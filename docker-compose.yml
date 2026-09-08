@@ -1,0 +1,13 @@
+services:
+  trader:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      TRADER_MODE: PAPER
+      TRADER_STARTING_CAPITAL: "10.00"
+      TRADER_LIVE_ENABLED: "false"
+    volumes:
+      - trader-data:/data
+volumes:
+  trader-data:

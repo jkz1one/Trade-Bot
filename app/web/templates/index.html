@@ -1,0 +1,25 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Autonomous Trader</title>
+<style>
+body{font-family:system-ui,-apple-system,sans-serif;margin:0;background:#0b0d10;color:#edf1f5}.wrap{max-width:1100px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;align-items:center}.badge{padding:6px 10px;border:1px solid #39414b;border-radius:999px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0}.card{background:#13171c;border:1px solid #252b33;border-radius:14px;padding:16px}.label{font-size:12px;color:#8f9aa7;text-transform:uppercase;letter-spacing:.05em}.value{font-size:27px;font-weight:700;margin-top:7px}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.activity{margin-top:12px}.row{padding:11px 0;border-top:1px solid #252b33;font-size:14px}button{background:#edf1f5;color:#0b0d10;border:0;border-radius:9px;padding:10px 14px;font-weight:700}.danger{background:#401b20;color:#ffccd1}pre{white-space:pre-wrap;word-break:break-word;color:#c8d0d9;font-size:12px}.muted{color:#8f9aa7}@media(max-width:800px){.grid,.two{grid-template-columns:1fr 1fr}}@media(max-width:520px){.grid,.two{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<div class="top"><div><h1 style="margin:0">AUTONOMOUS TRADER</h1><div class="muted">Auditable compounding experiment</div></div><span class="badge">● {{ mode }}</span></div>
+<div class="grid">
+<div class="card"><div class="label">Current equity</div><div class="value">${{ '%.2f'|format(account.equity) }}</div></div>
+<div class="card"><div class="label">Net trading P&amp;L</div><div class="value">${{ '%+.2f'|format(pnl) }}</div></div>
+<div class="card"><div class="label">Return</div><div class="value">{{ '%+.2f'|format(return_pct) }}%</div></div>
+<div class="card"><div class="label">Capital multiple</div><div class="value">{% if multiple %}{{ '%.3f'|format(multiple) }}×{% else %}—{% endif %}</div></div>
+<div class="card"><div class="label">High watermark</div><div class="value">${{ '%.2f'|format(account.high_watermark) }}</div></div>
+<div class="card"><div class="label">Risk mode</div><div class="value">{{ risk_mode }}</div></div>
+<div class="card"><div class="label">Drawdown</div><div class="value">{{ '%.2f'|format(account.drawdown_fraction*100) }}%</div></div>
+<div class="card"><div class="label">{{ benchmark_symbol }} benchmark</div><div class="value">{% if benchmark_pct is not none %}{{ '%+.2f'|format(benchmark_pct) }}%{% else %}—{% endif %}</div>{% if benchmark_note %}<div class="muted" style="font-size:12px">{{ benchmark_note }}</div>{% endif %}</div>
+</div>
+<div class="two">
+<div class="card"><div class="label">Agent now</div>{% if latest %}<div class="value">{{ latest.decision.action }}</div><p>Watching: <b>{{ latest.decision.symbol or '—' }}</b> · Confidence {{ '%.2f'|format(latest.decision.confidence) }}</p><p>{{ latest.decision.thesis }}</p><p class="muted">Risk: {{ 'APPROVED' if latest.risk.approved else 'REJECTED / HOLD' }}{% if latest.risk.rejection_reasons %} · {{ latest.risk.rejection_reasons|join(', ') }}{% endif %}</p>{% else %}<div class="value">READY</div><p>No evaluation yet.</p>{% endif %}</div>
+<div class="card"><div class="label">Open position</div>{% if account.position %}<div class="value">{{ account.position.symbol }}</div><p>${{ '%.2f'|format(account.position.market_value) }} · P&amp;L ${{ '%+.2f'|format(account.position.unrealized_pnl) }}</p><p>{{ account.position.thesis }}</p><p class="muted">Invalidation ${{ account.position.original_invalidation }}</p>{% else %}<div class="value">CASH</div><p>No open position.</p>{% endif %}</div>
+<div class="card"><div class="label">Economics</div><div class="value">${{ '%+.2f'|format(economic_pnl) }}</div><p>AI cost ${{ '%.4f'|format(ai_cost) }}</p><p class="muted">Economic P&amp;L keeps model expense separate from brokerage equity.</p></div>
+<div class="card"><div class="label">Controls</div><p>New-entry authority: <b>{{ 'ENABLED' if enabled else 'HALTED' }}</b></p><form method="post" action="/cycle" style="display:inline"><button {% if not enabled %}disabled{% endif %}>Run demo cycle</button></form> <form method="post" action="/halt" style="display:inline"><button class="danger">HALT BOT</button></form><p class="muted" style="font-size:12px">Slice 1 contains no live brokerage writer.</p></div>
+</div>
+<div class="card activity"><div class="label">Recent activity</div>{% for c in cycles %}<div class="row"><b>#{{ c.id }}</b> · {{ c.timestamp }}<pre>{{ c.decision_json }}\n{{ c.risk_json }}\n{{ c.execution_json }}</pre></div>{% else %}<p>No cycles yet.</p>{% endfor %}</div>
+</div></body></html>
