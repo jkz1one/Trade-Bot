@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     quote_max_age_seconds: int = 90
     max_daily_entries: int = 8
     exit_cooldown_minutes: int = 15
+    robinhood_mcp_url: str = "https://agent.robinhood.com/mcp/trading"
+    robinhood_redirect_uri: str = "http://127.0.0.1:8765/callback"
+    robinhood_oauth_storage: str = "~/.trade-bot/robinhood-oauth.json"
+    robinhood_schema_snapshot: str = "var/robinhood-tool-schemas.json"
     initial_symbols: list[str] = Field(
         default_factory=lambda: [
             "SPY", "QQQ", "IWM", "DIA", "XLK", "XLF", "XLE", "XLI", "XLV", "XLY",

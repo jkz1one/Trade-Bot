@@ -16,6 +16,7 @@ dependencies = [
   "pydantic>=2.8",
   "pydantic-settings>=2.4",
   "openai-agents>=0.2",
+  "mcp>=2.0,<3.0",
 ]
 
 [project.optional-dependencies]
