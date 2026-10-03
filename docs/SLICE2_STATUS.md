@@ -20,10 +20,10 @@ Trader Agent SHADOW cycle still require evidence from the user's authenticated M
 
 ## Latest authenticated batch
 
-The user's Mac pulled `b18f79b740a5d10bd93cd726d5e198105135acd6` and passed
-**95 tests**. `openai-structured-check` then returned HTTP 429,
+The user's Mac pulled `21e98163c8727bd07281493884f8e59984194c31` and passed
+**105 tests** in 4.92 seconds. `openai-structured-check` then returned HTTP 429,
 `credit_balance_exhausted` / `insufficient_quota`. Robinhood was not touched.
-The chained real SHADOW cycle and audit did **not** execute.
+The chained real SHADOW cycle, audit and history did **not** execute.
 
 The current external blocker is API credit. Add credits in the OpenAI API billing settings
 before retrying the authenticated batch. This quota response does not prove that structured
