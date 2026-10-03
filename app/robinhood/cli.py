@@ -34,7 +34,7 @@ async def _wait_for_callback():
     )
 
 
-async def discover(settings: Settings, output: str) -> int:
+async def discover(settings: Settings, output: str, required_output: str) -> int:
     connection = RobinhoodMcpConnection(
         url=settings.robinhood_mcp_url,
         redirect_uri=settings.robinhood_redirect_uri,
@@ -46,22 +46,36 @@ async def discover(settings: Settings, output: str) -> int:
         gateway = RobinhoodSafeGateway(client, settings.robinhood_mcp_url)
         snapshot = await gateway.discover_schemas()
     snapshot.save(output)
-    print(json.dumps({
-        "saved": output,
-        "tool_count": len(snapshot.tools),
-        "missing_required_tools": snapshot.missing_required_tools,
-        "advertised_write_tools": snapshot.advertised_write_tools,
-    }, indent=2))
-    return 2 if snapshot.missing_required_tools else 0
+    snapshot.save_required(required_output)
+    schema_count = sum(
+        1 for tool in snapshot.tools.values() if isinstance(tool.get("inputSchema"), dict)
+    )
+    print(
+        json.dumps(
+            {
+                "saved": output,
+                "required_saved": required_output,
+                "tool_count": len(snapshot.tools),
+                "input_schema_count": schema_count,
+                "missing_required_tools": snapshot.missing_required_tools,
+                "missing_required_input_schemas": snapshot.missing_required_input_schemas,
+                "advertised_write_tools": snapshot.advertised_write_tools,
+            },
+            indent=2,
+        )
+    )
+    incomplete = snapshot.missing_required_tools or snapshot.missing_required_input_schemas
+    return 2 if incomplete else 0
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Robinhood MCP schema discovery for Trade-Bot")
     parser.add_argument("command", choices=["discover"])
     parser.add_argument("--output", default="var/robinhood-tool-schemas.json")
+    parser.add_argument("--required-output", default="var/robinhood-required-schemas.json")
     args = parser.parse_args()
     settings = Settings()
-    raise SystemExit(asyncio.run(discover(settings, args.output)))
+    raise SystemExit(asyncio.run(discover(settings, args.output, args.required_output)))
 
 
 if __name__ == "__main__":
