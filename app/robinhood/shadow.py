@@ -5,7 +5,8 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from time import perf_counter
 
-from app.agent.prompts import TRADER_PROMPT_VERSION\nfrom app.agent.trader import TraderAgent, fail_closed_agent_run
+from app.agent.prompts import TRADER_PROMPT_VERSION
+from app.agent.trader import TraderAgent, fail_closed_agent_run
 from app.config import Settings
 from app.domain.models import AccountState, Action, ExecutionResult, MarketPacket, Position
 from app.risk.governor import govern

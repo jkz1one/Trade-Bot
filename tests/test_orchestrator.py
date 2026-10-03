@@ -1,5 +1,6 @@
 from decimal import Decimal
-from app.agent.prompts import TRADER_PROMPT_VERSION\nfrom app.agent.trader import StubTraderAgent
+from app.agent.prompts import TRADER_PROMPT_VERSION
+from app.agent.trader import StubTraderAgent
 from app.domain.models import Action, Horizon, TradeDecision
 from app.engine.orchestrator import Orchestrator
 from app.market.fixtures import FixtureMarketProvider

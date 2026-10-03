@@ -4,7 +4,8 @@ from datetime import datetime, timezone
 from time import perf_counter
 from uuid import uuid4
 
-from app.agent.prompts import TRADER_PROMPT_VERSION\nfrom app.agent.trader import TraderAgent
+from app.agent.prompts import TRADER_PROMPT_VERSION
+from app.agent.trader import TraderAgent
 from app.broker.base import Broker
 from app.config import Settings
 from app.domain.models import ExecutionResult, MarketPacket

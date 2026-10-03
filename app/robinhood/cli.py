@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import webbrowser
 from urllib.parse import parse_qs, urlparse
 
