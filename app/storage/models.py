@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from sqlalchemy import DateTime, Integer, Numeric, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -103,3 +103,14 @@ class SystemEventRow(Base):
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     level: Mapped[str] = mapped_column(String(16))
     message: Mapped[str] = mapped_column(Text)
+
+
+class ShadowCycleEvidenceRow(Base):
+    """Explicit links for new SHADOW cycles; legacy rows are never guessed/backfilled."""
+
+    __tablename__ = "shadow_cycle_evidence"
+    cycle_id: Mapped[int] = mapped_column(ForeignKey("decision_cycles.id"), primary_key=True)
+    model_usage_id: Mapped[int | None] = mapped_column(ForeignKey("model_usage.id"))
+    account_snapshot_id: Mapped[int] = mapped_column(ForeignKey("account_snapshots.id"))
+    benchmark_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("benchmark_snapshots.id"))
+    reconciliation_json: Mapped[str] = mapped_column(Text)

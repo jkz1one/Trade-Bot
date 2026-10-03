@@ -179,3 +179,4 @@ class ExecutionResult(BaseModel):
     message: str = ""
     broker_review: dict[str, Any] | None = None
     agent_error: str | None = None
+    review_error: str | None = None

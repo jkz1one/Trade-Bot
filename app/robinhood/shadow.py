@@ -167,42 +167,32 @@ class ShadowOrchestrator:
             agent_error=run.error,
         )
         if risk.approved and run.decision.symbol:
-            execution = await self._review(
-                run.decision,
-                risk,
-                packet,
-                truth.account.account_number,
-            )
-            if run.decision.action == Action.OPEN_LONG:
+            try:
+                execution = await self._review(
+                    run.decision, risk, packet, truth.account.account_number,
+                )
+            except Exception as exc:
+                execution = ExecutionResult(
+                    status="REJECTED", symbol=run.decision.symbol,
+                    message="SHADOW broker review failed; no order submitted",
+                    review_error=type(exc).__name__,
+                )
+            if execution.review_error is None and run.decision.action == Action.OPEN_LONG:
                 self.daily_entries += 1
 
         latency_ms = int((perf_counter() - started) * 1000)
-        self.repo.save_cycle(
+        self.repo.save_shadow_cycle(
             packet,
             run.decision,
             risk,
             execution,
-            self.settings.model_name,
-            latency_ms,
+            getattr(self.agent, "model_identifier", type(self.agent).__name__),
+            latency_ms=latency_ms,
             prompt_version=TRADER_PROMPT_VERSION,
+            input_tokens=run.input_tokens, output_tokens=run.output_tokens,
+            input_price=self.settings.model_input_usd_per_million,
+            output_price=self.settings.model_output_usd_per_million,
+            benchmark_symbol=self.settings.benchmark_symbol,
+            reconciliation=reconciliation.model_dump(mode="json"),
         )
-        if run.input_tokens or run.output_tokens:
-            self.repo.save_model_usage(
-                self.settings.model_name,
-                run.input_tokens,
-                run.output_tokens,
-                self.settings.model_input_usd_per_million,
-                self.settings.model_output_usd_per_million,
-            )
-        self.repo.save_account_snapshot(account)
-        spy = next(
-            (
-                c
-                for c in candidates
-                if c.quote.symbol == self.settings.benchmark_symbol
-            ),
-            None,
-        )
-        if spy:
-            self.repo.save_benchmark(spy.quote.symbol, spy.quote.last)
         return packet, run.decision, risk, execution, reconciliation, truth

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from decimal import Decimal
 
 from sqlalchemy import func, select
@@ -8,7 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.domain.models import AccountState, ExecutionResult, MarketPacket, Position, RiskDecision, TradeDecision
 from app.storage.models import (
     AccountSnapshotRow, BenchmarkSnapshotRow, CapitalEventRow, DecisionCycleRow,
-    FillRow, ModelUsageRow, OrderRow, PositionEpisodeRow,
+    FillRow, ModelUsageRow, OrderRow, PositionEpisodeRow, ShadowCycleEvidenceRow,
 )
 
 
@@ -92,6 +93,77 @@ class Repository:
                 execution_json=execution.model_dump_json(),
                 latency_ms=latency_ms,
             ))
+
+    def save_shadow_cycle(
+        self, packet: MarketPacket, decision: TradeDecision, risk: RiskDecision,
+        execution: ExecutionResult, model: str, *, prompt_version: str,
+        latency_ms: int, input_tokens: int, output_tokens: int,
+        input_price: Decimal, output_price: Decimal, benchmark_symbol: str,
+        reconciliation: dict,
+    ) -> int:
+        """Commit all evidence together, including explicit cycle-to-usage attribution."""
+        if input_tokens < 0 or output_tokens < 0 or input_price < 0 or output_price < 0:
+            raise ValueError("Model usage and pricing must be nonnegative")
+        with self.session_factory.begin() as s:
+            row = DecisionCycleRow(
+                timestamp=packet.as_of, packet_json=packet.model_dump_json(),
+                prompt_version=prompt_version, model_identifier=model,
+                decision_json=decision.model_dump_json(), risk_json=risk.model_dump_json(),
+                execution_json=execution.model_dump_json(), latency_ms=latency_ms,
+            )
+            account = packet.account
+            snapshot = AccountSnapshotRow(
+                timestamp=packet.as_of, equity=account.equity, cash=account.cash,
+                high_watermark=account.high_watermark, realized_pnl=account.realized_pnl,
+            )
+            usage = None
+            if input_tokens or output_tokens:
+                cost = (
+                    Decimal(input_tokens) * input_price + Decimal(output_tokens) * output_price
+                ) / Decimal("1000000")
+                usage = ModelUsageRow(
+                    timestamp=packet.as_of, model=model, input_tokens=input_tokens,
+                    output_tokens=output_tokens, input_price_per_million=input_price,
+                    output_price_per_million=output_price, estimated_cost=cost,
+                )
+                s.add(usage)
+            spy = next((c for c in packet.candidates
+                        if c.quote.symbol == benchmark_symbol), None)
+            benchmark = None
+            if spy is not None:
+                benchmark = BenchmarkSnapshotRow(
+                    timestamp=packet.as_of, symbol=benchmark_symbol, price=spy.quote.last,
+                )
+                s.add(benchmark)
+            s.add_all([row, snapshot])
+            s.flush()
+            s.add(ShadowCycleEvidenceRow(
+                cycle_id=row.id, model_usage_id=usage.id if usage else None,
+                account_snapshot_id=snapshot.id,
+                benchmark_snapshot_id=benchmark.id if benchmark else None,
+                reconciliation_json=json.dumps(reconciliation),
+            ))
+            s.flush()
+            return row.id
+
+    def shadow_cycle_evidence(self, cycle_id: int) -> dict:
+        with self.session_factory() as s:
+            evidence = s.get(ShadowCycleEvidenceRow, cycle_id)
+            if evidence is None:
+                return {"status": "LEGACY_UNLINKED", "model_usage": None,
+                        "reconciliation": None}
+            usage = s.get(ModelUsageRow, evidence.model_usage_id) if evidence.model_usage_id else None
+            return {
+                "status": "LINKED",
+                "model_usage": {
+                    "model": usage.model, "input_tokens": usage.input_tokens,
+                    "output_tokens": usage.output_tokens,
+                    "input_price_per_million": str(usage.input_price_per_million),
+                    "output_price_per_million": str(usage.output_price_per_million),
+                    "estimated_cost": str(usage.estimated_cost),
+                } if usage else None,
+                "reconciliation": json.loads(evidence.reconciliation_json),
+            }
 
     def save_fill(self, order_id: str, symbol: str, notional: Decimal, price: Decimal, quantity: Decimal, invalidation: Decimal, thesis: str) -> None:
         with self.session_factory.begin() as s:

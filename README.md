@@ -50,3 +50,19 @@ python -m app.robinhood.cli shadow-cycle --agent openai
 ```
 
 SHADOW uses real Robinhood account/market data and may call `review_equity_order` to preview a hypothetical order. It cannot place or cancel an order. Robinhood-backed state is stored separately in `./robinhood.db` by default.
+
+Inspect persisted evidence without network calls:
+
+```bash
+python -m app.robinhood.cli shadow-audit
+python -m app.robinhood.cli shadow-history --limit 100
+```
+
+New SHADOW cycles save their decision, exact model usage, account/benchmark snapshots and
+reconciliation evidence atomically. Older cycles remain available, with unlinked usage explicitly
+marked. Stub cycles use model identity `stub`. Model failures save HOLD and exit 8;
+broker-review failures save their evidence and exit 9. Neither failure submits an order.
+
+History shows action/failure/review counts, known model cost and raw SPY price observations.
+It does not infer fills, strategy P&L or alpha. Authenticated Slice 2 verification is still pending;
+see `docs/SLICE2_STATUS.md` for the latest API credit blocker and verification batch.

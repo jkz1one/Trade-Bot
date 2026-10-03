@@ -36,11 +36,19 @@ def fail_closed_agent_run(exc: Exception) -> AgentRun:
 
 
 class TraderAgent(ABC):
+    @property
+    def model_identifier(self) -> str:
+        return type(self).__name__
+
     @abstractmethod
     def decide(self, packet: MarketPacket) -> AgentRun: ...
 
 
 class StubTraderAgent(TraderAgent):
+    @property
+    def model_identifier(self) -> str:
+        return "stub"
+
     def __init__(self, decision: TradeDecision | None = None):
         self._decision = decision
 
@@ -64,6 +72,10 @@ class StubTraderAgent(TraderAgent):
 
 class OpenAIAgentsTrader(TraderAgent):
     """Reasoning adapter. It exposes no brokerage or other tools to the model."""
+
+    @property
+    def model_identifier(self) -> str:
+        return self._model
 
     def __init__(self, model: str):
         try:

@@ -101,6 +101,8 @@ async def test_shadow_review_never_places_order(repo):
 
 
 class ExplodingAgent:
+    model_identifier = "gpt-6-luna"
+
     def decide(self, packet):
         raise RuntimeError("simulated model outage")
 
@@ -131,7 +133,7 @@ async def test_agent_failure_becomes_fail_closed_hold(repo):
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("scenario", ["hold", "open", "failure", "mismatch"])
+@pytest.mark.parametrize("scenario", ["hold", "open", "failure", "mismatch", "review_failure"])
 async def test_complete_shadow_cycle_persists_evidence_and_gates_review(repo, scenario):
     import json
 
@@ -153,14 +155,16 @@ async def test_complete_shadow_cycle_persists_evidence_and_gates_review(repo, sc
         atr_fraction="0.01", realized_vol_fraction="0.01",
     )
     decision = TradeDecision(
-        action=Action.OPEN_LONG if scenario in {"open", "mismatch"} else Action.HOLD,
-        symbol="SPY" if scenario in {"open", "mismatch"} else None,
+        action=Action.OPEN_LONG if scenario in {"open", "mismatch", "review_failure"} else Action.HOLD,
+        symbol="SPY" if scenario in {"open", "mismatch", "review_failure"} else None,
         confidence=.8, setup_quality=.8, desired_exposure_fraction=.5,
         invalidation_price="98", thesis="Test supplied evidence",
         invalidation_reason="Test invalidation", why_now="Test rationale",
     )
 
     class UsageAgent:
+        model_identifier = "gpt-6-luna"
+
         def decide(self, packet):
             return AgentRun(decision, input_tokens=100, output_tokens=40)
 
@@ -176,6 +180,11 @@ async def test_complete_shadow_cycle_persists_evidence_and_gates_review(repo, sc
             return "test"
 
     gateway = ReviewGateway()
+    if scenario == "review_failure":
+        async def failing_review(name, arguments):
+            gateway.calls.append((name, arguments))
+            raise RuntimeError("private broker response")
+        gateway.call_safe = failing_review
     orchestrator = ShadowOrchestrator(
         Settings(mode="SHADOW"), repo, gateway,
         ExplodingAgent() if scenario == "failure" else UsageAgent(),
@@ -193,11 +202,17 @@ async def test_complete_shadow_cycle_persists_evidence_and_gates_review(repo, sc
     assert json.loads(row.packet_json)["account"]["buying_power"] == "10"
     assert repo.load_open_position() is None
     assert repo.benchmark_range("SPY") == (Decimal("100"), Decimal("100"))
-    if scenario == "open":
+    if scenario in {"open", "review_failure"}:
         assert risk.approved
         assert [name for name, _ in gateway.calls] == ["review_equity_order"]
-        assert execution.status == "SKIPPED"
-        assert execution.broker_review is not None
+        if scenario == "open":
+            assert execution.status == "SKIPPED"
+            assert execution.broker_review is not None
+        else:
+            assert execution.status == "REJECTED"
+            assert execution.review_error == "RuntimeError"
+            assert "private broker response" not in row.execution_json
+            assert orchestrator.daily_entries == 0
     else:
         assert gateway.calls == []
         assert not risk.approved
@@ -209,3 +224,6 @@ async def test_complete_shadow_cycle_persists_evidence_and_gates_review(repo, sc
         assert repo.model_cost_total() == Decimal("0.00003000")
         assert execution.agent_error is None
     assert reconciliation.reconciled == (scenario != "mismatch")
+    evidence = repo.shadow_cycle_evidence(row.id)
+    assert evidence["status"] == "LINKED"
+    assert evidence["reconciliation"]["reconciled"] == reconciliation.reconciled

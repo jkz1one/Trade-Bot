@@ -10,6 +10,7 @@ from urllib.parse import parse_qs, urlparse
 from app.agent.trader import OpenAIAgentsTrader, StubTraderAgent
 from app.config import Settings
 from app.domain.models import Action
+from app.metrics.shadow import shadow_history_report
 from app.robinhood.client import RobinhoodMcpConnection
 from app.robinhood.gateway import RobinhoodSafeGateway
 from app.robinhood.market import RobinhoodMarketData
@@ -272,7 +273,7 @@ def shadow_audit(settings: Settings) -> int:
         }, indent=2))
         return 5
     row = rows[0]
-    usage = repo.latest_model_usage()
+    evidence = repo.shadow_cycle_evidence(row.id)
     payload = {
         "cycle_id": row.id,
         "timestamp": row.timestamp.isoformat() if row.timestamp else None,
@@ -282,16 +283,9 @@ def shadow_audit(settings: Settings) -> int:
         "decision": json.loads(row.decision_json),
         "risk": json.loads(row.risk_json),
         "execution": json.loads(row.execution_json),
-        "latest_model_usage": (
-            {
-                "model": usage.model,
-                "input_tokens": usage.input_tokens,
-                "output_tokens": usage.output_tokens,
-                "estimated_cost": str(usage.estimated_cost),
-            }
-            if usage is not None
-            else None
-        ),
+        "cycle_evidence_status": evidence["status"],
+        "reconciliation": evidence["reconciliation"],
+        "latest_model_usage": evidence["model_usage"],
         "model_cost_total": str(repo.model_cost_total()),
         "benchmark_range": (
             [str(x) for x in repo.benchmark_range(settings.benchmark_symbol)]
@@ -301,6 +295,19 @@ def shadow_audit(settings: Settings) -> int:
     }
     print(json.dumps(payload, indent=2, default=str))
     return 0
+
+
+def shadow_history(settings: Settings, limit: int = 100) -> int:
+    print(json.dumps(shadow_history_report(_repo(settings), settings.benchmark_symbol, limit),
+                     indent=2, default=str))
+    return 0
+
+
+def _history_limit(value: str) -> int:
+    limit = int(value)
+    if not 1 <= limit <= 10000:
+        raise argparse.ArgumentTypeError("limit must be between 1 and 10000")
+    return limit
 
 
 async def shadow_cycle(settings: Settings, agent_name: str) -> int:
@@ -340,7 +347,9 @@ async def shadow_cycle(settings: Settings, agent_name: str) -> int:
     }, indent=2, default=str))
     if not reconciliation.reconciled:
         return 3
-    return 8 if execution.agent_error else 0
+    if execution.agent_error:
+        return 8
+    return 9 if execution.review_error else 0
 
 
 def main() -> None:
@@ -356,6 +365,8 @@ def main() -> None:
     sub.add_parser("openai-check")
     sub.add_parser("openai-structured-check")
     sub.add_parser("shadow-audit")
+    h = sub.add_parser("shadow-history")
+    h.add_argument("--limit", type=_history_limit, default=100)
     s = sub.add_parser("shadow-cycle")
     s.add_argument("--agent", choices=["stub", "openai"], default="stub")
     args = parser.parse_args()
@@ -370,6 +381,8 @@ def main() -> None:
         code = openai_structured_check(settings)
     elif args.command == "shadow-audit":
         code = shadow_audit(settings)
+    elif args.command == "shadow-history":
+        code = shadow_history(settings, args.limit)
     else:
         code = asyncio.run(shadow_cycle(settings, args.agent))
     raise SystemExit(code)

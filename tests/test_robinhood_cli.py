@@ -95,9 +95,11 @@ def test_structured_check_requires_hold_and_never_connects_to_robinhood(
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("agent_error, expected_code", [(None, 0), ("BadRequestError", 8)])
+@pytest.mark.parametrize("agent_error, review_error, expected_code", [
+    (None, None, 0), ("BadRequestError", None, 8), (None, "RuntimeError", 9),
+])
 async def test_shadow_cli_distinguishes_genuine_hold_from_failed_agent(
-    monkeypatch, tmp_path, capsys, agent_error, expected_code,
+    monkeypatch, tmp_path, capsys, agent_error, review_error, expected_code,
 ):
     import json
     from contextlib import asynccontextmanager
@@ -120,7 +122,7 @@ async def test_shadow_cli_distinguishes_genuine_hold_from_failed_agent(
                 SimpleNamespace(candidates=[], regime="test"),
                 StubTraderAgent().decide(None).decision,
                 ExecutionResult(status="SKIPPED"),
-                ExecutionResult(status="SKIPPED", agent_error=agent_error),
+                ExecutionResult(status="SKIPPED", agent_error=agent_error, review_error=review_error),
                 SimpleNamespace(reconciled=True, reasons=[]),
                 SimpleNamespace(account=SimpleNamespace(account_number="RH1234")),
             )
@@ -133,3 +135,16 @@ async def test_shadow_cli_distinguishes_genuine_hold_from_failed_agent(
     assert code == expected_code
     payload = json.loads(capsys.readouterr().out)
     assert payload["execution"]["agent_error"] == agent_error
+
+
+class _FakeCreditError(Exception):
+    status_code = 429
+    body = {"code": "credit_balance_exhausted", "type": "insufficient_quota"}
+
+
+def test_openai_credit_failure_points_to_billing():
+    summary = _openai_error_summary(_FakeCreditError())
+    assert summary["status_code"] == 429
+    assert summary["error_code"] == "credit_balance_exhausted"
+    assert "billing" in summary["next_step"]
+    assert "Rotate" not in summary["next_step"]
