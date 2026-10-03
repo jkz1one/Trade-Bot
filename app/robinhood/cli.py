@@ -61,6 +61,24 @@ def _mask(value: str) -> str:
     return "••••" + value[-4:] if len(value) >= 4 else "••••"
 
 
+def _openai_key_problem(value: str | None) -> str | None:
+    if not value:
+        return "OPENAI_API_KEY is not set"
+    cleaned = value.strip()
+    placeholders = {
+        "YOUR_API_KEY",
+        "your-api-key",
+        "your-key-here",
+        "...",
+        "sk-...",
+    }
+    if cleaned in placeholders or "YOUR_API_KEY" in cleaned.upper():
+        return "OPENAI_API_KEY is still a placeholder, not a real API key"
+    if len(cleaned) < 20:
+        return "OPENAI_API_KEY is too short to look like a real API key"
+    return None
+
+
 async def discover(settings: Settings, output: str, required_output: str) -> int:
     async with _connection(settings).client() as client:
         gateway = RobinhoodSafeGateway(client, settings.robinhood_mcp_url)
@@ -118,12 +136,17 @@ async def probe(settings: Settings) -> int:
 
 
 async def shadow_cycle(settings: Settings, agent_name: str) -> int:
-    if agent_name == "openai" and not os.getenv("OPENAI_API_KEY"):
-        print(json.dumps({
-            "error": "OPENAI_API_KEY is not set",
-            "action": "No Robinhood calls or model calls were made.",
-        }, indent=2))
-        return 4
+    if agent_name == "openai":
+        key_problem = _openai_key_problem(os.getenv("OPENAI_API_KEY"))
+        if key_problem:
+            print(json.dumps({
+                "error": key_problem,
+                "action": (
+                    "No Robinhood calls or model calls were made. Set a real OpenAI API key, "
+                    "not the example placeholder."
+                ),
+            }, indent=2))
+            return 4
     settings = settings.model_copy(update={"mode": "SHADOW", "live_enabled": False})
     repo = _repo(settings)
     agent = (

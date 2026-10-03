@@ -25,8 +25,8 @@
 
 ## Current model configuration
 
-- Model: `gpt-5.6-luna`
-- Configured pricing: $0.20 / 1M input tokens and $1.20 / 1M output tokens.
+- Model: `gpt-6-luna`
+- Configured standard short-context pricing: $0.05 / 1M input tokens and $0.25 / 1M output tokens.
 - The current Agents SDK path uses `Agent(output_type=TradeDecision, tools=[])` and `Runner.run_sync(..., max_turns=1)`.
 - Token usage is saved when the SDK returns it.
 
@@ -49,17 +49,17 @@ python -m app.robinhood.cli shadow-cycle --agent stub
 Real reasoning-agent SHADOW cycle:
 
 ```bash
-export OPENAI_API_KEY='your-key-here'
+read -s -p 'OpenAI API key: ' OPENAI_API_KEY; export OPENAI_API_KEY; echo
 python -m app.robinhood.cli shadow-cycle --agent openai
 ```
 
-If `OPENAI_API_KEY` is absent, the CLI exits before any Robinhood or model call.
+If `OPENAI_API_KEY` is absent, obviously placeholder text, or implausibly short, the CLI exits before any Robinhood or model call.
 
 ## Validation state
 
-- Last full local suite before live transport validation: 43/43 passing.
+- Full updated suite on the user's Mac: 51/51 passing.
 - User-run historical transport regression after the hotfix: 2/2 passing.
-- Additional reasoning-agent hardening tests have been added for credential preflight, fail-closed model errors, and non-fixture stub behavior; run the full suite again before merging Slice 2.
+- Credential preflight now explicitly rejects example placeholder keys before any network call.
 
 ## Remaining Slice 2 evidence
 
