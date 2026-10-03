@@ -89,3 +89,18 @@ async def test_live_market_shapes_become_candidate():
     assert candidate.atr_fraction > 0
     assert candidate.realized_vol_fraction > 0
     assert candidate.day_change_fraction > 0
+
+
+@pytest.mark.anyio
+async def test_historical_requests_are_single_symbol_to_stay_under_sse_limit():
+    now = datetime(2026, 10, 2, 15, 0, tzinfo=timezone.utc)
+    gateway = FakeGateway(now)
+    market = RobinhoodMarketData(gateway)
+    await market._bars(["SPY", "QQQ", "AAPL"], now)
+    historical_calls = [
+        args
+        for name, args in gateway.calls
+        if name == "get_equity_historicals"
+    ]
+    assert len(historical_calls) == 3
+    assert all(len(call["symbols"]) == 1 for call in historical_calls)

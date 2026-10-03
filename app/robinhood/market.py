@@ -13,6 +13,11 @@ from app.robinhood.read import tool_data
 
 ET = ZoneInfo("America/New_York")
 
+# Robinhood MCP responses are delivered as SSE events with a 1 MiB client limit. A week of
+# 5-minute OHLCV for several symbols can exceed that limit even though the tool accepts 10 symbols.
+# Keep historical requests per-symbol; quote/tradability batching remains unchanged.
+HISTORICAL_SYMBOLS_PER_CALL = 1
+
 
 def _d(value: Any) -> Decimal:
     return Decimal(str(value))
@@ -171,8 +176,8 @@ class RobinhoodMarketData:
         end = (
             now.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
         )
-        for i in range(0, len(symbols), 10):
-            batch = symbols[i:i + 10]
+        for i in range(0, len(symbols), HISTORICAL_SYMBOLS_PER_CALL):
+            batch = symbols[i:i + HISTORICAL_SYMBOLS_PER_CALL]
             data = tool_data(
                 await self.gateway.call_safe(
                     "get_equity_historicals",
