@@ -135,6 +135,47 @@ async def probe(settings: Settings) -> int:
     return 0 if reconciliation.reconciled else 3
 
 
+def shadow_audit(settings: Settings) -> int:
+    repo = _repo(settings)
+    rows = repo.recent_cycles(limit=1)
+    if not rows:
+        print(json.dumps({
+            "status": "EMPTY",
+            "message": "No SHADOW decision cycles are persisted yet.",
+        }, indent=2))
+        return 5
+    row = rows[0]
+    usage = repo.latest_model_usage()
+    payload = {
+        "cycle_id": row.id,
+        "timestamp": row.timestamp.isoformat() if row.timestamp else None,
+        "prompt_version": row.prompt_version,
+        "model": row.model_identifier,
+        "latency_ms": row.latency_ms,
+        "decision": json.loads(row.decision_json),
+        "risk": json.loads(row.risk_json),
+        "execution": json.loads(row.execution_json),
+        "latest_model_usage": (
+            {
+                "model": usage.model,
+                "input_tokens": usage.input_tokens,
+                "output_tokens": usage.output_tokens,
+                "estimated_cost": str(usage.estimated_cost),
+            }
+            if usage is not None
+            else None
+        ),
+        "model_cost_total": str(repo.model_cost_total()),
+        "benchmark_range": (
+            [str(x) for x in repo.benchmark_range(settings.benchmark_symbol)]
+            if repo.benchmark_range(settings.benchmark_symbol)
+            else None
+        ),
+    }
+    print(json.dumps(payload, indent=2, default=str))
+    return 0
+
+
 async def shadow_cycle(settings: Settings, agent_name: str) -> int:
     if agent_name == "openai":
         key_problem = _openai_key_problem(os.getenv("OPENAI_API_KEY"))
@@ -183,6 +224,7 @@ def main() -> None:
         default="var/robinhood-required-schemas.json",
     )
     sub.add_parser("probe")
+    sub.add_parser("shadow-audit")
     s = sub.add_parser("shadow-cycle")
     s.add_argument("--agent", choices=["stub", "openai"], default="stub")
     args = parser.parse_args()
@@ -191,6 +233,8 @@ def main() -> None:
         code = asyncio.run(discover(settings, args.output, args.required_output))
     elif args.command == "probe":
         code = asyncio.run(probe(settings))
+    elif args.command == "shadow-audit":
+        code = shadow_audit(settings)
     else:
         code = asyncio.run(shadow_cycle(settings, args.agent))
     raise SystemExit(code)

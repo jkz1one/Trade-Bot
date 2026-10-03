@@ -71,3 +71,15 @@ If `OPENAI_API_KEY` is absent, obviously placeholder text, or implausibly short,
 ## Live authority
 
 No live brokerage placement or cancellation path exists in Slice 2.
+
+
+## One-command audit
+
+After any SHADOW run:
+
+```bash
+python -m app.robinhood.cli shadow-audit
+```
+
+This prints the latest persisted cycle with prompt version, model, latency, decision, risk decision,
+execution/broker review, latest token usage, cumulative estimated model cost, and benchmark range.

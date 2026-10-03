@@ -1,7 +1,7 @@
 import pytest
 
 from app.config import Settings
-from app.robinhood.cli import _openai_key_problem, shadow_cycle
+from app.robinhood.cli import _openai_key_problem, shadow_audit, shadow_cycle
 
 
 @pytest.mark.anyio
@@ -19,3 +19,11 @@ def test_openai_key_preflight_rejects_example_placeholder():
 
 def test_openai_key_preflight_accepts_nonplaceholder_secret_shape():
     assert _openai_key_problem("sk-proj-example-but-long-enough-value") is None
+
+
+
+def test_shadow_audit_reports_empty_database(tmp_path, capsys):
+    settings = Settings(robinhood_db_url=f"sqlite:///{tmp_path / 'audit.db'}")
+    code = shadow_audit(settings)
+    assert code == 5
+    assert '"status": "EMPTY"' in capsys.readouterr().out

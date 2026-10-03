@@ -130,6 +130,14 @@ class Repository:
             value = s.scalar(select(func.coalesce(func.sum(ModelUsageRow.estimated_cost), 0)))
             return Decimal(str(value))
 
+    def latest_model_usage(self) -> ModelUsageRow | None:
+        with self.session_factory() as s:
+            return s.scalar(
+                select(ModelUsageRow)
+                .order_by(ModelUsageRow.id.desc())
+                .limit(1)
+            )
+
     def save_benchmark(self, symbol: str, price: Decimal) -> None:
         with self.session_factory.begin() as s:
             s.add(BenchmarkSnapshotRow(symbol=symbol, price=price))
