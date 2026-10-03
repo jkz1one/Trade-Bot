@@ -90,12 +90,14 @@ class McpSdkToolClient:
 
     async def list_tools(self) -> list[dict[str, Any]]:
         result = await self._client.list_tools()
-        return [tool.model_dump(mode="json") for tool in result.tools]
+        # MCP SDK v2 uses snake_case Python fields but camelCase JSON aliases. Persist the
+        # protocol/wire representation so schemas remain inputSchema/outputSchema.
+        return [tool.model_dump(mode="json", by_alias=True) for tool in result.tools]
 
     async def call_tool(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         result = await self._client.call_tool(name, arguments)
         if hasattr(result, "model_dump"):
-            return result.model_dump(mode="json")
+            return result.model_dump(mode="json", by_alias=True)
         raise RuntimeError(f"Unexpected MCP result type for {name}: {type(result)!r}")
 
 
@@ -147,6 +149,12 @@ class RobinhoodMcpConnection:
             callback_handler=self.callback_handler,
         )
         async with httpx2.AsyncClient(auth=oauth, follow_redirects=True) as http_client:
-            transport = streamable_http_client(self.url, http_client=http_client)
+            transport = streamable_http_client(
+                self.url,
+                http_client=http_client,
+                # Robinhood currently returns HTTP 400 to MCP session DELETE. Closing the
+                # HTTP client is sufficient; avoid a noisy non-fatal termination warning.
+                terminate_on_close=False,
+            )
             async with Client(transport) as client:
                 yield McpSdkToolClient(client)
