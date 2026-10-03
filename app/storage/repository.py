@@ -10,10 +10,11 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.exc import IntegrityError
 
 from app.domain.models import AccountState, ExecutionResult, MarketPacket, Position, RiskDecision, TradeDecision
+from app.config import Settings
 from app.storage.models import (
     AccountSnapshotRow, BenchmarkSnapshotRow, CapitalEventRow, DecisionCycleRow,
     FillRow, ModelUsageRow, OrderRow, PositionEpisodeRow, ShadowCycleEvidenceRow,
-    ShadowScheduleSlotRow,
+    ShadowScheduleSlotRow, ShadowForwardOutcomeRow,
 )
 
 
@@ -105,6 +106,7 @@ class Repository:
         input_price: Decimal, output_price: Decimal, benchmark_symbol: str,
         reconciliation: dict,
         slot_key: str | None = None, claim_token: str | None = None,
+        outcome_settings: Settings | None = None, completed_at: datetime | None = None,
     ) -> int:
         """Commit all evidence together, including explicit cycle-to-usage attribution."""
         if input_tokens < 0 or output_tokens < 0 or input_price < 0 or output_price < 0:
@@ -153,6 +155,16 @@ class Repository:
                 benchmark_snapshot_id=benchmark.id if benchmark else None,
                 reconciliation_json=json.dumps(reconciliation),
             ))
+            if outcome_settings is not None:
+                from app.metrics.shadow_outcomes import record_forward_outcomes
+
+                record_forward_outcomes(
+                    s, row.id, packet, decision, risk, execution,
+                    reconciliation=reconciliation, model=model, usage=usage,
+                    benchmark_symbol=benchmark_symbol,
+                    quote_max_age_seconds=outcome_settings.quote_max_age_seconds,
+                    completed_at=completed_at or datetime.now(timezone.utc),
+                )
             if slot is not None:
                 code = (3 if not reconciliation["reconciled"] else
                         8 if execution.agent_error else 9 if execution.review_error else 0)
@@ -164,6 +176,17 @@ class Repository:
                 slot.active_lock = None
             s.flush()
             return row.id
+
+    def shadow_forward_outcomes(self, limit: int = 100) -> list[ShadowForwardOutcomeRow]:
+        # The limit counts source cycles, so both horizons remain visible together.
+        with self.session_factory() as s:
+            ids = select(ShadowForwardOutcomeRow.source_cycle_id).distinct().order_by(
+                ShadowForwardOutcomeRow.source_cycle_id.desc()
+            ).limit(limit)
+            return list(s.scalars(select(ShadowForwardOutcomeRow).where(
+                ShadowForwardOutcomeRow.source_cycle_id.in_(ids)
+            ).order_by(ShadowForwardOutcomeRow.source_cycle_id.desc(),
+                       ShadowForwardOutcomeRow.horizon_minutes)))
 
     def claim_shadow_slot(self, window, claim_token: str, claimed_at: datetime) -> bool:
         try:

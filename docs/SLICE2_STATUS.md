@@ -5,8 +5,9 @@
 Branch: `slice2/robinhood-read-shadow`. PR #1 remains draft. `main` remains untouched.
 The authenticated core path is verified: strict OpenAI output, real Robinhood reads,
 model judgment, deterministic governor and persisted SHADOW audit. Scheduling is
-implemented and verified offline; a scheduled authenticated market-session cycle
-remains to be observed. LIVE is disabled.
+installed and its closed-session behavior is verified on the Mac. A scheduled
+authenticated regular-session cycle remains to be observed. Forward quote outcome
+tracking is implemented and verified offline. LIVE is disabled.
 
 ## Installation follow-up
 
@@ -21,11 +22,17 @@ generated build directories are ignored. The original failure was reproduced loc
 with an empty `var` directory. With that directory still present, the full editable
 installation and wheel build succeeded. Wheel contents were checked for application
 code and the template, with no runtime `var` files included. The installed CLI's
-Saturday tick returned MARKET_CLOSED, exit 0. Re-run the batch below on the Mac.
+Saturday tick returned MARKET_CLOSED, exit 0.
+
+The subsequent Mac batch pulled `32f0d23c6b7eeb9bedbd958e081c583353344d51`:
+installation succeeded, **136 tests passed** in 33.95 seconds, the scheduled tick
+returned MARKET_CLOSED with exit 0, and status showed CLOSED, no active slot, no
+attempted slots and `network_calls: false`. The whole chained batch completed.
+Installation and the closed-session gate are now verified on Python 3.14/macOS.
 
 ## Authenticated evidence from the user's Mac
 
-The latest batch pulled `7abcf284ee84a787020ba5913c5cc8d504ee930c` and passed
+The earlier authenticated model batch pulled `7abcf284ee84a787020ba5913c5cc8d504ee930c` and passed
 **105 tests** in 3.66 seconds. Every subsequent command completed:
 
 - `openai-structured-check`: OK, `gpt-6-luna`, HOLD, structured output accepted;
@@ -94,12 +101,60 @@ blocked execution counts are included. SPY output is a raw quote-price return wi
 sample endpoints. Strategy/economic P&L remains null: there is no counterfactual fill
 ledger yet, and SHADOW submits no trades.
 
+## Forward quote outcomes
+
+New cycles also atomically register two outcome rows per source cycle, for fixed
+15- and 60-minute horizons anchored to its scheduled session slot. Policy:
+`v1-forward-quote-marks`. This uses already-read packet quotes and adds no broker
+or model calls. These rows are separate from orders, fills and owned positions.
+
+- Eligible sources have clean reconciliation, explicit linked model usage and an
+  available decision inside a scheduled regular session. Source quotes must be
+  fresh, uncrossed and not future-dated. Stub/guard/failure/unscheduled sources and
+  legacy cycles cannot silently become model performance evidence.
+- Reviewed entries require deterministic approval and a completed broker review.
+  The reference is the decision-packet ask and approved notional. It is a quote
+  reference, not a claim that an execution-time fill was available at that price.
+- Cash HOLD is first-class: the fixed reference notional is the source account's
+  equity, price change is zero and the linked source model cost is deducted.
+  HOLD with an existing position and CLOSE/REDUCE are explicitly excluded in this
+  first measurement policy.
+- SPY uses its packet ask and subsequent bid on the same fixed reference notional.
+  A qualifying later cycle provides fresh quotes at/after the target, after source
+  decision completion, in the same regular session. The first accepted observation
+  is immutable and links to the exact later cycle and quote timestamps.
+- The observation window ends five minutes after the target or at regular close,
+  whichever comes first. Missing/stale/future/pre-target pairs remain PENDING;
+  a later cycle marks overdue rows EXPIRED. Targets outside the regular session or
+  before decision completion are EXCLUDED. No next-session backfill occurs.
+- Source model cost is frozen with the baseline and deducted per horizon sample.
+  The database's reported total cost is counted once from usage rows. Reports keep
+  15/60-minute cohorts and reviewed entries/cash HOLDs separate. Overlapping marks
+  are not independent samples and are never summed into a bankroll or compounding
+  return. Fees, slippage and dividends are not modeled.
+- Existing databases receive an additive `shadow_forward_outcomes` table. Legacy
+  cycles are not reconstructed/backfilled. Reports make no network calls and do
+  not expire rows on read; pending status is as of the last collected packet.
+
+Inspect local evidence:
+
+```bash
+python -m app.robinhood.cli shadow-outcomes --limit 100
+```
+
+The result includes baseline/measurement cycle IDs, status/reasons, quote references,
+fixed notional, linked model cost, forward quote changes and SPY excess after source
+model cost. It reports arithmetic cohort means only when observations exist.
+An existing database with only legacy/manual cycles initially reports EMPTY. Portfolio
+strategy/economic P&L remains null because this is proposal evidence, not a fill ledger.
+
 Audit, history and schedule status make no OpenAI or Robinhood calls:
 
 ```bash
 python -m app.robinhood.cli shadow-audit
 python -m app.robinhood.cli shadow-history --limit 100
 python -m app.robinhood.cli shadow-schedule-status
+python -m app.robinhood.cli shadow-outcomes --limit 100
 ```
 
 ## Authority and configuration
@@ -124,35 +179,38 @@ python -m app.robinhood.cli shadow-schedule-status
 
 ## Verification and next use
 
-Install the new calendar dependency after pulling:
+The Mac calendar installation is already verified. Validate this follow-up without
+repeating dependency installation or the structured-output check:
 
 ```bash
 git pull --ff-only && \
-pip install -e '.[dev]' && \
 pytest -q && \
-python -m app.robinhood.cli shadow-run --agent openai --once && \
-python -m app.robinhood.cli shadow-schedule-status
+python -m app.robinhood.cli shadow-outcomes --limit 100
 ```
 
-Outside a regular session the tick reports MARKET_CLOSED without using API credits
-or Robinhood. During a session it attempts the current slot and persists its result.
-Inspect audit/history after a completed cycle. The already successful structured-output
-check need not be repeated. To collect regular-session history, start:
+To collect regular-session history and future quote outcomes, start the foreground
+runner. Outside a regular session it waits without broker/model calls; during a
+session it attempts the current slot and persists its result. Inspect audit/history
+and outcomes after completed cycles:
 
 ```bash
 python -m app.robinhood.cli shadow-run --agent openai
 ```
 
-Updated local suite: **136 passed**. Compilation, fatal-error lint and whitespace
+Updated local suite: **167 passed**. Compilation, fatal-error lint and whitespace
 checks passed. The real CLI's Saturday tick returned MARKET_CLOSED with exit 0;
 schedule status reported no active claim or slots and no network calls.
 
 Local verification covers calendar boundaries, concurrent SQLite claims, restarts,
 crash blocking, rollback, sanitized failures, persistent New York daily limits,
 cooldown expiry, session-ending reads/model calls and review-only execution.
+Outcome tests cover quote/cost arithmetic, cash HOLD, exclusion reasons, immutable
+paired observations, concurrent SQLite connections, expiry/early close, atomic
+rollback, restart persistence, existing database upgrades and local reporting.
 No authenticated OpenAI or Robinhood calls were made in this execution workspace;
 it has neither API credentials nor Robinhood OAuth state.
 
-Next experiment work: counterfactual fills/position ledger, SPY and net-of-model-cost
-economic comparison, and enough market-session model decisions to evaluate signal.
+Next experiment work: a counterfactual portfolio/position/fill ledger and enough
+market-session model decisions to evaluate signal. SPY and model-cost comparisons
+now exist for fixed proposal quote marks, not full strategy economics.
 No profitability claim or LIVE enablement follows from this checkpoint.

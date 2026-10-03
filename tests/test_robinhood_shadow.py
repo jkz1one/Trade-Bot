@@ -283,6 +283,11 @@ async def test_complete_shadow_cycle_persists_evidence_and_gates_review(repo, sc
     evidence = repo.shadow_cycle_evidence(row.id)
     assert evidence["status"] == "LINKED"
     assert evidence["reconciliation"]["reconciled"] == reconciliation.reconciled
+    forward_rows = repo.shadow_forward_outcomes()
+    assert len(forward_rows) == 2
+    assert {o.source_cycle_id for o in forward_rows} == {row.id}
+    # These synthetic scenarios are unscheduled or have no forward session window.
+    assert {o.status for o in forward_rows} == {"EXCLUDED"}
     if scenario == "scheduled_closed":
         assert calls == []
         assert execution.session_blocked

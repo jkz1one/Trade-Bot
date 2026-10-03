@@ -133,3 +133,18 @@ class ShadowScheduleSlotRow(Base):
     exit_code: Mapped[int | None] = mapped_column(Integer)
     error_class: Mapped[str | None] = mapped_column(String(128))
     cycle_id: Mapped[int | None] = mapped_column(ForeignKey("decision_cycles.id"))
+
+
+class ShadowForwardOutcomeRow(Base):
+    """Immutable forward quote marks, separate from broker orders/fills/positions."""
+
+    __tablename__ = "shadow_forward_outcomes"
+    source_cycle_id: Mapped[int] = mapped_column(ForeignKey("decision_cycles.id"), primary_key=True)
+    horizon_minutes: Mapped[int] = mapped_column(Integer, primary_key=True)
+    status: Mapped[str] = mapped_column(String(16), index=True)
+    reason: Mapped[str | None] = mapped_column(String(64))
+    due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    baseline_json: Mapped[str] = mapped_column(Text)
+    measurement_cycle_id: Mapped[int | None] = mapped_column(ForeignKey("decision_cycles.id"))
+    result_json: Mapped[str | None] = mapped_column(Text)

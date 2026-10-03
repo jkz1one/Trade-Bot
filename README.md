@@ -56,6 +56,7 @@ Inspect persisted evidence without network calls:
 ```bash
 python -m app.robinhood.cli shadow-audit
 python -m app.robinhood.cli shadow-history --limit 100
+python -m app.robinhood.cli shadow-outcomes --limit 100
 ```
 
 New SHADOW cycles save their decision, exact model usage, account/benchmark snapshots and
@@ -86,3 +87,11 @@ blocks new scheduled cycles until inspected and resolved, with no automatic expi
 Session closure prevents model judgment or broker review as appropriate. Daily entry
 review limits and exit cooldown persist. History distinguishes actual model HOLDs
 from deterministic guards, stub decisions and unattributed legacy HOLDs.
+
+New scheduled cycles also collect fixed 15/60-minute forward quote outcomes for
+approved reviewed entries and model cash HOLDs, using already-read quotes. Outcomes
+require fresh paired quotes from the same regular session and persist their source
+and measurement cycle IDs. Missing observations expire without next-session backfill.
+The local `shadow-outcomes` report compares quote changes with SPY after linked source
+model cost. Initial output is EMPTY until new cycles are collected. These overlapping
+proposal samples are separate from portfolio fills, profit and compounding returns.

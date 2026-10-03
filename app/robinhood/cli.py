@@ -11,6 +11,7 @@ from app.agent.trader import OpenAIAgentsTrader, StubTraderAgent
 from app.config import Settings
 from app.domain.models import Action, utc_now
 from app.metrics.shadow import shadow_history_report
+from app.metrics.shadow_outcomes import forward_outcomes_report
 from app.robinhood.client import RobinhoodMcpConnection
 from app.robinhood.gateway import RobinhoodSafeGateway
 from app.robinhood.market import RobinhoodMarketData
@@ -304,6 +305,11 @@ def shadow_history(settings: Settings, limit: int = 100) -> int:
     return 0
 
 
+def shadow_outcomes(settings: Settings, limit: int = 100) -> int:
+    print(json.dumps(forward_outcomes_report(_repo(settings), limit), indent=2))
+    return 0
+
+
 def _history_limit(value: str) -> int:
     limit = int(value)
     if not 1 <= limit <= 10000:
@@ -414,6 +420,8 @@ def main() -> None:
     sub.add_parser("shadow-audit")
     h = sub.add_parser("shadow-history")
     h.add_argument("--limit", type=_history_limit, default=100)
+    o = sub.add_parser("shadow-outcomes")
+    o.add_argument("--limit", type=_history_limit, default=100)
     s = sub.add_parser("shadow-cycle")
     s.add_argument("--agent", choices=["stub", "openai"], default="stub")
     r = sub.add_parser("shadow-run")
@@ -434,6 +442,8 @@ def main() -> None:
         code = shadow_audit(settings)
     elif args.command == "shadow-history":
         code = shadow_history(settings, args.limit)
+    elif args.command == "shadow-outcomes":
+        code = shadow_outcomes(settings, args.limit)
     elif args.command == "shadow-run":
         code = asyncio.run(shadow_run(settings, args.agent, args.once))
     elif args.command == "shadow-schedule-status":

@@ -226,5 +226,6 @@ class ShadowOrchestrator:
             reconciliation=reconciliation.model_dump(mode="json"),
             slot_key=schedule_window.key if schedule_window else None,
             claim_token=claim_token,
+            outcome_settings=self.settings, completed_at=self.clock(),
         )
         return packet, run.decision, risk, execution, reconciliation, truth
