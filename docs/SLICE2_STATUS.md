@@ -95,3 +95,16 @@ python -m app.robinhood.cli openai-check
 
 This does not connect to Robinhood. It reports a sanitized HTTP status/error code and distinguishes
 common causes such as `invalid_api_key`, `ip_not_authorized`, permissions, and quota/billing.
+
+
+## Structured-output compatibility check
+
+Before another Robinhood-backed reasoning cycle:
+
+```bash
+python -m app.robinhood.cli openai-structured-check
+```
+
+This exercises the same strict `TradeDecision` output type against OpenAI with no Robinhood call.
+Trade-decision text/list length limits are enforced after parsing in Pydantic runtime validation rather
+than emitted as unsupported JSON Schema `minLength` / `maxLength` / `maxItems` keywords.

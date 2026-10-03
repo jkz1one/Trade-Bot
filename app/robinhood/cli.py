@@ -91,7 +91,13 @@ def _openai_error_summary(exc: Exception) -> dict[str, object]:
         if isinstance(nested, dict):
             code = code or nested.get("code")
             error_type = error_type or nested.get("type")
-    if code == "invalid_api_key" or error_type == "invalid_request_error":
+    message = None
+    if isinstance(body, dict):
+        message = body.get("message")
+        nested = body.get("error")
+        if isinstance(nested, dict):
+            message = message or nested.get("message")
+    if code == "invalid_api_key":
         next_step = "Create a new secret key at platform.openai.com/api-keys and replace the current value."
     elif code == "ip_not_authorized" or error_type == "ip_not_authorized":
         next_step = "Check the OpenAI organization/project IP allowlist for this Mac/network."
@@ -106,13 +112,17 @@ def _openai_error_summary(exc: Exception) -> dict[str, object]:
         next_step = "The API rejected authentication. Rotate the key and verify project/organization access."
     elif status == 403:
         next_step = "The key authenticated but lacks permission or model/project access."
+    elif status == 400:
+        next_step = "The API accepted authentication but rejected the request. Inspect the sanitized message for schema/parameter incompatibility."
     else:
         next_step = "Inspect the sanitized status/code and OpenAI project settings before retrying."
+    safe_message = str(message)[:800] if message else None
     return {
         "status": "ERROR",
         "status_code": status,
         "error_code": code,
         "error_type": error_type,
+        "message": safe_message,
         "exception": type(exc).__name__,
         "next_step": next_step,
     }
@@ -145,6 +155,52 @@ def openai_check(settings: Settings) -> int:
         payload["robinhood_touched"] = False
         print(json.dumps(payload, indent=2))
         return 6
+
+
+def openai_structured_check(settings: Settings) -> int:
+    key_problem = _openai_key_problem(os.getenv("OPENAI_API_KEY"))
+    if key_problem:
+        print(json.dumps({
+            "status": "ERROR",
+            "error": key_problem,
+            "action": "No OpenAI or Robinhood call was made.",
+        }, indent=2))
+        return 4
+    try:
+        from agents import Agent, Runner
+        from app.domain.models import TradeDecision
+
+        agent = Agent(
+            name="Trade Decision Schema Check",
+            model=settings.model_name,
+            instructions=(
+                "Return HOLD. This is a schema compatibility check only. "
+                "Use concise non-empty rationale fields."
+            ),
+            output_type=TradeDecision,
+            tools=[],
+        )
+        result = Runner.run_sync(
+            agent,
+            "Return a HOLD decision for this schema-only smoke test.",
+            max_turns=1,
+        )
+        decision = result.final_output
+        print(json.dumps({
+            "status": "OK",
+            "model": settings.model_name,
+            "structured_output": True,
+            "action": decision.action.value,
+            "robinhood_touched": False,
+        }, indent=2))
+        return 0
+    except Exception as exc:
+        payload = _openai_error_summary(exc)
+        payload["model"] = settings.model_name
+        payload["structured_output"] = False
+        payload["robinhood_touched"] = False
+        print(json.dumps(payload, indent=2))
+        return 7
 
 
 async def discover(settings: Settings, output: str, required_output: str) -> int:
@@ -293,6 +349,7 @@ def main() -> None:
     )
     sub.add_parser("probe")
     sub.add_parser("openai-check")
+    sub.add_parser("openai-structured-check")
     sub.add_parser("shadow-audit")
     s = sub.add_parser("shadow-cycle")
     s.add_argument("--agent", choices=["stub", "openai"], default="stub")
@@ -304,6 +361,8 @@ def main() -> None:
         code = asyncio.run(probe(settings))
     elif args.command == "openai-check":
         code = openai_check(settings)
+    elif args.command == "openai-structured-check":
+        code = openai_structured_check(settings)
     elif args.command == "shadow-audit":
         code = shadow_audit(settings)
     else:

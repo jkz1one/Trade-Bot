@@ -36,11 +36,11 @@ class TradeDecision(BaseModel):
     invalidation_price: Decimal | None = Field(default=None, gt=0)
     target_price: Decimal | None = Field(default=None, gt=0)
     hold_overnight: bool = False
-    thesis: str = Field(min_length=1, max_length=500)
-    invalidation_reason: str = Field(min_length=1, max_length=300)
-    evidence: list[str] = Field(default_factory=list, max_length=6)
-    risks: list[str] = Field(default_factory=list, max_length=6)
-    why_now: str = Field(min_length=1, max_length=300)
+    thesis: str
+    invalidation_reason: str
+    evidence: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+    why_now: str
 
     @model_validator(mode="after")
     def validate_action_fields(self) -> "TradeDecision":
@@ -50,6 +50,21 @@ class TradeDecision(BaseModel):
             raise ValueError("OPEN_LONG requires invalidation_price")
         if self.action == Action.HOLD and self.symbol is None:
             self.desired_exposure_fraction = 0
+
+        text_limits = {
+            "thesis": (self.thesis, 500),
+            "invalidation_reason": (self.invalidation_reason, 300),
+            "why_now": (self.why_now, 300),
+        }
+        for name, (value, max_length) in text_limits.items():
+            if not value.strip():
+                raise ValueError(f"{name} must not be empty")
+            if len(value) > max_length:
+                raise ValueError(f"{name} exceeds {max_length} characters")
+        if len(self.evidence) > 6:
+            raise ValueError("evidence may contain at most 6 items")
+        if len(self.risks) > 6:
+            raise ValueError("risks may contain at most 6 items")
         return self
 
 

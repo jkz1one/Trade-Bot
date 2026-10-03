@@ -40,3 +40,21 @@ def test_openai_error_summary_distinguishes_invalid_key():
     assert summary["status_code"] == 401
     assert summary["error_code"] == "invalid_api_key"
     assert "Create a new secret key" in summary["next_step"]
+
+
+
+class _FakeSchemaError(Exception):
+    status_code = 400
+    body = {
+        "code": "invalid_json_schema",
+        "type": "invalid_request_error",
+        "message": "Invalid schema: unsupported keyword maxLength",
+    }
+
+
+def test_openai_error_summary_does_not_treat_all_invalid_requests_as_bad_keys():
+    summary = _openai_error_summary(_FakeSchemaError())
+    assert summary["status_code"] == 400
+    assert summary["error_code"] == "invalid_json_schema"
+    assert "maxLength" in summary["message"]
+    assert "Create a new secret key" not in summary["next_step"]
