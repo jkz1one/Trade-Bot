@@ -8,6 +8,21 @@ model judgment, deterministic governor and persisted SHADOW audit. Scheduling is
 implemented and verified offline; a scheduled authenticated market-session cycle
 remains to be observed. LIVE is disabled.
 
+## Installation follow-up
+
+The user's next Mac batch pulled `0a6167681ea1b5e1694b8b6f5d334325ec505a6d`
+but stopped at `pip install -e '.[dev]'`: setuptools discovered both `app` and
+the runtime `var` directory as top-level packages. Tests and both scheduler commands
+in that chained batch did not run.
+
+Package discovery now explicitly includes only `app` and `app.*`, with implicit
+namespaces disabled. The web HTML template is explicitly included as package data;
+generated build directories are ignored. The original failure was reproduced locally
+with an empty `var` directory. With that directory still present, the full editable
+installation and wheel build succeeded. Wheel contents were checked for application
+code and the template, with no runtime `var` files included. The installed CLI's
+Saturday tick returned MARKET_CLOSED, exit 0. Re-run the batch below on the Mac.
+
 ## Authenticated evidence from the user's Mac
 
 The latest batch pulled `7abcf284ee84a787020ba5913c5cc8d504ee930c` and passed
