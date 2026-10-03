@@ -15,8 +15,8 @@ class Settings(BaseSettings):
     db_url: str = "sqlite:///./trader.db"
     live_enabled: bool = False
     model_name: str = "gpt-6-luna"
-    model_input_usd_per_million: Decimal = Decimal("0.05")
-    model_output_usd_per_million: Decimal = Decimal("0.25")
+    model_input_usd_per_million: Decimal = Decimal("0.10")
+    model_output_usd_per_million: Decimal = Decimal("0.50")
     benchmark_symbol: str = "SPY"
     min_order_notional: Decimal = Decimal("1.00")
     quote_max_age_seconds: int = 90

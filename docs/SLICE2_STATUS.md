@@ -26,7 +26,7 @@
 ## Current model configuration
 
 - Model: `gpt-6-luna`
-- Configured standard short-context pricing: $0.05 / 1M input tokens and $0.25 / 1M output tokens.
+- Configured standard pricing: $0.10 / 1M input tokens and $0.50 / 1M output tokens.
 - The current Agents SDK path uses `Agent(output_type=TradeDecision, tools=[])` and `Runner.run_sync(..., max_turns=1)`.
 - Token usage is saved when the SDK returns it.
 
@@ -83,3 +83,15 @@ python -m app.robinhood.cli shadow-audit
 
 This prints the latest persisted cycle with prompt version, model, latency, decision, risk decision,
 execution/broker review, latest token usage, cumulative estimated model cost, and benchmark range.
+
+
+## OpenAI-only credential check
+
+Before another full SHADOW cycle, validate only the OpenAI credential/model path:
+
+```bash
+python -m app.robinhood.cli openai-check
+```
+
+This does not connect to Robinhood. It reports a sanitized HTTP status/error code and distinguishes
+common causes such as `invalid_api_key`, `ip_not_authorized`, permissions, and quota/billing.

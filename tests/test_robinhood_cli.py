@@ -1,7 +1,7 @@
 import pytest
 
 from app.config import Settings
-from app.robinhood.cli import _openai_key_problem, shadow_audit, shadow_cycle
+from app.robinhood.cli import _openai_error_summary, _openai_key_problem, shadow_audit, shadow_cycle
 
 
 @pytest.mark.anyio
@@ -27,3 +27,16 @@ def test_shadow_audit_reports_empty_database(tmp_path, capsys):
     code = shadow_audit(settings)
     assert code == 5
     assert '"status": "EMPTY"' in capsys.readouterr().out
+
+
+
+class _FakeOpenAIError(Exception):
+    status_code = 401
+    body = {"code": "invalid_api_key", "type": "invalid_request_error"}
+
+
+def test_openai_error_summary_distinguishes_invalid_key():
+    summary = _openai_error_summary(_FakeOpenAIError())
+    assert summary["status_code"] == 401
+    assert summary["error_code"] == "invalid_api_key"
+    assert "Create a new secret key" in summary["next_step"]

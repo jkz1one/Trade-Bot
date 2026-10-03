@@ -79,6 +79,74 @@ def _openai_key_problem(value: str | None) -> str | None:
     return None
 
 
+def _openai_error_summary(exc: Exception) -> dict[str, object]:
+    status = getattr(exc, "status_code", None)
+    body = getattr(exc, "body", None)
+    code = None
+    error_type = None
+    if isinstance(body, dict):
+        code = body.get("code")
+        error_type = body.get("type")
+        nested = body.get("error")
+        if isinstance(nested, dict):
+            code = code or nested.get("code")
+            error_type = error_type or nested.get("type")
+    if code == "invalid_api_key" or error_type == "invalid_request_error":
+        next_step = "Create a new secret key at platform.openai.com/api-keys and replace the current value."
+    elif code == "ip_not_authorized" or error_type == "ip_not_authorized":
+        next_step = "Check the OpenAI organization/project IP allowlist for this Mac/network."
+    elif code in {
+        "organization_usage_limit_exceeded",
+        "organization_spend_limit_exceeded",
+        "project_spend_limit_exceeded",
+        "credit_balance_exhausted",
+    } or error_type == "insufficient_quota":
+        next_step = "Check API billing, credits, and project/organization spend limits."
+    elif status == 401:
+        next_step = "The API rejected authentication. Rotate the key and verify project/organization access."
+    elif status == 403:
+        next_step = "The key authenticated but lacks permission or model/project access."
+    else:
+        next_step = "Inspect the sanitized status/code and OpenAI project settings before retrying."
+    return {
+        "status": "ERROR",
+        "status_code": status,
+        "error_code": code,
+        "error_type": error_type,
+        "exception": type(exc).__name__,
+        "next_step": next_step,
+    }
+
+
+def openai_check(settings: Settings) -> int:
+    key_problem = _openai_key_problem(os.getenv("OPENAI_API_KEY"))
+    if key_problem:
+        print(json.dumps({
+            "status": "ERROR",
+            "error": key_problem,
+            "action": "No OpenAI or Robinhood call was made.",
+        }, indent=2))
+        return 4
+    try:
+        from openai import OpenAI
+
+        client = OpenAI()
+        model = client.models.retrieve(settings.model_name)
+        print(json.dumps({
+            "status": "OK",
+            "authentication": "accepted",
+            "model": getattr(model, "id", settings.model_name),
+            "robinhood_touched": False,
+        }, indent=2))
+        return 0
+    except Exception as exc:
+        payload = _openai_error_summary(exc)
+        payload["model"] = settings.model_name
+        payload["robinhood_touched"] = False
+        print(json.dumps(payload, indent=2))
+        return 6
+
+
 async def discover(settings: Settings, output: str, required_output: str) -> int:
     async with _connection(settings).client() as client:
         gateway = RobinhoodSafeGateway(client, settings.robinhood_mcp_url)
@@ -224,6 +292,7 @@ def main() -> None:
         default="var/robinhood-required-schemas.json",
     )
     sub.add_parser("probe")
+    sub.add_parser("openai-check")
     sub.add_parser("shadow-audit")
     s = sub.add_parser("shadow-cycle")
     s.add_argument("--agent", choices=["stub", "openai"], default="stub")
@@ -233,6 +302,8 @@ def main() -> None:
         code = asyncio.run(discover(settings, args.output, args.required_output))
     elif args.command == "probe":
         code = asyncio.run(probe(settings))
+    elif args.command == "openai-check":
+        code = openai_check(settings)
     elif args.command == "shadow-audit":
         code = shadow_audit(settings)
     else:
