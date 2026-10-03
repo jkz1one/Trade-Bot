@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -104,6 +104,7 @@ class AccountState(BaseModel):
     high_watermark: Decimal = Field(ge=0)
     realized_pnl: Decimal = Decimal("0")
     position: Position | None = None
+    working_orders: list[dict[str, Any]] = Field(default_factory=list)
 
     @property
     def drawdown_fraction(self) -> Decimal:
@@ -142,3 +143,4 @@ class ExecutionResult(BaseModel):
     fill_price: Decimal | None = None
     filled_quantity: Decimal = Decimal("0")
     message: str = ""
+    broker_review: dict[str, Any] | None = None

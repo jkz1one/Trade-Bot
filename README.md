@@ -1,8 +1,10 @@
-# Autonomous Compounding Trader — Slice 1
+# Autonomous Compounding Trader
 
-Deterministic paper-trading core for testing whether a reasoning trader has alpha. Live brokerage writes are intentionally absent.
+Small, auditable experiment for testing whether an autonomous reasoning trader can add value while deterministic software owns authority and risk.
 
-## Run
+## PAPER
+
+`main` is the known-good deterministic PAPER core.
 
 ```bash
 python -m venv .venv
@@ -11,27 +13,40 @@ pip install -e '.[dev]'
 uvicorn app.main:app --reload
 ```
 
-Open http://127.0.0.1:8000.
-
-The default database is `./trader.db` and default starting paper capital is `$10.00`.
+The default PAPER database is `./trader.db` and starting capital is `$10.00`.
 
 ## Safety boundary
 
-The agent returns a structured proposal. It never receives an execution tool. The deterministic governor independently calculates executable notional and may approve, clip, or reject the proposal. Only the paper broker can execute in Slice 1.
+The Trader Agent returns only a structured proposal. It has no brokerage write tools. The deterministic governor independently approves, clips, or rejects size.
 
-## Slice 2 — Robinhood read/shadow bootstrap
+## Slice 2 — Robinhood read / SHADOW
 
-`main` remains the known-good PAPER core. Slice 2 integration work lives on its own branch and
-starts by discovering Robinhood's live MCP schemas rather than hardcoding undocumented shapes.
+Development lives on `slice2/robinhood-read-shadow`.
 
-After installing dependencies, authenticate and capture the current tool schemas with:
+Robinhood OAuth state is stored outside the repository at `~/.trade-bot/robinhood-oauth.json` by default. Never commit or share that file.
+
+Schema discovery:
 
 ```bash
 python -m app.robinhood.cli discover
 ```
 
-OAuth tokens/client-registration metadata are stored at `~/.trade-bot/robinhood-oauth.json` by
-default with owner-only permissions. The generated `var/robinhood-tool-schemas.json` contains tool
-metadata/schema only and is gitignored. Schema discovery makes no brokerage tool calls. The
-Slice 2 gateway permits documented read tools plus `review_equity_order`; live placement,
-cancellation, watchlist mutation, and other writes are rejected before network invocation.
+Safe authenticated read/reconciliation probe:
+
+```bash
+python -m app.robinhood.cli probe
+```
+
+One SHADOW cycle, no model cost:
+
+```bash
+python -m app.robinhood.cli shadow-cycle --agent stub
+```
+
+One SHADOW cycle using the reasoning agent:
+
+```bash
+python -m app.robinhood.cli shadow-cycle --agent openai
+```
+
+SHADOW uses real Robinhood account/market data and may call `review_equity_order` to preview a hypothetical order. It cannot place or cancel an order. Robinhood-backed state is stored separately in `./robinhood.db` by default.

@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     robinhood_redirect_uri: str = "http://127.0.0.1:8765/callback"
     robinhood_oauth_storage: str = "~/.trade-bot/robinhood-oauth.json"
     robinhood_schema_snapshot: str = "var/robinhood-tool-schemas.json"
+    robinhood_required_schema_snapshot: str = "var/robinhood-required-schemas.json"
+    robinhood_db_url: str = "sqlite:///./robinhood.db"
+    shadow_lookback_days: int = 7
+    shadow_bar_interval: str = "5minute"
     initial_symbols: list[str] = Field(
         default_factory=lambda: [
             "SPY", "QQQ", "IWM", "DIA", "XLK", "XLF", "XLE", "XLI", "XLV", "XLY",
