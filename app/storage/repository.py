@@ -72,12 +72,25 @@ class Repository:
         with self.session_factory.begin() as s:
             s.add(AccountSnapshotRow(equity=a.equity, cash=a.cash, high_watermark=a.high_watermark, realized_pnl=a.realized_pnl))
 
-    def save_cycle(self, packet: MarketPacket, decision: TradeDecision, risk: RiskDecision, execution: ExecutionResult, model: str, latency_ms: int = 0) -> None:
+    def save_cycle(
+        self,
+        packet: MarketPacket,
+        decision: TradeDecision,
+        risk: RiskDecision,
+        execution: ExecutionResult,
+        model: str,
+        latency_ms: int = 0,
+        prompt_version: str = "v1",
+    ) -> None:
         with self.session_factory.begin() as s:
             s.add(DecisionCycleRow(
-                packet_json=packet.model_dump_json(), model_identifier=model,
-                decision_json=decision.model_dump_json(), risk_json=risk.model_dump_json(),
-                execution_json=execution.model_dump_json(), latency_ms=latency_ms,
+                packet_json=packet.model_dump_json(),
+                prompt_version=prompt_version,
+                model_identifier=model,
+                decision_json=decision.model_dump_json(),
+                risk_json=risk.model_dump_json(),
+                execution_json=execution.model_dump_json(),
+                latency_ms=latency_ms,
             ))
 
     def save_fill(self, order_id: str, symbol: str, notional: Decimal, price: Decimal, quantity: Decimal, invalidation: Decimal, thesis: str) -> None:

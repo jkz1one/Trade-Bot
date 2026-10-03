@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from time import perf_counter
 from uuid import uuid4
 
-from app.agent.trader import TraderAgent
+from app.agent.prompts import TRADER_PROMPT_VERSION\nfrom app.agent.trader import TraderAgent
 from app.broker.base import Broker
 from app.config import Settings
 from app.domain.models import ExecutionResult, MarketPacket
@@ -33,10 +33,18 @@ class Orchestrator:
             execution = self.broker.execute(
                 run.decision, risk, quote, idempotency_key=f"proposal-{uuid4().hex}"
             )
-            if execution.status == "FILLED":
+            if execution.status == "FILLED" and run.decision.action.value == "OPEN_LONG":
                 self.daily_entries += 1
         latency_ms = int((perf_counter() - started) * 1000)
-        self.repo.save_cycle(packet, run.decision, risk, execution, self.settings.model_name, latency_ms)
+        self.repo.save_cycle(
+            packet,
+            run.decision,
+            risk,
+            execution,
+            self.settings.model_name,
+            latency_ms,
+            prompt_version=TRADER_PROMPT_VERSION,
+        )
         if run.input_tokens or run.output_tokens:
             self.repo.save_model_usage(self.settings.model_name, run.input_tokens, run.output_tokens, self.settings.model_input_usd_per_million, self.settings.model_output_usd_per_million)
         self.repo.save_account_snapshot(self.broker.account_state(quotes))

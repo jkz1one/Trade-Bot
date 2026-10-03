@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from time import perf_counter
 
-from app.agent.trader import TraderAgent, fail_closed_agent_run
+from app.agent.prompts import TRADER_PROMPT_VERSION\nfrom app.agent.trader import TraderAgent, fail_closed_agent_run
 from app.config import Settings
 from app.domain.models import AccountState, Action, ExecutionResult, MarketPacket, Position
 from app.risk.governor import govern
@@ -182,6 +182,7 @@ class ShadowOrchestrator:
             execution,
             self.settings.model_name,
             latency_ms,
+            prompt_version=TRADER_PROMPT_VERSION,
         )
         if run.input_tokens or run.output_tokens:
             self.repo.save_model_usage(

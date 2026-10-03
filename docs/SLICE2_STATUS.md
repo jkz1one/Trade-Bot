@@ -1,29 +1,34 @@
-# Slice 2 — Robinhood Read / Shadow Status
+# Slice 2 — Robinhood Read / SHADOW Status
 
-## Implemented
+## Proven live on 2026-10-03
 
-- Robinhood OAuth completed successfully against the user's Agentic Trading account on 2026-10-03.
-- Live MCP discovery found 76 tools, 76 input schemas, and every required Slice 2 tool.
-- MCP SDK v2 tool models are serialized with `by_alias=True` so `inputSchema` / `outputSchema` are preserved.
-- OAuth state remains outside the repository.
-- Exact live-schema adapters now cover:
-  - accounts
-  - portfolio / buying power
-  - open equity positions
-  - working equity orders
-  - quotes
-  - historical OHLCV bars
-  - technical indicators
-  - tradability
-  - equity order review
-- The account adapter uses Robinhood's unleveraged buying power as the v1 ceiling, so margin leverage cannot increase deterministic size.
-- The market adapter batches quotes (up to 20) and tradability (10 per call). Historical OHLCV is intentionally fetched one symbol per call to remain below the MCP SDK's 1 MiB SSE-event ceiling; ATR, realized volatility, day change, and session VWAP relationship are then derived deterministically.
-- Broker/local reconciliation halts new trading for unsupported asset value, multiple positions, unowned/missing positions, quantity/symbol disagreement, non-long positions, or working orders.
-- SHADOW decisions use the same deterministic risk governor as PAPER.
-- An approved SHADOW action may call `review_equity_order`; it never calls `place_equity_order` or a cancellation/mutation tool.
-- PAPER and Robinhood state use separate SQLite files by default (`trader.db` and `robinhood.db`).
-- The original PAPER runtime remains unchanged.
-- Full local suite after this slice: **43/43 passing**. Python compile validation also passes.
+- Robinhood OAuth is working against the Agentic Trading account.
+- Live schema discovery returned 76 tools and 76 input schemas with no required-schema gaps.
+- The authenticated read probe completed successfully after transport hardening.
+- Account, portfolio, positions, working orders, quotes, tradability, and historical OHLCV parsed successfully.
+- Broker/local reconciliation returned clean.
+- All 20 configured equity/ETF candidates built successfully.
+- The first stub SHADOW cycle returned HOLD, the risk governor rejected entry with `NO_ENTRY_REQUEST`, and no broker review or order path was touched.
+- A live probe exposed the MCP SDK's 1 MiB SSE-event ceiling for batched 5-minute historicals. Historical OHLCV now fetches one symbol per call; the subsequent live probe passed.
+
+## Safety architecture
+
+- The Trader Agent has no brokerage tools.
+- Robinhood writes remain blocked by the capability firewall.
+- SHADOW may call only `review_equity_order` after deterministic risk approval; it never calls `place_equity_order` or cancellation/mutation tools.
+- Broker/local reconciliation fails closed for unsupported asset value, multiple positions, unowned/missing positions, position disagreement, non-long positions, or working orders.
+- V1 uses unleveraged buying power as the sizing ceiling, so margin leverage cannot increase deterministic exposure.
+- PAPER and Robinhood state use separate SQLite databases.
+- Model/API failures are converted to an auditable fail-closed HOLD.
+- The OpenAI Agents SDK run is bounded to one model turn and uses strict structured `TradeDecision` output.
+- Prompt version `v2-live-shadow` is persisted with each new cycle for later attribution.
+
+## Current model configuration
+
+- Model: `gpt-5.6-luna`
+- Configured pricing: $0.20 / 1M input tokens and $1.20 / 1M output tokens.
+- The current Agents SDK path uses `Agent(output_type=TradeDecision, tools=[])` and `Runner.run_sync(..., max_turns=1)`.
+- Token usage is saved when the SDK returns it.
 
 ## Commands
 
@@ -35,27 +40,34 @@ source .venv/bin/activate
 python -m app.robinhood.cli probe
 ```
 
-One SHADOW cycle with the deterministic stub agent:
+Stub SHADOW validation:
 
 ```bash
 python -m app.robinhood.cli shadow-cycle --agent stub
 ```
 
-Once live-read evidence is clean, a reasoning-agent SHADOW cycle is available with:
+Real reasoning-agent SHADOW cycle:
 
 ```bash
+export OPENAI_API_KEY='your-key-here'
 python -m app.robinhood.cli shadow-cycle --agent openai
 ```
 
-That requires the normal OpenAI API credentials. The Trader Agent receives no brokerage tools.
+If `OPENAI_API_KEY` is absent, the CLI exits before any Robinhood or model call.
 
-## Current empirical boundary
+## Validation state
 
-The request/response mappings are grounded in the authenticated Robinhood schemas, but the new adapters
-have not yet been exercised against the user's live account responses. The next empirical checkpoint
-is the `probe` command above. Its output masks the account number and makes no writes.
+- Last full local suite before live transport validation: 43/43 passing.
+- User-run historical transport regression after the hotfix: 2/2 passing.
+- Additional reasoning-agent hardening tests have been added for credential preflight, fail-closed model errors, and non-fixture stub behavior; run the full suite again before merging Slice 2.
+
+## Remaining Slice 2 evidence
+
+1. Run the full updated test suite.
+2. Execute one real OpenAI SHADOW cycle against live market packet data.
+3. Inspect the persisted decision, risk decision, model token usage/cost, and any broker review.
+4. Keep PR #1 draft until those checks are clean.
 
 ## Live authority
 
-No live brokerage placement or cancellation path exists in Slice 2. The capability firewall still
-permits only approved read tools plus `review_equity_order`.
+No live brokerage placement or cancellation path exists in Slice 2.
