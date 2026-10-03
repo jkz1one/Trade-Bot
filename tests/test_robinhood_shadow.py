@@ -5,7 +5,8 @@ from decimal import Decimal
 
 import pytest
 
-from app.agent.trader import StubTraderAgent
+from app.agent.prompts import TRADER_PROMPT_VERSION
+from app.agent.trader import AgentRun, StubTraderAgent
 from app.config import Settings
 from app.domain.models import (
     AccountState,
@@ -17,6 +18,7 @@ from app.domain.models import (
     RiskDecision,
     TradeDecision,
 )
+from app.robinhood.models import RobinhoodTruth
 from app.robinhood.shadow import ShadowOrchestrator
 
 
@@ -126,3 +128,84 @@ async def test_agent_failure_becomes_fail_closed_hold(repo):
     assert run.error == "RuntimeError"
     assert run.decision.action == Action.HOLD
     assert run.decision.confidence == 0
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("scenario", ["hold", "open", "failure", "mismatch"])
+async def test_complete_shadow_cycle_persists_evidence_and_gates_review(repo, scenario):
+    import json
+
+    truth = RobinhoodTruth.model_validate({
+        "account": {
+            "account_number": "RH1234", "type": "cash",
+            "brokerage_account_type": "individual", "agentic_allowed": True,
+            "state": "active", "deactivated": False, "permanently_deactivated": False,
+        },
+        "portfolio": {
+            "total_value": "10", "equity_value": "0", "cash": "10",
+            "buying_power": "10", "unleveraged_buying_power": "10",
+            "unsupported_value": "1" if scenario == "mismatch" else "0",
+        },
+    })
+    candidate = Candidate(
+        quote=Quote(symbol="SPY", timestamp=datetime.now(timezone.utc),
+                    bid=100, ask="100.01", last=100),
+        atr_fraction="0.01", realized_vol_fraction="0.01",
+    )
+    decision = TradeDecision(
+        action=Action.OPEN_LONG if scenario in {"open", "mismatch"} else Action.HOLD,
+        symbol="SPY" if scenario in {"open", "mismatch"} else None,
+        confidence=.8, setup_quality=.8, desired_exposure_fraction=.5,
+        invalidation_price="98", thesis="Test supplied evidence",
+        invalidation_reason="Test invalidation", why_now="Test rationale",
+    )
+
+    class UsageAgent:
+        def decide(self, packet):
+            return AgentRun(decision, input_tokens=100, output_tokens=40)
+
+    class Reads:
+        async def truth(self):
+            return truth
+
+    class Market:
+        async def candidates(self, account_number, symbols):
+            return [candidate]
+
+        def regime(self, candidates):
+            return "test"
+
+    gateway = ReviewGateway()
+    orchestrator = ShadowOrchestrator(
+        Settings(mode="SHADOW"), repo, gateway,
+        ExplodingAgent() if scenario == "failure" else UsageAgent(),
+    )
+    orchestrator.reads = Reads()
+    orchestrator.market = Market()
+    _, result, risk, execution, reconciliation, _ = await orchestrator.cycle()
+    rows = repo.recent_cycles()
+    assert len(rows) == 1
+    row = rows[0]
+    assert row.prompt_version == TRADER_PROMPT_VERSION
+    assert row.model_identifier == "gpt-6-luna"
+    assert json.loads(row.decision_json) == result.model_dump(mode="json")
+    assert json.loads(row.execution_json) == execution.model_dump(mode="json")
+    assert json.loads(row.packet_json)["account"]["buying_power"] == "10"
+    assert repo.load_open_position() is None
+    assert repo.benchmark_range("SPY") == (Decimal("100"), Decimal("100"))
+    if scenario == "open":
+        assert risk.approved
+        assert [name for name, _ in gateway.calls] == ["review_equity_order"]
+        assert execution.status == "SKIPPED"
+        assert execution.broker_review is not None
+    else:
+        assert gateway.calls == []
+        assert not risk.approved
+    if scenario == "failure":
+        assert result.action == Action.HOLD
+        assert execution.agent_error == "RuntimeError"
+        assert repo.latest_model_usage() is None
+    else:
+        assert repo.model_cost_total() == Decimal("0.00003000")
+        assert execution.agent_error is None
+    assert reconciliation.reconciled == (scenario != "mismatch")

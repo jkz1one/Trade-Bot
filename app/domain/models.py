@@ -3,9 +3,28 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, WithJsonSchema, model_validator
+
+
+# Pydantic's Decimal validation schema includes regex lookaround, which the
+# Structured Outputs API rejects. Override only the two model-proposed price
+# fields' wire representation. Decimal parsing, finiteness and Field(gt=0)
+# validation still run locally before any governor/review action.
+DecisionPrice = Annotated[
+    Decimal,
+    WithJsonSchema(
+        {
+            "anyOf": [
+                {"type": "number", "exclusiveMinimum": 0},
+                {"type": "string"},
+            ],
+            "description": "Positive finite decimal price; a string preserves precision.",
+        },
+        mode="validation",
+    ),
+]
 
 
 def utc_now() -> datetime:
@@ -33,8 +52,8 @@ class TradeDecision(BaseModel):
     setup_quality: float = Field(ge=0, le=1)
     horizon: Horizon = Horizon.INTRADAY
     desired_exposure_fraction: float = Field(default=0, ge=0, le=1)
-    invalidation_price: Decimal | None = Field(default=None, gt=0)
-    target_price: Decimal | None = Field(default=None, gt=0)
+    invalidation_price: DecisionPrice | None = Field(default=None, gt=0)
+    target_price: DecisionPrice | None = Field(default=None, gt=0)
     hold_overnight: bool = False
     thesis: str
     invalidation_reason: str
@@ -159,3 +178,4 @@ class ExecutionResult(BaseModel):
     filled_quantity: Decimal = Decimal("0")
     message: str = ""
     broker_review: dict[str, Any] | None = None
+    agent_error: str | None = None

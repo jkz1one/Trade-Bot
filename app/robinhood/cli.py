@@ -9,6 +9,7 @@ from urllib.parse import parse_qs, urlparse
 
 from app.agent.trader import OpenAIAgentsTrader, StubTraderAgent
 from app.config import Settings
+from app.domain.models import Action
 from app.robinhood.client import RobinhoodMcpConnection
 from app.robinhood.gateway import RobinhoodSafeGateway
 from app.robinhood.market import RobinhoodMarketData
@@ -186,6 +187,8 @@ def openai_structured_check(settings: Settings) -> int:
             max_turns=1,
         )
         decision = result.final_output
+        if decision.action != Action.HOLD:
+            raise ValueError("Schema smoke test did not return the requested HOLD")
         print(json.dumps({
             "status": "OK",
             "model": settings.model_name,
@@ -335,7 +338,9 @@ async def shadow_cycle(settings: Settings, agent_name: str) -> int:
         "risk": risk.model_dump(mode="json"),
         "execution": execution.model_dump(mode="json"),
     }, indent=2, default=str))
-    return 0 if reconciliation.reconciled else 3
+    if not reconciliation.reconciled:
+        return 3
+    return 8 if execution.agent_error else 0
 
 
 def main() -> None:

@@ -1,110 +1,81 @@
-# Slice 2 — Robinhood Read / SHADOW Status
+# Slice 2 — Robinhood READ / SHADOW Status
 
-## Proven live on 2026-10-03
+## Current checkpoint — 2026-10-03
 
-- Robinhood OAuth is working against the Agentic Trading account.
-- Live schema discovery returned 76 tools and 76 input schemas with no required-schema gaps.
-- The authenticated read probe completed successfully after transport hardening.
-- Account, portfolio, positions, working orders, quotes, tradability, and historical OHLCV parsed successfully.
-- Broker/local reconciliation returned clean.
-- All 20 configured equity/ETF candidates built successfully.
-- The first stub SHADOW cycle returned HOLD, the risk governor rejected entry with `NO_ENTRY_REQUEST`, and no broker review or order path was touched.
-- A live probe exposed the MCP SDK's 1 MiB SSE-event ceiling for batched 5-minute historicals. Historical OHLCV now fetches one symbol per call; the subsequent live probe passed.
+Branch: `slice2/robinhood-read-shadow`. PR #1 remains draft. `main` remains untouched.
+Slice 2 is not yet fully verified: authenticated structured output and a successful real
+Trader Agent SHADOW cycle still require evidence from the user's authenticated Mac.
 
-## Safety architecture
+## Proven against the live account
 
-- The Trader Agent has no brokerage tools.
-- Robinhood writes remain blocked by the capability firewall.
-- SHADOW may call only `review_equity_order` after deterministic risk approval; it never calls `place_equity_order` or cancellation/mutation tools.
-- Broker/local reconciliation fails closed for unsupported asset value, multiple positions, unowned/missing positions, position disagreement, non-long positions, or working orders.
-- V1 uses unleveraged buying power as the sizing ceiling, so margin leverage cannot increase deterministic exposure.
-- PAPER and Robinhood state use separate SQLite databases.
-- Model/API failures are converted to an auditable fail-closed HOLD.
-- The OpenAI Agents SDK run is bounded to one model turn and uses strict structured `TradeDecision` output.
-- Prompt version `v2-live-shadow` is persisted with each new cycle for later attribution.
+- Robinhood OAuth and MCP connection work.
+- Discovery returned 76 tools and 76 input schemas without required-tool/schema gaps.
+- Account, portfolio, positions, working orders, quotes, tradability and historical OHLCV parse.
+- Broker/local reconciliation was clean, with no position or working orders at that checkpoint.
+- All 20 configured candidates build and regime calculation works.
+- Stub SHADOW returned HOLD with no broker review or order submission.
+- Historical OHLCV fetches one symbol per call because batched 7-day / 5-minute results
+  exceeded the MCP SDK's 1 MiB SSE-event ceiling.
+- `openai-check` accepted authentication and model access for `gpt-6-luna`.
 
-## Current model configuration
+## Latest empirical failure
 
-- Model: `gpt-6-luna`
-- Configured standard pricing: $0.10 / 1M input tokens and $0.50 / 1M output tokens.
-- The current Agents SDK path uses `Agent(output_type=TradeDecision, tools=[])` and `Runner.run_sync(..., max_turns=1)`.
-- Token usage is saved when the SDK returns it.
+The user's chained batch pulled `6ef7a2ce6e6e34fa75ada66c9bc73622af31ce9c`, then
+passed **58 tests**. `openai-structured-check` returned HTTP 400 `invalid_json_schema`:
+regex lookaround at `$.properties.invalidation_price.anyOf[1].pattern` was unsupported.
+The subsequent real SHADOW cycle and audit did **not** execute because the commands used `&&`.
 
-## Commands
+## Fix and local verification
 
-Safe live-read probe:
+- Both proposed price fields use an explicit number/string wire schema, with no generated
+  Decimal regex. Nullable prices remain supported.
+- Prices remain Decimal values after parsing. Positivity, finiteness, precise string parsing,
+  action requirements, confidence/exposure bounds and rationale/list limits still validate locally.
+- Tests inspect the actual strict `AgentOutputSchema(TradeDecision)` and exercise its JSON parser,
+  including invalid prices, high-precision values and application limits.
+- The smoke check must return HOLD to report success.
+- SHADOW persists an explicit `execution.agent_error` on model failure and exits **8** after
+  saving the fail-closed HOLD. Genuine HOLD remains a successful decision.
+- Complete simulated SHADOW cycles verify HOLD, approved entry review, agent failure and
+  reconciliation failure, including persisted packet/decision/execution, benchmark and usage cost.
+- Fresh recovered checkout baseline: **58 passed**.
+- Updated complete suite: **95 passed**. Compilation, diff whitespace checks and fatal-error
+  lint checks passed. No authenticated API call was made in this execution workspace, which
+  has neither the OpenAI key nor Robinhood OAuth state.
 
-```bash
-git pull
-source .venv/bin/activate
-python -m app.robinhood.cli probe
-```
+## Authority and configuration
 
-Stub SHADOW validation:
+- Default mode remains PAPER. LIVE remains disabled.
+- Trader Agent uses `tools=[]`, strict `TradeDecision` output and `max_turns=1`.
+- Deterministic software owns approval and sizing, capped by unleveraged buying power.
+- SHADOW reads real broker truth and may use only `review_equity_order` for hypothetical
+  trading, after governor approval. It never submits or cancels an order.
+- Broker/local mismatches fail closed, including unsupported assets, multiple positions,
+  unowned/missing positions, symbol/quantity disagreement, non-long positions and working orders.
+- Robinhood state defaults to `robinhood.db`; PAPER state remains separate.
+- Model: `gpt-6-luna`. Configured prices: $0.10 / 1M input tokens and $0.50 / 1M output tokens.
+- Prompt version: `v2-live-shadow`. Successful SDK token usage and estimated costs persist.
 
-```bash
-python -m app.robinhood.cli shadow-cycle --agent stub
-```
+## Next authenticated batch
 
-Real reasoning-agent SHADOW cycle:
-
-```bash
-read -s -p 'OpenAI API key: ' OPENAI_API_KEY; export OPENAI_API_KEY; echo
-python -m app.robinhood.cli shadow-cycle --agent openai
-```
-
-If `OPENAI_API_KEY` is absent, obviously placeholder text, or implausibly short, the CLI exits before any Robinhood or model call.
-
-## Validation state
-
-- Full updated suite on the user's Mac: 51/51 passing.
-- User-run historical transport regression after the hotfix: 2/2 passing.
-- Credential preflight now explicitly rejects example placeholder keys before any network call.
-
-## Remaining Slice 2 evidence
-
-1. Run the full updated test suite.
-2. Execute one real OpenAI SHADOW cycle against live market packet data.
-3. Inspect the persisted decision, risk decision, model token usage/cost, and any broker review.
-4. Keep PR #1 draft until those checks are clean.
-
-## Live authority
-
-No live brokerage placement or cancellation path exists in Slice 2.
-
-
-## One-command audit
-
-After any SHADOW run:
+From the existing activated virtual environment on the Mac:
 
 ```bash
+git pull --ff-only && \
+pytest -q && \
+python -m app.robinhood.cli openai-structured-check && \
+python -m app.robinhood.cli shadow-cycle --agent openai && \
 python -m app.robinhood.cli shadow-audit
 ```
 
-This prints the latest persisted cycle with prompt version, model, latency, decision, risk decision,
-execution/broker review, latest token usage, cumulative estimated model cost, and benchmark range.
+The schema check touches OpenAI only. After it passes, the same batch goes directly through
+the real SHADOW model path and persisted audit. If the model run exits 8, its HOLD is already
+persisted; `python -m app.robinhood.cli shadow-audit` can inspect it separately.
 
+To close Slice 2, inspect the decision, deterministic risk result, skipped execution or
+hypothetical broker review, model/prompt identity, latency, tokens/cost and SPY snapshots.
+A valid HOLD is acceptable. Do not claim useful signal or profitability from one cycle.
 
-## OpenAI-only credential check
-
-Before another full SHADOW cycle, validate only the OpenAI credential/model path:
-
-```bash
-python -m app.robinhood.cli openai-check
-```
-
-This does not connect to Robinhood. It reports a sanitized HTTP status/error code and distinguishes
-common causes such as `invalid_api_key`, `ip_not_authorized`, permissions, and quota/billing.
-
-
-## Structured-output compatibility check
-
-Before another Robinhood-backed reasoning cycle:
-
-```bash
-python -m app.robinhood.cli openai-structured-check
-```
-
-This exercises the same strict `TradeDecision` output type against OpenAI with no Robinhood call.
-Trade-decision text/list length limits are enforced after parsing in Pydantic runtime validation rather
-than emitted as unsupported JSON Schema `minLength` / `maxLength` / `maxItems` keywords.
+After authenticated verification, proceed to market-session scheduling, persistent experiment
+results, economic/SPY performance, anti-churn/cooldown/idempotency hardening and decision history.
+Those experiment features are not implemented or verified by this schema-fix checkpoint.

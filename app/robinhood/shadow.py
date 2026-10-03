@@ -164,6 +164,7 @@ class ShadowOrchestrator:
             status="SKIPPED",
             symbol=run.decision.symbol,
             message=message,
+            agent_error=run.error,
         )
         if risk.approved and run.decision.symbol:
             execution = await self._review(
