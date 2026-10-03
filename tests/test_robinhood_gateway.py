@@ -25,6 +25,9 @@ class FakeToolClient:
             {"name": "review_equity_order", "inputSchema": {"type": "object"}},
             {"name": "place_equity_order", "inputSchema": {"type": "object"}},
             {"name": "cancel_equity_order", "inputSchema": {"type": "object"}},
+            {"name": "delete_alert", "inputSchema": {"type": "object"}},
+            {"name": "exercise_option", "inputSchema": {"type": "object"}},
+            {"name": "mark_alerts_read", "inputSchema": {"type": "object"}},
         ]
         return tools
 
@@ -39,28 +42,76 @@ async def test_discovery_records_schemas_but_does_not_call_tools(tmp_path: Path)
     gateway = RobinhoodSafeGateway(client, "https://agent.robinhood.com/mcp/trading")
     snapshot = await gateway.discover_schemas()
     assert snapshot.missing_required_tools == ()
+    assert snapshot.missing_required_input_schemas == ()
     assert "place_equity_order" in snapshot.advertised_write_tools
     assert "cancel_equity_order" in snapshot.advertised_write_tools
+    assert "delete_alert" in snapshot.advertised_write_tools
+    assert "exercise_option" in snapshot.advertised_write_tools
+    assert "mark_alerts_read" in snapshot.advertised_write_tools
     assert client.calls == []
 
     output = tmp_path / "schemas.json"
     snapshot.save(output)
     saved = json.loads(output.read_text())
     assert set(REQUIRED_SLICE2_READ_TOOLS).issubset(saved["tools"])
+    assert all("inputSchema" in saved["tools"][name] for name in REQUIRED_SLICE2_READ_TOOLS)
     assert "tokens" not in output.read_text().lower()
+
+
+@pytest.mark.anyio
+async def test_discovery_normalizes_mcp_v2_snake_case_schema_keys():
+    client = FakeToolClient()
+
+    async def snake_case_tools():
+        return [
+            {"name": name, "input_schema": {"type": "object", "properties": {}}}
+            for name in sorted(REQUIRED_SLICE2_READ_TOOLS)
+        ]
+
+    client.list_tools = snake_case_tools
+    snapshot = await RobinhoodSafeGateway(client, "endpoint").discover_schemas()
+    assert snapshot.missing_required_input_schemas == ()
+    assert snapshot.tools["get_accounts"]["inputSchema"]["type"] == "object"
+
+
+@pytest.mark.anyio
+async def test_discovery_reports_required_tool_without_input_schema():
+    client = FakeToolClient()
+    original = client.list_tools
+
+    async def missing_schema():
+        tools = await original()
+        for tool in tools:
+            if tool["name"] == "get_portfolio":
+                tool.pop("inputSchema", None)
+        return tools
+
+    client.list_tools = missing_schema
+    snapshot = await RobinhoodSafeGateway(client, "endpoint").discover_schemas()
+    assert snapshot.missing_required_input_schemas == ("get_portfolio",)
 
 
 @pytest.mark.anyio
 async def test_safe_read_and_review_calls_are_forwarded():
     client = FakeToolClient()
     gateway = RobinhoodSafeGateway(client, "https://agent.robinhood.com/mcp/trading")
-    await gateway.call_safe("get_portfolio", {"account_id": "fixture"})
+    await gateway.call_safe("get_portfolio", {"account_number": "fixture"})
     await gateway.call_safe("review_equity_order", {"fixture": True})
     assert [name for name, _ in client.calls] == ["get_portfolio", "review_equity_order"]
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("name", ["place_equity_order", "cancel_equity_order", "create_watchlist"])
+@pytest.mark.parametrize(
+    "name",
+    [
+        "place_equity_order",
+        "cancel_equity_order",
+        "create_watchlist",
+        "delete_alert",
+        "exercise_option",
+        "mark_alerts_read",
+    ],
+)
 async def test_live_writes_are_blocked_before_network_call(name):
     client = FakeToolClient()
     gateway = RobinhoodSafeGateway(client, "https://agent.robinhood.com/mcp/trading")
