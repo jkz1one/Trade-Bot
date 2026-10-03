@@ -17,7 +17,7 @@
   - tradability
   - equity order review
 - The account adapter uses Robinhood's unleveraged buying power as the v1 ceiling, so margin leverage cannot increase deterministic size.
-- The market adapter batches quotes (up to 20), tradability (10 per call), and historicals (10 per call), then derives ATR, realized volatility, day change, and session VWAP relationship deterministically.
+- The market adapter batches quotes (up to 20) and tradability (10 per call). Historical OHLCV is intentionally fetched one symbol per call to remain below the MCP SDK's 1 MiB SSE-event ceiling; ATR, realized volatility, day change, and session VWAP relationship are then derived deterministically.
 - Broker/local reconciliation halts new trading for unsupported asset value, multiple positions, unowned/missing positions, quantity/symbol disagreement, non-long positions, or working orders.
 - SHADOW decisions use the same deterministic risk governor as PAPER.
 - An approved SHADOW action may call `review_equity_order`; it never calls `place_equity_order` or a cancellation/mutation tool.

@@ -96,3 +96,33 @@ async def test_shadow_review_never_places_order(repo):
     assert execution.status == "SKIPPED"
     assert execution.broker_review is not None
     assert [name for name, _ in gateway.calls] == ["review_equity_order"]
+
+
+class ExplodingAgent:
+    def decide(self, packet):
+        raise RuntimeError("simulated model outage")
+
+
+@pytest.mark.anyio
+async def test_agent_failure_becomes_fail_closed_hold(repo):
+    settings = Settings(mode="SHADOW", live_enabled=False, db_url="sqlite://")
+    orchestrator = ShadowOrchestrator(
+        settings,
+        repo,
+        ReviewGateway(),
+        ExplodingAgent(),
+    )
+    packet = MarketPacket(
+        as_of=datetime.now(timezone.utc),
+        account=AccountState(
+            equity=Decimal("10"),
+            cash=Decimal("10"),
+            buying_power=Decimal("10"),
+            high_watermark=Decimal("10"),
+        ),
+        candidates=[],
+    )
+    run = await orchestrator._decide(packet)
+    assert run.error == "RuntimeError"
+    assert run.decision.action == Action.HOLD
+    assert run.decision.confidence == 0

@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from time import perf_counter
 
-from app.agent.trader import TraderAgent
+from app.agent.trader import TraderAgent, fail_closed_agent_run
 from app.config import Settings
 from app.domain.models import AccountState, Action, ExecutionResult, MarketPacket, Position
 from app.risk.governor import govern
@@ -55,7 +55,9 @@ class ShadowOrchestrator:
             broker = truth.positions[0]
             quote = quotes.get(broker.symbol)
             current = quote.bid if quote else local.current_price
-            position = local.model_copy(update={"current_price": current, "quantity": broker.quantity})
+            position = local.model_copy(
+                update={"current_price": current, "quantity": broker.quantity}
+            )
 
         equity = truth.portfolio.total_value
         persisted_hwm = self.repo.latest_high_watermark()
@@ -70,7 +72,15 @@ class ShadowOrchestrator:
             working_orders=[_order_dump(o) for o in truth.working_orders],
         )
 
-    async def _review(self, decision, risk, packet, account_number: str) -> ExecutionResult:
+    async def _decide(self, packet: MarketPacket):
+        try:
+            return await asyncio.to_thread(self.agent.decide, packet)
+        except Exception as exc:
+            return fail_closed_agent_run(exc)
+
+    async def _review(
+        self, decision, risk, packet, account_number: str
+    ) -> ExecutionResult:
         if decision.action == Action.OPEN_LONG:
             args = {
                 "account_number": account_number,
@@ -93,7 +103,9 @@ class ShadowOrchestrator:
             }
         else:
             return ExecutionResult(
-                status="SKIPPED", symbol=decision.symbol, message="No SHADOW review for action"
+                status="SKIPPED",
+                symbol=decision.symbol,
+                message="No SHADOW review for action",
             )
 
         raw = await self.gateway.call_safe("review_equity_order", args)
@@ -124,11 +136,16 @@ class ShadowOrchestrator:
             account=account,
             candidates=candidates,
             regime=self.market.regime(candidates),
-            recent_lessons=([] if reconciliation.reconciled else [
-                "Broker/local reconciliation failed: " + ", ".join(reconciliation.reasons)
-            ]),
+            recent_lessons=(
+                []
+                if reconciliation.reconciled
+                else [
+                    "Broker/local reconciliation failed: "
+                    + ", ".join(reconciliation.reasons)
+                ]
+            ),
         )
-        run = await asyncio.to_thread(self.agent.decide, packet)
+        run = await self._decide(packet)
         risk = govern(
             run.decision,
             packet,
@@ -137,19 +154,34 @@ class ShadowOrchestrator:
             broker_reconciled=reconciliation.reconciled,
             daily_entries=self.daily_entries,
         )
+        message = (
+            f"SHADOW: agent failure ({run.error}); fail-closed HOLD"
+            if run.error
+            else "SHADOW: no executable action"
+        )
         execution = ExecutionResult(
-            status="SKIPPED", symbol=run.decision.symbol, message="SHADOW: no executable action"
+            status="SKIPPED",
+            symbol=run.decision.symbol,
+            message=message,
         )
         if risk.approved and run.decision.symbol:
             execution = await self._review(
-                run.decision, risk, packet, truth.account.account_number
+                run.decision,
+                risk,
+                packet,
+                truth.account.account_number,
             )
             if run.decision.action == Action.OPEN_LONG:
                 self.daily_entries += 1
 
         latency_ms = int((perf_counter() - started) * 1000)
         self.repo.save_cycle(
-            packet, run.decision, risk, execution, self.settings.model_name, latency_ms
+            packet,
+            run.decision,
+            risk,
+            execution,
+            self.settings.model_name,
+            latency_ms,
         )
         if run.input_tokens or run.output_tokens:
             self.repo.save_model_usage(
@@ -160,7 +192,14 @@ class ShadowOrchestrator:
                 self.settings.model_output_usd_per_million,
             )
         self.repo.save_account_snapshot(account)
-        spy = next((c for c in candidates if c.quote.symbol == self.settings.benchmark_symbol), None)
+        spy = next(
+            (
+                c
+                for c in candidates
+                if c.quote.symbol == self.settings.benchmark_symbol
+            ),
+            None,
+        )
         if spy:
             self.repo.save_benchmark(spy.quote.symbol, spy.quote.last)
         return packet, run.decision, risk, execution, reconciliation, truth

@@ -117,6 +117,12 @@ async def probe(settings: Settings) -> int:
 
 
 async def shadow_cycle(settings: Settings, agent_name: str) -> int:
+    if agent_name == "openai" and not os.getenv("OPENAI_API_KEY"):
+        print(json.dumps({
+            "error": "OPENAI_API_KEY is not set",
+            "action": "No Robinhood calls or model calls were made.",
+        }, indent=2))
+        return 4
     settings = settings.model_copy(update={"mode": "SHADOW", "live_enabled": False})
     repo = _repo(settings)
     agent = (
