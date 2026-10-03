@@ -14,7 +14,7 @@ from app.config import Settings
 from app.storage.models import (
     AccountSnapshotRow, BenchmarkSnapshotRow, CapitalEventRow, DecisionCycleRow,
     FillRow, ModelUsageRow, OrderRow, PositionEpisodeRow, ShadowCycleEvidenceRow,
-    ShadowScheduleSlotRow, ShadowForwardOutcomeRow,
+    ShadowScheduleSlotRow, ShadowForwardOutcomeRow, ShadowServiceStateRow, SystemEventRow,
 )
 
 
@@ -187,6 +187,65 @@ class Repository:
                 ShadowForwardOutcomeRow.source_cycle_id.in_(ids)
             ).order_by(ShadowForwardOutcomeRow.source_cycle_id.desc(),
                        ShadowForwardOutcomeRow.horizon_minutes)))
+
+    def shadow_service_state(self) -> dict | None:
+        with self.session_factory() as s:
+            row = s.get(ShadowServiceStateRow, 1)
+            if row is None:
+                return None
+            stamp = row.heartbeat_at
+            if stamp.tzinfo is None:
+                stamp = stamp.replace(tzinfo=timezone.utc)
+            return {"status": row.status, "heartbeat_at": stamp.isoformat(),
+                    "release_sha": row.release_sha,
+                    "last_result": json.loads(row.last_result_json) if row.last_result_json else None}
+
+    def set_shadow_service_state(self, status: str, now: datetime, release: str,
+                                 result: dict | None = None) -> None:
+        with self.session_factory.begin() as s:
+            row = s.get(ShadowServiceStateRow, 1)
+            prior = row.status if row is not None else None
+            if row is None:
+                row = ShadowServiceStateRow(id=1, status=status, heartbeat_at=now, release_sha=release)
+                s.add(row)
+            row.status = status
+            row.heartbeat_at = now
+            row.release_sha = release
+            if result is not None:
+                row.last_result_json = json.dumps(result)
+            if status == "HALTED" and prior != "HALTED":
+                s.add(SystemEventRow(level="ERROR", message="SHADOW service halted: " + json.dumps(result)))
+
+    def heartbeat_shadow_service(self, now: datetime) -> None:
+        with self.session_factory.begin() as s:
+            row = s.get(ShadowServiceStateRow, 1)
+            if row is not None:
+                row.heartbeat_at = now
+
+    def resume_shadow_service(self, now: datetime, release: str) -> None:
+        with self.session_factory.begin() as s:
+            active = s.scalar(select(ShadowScheduleSlotRow).where(ShadowScheduleSlotRow.active_lock == 1))
+            if active is not None:
+                raise RuntimeError("An active scheduled claim must be inspected before service resume")
+            row = s.get(ShadowServiceStateRow, 1)
+            if row is None or row.status != "HALTED":
+                raise RuntimeError("No halted SHADOW service state to resume")
+            row.status = "STOPPED"
+            row.heartbeat_at = now
+            row.release_sha = release
+            s.add(SystemEventRow(level="WARNING", message="Operator resumed halted SHADOW service; next startup rechecks credentials"))
+
+    def abandon_shadow_slot(self, slot_key: str, now: datetime) -> None:
+        with self.session_factory.begin() as s:
+            row = s.get(ShadowScheduleSlotRow, slot_key)
+            if row is None or row.status != "CLAIMED":
+                raise RuntimeError("Only an interrupted CLAIMED slot can be abandoned")
+            row.status = "ABANDONED"
+            row.active_lock = None
+            row.finished_at = now
+            row.exit_code = 11
+            row.error_class = "OperatorAbandonedInterruptedClaim"
+            s.add(SystemEventRow(level="WARNING", message="Operator abandoned interrupted SHADOW slot " + slot_key + "; same slot remains non-replayable"))
 
     def claim_shadow_slot(self, window, claim_token: str, claimed_at: datetime) -> bool:
         try:

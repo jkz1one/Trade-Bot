@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     robinhood_mcp_url: str = "https://agent.robinhood.com/mcp/trading"
     robinhood_redirect_uri: str = "http://127.0.0.1:8765/callback"
     robinhood_oauth_storage: str = "~/.trade-bot/robinhood-oauth.json"
+    robinhood_interactive_auth: bool = True
+    openai_api_key_file: str | None = None
+    shadow_service_lock_path: str = "var/shadow-service.lock"
+    release_sha: str = "unknown"
     robinhood_schema_snapshot: str = "var/robinhood-tool-schemas.json"
     robinhood_required_schema_snapshot: str = "var/robinhood-required-schemas.json"
     robinhood_db_url: str = "sqlite:///./robinhood.db"

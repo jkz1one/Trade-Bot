@@ -1,0 +1,56 @@
+name: trade-bot-shadow
+services:
+  shadow:
+    build:
+      context: .
+      dockerfile: Dockerfile.shadow
+      args:
+        TRADE_BOT_RELEASE: ${TRADE_BOT_RELEASE:?Set TRADE_BOT_RELEASE to the checked-out commit SHA}
+    image: trade-bot-shadow:${TRADE_BOT_RELEASE:?Set TRADE_BOT_RELEASE}
+    restart: unless-stopped
+    init: true
+    user: "10001:10001"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 1.0
+    stop_grace_period: 660s
+    environment:
+      TRADER_MODE: SHADOW
+      TRADER_LIVE_ENABLED: "false"
+      TRADER_ROBINHOOD_INTERACTIVE_AUTH: "false"
+      TRADER_ROBINHOOD_DB_URL: sqlite:////data/robinhood.db
+      TRADER_DB_URL: sqlite:////data/paper-unused.db
+      TRADER_ROBINHOOD_OAUTH_STORAGE: /oauth/robinhood-oauth.json
+      TRADER_OPENAI_API_KEY_FILE: /run/secrets/openai_api_key
+      TRADER_SHADOW_SERVICE_LOCK_PATH: /data/shadow-service.lock
+    volumes:
+      - type: bind
+        source: /var/lib/trade-bot/data
+        target: /data
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /var/lib/trade-bot/oauth
+        target: /oauth
+        bind:
+          create_host_path: false
+    secrets: [openai_api_key]
+    healthcheck:
+      test: [CMD, python, -m, app.robinhood.cli, shadow-service-check]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+secrets:
+  openai_api_key:
+    file: /etc/trade-bot/openai_api_key

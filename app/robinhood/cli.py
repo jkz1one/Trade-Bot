@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import json
 import os
+from pathlib import Path
 import webbrowser
 from urllib.parse import parse_qs, urlparse
 
@@ -45,13 +46,25 @@ async def _wait_for_callback():
     )
 
 
+class HeadlessAuthorizationRequired(RuntimeError):
+    pass
+
+
+async def _headless_redirect(url: str) -> None:
+    raise HeadlessAuthorizationRequired("Robinhood requires operator authorization")
+
+
+async def _headless_callback():
+    raise HeadlessAuthorizationRequired("Robinhood requires operator authorization")
+
+
 def _connection(settings: Settings) -> RobinhoodMcpConnection:
     return RobinhoodMcpConnection(
         url=settings.robinhood_mcp_url,
         redirect_uri=settings.robinhood_redirect_uri,
         oauth_storage_path=settings.robinhood_oauth_storage,
-        redirect_handler=_open_browser,
-        callback_handler=_wait_for_callback,
+        redirect_handler=_open_browser if settings.robinhood_interactive_auth else _headless_redirect,
+        callback_handler=_wait_for_callback if settings.robinhood_interactive_auth else _headless_callback,
     )
 
 
@@ -81,6 +94,21 @@ def _openai_key_problem(value: str | None) -> str | None:
     if len(cleaned) < 20:
         return "OPENAI_API_KEY is too short to look like a real API key"
     return None
+
+
+def _configured_openai_key_problem(settings: Settings) -> str | None:
+    if settings.openai_api_key_file:
+        try:
+            value = Path(settings.openai_api_key_file).expanduser().read_text().strip()
+        except (OSError, UnicodeError):
+            return "Configured OpenAI key file cannot be read"
+        if "\n" in value or "\r" in value:
+            return "Configured OpenAI key file must contain one key"
+        problem = _openai_key_problem(value)
+        if problem:
+            return problem
+        os.environ["OPENAI_API_KEY"] = value
+    return _openai_key_problem(os.getenv("OPENAI_API_KEY"))
 
 
 def _openai_error_summary(exc: Exception) -> dict[str, object]:
@@ -133,7 +161,7 @@ def _openai_error_summary(exc: Exception) -> dict[str, object]:
 
 
 def openai_check(settings: Settings) -> int:
-    key_problem = _openai_key_problem(os.getenv("OPENAI_API_KEY"))
+    key_problem = _configured_openai_key_problem(settings)
     if key_problem:
         print(json.dumps({
             "status": "ERROR",
@@ -162,7 +190,7 @@ def openai_check(settings: Settings) -> int:
 
 
 def openai_structured_check(settings: Settings) -> int:
-    key_problem = _openai_key_problem(os.getenv("OPENAI_API_KEY"))
+    key_problem = _configured_openai_key_problem(settings)
     if key_problem:
         print(json.dumps({
             "status": "ERROR",
@@ -322,7 +350,7 @@ async def shadow_cycle(
     schedule_window=None, claim_token: str | None = None,
 ) -> int:
     if agent_name == "openai":
-        key_problem = _openai_key_problem(os.getenv("OPENAI_API_KEY"))
+        key_problem = _configured_openai_key_problem(settings)
         if key_problem:
             print(json.dumps({
                 "error": key_problem,
@@ -428,6 +456,16 @@ def main() -> None:
     r.add_argument("--agent", choices=["stub", "openai"], default="stub")
     r.add_argument("--once", action="store_true")
     sub.add_parser("shadow-schedule-status")
+    sub.add_parser("shadow-service")
+    sub.add_parser("shadow-service-check")
+    sub.add_parser("shadow-service-resume")
+    sub.add_parser("shadow-preflight")
+    backup = sub.add_parser("shadow-backup")
+    backup.add_argument("--output", required=True)
+    export = sub.add_parser("shadow-export")
+    export.add_argument("--output", required=True)
+    abandon = sub.add_parser("shadow-slot-abandon")
+    abandon.add_argument("--slot", required=True)
     args = parser.parse_args()
     settings = Settings()
     if args.command == "discover":
@@ -448,6 +486,28 @@ def main() -> None:
         code = asyncio.run(shadow_run(settings, args.agent, args.once))
     elif args.command == "shadow-schedule-status":
         code = shadow_schedule_status(settings)
+    elif args.command == "shadow-service":
+        from app.robinhood.service import run_shadow_service
+        code = asyncio.run(run_shadow_service(settings))
+    elif args.command == "shadow-service-check":
+        from app.robinhood.service import service_check
+        code = service_check(settings)
+    elif args.command in {"shadow-service-resume", "shadow-slot-abandon"}:
+        from app.robinhood.service import service_maintenance
+        code = service_maintenance(settings, abandon_slot=args.slot if args.command == "shadow-slot-abandon" else None)
+    elif args.command == "shadow-preflight":
+        from app.robinhood.service import service_preflight
+        result = asyncio.run(service_preflight(settings, _repo(settings)))
+        print(json.dumps(result or {"status": "OK", "network_calls": False}))
+        code = result["exit_code"] if result else 0
+    elif args.command == "shadow-backup":
+        from app.robinhood.backup import backup_database
+        print(json.dumps({"status": "OK", "output": backup_database(settings, args.output), "network_calls": False}))
+        code = 0
+    elif args.command == "shadow-export":
+        from app.robinhood.backup import export_shadow_bootstrap
+        print(json.dumps(asyncio.run(export_shadow_bootstrap(settings, args.output))))
+        code = 0
     else:
         code = asyncio.run(shadow_cycle(settings, args.agent))
     raise SystemExit(code)

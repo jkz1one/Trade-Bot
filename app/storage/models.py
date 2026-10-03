@@ -148,3 +148,12 @@ class ShadowForwardOutcomeRow(Base):
     baseline_json: Mapped[str] = mapped_column(Text)
     measurement_cycle_id: Mapped[int | None] = mapped_column(ForeignKey("decision_cycles.id"))
     result_json: Mapped[str | None] = mapped_column(Text)
+
+
+class ShadowServiceStateRow(Base):
+    __tablename__ = "shadow_service_state"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    status: Mapped[str] = mapped_column(String(16))
+    heartbeat_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    release_sha: Mapped[str] = mapped_column(String(64))
+    last_result_json: Mapped[str | None] = mapped_column(Text)

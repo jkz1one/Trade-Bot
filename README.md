@@ -76,10 +76,15 @@ python -m app.robinhood.cli shadow-schedule-status
 python -m app.robinhood.cli shadow-run --agent openai
 ```
 
-The foreground runner polls every 30 seconds and attempts the current 15-minute XNYS
-regular-session slot, handling holidays, early closes and daylight saving. It skips
-closed sessions before broker/model calls. The machine must remain awake and the
-process running. No service is installed automatically.
+For continuous operation on a Linux server, use the detached SHADOW service in
+[docs/SHADOW_SERVER.md](docs/SHADOW_SERVER.md). It keeps state outside the code checkout,
+restarts with Docker, uses private credential files and exposes no website ports.
+The Mac can be shut down after migration and server verification.
+
+The foreground runner remains useful for local checks. Both runners poll every
+30 seconds and attempt the current 15-minute XNYS regular-session slot, handling
+holidays, early closes and daylight saving. Closed sessions skip broker/model calls.
+Run only one runner against the brokerage account, including across different machines.
 
 Persistent SQLite claims prevent duplicate scheduled cycles across restarts/workers
 using the same database; missed slots are not replayed. An interrupted active claim

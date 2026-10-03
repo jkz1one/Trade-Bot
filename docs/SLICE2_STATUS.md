@@ -7,7 +7,43 @@ The authenticated core path is verified: strict OpenAI output, real Robinhood re
 model judgment, deterministic governor and persisted SHADOW audit. Scheduling is
 installed and its closed-session behavior is verified on the Mac. A scheduled
 authenticated regular-session cycle remains to be observed. Forward quote outcome
-tracking is implemented and verified offline. LIVE is disabled.
+tracking and a persistent Linux SHADOW service are implemented and verified offline.
+The service is prepared for DigitalOcean; it is not deployed yet. LIVE is disabled.
+
+## Persistent server follow-up
+
+The foreground Mac runner is a local verification tool. Continuous operation now
+has a separate `compose.shadow.yml` worker and `scripts/shadow-server.sh` helper,
+with a consolidated migration/operations guide in [SHADOW_SERVER.md](SHADOW_SERVER.md).
+SignalFlow's separate Docker worker, persistent state, restart and container-hardening
+patterns informed the deployment. SignalFlow itself is not changed or reused.
+
+The worker uses a lifetime process lock, local heartbeat, graceful signal handling,
+a bounded cycle timeout and durable HALTED state. Model, review, authentication,
+calendar and interrupted-claim failures stop further attempts until explicit local
+operator recovery. Resuming never replays an attempted slot. Docker restart does not
+clear a halt. Scheduled idempotency and crash blocking remain in the existing SQLite
+claim ledger. The service always disables interactive OAuth; an explicit stopped-worker
+authorization command remains available for operators.
+
+Credentials are private files; the OpenAI key is mounted as a secret and OAuth state
+is writable for refresh. SQLite, claims, audit history and service state persist outside
+the code checkout. Export/backup commands use consistent SQLite snapshots, check
+integrity and print no secrets. Initial server import refuses to overwrite existing
+history. Only SHADOW is configured; no web ports are published.
+
+Verification: **181 tests passed** locally. The 14 new service/backup tests cover
+locks, in-flight heartbeats/shutdown, timeouts, sanitized persistent failures, local
+credential checks, explicit claim abandonment/resume and private migration bundles.
+The actual CLI booted healthy with MARKET_CLOSED and synthetic credentials, then
+handled SIGTERM with exit 0 and STOPPED state. Compose configuration validation,
+shell syntax, compilation, fatal-error lint and whitespace checks passed.
+
+This workspace has no Docker daemon, real broker OAuth state, API key or confirmed
+droplet connection. The image has not been built here and no server has been deployed.
+Target-host image build, authenticated read probe, restart verification and the first
+regular-session model cycle remain deployment gates. No new live-account/model evidence
+is claimed by these offline checks.
 
 ## Installation follow-up
 
@@ -188,16 +224,17 @@ pytest -q && \
 python -m app.robinhood.cli shadow-outcomes --limit 100
 ```
 
-To collect regular-session history and future quote outcomes, start the foreground
-runner. Outside a regular session it waits without broker/model calls; during a
-session it attempts the current slot and persists its result. Inspect audit/history
-and outcomes after completed cycles:
+To collect regular-session history and future quote outcomes continuously, use the
+Linux service in [SHADOW_SERVER.md](SHADOW_SERVER.md). The foreground runner is also
+available for local checks. Outside a regular session either runner waits without
+broker/model calls; during a session it attempts the current slot and persists its
+result. Run only one worker against the account across machines:
 
 ```bash
 python -m app.robinhood.cli shadow-run --agent openai
 ```
 
-Updated local suite: **167 passed**. Compilation, fatal-error lint and whitespace
+Forward-outcome checkpoint suite: **167 passed**. Compilation, fatal-error lint and whitespace
 checks passed. The real CLI's Saturday tick returned MARKET_CLOSED with exit 0;
 schedule status reported no active claim or slots and no network calls.
 
