@@ -29,6 +29,13 @@ def shadow_history_report(repo: Repository, benchmark_symbol: str, limit: int) -
             cost += Decimal(usage["estimated_cost"])
         # Older cycles stored failures in the execution message, before agent_error existed.
         agent_failed = bool(execution.get("agent_error")) or "agent failure (" in execution.get("message", "")
+        hold_origin = None
+        if decision["action"] == "HOLD":
+            hold_origin = (
+                "AGENT_FAILURE" if agent_failed else
+                "DETERMINISTIC" if row.model_identifier in {"stub", "session-guard"} else
+                "MODEL" if usage is not None else "UNATTRIBUTED"
+            )
         actions[decision["action"]] += 1
         models[row.model_identifier] += 1
         rejections.update(risk.get("rejection_reasons", []))
@@ -46,6 +53,9 @@ def shadow_history_report(repo: Repository, benchmark_symbol: str, limit: int) -
             "agent_failed": agent_failed, "agent_error": execution.get("agent_error"),
             "review_error": execution.get("review_error"),
             "review_completed": execution.get("broker_review") is not None,
+            "hold_origin": hold_origin,
+            "session_blocked": execution.get("session_blocked", False),
+            "session_context": packet.get("session_context"),
             "evidence_status": evidence["status"], "model_usage": usage,
         })
     benchmark_return = None
@@ -59,6 +69,11 @@ def shadow_history_report(repo: Repository, benchmark_symbol: str, limit: int) -
         "cycle_count": len(cycles), "action_counts": dict(actions),
         "model_counts": dict(models), "rejection_counts": dict(rejections),
         "genuine_hold_count": sum(c["action"] == "HOLD" and not c["agent_failed"] for c in cycles),
+        "hold_count_note": "genuine_hold_count means non-failure HOLD; only model_hold_count has explicitly linked model usage.",
+        "model_hold_count": sum(c["hold_origin"] == "MODEL" for c in cycles),
+        "deterministic_hold_count": sum(c["hold_origin"] == "DETERMINISTIC" for c in cycles),
+        "unattributed_hold_count": sum(c["hold_origin"] == "UNATTRIBUTED" for c in cycles),
+        "session_blocked_count": sum(c["session_blocked"] for c in cycles),
         "agent_failure_count": sum(c["agent_failed"] for c in cycles),
         "review_failure_count": sum(bool(c["review_error"]) for c in cycles),
         "review_count": sum(c["review_completed"] for c in cycles),

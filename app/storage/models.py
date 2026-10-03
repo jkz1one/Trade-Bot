@@ -114,3 +114,22 @@ class ShadowCycleEvidenceRow(Base):
     account_snapshot_id: Mapped[int] = mapped_column(ForeignKey("account_snapshots.id"))
     benchmark_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("benchmark_snapshots.id"))
     reconciliation_json: Mapped[str] = mapped_column(Text)
+
+
+class ShadowScheduleSlotRow(Base):
+    __tablename__ = "shadow_schedule_slots"
+    slot_key: Mapped[str] = mapped_column(String(128), primary_key=True)
+    claim_token: Mapped[str] = mapped_column(String(64))
+    # All workers share one bankroll. A nullable unique lock permits many finished
+    # slots but at most one in-flight cycle, even across different interval keys.
+    active_lock: Mapped[int | None] = mapped_column(Integer, unique=True)
+    scheduled_for: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    session_date: Mapped[str] = mapped_column(String(10))
+    session_open: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    session_close: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    claimed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    status: Mapped[str] = mapped_column(String(16), default="CLAIMED")
+    exit_code: Mapped[int | None] = mapped_column(Integer)
+    error_class: Mapped[str | None] = mapped_column(String(128))
+    cycle_id: Mapped[int | None] = mapped_column(ForeignKey("decision_cycles.id"))

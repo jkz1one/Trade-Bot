@@ -153,6 +153,7 @@ class MarketPacket(BaseModel):
     candidates: list[Candidate]
     regime: str = "unknown"
     recent_lessons: list[str] = Field(default_factory=list)
+    session_context: dict[str, str] | None = None
 
 
 class RiskDecision(BaseModel):
@@ -180,3 +181,4 @@ class ExecutionResult(BaseModel):
     broker_review: dict[str, Any] | None = None
     agent_error: str | None = None
     review_error: str | None = None
+    session_blocked: bool = False

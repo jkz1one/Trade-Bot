@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.exc import IntegrityError
 
 from app.domain.models import AccountState, ExecutionResult, MarketPacket, Position, RiskDecision, TradeDecision
 from app.storage.models import (
     AccountSnapshotRow, BenchmarkSnapshotRow, CapitalEventRow, DecisionCycleRow,
     FillRow, ModelUsageRow, OrderRow, PositionEpisodeRow, ShadowCycleEvidenceRow,
+    ShadowScheduleSlotRow,
 )
 
 
@@ -100,11 +104,17 @@ class Repository:
         latency_ms: int, input_tokens: int, output_tokens: int,
         input_price: Decimal, output_price: Decimal, benchmark_symbol: str,
         reconciliation: dict,
+        slot_key: str | None = None, claim_token: str | None = None,
     ) -> int:
         """Commit all evidence together, including explicit cycle-to-usage attribution."""
         if input_tokens < 0 or output_tokens < 0 or input_price < 0 or output_price < 0:
             raise ValueError("Model usage and pricing must be nonnegative")
         with self.session_factory.begin() as s:
+            slot = s.get(ShadowScheduleSlotRow, slot_key) if slot_key is not None else None
+            if slot_key is not None and (
+                slot is None or slot.status != "CLAIMED" or slot.claim_token != claim_token
+            ):
+                raise RuntimeError("SHADOW scheduled cycle does not own its active claim")
             row = DecisionCycleRow(
                 timestamp=packet.as_of, packet_json=packet.model_dump_json(),
                 prompt_version=prompt_version, model_identifier=model,
@@ -143,8 +153,80 @@ class Repository:
                 benchmark_snapshot_id=benchmark.id if benchmark else None,
                 reconciliation_json=json.dumps(reconciliation),
             ))
+            if slot is not None:
+                code = (3 if not reconciliation["reconciled"] else
+                        8 if execution.agent_error else 9 if execution.review_error else 0)
+                slot.cycle_id = row.id
+                slot.status = "COMPLETED" if code == 0 else "FAILED"
+                slot.exit_code = code
+                slot.error_class = execution.agent_error or execution.review_error
+                slot.finished_at = datetime.now(timezone.utc)
+                slot.active_lock = None
             s.flush()
             return row.id
+
+    def claim_shadow_slot(self, window, claim_token: str, claimed_at: datetime) -> bool:
+        try:
+            with self.session_factory.begin() as s:
+                s.add(ShadowScheduleSlotRow(
+                    slot_key=window.key, claim_token=claim_token, active_lock=1,
+                    scheduled_for=window.scheduled_for, session_date=window.session_date,
+                    session_open=window.opens_at, session_close=window.closes_at,
+                    claimed_at=claimed_at, status="CLAIMED",
+                ))
+            return True
+        except IntegrityError:
+            # Primary-key and unique-lock constraints arbitrate concurrent workers.
+            return False
+
+    def shadow_slot(self, slot_key: str) -> ShadowScheduleSlotRow | None:
+        with self.session_factory() as s:
+            return s.get(ShadowScheduleSlotRow, slot_key)
+
+    def fail_shadow_slot(self, slot_key: str, claim_token: str, code: int, error: str) -> None:
+        with self.session_factory.begin() as s:
+            row = s.get(ShadowScheduleSlotRow, slot_key)
+            if row is not None and row.status == "CLAIMED" and row.claim_token == claim_token:
+                row.status = "FAILED"
+                row.exit_code = code
+                row.error_class = error
+                row.finished_at = datetime.now(timezone.utc)
+                row.active_lock = None
+
+    def shadow_schedule_slots(self, limit: int = 100) -> list[ShadowScheduleSlotRow]:
+        with self.session_factory() as s:
+            return list(s.scalars(select(ShadowScheduleSlotRow)
+                                 .order_by(ShadowScheduleSlotRow.scheduled_for.desc())
+                                 .limit(limit)))
+
+    def active_shadow_slot(self) -> ShadowScheduleSlotRow | None:
+        with self.session_factory() as s:
+            return s.scalar(select(ShadowScheduleSlotRow)
+                            .where(ShadowScheduleSlotRow.active_lock == 1))
+
+    def shadow_review_activity(self, now: datetime) -> tuple[int, datetime | None]:
+        """Daily reviewed entries and most recent reviewed close survive restarts."""
+        local = now.astimezone(ZoneInfo("America/New_York"))
+        day_start = local.replace(hour=0, minute=0, second=0, microsecond=0)
+        start = day_start.astimezone(timezone.utc)
+        with self.session_factory() as s:
+            rows = list(s.scalars(select(DecisionCycleRow)
+                                  .where(DecisionCycleRow.timestamp >= start - timedelta(days=1),
+                                         DecisionCycleRow.timestamp <= now)))
+        entries = 0
+        last_close = None
+        for row in rows:
+            decision = json.loads(row.decision_json)
+            risk = json.loads(row.risk_json)
+            execution = json.loads(row.execution_json)
+            if not risk["approved"] or execution.get("broker_review") is None:
+                continue
+            stamp = row.timestamp.replace(tzinfo=timezone.utc) if row.timestamp.tzinfo is None else row.timestamp
+            if decision["action"] == "OPEN_LONG" and stamp >= start:
+                entries += 1
+            if decision["action"] == "CLOSE":
+                last_close = max(last_close, stamp) if last_close else stamp
+        return entries, last_close
 
     def shadow_cycle_evidence(self, cycle_id: int) -> dict:
         with self.session_factory() as s:

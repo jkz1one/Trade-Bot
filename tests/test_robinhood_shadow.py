@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 import pytest
@@ -14,12 +14,16 @@ from app.domain.models import (
     Candidate,
     Horizon,
     MarketPacket,
+    Position,
+    ExecutionResult,
     Quote,
     RiskDecision,
     TradeDecision,
 )
 from app.robinhood.models import RobinhoodTruth
 from app.robinhood.shadow import ShadowOrchestrator
+from app.robinhood.schedule import SessionWindow
+from app.risk.governor import govern
 
 
 class ReviewGateway:
@@ -133,7 +137,10 @@ async def test_agent_failure_becomes_fail_closed_hold(repo):
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("scenario", ["hold", "open", "failure", "mismatch", "review_failure"])
+@pytest.mark.parametrize("scenario", [
+    "hold", "open", "failure", "mismatch", "review_failure",
+    "scheduled_closed", "scheduled_expiry", "daily_limit", "exit_cooldown", "cooldown_expired",
+])
 async def test_complete_shadow_cycle_persists_evidence_and_gates_review(repo, scenario):
     import json
 
@@ -149,23 +156,33 @@ async def test_complete_shadow_cycle_persists_evidence_and_gates_review(repo, sc
             "unsupported_value": "1" if scenario == "mismatch" else "0",
         },
     })
+    now = datetime(2026, 10, 5, 16, 0, tzinfo=timezone.utc)
     candidate = Candidate(
-        quote=Quote(symbol="SPY", timestamp=datetime.now(timezone.utc),
+        quote=Quote(symbol="SPY", timestamp=now,
                     bid=100, ask="100.01", last=100),
         atr_fraction="0.01", realized_vol_fraction="0.01",
     )
+    entry = scenario not in {"hold", "failure"}
     decision = TradeDecision(
-        action=Action.OPEN_LONG if scenario in {"open", "mismatch", "review_failure"} else Action.HOLD,
-        symbol="SPY" if scenario in {"open", "mismatch", "review_failure"} else None,
+        action=Action.OPEN_LONG if entry else Action.HOLD,
+        symbol="SPY" if entry else None,
         confidence=.8, setup_quality=.8, desired_exposure_fraction=.5,
         invalidation_price="98", thesis="Test supplied evidence",
         invalidation_reason="Test invalidation", why_now="Test rationale",
     )
+    clock_now = now
+    calls = []
 
     class UsageAgent:
         model_identifier = "gpt-6-luna"
 
         def decide(self, packet):
+            nonlocal clock_now
+            calls.append(1)
+            if scenario == "scheduled_closed":
+                raise AssertionError("Closed session must skip the model")
+            if scenario == "scheduled_expiry":
+                clock_now = now + timedelta(seconds=30)
             return AgentRun(decision, input_tokens=100, output_tokens=40)
 
     class Reads:
@@ -186,26 +203,61 @@ async def test_complete_shadow_cycle_persists_evidence_and_gates_review(repo, sc
             raise RuntimeError("private broker response")
         gateway.call_safe = failing_review
     orchestrator = ShadowOrchestrator(
-        Settings(mode="SHADOW"), repo, gateway,
+        Settings(mode="SHADOW", max_daily_entries=1), repo, gateway,
         ExplodingAgent() if scenario == "failure" else UsageAgent(),
+        clock=lambda: clock_now,
     )
     orchestrator.reads = Reads()
     orchestrator.market = Market()
-    _, result, risk, execution, reconciliation, _ = await orchestrator.cycle()
+    previous_saved = scenario in {"daily_limit", "exit_cooldown", "cooldown_expired"}
+    if previous_saved:
+        previous_packet = MarketPacket(
+            as_of=now - timedelta(minutes=15 if scenario == "cooldown_expired" else 5),
+            candidates=[candidate],
+            account=AccountState(equity=10, cash=10, buying_power=10, high_watermark=10),
+        )
+        previous_decision = decision
+        if scenario in {"exit_cooldown", "cooldown_expired"}:
+            previous_packet.account.position = Position(
+                symbol="SPY", quantity="0.04", entry_price=100, current_price=100,
+                original_invalidation=98, thesis="previous position", opened_at=previous_packet.as_of,
+            )
+            previous_decision = decision.model_copy(update={"action": Action.CLOSE})
+        previous_risk = govern(previous_decision, previous_packet, Settings(mode="SHADOW"))
+        assert previous_risk.approved
+        repo.save_shadow_cycle(
+            previous_packet, previous_decision, previous_risk,
+            ExecutionResult(status="SKIPPED", broker_review={}), "stub",
+            prompt_version=TRADER_PROMPT_VERSION, latency_ms=0,
+            input_tokens=0, output_tokens=0, input_price=Decimal("0.1"),
+            output_price=Decimal("0.5"), benchmark_symbol="SPY",
+            reconciliation={"reconciled": True, "reasons": []},
+        )
+    scheduled = scenario in {"scheduled_closed", "scheduled_expiry"}
+    window = SessionWindow(
+        now.date().isoformat(), now - timedelta(minutes=15),
+        now - timedelta(seconds=1) if scenario == "scheduled_closed" else now + timedelta(seconds=20),
+        now - timedelta(minutes=15),
+    ) if scheduled else None
+    if scheduled:
+        assert repo.claim_shadow_slot(window, "test-owner", now)
+    _, result, risk, execution, reconciliation, _ = await orchestrator.cycle(
+        schedule_window=window, claim_token="test-owner" if scheduled else None,
+    )
     rows = repo.recent_cycles()
-    assert len(rows) == 1
+    assert len(rows) == (2 if previous_saved else 1)
     row = rows[0]
     assert row.prompt_version == TRADER_PROMPT_VERSION
-    assert row.model_identifier == "gpt-6-luna"
+    assert row.model_identifier == ("session-guard" if scenario == "scheduled_closed" else "gpt-6-luna")
     assert json.loads(row.decision_json) == result.model_dump(mode="json")
     assert json.loads(row.execution_json) == execution.model_dump(mode="json")
     assert json.loads(row.packet_json)["account"]["buying_power"] == "10"
     assert repo.load_open_position() is None
     assert repo.benchmark_range("SPY") == (Decimal("100"), Decimal("100"))
-    if scenario in {"open", "review_failure"}:
+    if scenario in {"open", "review_failure", "cooldown_expired"}:
         assert risk.approved
         assert [name for name, _ in gateway.calls] == ["review_equity_order"]
-        if scenario == "open":
+        if scenario != "review_failure":
             assert execution.status == "SKIPPED"
             assert execution.broker_review is not None
         else:
@@ -213,12 +265,16 @@ async def test_complete_shadow_cycle_persists_evidence_and_gates_review(repo, sc
             assert execution.review_error == "RuntimeError"
             assert "private broker response" not in row.execution_json
             assert orchestrator.daily_entries == 0
+    elif scenario == "scheduled_expiry":
+        assert risk.approved
+        assert gateway.calls == []
+        assert execution.session_blocked
     else:
         assert gateway.calls == []
         assert not risk.approved
-    if scenario == "failure":
+    if scenario in {"failure", "scheduled_closed"}:
         assert result.action == Action.HOLD
-        assert execution.agent_error == "RuntimeError"
+        assert execution.agent_error == ("RuntimeError" if scenario == "failure" else None)
         assert repo.latest_model_usage() is None
     else:
         assert repo.model_cost_total() == Decimal("0.00003000")
@@ -227,3 +283,20 @@ async def test_complete_shadow_cycle_persists_evidence_and_gates_review(repo, sc
     evidence = repo.shadow_cycle_evidence(row.id)
     assert evidence["status"] == "LINKED"
     assert evidence["reconciliation"]["reconciled"] == reconciliation.reconciled
+    if scenario == "scheduled_closed":
+        assert calls == []
+        assert execution.session_blocked
+    if scheduled:
+        from app.metrics.shadow import shadow_history_report
+
+        assert json.loads(row.packet_json)["session_context"] == window.context()
+        assert repo.shadow_slot(window.key).status == "COMPLETED"
+        assert repo.shadow_slot(window.key).cycle_id == row.id
+        history = shadow_history_report(repo, "SPY", 100)
+        assert history["session_blocked_count"] == 1
+        assert history["deterministic_hold_count"] == (1 if scenario == "scheduled_closed" else 0)
+        assert history["cycles"][0]["session_context"] == window.context()
+    if scenario == "daily_limit":
+        assert "DAILY_ENTRY_LIMIT" in risk.rejection_reasons
+    if scenario == "exit_cooldown":
+        assert "EXIT_COOLDOWN" in risk.rejection_reasons

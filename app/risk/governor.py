@@ -23,6 +23,7 @@ def govern(
     system_enabled: bool = True,
     broker_reconciled: bool = True,
     daily_entries: int = 0,
+    in_exit_cooldown: bool = False,
 ) -> RiskDecision:
     equity = packet.account.equity
     policy = policy_for_equity(equity)
@@ -97,6 +98,8 @@ def govern(
             reasons.append("AVERAGING_DOWN_PROHIBITED")
     if daily_entries >= settings.max_daily_entries:
         reasons.append("DAILY_ENTRY_LIMIT")
+    if in_exit_cooldown:
+        reasons.append("EXIT_COOLDOWN")
     if packet.account.drawdown_fraction >= policy.shutdown_drawdown_fraction:
         reasons.append("DRAWDOWN_SHUTDOWN")
 

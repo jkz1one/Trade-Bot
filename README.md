@@ -64,5 +64,25 @@ marked. Stub cycles use model identity `stub`. Model failures save HOLD and exit
 broker-review failures save their evidence and exit 9. Neither failure submits an order.
 
 History shows action/failure/review counts, known model cost and raw SPY price observations.
-It does not infer fills, strategy P&L or alpha. Authenticated Slice 2 verification is still pending;
-see `docs/SLICE2_STATUS.md` for the latest API credit blocker and verification batch.
+It does not infer fills, strategy P&L or alpha. The authenticated model-to-SHADOW core
+is verified; see `docs/SLICE2_STATUS.md` for evidence and remaining experiment work.
+
+Regular-session scheduling (install the updated dependencies with `pip install -e '.[dev]'`):
+
+```bash
+python -m app.robinhood.cli shadow-run --agent openai --once
+python -m app.robinhood.cli shadow-schedule-status
+python -m app.robinhood.cli shadow-run --agent openai
+```
+
+The foreground runner polls every 30 seconds and attempts the current 15-minute XNYS
+regular-session slot, handling holidays, early closes and daylight saving. It skips
+closed sessions before broker/model calls. The machine must remain awake and the
+process running. No service is installed automatically.
+
+Persistent SQLite claims prevent duplicate scheduled cycles across restarts/workers
+using the same database; missed slots are not replayed. An interrupted active claim
+blocks new scheduled cycles until inspected and resolved, with no automatic expiry.
+Session closure prevents model judgment or broker review as appropriate. Daily entry
+review limits and exit cooldown persist. History distinguishes actual model HOLDs
+from deterministic guards, stub decisions and unattributed legacy HOLDs.

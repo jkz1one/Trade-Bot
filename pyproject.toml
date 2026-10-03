@@ -17,6 +17,7 @@ dependencies = [
   "pydantic-settings>=2.4",
   "openai-agents>=0.2",
   "mcp>=2.0,<3.0",
+  "exchange-calendars>=4.11,<5",
 ]
 
 [project.optional-dependencies]

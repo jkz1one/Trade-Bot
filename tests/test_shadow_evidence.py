@@ -113,6 +113,10 @@ def test_history_survives_restart_distinguishes_errors_and_reports_only_known_co
     assert report["action_counts"] == {"HOLD": 3}
     assert report["model_counts"] == {"gpt-6-luna": 2, "stub": 1}
     assert report["genuine_hold_count"] == 2
+    assert report["model_hold_count"] == 1
+    assert report["deterministic_hold_count"] == 1
+    assert report["unattributed_hold_count"] == 0
+    assert [c["hold_origin"] for c in report["cycles"]] == ["MODEL", "AGENT_FAILURE", "DETERMINISTIC"]
     assert report["agent_failure_count"] == 1
     assert report["linked_cycle_count"] == 3
     assert report["usage_reported_cycle_count"] == 1
@@ -137,6 +141,8 @@ def test_no_benchmark_or_usage_is_reported_as_missing(repo):
     report = shadow_history_report(repo, "SPY", 10)
     assert report["benchmark"]["sample_count"] == 0
     assert report["benchmark"]["raw_price_return_fraction"] is None
+    assert report["model_hold_count"] == 0
+    assert report["unattributed_hold_count"] == 1
 
 
 def test_empty_history_and_limit_validation(repo):

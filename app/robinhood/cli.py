@@ -9,7 +9,7 @@ from urllib.parse import parse_qs, urlparse
 
 from app.agent.trader import OpenAIAgentsTrader, StubTraderAgent
 from app.config import Settings
-from app.domain.models import Action
+from app.domain.models import Action, utc_now
 from app.metrics.shadow import shadow_history_report
 from app.robinhood.client import RobinhoodMcpConnection
 from app.robinhood.gateway import RobinhoodSafeGateway
@@ -17,6 +17,7 @@ from app.robinhood.market import RobinhoodMarketData
 from app.robinhood.read import RobinhoodReadService
 from app.robinhood.reconcile import reconcile_truth
 from app.robinhood.shadow import ShadowOrchestrator
+from app.robinhood.schedule import ShadowScheduler, XNYSCalendar
 from app.storage.db import init_db, make_engine, make_session_factory
 from app.storage.repository import Repository
 
@@ -310,7 +311,10 @@ def _history_limit(value: str) -> int:
     return limit
 
 
-async def shadow_cycle(settings: Settings, agent_name: str) -> int:
+async def shadow_cycle(
+    settings: Settings, agent_name: str, *, repo: Repository | None = None,
+    schedule_window=None, claim_token: str | None = None,
+) -> int:
     if agent_name == "openai":
         key_problem = _openai_key_problem(os.getenv("OPENAI_API_KEY"))
         if key_problem:
@@ -323,7 +327,7 @@ async def shadow_cycle(settings: Settings, agent_name: str) -> int:
             }, indent=2))
             return 4
     settings = settings.model_copy(update={"mode": "SHADOW", "live_enabled": False})
-    repo = _repo(settings)
+    repo = repo if repo is not None else _repo(settings)
     agent = (
         OpenAIAgentsTrader(settings.model_name)
         if agent_name == "openai"
@@ -332,9 +336,10 @@ async def shadow_cycle(settings: Settings, agent_name: str) -> int:
     async with _connection(settings).client() as client:
         gateway = RobinhoodSafeGateway(client, settings.robinhood_mcp_url)
         orchestrator = ShadowOrchestrator(settings, repo, gateway, agent)
-        packet, decision, risk, execution, reconciliation, truth = (
-            await orchestrator.cycle()
-        )
+        result = (await orchestrator.cycle(
+            schedule_window=schedule_window, claim_token=claim_token,
+        ) if schedule_window is not None else await orchestrator.cycle())
+        packet, decision, risk, execution, reconciliation, truth = result
     print(json.dumps({
         "account": _mask(truth.account.account_number),
         "reconciled": reconciliation.reconciled,
@@ -350,6 +355,48 @@ async def shadow_cycle(settings: Settings, agent_name: str) -> int:
     if execution.agent_error:
         return 8
     return 9 if execution.review_error else 0
+
+
+async def shadow_run(settings: Settings, agent_name: str, once: bool) -> int:
+    repo = _repo(settings)
+
+    async def run(window, token):
+        return await shadow_cycle(settings, agent_name, repo=repo,
+                                  schedule_window=window, claim_token=token)
+
+    scheduler = ShadowScheduler(repo, run)
+    previous = None
+    while True:
+        result = await scheduler.tick()
+        if result != previous:
+            print(json.dumps(result, indent=2), flush=True)
+            previous = result
+        if once or result["exit_code"]:
+            return result["exit_code"]
+        await asyncio.sleep(30)
+
+
+def shadow_schedule_status(settings: Settings) -> int:
+    repo = _repo(settings)
+    try:
+        window = XNYSCalendar().current_window(utc_now())
+        market = {"status": "OPEN" if window else "CLOSED",
+                  "session": window.context() if window else None}
+    except Exception as exc:
+        market = {"status": "ERROR", "error_class": type(exc).__name__}
+    active = repo.active_shadow_slot()
+    payload = {
+        "market": market, "active_slot": active.slot_key if active else None,
+        "slots": [{
+            "slot_key": row.slot_key, "scheduled_for": row.scheduled_for.isoformat(),
+            "status": row.status, "cycle_id": row.cycle_id,
+            "exit_code": row.exit_code, "error_class": row.error_class,
+        } for row in repo.shadow_schedule_slots()],
+        "network_calls": False,
+        "recovery_note": "An interrupted CLAIMED slot blocks new scheduled cycles until reviewed; it is never automatically replayed.",
+    }
+    print(json.dumps(payload, indent=2))
+    return 12 if market["status"] == "ERROR" else 0
 
 
 def main() -> None:
@@ -369,6 +416,10 @@ def main() -> None:
     h.add_argument("--limit", type=_history_limit, default=100)
     s = sub.add_parser("shadow-cycle")
     s.add_argument("--agent", choices=["stub", "openai"], default="stub")
+    r = sub.add_parser("shadow-run")
+    r.add_argument("--agent", choices=["stub", "openai"], default="stub")
+    r.add_argument("--once", action="store_true")
+    sub.add_parser("shadow-schedule-status")
     args = parser.parse_args()
     settings = Settings()
     if args.command == "discover":
@@ -383,6 +434,10 @@ def main() -> None:
         code = shadow_audit(settings)
     elif args.command == "shadow-history":
         code = shadow_history(settings, args.limit)
+    elif args.command == "shadow-run":
+        code = asyncio.run(shadow_run(settings, args.agent, args.once))
+    elif args.command == "shadow-schedule-status":
+        code = shadow_schedule_status(settings)
     else:
         code = asyncio.run(shadow_cycle(settings, args.agent))
     raise SystemExit(code)

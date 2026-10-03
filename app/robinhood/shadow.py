@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
 from decimal import Decimal
 from time import perf_counter
 
 from app.agent.prompts import TRADER_PROMPT_VERSION
-from app.agent.trader import TraderAgent, fail_closed_agent_run
+from app.agent.trader import AgentRun, TraderAgent, fail_closed_agent_run
 from app.config import Settings
-from app.domain.models import AccountState, Action, ExecutionResult, MarketPacket, Position
+from app.domain.models import (
+    AccountState, Action, ExecutionResult, MarketPacket, Position, TradeDecision, utc_now,
+)
 from app.risk.governor import govern
 from app.robinhood.gateway import RobinhoodSafeGateway
 from app.robinhood.market import RobinhoodMarketData
@@ -30,6 +31,7 @@ class ShadowOrchestrator:
         repo: Repository,
         gateway: RobinhoodSafeGateway,
         agent: TraderAgent,
+        *, clock=None,
     ):
         if settings.normalized_mode != "SHADOW":
             raise RuntimeError("ShadowOrchestrator requires TRADER_MODE=SHADOW")
@@ -39,6 +41,7 @@ class ShadowOrchestrator:
         self.repo = repo
         self.gateway = gateway
         self.agent = agent
+        self.clock = clock or utc_now
         self.reads = RobinhoodReadService(gateway)
         self.market = RobinhoodMarketData(
             gateway,
@@ -123,7 +126,11 @@ class ShadowOrchestrator:
             broker_review=review,
         )
 
-    async def cycle(self):
+    async def cycle(self, *, schedule_window=None, claim_token: str | None = None):
+        if schedule_window is not None:
+            claim = self.repo.shadow_slot(schedule_window.key)
+            if claim is None or claim.status != "CLAIMED" or claim.claim_token != claim_token:
+                raise RuntimeError("Scheduled SHADOW must own an active cycle claim before reads")
         started = perf_counter()
         truth = await self.reads.truth()
         reconciliation = reconcile_truth(self.repo, truth)
@@ -133,7 +140,7 @@ class ShadowOrchestrator:
         )
         account = self._account_state(truth, candidates, reconciliation.reconciled)
         packet = MarketPacket(
-            as_of=datetime.now(timezone.utc),
+            as_of=self.clock(),
             account=account,
             candidates=candidates,
             regime=self.market.regime(candidates),
@@ -145,15 +152,30 @@ class ShadowOrchestrator:
                     + ", ".join(reconciliation.reasons)
                 ]
             ),
+            session_context=schedule_window.context() if schedule_window else None,
         )
-        run = await self._decide(packet)
+        session_blocked = schedule_window is not None and not schedule_window.is_open(self.clock())
+        if session_blocked:
+            run = AgentRun(TradeDecision(
+                action=Action.HOLD, confidence=0, setup_quality=0,
+                thesis="The scheduled regular market session ended before model judgment.",
+                invalidation_reason="No position-changing action is permitted outside this session.",
+                why_now="Wait for a future regular market session.",
+            ))
+        else:
+            run = await self._decide(packet)
+        entries, last_close = self.repo.shadow_review_activity(packet.as_of)
+        in_cooldown = last_close is not None and (
+            packet.as_of - last_close
+        ).total_seconds() < self.settings.exit_cooldown_minutes * 60
         risk = govern(
             run.decision,
             packet,
             self.settings,
             system_enabled=self.system_enabled,
             broker_reconciled=reconciliation.reconciled,
-            daily_entries=self.daily_entries,
+            daily_entries=entries,
+            in_exit_cooldown=in_cooldown,
         )
         message = (
             f"SHADOW: agent failure ({run.error}); fail-closed HOLD"
@@ -165,19 +187,26 @@ class ShadowOrchestrator:
             symbol=run.decision.symbol,
             message=message,
             agent_error=run.error,
+            session_blocked=session_blocked,
         )
         if risk.approved and run.decision.symbol:
-            try:
-                execution = await self._review(
-                    run.decision, risk, packet, truth.account.account_number,
-                )
-            except Exception as exc:
+            if schedule_window is not None and not schedule_window.is_open(self.clock()):
                 execution = ExecutionResult(
-                    status="REJECTED", symbol=run.decision.symbol,
-                    message="SHADOW broker review failed; no order submitted",
-                    review_error=type(exc).__name__,
+                    status="SKIPPED", symbol=run.decision.symbol, session_blocked=True,
+                    message="SHADOW session ended during model judgment; broker review skipped",
                 )
-            if execution.review_error is None and run.decision.action == Action.OPEN_LONG:
+            else:
+                try:
+                    execution = await self._review(
+                        run.decision, risk, packet, truth.account.account_number,
+                    )
+                except Exception as exc:
+                    execution = ExecutionResult(
+                        status="REJECTED", symbol=run.decision.symbol,
+                        message="SHADOW broker review failed; no order submitted",
+                        review_error=type(exc).__name__,
+                    )
+            if execution.broker_review is not None and run.decision.action == Action.OPEN_LONG:
                 self.daily_entries += 1
 
         latency_ms = int((perf_counter() - started) * 1000)
@@ -186,6 +215,7 @@ class ShadowOrchestrator:
             run.decision,
             risk,
             execution,
+            "session-guard" if session_blocked else
             getattr(self.agent, "model_identifier", type(self.agent).__name__),
             latency_ms=latency_ms,
             prompt_version=TRADER_PROMPT_VERSION,
@@ -194,5 +224,7 @@ class ShadowOrchestrator:
             output_price=self.settings.model_output_usd_per_million,
             benchmark_symbol=self.settings.benchmark_symbol,
             reconciliation=reconciliation.model_dump(mode="json"),
+            slot_key=schedule_window.key if schedule_window else None,
+            claim_token=claim_token,
         )
         return packet, run.decision, risk, execution, reconciliation, truth
