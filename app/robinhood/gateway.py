@@ -9,7 +9,6 @@ from typing import Any
 from app.robinhood.client import ToolClient
 
 
-# Exact names currently documented by Robinhood and required by the Slice 2 handoff.
 REQUIRED_SLICE2_READ_TOOLS = frozenset(
     {
         "get_accounts",
@@ -23,8 +22,6 @@ REQUIRED_SLICE2_READ_TOOLS = frozenset(
     }
 )
 
-# Additional non-mutating tools useful to the experiment. Review simulates/previews an order;
-# it does not place one. The Trader Agent never receives this gateway directly.
 SAFE_SLICE2_TOOLS = REQUIRED_SLICE2_READ_TOOLS | frozenset(
     {
         "get_realized_pnl",
@@ -37,11 +34,46 @@ SAFE_SLICE2_TOOLS = REQUIRED_SLICE2_READ_TOOLS | frozenset(
     }
 )
 
-FORBIDDEN_WRITE_PREFIXES = ("place_", "cancel_", "create_", "update_", "add_", "remove_", "follow_", "unfollow_")
+FORBIDDEN_WRITE_PREFIXES = (
+    "place_",
+    "cancel_",
+    "create_",
+    "delete_",
+    "exercise_",
+    "update_",
+    "add_",
+    "remove_",
+    "follow_",
+    "unfollow_",
+    "mark_",
+)
 
 
 class UnsafeRobinhoodToolError(RuntimeError):
     pass
+
+
+def _wire_field(tool: dict[str, Any], camel: str, snake: str | None = None) -> Any:
+    if camel in tool:
+        return tool[camel]
+    if snake and snake in tool:
+        return tool[snake]
+    return None
+
+
+def _normalize_tool_metadata(tool: dict[str, Any]) -> dict[str, Any]:
+    normalized: dict[str, Any] = {}
+    for camel, snake in (
+        ("name", None),
+        ("description", None),
+        ("inputSchema", "input_schema"),
+        ("outputSchema", "output_schema"),
+        ("annotations", None),
+    ):
+        value = _wire_field(tool, camel, snake)
+        if value is not None:
+            normalized[camel] = value
+    return normalized
 
 
 @dataclass(frozen=True)
@@ -50,6 +82,7 @@ class ToolSchemaSnapshot:
     endpoint: str
     tools: dict[str, dict[str, Any]]
     missing_required_tools: tuple[str, ...]
+    missing_required_input_schemas: tuple[str, ...]
     advertised_write_tools: tuple[str, ...]
 
     def to_dict(self) -> dict[str, Any]:
@@ -58,6 +91,7 @@ class ToolSchemaSnapshot:
             "endpoint": self.endpoint,
             "tools": self.tools,
             "missing_required_tools": list(self.missing_required_tools),
+            "missing_required_input_schemas": list(self.missing_required_input_schemas),
             "advertised_write_tools": list(self.advertised_write_tools),
         }
 
@@ -66,13 +100,19 @@ class ToolSchemaSnapshot:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(json.dumps(self.to_dict(), indent=2, sort_keys=True) + "\n")
 
+    def save_required(self, path: str | Path) -> None:
+        target = Path(path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            name: self.tools[name]
+            for name in sorted(REQUIRED_SLICE2_READ_TOOLS | {"review_equity_order"})
+            if name in self.tools
+        }
+        target.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
 
 class RobinhoodSafeGateway:
-    """Capability firewall around a generic MCP tool client.
-
-    No method accepts arbitrary live brokerage writes. Even if Robinhood advertises placement
-    tools during discovery, this gateway rejects them before a network call is made.
-    """
+    """Capability firewall around a generic MCP tool client."""
 
     def __init__(self, client: ToolClient, endpoint: str):
         self._client = client
@@ -82,25 +122,26 @@ class RobinhoodSafeGateway:
         tools = await self._client.list_tools()
         by_name: dict[str, dict[str, Any]] = {}
         advertised_writes: list[str] = []
-        for tool in tools:
+        for raw_tool in tools:
+            tool = _normalize_tool_metadata(raw_tool)
             name = str(tool.get("name", ""))
             if not name:
                 continue
-            # Persist only public tool metadata/schema. Tool-call results/account data are not
-            # part of schema discovery and therefore cannot leak into this snapshot.
-            by_name[name] = {
-                key: tool[key]
-                for key in ("name", "description", "inputSchema", "outputSchema", "annotations")
-                if key in tool
-            }
+            by_name[name] = tool
             if name.startswith(FORBIDDEN_WRITE_PREFIXES):
                 advertised_writes.append(name)
         missing = sorted(REQUIRED_SLICE2_READ_TOOLS - by_name.keys())
+        missing_schemas = sorted(
+            name
+            for name in REQUIRED_SLICE2_READ_TOOLS
+            if name in by_name and not isinstance(by_name[name].get("inputSchema"), dict)
+        )
         return ToolSchemaSnapshot(
             captured_at=datetime.now(timezone.utc).isoformat(),
             endpoint=self.endpoint,
             tools=dict(sorted(by_name.items())),
             missing_required_tools=tuple(missing),
+            missing_required_input_schemas=tuple(missing_schemas),
             advertised_write_tools=tuple(sorted(advertised_writes)),
         )
 
