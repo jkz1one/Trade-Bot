@@ -10,6 +10,37 @@ authenticated regular-session cycle remains to be observed. Forward quote outcom
 tracking and a persistent Linux SHADOW service are implemented and verified offline.
 The service is prepared for DigitalOcean; it is not deployed yet. LIVE is disabled.
 
+## Model subprocess hardening
+
+The SignalFlow review exposed the earlier `asyncio.to_thread` cancellation limitation.
+OpenAI SHADOW decisions now execute in an isolated, tool-less child process. The child
+receives only the MarketPacket, model name and request timeout through stdin. It owns
+no broker connection or database handle. Success returns validated TradeDecision and
+exact usage; errors return a sanitized class and fail-closed HOLD. Child stdout/stderr
+diagnostics cannot enter the protocol or application logs.
+
+Defaults: 60-second SDK request timeout, zero SDK retries, 120-second entire process
+deadline (startup/import included). Model timeout or outer cycle cancellation terminates
+the process group, escalates to SIGKILL after two seconds if needed and reaps the child.
+Cancellation during startup or cleanup cannot leave an orphan or turn cancellation
+into a successful proposal. The original strict schema, runtime limits, tools=[] and
+one-turn policy remain unchanged. SDK tracing is disabled only in the subprocess;
+application audit/usage persistence remains authoritative.
+
+A model deadline persists HOLD/ModelProcessTimeout, no review and exit 8, then latches
+HALTED. An outer cycle deadline leaves its active claim interrupted and blocks replay.
+Missing usage remains unknown; local termination cannot guarantee cancellation of
+remote computation or billing. No model calls are retried or reconstructed by recovery.
+
+Updated local suite: **198 tests passed**, including 17 new process tests. They use real
+blocking synchronous children that ignore SIGTERM, prove forced kill/reaping, cover
+startup/repeated/success-cleanup cancellation, malformed/oversized/crashed output, exact
+packet/decision/usage transport, no retries/tools, durable service halt and claim state,
+no review/replay after timeout, and shutdown draining a blocked model call.
+Compilation, fatal-error lint and whitespace checks passed. No live API/broker calls
+were made. Container build, authenticated subprocess output, host memory/latency and
+first scheduled regular-session cycle remain target-host gates.
+
 ## SignalFlow architectural review
 
 [SIGNALFLOW_REUSE_ASSESSMENT.md](SIGNALFLOW_REUSE_ASSESSMENT.md) records a targeted,
@@ -23,11 +54,11 @@ point-in-time replay and separately measured synthetic execution. Options/flow f
 multi-bot coordination and SignalFlow's narration-only AI schema are not a direct fit.
 The existing web app remains PAPER/demo only; no SHADOW browser monitor exists yet.
 
-An important service limitation was reproduced locally: the cycle timeout cancels an
+An important limitation in the reviewed snapshot was reproduced locally: the cycle timeout cancels an
 awaiting task but cannot terminate the synchronous model thread used by `to_thread`.
-Durable halt/claim blocking prevents another cycle; bounded real-call cleanup and
-shutdown remain unverified. Harden that boundary before unattended deployment, then
-add the read-only observer and sequential experiment ledger. No live model/broker
+Durable halt/claim blocking prevented another cycle; subprocess hardening above now
+fixes local cleanup/shutdown for OpenAI SHADOW. The next engineering slice is the
+read-only observer, followed by the sequential experiment ledger. No live model/broker
 calls or server changes occurred during the review.
 
 ## Persistent server follow-up

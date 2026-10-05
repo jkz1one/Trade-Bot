@@ -28,6 +28,8 @@ services:
       TRADER_ROBINHOOD_OAUTH_STORAGE: /oauth/robinhood-oauth.json
       TRADER_OPENAI_API_KEY_FILE: /run/secrets/openai_api_key
       TRADER_SHADOW_SERVICE_LOCK_PATH: /data/shadow-service.lock
+      TRADER_MODEL_PROCESS_TIMEOUT_SECONDS: "120"
+      TRADER_MODEL_REQUEST_TIMEOUT_SECONDS: "60"
     volumes:
       - type: bind
         source: /var/lib/trade-bot/data

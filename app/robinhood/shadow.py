@@ -5,7 +5,7 @@ from decimal import Decimal
 from time import perf_counter
 
 from app.agent.prompts import TRADER_PROMPT_VERSION
-from app.agent.trader import AgentRun, TraderAgent, fail_closed_agent_run
+from app.agent.trader import AgentRun, OpenAIAgentsTrader, TraderAgent, fail_closed_agent_run
 from app.config import Settings
 from app.domain.models import (
     AccountState, Action, ExecutionResult, MarketPacket, Position, TradeDecision, utc_now,
@@ -78,6 +78,11 @@ class ShadowOrchestrator:
 
     async def _decide(self, packet: MarketPacket):
         try:
+            if isinstance(self.agent, OpenAIAgentsTrader):
+                return await self.agent.decide_isolated(
+                    packet, timeout_seconds=self.settings.model_process_timeout_seconds,
+                    request_timeout_seconds=self.settings.model_request_timeout_seconds,
+                )
             return await asyncio.to_thread(self.agent.decide, packet)
         except Exception as exc:
             return fail_closed_agent_run(exc)

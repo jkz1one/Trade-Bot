@@ -12,6 +12,14 @@ roadmap, an integration, or approval to deploy/change SignalFlow.
   opening baseline summary also lags later entries describing PRs #106/#108.
   Do not infer the droplet's current image, availability or health from this file.
 
+Follow-up implementation: OpenAI SHADOW now uses a killable model subprocess with a
+120-second overall deadline, 60-second request timeout, zero SDK retries and explicit
+terminate/kill/reap cleanup. Seventeen process/worker/integration tests exercise genuinely
+blocking synchronous children, cancellation races, output validation, service halt,
+claim retention and shutdown drain. The historical thread gap below describes the
+reviewed snapshot; see [SLICE2_STATUS.md](SLICE2_STATUS.md) for current verification.
+An authenticated subprocess model run and target-host startup still remain to be observed.
+
 A thirty-file pinned SignalFlow reference snapshot was recovered. Targeted reads covered architecture,
 paper measurement, outcome/rejection reporting, replay, calibration, reconciliation,
 stop/loss controls, worker health, runtime incidents and dashboard surfaces. This is
@@ -77,7 +85,7 @@ creates fixture market data, a stub agent and PaperBroker. Its run-cycle/halt co
 operate that process; they do not control the SHADOW service. It must not be presented
 as a live SHADOW monitor or have its demo metrics relabeled as brokerage results.
 
-## Concrete runtime lesson and current gap
+## Concrete runtime lesson and reviewed snapshot gap
 
 SignalFlow's [reliability audit](https://github.com/jkz1one/SignalFlow/blob/f9eaf2c1b5d13dca287ee7138126883065b00395/docs/play-orchestrator-reliability-audit.md)
 and [restart guard](https://github.com/jkz1one/SignalFlow/blob/f9eaf2c1b5d13dca287ee7138126883065b00395/backend/platform/worker_restart_guard.py)
@@ -87,13 +95,13 @@ offline checks passed, plus an immediate memory problem associated with diagnost
 provider comparisons inside a latency-sensitive stream worker. These are documented
 historical observations, not fresh measurements of the current droplet.
 
-The same cancellation distinction matters in Trade-Bot. `ShadowOrchestrator._decide`
+The same cancellation distinction applied in the reviewed Trade-Bot snapshot. `ShadowOrchestrator._decide`
 uses `asyncio.to_thread(agent.decide, packet)`, while `ShadowService` applies a
 600-second `asyncio.wait_for` to the cycle. A timeout cancels the awaiting coroutine;
 it does not forcibly terminate the synchronous OpenAI call/thread. A small local
 thread experiment reproduced this behavior without an API call.
 
-Current fail-closed behavior still prevents another scheduled cycle and any broker
+That snapshot's fail-closed behavior still prevents another scheduled cycle and any broker
 write, and an interrupted claim blocks replay. However, a model request may continue
 after HALTED, with additional latency/cost. `asyncio.run` may wait on executor shutdown;
 the Docker 660-second stop grace can ultimately force termination. A normal SIGTERM
@@ -117,7 +125,8 @@ stage timing and memory/restart evidence on the actual host before enlarging sco
 This is a reuse recommendation within the settled project scope. No runtime feature
 below is implemented by this review.
 
-1. **Harden the model timeout/shutdown boundary.** Prove behavior for blocked synchronous
+1. **Harden the model timeout/shutdown boundary.** Implemented and verified offline in
+   the subprocess follow-up. Prove behavior for blocked synchronous
    work, executor/process cleanup, durable claims and halt/resume before continuous
    deployment. Retain the existing server migration and target-host verification gates.
 2. **Add a separate private read-only SHADOW dashboard.** Show worker state/release,

@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     openai_api_key_file: str | None = None
     shadow_service_lock_path: str = "var/shadow-service.lock"
     release_sha: str = "unknown"
+    model_process_timeout_seconds: float = Field(default=120, gt=0, le=300)
+    model_request_timeout_seconds: float = Field(default=60, gt=0, le=120)
     robinhood_schema_snapshot: str = "var/robinhood-tool-schemas.json"
     robinhood_required_schema_snapshot: str = "var/robinhood-required-schemas.json"
     robinhood_db_url: str = "sqlite:///./robinhood.db"

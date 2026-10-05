@@ -111,3 +111,11 @@ class OpenAIAgentsTrader(TraderAgent):
             input_tokens=int(getattr(usage, "input_tokens", 0) or 0),
             output_tokens=int(getattr(usage, "output_tokens", 0) or 0),
         )
+
+    async def decide_isolated(self, packet, *, timeout_seconds, request_timeout_seconds):
+        from app.agent.process import run_model_process
+
+        return await run_model_process(
+            self._model, packet, timeout_seconds=timeout_seconds,
+            request_timeout_seconds=request_timeout_seconds,
+        )

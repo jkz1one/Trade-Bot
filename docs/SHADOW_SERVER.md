@@ -111,12 +111,27 @@ SIGTERM stops new cycles and allows the active cycle to drain; Docker allows 660
 seconds before termination. A hard interruption can leave a CLAIMED slot. It blocks
 new work across restarts and is never automatically replayed or expired.
 
-Known limitation from the [SignalFlow review](SIGNALFLOW_REUSE_ASSESSMENT.md): the
-600-second deadline cancels the awaiting coroutine, not a synchronous model thread
-already executing through `asyncio.to_thread`. That request may continue after HALTED,
-and executor shutdown can outlast the normal drain. Docker may ultimately force
-termination. Harden/verify the real-call timeout and cleanup boundary before unattended
-deployment; existing async timeout tests and the normal SIGTERM smoke do not prove it.
+The synchronous-model-thread gap identified in the
+[SignalFlow review](SIGNALFLOW_REUSE_ASSESSMENT.md) is fixed for OpenAI SHADOW cycles.
+Each decision runs in a separate process with no broker/database handles or model tools.
+The request timeout is 60 seconds, SDK retries are zero, and the entire model-process
+deadline is 120 seconds including startup. Timeout/cancellation sends SIGTERM to that
+child's process group, then SIGKILL after at most two seconds of graceful termination,
+and reaps it before returning. The parent has no synchronous model executor to drain.
+The outer 600-second cycle deadline also invokes this cleanup.
+
+A model deadline becomes fail-closed HOLD with `agent_error: ModelProcessTimeout`,
+no review, exit 8 and a durable service halt. An outer cycle cancellation preserves
+the interrupted claim and halts; it never creates a completed cycle or replays work.
+SDK tracing is disabled in the child; persisted application evidence remains the audit.
+Child diagnostic output is discarded; only validated decision/usage/error-class JSON
+crosses the process boundary.
+
+Local process termination closes the client connection; it cannot guarantee that an
+already accepted remote API request stops computing or is unbilled. A terminated/failed
+call without returned usage remains unknown, not zero-cost evidence. Compare API billing
+when accounting for such failures. This subprocess path has offline failure-injection
+coverage but still requires authenticated model verification on the target host.
 
 After inspecting logs, audit and slots, stop the worker and fix the reported problem
 (for example, update the private key file or replenish API credits). If a CLAIMED
