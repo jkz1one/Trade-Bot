@@ -1,6 +1,6 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
-## Current checkpoint — 2026-10-03
+## Current checkpoint — 2026-10-05 UTC
 
 Branch: `slice2/robinhood-read-shadow`. PR #1 remains draft. `main` remains untouched.
 The authenticated core path is verified: strict OpenAI output, real Robinhood reads,
@@ -9,6 +9,26 @@ installed and its closed-session behavior is verified on the Mac. A scheduled
 authenticated regular-session cycle remains to be observed. Forward quote outcome
 tracking and a persistent Linux SHADOW service are implemented and verified offline.
 The service is prepared for DigitalOcean; it is not deployed yet. LIVE is disabled.
+
+## SignalFlow architectural review
+
+[SIGNALFLOW_REUSE_ASSESSMENT.md](SIGNALFLOW_REUSE_ASSESSMENT.md) records a targeted,
+source-linked comparison against SignalFlow `f9eaf2c1b5d13dca287ee7138126883065b00395`
+and Trade-Bot `87319600d44524840010ccb3d4b3c084c0b00e74`. SignalFlow was read only;
+no runtime features or integration were added by this review. Twelve isolated pure
+SignalFlow rejection/replay/outcome tests passed; Trade-Bot's 181 tests passed again.
+
+Reusable patterns are stored-evidence dashboard/reporting, complete decision cohorts,
+point-in-time replay and separately measured synthetic execution. Options/flow feeds,
+multi-bot coordination and SignalFlow's narration-only AI schema are not a direct fit.
+The existing web app remains PAPER/demo only; no SHADOW browser monitor exists yet.
+
+An important service limitation was reproduced locally: the cycle timeout cancels an
+awaiting task but cannot terminate the synchronous model thread used by `to_thread`.
+Durable halt/claim blocking prevents another cycle; bounded real-call cleanup and
+shutdown remain unverified. Harden that boundary before unattended deployment, then
+add the read-only observer and sequential experiment ledger. No live model/broker
+calls or server changes occurred during the review.
 
 ## Persistent server follow-up
 

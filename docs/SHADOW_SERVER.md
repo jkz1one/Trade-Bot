@@ -111,6 +111,13 @@ SIGTERM stops new cycles and allows the active cycle to drain; Docker allows 660
 seconds before termination. A hard interruption can leave a CLAIMED slot. It blocks
 new work across restarts and is never automatically replayed or expired.
 
+Known limitation from the [SignalFlow review](SIGNALFLOW_REUSE_ASSESSMENT.md): the
+600-second deadline cancels the awaiting coroutine, not a synchronous model thread
+already executing through `asyncio.to_thread`. That request may continue after HALTED,
+and executor shutdown can outlast the normal drain. Docker may ultimately force
+termination. Harden/verify the real-call timeout and cleanup boundary before unattended
+deployment; existing async timeout tests and the normal SIGTERM smoke do not prove it.
+
 After inspecting logs, audit and slots, stop the worker and fix the reported problem
 (for example, update the private key file or replenish API credits). If a CLAIMED
 slot is confirmed interrupted, explicitly abandon its exact key before resuming:
