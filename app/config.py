@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     release_sha: str = "unknown"
     model_process_timeout_seconds: float = Field(default=120, gt=0, le=300)
     model_request_timeout_seconds: float = Field(default=60, gt=0, le=120)
+    dashboard_password_file: str | None = None
     robinhood_schema_snapshot: str = "var/robinhood-tool-schemas.json"
     robinhood_required_schema_snapshot: str = "var/robinhood-required-schemas.json"
     robinhood_db_url: str = "sqlite:///./robinhood.db"

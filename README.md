@@ -78,8 +78,17 @@ python -m app.robinhood.cli shadow-run --agent openai
 
 For continuous operation on a Linux server, use the detached SHADOW service in
 [docs/SHADOW_SERVER.md](docs/SHADOW_SERVER.md). It keeps state outside the code checkout,
-restarts with Docker, uses private credential files and exposes no website ports.
+restarts with Docker and uses private credential files. A separate password-protected
+SHADOW observer reads saved history on a localhost-only port through an SSH tunnel.
 The Mac can be shut down after migration and server verification.
+
+The observer shows worker heartbeat/halt state, account snapshot age, model proposals,
+deterministic risk results, review completion, linked model cost and forward quote
+outcomes. Opening or refreshing it never runs a cycle or calls a broker/model.
+It has no trading or recovery controls. The existing `app.main` remains PAPER-only.
+See the server guide for access and the separate `app.web.shadow:create_shadow_app`
+application; it refuses startup without SHADOW mode, LIVE disabled and a private
+password file.
 
 The foreground runner remains useful for local checks. Both runners poll every
 30 seconds and attempt the current 15-minute XNYS regular-session slot, handling

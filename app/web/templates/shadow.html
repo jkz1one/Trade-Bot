@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  {% if auto_refresh %}<meta http-equiv="refresh" content="30">{% endif %}
+  <title>Trade-Bot · SHADOW observer</title>
+  <style>
+    :root { color-scheme:dark; --bg:#0c1017; --panel:#141b26; --line:#2a3445; --text:#edf2fa; --muted:#a6b5ca; --mint:#85e3c9; --amber:#ffc278; --red:#ff9ba8; }
+    * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); font:15px/1.55 system-ui,sans-serif; }
+    main { max-width:1240px; margin:auto; padding:32px 24px 56px; }
+    header,.section-head,.controls { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    header { border-bottom:1px solid var(--line); padding-bottom:22px; margin-bottom:24px; }
+    h1 { font-size:27px; letter-spacing:-.6px; margin:0; } h2 { font-size:19px; margin:0 0 14px; } h3 { font-size:15px; margin:20px 0 6px; }
+    p { margin:8px 0; } a { color:var(--mint); text-underline-offset:4px; } .muted,small { color:var(--muted); } small { font-size:12px; }
+    .eyebrow { font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--mint); margin-bottom:6px; }
+    .tag { display:inline-block; border:1px solid var(--line); border-radius:6px; padding:4px 10px; font-size:12px; font-weight:650; }
+    .good { color:var(--mint); } .warn { color:var(--amber); } .bad { color:var(--red); }
+    .cards { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin:20px 0; }
+    .card,section { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:20px; }
+    .card .label { color:var(--muted); font-size:12px; margin-bottom:8px; } .value { font-size:24px; font-weight:650; letter-spacing:-.4px; }
+    .card small { display:block; margin-top:8px; } section { margin:20px 0; } .split { display:grid; grid-template-columns:1.3fr 1fr; gap:24px; }
+    .facts { display:grid; grid-template-columns:150px minmax(0,1fr); gap:8px 14px; margin:12px 0; }
+    .facts dt { color:var(--muted); } .facts dd { margin:0; overflow-wrap:anywhere; }
+    .callout { border-left:3px solid var(--amber); padding:10px 14px; background:#202333; border-radius:0 6px 6px 0; }
+    .table-wrap { overflow-x:auto; } table { width:100%; border-collapse:collapse; font-size:13px; }
+    th { color:var(--muted); text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.6px; font-weight:600; white-space:nowrap; }
+    td,th { padding:13px 12px; border-bottom:1px solid var(--line); vertical-align:top; } td:first-child,th:first-child { padding-left:0; } tr:last-child td { border-bottom:0; }
+    td small { display:block; } .nowrap { white-space:nowrap; } .reason { max-width:300px; overflow-wrap:anywhere; }
+    .controls { font-size:13px; margin:12px 0; } ul { padding-left:20px; } li { margin:5px 0; } footer { color:var(--muted); font-size:12px; }
+    @media(max-width:760px) { main { padding:22px 16px; } .cards { grid-template-columns:repeat(2,minmax(0,1fr)); } .split { grid-template-columns:1fr; gap:10px; } .facts { grid-template-columns:125px minmax(0,1fr); } .card,section { padding:16px; } .value { font-size:21px; } }
+    @media(max-width:380px) { .cards { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body><main>
+  <header>
+    <div><div class="eyebrow">Autonomous Compounding Trader</div><h1>SHADOW observer</h1><p class="muted">Stored evidence · Robinhood reads and approved reviews · No orders submitted</p></div>
+    <span class="tag good">PRIVATE / READ ONLY</span>
+  </header>
+  <div class="controls">
+    <span class="muted">{% if auto_refresh %}Refreshes every 30 seconds{% else %}Automatic refresh paused{% endif %}</span>
+    <span><a href="/?limit={{ limit }}">Latest / refresh</a> &nbsp; <a href="/?limit={{ limit }}&amp;refresh=false">Pause refresh</a></span>
+  </div>
+  {% if data.status == 'UNAVAILABLE' %}
+    <section><h2 class="warn">History unavailable</h2><p>The observer cannot read a complete SHADOW history. Check the worker and server logs over SSH.</p><p class="muted">Reason: {{ data.reason }}. This page does not repair or initialize the database.</p></section>
+  {% elif not data.get('history') %}
+    <section><h2>Waiting for history</h2><p>The SHADOW database has not been created. Start and verify the worker on the server to collect evidence.</p><p class="muted">The observer makes no broker or model calls.</p></section>
+  {% else %}
+    {% set latest = data.latest %}{% set history = data.history %}{% set service = data.service %}{% set outcomes = data.outcomes %}
+    <div class="cards">
+      <div class="card"><div class="label">Worker</div><div class="value {{ 'good' if data.worker_healthy else 'warn' }}">{{ service.status if service else 'NOT STARTED' }}</div><small>{% if data.worker_healthy %}Heartbeat current{% elif service and service.status == 'RUNNING' %}Heartbeat stale or clock mismatch{% else %}Worker is not healthy{% endif %}</small></div>
+      <div class="card"><div class="label">Last saved decision</div><div class="value">{{ latest.decision.action if latest else '—' }}</div><small>{% if latest %}Cycle {{ latest.cycle_id }} · {{ latest.age_seconds }} seconds old{% else %}No cycle recorded{% endif %}</small></div>
+      <div class="card"><div class="label">Reported model cost · all history</div><div class="value">${{ '%.6f'|format(history.database_model_cost_total|float) }}</div><small>Missing usage is unknown; billing may be higher.</small></div>
+      <div class="card"><div class="label">Reviews · selected window</div><div class="value">{{ history.review_count }}</div><small>{{ history.cycle_count }} decisions · {{ history.agent_failure_count }} model failures</small></div>
+    </div>
+    <section>
+      <h2>Service health</h2>
+      <dl class="facts"><dt>Heartbeat</dt><dd>{{ service.heartbeat_at if service else 'No heartbeat' }}{% if service %} · {{ data.heartbeat_age_seconds }} seconds old{% endif %}</dd>
+      <dt>Worker release</dt><dd>{{ service.release_sha if service else 'Unknown' }}</dd>
+      <dt>Last scheduler result</dt><dd>{% if service and service.last_result %}{{ service.last_result.status }} · {{ service.last_result.get('reason', service.last_result.get('error_class', '')) }} · exit {{ service.last_result.get('exit_code', 'unknown') }}{% else %}No result recorded{% endif %}</dd>
+      <dt>Active slot</dt><dd>{{ data.active_slot or 'None' }}</dd></dl>
+      {% if service and service.status == 'HALTED' %}<p class="callout">The worker has halted. Inspect the failure and slot evidence over SSH before explicit recovery. Restarting does not clear the halt.</p>{% endif %}
+      <p class="muted">A current heartbeat shows worker activity. Broker authentication, model availability and account freshness require separate evidence.</p>
+    </section>
+    {% if latest %}
+    <section>
+      <div class="section-head"><h2>Latest decision · cycle {{ latest.cycle_id }}</h2><span class="tag {{ 'bad' if latest.execution.agent_error else '' }}">{% if latest.execution.agent_error %}FAIL-CLOSED MODEL ERROR · {% endif %}{{ latest.model }}</span></div>
+      <p class="muted">Last saved account and market snapshot: {{ latest.as_of }} · {{ latest.age_seconds }} seconds old. Values below are not live quotes.</p>
+      <div class="cards">
+        <div class="card"><div class="label">Account equity</div><div class="value">${{ '%.2f'|format(latest.account.equity|float) }}</div></div>
+        <div class="card"><div class="label">Cash</div><div class="value">${{ '%.2f'|format(latest.account.cash|float) }}</div></div>
+        <div class="card"><div class="label">Unleveraged buying power</div><div class="value">${{ '%.2f'|format(latest.account.buying_power|float) }}</div></div>
+        <div class="card"><div class="label">Saved position</div><div class="value">{{ latest.position.symbol if latest.position else 'CASH' }}</div>{% if latest.position %}<small>{{ latest.position.quantity }} shares · entry ${{ latest.position.entry_price }}</small>{% endif %}</div>
+      </div>
+      <div class="split"><div>
+        <h3>Model proposal</h3><p><strong>{{ latest.decision.action }}{% if latest.decision.symbol %} · {{ latest.decision.symbol }}{% endif %}</strong> · confidence {{ '%.0f'|format(latest.decision.confidence * 100) }}%</p>
+        <p>{{ latest.decision.thesis }}</p><h3>Why now</h3><p>{{ latest.decision.why_now }}</p>
+        {% if latest.decision.evidence %}<h3>Evidence</h3><ul>{% for item in latest.decision.evidence %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+        {% if latest.decision.risks %}<h3>Risks</h3><ul>{% for item in latest.decision.risks %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+        <h3>Invalidation</h3><p>{{ latest.decision.invalidation_reason }}{% if latest.decision.invalidation_price %} · ${{ latest.decision.invalidation_price }}{% endif %}</p>
+      </div><div>
+        <h3>Deterministic authority</h3>
+        <dl class="facts"><dt>Governor</dt><dd>{{ 'APPROVED' if latest.risk.approved else 'REJECTED / NO ENTRY' }}</dd>
+        <dt>Approved notional</dt><dd>${{ latest.risk.approved_notional }}</dd>
+        <dt>Rejections</dt><dd>{{ latest.risk.rejection_reasons|join(', ') or 'None' }}</dd>
+        <dt>Constraints</dt><dd>{{ latest.risk.constraint_hits|join(', ') or 'None' }}</dd>
+        <dt>Reconciliation</dt><dd>{% if latest.evidence.reconciliation %}{{ 'MATCHED' if latest.evidence.reconciliation.reconciled else 'MISMATCH' }}{% else %}Unknown / legacy evidence{% endif %}</dd>
+        <dt>Broker review</dt><dd>{{ 'Completed' if latest.execution.review_completed else 'Not performed' }}</dd>
+        <dt>Execution</dt><dd>{{ latest.execution.status }} · SHADOW submits no order</dd>
+        <dt>Model error</dt><dd>{{ latest.execution.agent_error or 'None reported' }}</dd>
+        <dt>Review error</dt><dd>{{ latest.execution.review_error or 'None reported' }}</dd>
+        <dt>Prompt / latency</dt><dd>{{ latest.prompt_version }} · {{ latest.latency_ms }} ms</dd>
+        <dt>Linked model usage</dt><dd>{% if latest.evidence.model_usage %}{{ latest.evidence.model_usage.input_tokens }} input / {{ latest.evidence.model_usage.output_tokens }} output · ${{ latest.evidence.model_usage.estimated_cost }}{% else %}Unknown / not reported{% endif %}</dd></dl>
+        {% if latest.evidence.reconciliation and latest.evidence.reconciliation.reasons %}<p class="callout">{{ latest.evidence.reconciliation.reasons|join(', ') }}</p>{% endif %}
+      </div></div>
+    </section>
+    {% else %}<section><h2>Waiting for the first decision</h2><p>The saved worker state is available. Closed sessions skip model and broker calls.</p></section>{% endif %}
+    <section>
+      <div class="section-head"><h2>Decision history</h2><span class="muted">{{ history.cycle_count }} decisions in this window</span></div>
+      <p class="muted">{{ history.model_hold_count }} model HOLDs · {{ history.deterministic_hold_count }} deterministic HOLDs · {{ history.unattributed_hold_count }} unattributed HOLDs · {{ history.agent_failure_count }} model failures</p>
+      <p class="muted">Window reported model cost: ${{ history.window_reported_model_cost }} · usage linked to {{ history.usage_reported_cycle_count }} / {{ history.cycle_count }} decisions.</p>
+      <div class="table-wrap"><table><thead><tr><th>Cycle / UTC</th><th>Proposal</th><th>HOLD origin</th><th>Governor / reason</th><th>Review</th><th>Model cost</th></tr></thead><tbody>
+      {% for item in history.cycles|reverse %}<tr><td class="nowrap">#{{ item.cycle_id }}<small>{{ item.timestamp }}</small></td><td>{{ item.action }} {{ item.symbol or '' }}<small>{{ item.model }} · {{ item.prompt_version }}</small></td><td>{{ item.hold_origin or '—' }}{% if item.agent_error %}<small class="bad">{{ item.agent_error }}</small>{% endif %}</td><td class="reason">{{ 'Approved' if item.risk_approved else 'Rejected / no entry' }}<small>{{ item.rejection_reasons|join(', ') }}</small></td><td>{{ 'Completed' if item.review_completed else '—' }}{% if item.review_error %}<small class="bad">{{ item.review_error }}</small>{% endif %}</td><td class="nowrap">{% if item.model_usage %}${{ item.model_usage.estimated_cost }}{% else %}Unknown{% endif %}</td></tr>
+      {% else %}<tr><td colspan="6" class="muted">No decisions in this window.</td></tr>{% endfor %}</tbody></table></div>
+      <div class="controls"><span>Latest window: <a href="/?limit=25">25</a> / <a href="/?limit=50">50</a> / <a href="/?limit=100">100</a></span>{% if data.page.has_older %}<a href="/?limit={{ limit }}&amp;before={{ data.page.next_before }}">Older decisions →</a>{% endif %}</div>
+    </section>
+    <section>
+      <h2>Forward quote outcomes vs {{ history.benchmark.symbol }}</h2>
+      <p class="callout">These are 15 / 60 minute quote marks after linked source model cost. They are not fills, portfolio profit or compounding returns. Horizons and overlapping proposals are not independent samples; fees, slippage and dividends are not modeled.</p>
+      <p class="muted">{% for status, count in outcomes.status_counts.items() %}{{ status }}: {{ count }}{% if not loop.last %} · {% endif %}{% else %}No forward outcomes recorded for this window.{% endfor %}</p>
+      <div class="table-wrap"><table><thead><tr><th>Horizon / proposal</th><th>Observed samples</th><th>Mean mark after model cost</th><th>Mean excess vs {{ history.benchmark.symbol }}</th></tr></thead><tbody>
+      {% for item in outcomes.groups %}<tr><td>{{ item.horizon_minutes }} min · {{ item.kind }}</td><td>{{ item.sample_count }}</td><td>{{ '%+.3f'|format(item.mean_after_model_cost_return_fraction|float * 100) }}%</td><td>{{ '%+.3f'|format(item.mean_after_model_cost_excess_fraction|float * 100) }}%</td></tr>{% else %}<tr><td colspan="4" class="muted">No paired forward measurements yet.</td></tr>{% endfor %}</tbody></table></div>
+      {% if outcomes.outcomes %}<details><summary>Source and measurement evidence</summary><div class="table-wrap"><table><thead><tr><th>Source</th><th>Horizon</th><th>Kind / symbol</th><th>Status / reason</th><th>Measurement</th></tr></thead><tbody>{% for item in outcomes.outcomes %}<tr><td>#{{ item.source_cycle_id }}</td><td>{{ item.horizon_minutes }} min</td><td>{{ item.kind or '—' }} {{ item.symbol or '' }}</td><td class="reason">{{ item.status }}<small>{{ item.reason or '' }}</small></td><td>{{ '#' ~ item.measurement_cycle_id if item.measurement_cycle_id else '—' }}</td></tr>{% endfor %}</tbody></table></div></details>{% endif %}
+      <p class="muted">Raw {{ history.benchmark.symbol }} price change across saved window samples: {% if history.benchmark.raw_price_return_fraction is not none %}{{ '%+.3f'|format(history.benchmark.raw_price_return_fraction|float * 100) }}%{% else %}Not enough observations{% endif %}. This is a market observation, not strategy alpha.</p>
+    </section>
+    <section><h2>Recent schedule slots</h2><div class="table-wrap"><table><thead><tr><th>Slot</th><th>Status</th><th>Cycle</th><th>Exit / error</th></tr></thead><tbody>{% for item in data.slots %}<tr><td class="nowrap">{{ item.slot_key }}</td><td>{{ item.status }}</td><td>{{ '#' ~ item.cycle_id if item.cycle_id else '—' }}</td><td>{{ item.exit_code if item.exit_code is not none else '—' }} {{ item.error_class or '' }}</td></tr>{% else %}<tr><td colspan="4" class="muted">No scheduled attempts recorded.</td></tr>{% endfor %}</tbody></table></div></section>
+    <footer>Observer read: {{ data.observed_at }} · All times UTC · Account data remains at its last saved timestamp. This view cannot start, resume or trade.</footer>
+  {% endif %}
+</main></body></html>

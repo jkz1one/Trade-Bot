@@ -8,7 +8,39 @@ model judgment, deterministic governor and persisted SHADOW audit. Scheduling is
 installed and its closed-session behavior is verified on the Mac. A scheduled
 authenticated regular-session cycle remains to be observed. Forward quote outcome
 tracking and a persistent Linux SHADOW service are implemented and verified offline.
-The service is prepared for DigitalOcean; it is not deployed yet. LIVE is disabled.
+The service and private read-only observer are prepared for DigitalOcean; they are
+not deployed yet. LIVE is disabled.
+
+## Private SHADOW observer
+
+A separate `app.web.shadow:create_shadow_app` now reads stored worker/slot/cycle,
+account, risk/reconciliation, review completion, linked model usage and forward
+quote outcomes. The PAPER/demo app and its controls remain separate. Observer
+startup requires SHADOW mode, LIVE disabled and an independent private password.
+No broker/model clients are initialized or called; there are no mutation routes.
+
+The database is opened read-only without bootstrap/repair. Reports use a single
+committed snapshot, bounded pagination and source-linked outcome cohorts. Latest
+account values carry their saved timestamp/age; heartbeat readiness is a separate
+signal. Model HOLD, deterministic HOLD, unattributed legacy HOLD and failure remain
+distinct. Missing usage is unknown; quote marks are not portfolio profit/alpha.
+Raw broker reviews/identifiers, working orders and claim-owner tokens are omitted.
+
+Compose mounts only read-only data and the independent observer password, without
+broker OAuth or API credentials, and publishes only `127.0.0.1:8787`. Access uses an
+SSH tunnel and password authentication. `prepare` generates the password privately
+without overwriting existing files; `observer` can start inspection without starting
+the worker. See [SHADOW_SERVER.md](SHADOW_SERVER.md) for consolidated operations.
+
+The full updated suite passed **229 tests** in 7.60 seconds. Observer validation
+includes authentication and password failure/rotation, denied
+SQLite writes, absent mutation routes, empty/corrupt history, escaping and secret
+projection, heartbeat freshness, paged cohort linkage, one committed WAL snapshot,
+and progress with default-journal writes plus concurrent readers. Wheel packaging,
+Compose schema/private-boundary checks and shell syntax are also verified. Actual
+Uvicorn startup/private HTTP reads/graceful shutdown passed with synthetic history
+and no remote calls. HTML responses render in tests; desktop/mobile visual review remains a host gate because
+the browser download failed in this workspace. No deployment or live calls occurred.
 
 ## Model subprocess hardening
 
@@ -52,13 +84,14 @@ SignalFlow rejection/replay/outcome tests passed; Trade-Bot's 181 tests passed a
 Reusable patterns are stored-evidence dashboard/reporting, complete decision cohorts,
 point-in-time replay and separately measured synthetic execution. Options/flow feeds,
 multi-bot coordination and SignalFlow's narration-only AI schema are not a direct fit.
-The existing web app remains PAPER/demo only; no SHADOW browser monitor exists yet.
+The existing web app remains PAPER/demo only; the separate SHADOW observer is now
+implemented above.
 
 An important limitation in the reviewed snapshot was reproduced locally: the cycle timeout cancels an
 awaiting task but cannot terminate the synchronous model thread used by `to_thread`.
 Durable halt/claim blocking prevented another cycle; subprocess hardening above now
-fixes local cleanup/shutdown for OpenAI SHADOW. The next engineering slice is the
-read-only observer, followed by the sequential experiment ledger. No live model/broker
+fixes local cleanup/shutdown for OpenAI SHADOW. The observer is implemented; the next
+experiment slice is the sequential experiment ledger. No live model/broker
 calls or server changes occurred during the review.
 
 ## Persistent server follow-up
@@ -81,7 +114,8 @@ Credentials are private files; the OpenAI key is mounted as a secret and OAuth s
 is writable for refresh. SQLite, claims, audit history and service state persist outside
 the code checkout. Export/backup commands use consistent SQLite snapshots, check
 integrity and print no secrets. Initial server import refuses to overwrite existing
-history. Only SHADOW is configured; no web ports are published.
+history. Only SHADOW is configured. The observer follow-up now publishes a
+localhost-only port through an SSH tunnel; no public web listener is configured.
 
 Verification: **181 tests passed** locally. The 14 new service/backup tests cover
 locks, in-flight heartbeats/shutdown, timeouts, sanitized persistent failures, local

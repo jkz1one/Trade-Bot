@@ -2,8 +2,8 @@
 
 The server runs the OpenAI SHADOW scheduler independently of the Mac or SSH session.
 The application remains Robinhood READ plus approved order review only. LIVE and
-broker placements/cancellations remain disabled. This is a worker deployment;
-there are no published web ports or changes to SignalFlow's services.
+broker placements/cancellations remain disabled. A separate private observer reads
+stored history through a localhost-only port. SignalFlow's services are unchanged.
 
 ## Layout and requirements
 
@@ -15,10 +15,12 @@ these persistent host paths:
 | `/var/lib/trade-bot/data` | SQLite history, schedule claims, service state, backups |
 | `/var/lib/trade-bot/oauth` | Robinhood OAuth client/tokens, writable for refresh |
 | `/etc/trade-bot/openai_api_key` | Private OpenAI key file |
+| `/etc/trade-bot/dashboard_password` | Independent observer password |
 
 Directories are mode 700 and credential/data files mode 600, owned by container
 UID/GID 10001. The non-root container has a read-only application filesystem, a
-temporary `/tmp`, rotated logs, and a 512 MiB memory limit. The host needs Docker
+temporary `/tmp`, rotated logs, and a 512 MiB worker memory limit. The observer has
+a separate 256 MiB limit, read-only data mount, and no API key or OAuth mount. The host needs Docker
 Engine with Compose v2+, outbound HTTPS and capacity alongside existing services.
 Installing or upgrading Docker and changing other workloads is outside the helper.
 
@@ -79,11 +81,77 @@ That explicit interactive command stops the daemon, prints the authorization URL
 for your browser and accepts the callback URL over SSH. The unattended worker never
 opens a browser or waits for input. Restart with `start` after authorization succeeds.
 
-`start` launches detached. Check `status` after the first heartbeat; during a closed
+`start` launches the worker and observer detached. Check `status` after the first heartbeat; during a closed
 session logs should show MARKET_CLOSED without broker/model calls. Ensure the host's
 Docker daemon starts at boot. Once startup and restart are verified, closing SSH or
 shutting down the Mac does not stop the worker. Keep the private transfer bundle only
 as long as needed for migration verification; manage its deletion separately.
+
+## Private dashboard
+
+`prepare` generates a 64-character random observer password in its own mode-600
+file without printing it or replacing an existing password/key. If updating an
+existing server, run `prepare` once before building the observer release.
+
+On the Mac, forward the server's localhost-only observer port:
+
+```bash
+ssh -N -L 127.0.0.1:8787:127.0.0.1:8787 root@DROPLET_IP
+```
+
+Open `http://127.0.0.1:8787` in your browser. The username is `trader`. Read the
+password only in your private SSH terminal with `sudo cat /etc/trade-bot/dashboard_password`;
+do not paste it into chat. Replace the SSH user/address with the confirmed host's
+existing access. Closing the tunnel stops browser access; the worker continues.
+There is no public HTTP port or domain configuration. Do not expose this Basic-auth
+HTTP endpoint publicly; the supported transport is encrypted SSH forwarding.
+
+The observer is a separate `app.web.shadow:create_shadow_app` FastAPI factory. It
+requires SHADOW mode, LIVE disabled and a password file of at least 24 characters.
+Routes are authenticated `GET /` and `GET /api/shadow`, plus public process-only
+`GET /healthz` on the same private listener. API documentation and all mutation
+routes are absent. Responses prohibit caching/framing and load no external scripts,
+fonts or assets. Model text is escaped. Access logging is disabled.
+
+The app opens the SQLite file with `mode=ro` and `query_only=ON`, never initializes
+or repairs it, and reads each report inside one committed transaction. It does not
+import a broker adapter or model client. Missing history shows a waiting state;
+an incomplete/unreadable schema returns a sanitized unavailable state. A corrupt
+record cannot silently become a trading result. Password errors fail closed.
+The observer's ready health endpoint does not assert worker/data/model health.
+
+Views show heartbeat/release/halt and active slot, latest saved account/position and
+its age, proposal/risk/reconciliation, review completion, prompt/model/usage, paged
+decision history, and 15/60-minute quote outcomes versus SPY. The full latest snapshot
+stays visible when browsing older history. Pages are bounded to 100 decisions, with
+matching source outcome cohorts. The first page refreshes every 30 seconds; pause
+refresh for inspection, and older pages never automatically refresh.
+Raw broker review/account identifiers, working orders, claim-owner tokens and
+credential paths are omitted. There are no start, trade, halt or resume controls.
+Usage gaps are unknown and quote marks remain separate from portfolio P&L.
+
+To inspect a halted worker without starting it:
+
+```bash
+./scripts/shadow-server.sh observer
+./scripts/shadow-server.sh observer-logs
+```
+
+`observer` starts/recreates only the observer with no worker dependency. `stop` stops both
+services; `authorize` stops only the worker so inspection can continue. Rotate the
+password by updating the private host file, preserving owner/mode, then run
+`./scripts/shadow-server.sh observer` so its bind-mounted secret reads the new file. It rereads the mounted
+password on each request. Browser Basic-auth caching may require a new private window.
+
+For a local development check, point the observer explicitly at the SHADOW database
+and a private password file, without changing the PAPER default:
+
+```bash
+TRADER_MODE=SHADOW TRADER_LIVE_ENABLED=false \
+TRADER_ROBINHOOD_DB_URL=sqlite:///./robinhood.db \
+TRADER_DASHBOARD_PASSWORD_FILE=/path/to/private/dashboard_password \
+uvicorn app.web.shadow:create_shadow_app --factory --host 127.0.0.1 --port 8787 --no-access-log
+```
 
 ## Operation and failure recovery
 
@@ -98,8 +166,8 @@ cd /opt/trade-bot
 ```
 
 Health checks inspect only local heartbeat and state. They do not prove current
-OpenAI billing, remote authentication, or trading signal quality. There is no external
-alerting or browser dashboard in this deployment.
+OpenAI billing, remote authentication, or trading signal quality. The observer shows
+saved status only; there is no external alerting.
 
 Docker restarts an unexpectedly exited container. An application failure instead
 latches HALTED in SQLite and keeps an idle worker with an unhealthy check. A restart
@@ -171,6 +239,7 @@ git pull --ff-only
 ./scripts/shadow-server.sh build
 ./scripts/shadow-server.sh backup
 ./scripts/shadow-server.sh stop
+./scripts/shadow-server.sh prepare
 ./scripts/shadow-server.sh start
 ./scripts/shadow-server.sh status
 ./scripts/shadow-server.sh logs
@@ -189,3 +258,20 @@ Compose configuration is validated. This execution workspace has no Docker daemo
 live credentials, so image build, authenticated server probe, host restart and the
 first regular-session model cycle remain target-host checks. Deployment is not complete
 until those checks succeed on the confirmed droplet.
+
+The observer adds authenticated read-only coverage for missing/corrupt/legacy history,
+password rotation/failure, escaping/secret projection, bounded pagination/cohort
+linkage, stale/future/halted heartbeats and writes rejected by its SQLite connection.
+Tests prove one snapshot even when a WAL writer commits during a report, and progress
+with concurrent default-journal worker writes and two readers. Password preparation
+is tested using temporary paths and mapped test ownership; actual container UID/file
+permissions remain a host check. The package wheel includes both web templates.
+Actual local Uvicorn startup, authenticated HTML/JSON, denied unauthenticated
+history, unchanged database and graceful shutdown are verified with synthetic
+stored evidence and no remote API calls.
+The updated Compose manifest is checked against the official Compose JSON Schema and
+its private mounts/port/secret boundaries. Docker image startup and a visual browser
+review remain unverified here: this workspace has no Docker daemon/browser binary,
+and browser installation returned a non-archive download. Verify desktop/mobile
+rendering through the private tunnel on the target host before considering deployment
+complete.

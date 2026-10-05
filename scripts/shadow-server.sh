@@ -11,6 +11,11 @@ if [[ "$action" == prepare ]]; then
   if [[ ! -e /etc/trade-bot/openai_api_key ]]; then
     install -m 600 -o 10001 -g 10001 /dev/null /etc/trade-bot/openai_api_key
   fi
+  if [[ ! -e /etc/trade-bot/dashboard_password ]]; then
+    (umask 077; od -An -N32 -tx1 /dev/urandom | tr -d ' \n' > /etc/trade-bot/dashboard_password)
+    chown 10001:10001 /etc/trade-bot/dashboard_password
+    chmod 600 /etc/trade-bot/dashboard_password
+  fi
   echo 'Private Trade-Bot directories prepared. Credentials must be imported before startup.'
   exit 0
 fi
@@ -46,10 +51,12 @@ case "$action" in
     ;;
   start)
     "${compose[@]}" run --rm --no-deps shadow python -m app.robinhood.cli shadow-preflight
-    "${compose[@]}" up -d --no-build shadow
+    "${compose[@]}" up -d --no-build shadow observer
     "${compose[@]}" ps
     ;;
-  stop) "${compose[@]}" stop shadow ;;
+  stop) "${compose[@]}" stop shadow observer ;;
+  observer) "${compose[@]}" up -d --no-build --no-deps --force-recreate observer ;;
+  observer-logs) "${compose[@]}" logs --tail 100 observer ;;
   status)
     "${compose[@]}" ps
     "${compose[@]}" exec -T shadow python -m app.robinhood.cli shadow-service-check
@@ -65,5 +72,5 @@ case "$action" in
     ;;
   resume) "${compose[@]}" run --rm --no-deps shadow python -m app.robinhood.cli shadow-service-resume ;;
   abandon) "${compose[@]}" run --rm --no-deps shadow python -m app.robinhood.cli shadow-slot-abandon --slot "${2:?Pass the inspected slot key}" ;;
-  *) echo 'Use prepare, import, build, preflight, probe, authorize, start, stop, status, logs, audit, history, outcomes, slots, backup, resume or abandon.' >&2; exit 2 ;;
+  *) echo 'Use prepare, import, build, preflight, probe, authorize, start, stop, observer, observer-logs, status, logs, audit, history, outcomes, slots, backup, resume or abandon.' >&2; exit 2 ;;
 esac

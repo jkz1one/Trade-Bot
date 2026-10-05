@@ -53,6 +53,48 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+  observer:
+    image: trade-bot-shadow:${TRADE_BOT_RELEASE:?Set TRADE_BOT_RELEASE}
+    command: [uvicorn, app.web.shadow:create_shadow_app, --factory, --host, 0.0.0.0, --port, "8787", --no-access-log]
+    restart: unless-stopped
+    init: true
+    user: "10001:10001"
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 32
+    mem_limit: 256m
+    cpus: 0.5
+    environment:
+      TRADER_MODE: SHADOW
+      TRADER_LIVE_ENABLED: "false"
+      TRADER_ROBINHOOD_DB_URL: sqlite:////data/robinhood.db
+      TRADER_DASHBOARD_PASSWORD_FILE: /run/secrets/dashboard_password
+    ports:
+      - "127.0.0.1:8787:8787"
+    volumes:
+      - type: bind
+        source: /var/lib/trade-bot/data
+        target: /data
+        read_only: true
+        bind:
+          create_host_path: false
+    secrets: [dashboard_password]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8787/healthz', timeout=2).close()"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 secrets:
   openai_api_key:
     file: /etc/trade-bot/openai_api_key
+  dashboard_password:
+    file: /etc/trade-bot/dashboard_password
