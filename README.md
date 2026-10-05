@@ -109,3 +109,29 @@ and measurement cycle IDs. Missing observations expire without next-session back
 The local `shadow-outcomes` report compares quote changes with SPY after linked source
 model cost. Initial output is EMPTY until new cycles are collected. These overlapping
 proposal samples are separate from portfolio fills, profit and compounding returns.
+
+## Sequential virtual bankroll
+
+The opt-in [synthetic portfolio experiment](docs/SYNTHETIC_EXPERIMENT.md) adds persistent
+virtual cash/one position, later-quote fills, deterministic stops/session exits,
+model-cost-adjusted returns, a paired SPY portfolio and observed drawdown. The sole
+model sees that virtual account, so its decisions and costs form a separately named
+population. This profile uses Robinhood READ only, including rejecting order review.
+Initialize an immutable experiment ID, select it for the existing scheduled worker
+and inspect its own report/private dashboard section. The default SHADOW profile
+continues to use real-account context.
+
+Linux server dependencies are pinned in `requirements-runtime.lock` and
+`requirements-build.lock`; the worker image installs them without resolving newer
+versions. For a matching Linux Python 3.12 development environment:
+
+```bash
+pip install --no-deps -r requirements-build.lock -r requirements-dev.lock
+pip install --no-deps --no-build-isolation -e .
+pytest -q
+```
+
+`scripts/lock-dependencies.py --check` verifies those pins against an installed,
+tested Linux Python 3.12 environment. Refreshing pins requires a clean install and
+full verification. OS/image artifacts and authenticated host operation remain
+separate deployment checks.

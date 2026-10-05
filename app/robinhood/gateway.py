@@ -149,3 +149,12 @@ class RobinhoodSafeGateway:
         if name not in SAFE_SLICE2_TOOLS:
             raise UnsafeRobinhoodToolError(f"Robinhood tool is not permitted in Slice 2: {name}")
         return await self._client.call_tool(name, arguments)
+
+
+class RobinhoodReadOnlyGateway(RobinhoodSafeGateway):
+    """Synthetic experiments have market/account reads, never brokerage order review."""
+
+    async def call_safe(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+        if name == "review_equity_order":
+            raise UnsafeRobinhoodToolError("Synthetic PAPER cannot review broker orders")
+        return await super().call_safe(name, arguments)

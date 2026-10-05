@@ -50,7 +50,7 @@ def save_at(
         invalidation_price=98, thesis="Supplied quote evidence", invalidation_reason="Test stop",
         why_now="Test observation",
     )
-    risk = govern(decision, packet, settings, broker_reconciled=reconciled)
+    risk = govern(decision, packet, settings, broker_reconciled=reconciled, now=at)
     if approved is not None:
         risk = risk.model_copy(update={"approved": approved})
     execution = ExecutionResult(

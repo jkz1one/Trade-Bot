@@ -223,7 +223,7 @@ async def test_complete_shadow_cycle_persists_evidence_and_gates_review(repo, sc
                 original_invalidation=98, thesis="previous position", opened_at=previous_packet.as_of,
             )
             previous_decision = decision.model_copy(update={"action": Action.CLOSE})
-        previous_risk = govern(previous_decision, previous_packet, Settings(mode="SHADOW"))
+        previous_risk = govern(previous_decision, previous_packet, Settings(mode="SHADOW"), now=now)
         assert previous_risk.approved
         repo.save_shadow_cycle(
             previous_packet, previous_decision, previous_risk,

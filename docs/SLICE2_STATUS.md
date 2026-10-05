@@ -9,7 +9,44 @@ installed and its closed-session behavior is verified on the Mac. A scheduled
 authenticated regular-session cycle remains to be observed. Forward quote outcome
 tracking and a persistent Linux SHADOW service are implemented and verified offline.
 The service and private read-only observer are prepared for DigitalOcean; they are
-not deployed yet. LIVE is disabled.
+not deployed yet. A separate sequential synthetic bankroll profile and locked server
+dependencies are now implemented and verified offline. LIVE is disabled.
+
+## Sequential synthetic portfolio and build hardening
+
+The opt-in synthetic profile runs the sole trader against its own virtual cash and
+position. It uses safe Robinhood reads, real broker/local reconciliation, the same
+persistent scheduler/lifetime lock and the existing isolated model process. It
+rejects broker review as well as writes. Real-account SHADOW journals, cost reports
+and ownership remain separate; default PAPER/SHADOW behavior is preserved.
+
+Approved proposals queue for a later fresh quote and deterministic revalidation.
+The ledger persists virtual fills/cash, original stops, session exits, daily entries,
+cooldown, fees, all reported model costs, paired SPY liquidation equity and observed
+net drawdown. Configurations are immutable named cohorts, including model/prices,
+market inputs, prompt and risk policy. A pre-model receipt exposes potentially
+billed calls after crashes/rollback; missing usage blocks new entries and makes net
+economics unavailable. Future/naive quote timestamps now fail closed in the governor.
+See [SYNTHETIC_EXPERIMENT.md](SYNTHETIC_EXPERIMENT.md) for execution assumptions,
+profile selection and reporting limitations.
+
+The complete updated suite passed **276 tests in 8.45 seconds** in a fresh Linux
+CPython 3.12.14 environment installed exclusively from the new exact dependency
+locks. `pip check` and lock/environment comparison passed. Tests include sequential
+fills/accounting, restart/isolation, bad quotes, gap/session exits, cost uncertainty,
+atomic rollback, cancellation, durable halt, backup restoration, CLI selection,
+read-only gateway and authenticated read-only observer integration. These are
+synthetic fixtures; no new authenticated broker/model or profitability evidence is
+claimed. An actual installed-package Uvicorn run also passed authenticated synthetic
+HTML/JSON, denied anonymous reads, unchanged DB and completed lifespan shutdown
+with three simulated cycles/two fills. The earlier 229-test observer checkpoint
+remains recorded below.
+
+Server runtime and build dependency closures are pinned and the Docker build disables
+both dependency resolution and build isolation. The official Python base tag is
+explicit; actual Docker image/OS digest, UID permissions, authenticated regular-session
+operation, restart/recovery and desktop/mobile visual review remain host gates.
+PR #1 stays draft; no deployment or merge has occurred.
 
 ## Private SHADOW observer
 

@@ -275,3 +275,31 @@ review remain unverified here: this workspace has no Docker daemon/browser binar
 and browser installation returned a non-archive download. Verify desktop/mobile
 rendering through the private tunnel on the target host before considering deployment
 complete.
+
+## Opt-in virtual bankroll and locked builds
+
+The same detached worker can run a separately named synthetic PAPER bankroll rather
+than real-account SHADOW model decisions. Use [SYNTHETIC_EXPERIMENT.md](SYNTHETIC_EXPERIMENT.md)
+for initialization, frozen configuration, execution assumptions and interpretation.
+Stop the worker, initialize the new ID through `synthetic-init`, select it using
+`TRADE_BOT_EXPERIMENT_ID` in `/etc/trade-bot/worker.env`, and run preflight before
+startup. `prepare` creates that private file only when absent. The blank default
+preserves real-account SHADOW. Run one profile at a time, with shared scheduled
+claims and separate virtual accounting/costs. `synthetic-report ID` and the private
+observer show this population; ordinary SHADOW reports remain scoped to real context.
+SQLite backups/imports include all four synthetic tables and pre-model receipts.
+
+`Dockerfile.shadow` now installs exact runtime/build dependency closures, then builds
+this project with dependency resolution and build isolation disabled and runs
+`pip check`. The base is the explicit official `python:3.12.15-slim-bookworm` tag,
+verified against the [Docker official-images catalog](https://github.com/docker-library/official-images/blob/master/library/python) on 2026-10-05. A tag does not
+freeze every OS artifact; record the base digest and final image ID at the target-host
+build. This workspace's clean install/tests use Linux CPython 3.12.14. Actual image
+build/startup on the tagged patch and container ownership remain host checks;
+no Docker daemon is available here. Pin changes require regenerating the closure
+from a tested Linux Python 3.12 environment, a clean install and the full suite.
+The original Mac editable install remains available but is not the server lock target.
+
+The current locked-package HTTP smoke also verifies the new synthetic report and
+dashboard using three fixture cycles/two simulated fills, no credentials or remote
+calls, an unchanged database and completed Uvicorn lifespan shutdown on SIGTERM.

@@ -48,6 +48,12 @@ async def service_preflight(settings, repo):
         return {"reason": "INVALID_SERVICE_MODE", "exit_code": 14}
     if repo.active_shadow_slot() is not None:
         return {"reason": "INTERRUPTED_CLAIM", "exit_code": 10}
+    if settings.synthetic_experiment_id:
+        from app.experiment.storage import SyntheticStore
+        try:
+            SyntheticStore(repo.session_factory).validate_profile(settings, settings.model_name)
+        except (ValueError, RuntimeError) as exc:
+            return {"reason": "SYNTHETIC_PROFILE_INVALID", "error_class": type(exc).__name__, "exit_code": 14}
     if _configured_openai_key_problem(settings):
         return {"reason": "OPENAI_KEY_NOT_CONFIGURED", "exit_code": 4}
     try:
@@ -175,7 +181,8 @@ async def run_shadow_service(settings):
                 except Exception as exc:
                     return {"status": "ERROR", "reason": "CALENDAR_FAILURE",
                             "error_class": type(exc).__name__, "exit_code": 12}
-            return await self.delegate.tick()
+            from app.experiment.storage import annotate_tick
+            return annotate_tick(settings, repo, await self.delegate.tick())
     stop = asyncio.Event()
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGTERM, signal.SIGINT):

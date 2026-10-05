@@ -25,8 +25,13 @@ def test_prepare_generates_private_independent_password_without_overwriting_file
     assert password_path.stat().st_mode & 0o777 == 0o600
     assert password_path.stat().st_uid == os.geteuid()
     assert password not in first.stdout + first.stderr
+    profile = password_path.parent / "worker.env"
+    assert profile.read_text() == "TRADE_BOT_EXPERIMENT_ID=\n"
+    assert profile.stat().st_mode & 0o777 == 0o600
+    profile.write_text("TRADE_BOT_EXPERIMENT_ID=existing-v1\n")
     key = password_path.parent / "openai_api_key"
     key.write_text("existing-private-test-key")
     subprocess.run(["bash", str(target), "prepare"], capture_output=True, text=True, check=True)
     assert password_path.read_text() == password
     assert key.read_text() == "existing-private-test-key"
+    assert profile.read_text() == "TRADE_BOT_EXPERIMENT_ID=existing-v1\n"

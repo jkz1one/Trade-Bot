@@ -24,7 +24,9 @@ def govern(
     broker_reconciled: bool = True,
     daily_entries: int = 0,
     in_exit_cooldown: bool = False,
+    now: datetime | None = None,
 ) -> RiskDecision:
+    now = now or datetime.now(timezone.utc)
     equity = packet.account.equity
     policy = policy_for_equity(equity)
     dd_mod = drawdown_modifier(packet.account.drawdown_fraction, policy.shutdown_drawdown_fraction)
@@ -45,9 +47,7 @@ def govern(
             reasons.append("SYMBOL_NOT_IN_PACKET")
             notional = Decimal("0")
         else:
-            age = max(0.0, (datetime.now(timezone.utc) - candidate.quote.timestamp).total_seconds())
-            if age > settings.quote_max_age_seconds:
-                reasons.append("STALE_QUOTE")
+            reasons.extend(_quote_time_reasons(candidate.quote.timestamp, now, settings))
             if candidate.quote.ask < candidate.quote.bid or candidate.quote.bid <= 0:
                 reasons.append("INSANE_QUOTE")
             notional = (
@@ -114,10 +114,7 @@ def govern(
         risk_dollars = Decimal("0")
     else:
         q = candidate.quote
-        now = datetime.now(timezone.utc)
-        age = Decimal(str(max(0.0, (now - q.timestamp).total_seconds())))
-        if age > settings.quote_max_age_seconds:
-            reasons.append("STALE_QUOTE")
+        reasons.extend(_quote_time_reasons(q.timestamp, now, settings))
         if q.ask < q.bid or q.bid <= 0:
             reasons.append("INSANE_QUOTE")
         if not q.fractional_tradable:
@@ -173,3 +170,12 @@ def govern(
         constraint_hits=hits,
         rejection_reasons=reasons,
     )
+
+
+def _quote_time_reasons(timestamp, now, settings):
+    if timestamp.tzinfo is None or timestamp.utcoffset() is None:
+        return ["INVALID_QUOTE_TIME"]
+    age = (now - timestamp).total_seconds()
+    if age < 0:
+        return ["FUTURE_QUOTE"]
+    return ["STALE_QUOTE"] if age > settings.quote_max_age_seconds else []

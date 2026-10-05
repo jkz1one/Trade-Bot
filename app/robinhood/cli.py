@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import json
 import os
+from decimal import Decimal
 from pathlib import Path
 import webbrowser
 from urllib.parse import parse_qs, urlparse
@@ -14,7 +15,7 @@ from app.domain.models import Action, utc_now
 from app.metrics.shadow import shadow_history_report
 from app.metrics.shadow_outcomes import forward_outcomes_report
 from app.robinhood.client import RobinhoodMcpConnection
-from app.robinhood.gateway import RobinhoodSafeGateway
+from app.robinhood.gateway import RobinhoodReadOnlyGateway, RobinhoodSafeGateway
 from app.robinhood.market import RobinhoodMarketData
 from app.robinhood.read import RobinhoodReadService
 from app.robinhood.reconcile import reconcile_truth
@@ -338,6 +339,13 @@ def shadow_outcomes(settings: Settings, limit: int = 100) -> int:
     return 0
 
 
+def _synthetic_limit(value: str) -> int:
+    limit = int(value)
+    if not 1 <= limit <= 100:
+        raise argparse.ArgumentTypeError("synthetic limit must be between 1 and 100")
+    return limit
+
+
 def _history_limit(value: str) -> int:
     limit = int(value)
     if not 1 <= limit <= 10000:
@@ -362,14 +370,32 @@ async def shadow_cycle(
             return 4
     settings = settings.model_copy(update={"mode": "SHADOW", "live_enabled": False})
     repo = repo if repo is not None else _repo(settings)
+    if settings.synthetic_experiment_id:
+        from app.experiment.storage import SyntheticStore
+
+        if schedule_window is None:
+            print(json.dumps({"reason": "SYNTHETIC_REQUIRES_SCHEDULER", "exit_code": 14}))
+            return 14
+        SyntheticStore(repo.session_factory).validate_profile(
+            settings, settings.model_name if agent_name == "openai" else "stub",
+        )
     agent = (
         OpenAIAgentsTrader(settings.model_name)
         if agent_name == "openai"
         else StubTraderAgent()
     )
     async with _connection(settings).client() as client:
-        gateway = RobinhoodSafeGateway(client, settings.robinhood_mcp_url)
+        gateway_type = (
+            RobinhoodReadOnlyGateway if settings.synthetic_experiment_id else RobinhoodSafeGateway
+        )
+        gateway = gateway_type(client, settings.robinhood_mcp_url)
         orchestrator = ShadowOrchestrator(settings, repo, gateway, agent)
+        if settings.synthetic_experiment_id:
+            from app.experiment.runner import synthetic_cycle
+
+            payload = await synthetic_cycle(orchestrator, schedule_window, claim_token)
+            print(json.dumps(payload, indent=2))
+            return payload["exit_code"]
         result = (await orchestrator.cycle(
             schedule_window=schedule_window, claim_token=claim_token,
         ) if schedule_window is not None else await orchestrator.cycle())
@@ -401,7 +427,8 @@ async def shadow_run(settings: Settings, agent_name: str, once: bool) -> int:
     scheduler = ShadowScheduler(repo, run)
     previous = None
     while True:
-        result = await scheduler.tick()
+        from app.experiment.storage import annotate_tick
+        result = annotate_tick(settings, repo, await scheduler.tick())
         if result != previous:
             print(json.dumps(result, indent=2), flush=True)
             previous = result
@@ -460,6 +487,15 @@ def main() -> None:
     sub.add_parser("shadow-service-check")
     sub.add_parser("shadow-service-resume")
     sub.add_parser("shadow-preflight")
+    synthetic = sub.add_parser("synthetic-init")
+    synthetic.add_argument("--id", required=True)
+    synthetic.add_argument("--capital", type=Decimal, default="10")
+    synthetic.add_argument("--slippage-bps", type=Decimal, default="5")
+    synthetic.add_argument("--fee-per-fill", type=Decimal, default="0")
+    synthetic.add_argument("--agent", choices=["stub", "openai"], default="openai")
+    report = sub.add_parser("synthetic-report")
+    report.add_argument("--id", required=True)
+    report.add_argument("--limit", type=_synthetic_limit, default=25)
     backup = sub.add_parser("shadow-backup")
     backup.add_argument("--output", required=True)
     export = sub.add_parser("shadow-export")
@@ -468,7 +504,29 @@ def main() -> None:
     abandon.add_argument("--slot", required=True)
     args = parser.parse_args()
     settings = Settings()
-    if args.command == "discover":
+    if args.command == "synthetic-init":
+        from app.experiment.ledger import ExperimentConfig
+        from app.experiment.storage import SyntheticStore
+        from app.robinhood.service import ServiceLock
+        if settings.live_enabled or settings.normalized_mode == "LIVE":
+            raise RuntimeError("Synthetic initialization requires LIVE disabled")
+        with ServiceLock(settings.shadow_service_lock_path):
+            config = ExperimentConfig.capture(
+                settings, settings.model_name if args.agent == "openai" else "stub",
+                capital=args.capital, slippage_bps=args.slippage_bps,
+                fee_per_fill=args.fee_per_fill,
+            )
+            SyntheticStore(_repo(settings).session_factory).initialize(args.id, config)
+        print(json.dumps({
+            "status": "INITIALIZED", "mode": "SYNTHETIC_PAPER",
+            "experiment_id": args.id, "network_calls": False,
+        }))
+        code = 0
+    elif args.command == "synthetic-report":
+        from app.experiment.storage import SyntheticStore
+        print(json.dumps(SyntheticStore(_repo(settings).session_factory).report(args.id, args.limit), indent=2))
+        code = 0
+    elif args.command == "discover":
         code = asyncio.run(discover(settings, args.output, args.required_output))
     elif args.command == "probe":
         code = asyncio.run(probe(settings))

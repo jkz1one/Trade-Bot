@@ -113,6 +113,9 @@ def stored_snapshot(path, engine, *, benchmark_symbol, now, limit=25, before=Non
                     "cycle_id",
                     "error_class",
                     "prior_exit_code",
+                    "population",
+                    "experiment_id",
+                    "synthetic_cycle_id",
                 }
             }
         latest_rows = repo.recent_cycles(1)
@@ -202,6 +205,11 @@ def stored_snapshot(path, engine, *, benchmark_symbol, now, limit=25, before=Non
             for item in repo.shadow_schedule_slots(10)
         ]
         active = repo.active_shadow_slot()
+        experiments = []
+        if {"synthetic_experiments", "synthetic_cycles", "synthetic_fills", "synthetic_attempts"}.issubset(tables):
+            from app.experiment.storage import SyntheticStore
+
+            experiments = SyntheticStore(factory).summaries()
         return {
             "status": "OK" if latest else "EMPTY",
             "mode": "SHADOW",
@@ -223,4 +231,5 @@ def stored_snapshot(path, engine, *, benchmark_symbol, now, limit=25, before=Non
             },
             "strategy_pnl": None,
             "economic_pnl": None,
+            "synthetic_experiments": experiments,
         }

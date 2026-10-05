@@ -16,6 +16,9 @@ if [[ "$action" == prepare ]]; then
     chown 10001:10001 /etc/trade-bot/dashboard_password
     chmod 600 /etc/trade-bot/dashboard_password
   fi
+  if [[ ! -e /etc/trade-bot/worker.env ]]; then
+    (umask 077; printf 'TRADE_BOT_EXPERIMENT_ID=\n' > /etc/trade-bot/worker.env)
+  fi
   echo 'Private Trade-Bot directories prepared. Credentials must be imported before startup.'
   exit 0
 fi
@@ -37,6 +40,9 @@ fi
 command -v docker >/dev/null || { echo 'Docker Engine with Compose is required on the server.' >&2; exit 1; }
 export TRADE_BOT_RELEASE="$(git rev-parse --verify HEAD)"
 compose=(docker compose -p trade-bot-shadow -f "$trade_root/compose.shadow.yml")
+if [[ -f /etc/trade-bot/worker.env ]]; then
+  compose+=(--env-file /etc/trade-bot/worker.env)
+fi
 case "$action" in
   build)
     [[ -z "$(git status --porcelain)" ]] || { echo 'Build requires a clean checkout.' >&2; exit 1; }
@@ -66,11 +72,13 @@ case "$action" in
   history) "${compose[@]}" exec -T shadow python -m app.robinhood.cli shadow-history --limit 100 ;;
   outcomes) "${compose[@]}" exec -T shadow python -m app.robinhood.cli shadow-outcomes --limit 100 ;;
   slots) "${compose[@]}" exec -T shadow python -m app.robinhood.cli shadow-schedule-status ;;
+  synthetic-init) "${compose[@]}" run --rm --no-deps shadow python -m app.robinhood.cli synthetic-init --id "${2:?Pass the new experiment ID}" "${@:3}" ;;
+  synthetic-report) "${compose[@]}" exec -T shadow python -m app.robinhood.cli synthetic-report --id "${2:?Pass the experiment ID}" --limit 25 ;;
   backup)
     trade_backup="/data/backups/robinhood-$(date -u +%Y%m%dT%H%M%SZ).db"
     "${compose[@]}" exec -T shadow python -m app.robinhood.cli shadow-backup --output "$trade_backup"
     ;;
   resume) "${compose[@]}" run --rm --no-deps shadow python -m app.robinhood.cli shadow-service-resume ;;
   abandon) "${compose[@]}" run --rm --no-deps shadow python -m app.robinhood.cli shadow-slot-abandon --slot "${2:?Pass the inspected slot key}" ;;
-  *) echo 'Use prepare, import, build, preflight, probe, authorize, start, stop, observer, observer-logs, status, logs, audit, history, outcomes, slots, backup, resume or abandon.' >&2; exit 2 ;;
+  *) echo 'Use prepare, import, build, preflight, probe, authorize, start, stop, observer, observer-logs, status, logs, audit, history, outcomes, slots, synthetic-init, synthetic-report, backup, resume or abandon.' >&2; exit 2 ;;
 esac

@@ -3,7 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     model_process_timeout_seconds: float = Field(default=120, gt=0, le=300)
     model_request_timeout_seconds: float = Field(default=60, gt=0, le=120)
     dashboard_password_file: str | None = None
+    synthetic_experiment_id: str | None = None
     robinhood_schema_snapshot: str = "var/robinhood-tool-schemas.json"
     robinhood_required_schema_snapshot: str = "var/robinhood-required-schemas.json"
     robinhood_db_url: str = "sqlite:///./robinhood.db"
@@ -47,6 +48,11 @@ class Settings(BaseSettings):
     @property
     def normalized_mode(self) -> str:
         return self.mode.upper()
+
+    @field_validator("synthetic_experiment_id", mode="before")
+    @classmethod
+    def blank_experiment_is_disabled(cls, value):
+        return None if isinstance(value, str) and not value.strip() else value
 
 
 @lru_cache

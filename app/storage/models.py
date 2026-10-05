@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -157,3 +157,48 @@ class ShadowServiceStateRow(Base):
     heartbeat_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     release_sha: Mapped[str] = mapped_column(String(64))
     last_result_json: Mapped[str | None] = mapped_column(Text)
+
+
+class SyntheticExperimentRow(Base):
+    __tablename__ = "synthetic_experiments"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    config_json: Mapped[str] = mapped_column(Text)
+    state_json: Mapped[str] = mapped_column(Text)
+    revision: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class SyntheticCycleRow(Base):
+    __tablename__ = "synthetic_cycles"
+    __table_args__ = (UniqueConstraint("experiment_id", "slot_key"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    experiment_id: Mapped[str] = mapped_column(ForeignKey("synthetic_experiments.id"), index=True)
+    slot_key: Mapped[str] = mapped_column(ForeignKey("shadow_schedule_slots.slot_key"))
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    model: Mapped[str] = mapped_column(String(128))
+    prompt_version: Mapped[str] = mapped_column(String(128))
+    packet_json: Mapped[str] = mapped_column(Text)
+    decision_json: Mapped[str] = mapped_column(Text)
+    risk_json: Mapped[str] = mapped_column(Text)
+    execution_json: Mapped[str] = mapped_column(Text)
+    usage_json: Mapped[str | None] = mapped_column(Text)
+    snapshot_json: Mapped[str] = mapped_column(Text)
+
+
+class SyntheticFillRow(Base):
+    __tablename__ = "synthetic_fills"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    experiment_id: Mapped[str] = mapped_column(ForeignKey("synthetic_experiments.id"), index=True)
+    cycle_id: Mapped[int] = mapped_column(ForeignKey("synthetic_cycles.id"))
+    source_cycle_id: Mapped[int | None] = mapped_column(ForeignKey("synthetic_cycles.id"))
+    fill_json: Mapped[str] = mapped_column(Text)
+
+
+class SyntheticAttemptRow(Base):
+    """Durable pre-model receipt prevents a crash from hiding potentially billed calls."""
+
+    __tablename__ = "synthetic_attempts"
+    slot_key: Mapped[str] = mapped_column(ForeignKey("shadow_schedule_slots.slot_key"), primary_key=True)
+    experiment_id: Mapped[str] = mapped_column(ForeignKey("synthetic_experiments.id"), index=True)
+    model_attempted: Mapped[bool] = mapped_column(Boolean, default=False)
+    accounted: Mapped[bool] = mapped_column(Boolean, default=False)

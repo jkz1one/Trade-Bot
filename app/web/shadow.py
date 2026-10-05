@@ -111,6 +111,24 @@ def create_shadow_app(settings=None, *, clock=utc_now):
         data = report(limit, before)
         return JSONResponse(data, status_code=503 if data["status"] == "UNAVAILABLE" else 200)
 
+    @app.get("/api/synthetic/{name}", dependencies=[Depends(authenticate)])
+    def synthetic(name: str, limit: int = Query(25, ge=1, le=100)):
+        from fastapi.responses import JSONResponse
+        from sqlalchemy.orm import sessionmaker
+
+        from app.experiment.storage import SyntheticStore
+
+        try:
+            with engine.connect() as connection:
+                connection.exec_driver_sql("BEGIN")
+                return SyntheticStore(sessionmaker(bind=connection, expire_on_commit=False)).report(
+                    name, limit
+                )
+        except ValueError:
+            raise HTTPException(404, "Synthetic experiment unavailable") from None
+        except (SQLAlchemyError, KeyError, TypeError, OSError):
+            return JSONResponse({"status": "UNAVAILABLE", "network_calls": False}, status_code=503)
+
     @app.get("/", response_class=HTMLResponse, dependencies=[Depends(authenticate)])
     def index(
         request: Request,

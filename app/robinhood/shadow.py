@@ -181,6 +181,7 @@ class ShadowOrchestrator:
             broker_reconciled=reconciliation.reconciled,
             daily_entries=entries,
             in_exit_cooldown=in_cooldown,
+            now=self.clock(),
         )
         message = (
             f"SHADOW: agent failure ({run.error}); fail-closed HOLD"

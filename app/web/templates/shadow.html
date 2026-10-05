@@ -49,8 +49,8 @@
     {% set latest = data.latest %}{% set history = data.history %}{% set service = data.service %}{% set outcomes = data.outcomes %}
     <div class="cards">
       <div class="card"><div class="label">Worker</div><div class="value {{ 'good' if data.worker_healthy else 'warn' }}">{{ service.status if service else 'NOT STARTED' }}</div><small>{% if data.worker_healthy %}Heartbeat current{% elif service and service.status == 'RUNNING' %}Heartbeat stale or clock mismatch{% else %}Worker is not healthy{% endif %}</small></div>
-      <div class="card"><div class="label">Last saved decision</div><div class="value">{{ latest.decision.action if latest else '—' }}</div><small>{% if latest %}Cycle {{ latest.cycle_id }} · {{ latest.age_seconds }} seconds old{% else %}No cycle recorded{% endif %}</small></div>
-      <div class="card"><div class="label">Reported model cost · all history</div><div class="value">${{ '%.6f'|format(history.database_model_cost_total|float) }}</div><small>Missing usage is unknown; billing may be higher.</small></div>
+      <div class="card"><div class="label">Last real-account SHADOW decision</div><div class="value">{{ latest.decision.action if latest else '—' }}</div><small>{% if latest %}Cycle {{ latest.cycle_id }} · {{ latest.age_seconds }} seconds old{% else %}No real-account cycle recorded{% endif %}</small></div>
+      <div class="card"><div class="label">Reported model cost · SHADOW history</div><div class="value">${{ '%.6f'|format(history.database_model_cost_total|float) }}</div><small>Synthetic costs are separate. Missing usage is unknown.</small></div>
       <div class="card"><div class="label">Reviews · selected window</div><div class="value">{{ history.review_count }}</div><small>{{ history.cycle_count }} decisions · {{ history.agent_failure_count }} model failures</small></div>
     </div>
     <section>
@@ -58,13 +58,37 @@
       <dl class="facts"><dt>Heartbeat</dt><dd>{{ service.heartbeat_at if service else 'No heartbeat' }}{% if service %} · {{ data.heartbeat_age_seconds }} seconds old{% endif %}</dd>
       <dt>Worker release</dt><dd>{{ service.release_sha if service else 'Unknown' }}</dd>
       <dt>Last scheduler result</dt><dd>{% if service and service.last_result %}{{ service.last_result.status }} · {{ service.last_result.get('reason', service.last_result.get('error_class', '')) }} · exit {{ service.last_result.get('exit_code', 'unknown') }}{% else %}No result recorded{% endif %}</dd>
+      <dt>Last tick population</dt><dd>{% if service and service.last_result %}{{ service.last_result.get('population', 'REAL_ACCOUNT_SHADOW') }} {{ service.last_result.get('experiment_id', '') }}{% else %}Not yet recorded{% endif %}</dd>
       <dt>Active slot</dt><dd>{{ data.active_slot or 'None' }}</dd></dl>
       {% if service and service.status == 'HALTED' %}<p class="callout">The worker has halted. Inspect the failure and slot evidence over SSH before explicit recovery. Restarting does not clear the halt.</p>{% endif %}
       <p class="muted">A current heartbeat shows worker activity. Broker authentication, model availability and account freshness require separate evidence.</p>
     </section>
+    {% for experiment in data.synthetic_experiments %}
+    <section>
+      <div class="section-head"><h2>Synthetic portfolio · {{ experiment.experiment_id }}</h2><span class="tag warn">PAPER / ASSUMED FILLS</span></div>
+      <p class="muted">Separate virtual account · {{ experiment.config.policy }} · {{ experiment.config.model }} · initial ${{ experiment.config.capital }} · {{ experiment.config.slippage_bps }} bps slippage each side · ${{ experiment.config.fee_per_fill }} per fill</p>
+      <p class="muted">Total reported experiment model cost: ${{ experiment.known_model_cost }} · {{ experiment.unknown_model_calls }} calls with unknown usage{% if experiment.unaccounted_model_attempts %} · {{ experiment.unaccounted_model_attempts }} unaccounted pre-model receipts{% endif %}</p>
+      {% if experiment.latest %}{% set book = experiment.latest %}
+      <p class="muted">Saved marks: {{ book.as_of }}. The model sees this experiment's virtual account; its decisions and costs are separate from real-account SHADOW.</p>
+      <div class="cards">
+        <div class="card"><div class="label">Virtual trading cash</div><div class="value">${{ '%.4f'|format(book.cash|float) }}</div><small>{{ book.position.symbol if book.position else 'CASH' }}{% if book.position %} · {{ book.position.quantity }} shares{% endif %}</small></div>
+        <div class="card"><div class="label">Net equity after model costs</div><div class="value">{% if book.net_after_model_cost_equity is not none %}${{ '%.4f'|format(book.net_after_model_cost_equity|float) }}{% else %}Unknown{% endif %}</div><small>${{ book.known_model_cost }} reported · {{ book.unknown_model_calls }} calls with unknown usage</small></div>
+        <div class="card"><div class="label">Net return / excess vs {{ experiment.config.benchmark_symbol }}</div><div class="value">{% if book.net_return_fraction is not none %}{{ '%+.3f'|format(book.net_return_fraction|float * 100) }}%{% else %}Unknown{% endif %}</div><small>Excess: {% if book.net_excess_fraction is not none %}{{ '%+.3f'|format(book.net_excess_fraction|float * 100) }}%{% else %}Unknown{% endif %}</small></div>
+        <div class="card"><div class="label">Maximum observed net drawdown</div><div class="value">{% if book.max_drawdown_fraction is not none %}{{ '%.3f'|format(book.max_drawdown_fraction|float * 100) }}%{% else %}Unknown{% endif %}</div><small>Position mark {{ 'fresh' if book.position_valuation_fresh else 'stale' }} · benchmark {{ 'fresh' if book.benchmark_valuation_fresh else 'stale' }}</small></div>
+      </div>
+      <p class="callout">Model intents wait for a later fresh quote and are sized again. Software enforces stops, session exits, one position and cooldown. Missing costs or stale marks make net metrics unavailable. These are simulated results, not broker fills or established profitability.</p>
+      <p>Pending intent: {{ book.pending.decision.action ~ ' ' ~ book.pending.decision.symbol if book.pending else 'None' }}{% if book.pending %} · available {{ book.pending.available_at }} · expires {{ book.pending.expires_at }}{% endif %}</p>
+      <p class="muted">Recent events: {{ book.events|join(', ') or 'None' }} · Trading fees paid: ${{ book.fees_paid }}</p>
+      <div class="table-wrap"><table><thead><tr><th>Experiment cycle / UTC</th><th>Proposal / source</th><th>Governor</th><th>Model usage</th></tr></thead><tbody>{% for item in experiment.cycles|reverse %}<tr><td>{{ item.cycle_id }}<small>{{ item.timestamp }}</small></td><td>{{ item.decision.action }} {{ item.decision.symbol or '' }}<small>{{ item.model }}{% if item.execution.agent_error %} · {{ item.execution.agent_error }}{% endif %}</small></td><td class="reason">{{ 'Queued' if item.risk.approved else 'Rejected / no entry' }}<small>{{ item.risk.rejection_reasons|join(', ') }}</small></td><td>{% if item.usage %}${{ item.usage.estimated_cost }}{% elif item.execution.model_attempted %}Unknown{% else %}No model call{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+      {% if experiment.fills %}<h3>Recent simulated fills</h3><div class="table-wrap"><table><thead><tr><th>Fill / cycle</th><th>Side / symbol</th><th>Quantity / price</th><th>Reason / proposal cycle</th></tr></thead><tbody>{% for fill in experiment.fills|reverse %}<tr><td>{{ fill.fill_id }} / {{ fill.cycle_id }}</td><td>{{ fill.side }} {{ fill.symbol }}</td><td>{{ fill.quantity }} @ ${{ fill.price }}</td><td>{{ fill.reason }}<small>Source {{ fill.source_cycle_id if fill.source_cycle_id is not none else 'deterministic' }}</small></td></tr>{% endfor %}</tbody></table></div>{% endif %}
+      {% else %}<p>Initialized. Waiting for its first scheduled cycle.</p>{% endif %}
+      <p class="muted">{{ experiment.measurement_note }}</p>
+      <p><a href="/api/synthetic/{{ experiment.experiment_id }}">Read experiment report</a></p>
+    </section>
+    {% endfor %}
     {% if latest %}
     <section>
-      <div class="section-head"><h2>Latest decision · cycle {{ latest.cycle_id }}</h2><span class="tag {{ 'bad' if latest.execution.agent_error else '' }}">{% if latest.execution.agent_error %}FAIL-CLOSED MODEL ERROR · {% endif %}{{ latest.model }}</span></div>
+      <div class="section-head"><h2>Latest real-account SHADOW decision · cycle {{ latest.cycle_id }}</h2><span class="tag {{ 'bad' if latest.execution.agent_error else '' }}">{% if latest.execution.agent_error %}FAIL-CLOSED MODEL ERROR · {% endif %}{{ latest.model }}</span></div>
       <p class="muted">Last saved account and market snapshot: {{ latest.as_of }} · {{ latest.age_seconds }} seconds old. Values below are not live quotes.</p>
       <div class="cards">
         <div class="card"><div class="label">Account equity</div><div class="value">${{ '%.2f'|format(latest.account.equity|float) }}</div></div>
