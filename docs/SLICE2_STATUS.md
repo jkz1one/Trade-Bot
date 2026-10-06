@@ -20,9 +20,9 @@ evidence remain deployment gates. LIVE is disabled.
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **342 tests in 10.57 seconds**, including 40 execution
-lifecycle tests and 26 position-supervision tests. The deployed application release
-remains the one recorded below.
+full local suite passed **377 tests in 10.80 seconds**, including 40 execution
+lifecycle tests, 26 position-supervision tests and 35 execution-limit/dispatch tests.
+The deployed application release remains the one recorded below.
 
 ## Target-host evidence — 2026-10-06 UTC
 
@@ -137,6 +137,39 @@ with two simulated fills and a flat final account. This is offline fixture
 evidence only. No broker adapter, deployment change or authenticated call was added.
 Bounded executor deadlines, actual broker contract proof, deployed supervision,
 bankroll/account gates and operator recovery/alerts remain future engineering.
+
+## Offline account/dollar-envelope follow-up — 2026-10-06 UTC
+
+Fresh canonical branch state matched `fdd6d5ad80eb9fbc04fd7eb79a5aed1a459367d7`
+before editing. Each new offline journal now freezes its fixture account identity,
+entry/position dollar ceilings and total/daily loss limits. Current journal/account
+truth owns authority. Profits, model account proposals, runtime configuration changes
+or manual resume cannot raise these limits. Daily realized net P&L includes all fill
+fees, persists across restart and updates once with the atomic fill ledger. Loss
+gates block new entries while protective closes remain available. Existing journals
+without this envelope remain read-only reportable; execution requires a fresh journal
+rather than silently adopting new authority.
+
+PREPARED dispatch now requires a supplied fresh market packet and rechecks the saved
+proposal against it. Current stop invalidation, tradability, volatility and account
+limits can reject the old approval. Duplicate/crossed/nonfinite/stale/regressing
+evidence never authorizes an attempt. Buy risk covers the original maximum executable
+limit even if the current ask falls. Observed and governed packets and snapshot/risk
+identity are saved; blocked admission/dispatch retains an audit reason. Attempted
+orders still cannot replay and do not need a new packet simply to return their status.
+
+Verification: **377 tests passed in 10.80s**, including 35 new limit/dispatch tests.
+Changed-code Ruff checks/format checks, `pip check` and whitespace checks passed.
+The wheel installed outside the repository and passed optimized-Python rehearsal
+and independent account-pin/$2-ceiling/fresh-invalidation checks without network calls.
+No server, existing experiment, model prompt, broker API or LIVE path was changed.
+
+Estimated v1 execution-engine completeness: **about 60%**, a rough engineering
+estimate of implemented components, not a LIVE-readiness or profitability score.
+Remaining work includes bounded executor deadlines, actual broker identity/order/fill
+contract proof, real account/capital enablement gates, operator recovery/alerts,
+deployed supervision and integrated failure verification. The pending market-session
+and host evidence above remains separate.
 
 ## Sequential synthetic portfolio and build hardening
 

@@ -77,7 +77,7 @@ def run_rehearsal(path):
     _require(engine.reconcile(venue.snapshot(at), now=at)["reconciled"])
     intent = engine.prepare("fixture-entry", _decision(), _packet(at), now=at)
     venue.lose_next_ack = True
-    _require(engine.dispatch(intent.client_id, venue, now=at) == "UNKNOWN")
+    _require(engine.dispatch(intent.client_id, venue, now=at, packet=_packet(at)) == "UNKNOWN")
     engine = ExecutionEngine(path, settings)  # Persistent state across restart.
     _require(engine.dispatch(intent.client_id, venue, now=at) == "UNKNOWN")
     _require(venue.submit_count == 1)
@@ -99,7 +99,10 @@ def run_rehearsal(path):
     exit_intent = engine.prepare(
         "fixture-exit", _decision(exiting=True), _packet(at, exiting=True), now=at
     )
-    _require(engine.dispatch(exit_intent.client_id, venue, now=at) == "OPEN")
+    _require(
+        engine.dispatch(exit_intent.client_id, venue, now=at, packet=_packet(at, exiting=True))
+        == "OPEN"
+    )
     venue.fill(exit_intent.client_id, half, Decimal(11), at, fill_id="fixture-sell")
     _require(engine.reconcile(venue.snapshot(at), now=at)["reconciled"])
     _require(venue.submit_count == 2)

@@ -27,12 +27,52 @@ Robinhood ownership or mixed into `virtual-v1` performance.
 
 ## Durable lifecycle
 
+### Frozen account and dollar envelope
+
+Each new rehearsal journal also freezes an `ExecutionLimits` envelope: the expected
+local fixture account identity, maximum entry and position commitment, total dollar
+loss limit and daily realized dollar loss limit. Explicit limits must be finite and
+positive; entry ceiling cannot exceed position ceiling and the total loss allowance
+cannot exceed allocated starting capital. Defaults use starting capital for all four
+dollar limits and the `execution-rehearsal` fixture identity. These defaults are
+offline guardrails, not a selected LIVE bankroll or loss policy. The existing governor
+may impose tighter bounds.
+
+Model account proposals cannot change these ceilings. Matching cash balances cannot
+authorize a different account. Foreign snapshots fail reconciliation and foreign
+fixture dispatch latches a halt before an attempt. Runtime changes to capital,
+limits, universe, risk settings or mode fail closed against the journal configuration.
+Increasing profits cannot raise the frozen entry ceiling. Position appreciation does
+not force a sale; this cap bounds new entry commitments. Limits never clip an owned
+position's protective sale.
+
+The total entry-loss gate uses cash plus the current bid-marked position versus
+allocated starting capital, including fees already paid and current unrealized loss.
+It does not estimate a future exit fee. The daily entry gate
+uses realized net P&L on each fill's New York date, including entry and exit fees.
+The daily map persists atomically with ledger/fills and is not incremented by repeated
+evidence. Daily wins offset that day's losses; this is a net-loss cap, not cumulative
+gross losses. The total gate persists into later sessions; the daily gate checks the
+current session date. These gates block new entries without disabling protective
+closes. Operator resume cannot waive a loss limit or change its frozen value.
+
+Journals created before this envelope remain readable with `report`, but reopening
+them for execution is rejected as an immutable-configuration mismatch. Use a new
+offline journal with explicitly selected limits; no automatic authority migration
+or server experiment reset is provided.
+
 1. Persist a governor-approved intent with a stable source identity, proposal/input
    fingerprint, quantity, limit, expiry, original stop and complete approval inputs.
    Conflicting reuse of a source key fails closed. One active reservation blocks
    additional orders, including while an entry is only partially filled.
-2. Rerun the governor against current reconciled account truth immediately before
-   the attempt. Reduced buying power cannot inherit an older, larger approval;
+2. Require a separately supplied `packet=` for a PREPARED dispatch. Check fresh,
+   nonregressing packet/quote times, unique symbols, finite values and intact bid/ask
+   evidence; never reuse the saved approval packet as current market truth. Rerun
+   the governor using the saved decision and current reconciled account/market truth.
+   The model cannot rewrite the approved stop or terms during dispatch. For a buy,
+   risk sizing covers at least the original limit price even when the new ask falls.
+   Save observed and governed packets, risk and snapshot identity with the attempt.
+   Reduced buying power cannot inherit an older, larger approval;
    reject the unattempted intent if its fixed terms no longer fit. Then commit
    SUBMITTING and the attempt timestamp before invoking the local fixture.
    Every attempted/terminal identity is ineligible for another submission. A lost
@@ -118,7 +158,10 @@ orders, fills and the last 100 audit events.
 Tests cover duplicate/concurrent dispatch, crash/lost-ack recovery, partial/terminal
 outcomes, immutable evidence, quote/session checks, fees/cash, one position, entry
 limits/cooldown across restarts, manual halt, rollback, network-free CLI operation,
-database isolation and read-only reports. See SLICE2_STATUS.md for executed results.
+database isolation, read-only reports, immutable dollar/account limits, entry-loss
+gates, daily fee/P&L persistence and fresh-market dispatch reapproval. Admission and
+dispatch blocks retain audited reasons without creating an attempt. See
+SLICE2_STATUS.md for executed results.
 
 ## SignalFlow adaptation and remaining engineering
 
@@ -147,8 +190,8 @@ and prove that evidence without truncation or guessed identities. The in-memory
 fixture venue survives journal reopen only within the rehearsal process and is not
 a broker restart simulator or a persistent brokerage service.
 
-Then implement bounded executor deadlines, independent live enablement and bankroll
-caps, account identity pinning, real-adapter owned-position reconciliation,
+Then implement bounded executor deadlines, independent live enablement, actual-account
+identity pinning and verified bankroll controls, real-adapter owned-position reconciliation,
 deployed stop/session supervision, model-cost integration, alerts and authenticated operator
 recovery. Test these independently before connecting them to a live capability.
 The deployed SHADOW worker and its continuing market-session verification stay on

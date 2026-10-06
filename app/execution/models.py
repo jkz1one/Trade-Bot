@@ -103,7 +103,7 @@ class VenuePosition(Contract):
 
 class Snapshot(Contract):
     environment: Literal["LOCAL_FIXTURE"] = "LOCAL_FIXTURE"
-    account_id: Literal["execution-rehearsal"] = "execution-rehearsal"
+    account_id: str = Field(default="execution-rehearsal", min_length=1, max_length=128)
     snapshot_id: str = Field(min_length=1, max_length=128)
     captured_at: datetime
     complete: bool = True
@@ -127,6 +127,24 @@ class PositionManagement(Contract):
     supervision_issue: str | None = None
 
 
+class ExecutionLimits(Contract):
+    """Frozen local-fixture admission envelope, independent of model proposals."""
+
+    account_id: str = Field(default="execution-rehearsal", min_length=1, max_length=128)
+    max_entry_notional: Decimal = Field(gt=0)
+    max_position_notional: Decimal = Field(gt=0)
+    total_loss_limit: Decimal = Field(gt=0)
+    daily_loss_limit: Decimal = Field(gt=0)
+
+    @model_validator(mode="after")
+    def bounded(self):
+        if not self.account_id.strip():
+            raise ValueError("An explicit fixture account identity is required")
+        if self.max_entry_notional > self.max_position_notional:
+            raise ValueError("Entry ceiling cannot exceed position ceiling")
+        return self
+
+
 class Ledger(Contract):
     cash: Decimal = Field(ge=0)
     position: Position | None = None
@@ -136,3 +154,11 @@ class Ledger(Contract):
     entry_times: list[datetime] = Field(default_factory=list)
     last_close_at: datetime | None = None
     management: PositionManagement | None = None
+    daily_net_pnl: dict[str, Decimal] = Field(default_factory=dict)
+
+    @field_validator("daily_net_pnl")
+    @classmethod
+    def finite_daily_pnl(cls, value):
+        if any(not amount.is_finite() for amount in value.values()):
+            raise ValueError("Daily net P&L must be finite")
+        return value

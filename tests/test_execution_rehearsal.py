@@ -57,7 +57,7 @@ def ctx(tmp_path):
 def open_order(ctx):
     engine, venue, _ = ctx
     intent = engine.prepare("cycle-1", decision(), packet(), now=NOW)
-    assert engine.dispatch(intent.client_id, venue, now=NOW) == OrderState.OPEN
+    assert engine.dispatch(intent.client_id, venue, now=NOW, packet=packet(NOW)) == OrderState.OPEN
     return intent
 
 
@@ -100,9 +100,16 @@ def test_restart_and_concurrent_dispatch_cannot_repeat_attempt(ctx):
     intent = engine.prepare("cycle-1", decision(), packet(), now=NOW)
     restarted = ExecutionEngine(engine.journal.path, settings)
     with ThreadPoolExecutor(max_workers=2) as pool:
-        list(pool.map(lambda e: e.dispatch(intent.client_id, venue, now=NOW), [engine, restarted]))
+        list(
+            pool.map(
+                lambda e: e.dispatch(intent.client_id, venue, now=NOW, packet=packet(NOW)),
+                [engine, restarted],
+            )
+        )
     assert venue.submit_count == 1
-    assert restarted.dispatch(intent.client_id, venue, now=NOW) == OrderState.OPEN
+    assert (
+        restarted.dispatch(intent.client_id, venue, now=NOW, packet=packet(NOW)) == OrderState.OPEN
+    )
     assert venue.submit_count == 1
 
 
@@ -124,7 +131,7 @@ def test_partial_cancel_preserves_position_and_cash_then_full_close(ctx):
     restarted = ExecutionEngine(engine.journal.path, settings)
     exit_intent = restarted.prepare("exit", decision("CLOSE"), packet(at, "11", "11.01"), now=at)
     assert exit_intent.quantity == half
-    restarted.dispatch(exit_intent.client_id, venue, now=at)
+    restarted.dispatch(exit_intent.client_id, venue, now=at, packet=packet(at))
     venue.fill(exit_intent.client_id, half, D(11), at, fill_id="sell")
     assert restarted.reconcile(venue.snapshot(at), now=at)["reconciled"]
     report = restarted.journal.report()
@@ -153,12 +160,17 @@ def test_lost_ack_missing_order_never_expires_or_resubmits(ctx):
     engine, venue, settings = ctx
     intent = engine.prepare("cycle-1", decision(), packet(), now=NOW)
     venue.lose_next_ack = True
-    assert engine.dispatch(intent.client_id, venue, now=NOW) == OrderState.UNKNOWN
+    assert (
+        engine.dispatch(intent.client_id, venue, now=NOW, packet=packet(NOW)) == OrderState.UNKNOWN
+    )
     restarted = ExecutionEngine(engine.journal.path, settings)
     later = NOW + timedelta(hours=1)
     missing = venue.snapshot(later).model_copy(update={"orders": []})
     assert "ATTEMPTED_ORDER_MISSING" in restarted.reconcile(missing, now=later)["issues"]
-    assert restarted.dispatch(intent.client_id, venue, now=later) == OrderState.UNKNOWN
+    assert (
+        restarted.dispatch(intent.client_id, venue, now=later, packet=packet(later))
+        == OrderState.UNKNOWN
+    )
     with pytest.raises(ExecutionBlocked):
         restarted.abandon_prepared(intent.client_id, "expired", now=later)
     with pytest.raises(ExecutionBlocked):
@@ -171,7 +183,7 @@ def test_lost_ack_recovers_with_fill_evidence_but_requires_explicit_resume(ctx):
     engine, venue, settings = ctx
     intent = engine.prepare("cycle-1", decision(), packet(), now=NOW)
     venue.lose_next_ack = True
-    engine.dispatch(intent.client_id, venue, now=NOW)
+    engine.dispatch(intent.client_id, venue, now=NOW, packet=packet(NOW))
     at = NOW + timedelta(seconds=1)
     venue.fill(intent.client_id, intent.quantity, D(10), at)
     restarted = ExecutionEngine(engine.journal.path, settings)
@@ -193,9 +205,12 @@ def test_process_crash_after_acceptance_preserves_attempt_before_ack(ctx, monkey
 
     monkeypatch.setattr(venue, "accept", crash)
     with pytest.raises(KeyboardInterrupt):
-        engine.dispatch(intent.client_id, venue, now=NOW)
+        engine.dispatch(intent.client_id, venue, now=NOW, packet=packet(NOW))
     restarted = ExecutionEngine(engine.journal.path, settings)
-    assert restarted.dispatch(intent.client_id, venue, now=NOW) == OrderState.UNKNOWN
+    assert (
+        restarted.dispatch(intent.client_id, venue, now=NOW, packet=packet(NOW))
+        == OrderState.UNKNOWN
+    )
     assert restarted.journal.report()["halted"]
     assert venue.submit_count == 1
     assert restarted.reconcile(venue.snapshot(NOW), now=NOW)["reconciled"]
@@ -281,7 +296,7 @@ def test_halt_and_prepared_abandonment_persist(ctx):
     engine.halt("operator kill switch", now=NOW)
     restarted = ExecutionEngine(engine.journal.path, settings)
     with pytest.raises(ExecutionBlocked, match="HALTED"):
-        restarted.dispatch(intent.client_id, venue, now=NOW)
+        restarted.dispatch(intent.client_id, venue, now=NOW, packet=packet(NOW))
     restarted.abandon_prepared(intent.client_id, "never attempted", now=NOW)
     restarted.resume("account checked", now=NOW)
     assert not restarted.journal.report()["halted"]
@@ -291,7 +306,12 @@ def test_halt_and_prepared_abandonment_persist(ctx):
 def test_unattempted_expiration_never_calls_venue(ctx):
     engine, venue, _ = ctx
     intent = engine.prepare("cycle-1", decision(), packet(), now=NOW)
-    assert engine.dispatch(intent.client_id, venue, now=intent.expires_at) == OrderState.EXPIRED
+    assert (
+        engine.dispatch(
+            intent.client_id, venue, now=intent.expires_at, packet=packet(intent.expires_at)
+        )
+        == OrderState.EXPIRED
+    )
     assert venue.submit_count == 0
     assert not engine.journal.report()["orders"][0]["active"]
 
@@ -306,7 +326,7 @@ def test_rehearsal_rejects_live_modes_generic_adapters_and_real_databases(ctx, t
         with pytest.raises(ValueError, match="LIVE disabled"):
             ExecutionEngine(tmp_path / "forbidden.db", bad)
     with pytest.raises(ValueError, match="fixture venue"):
-        engine.dispatch(intent.client_id, object(), now=NOW)
+        engine.dispatch(intent.client_id, object(), now=NOW, packet=packet(NOW))
     assert venue.submit_count == 0
     path = tmp_path / "robinhood.db"
     with sqlite3.connect(path) as db:
@@ -358,7 +378,7 @@ def test_only_observed_terminal_outcomes_release_attempted_reservations(ctx, sta
     assert engine.reconcile(venue.snapshot(NOW), now=NOW)["reconciled"]
     assert engine.journal.report()["orders"][0]["status"] == status
     assert not engine.journal.report()["orders"][0]["active"]
-    assert engine.dispatch(intent.client_id, venue, now=NOW) == status
+    assert engine.dispatch(intent.client_id, venue, now=NOW, packet=packet(NOW)) == status
     assert venue.submit_count == 1
 
 
@@ -438,11 +458,11 @@ def test_daily_entry_limit_survives_close_cooldown_and_restart(tmp_path):
     venue = LocalFixtureVenue(D(10))
     engine.reconcile(venue.snapshot(NOW), now=NOW)
     intent = engine.prepare("buy", decision(), packet(), now=NOW)
-    engine.dispatch(intent.client_id, venue, now=NOW)
+    engine.dispatch(intent.client_id, venue, now=NOW, packet=packet(NOW))
     venue.fill(intent.client_id, intent.quantity, D(10), NOW)
     engine.reconcile(venue.snapshot(NOW), now=NOW)
     close = engine.prepare("sell", decision("CLOSE"), packet(NOW, "10", "10.01"), now=NOW)
-    engine.dispatch(close.client_id, venue, now=NOW)
+    engine.dispatch(close.client_id, venue, now=NOW, packet=packet(NOW))
     venue.fill(close.client_id, close.quantity, D(10), NOW)
     engine.reconcile(venue.snapshot(NOW), now=NOW)
     later = NOW + timedelta(minutes=16)
@@ -463,7 +483,7 @@ def test_kill_during_attempt_preserves_late_fill_evidence_without_resuming(ctx, 
         return order_id
 
     monkeypatch.setattr(venue, "accept", accept_then_halt)
-    engine.dispatch(intent.client_id, venue, now=NOW)
+    engine.dispatch(intent.client_id, venue, now=NOW, packet=packet(NOW))
     venue.fill(intent.client_id, intent.quantity, D(10), NOW)
     assert engine.reconcile(venue.snapshot(NOW), now=NOW)["reconciled"]
     assert engine.journal.report()["halted"]
@@ -570,7 +590,9 @@ def die_after_accept(intent, now):
     accept(intent, now)
     os._exit(95)
 venue.accept = die_after_accept
-engine.dispatch(sys.argv[2], venue, now=datetime.fromisoformat(sys.argv[3]))
+from tests.test_execution_rehearsal import packet
+at = datetime.fromisoformat(sys.argv[3])
+engine.dispatch(sys.argv[2], venue, now=at, packet=packet(at))
 """
     result = subprocess.run(
         [sys.executable, "-c", script, str(engine.journal.path), intent.client_id, NOW.isoformat()],
@@ -582,7 +604,10 @@ engine.dispatch(sys.argv[2], venue, now=datetime.fromisoformat(sys.argv[3]))
     assert engine.journal.report()["orders"][0]["status"] == "SUBMITTING"
     restarted = ExecutionEngine(engine.journal.path, settings)
     new_venue = LocalFixtureVenue(D(10))
-    assert restarted.dispatch(intent.client_id, new_venue, now=NOW) == OrderState.UNKNOWN
+    assert (
+        restarted.dispatch(intent.client_id, new_venue, now=NOW, packet=packet(NOW))
+        == OrderState.UNKNOWN
+    )
     assert new_venue.submit_count == 0
     assert restarted.journal.report()["halted"]
     assert (
@@ -596,7 +621,9 @@ def test_buying_power_change_is_rechecked_before_attempt(ctx):
     at = NOW + timedelta(seconds=1)
     limited = venue.snapshot(at).model_copy(update={"safe_buying_power": D(1)})
     assert engine.reconcile(limited, now=at)["reconciled"]
-    assert engine.dispatch(intent.client_id, venue, now=at) == OrderState.REJECTED
+    assert (
+        engine.dispatch(intent.client_id, venue, now=at, packet=packet(at)) == OrderState.REJECTED
+    )
     report = engine.journal.report()
     assert venue.submit_count == 0 and report["orders"][0]["attempted_at"] is None
     assert not report["orders"][0]["active"]

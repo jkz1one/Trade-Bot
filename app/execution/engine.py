@@ -9,6 +9,8 @@ from datetime import datetime, timedelta
 from decimal import ROUND_DOWN
 from zoneinfo import ZoneInfo
 
+from pydantic import ValidationError
+
 from app.config import Settings
 from app.domain.models import AccountState, Action, MarketPacket, Position, TradeDecision
 from app.execution.fixture import LocalFixtureVenue
@@ -17,6 +19,7 @@ from app.execution.models import (
     SHARE_STEP,
     TERMINAL,
     ZERO,
+    ExecutionLimits,
     Intent,
     Ledger,
     Observation,
@@ -40,15 +43,30 @@ def _clock(now):
 
 
 class ExecutionEngine:
-    def __init__(self, path, settings: Settings, *, calendar=None):
+    def __init__(
+        self, path, settings: Settings, *, calendar=None, limits: ExecutionLimits | None = None
+    ):
         if settings.normalized_mode != "PAPER" or settings.live_enabled:
             raise ValueError("Execution rehearsal requires PAPER with LIVE disabled")
         self.settings = Settings.model_validate(settings.model_dump())
+        self.limits = ExecutionLimits.model_validate(
+            limits.model_dump()
+            if limits is not None
+            else {
+                "max_entry_notional": settings.starting_capital,
+                "max_position_notional": settings.starting_capital,
+                "total_loss_limit": settings.starting_capital,
+                "daily_loss_limit": settings.starting_capital,
+            }
+        )
+        if self.limits.total_loss_limit > settings.starting_capital:
+            raise ValueError("Total loss limit cannot exceed allocated starting capital")
         self.calendar = calendar if calendar is not None else XNYSCalendar()
         self.journal = ExecutionJournal(
             path,
             {
                 "capital": str(settings.starting_capital),
+                "execution_limits": self.limits.model_dump(mode="json"),
                 "symbols": settings.initial_symbols,
                 "risk_settings": {
                     k: str(getattr(settings, k))
@@ -83,9 +101,22 @@ class ExecutionEngine:
                         db, datetime.now().astimezone(), "INTERRUPTED_ATTEMPT", {}, row[0]
                     )
 
-    @staticmethod
-    def _control(db):
-        return db.execute("SELECT * FROM execution_control WHERE id=1").fetchone()
+    def _control(self, db):
+        row = db.execute("SELECT * FROM execution_control WHERE id=1").fetchone()
+        config = json.loads(row["config_json"])
+        if (
+            config["execution_limits"] != self.limits.model_dump(mode="json")
+            or config["capital"] != str(self.settings.starting_capital)
+            or config["symbols"] != self.settings.initial_symbols
+            or any(
+                config["risk_settings"][key] != str(getattr(self.settings, key))
+                for key in config["risk_settings"]
+            )
+            or self.settings.normalized_mode != "PAPER"
+            or self.settings.live_enabled
+        ):
+            raise ExecutionBlocked("EXECUTION_CONFIGURATION_CHANGED")
+        return row
 
     @staticmethod
     def _fresh(snapshot, now, maximum_age):
@@ -98,9 +129,39 @@ class ExecutionEngine:
         if not control["snapshot_json"] or json.loads(control["issues_json"]):
             raise ExecutionBlocked("RECONCILIATION_REQUIRED")
         snapshot = Snapshot.model_validate_json(control["snapshot_json"])
+        if snapshot.account_id != self.limits.account_id:
+            raise ExecutionBlocked("EXECUTION_ACCOUNT_MISMATCH")
         if not self._fresh(snapshot, now, self.settings.quote_max_age_seconds):
             raise ExecutionBlocked("STALE_EXECUTION_SNAPSHOT")
         return snapshot
+
+    @staticmethod
+    def _validated_packet(packet):
+        try:
+            return MarketPacket.model_validate(packet.model_dump())
+        except ValidationError:
+            raise ExecutionBlocked("INVALID_MARKET_PACKET") from None
+
+    @staticmethod
+    def _market_values(packet):
+        symbols = [c.quote.symbol for c in packet.candidates]
+        if len(set(symbols)) != len(symbols):
+            raise ExecutionBlocked("DUPLICATE_MARKET_SYMBOLS")
+        for candidate in packet.candidates:
+            q = candidate.quote
+            if any(
+                not value.is_finite()
+                for value in (
+                    q.bid,
+                    q.ask,
+                    q.last,
+                    candidate.atr_fraction,
+                    candidate.realized_vol_fraction,
+                )
+            ):
+                raise ExecutionBlocked("NONFINITE_MARKET_VALUES")
+            if q.bid > q.ask:
+                raise ExecutionBlocked("INSANE_QUOTE")
 
     def _govern(self, decision, packet, state, snapshot, now):
         position = state.position
@@ -116,7 +177,12 @@ class ExecutionEngine:
         account = AccountState(
             equity=equity,
             cash=state.cash,
-            buying_power=min(state.cash, snapshot.safe_buying_power),
+            buying_power=min(
+                state.cash,
+                snapshot.safe_buying_power,
+                self.limits.max_entry_notional,
+                self.limits.max_position_notional,
+            ),
             high_watermark=max(state.high_watermark, equity),
             realized_pnl=state.realized_pnl - state.fees_paid,
             position=position,
@@ -138,6 +204,30 @@ class ExecutionEngine:
             in_exit_cooldown=cooldown,
             now=now,
         )
+        if decision.action == Action.OPEN_LONG:
+            reasons = list(risk.rejection_reasons)
+            if equity <= self.settings.starting_capital - self.limits.total_loss_limit:
+                reasons.append("EXECUTION_TOTAL_LOSS_LIMIT")
+            if state.daily_net_pnl.get(today.isoformat(), ZERO) <= -self.limits.daily_loss_limit:
+                reasons.append("EXECUTION_DAILY_LOSS_LIMIT")
+            if reasons:
+                risk = risk.model_copy(
+                    update={
+                        "approved": False,
+                        "approved_notional": ZERO,
+                        "planned_risk_dollars": ZERO,
+                        "planned_risk_fraction": ZERO,
+                        "rejection_reasons": reasons,
+                    }
+                )
+            if min(self.limits.max_entry_notional, self.limits.max_position_notional) < min(
+                state.cash, snapshot.safe_buying_power
+            ):
+                risk = risk.model_copy(
+                    update={
+                        "constraint_hits": [*risk.constraint_hits, "EXECUTION_NOTIONAL_CEILING"]
+                    }
+                )
         return risk, governed_packet
 
     @staticmethod
@@ -260,7 +350,7 @@ class ExecutionEngine:
     def supervise(self, packet: MarketPacket, *, now):
         """Observe owned risk without model judgment, order submission or broker reads."""
         _clock(now)
-        packet = MarketPacket.model_validate(packet.model_dump())
+        packet = self._validated_packet(packet)
         with self.journal.write() as db:
             control = self._control(db)
             return self._supervise(
@@ -301,12 +391,21 @@ class ExecutionEngine:
         return self.prepare(prefix + ":" + str(attempts), decision, packet, now=now)
 
     def prepare(self, source_key: str, decision: TradeDecision, packet: MarketPacket, *, now):
+        try:
+            return self._prepare(source_key, decision, packet, now=now)
+        except ExecutionBlocked as exc:
+            # Admission failure must survive the rolled-back preparation transaction.
+            with self.journal.write() as db:
+                self.journal.event(db, now, "ADMISSION_BLOCKED", {"reason": str(exc)})
+            raise
+
+    def _prepare(self, source_key: str, decision: TradeDecision, packet: MarketPacket, *, now):
         _clock(now)
         if not source_key.strip() or len(source_key) > 128:
             raise ValueError("A bounded stable decision source key is required")
         # Revalidate even if a caller has used model_copy/model_construct.
         decision = TradeDecision.model_validate(decision.model_dump())
-        packet = MarketPacket.model_validate(packet.model_dump())
+        packet = self._validated_packet(packet)
         fingerprint = hashlib.sha256(
             json.dumps(
                 {
@@ -336,6 +435,7 @@ class ExecutionEngine:
                     {"source_key": source_key, "decision": decision.model_dump(mode="json")},
                 )
                 return None
+            self._market_values(packet)
             control = self._control(db)
             snapshot = self._ready(control, now)
             if db.execute("SELECT 1 FROM execution_orders WHERE active_lock=1").fetchone():
@@ -425,11 +525,25 @@ class ExecutionEngine:
             )
             return intent
 
-    def dispatch(self, client_id: str, venue: LocalFixtureVenue, *, now):
+    def dispatch(
+        self, client_id: str, venue: LocalFixtureVenue, *, now, packet: MarketPacket | None = None
+    ):
+        _clock(now)
+        try:
+            return self._dispatch(client_id, venue, now=now, packet=packet)
+        except ExecutionBlocked as exc:
+            with self.journal.write() as db:
+                self.journal.event(db, now, "DISPATCH_BLOCKED", {"reason": str(exc)}, client_id)
+            raise
+
+    def _dispatch(self, client_id, venue, *, now, packet):
         _clock(now)
         # Intentional hard boundary: generic transports and Robinhood clients cannot be attached.
         if type(venue) is not LocalFixtureVenue:
             raise ValueError("Only the built-in local fixture venue is supported")
+        if venue.account_id != self.limits.account_id:
+            self.halt("EXECUTION_ACCOUNT_MISMATCH", now=now)
+            raise ExecutionBlocked("EXECUTION_ACCOUNT_MISMATCH")
         with self.journal.write() as db:
             order = db.execute(
                 "SELECT * FROM execution_orders WHERE client_id=?", (client_id,)
@@ -455,7 +569,43 @@ class ExecutionEngine:
             state = Ledger.model_validate_json(control["ledger_json"])
             approval = json.loads(order["approval_json"])
             proposed = TradeDecision.model_validate(approval["decision"])
-            packet = MarketPacket.model_validate(approval["packet"])
+            if packet is None:
+                raise ExecutionBlocked("FRESH_DISPATCH_PACKET_REQUIRED")
+            packet = self._validated_packet(packet)
+            self._market_values(packet)
+            observed_packet = packet.model_dump(mode="json")
+            if (
+                packet.as_of.tzinfo is None
+                or packet.as_of.utcoffset() is None
+                or not 0
+                <= (now - packet.as_of).total_seconds()
+                <= self.settings.quote_max_age_seconds
+            ):
+                raise ExecutionBlocked("INVALID_DISPATCH_PACKET_TIME")
+            original = MarketPacket.model_validate(approval["packet"])
+            current = next((c for c in packet.candidates if c.quote.symbol == intent.symbol), None)
+            previous = next(c for c in original.candidates if c.quote.symbol == intent.symbol)
+            if (
+                packet.as_of < original.as_of
+                or current is None
+                or current.quote.timestamp.tzinfo is None
+                or current.quote.timestamp.utcoffset() is None
+                or current.quote.timestamp < previous.quote.timestamp
+            ):
+                raise ExecutionBlocked("DISPATCH_MARKET_EVIDENCE_REGRESSION")
+            if intent.side == "BUY" and current.quote.ask < intent.limit_price:
+                # Size/risk must cover the maximum executable limit price, even after a rebound down.
+                current = current.model_copy(
+                    update={"quote": current.quote.model_copy(update={"ask": intent.limit_price})}
+                )
+                packet = packet.model_copy(
+                    update={
+                        "candidates": [
+                            current if c.quote.symbol == intent.symbol else c
+                            for c in packet.candidates
+                        ]
+                    }
+                )
             risk, current_packet = self._govern(proposed, packet, state, snapshot, now)
             window = self.calendar.current_window(now)
             if intent.side == "BUY":
@@ -482,10 +632,29 @@ class ExecutionEngine:
                     db,
                     now,
                     "PRE_DISPATCH_BLOCKED",
-                    {"risk": risk.model_dump(mode="json")},
+                    {
+                        "risk": risk.model_dump(mode="json"),
+                        "market_packet": observed_packet,
+                        "risk_packet": current_packet.model_dump(mode="json"),
+                        "entry_valid": entry_valid,
+                        "quantity_ok": quantity_ok,
+                        "snapshot_id": snapshot.snapshot_id,
+                    },
                     client_id,
                 )
                 return OrderState.REJECTED
+            self.journal.event(
+                db,
+                now,
+                "PRE_DISPATCH_APPROVED",
+                {
+                    "risk": risk.model_dump(mode="json"),
+                    "market_packet": observed_packet,
+                    "risk_packet": current_packet.model_dump(mode="json"),
+                    "snapshot_id": snapshot.snapshot_id,
+                },
+                client_id,
+            )
             db.execute(
                 "UPDATE execution_orders SET status='SUBMITTING',attempted_at=? WHERE client_id=?",
                 (now.isoformat(), client_id),
@@ -629,6 +798,8 @@ class ExecutionEngine:
 
     def _reconcile(self, db, control, snapshot, now, issues):
         state = Ledger.model_validate_json(control["ledger_json"])
+        if snapshot.account_id != self.limits.account_id:
+            issues.append("EXECUTION_ACCOUNT_MISMATCH")
         if not self._fresh(snapshot, now, self.settings.quote_max_age_seconds):
             issues.append("STALE_FUTURE_OR_INCOMPLETE_SNAPSHOT")
         old_snapshot = (
@@ -755,6 +926,7 @@ class ExecutionEngine:
     def _apply_fill(state, intent, fill, management=None):
         position = state.position
         updates = {"fees_paid": state.fees_paid + fill.fee}
+        net = -fill.fee
         if intent.side == "BUY":
             if position and position.symbol != intent.symbol:
                 raise ValueError("Multiple positions")
@@ -788,6 +960,7 @@ class ExecutionEngine:
             updates["realized_pnl"] = state.realized_pnl + fill.quantity * (
                 fill.price - position.entry_price
             )
+            net += fill.quantity * (fill.price - position.entry_price)
             updates["position"] = (
                 position.model_copy(update={"quantity": quantity, "current_price": fill.price})
                 if quantity
@@ -796,6 +969,11 @@ class ExecutionEngine:
             if quantity == ZERO:
                 updates["last_close_at"] = fill.occurred_at
                 updates["management"] = None
+        day = fill.occurred_at.astimezone(ZoneInfo("America/New_York")).date().isoformat()
+        updates["daily_net_pnl"] = {
+            **state.daily_net_pnl,
+            day: state.daily_net_pnl.get(day, ZERO) + net,
+        }
         result = Ledger.model_validate({**state.model_dump(), **updates})
         equity = result.cash + (result.position.market_value if result.position else ZERO)
         return result.model_copy(update={"high_watermark": max(result.high_watermark, equity)})

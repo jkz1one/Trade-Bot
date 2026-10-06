@@ -10,7 +10,8 @@ from app.execution.models import ZERO, Fill, Intent, Observation, Snapshot, Venu
 
 
 class LocalFixtureVenue:
-    def __init__(self, capital: Decimal):
+    def __init__(self, capital: Decimal, *, account_id="execution-rehearsal"):
+        self.account_id = account_id
         self.cash = capital
         self.position: VenuePosition | None = None
         self.orders: dict[str, Observation] = {}
@@ -111,6 +112,7 @@ class LocalFixtureVenue:
             ZERO,
         )
         return Snapshot(
+            account_id=self.account_id,
             snapshot_id=snapshot_id or uuid4().hex,
             captured_at=at,
             cash=self.cash,

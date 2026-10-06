@@ -20,7 +20,7 @@ def hold_position(context, *, at=NOW, overnight=False, partial=False):
     engine.reconcile(venue.snapshot(at), now=at)
     proposal = decision().model_copy(update={"hold_overnight": overnight})
     intent = engine.prepare("entry", proposal, packet(at), now=at)
-    engine.dispatch(intent.client_id, venue, now=at)
+    engine.dispatch(intent.client_id, venue, now=at, packet=packet(at))
     quantity = (intent.quantity / 2).quantize(D(".00000001")) if partial else intent.quantity
     venue.fill(intent.client_id, quantity, D(10), at, fill_id="entry-fill")
     assert engine.reconcile(venue.snapshot(at), now=at)["reconciled"]
@@ -58,7 +58,7 @@ def test_stop_latches_across_rebound_restart_and_model_hold(ctx):
     assert protective.original_invalidation == D("9.5")
     assert restarted.prepare_protective_exit(packet(at, "10.01", "10.02"), now=at) == protective
     assert venue.submit_count == 1
-    restarted.dispatch(protective.client_id, venue, now=at)
+    restarted.dispatch(protective.client_id, venue, now=at, packet=packet(at))
     venue.fill(protective.client_id, protective.quantity, protective.limit_price, at)
     assert restarted.reconcile(venue.snapshot(at), now=at)["reconciled"]
     assert restarted.journal.report()["ledger"]["management"] is None
@@ -159,7 +159,7 @@ def test_partial_exit_reuses_active_order_then_closes_known_remainder(ctx):
     at = NOW + timedelta(seconds=1)
     p = observe(ctx, at, "9.40", "9.41")
     first = engine.prepare_protective_exit(p, now=at)
-    engine.dispatch(first.client_id, venue, now=at)
+    engine.dispatch(first.client_id, venue, now=at, packet=packet(at))
     half = (first.quantity / 2).quantize(D(".00000001"))
     venue.fill(first.client_id, half, first.limit_price, at)
     engine.reconcile(venue.snapshot(at), now=at)
@@ -177,7 +177,12 @@ def test_expired_unattempted_exit_gets_new_identity(ctx):
     hold_position(ctx)
     at = NOW + timedelta(seconds=1)
     first = engine.prepare_protective_exit(observe(ctx, at, "9.40", "9.41"), now=at)
-    assert engine.dispatch(first.client_id, venue, now=first.expires_at) == "EXPIRED"
+    assert (
+        engine.dispatch(
+            first.client_id, venue, now=first.expires_at, packet=packet(first.expires_at)
+        )
+        == "EXPIRED"
+    )
     at = first.expires_at
     second = engine.prepare_protective_exit(observe(ctx, at, "9.30", "9.31"), now=at)
     assert second.client_id != first.client_id and second.limit_price == D("9.30")
@@ -189,7 +194,7 @@ def test_entry_prepare_and_dispatch_block_late_session(ctx):
     at = NOW.replace(hour=19, minute=44, second=30)
     entry = engine.prepare("entry", decision(), observe(ctx, at), now=at)
     at += timedelta(seconds=30)
-    assert engine.dispatch(entry.client_id, venue, now=at) == "REJECTED"
+    assert engine.dispatch(entry.client_id, venue, now=at, packet=packet(at)) == "REJECTED"
     with pytest.raises(ExecutionBlocked, match="NO_FORWARD_SESSION"):
         engine.prepare("late", decision(), observe(ctx, at), now=at)
     assert venue.submit_count == 0
