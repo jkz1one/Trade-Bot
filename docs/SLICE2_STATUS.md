@@ -10,9 +10,11 @@ authenticated regular-session cycle remains to be observed. Forward quote outcom
 tracking and a persistent Linux SHADOW service are implemented and verified offline.
 The service and private read-only observer are now running on the permanent
 DigitalOcean server, with both containers healthy. The opt-in synthetic bankroll
-profile is initialized but has no market-session cycles yet. Backup, reboot recovery,
-private dashboard inspection and authenticated scheduled model-process evidence
-remain deployment gates. LIVE is disabled.
+profile is initialized but has no market-session cycles yet. Automatic container
+restart and experiment configuration persistence passed the operator's host reboot
+check. The operator confirmed the HTTPS dashboard login/page works. Backup,
+mobile inspection, failure recovery and authenticated scheduled model-process
+evidence remain deployment gates. LIVE is disabled.
 
 ## Target-host evidence — 2026-10-06 UTC
 
@@ -46,9 +48,18 @@ execution by this workspace. Deployed application release:
   evidence. No order placement, cancellation or LIVE path was enabled.
 - Mac editable installation and full suite passed: **276 tests in 23.55 seconds**
   on Python 3.14.5, independently of the earlier locked Linux suite.
+- Operator's post-reboot output at 20:56:46 UTC showed both containers healthy
+  after automatic restart, RUNNING heartbeat and MARKET_CLOSED. The same release,
+  experiment ID, frozen configuration and revision-0 empty cohort persisted.
+- Host Caddy service reported active after restart. Operator selected DuckDNS plus
+  Caddy HTTPS access instead of an SSH tunnel, retaining the observer's localhost
+  bind and application authentication. See SHADOW_SERVER.md for the proxy boundary.
+  At 20:58 UTC the operator confirmed dashboard login and the website page work.
+  This is operator browser evidence; exact HTTP headers, mobile inspection, firewall
+  configuration and backup results have not been supplied.
 
-Next: verify an integrity-checked server backup, host reboot persistence and private
-authenticated desktop/mobile dashboard; then observe a regular-session scheduled
+Next: verify an integrity-checked server backup/off-host protection and mobile
+dashboard rendering; then observe a regular-session scheduled
 model cycle, stored usage/decision/risk evidence and subsequent virtual transitions.
 Target-host failure recovery remains unverified. Keep PR #1 draft and main untouched.
 
@@ -85,8 +96,9 @@ remains recorded below.
 Server runtime and build dependency closures are pinned and the Docker build disables
 both dependency resolution and build isolation. The official Python base tag is
 explicit; target-host build and basic mounted credential/database access now pass
-as recorded above. Authenticated regular-session operation, restart/recovery and
-desktop/mobile visual review remain host gates. PR #1 stays draft; no merge has occurred.
+as recorded above. Normal host restart now passes. Authenticated regular-session
+operation, failure recovery and desktop/mobile visual review remain host gates.
+PR #1 stays draft; no merge has occurred.
 
 ## Private SHADOW observer
 

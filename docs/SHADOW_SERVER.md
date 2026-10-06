@@ -103,8 +103,64 @@ Open `http://127.0.0.1:8787` in your browser. The username is `trader`. Read the
 password only in your private SSH terminal with `sudo cat /etc/trade-bot/dashboard_password`;
 do not paste it into chat. Replace the SSH user/address with the confirmed host's
 existing access. Closing the tunnel stops browser access; the worker continues.
-There is no public HTTP port or domain configuration. Do not expose this Basic-auth
-HTTP endpoint publicly; the supported transport is encrypted SSH forwarding.
+Compose keeps the observer on localhost. Use encrypted SSH forwarding as above or
+the optional host HTTPS proxy below. Never publish the observer's plain HTTP port
+8787 directly.
+
+### Optional DuckDNS/Caddy HTTPS access
+
+The operator may point a DuckDNS hostname at the confirmed Trade-Bot droplet and
+install host Caddy using its [official Ubuntu package instructions](https://caddyserver.com/docs/install#debian-ubuntu-raspbian).
+This is host configuration; no worker image, credentials, database or Compose mount
+changes are required. The host proxy can reach the existing localhost listener.
+Keep its configuration outside the Git checkout so the release stays clean.
+
+The operator selected `signalflow.duckdns.org` on 2026-10-06. Verify that its A record
+points to the new droplet; remove old AAAA records unless verified IPv6 is configured.
+Reusing the hostname changes its destination, not the older SignalFlow services.
+The DigitalOcean firewall must be attached to the new droplet, permitting inbound
+TCP 22 for SSH and TCP 80/443 for web access. The operator chose all-address SSH
+access with configured authentication. Retain outbound TCP/UDP/ICMP defaults.
+Keep 8787 and the Caddy administration port unexposed. Check existing 80/443
+listeners before installation; preserve any existing proxy configuration.
+
+Host `/etc/caddy/Caddyfile` for the selected name:
+
+```caddyfile
+signalflow.duckdns.org {
+    @health path /healthz /healthz/*
+    respond @health 404
+
+    header -Server
+    reverse_proxy 127.0.0.1:8787
+}
+```
+
+[Automatic HTTPS](https://caddyserver.com/docs/automatic-https) obtains/renews a public
+certificate and redirects HTTP to HTTPS. Application Basic authentication remains
+authoritative; no API/OAuth key or dashboard password belongs in Caddy's config.
+Public health requests return 404; Docker's direct local health check is unchanged.
+Do not enable access logging for the proxy. Caddy service readiness alone does not
+prove DNS, TLS or observer authentication.
+
+Validate the config before reload, then check the public endpoint with certificate
+verification enabled (never `curl -k`):
+
+```bash
+caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+systemctl enable --now caddy
+systemctl reload caddy
+curl --silent --show-error --max-time 20 --dump-header - --output /dev/null \
+  https://signalflow.duckdns.org/
+```
+
+Expect 401 plus the application WWW-Authenticate header. A browser should require
+username `trader` and the existing private dashboard password, then render the
+authenticated history. Inspect desktop/mobile and verify access after host reboot.
+The server worker runs independently of the browser or Mac. On 2026-10-06 the
+operator confirmed the selected HTTPS dashboard login and page work, and the
+post-reboot Caddy service was active. Exact HTTP-header and mobile checks remain
+unreported. This operator evidence is separate from this workspace's offline tests.
 
 The observer is a separate `app.web.shadow:create_shadow_app` FastAPI factory. It
 requires SHADOW mode, LIVE disabled and a password file of at least 24 characters.
