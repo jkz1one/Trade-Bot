@@ -12,7 +12,8 @@ The service and private read-only observer are now running on the permanent
 DigitalOcean server, with both containers healthy. The opt-in synthetic bankroll
 profile is initialized but has no market-session cycles yet. Automatic container
 restart and experiment configuration persistence passed the operator's host reboot
-check. The operator confirmed the HTTPS dashboard login/page works. Backup,
+check. The operator confirmed the HTTPS dashboard login/page works. An integrity-checked
+local backup succeeded and a nightly cron job is installed. Off-host protection,
 mobile inspection, failure recovery and authenticated scheduled model-process
 evidence remain deployment gates. LIVE is disabled.
 
@@ -56,9 +57,15 @@ execution by this workspace. Deployed application release:
   bind and application authentication. See SHADOW_SERVER.md for the proxy boundary.
   At 20:58 UTC the operator confirmed dashboard login and the website page work.
   This is operator browser evidence; exact HTTP headers, mobile inspection, firewall
-  configuration and backup results have not been supplied.
+  configuration have not been supplied.
+- At 21:00:16 UTC, the operator ran the server backup helper successfully:
+  `/data/backups/robinhood-20261006T210016Z.db`, status OK, no network calls.
+  The helper creates an integrity-checked SQLite snapshot. The same successful
+  shell block installed `/etc/cron.d/trade-bot-backup` for 01:15 UTC daily and
+  enabled cron, with output in `/var/log/trade-bot-backup.log` (mode 600).
+  Installation is verified; a cron-triggered run and off-host copy are not yet observed.
 
-Next: verify an integrity-checked server backup/off-host protection and mobile
+Next: verify off-host backup protection and mobile
 dashboard rendering; then observe a regular-session scheduled
 model cycle, stored usage/decision/risk evidence and subsequent virtual transitions.
 Target-host failure recovery remains unverified. Keep PR #1 draft and main untouched.
