@@ -3,6 +3,13 @@
 Reviewed 2026-10-05 UTC. This is an implementation assessment, not a new master
 roadmap, an integration, or approval to deploy/change SignalFlow.
 
+2026-10-06 follow-up: fresh GitHub inspection confirms the same SignalFlow HEAD.
+Its broker snapshot/capability, reservation, persistent ledger and partial-fill
+contracts now inform the separate [execution lifecycle rehearsal](EXECUTION_REHEARSAL.md).
+This is an implemented fixture-only foundation using the current governor, Decimal
+and one position. It adds no broker writes or SignalFlow runtime dependency; the
+historical review and its narrower evidence below remain intact.
+
 ## Canonical snapshots and evidence boundary
 
 - SignalFlow `main`: `f9eaf2c1b5d13dca287ee7138126883065b00395`.

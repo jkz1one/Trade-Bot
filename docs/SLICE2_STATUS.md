@@ -17,6 +17,12 @@ local backup succeeded and a nightly cron job is installed. Off-host protection,
 mobile inspection, failure recovery and authenticated scheduled model-process
 evidence remain deployment gates. LIVE is disabled.
 
+Parallel engineering now includes a separate offline execution lifecycle rehearsal,
+informed by SignalFlow's reservation and authoritative reconciliation contracts.
+It has no broker write adapter or connection to the deployed experiment. The latest
+full local suite passed **316 tests in 10.18 seconds**, including 40 new execution
+tests. The deployed application release remains the one recorded below.
+
 ## Target-host evidence — 2026-10-06 UTC
 
 Evidence below comes from the operator's pasted deployment output, not remote
@@ -69,6 +75,42 @@ Next: verify off-host backup protection and mobile
 dashboard rendering; then observe a regular-session scheduled
 model cycle, stored usage/decision/risk evidence and subsequent virtual transitions.
 Target-host failure recovery remains unverified. Keep PR #1 draft and main untouched.
+
+## Offline execution foundation — 2026-10-06 UTC
+
+The operator requested execution engineering while SHADOW collects evidence, using
+SignalFlow for inspiration and integration. Fresh GitHub refs were recovered before
+editing: Trade-Bot `e1e846e3a5c0b28e2e3ccbf7666c472db3654128`, SignalFlow `main`
+`f9eaf2c1b5d13dca287ee7138126883065b00395`. Relevant broker capability, reservation,
+reconciliation, ledger and partial-fill sources were read at that pinned snapshot.
+
+Implemented `app.execution` with existing decision/packet/governor integration,
+current journal account authority, pre-dispatch reapproval, durable intent/attempt
+identity, one active reservation, cumulative partial fills, Decimal cash/fees,
+original invalidation, daily entries/cooldown, atomic ledger/fill/order updates and
+persistent halt/manual recovery. Missing orders never expire an attempted reservation
+or authorize replay. Startup latches interrupted attempts as UNKNOWN. Only a built-in
+local fixture venue can be attached; PAPER/LIVE-disabled configuration is required.
+The journal is separate from all existing PAPER/SHADOW/synthetic tables and refuses
+their databases. No Robinhood calls, model calls, broker writes or SignalFlow runtime
+imports were added. The server runner, `virtual-v1`, prompt and risk policy are unchanged.
+
+Verification: **40 execution tests passed**; the full suite passed **316 in 10.18s**
+on Linux CPython 3.12.14. Coverage includes a real child-process exit after the
+committed attempt, concurrent/repeated dispatch, lost acknowledgment, partial and
+terminal outcomes, immutable/missing/stale evidence, budget/limit violations,
+fees/cash, persistent limits/halt, transactional failure rollback and read-only,
+network-free reporting. Changed-code Ruff checks/format checks and dependency
+`pip check` passed. A built wheel was installed outside the repository and its
+standalone fixture command also passed under optimized Python, saving two simulated
+fills, terminal orders and a flat final account. These scripted results are execution
+verification, not trading performance or real broker capability evidence.
+
+See [EXECUTION_REHEARSAL.md](EXECUTION_REHEARSAL.md) for the reproducible command,
+SignalFlow adaptation and remaining adapter/deadline/operator-control engineering.
+Do not rebuild the deployed server for this offline foundation. Its first regular
+market-session model cycle and the previously listed host verification gates remain
+pending; LIVE remains disabled.
 
 ## Sequential synthetic portfolio and build hardening
 

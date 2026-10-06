@@ -19,6 +19,11 @@ The default PAPER database is `./trader.db` and starting capital is `$10.00`.
 
 The Trader Agent returns only a structured proposal. It has no brokerage write tools. The deterministic governor independently approves, clips, or rejects size.
 
+An offline [execution lifecycle rehearsal](docs/EXECUTION_REHEARSAL.md) now tests durable
+approved intents, partial fills, uncertain acknowledgments, restart recovery and a
+persistent dispatch halt using a local fake venue. It has no broker write adapter and
+does not change the deployed SHADOW experiment.
+
 ## Slice 2 — Robinhood read / SHADOW
 
 Development lives on `slice2/robinhood-read-shadow`.
