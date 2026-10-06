@@ -1,6 +1,6 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
-## Current checkpoint — 2026-10-05 UTC
+## Current checkpoint — 2026-10-06 UTC
 
 Branch: `slice2/robinhood-read-shadow`. PR #1 remains draft. `main` remains untouched.
 The authenticated core path is verified: strict OpenAI output, real Robinhood reads,
@@ -8,9 +8,49 @@ model judgment, deterministic governor and persisted SHADOW audit. Scheduling is
 installed and its closed-session behavior is verified on the Mac. A scheduled
 authenticated regular-session cycle remains to be observed. Forward quote outcome
 tracking and a persistent Linux SHADOW service are implemented and verified offline.
-The service and private read-only observer are prepared for DigitalOcean; they are
-not deployed yet. A separate sequential synthetic bankroll profile and locked server
-dependencies are now implemented and verified offline. LIVE is disabled.
+The service and private read-only observer are now running on the permanent
+DigitalOcean server, with both containers healthy. The opt-in synthetic bankroll
+profile is initialized but has no market-session cycles yet. Backup, reboot recovery,
+private dashboard inspection and authenticated scheduled model-process evidence
+remain deployment gates. LIVE is disabled.
+
+## Target-host evidence — 2026-10-06 UTC
+
+Evidence below comes from the operator's pasted deployment output, not remote
+execution by this workspace. Deployed application release:
+`de5dd1c7bd3a2d3b85a2d6bb7f624e0d3a3f9245`.
+
+- Fresh Ubuntu 24.04.5 amd64 server; application cloned from the Slice 2 branch.
+  Docker build completed on `python:3.12.15-slim-bookworm`, including package
+  installation and `pip check`.
+- Resolved Python base digest:
+  `sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258`.
+  Built application image index digest:
+  `sha256:734ec19a3fba9238ed5faeb3b4e988dc2624abd066da95b10b26ffac292ade45`.
+- OpenAI authentication accepted for `gpt-6-luna`; exact structured-output smoke
+  returned `structured_output: true`, action HOLD, without touching Robinhood.
+  This smoke is not the worker's isolated scheduled model process.
+- Fresh Robinhood OAuth authorization and safe probe passed: reconciliation true,
+  no positions, no working orders, all 20 candidates and mixed regime. No broker
+  identifier or private account values are copied into this public document.
+- Operator chose a fresh server database, preserving the Mac database separately.
+  No bootstrap migration occurred. Only one worker may run across machines.
+- `virtual-v1` initialized with $10 virtual capital, 5 bps per-side slippage,
+  zero fixed fee, SPY benchmark and frozen `gpt-6-luna` prices/prompt/risk inputs.
+  Prompt version: `v3-session-shadow:virtual-account-v1`.
+- Preflight passed. Scheduled one-off and detached service returned MARKET_CLOSED
+  with exit 0 and population SYNTHETIC_PAPER. At 20:22:06 UTC, heartbeat status was
+  RUNNING; worker and observer were healthy. Observer port remained localhost-only.
+- Schedule had no active claim or slots. Experiment revision was 0, with no cycles,
+  fills or unaccounted model attempts. An empty cohort has no signal/performance
+  evidence. No order placement, cancellation or LIVE path was enabled.
+- Mac editable installation and full suite passed: **276 tests in 23.55 seconds**
+  on Python 3.14.5, independently of the earlier locked Linux suite.
+
+Next: verify an integrity-checked server backup, host reboot persistence and private
+authenticated desktop/mobile dashboard; then observe a regular-session scheduled
+model cycle, stored usage/decision/risk evidence and subsequent virtual transitions.
+Target-host failure recovery remains unverified. Keep PR #1 draft and main untouched.
 
 ## Sequential synthetic portfolio and build hardening
 
@@ -44,9 +84,9 @@ remains recorded below.
 
 Server runtime and build dependency closures are pinned and the Docker build disables
 both dependency resolution and build isolation. The official Python base tag is
-explicit; actual Docker image/OS digest, UID permissions, authenticated regular-session
-operation, restart/recovery and desktop/mobile visual review remain host gates.
-PR #1 stays draft; no deployment or merge has occurred.
+explicit; target-host build and basic mounted credential/database access now pass
+as recorded above. Authenticated regular-session operation, restart/recovery and
+desktop/mobile visual review remain host gates. PR #1 stays draft; no merge has occurred.
 
 ## Private SHADOW observer
 
@@ -369,7 +409,8 @@ rollback, restart persistence, existing database upgrades and local reporting.
 No authenticated OpenAI or Robinhood calls were made in this execution workspace;
 it has neither API credentials nor Robinhood OAuth state.
 
-Next experiment work: a counterfactual portfolio/position/fill ledger and enough
-market-session model decisions to evaluate signal. SPY and model-cost comparisons
-now exist for fixed proposal quote marks, not full strategy economics.
+The separate sequential synthetic portfolio/fill ledger described above is now
+implemented and selected on the server. Next experiment work is to collect enough
+regular-session decisions and virtual transitions to evaluate signal. Real-account
+SHADOW forward marks remain separate from the synthetic portfolio economics.
 No profitability claim or LIVE enablement follows from this checkpoint.
