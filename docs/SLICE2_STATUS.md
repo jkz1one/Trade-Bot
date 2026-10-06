@@ -20,8 +20,9 @@ evidence remain deployment gates. LIVE is disabled.
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **316 tests in 10.18 seconds**, including 40 new execution
-tests. The deployed application release remains the one recorded below.
+full local suite passed **342 tests in 10.57 seconds**, including 40 execution
+lifecycle tests and 26 position-supervision tests. The deployed application release
+remains the one recorded below.
 
 ## Target-host evidence — 2026-10-06 UTC
 
@@ -111,6 +112,31 @@ SignalFlow adaptation and remaining adapter/deadline/operator-control engineerin
 Do not rebuild the deployed server for this offline foundation. Its first regular
 market-session model cycle and the previously listed host verification gates remain
 pending; LIVE remains disabled.
+
+## Offline position-supervision follow-up — 2026-10-06 UTC
+
+Fresh GitHub branch state matched `e8dfa23c8e54f0f5e26012c873e0fc53f965f64b`
+before editing. SignalFlow's pinned stop-authority source was read alongside the
+current engine and settled synthetic stop/session policy. The fixture engine now
+persists original entry management, latches stop/session exits across HOLD/rebound/
+restart, marks the owned position and prepares governor-approved protective exits
+without a model. Explicit overnight permission preserves the existing policy; it
+never disables stop invalidation. Missing/stale/regressing evidence halts execution.
+Partial entry remainder must be definitively resolved before an exit; active sells
+are reused and known canceled residual shares get a new intent. Entry preparation
+and dispatch both enforce the final-15-minute session gate and current invalidation.
+
+Verification: **26 supervision tests passed as part of 342 full-suite tests in
+10.57s** on CPython 3.12.14. Tests include early closes, overnight permissions,
+legacy lineage recovery, stale/missing/crossed/regressing quotes, stale account
+evidence, failed calendar, concurrent preparation, partial fills, expired unattempted
+exits, persistence rollback and unchanged original stop. Changed-code Ruff checks,
+format checks, dependency integrity and whitespace checks passed. The new wheel
+installed outside the repository and passed the optimized-Python fixture command,
+with two simulated fills and a flat final account. This is offline fixture
+evidence only. No broker adapter, deployment change or authenticated call was added.
+Bounded executor deadlines, actual broker contract proof, deployed supervision,
+bankroll/account gates and operator recovery/alerts remain future engineering.
 
 ## Sequential synthetic portfolio and build hardening
 

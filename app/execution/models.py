@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.domain.models import Position
+from app.domain.models import Horizon, Position
 
 ZERO = Decimal(0)
 SHARE_STEP = Decimal("0.00000001")
@@ -114,6 +114,19 @@ class Snapshot(Contract):
     orders: list[Observation] = Field(default_factory=list)
 
 
+class PositionManagement(Contract):
+    policy: Literal["original-stop-session-v1"] = "original-stop-session-v1"
+    entry_client_id: str
+    session_date: str
+    horizon: Horizon
+    hold_overnight: bool
+    exit_reason: Literal["INVALIDATION", "MISSED_SESSION_EXIT", "SESSION_EXIT"] | None = None
+    exit_required_at: datetime | None = None
+    last_supervised_at: datetime | None = None
+    last_quote_at: datetime | None = None
+    supervision_issue: str | None = None
+
+
 class Ledger(Contract):
     cash: Decimal = Field(ge=0)
     position: Position | None = None
@@ -122,3 +135,4 @@ class Ledger(Contract):
     high_watermark: Decimal = Field(gt=0)
     entry_times: list[datetime] = Field(default_factory=list)
     last_close_at: datetime | None = None
+    management: PositionManagement | None = None

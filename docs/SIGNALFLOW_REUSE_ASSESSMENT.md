@@ -10,6 +10,13 @@ This is an implemented fixture-only foundation using the current governor, Decim
 and one position. It adds no broker writes or SignalFlow runtime dependency; the
 historical review and its narrower evidence below remain intact.
 
+The offline engine now also adapts the pinned
+[stop authority](https://github.com/jkz1one/SignalFlow/blob/f9eaf2c1b5d13dca287ee7138126883065b00395/backend/platform/play_stop_authority.py)
+principle: deterministic original-stop and session-exit requirements persist through
+HOLD, rebound and restart. It retains Trade-Bot's Decimal long-only policy and explicit
+overnight permission. Twenty-six additional supervision tests cover this fixture-only
+implementation; no SignalFlow runtime integration or deployed worker change occurred.
+
 ## Canonical snapshots and evidence boundary
 
 - SignalFlow `main`: `f9eaf2c1b5d13dca287ee7138126883065b00395`.

@@ -21,8 +21,10 @@ from app.execution.models import (
     Ledger,
     Observation,
     OrderState,
+    PositionManagement,
     Snapshot,
 )
+from app.execution.supervision import assess_position
 from app.risk.governor import govern
 from app.risk.policy import TIERS
 from app.robinhood.schedule import XNYSCalendar
@@ -138,6 +140,166 @@ class ExecutionEngine:
         )
         return risk, governed_packet
 
+    @staticmethod
+    def _entry_management(row):
+        intent = Intent.model_validate_json(row["intent_json"])
+        approval = json.loads(row["approval_json"])
+        decision = TradeDecision.model_validate(approval["decision"])
+        packet = MarketPacket.model_validate(approval["packet"])
+        if (
+            intent.side != "BUY"
+            or decision.action != Action.OPEN_LONG
+            or not approval["risk"]["approved"]
+        ):
+            raise ValueError("Missing approved entry lineage")
+        session = packet.session_context["session_date"] if packet.session_context else None
+        if (
+            session
+            != intent.prepared_at.astimezone(ZoneInfo("America/New_York")).date().isoformat()
+        ):
+            raise ValueError("Missing original entry session")
+        return PositionManagement(
+            entry_client_id=intent.client_id,
+            session_date=session,
+            horizon=decision.horizon,
+            hold_overnight=decision.hold_overnight,
+        )
+
+    def _position_management(self, db, state):
+        if state.management:
+            return state.management
+        # Older rehearsal journals already saved complete governor-approved entry inputs.
+        # Recover only the most recent actually filled BUY, never infer overnight permission.
+        for row in db.execute("SELECT * FROM execution_orders ORDER BY rowid DESC"):
+            intent = Intent.model_validate_json(row["intent_json"])
+            if (
+                intent.side != "BUY"
+                or not db.execute(
+                    "SELECT 1 FROM execution_fills WHERE client_id=? LIMIT 1", (intent.client_id,)
+                ).fetchone()
+            ):
+                continue
+            if (
+                intent.symbol != state.position.symbol
+                or intent.original_invalidation != state.position.original_invalidation
+            ):
+                raise ValueError("Entry lineage does not match owned position")
+            return self._entry_management(row)
+        raise ValueError("No filled entry lineage for owned position")
+
+    def _supervise(self, db, control, state, packet, now):
+        if state.position is None:
+            return {"status": "FLAT", "exit_reason": None}
+        try:
+            window = self.calendar.current_window(now)
+            calendar_failed = False
+        except Exception:  # noqa: BLE001 - failed risk supervision must latch a halt.
+            window, calendar_failed = None, True
+        try:
+            management = self._position_management(db, state)
+            updated, quote = assess_position(
+                state.position,
+                management,
+                packet,
+                window,
+                now,
+                self.settings.quote_max_age_seconds,
+            )
+        except (ValueError, KeyError, ArithmeticError):
+            updated, quote = None, None
+        issue = updated.supervision_issue if updated else "POSITION_MANAGEMENT_NOT_PROVEN"
+        if calendar_failed:
+            issue = "CALENDAR_FAILURE"
+        if not control["snapshot_json"] or json.loads(control["issues_json"]):
+            issue = "RECONCILIATION_REQUIRED"
+        elif not self._fresh(
+            Snapshot.model_validate_json(control["snapshot_json"]),
+            now,
+            self.settings.quote_max_age_seconds,
+        ):
+            issue = "STALE_EXECUTION_SNAPSHOT"
+        active = db.execute("SELECT * FROM execution_orders WHERE active_lock=1").fetchone()
+        pending_exit = False
+        if updated and updated.exit_reason and active:
+            pending_exit = Intent.model_validate_json(active["intent_json"]).side == "SELL"
+            if not pending_exit:
+                issue = "ENTRY_REMAINDER_UNRESOLVED"
+        if updated:
+            updated = updated.model_copy(update={"supervision_issue": issue})
+            changes = {"management": updated}
+            if quote is not None and issue is None:
+                position = state.position.model_copy(update={"current_price": quote.bid})
+                changes.update(
+                    position=position,
+                    high_watermark=max(state.high_watermark, state.cash + position.market_value),
+                )
+            state = state.model_copy(update=changes)
+            db.execute(
+                "UPDATE execution_control SET ledger_json=? WHERE id=1", (state.model_dump_json(),)
+            )
+        if issue:
+            db.execute(
+                "UPDATE execution_control SET halted=1,halt_reason=COALESCE(halt_reason,'POSITION_SUPERVISION_BLOCKED') WHERE id=1"
+            )
+        result = {
+            "status": "BLOCKED"
+            if issue
+            else "EXIT_PENDING"
+            if pending_exit
+            else "EXIT_REQUIRED"
+            if updated.exit_reason
+            else "HOLD_POSITION",
+            "exit_reason": updated.exit_reason if updated else None,
+            "issue": issue,
+            "entry_client_id": updated.entry_client_id if updated else None,
+            "execution_halted": bool(control["halted"]) or issue is not None,
+        }
+        self.journal.event(db, now, "POSITION_SUPERVISED", result)
+        return result
+
+    def supervise(self, packet: MarketPacket, *, now):
+        """Observe owned risk without model judgment, order submission or broker reads."""
+        _clock(now)
+        packet = MarketPacket.model_validate(packet.model_dump())
+        with self.journal.write() as db:
+            control = self._control(db)
+            return self._supervise(
+                db, control, Ledger.model_validate_json(control["ledger_json"]), packet, now
+            )
+
+    def prepare_protective_exit(self, packet: MarketPacket, *, now):
+        assessment = self.supervise(packet, now=now)
+        if assessment["status"] in {"FLAT", "HOLD_POSITION"}:
+            return None
+        if assessment["status"] == "BLOCKED" or assessment["execution_halted"]:
+            raise ExecutionBlocked(assessment.get("issue") or "EXECUTION_HALTED")
+        with self.journal.read() as db:
+            active = db.execute("SELECT * FROM execution_orders WHERE active_lock=1").fetchone()
+            if active:
+                intent = Intent.model_validate_json(active["intent_json"])
+                if intent.side != "SELL":
+                    raise ExecutionBlocked("ENTRY_REMAINDER_UNRESOLVED")
+                return intent
+            state = Ledger.model_validate_json(self._control(db)["ledger_json"])
+            prefix = (
+                "protective-" + hashlib.sha256(assessment["entry_client_id"].encode()).hexdigest()
+            )
+            attempts = sum(
+                row[0].startswith(prefix + ":")
+                for row in db.execute("SELECT source_key FROM execution_orders")
+            )
+        decision = TradeDecision(
+            action=Action.CLOSE,
+            symbol=state.position.symbol,
+            confidence=0,
+            setup_quality=0,
+            thesis="Deterministic protective exit",
+            invalidation_reason=assessment["exit_reason"],
+            why_now="Persisted position supervision requires an exit",
+        )
+        # A new suffix is allowed only after the prior order is definitively terminal.
+        return self.prepare(prefix + ":" + str(attempts), decision, packet, now=now)
+
     def prepare(self, source_key: str, decision: TradeDecision, packet: MarketPacket, *, now):
         _clock(now)
         if not source_key.strip() or len(source_key) > 128:
@@ -163,6 +325,10 @@ class ExecutionEngine:
                     raise ExecutionBlocked("SOURCE_KEY_CONTENT_CONFLICT")
                 return Intent.model_validate_json(old["intent_json"])
             if decision.action == Action.HOLD:
+                control = self._control(db)
+                state = Ledger.model_validate_json(control["ledger_json"])
+                if state.position:
+                    self._supervise(db, control, state, packet, now)
                 self.journal.event(
                     db,
                     now,
@@ -198,6 +364,11 @@ class ExecutionEngine:
             if not risk.approved or candidate is None:
                 raise ExecutionBlocked(";".join(risk.rejection_reasons) or "NO_APPROVED_ACTION")
             buy = decision.action == Action.OPEN_LONG
+            if buy and (
+                candidate.quote.bid <= decision.invalidation_price
+                or now >= window.closes_at - timedelta(minutes=15)
+            ):
+                raise ExecutionBlocked("ENTRY_INVALIDATED_OR_NO_FORWARD_SESSION")
             price = candidate.quote.ask if buy else candidate.quote.bid
             quantity = (
                 (risk.approved_notional / price).quantize(SHARE_STEP, rounding=ROUND_DOWN)
@@ -286,6 +457,15 @@ class ExecutionEngine:
             proposed = TradeDecision.model_validate(approval["decision"])
             packet = MarketPacket.model_validate(approval["packet"])
             risk, current_packet = self._govern(proposed, packet, state, snapshot, now)
+            window = self.calendar.current_window(now)
+            if intent.side == "BUY":
+                quote = next(c.quote for c in packet.candidates if c.quote.symbol == intent.symbol)
+                entry_valid = (
+                    quote.bid > intent.original_invalidation
+                    and now < window.closes_at - timedelta(minutes=15)
+                )
+            else:
+                entry_valid = True
             quantity_ok = (
                 intent.quantity * intent.limit_price <= risk.approved_notional
                 if intent.side == "BUY"
@@ -293,7 +473,7 @@ class ExecutionEngine:
                 and current_packet.account.position.symbol == intent.symbol
                 and current_packet.account.position.quantity == intent.quantity
             )
-            if not risk.approved or not quantity_ok:
+            if not risk.approved or not quantity_ok or not entry_valid:
                 db.execute(
                     "UPDATE execution_orders SET status='REJECTED', active_lock=NULL WHERE client_id=?",
                     (client_id,),
@@ -386,6 +566,9 @@ class ExecutionEngine:
                 raise ExecutionBlocked("STALE_EXECUTION_SNAPSHOT")
             if db.execute("SELECT 1 FROM execution_orders WHERE active_lock=1").fetchone():
                 raise ExecutionBlocked("ORDER_ALREADY_IN_FLIGHT")
+            state = Ledger.model_validate_json(c["ledger_json"])
+            if state.position and (state.management is None or state.management.supervision_issue):
+                raise ExecutionBlocked("POSITION_SUPERVISION_REQUIRED")
             db.execute("UPDATE execution_control SET halted=0,halt_reason=NULL WHERE id=1")
             self.journal.event(db, now, "MANUAL_RESUME", {"reason": reason})
 
@@ -551,7 +734,8 @@ class ExecutionEngine:
                 issues.append("FILL_TIME_REGRESSION")
                 break
             intent = Intent.model_validate_json(local[client_id]["intent_json"])
-            state = self._apply_fill(state, intent, fill)
+            management = self._entry_management(local[client_id]) if intent.side == "BUY" else None
+            state = self._apply_fill(state, intent, fill, management)
         expected = state.position
         actual = snapshot.positions[0] if len(snapshot.positions) == 1 else None
         if state.cash != snapshot.cash:
@@ -568,7 +752,7 @@ class ExecutionEngine:
         return state, observations, new_fills
 
     @staticmethod
-    def _apply_fill(state, intent, fill):
+    def _apply_fill(state, intent, fill, management=None):
         position = state.position
         updates = {"fees_paid": state.fees_paid + fill.fee}
         if intent.side == "BUY":
@@ -589,6 +773,9 @@ class ExecutionEngine:
             )
             if position is None:
                 updates["entry_times"] = [*state.entry_times, fill.occurred_at]
+                if management is None:
+                    raise ValueError("Entry management is required")
+                updates["management"] = management
         else:
             if (
                 not position
@@ -608,6 +795,7 @@ class ExecutionEngine:
             )
             if quantity == ZERO:
                 updates["last_close_at"] = fill.occurred_at
+                updates["management"] = None
         result = Ledger.model_validate({**state.model_dump(), **updates})
         equity = result.cash + (result.position.market_value if result.position else ZERO)
         return result.model_copy(update={"high_watermark": max(result.high_watermark, equity)})

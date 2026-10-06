@@ -63,6 +63,38 @@ The fixture halt is a persistent dispatch block, not liquidation or broker
 cancellation. An already accepted order can still fill. This module does not provide
 external alert delivery or a deployed operator control surface.
 
+## Deterministic position supervision
+
+The offline engine persists each filled entry's original stop, session, horizon and
+explicit overnight permission from its saved governor-approved inputs. Older journals
+recover this policy only from a proven filled entry; missing lineage halts execution.
+SignalFlow's stop-authority contract informs this boundary, using Decimal and one
+long position. No model can widen or clear the original stop.
+
+`supervise(packet, now=...)` checks fresh reconciled account evidence and fresh,
+nonregressing bid/ask quotes during the actual XNYS regular session. A bid at or
+below the original stop latches INVALIDATION. Without overnight permission, the
+last 15 minutes of the actual session latch SESSION_EXIT; a position carried into
+a later session latches MISSED_SESSION_EXIT. A rebound, restart or model HOLD cannot
+clear the requirement. Valid observations update the position mark and high watermark.
+Unusable quotes, unavailable calendar/account evidence or unknown entry policy latch
+a persistent halt. Recovery from a supervision halt requires fresh supervision and
+explicit operator resume.
+
+`prepare_protective_exit(packet, now=...)` creates a CLOSE proposal without a model,
+through the existing governor and intent journal. It does not dispatch. Repeated or
+concurrent preparation reuses the active sell identity. A partially filled entry
+with an unresolved buy remainder blocks exit preparation until definitive terminal
+evidence resolves that remainder. A known canceled partial sell can produce a new
+intent for the remaining owned shares; ambiguous attempts cannot be replayed.
+Entries are rejected at preparation and dispatch if already invalidated or inside
+the final 15 minutes of the session.
+
+This is sampled quote supervision, not a standing broker stop, guaranteed exit price,
+continuous monitor or deployed service. The offline caller must supply observations
+and perform the distinct fixture dispatch/reconciliation steps. No broker cancellation,
+network calls or current experiment policy changes are introduced.
+
 ## Standalone verification
 
 From the updated development checkout:
@@ -97,6 +129,7 @@ Fresh GitHub inspection confirms SignalFlow `main` remains
 - [Order reservations and reconciliation](https://github.com/jkz1one/SignalFlow/blob/f9eaf2c1b5d13dca287ee7138126883065b00395/backend/platform/portfolio_reconciliation.py).
 - [Durable broker ledger](https://github.com/jkz1one/SignalFlow/blob/f9eaf2c1b5d13dca287ee7138126883065b00395/backend/platform/portfolio_broker_store.py).
 - [Partial-fill and rejection/recovery tests](https://github.com/jkz1one/SignalFlow/blob/f9eaf2c1b5d13dca287ee7138126883065b00395/tests/test_roadmap_phase20_broker_reconciliation.py).
+- [Stop authority](https://github.com/jkz1one/SignalFlow/blob/f9eaf2c1b5d13dca287ee7138126883065b00395/backend/platform/play_stop_authority.py).
 
 The implementation adapts persistent reservation ownership, capability separation
 and authoritative reconciliation. It strengthens the missing-order boundary:
@@ -115,8 +148,8 @@ fixture venue survives journal reopen only within the rehearsal process and is n
 a broker restart simulator or a persistent brokerage service.
 
 Then implement bounded executor deadlines, independent live enablement and bankroll
-caps, account identity pinning, owned-position reconciliation, deterministic
-stop/session supervision, model-cost integration, alerts and authenticated operator
+caps, account identity pinning, real-adapter owned-position reconciliation,
+deployed stop/session supervision, model-cost integration, alerts and authenticated operator
 recovery. Test these independently before connecting them to a live capability.
 The deployed SHADOW worker and its continuing market-session verification stay on
 their current release; no server update is needed for this offline slice.
