@@ -218,6 +218,75 @@ gates, daily fee/P&L persistence and fresh-market dispatch reapproval. Admission
 dispatch blocks retain audited reasons without creating an attempt. See
 SLICE2_STATUS.md for executed results.
 
+## Authenticated local recovery and alert outbox
+
+The isolated engine now has an explicitly enrolled operator capability. A random
+key of at least 32 bytes remains with trusted operator code; the journal stores
+only its SHA-256 fingerprint and a generated journal UUID. Enrollment is explicit,
+idempotent for the same key, and rejects replacement. Key rotation/revocation,
+per-person login, remote transport and deployment are future work. A shared key
+authenticates the capability; the signed actor field is an audit label, not proof
+of a separately authenticated person. Existing Python engine methods remain a
+trusted local API. These controls are not a sandbox against code or filesystem
+owners, and the model receives neither the key nor a command tool.
+
+`OperatorControl.review()` returns one read-only journal snapshot and its audit
+revision. `OperatorCommand` freezes a stable ID, journal UUID, actor, bounded
+reason, exact action/target, expected revision and aware issue/expiry times. Its
+lifetime is positive and at most five minutes. `sign_command` uses HMAC-SHA256
+over the canonical revalidated envelope. Application authenticates before any
+write and rechecks enrollment inside the write transaction. Neither raw key nor
+signature is stored in the audit. Signed command bodies and outcome receipts are.
+
+The only actions are HALT, RESUME, ABANDON_PREPARED and ACK_ALERT. None submits,
+reviews or cancels a broker order, changes cash/limits, edits evidence or clears a
+stop. New commands from the future or at/after expiry receive a durable rejection.
+Recovery, abandonment and acknowledgment require the exact reviewed revision;
+any new reconciliation, fill, supervision or command invalidates that review.
+HALT can reduce authority even after revision/config changes. Every mutation,
+audit record and receipt commits atomically. Storage failure rolls back all three.
+
+An authenticated repeat of the exact ID/content returns its original receipt even
+after expiry, without reapplying or changing current state. Reusing an ID with
+different signed content fails. Concurrent identical requests apply once; distinct
+requests against one review serialize, with the second requiring a new review.
+Rejected requests also have stable receipts: retrying the same ID after obtaining
+better evidence cannot silently turn the rejection into an approval.
+
+RESUME retains the existing complete/fresh account reconciliation and no-active-
+order requirements. It additionally requires fresh, nonfuture position supervision
+and quotes for an owned position. Unknown/partial orders cannot be released by a
+command; only definitive complete venue evidence releases attempted reservations.
+ABANDON_PREPARED expires only an unattempted local intent. Frozen risk envelopes
+and latched original-stop exits remain in force after recovery.
+
+Critical events and changed blocked/exit-required supervision observations create
+an alert row in the same transaction as the originating event. Repeated identical
+supervision does not create repeated alerts. `ExecutionJournal.alerts(after=...,
+limit=...)` pages the durable local outbox in event order; report exposes the first
+100 alerts and an exact count of all unacknowledged alerts. ACK_ALERT records the
+signed actor, command ID and time. It does not mean an external message was sent,
+resolve risk, clear a halt or release a reservation. There is no automatic delivery
+or Slack/email integration. Alert rows apply to new events after this feature;
+historical events are not retrospectively declared delivered or acknowledged.
+
+Opening a compatible current journal for execution adds the three operator/receipt/
+alert tables without changing its frozen envelope. Read-only reports of prior
+journals do not initialize or enroll anything. Journals lacking earlier frozen
+limits remain incompatible with execution as before.
+
+Run the new exclusive-file, network-free proof:
+
+```bash
+python -m app.execution.cli operator-run --db execution-operator.db
+python -m app.execution.cli report --db execution-operator.db
+```
+
+It uses an ephemeral random capability and scripted fake outcomes: lost ack,
+rejected recovery, alert acknowledgment while still halted, reopen, definitive
+canceled outcome and explicit signed recovery. It proves no retry, not brokerage
+or trading performance. No server update or deployment key is needed.
+
 ## SignalFlow adaptation and remaining engineering
 
 Fresh GitHub inspection confirms SignalFlow `main` remains
@@ -247,7 +316,9 @@ persists independently. Neither is real brokerage capability evidence.
 
 Then verify deadlines with the actual broker adapter and implement independent live enablement, actual-account
 identity pinning and verified bankroll controls, real-adapter owned-position reconciliation,
-deployed stop/session supervision, model-cost integration, alerts and authenticated operator
-recovery. Test these independently before connecting them to a live capability.
+deployed stop/session supervision, model-cost integration, external alert delivery and
+deployed authenticated operator recovery. The local capability/outbox above must
+also gain secure transport, key lifecycle and host failure verification before use.
+Test these independently before connecting them to a live capability.
 The deployed SHADOW worker and its continuing market-session verification stay on
 their current release; no server update is needed for this offline slice.

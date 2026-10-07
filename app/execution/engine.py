@@ -828,49 +828,62 @@ class ExecutionEngine:
             raise
         return self.reconcile(result.snapshot, now=now)
 
+    @staticmethod
+    def _reason(reason):
+        if not reason.strip() or len(reason) > 300:
+            raise ValueError("A bounded operator reason is required")
+
+    def _halt(self, db, reason, now):
+        db.execute("UPDATE execution_control SET halted=1,halt_reason=? WHERE id=1", (reason,))
+        self.journal.event(db, now, "MANUAL_HALT", {"reason": reason})
+
     def halt(self, reason: str, *, now):
         _clock(now)
-        if not reason.strip() or len(reason) > 300:
-            raise ValueError("A bounded halt reason is required")
+        self._reason(reason)
         with self.journal.write() as db:
-            db.execute("UPDATE execution_control SET halted=1,halt_reason=? WHERE id=1", (reason,))
-            self.journal.event(db, now, "MANUAL_HALT", {"reason": reason})
+            self._halt(db, reason, now)
+
+    def _abandon_prepared(self, db, client_id, reason, now):
+        row = db.execute(
+            "SELECT * FROM execution_orders WHERE client_id=?", (client_id,)
+        ).fetchone()
+        if row is None or row["attempted_at"] or row["status"] != OrderState.PREPARED:
+            raise ExecutionBlocked("ATTEMPTED_ORDER_REQUIRES_RECONCILIATION")
+        db.execute(
+            "UPDATE execution_orders SET status='EXPIRED',active_lock=NULL WHERE client_id=?",
+            (client_id,),
+        )
+        self.journal.event(db, now, "PREPARED_ABANDONED", {"reason": reason}, client_id)
 
     def abandon_prepared(self, client_id: str, reason: str, *, now):
         """Only an unattempted local intent can be abandoned without venue evidence."""
         _clock(now)
-        if not reason.strip() or len(reason) > 300:
-            raise ValueError("A bounded abandonment reason is required")
+        self._reason(reason)
         with self.journal.write() as db:
-            row = db.execute(
-                "SELECT * FROM execution_orders WHERE client_id=?", (client_id,)
-            ).fetchone()
-            if row is None or row["attempted_at"] or row["status"] != OrderState.PREPARED:
-                raise ExecutionBlocked("ATTEMPTED_ORDER_REQUIRES_RECONCILIATION")
-            db.execute(
-                "UPDATE execution_orders SET status='EXPIRED',active_lock=NULL WHERE client_id=?",
-                (client_id,),
-            )
-            self.journal.event(db, now, "PREPARED_ABANDONED", {"reason": reason}, client_id)
+            self._abandon_prepared(db, client_id, reason, now)
+
+    def _resume(self, db, reason, now):
+        c = self._control(db)
+        if json.loads(c["issues_json"]) or not c["snapshot_json"]:
+            raise ExecutionBlocked("RECONCILIATION_REQUIRED")
+        snap = Snapshot.model_validate_json(c["snapshot_json"])
+        if snap.account_id != self.limits.account_id:
+            raise ExecutionBlocked("EXECUTION_ACCOUNT_MISMATCH")
+        if not self._fresh(snap, now, self.settings.quote_max_age_seconds):
+            raise ExecutionBlocked("STALE_EXECUTION_SNAPSHOT")
+        if db.execute("SELECT 1 FROM execution_orders WHERE active_lock=1").fetchone():
+            raise ExecutionBlocked("ORDER_ALREADY_IN_FLIGHT")
+        state = Ledger.model_validate_json(c["ledger_json"])
+        if state.position and (state.management is None or state.management.supervision_issue):
+            raise ExecutionBlocked("POSITION_SUPERVISION_REQUIRED")
+        db.execute("UPDATE execution_control SET halted=0,halt_reason=NULL WHERE id=1")
+        self.journal.event(db, now, "MANUAL_RESUME", {"reason": reason})
 
     def resume(self, reason: str, *, now):
         _clock(now)
-        if not reason.strip() or len(reason) > 300:
-            raise ValueError("A bounded resume reason is required")
+        self._reason(reason)
         with self.journal.write() as db:
-            c = self._control(db)
-            if json.loads(c["issues_json"]) or not c["snapshot_json"]:
-                raise ExecutionBlocked("RECONCILIATION_REQUIRED")
-            snap = Snapshot.model_validate_json(c["snapshot_json"])
-            if not self._fresh(snap, now, self.settings.quote_max_age_seconds):
-                raise ExecutionBlocked("STALE_EXECUTION_SNAPSHOT")
-            if db.execute("SELECT 1 FROM execution_orders WHERE active_lock=1").fetchone():
-                raise ExecutionBlocked("ORDER_ALREADY_IN_FLIGHT")
-            state = Ledger.model_validate_json(c["ledger_json"])
-            if state.position and (state.management is None or state.management.supervision_issue):
-                raise ExecutionBlocked("POSITION_SUPERVISION_REQUIRED")
-            db.execute("UPDATE execution_control SET halted=0,halt_reason=NULL WHERE id=1")
-            self.journal.event(db, now, "MANUAL_RESUME", {"reason": reason})
+            self._resume(db, reason, now)
 
     def reconcile(self, snapshot: Snapshot, *, now):
         _clock(now)

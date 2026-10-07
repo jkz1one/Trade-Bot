@@ -20,9 +20,9 @@ evidence remain deployment gates. LIVE is disabled.
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **399 tests in 31.77 seconds**, including 40 execution
+full local suite passed **434 tests in 32.58 seconds**, including 40 execution
 lifecycle tests, 26 position-supervision tests, 35 execution-limit/dispatch tests
-and 22 isolated-process/durable-venue tests.
+and 22 isolated-process/durable-venue tests, plus 35 operator/alert tests.
 The deployed application release remains the one recorded below.
 
 ## Target-host evidence — 2026-10-06 UTC
@@ -206,6 +206,54 @@ Remaining: actual broker identity/order/fill/deadline contract verification, rea
 enablement/capital gates, authenticated operator recovery and alerts, deployed
 supervision and integrated failure testing. This is not LIVE-readiness or profitability
 evidence; the previously listed host and market-session gates still apply.
+
+## Offline authenticated recovery follow-up — 2026-10-07 UTC
+
+Fresh canonical branch state matched `9b95db444bfa8bd01b481118be4c57469281ef03`
+before editing. The isolated execution journal now supports explicit operator
+capability enrollment, signed command envelopes and durable replay receipts.
+HMAC commands bind an immutable journal UUID, actor label, reason, action/target,
+reviewed audit revision and a maximum-five-minute lifetime. The key and signature
+are not persisted in audit records or supplied to the trader/model processes.
+Shared-key capability authentication is not per-person login; trusted local
+Python/filesystem owners retain authority. No HTTP mutation route was added.
+
+HALT reduces authority even if review/config changed. RESUME, local PREPARED
+abandonment and alert acknowledgment require the exact current reviewed revision.
+Mutation, event and receipt commit together. Repeats return the original receipt
+without reapplying, including after expiry; content reuse under the same ID fails.
+Expired/future and risk-rejected requests have durable rejected receipts.
+Recovery additionally requires fresh owned-position supervision/quotes, retains
+complete account/order reconciliation and cannot release an uncertain attempt or
+waive original stops, frozen limits or terminal-evidence requirements.
+
+Critical events and changed blocked/exit-required supervision create persistent
+alert rows atomically with their source events. Pagination retains older pending
+alerts beyond the report's 100-row page; acknowledgment records operator/time/ID
+but never clears a halt, delivers an external message or releases reservations.
+Repeated identical supervision is deduplicated. Compatible current journals gain
+only additive tables on writable open; read-only prior reports do not migrate or
+enroll. Historical events are not backfilled as new alerts.
+
+Verification: **434 tests passed in 32.58s**, including **35 new operator/alert
+tests in 0.85s**, on Linux CPython 3.12.14. Coverage includes invalid/tampered/cross-
+journal signatures, immutable enrollment, secret/MAC audit exclusion, expiry,
+replay/conflicting IDs, concurrent duplicate/stale requests, late fills invalidating
+review, receipt/alert storage rollback, uncertain-order recovery restrictions,
+fresh position supervision, stop persistence, alert pagination/deduplication,
+read-only legacy reports and an exclusive-file offline CLI proof.
+Ruff check/format, dependency and whitespace checks passed. The wheel installed
+outside the repo and its optimized-Python operator scenario persisted one canceled
+fake order, three command receipts, one acknowledged alert and no retry. Read-only
+reporting left the private database unchanged. No broker/model calls, credential
+loading, server changes or external notification occurred.
+
+Estimated v1 execution-engine completeness: **about 72%**, a rough component estimate.
+Remaining: actual broker identity/order/fill/deadline contract proof, real-account
+enablement/capital gates, deployed independent supervision, integrated model costs,
+secure operator transport/key lifecycle/restore handling, external alert delivery
+and host failure testing. LIVE readiness and profitability remain unverified.
+The deployed release and earlier host/market-session gates remain unchanged.
 
 ## Sequential synthetic portfolio and build hardening
 

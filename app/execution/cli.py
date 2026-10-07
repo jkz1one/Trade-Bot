@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import secrets
 import sqlite3
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -17,6 +18,7 @@ from app.execution.engine import ExecutionBlocked, ExecutionEngine
 from app.execution.fixture import LocalFixtureVenue
 from app.execution.journal import ExecutionJournal
 from app.execution.models import ExecutionLimits
+from app.execution.operator import OperatorCommand, OperatorControl, sign_command
 
 
 def _packet(at, *, exiting=False):
@@ -184,9 +186,62 @@ async def run_deadline_rehearsal(path):
     return report
 
 
+def run_operator_rehearsal(path):
+    path = Path(path)
+    _reserve_file(path)
+    settings = Settings(_env_file=None, mode="PAPER", live_enabled=False, starting_capital=10)
+    engine = ExecutionEngine(path, settings)
+    venue = LocalFixtureVenue(Decimal(10))
+    at = datetime(2026, 10, 6, 15, tzinfo=UTC)
+    _require(engine.reconcile(venue.snapshot(at), now=at)["reconciled"])
+    key = secrets.token_bytes(32)  # Ephemeral fixture capability, never printed/persisted.
+    OperatorControl.enroll(engine, key, now=at)
+    operator = OperatorControl(engine, key)
+
+    def request(action, **targets):
+        review = operator.review()
+        command = OperatorCommand(
+            journal_id=operator.journal_id,
+            command_id="fixture-command-" + secrets.token_hex(8),
+            actor="offline-operator",
+            action=action,
+            reason="Verified local fixture evidence",
+            expected_revision=review["revision"],
+            issued_at=at,
+            expires_at=at + timedelta(minutes=1),
+            **targets,
+        )
+        signature = sign_command(command, key)
+        result = operator.apply(command, signature, now=at)
+        _require(operator.apply(command, signature, now=at)["replayed"])
+        return result
+
+    intent = engine.prepare("operator-entry", _decision(), _packet(at), now=at)
+    venue.lose_next_ack = True
+    _require(engine.dispatch(intent.client_id, venue, now=at, packet=_packet(at)) == "UNKNOWN")
+    _require(request("RESUME")["status"] == "REJECTED")
+    for alert in engine.journal.alerts():
+        _require(
+            request("ACK_ALERT", alert_sequence=alert["event_sequence"])["status"] == "APPLIED"
+        )
+    _require(engine.journal.report()["halted"])  # Acknowledgment cannot clear risk.
+    engine = ExecutionEngine(path, settings)
+    operator = OperatorControl(engine, key)
+    venue.terminal(intent.client_id, "CANCELED", at)
+    _require(engine.reconcile(venue.snapshot(at), now=at)["reconciled"])
+    _require(request("RESUME")["status"] == "APPLIED")
+    _require(venue.submit_count == 1)
+    report = engine.journal.report()
+    report.update(
+        status="OK",
+        measurement_note="Authenticated offline fixture recovery; no API, broker fills or deployed controls.",
+    )
+    return report
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["run", "deadline-run", "report"])
+    parser.add_argument("command", choices=["run", "deadline-run", "operator-run", "report"])
     parser.add_argument("--db", default="execution-rehearsal.db")
     args = parser.parse_args(argv)
     try:
@@ -195,6 +250,8 @@ def main(argv=None):
             if args.command == "run"
             else asyncio.run(run_deadline_rehearsal(args.db))
             if args.command == "deadline-run"
+            else run_operator_rehearsal(args.db)
+            if args.command == "operator-run"
             else ExecutionJournal(args.db).report()
         )
         print(json.dumps(report, indent=2))

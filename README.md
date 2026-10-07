@@ -26,6 +26,9 @@ venue. Frozen account/dollar limits and fresh-market dispatch reapproval also pa
 offline verification. A separate durable fake venue now verifies killable submission/read
 deadlines and cancellation/crash recovery. It has no broker write adapter and
 does not change the deployed SHADOW experiment.
+Signed local operator commands now test atomic halt/recovery, revision checks,
+replay receipts and persistent alert acknowledgment. External alert delivery and
+deployed recovery controls remain unimplemented.
 
 ## Slice 2 — Robinhood read / SHADOW
 

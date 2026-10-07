@@ -11,6 +11,15 @@ from urllib.parse import quote
 from app.execution.models import Ledger
 
 SCHEMA = "execution-rehearsal-v1"
+ALERT_KINDS = {
+    "INTERRUPTED_ATTEMPT",
+    "ATTEMPT_UNCERTAIN",
+    "RECONCILIATION_BLOCKED",
+    "INVALID_EVIDENCE",
+    "MANUAL_HALT",
+    "FIXTURE_READ_FAILED",
+    "FIXTURE_BINDING_BLOCKED",
+}
 
 
 class ExecutionJournal:
@@ -37,12 +46,18 @@ class ExecutionJournal:
                 "execution_events",
                 "execution_snapshots",
                 "execution_fixture_binding",
+                "execution_operator",
+                "execution_commands",
+                "execution_alerts",
                 "sqlite_sequence",
             }
             if tables - allowed:
                 raise ValueError("Execution rehearsal requires a separate database")
             # Individual statements preserve the surrounding BEGIN IMMEDIATE.
             for sql in (
+                "CREATE TABLE IF NOT EXISTS execution_operator (id INTEGER PRIMARY KEY CHECK(id=1), journal_id TEXT NOT NULL UNIQUE, key_hash TEXT NOT NULL)",
+                "CREATE TABLE IF NOT EXISTS execution_commands (command_id TEXT PRIMARY KEY, fingerprint TEXT NOT NULL, result_json TEXT NOT NULL)",
+                "CREATE TABLE IF NOT EXISTS execution_alerts (event_sequence INTEGER PRIMARY KEY REFERENCES execution_events(sequence), acknowledged_at TEXT, actor TEXT, command_id TEXT)",
                 "CREATE TABLE IF NOT EXISTS execution_fixture_binding (id INTEGER PRIMARY KEY CHECK(id=1), venue_id TEXT NOT NULL, account_id TEXT NOT NULL)",
                 (
                     "CREATE TABLE IF NOT EXISTS execution_control (id INTEGER PRIMARY KEY CHECK(id=1), "
@@ -111,10 +126,49 @@ class ExecutionJournal:
 
     @staticmethod
     def event(db, at, kind, payload, client_id=None):
-        db.execute(
+        cursor = db.execute(
             "INSERT INTO execution_events(occurred_at,kind,client_id,payload) VALUES(?,?,?,?)",
             (at.isoformat(), kind, client_id, json.dumps(payload, sort_keys=True)),
         )
+        alert = kind in ALERT_KINDS
+        if kind == "POSITION_SUPERVISED" and payload["status"] in {"BLOCKED", "EXIT_REQUIRED"}:
+            previous = db.execute(
+                "SELECT payload FROM execution_events WHERE kind=? AND sequence<? ORDER BY sequence DESC LIMIT 1",
+                (kind, cursor.lastrowid),
+            ).fetchone()
+            keys = ("status", "exit_reason", "issue", "entry_client_id")
+            alert = not previous or any(
+                json.loads(previous[0]).get(k) != payload.get(k) for k in keys
+            )
+        if alert:
+            db.execute(
+                "INSERT INTO execution_alerts(event_sequence) VALUES(?)", (cursor.lastrowid,)
+            )
+
+    @staticmethod
+    def revision(db):
+        return db.execute("SELECT COALESCE(MAX(sequence),0) FROM execution_events").fetchone()[0]
+
+    def alerts(self, *, after=0, limit=100):
+        """Ordered local outbox page; acknowledgment is not delivery or risk resolution."""
+        if after < 0 or not 1 <= limit <= 1000:
+            raise ValueError("Invalid alert page")
+        with self.read() as db:
+            return self._alerts(db, after, limit)
+
+    @staticmethod
+    def _alerts(db, after, limit):
+        if not db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_alerts'").fetchone():
+            return []
+        return [
+            dict(r)
+            for r in db.execute(
+                "SELECT a.*,e.occurred_at,e.kind,e.client_id AS order_client_id,e.payload "
+                "FROM execution_alerts a JOIN execution_events e ON e.sequence=a.event_sequence "
+                "WHERE a.event_sequence>? ORDER BY a.event_sequence LIMIT ?",
+                (after, limit),
+            )
+        ]
 
     def report(self):
         with self.read() as db:
@@ -129,6 +183,15 @@ class ExecutionJournal:
                 ).fetchone()
             return {
                 "mode": "EXECUTION_REHEARSAL",
+                "revision": self.revision(db),
+                "alerts": self._alerts(db, 0, 100),
+                "unacknowledged_alerts": db.execute(
+                    "SELECT COUNT(*) FROM execution_alerts WHERE acknowledged_at IS NULL"
+                ).fetchone()[0]
+                if db.execute(
+                    "SELECT 1 FROM sqlite_master WHERE name='execution_alerts'"
+                ).fetchone()
+                else 0,
                 "network_calls": False,
                 "live_enabled": False,
                 "config": json.loads(c["config_json"]),
