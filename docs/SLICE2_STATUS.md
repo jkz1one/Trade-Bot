@@ -20,11 +20,11 @@ evidence remain deployment gates. LIVE is disabled.
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **614 tests in 54.07 seconds with warnings treated as errors**, including 40 execution
-lifecycle tests, 26 position-supervision tests, 35 execution-limit/dispatch tests
-and 22 isolated-process/durable-venue tests, plus 35 operator/alert tests and
-26 credential/restore tests, 30 model-cost/economics tests, 36 bounded-judgment tests,
-31 independent-supervisor tests and 57 control-transport tests.
+full local suite passed **757 tests in 126.65 seconds with warnings treated as errors**,
+including the previous 730 cases and 27 new fixture PAPER runtime cases. The runtime
+now connects scheduled judgment and guarded fake dispatch to independent supervision,
+with durable claims, entry-health gates and verified cancellation/shutdown ownership.
+Changed-code checks and installed-package proofs passed; see the latest follow-up below.
 The deployed application release remains the one recorded below.
 
 ## Target-host evidence — 2026-10-06 UTC
@@ -689,6 +689,71 @@ Actual broker contracts, authenticated bounded-model validation/adoption and dep
 supervision/control/notifications remain. The existing SHADOW cohort and unobserved
 first scheduled regular-session evidence gate are unchanged. No LIVE capability,
 broker mutation, external recipient notification or server update was introduced.
+
+## Fixture PAPER runtime follow-up — 2026-10-07 UTC
+
+The new opt-in PaperRuntime connects the exact durable fixture engine, venue, quote
+feed, independent supervisor and optional bounded judgment coordinator. Default is
+an explicit stub HOLD. This is isolated from the deployed SHADOW worker, Robinhood
+account and frozen `virtual-v1` population. Operations: [PAPER_RUNTIME.md](PAPER_RUNTIME.md).
+
+Enrollment requires VERIFIED paired authority, precedes orders/model attempts and
+freezes source identities/paths, engine/supervisor/model policies, runtime limits and
+current-slot XNYS cadence. A private single-host lease spans the whole service and
+all child cleanup; the CLI takes it before writable startup recovery. Initialization
+is exclusive, with private separate fixture files, and supplies PAPER/LIVE-disabled
+settings explicitly. There is no automatic enrollment/rebind/reset on restart.
+
+The independent supervisor, runtime heartbeat and scheduled cycle task run together.
+Cycle admission requires the supervisor's exact freshly observed quote sequence/hash
+and reconciled account truth. A durable current-slot claim plus governed packet
+precedes any model call. One attempt per 15-minute regular-session slot; no missed-slot
+backfill or interrupted replay. Known model cost remains counted when late judgment
+crosses a slot and cannot prepare/dispatch. HOLD, risk rejection and fake execution
+retain their decisions/results and existing detailed risk/usage/dispatch evidence.
+
+Entry health is revoked during shutdown and after stopped/stale/failed ownership;
+new model receipts and BUY admission/dispatch require it. Protective SELL retains
+its existing checks and runs while model reasoning waits. Interrupted cycles persist,
+halt and block later slots without an automatic resolution command. Failure stops
+all components. Repeated cancellation drains fixed children before lease release,
+then finishes bounded supervision; STOPPING ticks cannot renew supervisor authority.
+
+Integration testing found a read/submission race: a supervisor read during SUBMITTING
+could falsely interpret pre-acceptance absence as a missing attempted order. Fenced
+supervisor reads now defer until the bounded attempt settles, renewing neither account
+evidence nor heartbeat. UNKNOWN/missing orders still run the normal fail-closed checks.
+No attempted order is replayed or reservation released by this deferral.
+
+Verification: **757 tests passed in 126.65s with warnings treated as errors**, including
+**27 new runtime cases**. Coverage includes scheduled HOLD/restart ownership,
+duplicate-run admission before writes, known/unknown model usage, risk rejection,
+slot crossing, service failure, stale/stopped entry/model gates, interruption/no replay,
+protected cleanup during repeated cancellation, private key/lease files, immutable
+policy, explicit paired authority, bounded publication and read-only CLI reports.
+Related supervisor/process cases passed; changed-code Ruff/format, pip check and
+whitespace checks passed.
+
+The wheel installed outside the checkout passed optimized-Python/Werror proof using
+real fixture/model subprocesses and a mocked native SDK transport, with no external
+calls. The runtime scheduled a governed entry, reconciled a scripted fill and began
+its second scheduled judgment. While the model child remained blocked, independent
+supervision dispatched a governed fake SELL and reconciled flat after the second
+scripted fill. Shutdown reaped all children, preserved one interrupted cycle and an
+unknown model receipt, kept the halt and withheld net economics. Known cost was
+`0.00015`; the authority pair remained VERIFIED and reporting changed no store bytes.
+A separate installed native CLI process, with an explicitly closed fixture calendar,
+rejected a duplicate start, handled real SIGTERM with exit 0 and persisted STOPPED
+without any cycles or network calls. Wheel SHA-256:
+`423bfbeb7e5155af03acf1fde92e645c2507154c47d13ee7c5ec20e47e5b8f91`.
+
+Estimated v1 execution-engine completeness: **about 87%**, a rough component estimate.
+This connects fixture scheduling/supervision/judgment/execution; it is not production
+market-data collection, automatic fake fills, an authenticated provider run or trading
+signal evidence. Operator/alert/archive service provisioning, real data integration,
+authenticated bounded-model validation/adoption, host failure/recovery and actual
+broker capability contracts remain. The deployed worker stays at its recorded release;
+no server update, real broker write, LIVE capability or experiment policy change occurred.
 
 ## Sequential synthetic portfolio and build hardening
 

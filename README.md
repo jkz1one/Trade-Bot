@@ -149,6 +149,14 @@ The local `shadow-outcomes` report compares quote changes with SPY after linked 
 model cost. Initial output is EMPTY until new cycles are collected. These overlapping
 proposal samples are separate from portfolio fills, profit and compounding returns.
 
+## Isolated PAPER engine service
+
+The opt-in [fixture PAPER service](docs/PAPER_RUNTIME.md) now connects independent
+supervision, durable XNYS cycle claims, bounded judgment, deterministic admission and
+fake dispatch. Default is audited stub HOLD. Restarts never replay an attempted slot;
+shutdown revokes entry health and retains interrupted claims for review. It requires
+separate fixture stores and does not upgrade the deployed SHADOW worker or enable LIVE.
+
 ## Sequential virtual bankroll
 
 The opt-in [synthetic portfolio experiment](docs/SYNTHETIC_EXPERIMENT.md) adds persistent

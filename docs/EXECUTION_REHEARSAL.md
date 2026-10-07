@@ -756,3 +756,13 @@ verification before use.
 Test these independently before connecting them to a live capability.
 The deployed SHADOW worker and its continuing market-session verification stay on
 their current release; no server update is needed for this offline slice.
+
+## Scheduled fixture PAPER service
+
+The opt-in [PAPER runtime](PAPER_RUNTIME.md) connects the exact durable fixture engine,
+quotes, independent supervision, bounded judgment and fake dispatch under one lifetime
+lease. Claims persist before model calls, current slots are attempted once, and unknown
+or interrupted evidence never replays. Stopped/stale runtime authority blocks entries
+and model receipts while protective SELL retains its existing guard policy. Native
+CLI initialization, fixture publication, run and read-only reporting are separate from
+the deployed SHADOW worker; no real broker write adapter or automatic fills exist.

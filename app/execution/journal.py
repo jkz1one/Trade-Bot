@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
 
-from app.execution import alert_state, economics, restore, supervisor_state
+from app.execution import alert_state, economics, restore, runtime_state, supervisor_state
 from app.execution.models import Ledger
 
 SCHEMA = "execution-rehearsal-v1"
@@ -22,6 +22,7 @@ ALERT_KINDS = {
     "FIXTURE_READ_FAILED",
     "FIXTURE_BINDING_BLOCKED",
     "MODEL_COST_BOUND_EXCEEDED",
+    "RUNTIME_CYCLE_COMPLETED",
 }
 
 
@@ -62,6 +63,8 @@ class ExecutionJournal:
                 "execution_supervisor",
                 "execution_alert_delivery",
                 "execution_alert_attempts",
+                "execution_runtime",
+                "execution_runtime_cycles",
                 "sqlite_sequence",
             }
             if tables - allowed:
@@ -162,6 +165,8 @@ class ExecutionJournal:
             (at.isoformat(), kind, client_id, json.dumps(payload, sort_keys=True)),
         )
         alert = kind in ALERT_KINDS
+        if kind == "RUNTIME_CYCLE_COMPLETED":
+            alert = payload["status"] == "INTERRUPTED"
         if kind in {"MODEL_JUDGMENT_INTERRUPTED", "MODEL_JUDGMENT_RECORDED"}:
             alert = kind == "MODEL_JUDGMENT_INTERRUPTED" or payload["result"]["error"] is not None
         if kind == "SUPERVISOR_TICK" and payload["result"]["status"] in {"FAILED", "BLOCKED"}:
@@ -228,6 +233,7 @@ class ExecutionJournal:
                 "revision": self.revision(db),
                 "economics": economics.economics_report(db, c, now or datetime.now().astimezone()),
                 "supervisor": supervisor_state.report(db, now or datetime.now().astimezone()),
+                "runtime": runtime_state.report(db, now or datetime.now().astimezone()),
                 "alert_delivery": alert_state.report(db, now or datetime.now().astimezone()),
                 "restore_fence": restore.status(db, restore.authority_path(self.path)),
                 "alerts": self._alerts(db, 0, 100),

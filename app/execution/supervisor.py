@@ -139,6 +139,9 @@ class ExecutionSupervisor:
         _clock(now)
         with self.engine.journal.write() as db:
             row = self._state(db)
+            if row["status"] == "STOPPING":
+                # A draining tick must never re-grant entry health after stop.
+                status, result = "STOPPING", {"status": "STOPPING"}
             if status == "RUNNING":
                 control = self.engine._control(db)
                 if control["halted"] or json.loads(control["issues_json"]):
@@ -236,7 +239,7 @@ class ExecutionSupervisor:
                 raise ExecutionBlocked("SUPERVISOR_ACCOUNT_NOT_FRESH")
         self._publish("RUNNING", result, completed, sample=(sequence, digest))
 
-    async def run(self, stop: asyncio.Event):
+    async def run(self, stop: asyncio.Event, *, drain_tick_on_stop=False):
         lock_path = Path(str(self.engine.journal.path) + ".supervisor.lock")
         fd = os.open(lock_path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
         try:
@@ -257,11 +260,16 @@ class ExecutionSupervisor:
                     )
                     if stopping in done:
                         self._finish("STOPPING")
-                        tick.cancel()
-                        try:
+                        if drain_tick_on_stop:
+                            # The tick already owns a bounded timeout and its fixed
+                            # child deadline; entry authority was revoked above.
                             await tick
-                        except asyncio.CancelledError:
-                            pass
+                        else:
+                            tick.cancel()
+                            try:
+                                await tick
+                            except asyncio.CancelledError:
+                                pass
                         break
                     tick.result()
                     tick = None

@@ -32,6 +32,7 @@ from app.execution.models import (
     PositionManagement,
     Snapshot,
 )
+from app.execution.runtime_state import entry_reasons as runtime_entry_reasons
 from app.execution.supervision import assess_position
 from app.execution.supervisor_state import entry_reasons as supervisor_entry_reasons
 from app.risk.governor import govern
@@ -213,6 +214,7 @@ class ExecutionEngine:
         if decision.action == Action.OPEN_LONG:
             reasons = list(risk.rejection_reasons)
             reasons.extend(supervisor_entry_reasons(db, now))
+            reasons.extend(runtime_entry_reasons(db, now))
             reasons.extend(alert_entry_reasons(db, now))
             cost_reasons, costs = entry_reasons(db, source_key, decision, packet, now)
             reasons.extend(cost_reasons)
@@ -854,6 +856,19 @@ class ExecutionEngine:
             raise ValueError("Only the built-in durable fixture venue is supported")
         self._bind_fixture(venue, now=now)
         with self.journal.read() as db:
+            if (
+                fence_account_changes
+                and db.execute(
+                    "SELECT 1 FROM execution_orders WHERE status='SUBMITTING'"
+                ).fetchone()
+            ):
+                # A complete read cannot establish missing-order truth while the
+                # bounded acceptance attempt is still in flight. Renew no evidence.
+                return {
+                    "reconciled": False,
+                    "issues": ["SUBMISSION_IN_PROGRESS"],
+                    "superseded": True,
+                }
             epoch = self._reconciliation_epoch(db) if fence_account_changes else None
         try:
             result = await run_fixture_process(
