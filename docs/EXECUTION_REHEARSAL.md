@@ -626,6 +626,87 @@ provisioning, actual deployed recovery, external alerts and off-host restore pro
 remain deployment requirements. No actual host or experiment is changed by this
 factory or the fixture tests.
 
+## Bounded HTTPS alert delivery
+
+`app.execution.alerts.AlertDelivery` is opt-in fixture-engine infrastructure, separate
+from the deployed SHADOW worker. Enrollment requires the exact built-in PAPER engine,
+a VERIFIED journal/authority pair, explicit `AlertConfig(origin=...)`, a dedicated
+private token file and enrollment before any order preparation. Destination, limits,
+token path, optional CA path/hash and journal identity are frozen in the restore-fenced
+journal. Reopening requires the same policy; runtime changes fail before sending.
+
+`await delivery.deliver_once()` sends one due alert; `await delivery.run(stop_event)`
+polls independently. A private single-host nonblocking file lock covers admission,
+child work and cancellation cleanup. A duplicate runner receives BUSY. An idle poll
+verifies authority and changes neither journal nor authority bytes. This lock cannot
+coordinate multiple hosts or protect against a privileged filesystem owner.
+
+The sink contract is deliberate and provider-neutral:
+
+| Request or receipt | Contract |
+|---|---|
+| Destination | Exact HTTPS origin, fixed `POST /v1/alerts`; no URL credentials, query, fragment or redirect following. |
+| Authentication | Dedicated 32-byte lowercase hex Bearer token, optional trailing LF, in a regular owner-only mode-0600 file; no final symlink, FIFO or oversized secret reads. Rechecked by each child, so local token replacement can rotate it. |
+| Payload | `schema_version`, restore authority UUID as `journal_id`, original event sequence/time/kind and stable SHA-256 `delivery_id`. No account, order, money, prompt, thesis, event payload or credential. |
+| Idempotency | `Idempotency-Key` equals delivery ID, derived from journal identity and event sequence. Retries use the identical serialized payload and SHA-256. |
+| Confirmation | HTTP 200 or 202, JSON content type, uncompressed body no larger than 1 KiB; strict `{delivery_id, payload_sha256, accepted: true}` matching the exact request. Duplicate fields, extra fields, false acceptance or foreign bindings fail. |
+| Sink responsibility | Authenticate, durably store/deduplicate `(delivery_id, payload_sha256)` before replying, reject changed payloads for an existing ID, and return the original receipt on replay. Route any human notification separately. |
+
+TLS verifies the endpoint hostname using system trust. An optional explicitly supplied
+CA file is bounded to 1 MiB, rejects final symlinks/nonregular files, and is hash-pinned
+at enrollment and rechecked before each authenticated request. No proxy environment
+or SDK retries are used. The implementation is not a drop-in Slack, email or generic
+webhook integration: a sink must implement this receipt contract. Neither acceptance
+nor delivery means a person received, read or resolved an alert.
+
+Each attempt is committed IN_FLIGHT before process creation, with stable payload/hash,
+unique claim, total/batch attempt counts and conservative retry time. Attempt, result
+and explicit rearm events remain in the audit. Default process deadline is 10 seconds
+(maximum 30), retry delays are 60 then 120 seconds, maximum three attempts per batch,
+and the run loop polls every five seconds. The wall-clock retry lease includes at
+least process deadline plus five seconds. Retries are bounded best effort with possible
+duplicates, not a guarantee of delivery or exactly-once human notification. A lost
+reply, timeout, cancellation or parent crash can leave a delivered alert unconfirmed.
+Such claims retain their ID and wait for the lease before retrying; a final interrupted
+claim expires to EXHAUSTED without another automatic send. Other due alerts can
+continue while an earlier alert waits for retry or is exhausted.
+
+A fixed child receives only the sink configuration, minimal alert and sink credential
+path, with a whitelisted environment excluding model/broker secrets and proxies. It
+receives no engine database path or handles. Input/output pipes are bounded. Parent
+cancellation drains TERM/KILL cleanup and reaps the child before releasing the lock;
+a child watchdog exits on parent death or monotonic deadline. Synchronous SQLite,
+restore hashing, local CA work and process spawning remain local host operations,
+not hard real-time guarantees. Killing a client cannot retract a request already
+accepted by the remote sink.
+
+Once enrolled, undelivered alerts older than the frozen default 120 seconds (maximum
+300), future/invalid event clocks or an exhausted attempt block new BUY admission and
+new model-call receipts. The health report uses a bounded aggregate and is visible in
+journal and authenticated operator review. Fresh quote/account reads cannot erase this
+gate. HOLD remains auditable and protective SELL admission retains the existing
+ownership, halt, freshness, account and governor requirements.
+
+`delivery.rearm(event_sequence, reason, now=...)` is an explicit trusted-local recovery
+operation for EXHAUSTED alerts only. It audits the reason, keeps the exact ID/payload
+and cumulative attempt history, and grants one more bounded batch. There is no HTTP
+rearm route or automatic rearm. An overdue alert stays entry-blocking until its exact
+receipt is confirmed. This action cannot acknowledge alerts, clear a dispatch halt,
+release orders, change policy or call the model. Operator ACK_ALERT remains separate
+and does not suppress delivery; delivery does not automatically acknowledge or resume.
+
+Verification adds **59 tests**, including actual loopback verified-TLS child calls,
+lost/foreign/duplicate/malformed/oversized receipts, redirects, retry spacing and caps,
+private tokens, CA verification/change rejection, duplicate owners, repeated
+cancellation, actual parent crash/watchdog cleanup, leases, storage failures, restart,
+read-only idle polling, audited rearm, backlog/model/BUY gates and protective exits.
+The installed wheel also passed a native HTTPS sink/journal restart proof under
+optimized Python and warnings as errors: two identical requests yielded one durable
+sink receipt, both children were reaped, restore authority stayed VERIFIED, private
+files and read-only bytes passed, and halt/ack state stayed unchanged. There were zero
+broker/model calls. Deployed sink provisioning, real notification routing, credential
+lifecycle and off-host alert/restore availability remain unproven.
+
 ## SignalFlow adaptation and remaining engineering
 
 Fresh GitHub inspection confirms SignalFlow `main` remains

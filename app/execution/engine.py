@@ -15,6 +15,7 @@ from pydantic import ValidationError
 
 from app.config import Settings
 from app.domain.models import AccountState, Action, MarketPacket, Position, TradeDecision
+from app.execution.alert_state import entry_reasons as alert_entry_reasons
 from app.execution.durable_fixture import DurableFixtureVenue
 from app.execution.economics import entry_reasons, summary
 from app.execution.fixture import LocalFixtureVenue
@@ -212,6 +213,7 @@ class ExecutionEngine:
         if decision.action == Action.OPEN_LONG:
             reasons = list(risk.rejection_reasons)
             reasons.extend(supervisor_entry_reasons(db, now))
+            reasons.extend(alert_entry_reasons(db, now))
             cost_reasons, costs = entry_reasons(db, source_key, decision, packet, now)
             reasons.extend(cost_reasons)
             known_cost = Decimal(costs["known_cost"])

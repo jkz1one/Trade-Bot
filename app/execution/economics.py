@@ -15,6 +15,7 @@ from zoneinfo import ZoneInfo
 from pydantic import Field, field_validator, model_validator
 
 from app.domain.models import TradeDecision
+from app.execution.alert_state import entry_reasons as alert_entry_reasons
 from app.execution.models import ZERO, Contract, Ledger, Snapshot
 from app.execution.supervisor_state import entry_reasons as supervisor_entry_reasons
 
@@ -201,6 +202,8 @@ class CostAccounting:
             engine._ready(control, now)
             if supervisor_entry_reasons(db, now):
                 raise ExecutionBlocked("EXECUTION_SUPERVISOR_NOT_READY")
+            if alert_entry_reasons(db, now):
+                raise ExecutionBlocked("EXECUTION_ALERT_DELIVERY_NOT_READY")
             if db.execute("SELECT 1 FROM execution_orders WHERE active_lock=1").fetchone():
                 raise ExecutionBlocked("ORDER_ALREADY_IN_FLIGHT")
             if engine.calendar.current_window(now) is None:

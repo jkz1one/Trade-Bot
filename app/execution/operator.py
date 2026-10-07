@@ -16,7 +16,7 @@ from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from app.execution import restore, supervisor_state
+from app.execution import alert_state, restore, supervisor_state
 from app.execution.engine import ExecutionBlocked, ExecutionEngine, _clock
 from app.execution.models import Contract, Ledger
 
@@ -207,6 +207,7 @@ class OperatorControl:
                 if active
                 else None,
                 "supervisor": supervisor_state.report(db, now),
+                "alert_delivery": alert_state.report(db, now),
                 "restore_fence": fence,
                 "alerts": [
                     dict(row)

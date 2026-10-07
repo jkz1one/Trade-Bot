@@ -552,6 +552,66 @@ cohort are unchanged; first scheduled regular-session evidence remains unobserve
 in this workspace. No LIVE capability, actual server update or outbound broker/model
 call was introduced.
 
+## Durable alert delivery follow-up — 2026-10-07 UTC
+
+Fresh canonical branch state matched `7d2e41c2b246e94dbf09ed06083eac8fc6a063a7`
+before editing. PR #1 remains draft; main and the deployed worker are unchanged.
+The opt-in fixture engine now freezes an HTTPS sink/limits/private token path and
+requires VERIFIED restore authority before delivery enrollment. It sends minimal
+alert identities rather than account, order, money, prompt or full event payloads.
+
+Attempts are committed before the fixed isolated child runs. An exact strict sink
+receipt is required; redirects, malformed/foreign/oversized/compressed receipts,
+TLS/credential failures and timeouts cannot mark delivery complete. Native TLS
+verifies hostname/trust; optional CA file/hash and private token are checked per
+request. Broker/model secrets, proxies and engine database handles are excluded.
+A nonblocking single-host lifetime lock spans awaits and child cleanup; a watchdog
+bounds orphan work after parent death. Idle polls are read-only.
+
+Lost responses/restart/cancellation retain the identical alert ID, payload and hash.
+Default retry delays are 60 then 120 seconds, with at most three attempts per batch.
+Exhausted alerts stop automatic retries. Trusted-local reasoned rearm audits a new
+bounded batch while keeping cumulative attempts and identity; it neither resumes
+trading nor acknowledges an alert. There is no HTTP rearm route. Other due alerts
+are not starved by a waiting or exhausted earlier alert.
+
+Once enrolled, overdue (default 120 seconds), future/invalid-clock or exhausted
+undelivered alerts block new entries and model-call receipts. HOLD remains first-class;
+governed protective SELLs retain their existing checks. Delivery confirmation and
+operator acknowledgment remain independent, and neither clears a dispatch halt.
+Journal and authenticated operator review expose delivery backlog health. The sink
+must durably deduplicate IDs before returning a receipt; remote receipt acceptance
+is not evidence of human notification or resolution.
+
+Verification: **673 tests passed in 91.39s with warnings treated as errors**, including
+**59 new delivery tests**. Changed-code Ruff check/format, pip check and whitespace
+checks passed. Related tests also corrected fixture ordering so model evidence did
+not mask the independent BUY gate, and verified specific restore rollback diagnostics.
+Tests cover actual loopback verified-TLS child requests, strict receipts, lost replies,
+retry caps/backoff, private credentials, trust changes, leases, duplicate owners,
+repeated cancellation, actual parent crash/watchdog exit/reaping, storage failures,
+restart, idle read-only bytes, audited outage rearm, no starvation, entry/model gates
+and governed protective exits.
+
+The installed wheel outside the checkout passed the native HTTPS sink/journal restart
+proof under optimized Python and warnings as errors. The first request was durably
+accepted by the local sink but lost its response. After sink and engine restart, the
+same ID/payload/hash replay returned one durable unique receipt for two requests.
+Both children were reaped; restore status remained VERIFIED, private files and
+read-only byte checks passed, halt and acknowledgment state remained unchanged,
+and there were zero broker/model calls. Wheel SHA-256:
+`2c848ea63c78f11daaa419bf21102e26c71c3cdcd2370a04b2af7625df5bd84f`.
+
+Estimated v1 execution-engine completeness: **about 84%**, a rough component estimate.
+This verifies transport against a local contract sink, not deployed external alerts
+or human delivery. Actual sink/notification provisioning, server integration and
+credential lifecycle, off-host restoration/host-failure proof, actual broker
+contracts and authenticated bounded-model adoption remain. Synchronous storage and
+whole-history restore hashing are not hard real-time guarantees; paired rollback
+and multi-host coordination remain outside local fencing. The deployed release,
+SHADOW cohort and unobserved first scheduled regular-session evidence gate are
+unchanged. No LIVE, broker write path or external recipient notification was added.
+
 ## Sequential synthetic portfolio and build hardening
 
 The opt-in synthetic profile runs the sole trader against its own virtual cash and

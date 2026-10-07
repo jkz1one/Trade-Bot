@@ -27,8 +27,8 @@ offline verification. A separate durable fake venue now verifies killable submis
 deadlines and cancellation/crash recovery. It has no broker write adapter and
 does not change the deployed SHADOW experiment.
 Signed local operator commands now test atomic halt/recovery, revision checks,
-replay receipts and persistent alert acknowledgment. External alert delivery and
-deployed recovery controls remain unimplemented.
+replay receipts and persistent alert acknowledgment. Deployed notification and
+recovery integration remain pending.
 Credential rotation/revocation retain a dispatch halt and reject retired keys.
 An opt-in separate authority file blocks journal-only rollback before any write.
 Rolling back both files together remains outside this local safeguard.
@@ -47,6 +47,11 @@ An isolated native-TLS control API now exposes bounded operator review and the s
 existing signed recovery actions. Separate read/signing credentials, reviewed revisions,
 restore fencing and durable replay receipts remain mandatory. It is not deployed and
 adds no routes to the current SHADOW observer or PAPER app.
+Opt-in HTTPS alert delivery now freezes a dedicated sink, persists attempts before sending,
+requires an exact acceptance receipt and retries the same alert ID within a bounded batch.
+Overdue/exhausted delivery blocks new entries and model calls; governed protective exits
+retain their existing checks. Delivery never acknowledges an alert or resumes execution.
+This is verified with a local TLS sink; no external notifications or server changes were made.
 
 ## Slice 2 — Robinhood read / SHADOW
 
