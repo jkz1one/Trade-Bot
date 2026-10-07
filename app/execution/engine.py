@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
+import time
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from decimal import ROUND_DOWN
@@ -13,6 +15,7 @@ from pydantic import ValidationError
 
 from app.config import Settings
 from app.domain.models import AccountState, Action, MarketPacket, Position, TradeDecision
+from app.execution.durable_fixture import DurableFixtureVenue
 from app.execution.fixture import LocalFixtureVenue
 from app.execution.journal import ExecutionJournal
 from app.execution.models import (
@@ -536,12 +539,40 @@ class ExecutionEngine:
                 self.journal.event(db, now, "DISPATCH_BLOCKED", {"reason": str(exc)}, client_id)
             raise
 
-    def _dispatch(self, client_id, venue, *, now, packet):
-        _clock(now)
-        # Intentional hard boundary: generic transports and Robinhood clients cannot be attached.
-        if type(venue) is not LocalFixtureVenue:
-            raise ValueError("Only the built-in local fixture venue is supported")
+    def _bind_fixture(self, venue, *, now):
         if venue.account_id != self.limits.account_id:
+            self.halt("EXECUTION_ACCOUNT_MISMATCH", now=now)
+            raise ExecutionBlocked("EXECUTION_ACCOUNT_MISMATCH")
+        reason = None
+        with self.journal.write() as db:
+            self._control(db)
+            binding = db.execute("SELECT * FROM execution_fixture_binding WHERE id=1").fetchone()
+            if binding and (
+                binding["venue_id"] != venue.venue_id or binding["account_id"] != venue.account_id
+            ):
+                reason = "FIXTURE_VENUE_BINDING_MISMATCH"
+            elif binding is None:
+                if db.execute(
+                    "SELECT 1 FROM execution_orders WHERE attempted_at IS NOT NULL"
+                ).fetchone():
+                    reason = "FIXTURE_TRANSPORT_ALREADY_USED"
+                else:
+                    db.execute(
+                        "INSERT INTO execution_fixture_binding VALUES(1,?,?)",
+                        (venue.venue_id, venue.account_id),
+                    )
+                    self.journal.event(db, now, "FIXTURE_VENUE_BOUND", {"venue_id": venue.venue_id})
+            if reason:
+                db.execute(
+                    "UPDATE execution_control SET halted=1,halt_reason=? WHERE id=1", (reason,)
+                )
+                self.journal.event(db, now, "FIXTURE_BINDING_BLOCKED", {"reason": reason})
+        if reason:
+            raise ExecutionBlocked(reason)
+
+    def _begin_attempt(self, client_id, account_id, *, now, packet, process_context=None):
+        _clock(now)
+        if account_id != self.limits.account_id:
             self.halt("EXECUTION_ACCOUNT_MISMATCH", now=now)
             raise ExecutionBlocked("EXECUTION_ACCOUNT_MISMATCH")
         with self.journal.write() as db:
@@ -565,6 +596,11 @@ class ExecutionEngine:
                 self.journal.event(db, now, "PREPARED_EXPIRED", {}, client_id)
                 return OrderState.EXPIRED
             control = self._control(db)
+            binding = db.execute("SELECT * FROM execution_fixture_binding WHERE id=1").fetchone()
+            if binding and (
+                process_context is None or process_context["venue_id"] != binding["venue_id"]
+            ):
+                raise ExecutionBlocked("FIXTURE_PROCESS_REQUIRED")
             snapshot = self._ready(control, now)
             state = Ledger.model_validate_json(control["ledger_json"])
             approval = json.loads(order["approval_json"])
@@ -659,43 +695,138 @@ class ExecutionEngine:
                 "UPDATE execution_orders SET status='SUBMITTING',attempted_at=? WHERE client_id=?",
                 (now.isoformat(), client_id),
             )
-            self.journal.event(db, now, "ATTEMPT_STARTED", {}, client_id)
+            self.journal.event(
+                db,
+                now,
+                "ATTEMPT_STARTED",
+                self._attempt_context(intent, process_context, now),
+                client_id,
+            )
+        return intent
+
+    def _attempt_context(self, intent, context, now):
+        if context is None:
+            return {"adapter": "LOCAL_FIXTURE"}
+        effective = min(
+            self.limits.process_timeout_seconds, (intent.expires_at - now).total_seconds()
+        )
+        context.update(
+            effective_timeout_seconds=effective, deadline_monotonic=time.monotonic() + effective
+        )
+        return context
+
+    def _dispatch(self, client_id, venue, *, now, packet):
+        if type(venue) is not LocalFixtureVenue:
+            raise ValueError("Only the built-in local fixture venue is supported")
+        intent = self._begin_attempt(client_id, venue.account_id, now=now, packet=packet)
+        if not isinstance(intent, Intent):
+            return intent
         # Write-ahead attempt has committed BEFORE the fake venue is called.
         try:
             order_id = venue.accept(intent, now)
-            if not isinstance(order_id, str) or not order_id or len(order_id) > 128:
-                raise ValueError("Invalid fixture acknowledgment")
-            with self.journal.write() as db:
-                row = db.execute(
-                    "SELECT * FROM execution_orders WHERE client_id=?", (client_id,)
-                ).fetchone()
-                if row["order_id"] and row["order_id"] != order_id:
-                    raise ValueError("Acknowledgment contradicts reconciled order identity")
-                if row["status"] in {OrderState.SUBMITTING, OrderState.UNKNOWN}:
-                    db.execute(
-                        "UPDATE execution_orders SET status='OPEN',order_id=? WHERE client_id=?",
-                        (order_id, client_id),
-                    )
-                    status = OrderState.OPEN
-                else:
-                    status = row[
-                        "status"
-                    ]  # Late ack cannot regress a reconciled partial/terminal order.
-                self.journal.event(db, now, "ACKNOWLEDGED", {"order_id": order_id}, client_id)
-            return status
+            return self._acknowledge(client_id, order_id, now=now)
         except Exception as exc:  # noqa: BLE001 - any failure after an attempt is uncertain.
-            with self.journal.write() as db:
-                db.execute(
-                    "UPDATE execution_orders SET status='UNKNOWN' WHERE client_id=? AND status='SUBMITTING'",
-                    (client_id,),
-                )
-                db.execute(
-                    "UPDATE execution_control SET halted=1,halt_reason='UNCERTAIN_ORDER_ATTEMPT' WHERE id=1"
-                )
-                self.journal.event(
-                    db, now, "ATTEMPT_UNCERTAIN", {"error_class": type(exc).__name__}, client_id
-                )
+            self._uncertain(client_id, exc, now=now)
             return OrderState.UNKNOWN
+
+    def _acknowledge(self, client_id, order_id, *, now):
+        if not isinstance(order_id, str) or not order_id or len(order_id) > 128:
+            raise ValueError("Invalid fixture acknowledgment")
+        with self.journal.write() as db:
+            row = db.execute(
+                "SELECT * FROM execution_orders WHERE client_id=?", (client_id,)
+            ).fetchone()
+            if row["order_id"] and row["order_id"] != order_id:
+                raise ValueError("Acknowledgment contradicts reconciled order identity")
+            if row["status"] in {OrderState.SUBMITTING, OrderState.UNKNOWN}:
+                db.execute(
+                    "UPDATE execution_orders SET status='OPEN',order_id=? WHERE client_id=?",
+                    (order_id, client_id),
+                )
+                status = OrderState.OPEN
+            else:
+                status = row[
+                    "status"
+                ]  # Late ack cannot regress a reconciled partial/terminal order.
+            self.journal.event(db, now, "ACKNOWLEDGED", {"order_id": order_id}, client_id)
+        return status
+
+    def _uncertain(self, client_id, exc, *, now):
+        with self.journal.write() as db:
+            db.execute(
+                "UPDATE execution_orders SET status='UNKNOWN' WHERE client_id=? AND status='SUBMITTING'",
+                (client_id,),
+            )
+            db.execute(
+                "UPDATE execution_control SET halted=1,halt_reason='UNCERTAIN_ORDER_ATTEMPT' WHERE id=1"
+            )
+            self.journal.event(
+                db, now, "ATTEMPT_UNCERTAIN", {"error_class": type(exc).__name__}, client_id
+            )
+
+    async def dispatch_async(self, client_id, venue: DurableFixtureVenue, *, now, packet=None):
+        """Isolated bounded fake submission. No generic or real broker adapter exists."""
+        from app.execution.process import run_fixture_process
+
+        _clock(now)
+        if type(venue) is not DurableFixtureVenue:
+            raise ValueError("Only the built-in durable fixture venue is supported")
+        try:
+            self._bind_fixture(venue, now=now)
+            process_context = {
+                "adapter": "DURABLE_FIXTURE_PROCESS",
+                "venue_id": venue.venue_id,
+                "timeout_seconds": self.limits.process_timeout_seconds,
+            }
+            intent = self._begin_attempt(
+                client_id,
+                venue.account_id,
+                now=now,
+                packet=packet,
+                process_context=process_context,
+            )
+        except ExecutionBlocked as exc:
+            with self.journal.write() as db:
+                self.journal.event(db, now, "DISPATCH_BLOCKED", {"reason": str(exc)}, client_id)
+            raise
+        if not isinstance(intent, Intent):
+            return intent
+        try:
+            result = await run_fixture_process(
+                venue,
+                now=now,
+                intent=intent,
+                timeout_seconds=self.limits.process_timeout_seconds,
+                deadline_monotonic=process_context["deadline_monotonic"],
+            )
+            return self._acknowledge(client_id, result.order_id, now=now)
+        except BaseException as exc:
+            # The subprocess has been terminated/reaped before uncertainty is persisted.
+            self._uncertain(client_id, exc, now=now)
+            if isinstance(exc, asyncio.CancelledError) or not isinstance(exc, Exception):
+                raise
+            return OrderState.UNKNOWN
+
+    async def reconcile_fixture(self, venue: DurableFixtureVenue, *, now):
+        """Bounded complete-history fake read; failed reads never invent outcomes."""
+        from app.execution.process import run_fixture_process
+
+        _clock(now)
+        if type(venue) is not DurableFixtureVenue:
+            raise ValueError("Only the built-in durable fixture venue is supported")
+        self._bind_fixture(venue, now=now)
+        try:
+            result = await run_fixture_process(
+                venue, now=now, timeout_seconds=self.limits.process_timeout_seconds
+            )
+        except BaseException as exc:
+            self.halt("FIXTURE_READ_FAILED", now=now)
+            with self.journal.write() as db:
+                self.journal.event(
+                    db, now, "FIXTURE_READ_FAILED", {"error_class": type(exc).__name__}
+                )
+            raise
+        return self.reconcile(result.snapshot, now=now)
 
     def halt(self, reason: str, *, now):
         _clock(now)

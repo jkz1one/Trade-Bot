@@ -1,6 +1,6 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
-## Current checkpoint — 2026-10-06 UTC
+## Current checkpoint — 2026-10-07 UTC
 
 Branch: `slice2/robinhood-read-shadow`. PR #1 remains draft. `main` remains untouched.
 The authenticated core path is verified: strict OpenAI output, real Robinhood reads,
@@ -20,8 +20,9 @@ evidence remain deployment gates. LIVE is disabled.
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **377 tests in 10.80 seconds**, including 40 execution
-lifecycle tests, 26 position-supervision tests and 35 execution-limit/dispatch tests.
+full local suite passed **399 tests in 31.77 seconds**, including 40 execution
+lifecycle tests, 26 position-supervision tests, 35 execution-limit/dispatch tests
+and 22 isolated-process/durable-venue tests.
 The deployed application release remains the one recorded below.
 
 ## Target-host evidence — 2026-10-06 UTC
@@ -170,6 +171,41 @@ Remaining work includes bounded executor deadlines, actual broker identity/order
 contract proof, real account/capital enablement gates, operator recovery/alerts,
 deployed supervision and integrated failure verification. The pending market-session
 and host evidence above remains separate.
+
+## Offline bounded executor follow-up — 2026-10-07 UTC
+
+Fresh canonical branch state matched `24069cd6d523a2dd7cbe3f743aa80cce8c888d63`
+before editing. Isolated submission/read calls now use only the built-in durable
+fake venue, separate from engine and server experiment databases. Acceptance and
+complete order/fill/account truth persist independently across process deaths.
+The journal binds a venue UUID/account and rejects replacement/transport bypass.
+Write-ahead receipts precede launch; the frozen monotonic process deadline is also
+capped by the intent's remaining admission lifetime and checked before acceptance.
+
+Timeout, crash, lost/malformed/oversized acknowledgment and cancellation preserve
+UNKNOWN/reservation/halt rather than retrying. Cleanup terminates, escalates if needed,
+drains and reaps the child even under repeated cancellation or cancellation during
+launch. The child receives no broker/model credentials or LIVE settings. Parent-death
+checks stop diagnostic fake stalls while already accepted orders remain durable.
+Failed complete-history reads halt without fabricating account or terminal evidence.
+
+Verification: **399 tests passed in 31.77s** on Linux CPython 3.12.14, including
+**22 new process/venue tests in 20.95s**. Tests use real children, native timeout/
+SIGTERM-ignore/crash faults, cancellation races, an abrupt parent `os._exit(95)` and
+reaped orphan child, bounded short admission lease, immutable venue binding, safe
+database isolation and a saved end-to-end partial-entry/protective-exit scenario.
+The Linux parent-death test owns/reaps its orphan using a temporary test-process
+subreaper flag; this does not change a host service or the deployed server.
+Ruff checks/format checks, dependency and whitespace checks passed. The wheel
+installed outside the repo and its optimized-Python `deadline-run` saved a timeout,
+two simulated fills, terminal orders and a flat final account; read-only reporting
+passed. No broker/model calls, credential loading or server changes occurred.
+
+Estimated v1 execution-engine completeness: **about 70%**, a rough component estimate.
+Remaining: actual broker identity/order/fill/deadline contract verification, real-account
+enablement/capital gates, authenticated operator recovery and alerts, deployed
+supervision and integrated failure testing. This is not LIVE-readiness or profitability
+evidence; the previously listed host and market-session gates still apply.
 
 ## Sequential synthetic portfolio and build hardening
 

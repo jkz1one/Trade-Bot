@@ -36,12 +36,14 @@ class ExecutionJournal:
                 "execution_fills",
                 "execution_events",
                 "execution_snapshots",
+                "execution_fixture_binding",
                 "sqlite_sequence",
             }
             if tables - allowed:
                 raise ValueError("Execution rehearsal requires a separate database")
             # Individual statements preserve the surrounding BEGIN IMMEDIATE.
             for sql in (
+                "CREATE TABLE IF NOT EXISTS execution_fixture_binding (id INTEGER PRIMARY KEY CHECK(id=1), venue_id TEXT NOT NULL, account_id TEXT NOT NULL)",
                 (
                     "CREATE TABLE IF NOT EXISTS execution_control (id INTEGER PRIMARY KEY CHECK(id=1), "
                     "config_json TEXT NOT NULL, ledger_json TEXT NOT NULL, halted INTEGER NOT NULL, "
@@ -118,11 +120,19 @@ class ExecutionJournal:
         with self.read() as db:
             c = db.execute("SELECT * FROM execution_control WHERE id=1").fetchone()
             orders = db.execute("SELECT * FROM execution_orders ORDER BY rowid").fetchall()
+            binding = None
+            if db.execute(
+                "SELECT 1 FROM sqlite_master WHERE name='execution_fixture_binding'"
+            ).fetchone():
+                binding = db.execute(
+                    "SELECT venue_id,account_id FROM execution_fixture_binding WHERE id=1"
+                ).fetchone()
             return {
                 "mode": "EXECUTION_REHEARSAL",
                 "network_calls": False,
                 "live_enabled": False,
                 "config": json.loads(c["config_json"]),
+                "fixture_binding": dict(binding) if binding else None,
                 "halted": bool(c["halted"]),
                 "halt_reason": c["halt_reason"],
                 "issues": json.loads(c["issues_json"]),

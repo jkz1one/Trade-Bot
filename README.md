@@ -23,7 +23,8 @@ An offline [execution lifecycle rehearsal](docs/EXECUTION_REHEARSAL.md) now test
 approved intents, partial fills, uncertain acknowledgments, restart recovery,
 deterministic stop/session exits and a persistent dispatch halt using a local fake
 venue. Frozen account/dollar limits and fresh-market dispatch reapproval also pass
-offline verification. It has no broker write adapter and
+offline verification. A separate durable fake venue now verifies killable submission/read
+deadlines and cancellation/crash recovery. It has no broker write adapter and
 does not change the deployed SHADOW experiment.
 
 ## Slice 2 — Robinhood read / SHADOW

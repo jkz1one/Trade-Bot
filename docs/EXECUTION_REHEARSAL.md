@@ -14,7 +14,8 @@ universe, XNYS regular-session boundary, share precision, entry limits, cooldown
 original invalidation and one-position restrictions. HOLD creates an audit event
 and no order. The Trader Agent still receives no execution tools.
 
-Only `LocalFixtureVenue` can be attached. There is no generic network transport,
+Only the built-in in-memory `LocalFixtureVenue` and isolated `DurableFixtureVenue`
+test drivers can be attached. There is no generic network transport,
 broker submission/cancellation method, credential loading or deployment switch.
 The constructor requires PAPER and LIVE disabled. The standalone fixture command
 also fixes those values even if environment variables request LIVE.
@@ -135,6 +136,50 @@ continuous monitor or deployed service. The offline caller must supply observati
 and perform the distinct fixture dispatch/reconciliation steps. No broker cancellation,
 network calls or current experiment policy changes are introduced.
 
+## Isolated durable-venue deadline rehearsal
+
+`dispatch_async` accepts only the exact built-in `DurableFixtureVenue` class. It uses
+the same saved decision, fresh-market reapproval, fixed limits and write-ahead attempt
+as the in-memory harness. A dedicated fake-venue SQLite file persists acceptance and
+complete order/fill/account truth independently of the executor process. Creation is
+exclusive/private; existing application or journal databases cannot become venues.
+The journal binds one immutable venue UUID/account identity before isolated operations.
+A replacement database, transport switch or synchronous bypass is rejected.
+
+The worker receives only one validated local fake operation and its fixed intent,
+clock, venue identity and acceptance deadline. It has no brokerage transport or
+model tools. Its environment excludes model/broker secrets, OAuth/settings variables
+and LIVE flags. Startup, operation and bounded response parsing share one monotonic
+deadline, frozen in the envelope (default 10 seconds, maximum 30). Submission is
+further bounded by the admitted intent's remaining lifetime. The saved attempt receipt
+includes the adapter, venue UUID, effective timeout and monotonic deadline. The child
+checks that lease after acquiring its SQLite transaction, immediately before acceptance.
+These monotonic values are local process evidence, not replayable admission on restart.
+
+Timeout, malformed/oversized output, lost acknowledgment, process crash and cancellation
+retain uncertainty and reservation ownership. Cleanup signals only the isolated child's
+process group, escalates from SIGTERM to SIGKILL after one second, drains stdout and
+reaps before returning. Repeated cancellation and cancellation during launch cannot
+skip cleanup; cancellation is propagated after persisting uncertainty. Fake workers
+also check parent identity before acceptance and during diagnostic stalls, so parent
+death cannot leave a stalled fake child indefinitely. This does not cancel an accepted
+order. Accepted fake orders remain durable and can later fill.
+
+`reconcile_fixture` performs a bounded isolated complete-history read. Failed reads
+latch a halt without changing prior ledger/snapshot evidence. A later valid read
+accounts for truth but does not automatically resume execution. Missing attempted
+orders are still insufficient to release a reservation, even after a known local
+timeout. Reopen/reconcile both databases, prove terminal outcomes, supervise owned
+risk and explicitly resume. The existing in-memory sync API remains a scripted test
+harness; it cannot bypass a journal bound to the process driver.
+
+The deadline applies to isolated fixture I/O; serialized local journal transactions
+retain their 10-second SQLite lock timeout. OS launch/reaping failures must remain
+blocking rather than permit another attempt with an unowned process. These tests
+prove the local fixture boundary, not actual broker SDK deadlines or order semantics.
+New timeout policy fields require a fresh offline journal; prior journals remain
+read-only reportable without an authority migration.
+
 ## Standalone verification
 
 From the updated development checkout:
@@ -142,6 +187,10 @@ From the updated development checkout:
 ```bash
 python -m app.execution.cli run --db execution-rehearsal.db
 python -m app.execution.cli report --db execution-rehearsal.db
+
+# Use a different new file for the durable, bounded-process scenario.
+python -m app.execution.cli deadline-run --db execution-deadline.db
+python -m app.execution.cli report --db execution-deadline.db
 ```
 
 `run` exclusively creates a new private file and refuses to overwrite one. It uses
@@ -154,6 +203,12 @@ scripted cash increase is not evidence of trading signal or profitability.
 `report` opens the journal read-only without initialization or network calls. A
 missing database is not created. Reports include the persisted control state,
 orders, fills and the last 100 audit events.
+
+`deadline-run` also exclusively creates `execution-deadline.db.venue.db`, then times
+out after durable fake acceptance, reopens both stores, proves no retry, reconciles
+a partial fill and scripted canceled remainder, supervises a stop and explicitly
+resumes before a bounded protective close. Both resulting fills are simulated.
+Neither file is the server experiment or a live account.
 
 Tests cover duplicate/concurrent dispatch, crash/lost-ack recovery, partial/terminal
 outcomes, immutable evidence, quote/session checks, fees/cash, one position, entry
@@ -187,10 +242,10 @@ cancellation and ambiguous-response semantics. A fresh open-orders list alone is
 insufficient. This fixture snapshot requires complete history for all attempted
 orders and known fills, including terminal outcomes; a future adapter must supply
 and prove that evidence without truncation or guessed identities. The in-memory
-fixture venue survives journal reopen only within the rehearsal process and is not
-a broker restart simulator or a persistent brokerage service.
+fixture survives journal reopen only within its process; the separate durable fixture
+persists independently. Neither is real brokerage capability evidence.
 
-Then implement bounded executor deadlines, independent live enablement, actual-account
+Then verify deadlines with the actual broker adapter and implement independent live enablement, actual-account
 identity pinning and verified bankroll controls, real-adapter owned-position reconciliation,
 deployed stop/session supervision, model-cost integration, alerts and authenticated operator
 recovery. Test these independently before connecting them to a live capability.

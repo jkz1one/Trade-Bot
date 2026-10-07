@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import sqlite3
 from datetime import UTC, datetime, timedelta
@@ -11,9 +12,11 @@ from pathlib import Path
 
 from app.config import Settings
 from app.domain.models import AccountState, Candidate, MarketPacket, Quote, TradeDecision
+from app.execution.durable_fixture import DurableFixtureVenue
 from app.execution.engine import ExecutionBlocked, ExecutionEngine
 from app.execution.fixture import LocalFixtureVenue
 from app.execution.journal import ExecutionJournal
+from app.execution.models import ExecutionLimits
 
 
 def _packet(at, *, exiting=False):
@@ -55,11 +58,16 @@ def _require(value):
         raise RuntimeError("Execution fixture verification failed")
 
 
+def _reserve_file(path):
+    # Exclusive local file creation; run before launching any fixture child.
+    with path.open("xb"):
+        path.chmod(0o600)
+
+
 def run_rehearsal(path):
     path = Path(path)
     # Reserve a new private file exclusively. No resets, migrations, or experiment import.
-    with path.open("xb"):
-        path.chmod(0o600)
+    _reserve_file(path)
     settings = Settings(
         _env_file=None,
         mode="PAPER",
@@ -114,14 +122,80 @@ def run_rehearsal(path):
     return report
 
 
+async def run_deadline_rehearsal(path):
+    """Lost acknowledgment with independent durable venue evidence and bounded children."""
+    path = Path(path)
+    _reserve_file(path)
+    venue = DurableFixtureVenue(
+        str(path) + ".venue.db", capital=Decimal(10), fault="STALL_AFTER_ACCEPT"
+    )
+    settings = Settings(
+        _env_file=None,
+        mode="PAPER",
+        live_enabled=False,
+        starting_capital=10,
+        initial_symbols=["SPY"],
+        min_order_notional=1,
+        quote_max_age_seconds=90,
+        max_daily_entries=8,
+        exit_cooldown_minutes=15,
+    )
+    limits = ExecutionLimits(
+        max_entry_notional=10,
+        max_position_notional=10,
+        total_loss_limit=10,
+        daily_loss_limit=10,
+        process_timeout_seconds=2,
+    )
+    at = datetime(2026, 10, 6, 15, tzinfo=UTC)
+    engine = ExecutionEngine(path, settings, limits=limits)
+    # Initial read is fault-free; the configured fault applies only to local acceptance.
+    _require((await engine.reconcile_fixture(venue, now=at))["reconciled"])
+    entry = engine.prepare("deadline-entry", _decision(), _packet(at), now=at)
+    _require(
+        await engine.dispatch_async(entry.client_id, venue, now=at, packet=_packet(at)) == "UNKNOWN"
+    )
+    _require(venue.submit_count == 1 and engine.journal.report()["halted"])
+    venue = DurableFixtureVenue(venue.path)
+    engine = ExecutionEngine(path, settings, limits=limits)
+    _require(await engine.dispatch_async(entry.client_id, venue, now=at) == "UNKNOWN")
+    _require(venue.submit_count == 1)
+    _require((await engine.reconcile_fixture(venue, now=at))["reconciled"])
+    at += timedelta(seconds=1)
+    half = (entry.quantity / 2).quantize(Decimal(".00000001"))
+    venue.fill(entry.client_id, half, Decimal(10), at, fill_id="deadline-partial")
+    venue.terminal(entry.client_id, "CANCELED", at)
+    _require((await engine.reconcile_fixture(venue, now=at))["new_fills"] == 1)
+    p = _packet(at)
+    p.candidates[0].quote.bid = Decimal("9.4")
+    p.candidates[0].quote.ask = Decimal("9.41")
+    _require(engine.supervise(p, now=at)["exit_reason"] == "INVALIDATION")
+    engine.resume("complete fixture evidence and current stop supervision", now=at)
+    exit_intent = engine.prepare_protective_exit(p, now=at)
+    _require(await engine.dispatch_async(exit_intent.client_id, venue, now=at, packet=p) == "OPEN")
+    venue.fill(exit_intent.client_id, half, exit_intent.limit_price, at, fill_id="deadline-exit")
+    _require((await engine.reconcile_fixture(venue, now=at))["new_fills"] == 1)
+    report = engine.journal.report()
+    _require(venue.submit_count == 2 and report["ledger"]["position"] is None)
+    report.update(
+        status="OK",
+        measurement_note="Durable fake venue and scripted quotes; deadline/recovery verification, never broker execution or trading performance.",
+    )
+    return report
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["run", "report"])
+    parser.add_argument("command", choices=["run", "deadline-run", "report"])
     parser.add_argument("--db", default="execution-rehearsal.db")
     args = parser.parse_args(argv)
     try:
         report = (
-            run_rehearsal(args.db) if args.command == "run" else ExecutionJournal(args.db).report()
+            run_rehearsal(args.db)
+            if args.command == "run"
+            else asyncio.run(run_deadline_rehearsal(args.db))
+            if args.command == "deadline-run"
+            else ExecutionJournal(args.db).report()
         )
         print(json.dumps(report, indent=2))
         return 0

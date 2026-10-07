@@ -135,6 +135,7 @@ class ExecutionLimits(Contract):
     max_position_notional: Decimal = Field(gt=0)
     total_loss_limit: Decimal = Field(gt=0)
     daily_loss_limit: Decimal = Field(gt=0)
+    process_timeout_seconds: float = Field(default=10, gt=0, le=30)
 
     @model_validator(mode="after")
     def bounded(self):
