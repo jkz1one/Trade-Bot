@@ -20,8 +20,8 @@ evidence remain deployment gates. LIVE is disabled.
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **954 tests in 134.92 seconds with warnings treated as errors**,
-including the previous 926 cases and 28 companion attachment/native control cases. Interrupted
+full local suite passed **986 tests in 157.21 seconds with warnings treated as errors**,
+including the previous 954 cases and 32 independent alert-service cases. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
 The source-bound market-only PAPER feed now connects through a bounded headless
@@ -31,6 +31,10 @@ native CLI SIGTERM proofs passed with local MCP fixtures.
 The operator API now has a native TLS companion CLI which attaches without trader
 startup recovery; installed-package tests preserved active SUBMITTING state, applied
 a signed HALT once and drained actual SIGTERM with exit 0.
+The independent alert CLI now uses the same safe attachment, retains lifetime
+ownership and delivers halt alerts after the trader stops. All 91 installed
+alert cases passed; actual native SIGTERM drained bounded work and restart did not
+replay confirmed delivery. This is local TLS evidence, not external notifications.
 Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticated
 collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
@@ -1030,6 +1034,68 @@ market/model validation, host-failure/restore proof and real broker capabilities
 This adds no broker write adapter, LIVE switch or current server deployment. The
 deployed SHADOW release/virtual-v1, main and LIVE state remain unchanged. Do not rebuild
 the deployed SHADOW image for this isolated engine component. Operations:
+[PAPER_RUNTIME.md](PAPER_RUNTIME.md).
+
+Estimated v1 execution-engine completeness: **about 89%**, a rough component estimate
+excluding LIVE readiness and profitability.
+
+## Independent alert-service follow-up — 2026-10-07 UTC
+
+The HTTPS delivery component now has an independent native `app.execution.alert_cli`
+with run/once/report commands. A halted, failed or stopped trader cannot terminate
+this separate sender. It reconstructs only the exact existing enrollment from a
+bounded frozen policy, validates the retained authority pair and current engine
+configuration, and never invokes trading-owner recovery or the enrollment constructor.
+Starting/reporting creates no execution tables, changes no permissions and preserves
+PREPARED/SUBMITTING/UNKNOWN orders, reservations and retained halts. Missing enrollment,
+changed/foreign policy, CA hash mismatch and invalid authority fail without repair.
+Report is read-only, bounded and does not read the sink token or contact the network.
+
+New runtime populations may explicitly enroll an exact HTTPS sink with
+`--alert-origin --alert-token-file` and optional `--alert-ca-file`, validated before
+population creation. Private tokens and optional CA trust retain existing transport
+requirements. Paths/origin/limits are frozen; the sender has no CLI/environment
+reconfiguration, auto-enrollment, rearm or resume option. Existing/default populations
+and the deployed SHADOW experiment are unchanged. Initialization performs no network
+calls. The sink must implement the existing exact ID/hash acceptance contract.
+
+The private single-host alert lease now spans the entire service, including idle
+polls, admission, transport and child cleanup. Runtime/control ownership remains
+independent. Duplicate services fail before attachment; one-shot delivery retains
+BUSY compatibility. Native SIGINT/SIGTERM drains the current bounded attempt and
+starts no further sends. Cancellation of an embedding caller retains the lease
+through native child cleanup even under repeated cancellation, leaving uncertain
+IN_FLIGHT evidence for the existing conservative retry lease. Stable identities,
+exact receipts, retry/backoff limits, exhaustion and explicit reviewed rearm are
+unchanged. Exhausted older alerts do not starve newly due alerts. Delivery never
+acknowledges an alert, resolves orders, releases reservations or resumes trading;
+existing overdue/exhausted backlog gates and protective-exit rules remain intact.
+
+Verification: **986 tests passed in 157.21s with warnings treated as errors**. This adds 32 focused cases covering attachment,
+retained trading state/pair bytes, missing/changed policy, authority/CA boundaries,
+new-only initialization, credentials, independent lifetime ownership, exhaustion,
+continued halted delivery, repeated cancellation, privacy and native shutdown.
+Scoped fatal-error/import lint, formatting, pip check and whitespace checks passed.
+The wheel installed outside the checkout passed all **91 alert transport/service
+cases in 58.05s with warnings treated as errors**. Wheel SHA-256:
+`2df1b57a15770c9b41e3690e6ce064dc27a1df5427d6e7d88853d2edc127995f`.
+
+The installed native sender delivered a retained halt alert to a verified loopback
+TLS contract sink while an order remained SUBMITTING. Duplicate run/once admission
+was rejected without changing either retained file or sending another request.
+Actual SIGTERM returned exit 0 and released the lifetime lease. Restart did not
+replay the confirmed alert; read-only report left both files unchanged without a
+sink token. The unresolved order/halt remained intact under VERIFIED authority.
+A second actual native proof signalled during a stalled request, drained its bounded
+failure to RETRY, returned exit 0 and freed ownership. Zero remote broker/model calls
+occurred. Sink acceptance is not proof of a human notification.
+
+Remaining: independent host/service provisioning, external notification/archive
+contracts and credential lifecycle, authenticated market/model timing and billing,
+host-failure/restore validation and broker capabilities. This adds no daemon wrapper,
+real broker write adapter, LIVE enablement or server change. The deployed release
+remains `de5dd1c7bd3a2d3b85a2d6bb7f624e0d3a3f9245`. Do not rebuild the deployed
+SHADOW image for this isolated PAPER component. Operations:
 [PAPER_RUNTIME.md](PAPER_RUNTIME.md).
 
 Estimated v1 execution-engine completeness: **about 89%**, a rough component estimate

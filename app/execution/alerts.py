@@ -10,6 +10,7 @@ import os
 import stat
 import sys
 import time
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Literal
@@ -35,6 +36,48 @@ def ca_bytes(path):
         if not stat.S_ISREG(info.st_mode) or not 0 < info.st_size <= 1024 * 1024:
             raise ValueError("A bounded regular CA file is required")
         return os.read(fd, 1024 * 1024 + 1)
+    finally:
+        os.close(fd)
+
+
+class AlertAlreadyRunning(RuntimeError):
+    pass
+
+
+@contextmanager
+def alert_delivery_lease(journal):
+    """Single-host ownership includes idle polling and native child cleanup."""
+    journal = Path(journal).expanduser().absolute()
+    retained = os.open(journal, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    try:
+        info = os.fstat(retained)
+        if (
+            not stat.S_ISREG(info.st_mode)
+            or stat.S_IMODE(info.st_mode) != 0o600
+            or info.st_uid != os.geteuid()
+        ):
+            raise ValueError("A private owned existing execution journal is required")
+        journal = journal.resolve(strict=True)
+    finally:
+        os.close(retained)
+    fd = os.open(
+        str(journal) + ".alerts.lock",
+        os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK,
+        0o600,
+    )
+    try:
+        info = os.fstat(fd)
+        if (
+            not stat.S_ISREG(info.st_mode)
+            or stat.S_IMODE(info.st_mode) != 0o600
+            or info.st_uid != os.geteuid()
+        ):
+            raise ValueError("Private current-owner alert lock required")
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise AlertAlreadyRunning("An alert service already owns this journal") from None
+        yield journal
     finally:
         os.close(fd)
 
@@ -158,26 +201,10 @@ async def _send(request):
 
 class AlertDelivery:
     def __init__(self, engine, config, *, token_file, ca_file=None, clock=utc_now):
-        if type(engine) is not ExecutionEngine:
-            raise ValueError("Only the built-in fixture execution engine is supported")
-        self.engine, self.clock = engine, clock
-        self.config = AlertConfig.model_validate(config.model_dump())
-        self.token_file = str(Path(token_file).expanduser().absolute())
-        self.ca_file = str(Path(ca_file).expanduser().absolute()) if ca_file else None
-        self.ca_sha256 = hashlib.sha256(ca_bytes(self.ca_file)).hexdigest() if ca_file else None
+        self._configure(engine, config, token_file=token_file, ca_file=ca_file, clock=clock)
         now = clock()
         _clock(now)
         now = now.astimezone(UTC)
-        # Enrollment is explicit, never adopts a damaged or unfenced journal.
-        with engine.journal.read() as db:
-            if (
-                restore.status(db, restore.authority_path(engine.journal.path))["status"]
-                != "VERIFIED"
-            ):
-                raise ValueError("Verified restore authority required for alert delivery")
-            self.journal_id = db.execute(
-                "SELECT authority_id FROM execution_restore_binding WHERE id=1"
-            ).fetchone()[0]
         with engine.journal.write() as db:
             engine._control(db)
             db.execute(
@@ -200,6 +227,60 @@ class AlertDelivery:
                 engine.journal.event(
                     db, now, "ALERT_DELIVERY_ENROLLED", {"journal_id": self.journal_id}
                 )
+
+    def _configure(self, engine, config, *, token_file, ca_file, clock):
+        if type(engine) is not ExecutionEngine:
+            raise ValueError("Only the built-in fixture execution engine is supported")
+        self.engine, self.clock = engine, clock
+        self.config = AlertConfig.model_validate(config.model_dump())
+        self.token_file = str(Path(token_file).expanduser().absolute())
+        self.ca_file = str(Path(ca_file).expanduser().absolute()) if ca_file else None
+        self.ca_sha256 = hashlib.sha256(ca_bytes(self.ca_file)).hexdigest() if ca_file else None
+        _clock(clock())
+        # Enrollment is explicit, never adopts a damaged or unfenced journal.
+        with engine.journal.read() as db:
+            if (
+                restore.status(db, restore.authority_path(engine.journal.path))["status"]
+                != "VERIFIED"
+            ):
+                raise ValueError("Verified restore authority required for alert delivery")
+            self.journal_id = db.execute(
+                "SELECT authority_id FROM execution_restore_binding WHERE id=1"
+            ).fetchone()[0]
+
+    @classmethod
+    def attach_existing(cls, engine, *, clock=utc_now):
+        """Read-only attachment; never enroll, migrate or recover trading attempts."""
+        if cls is not AlertDelivery or type(engine) is not ExecutionEngine:
+            raise ValueError("Only built-in alert attachment is supported")
+        with engine.journal.read() as db:
+            names = {
+                row[0]
+                for row in db.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name IN "
+                    "('execution_alert_delivery','execution_alert_attempts')"
+                )
+            }
+            if len(names) != 2:
+                raise ValueError("Explicit alert enrollment required")
+            row = db.execute(
+                "SELECT CASE WHEN length(CAST(policy_json AS BLOB))<=16384 "
+                "THEN policy_json ELSE NULL END FROM execution_alert_delivery WHERE id=1"
+            ).fetchone()
+            if not row or not row[0]:
+                raise ValueError("Bounded enrolled alert policy required")
+            policy = json.loads(row[0])
+        delivery = object.__new__(cls)
+        delivery._configure(
+            engine,
+            AlertConfig(origin=policy["origin"], limits=policy["limits"]),
+            token_file=policy["token_file"],
+            ca_file=policy["ca_file"],
+            clock=clock,
+        )
+        with engine.journal.read() as db:
+            delivery._state(db)
+        return delivery
 
     def _policy(self):
         return json.dumps(
@@ -351,92 +432,86 @@ class AlertDelivery:
             )
 
     async def deliver_once(self):
-        # Nonblocking single-host lifetime ownership spans every await and child cleanup.
-        lock_path = str(self.engine.journal.path) + ".alerts.lock"
-        fd = os.open(lock_path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
         try:
-            info = os.fstat(fd)
-            if (
-                not stat.S_ISREG(info.st_mode)
-                or stat.S_IMODE(info.st_mode) != 0o600
-                or info.st_uid != os.geteuid()
-            ):
-                raise ValueError("Private regular alert lock required")
-            try:
-                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            except BlockingIOError:
-                return {"status": "BUSY"}
-            now = self.clock()
-            _clock(now)
-            now = now.astimezone(UTC)
-            with self.engine.journal.read() as db:
-                self._state(db)
-                fence = restore.status(db, restore.authority_path(self.engine.journal.path))
-                if fence["status"] != "VERIFIED":
-                    raise ValueError(fence.get("reason", "Verified restore authority required"))
-                due = db.execute(
-                    "SELECT 1 FROM execution_alerts a LEFT JOIN execution_alert_attempts d ON d.event_sequence=a.event_sequence WHERE d.status IS NULL OR (d.status IN ('RETRY','IN_FLIGHT') AND d.next_at<=?) LIMIT 1",
-                    (now.isoformat(),),
-                ).fetchone()
-            if due is None:
-                return {"status": "IDLE"}
-            claimed = self._claim(now)
-            if claimed is None:
-                return {"status": "IDLE"}
-            if claimed.get("exhausted"):
-                return {"status": "EXHAUSTED"}
-            # Deadline starts at admission, before process creation.
-            request = AlertRequest(
-                config=self.config,
-                message=claimed["message"],
-                payload_sha256=claimed["digest"],
-                token_file=self.token_file,
-                ca_file=self.ca_file,
-                ca_sha256=self.ca_sha256,
-                parent_pid=os.getpid(),
-                deadline_monotonic=time.monotonic() + self.config.limits.timeout_seconds,
+            with alert_delivery_lease(self.engine.journal.path):
+                return await self._deliver_owned()
+        except AlertAlreadyRunning:
+            return {"status": "BUSY"}
+
+    async def _deliver_owned(self):
+        now = self.clock()
+        _clock(now)
+        now = now.astimezone(UTC)
+        with self.engine.journal.read() as db:
+            self._state(db)
+            fence = restore.status(db, restore.authority_path(self.engine.journal.path))
+            if fence["status"] != "VERIFIED":
+                raise ValueError(fence.get("reason", "Verified restore authority required"))
+            due = db.execute(
+                "SELECT 1 FROM execution_alerts a LEFT JOIN execution_alert_attempts d ON d.event_sequence=a.event_sequence WHERE d.status IS NULL OR (d.status IN ('RETRY','IN_FLIGHT') AND d.next_at<=?) LIMIT 1",
+                (now.isoformat(),),
+            ).fetchone()
+        if due is None:
+            return {"status": "IDLE"}
+        claimed = self._claim(now)
+        if claimed is None:
+            return {"status": "IDLE"}
+        if claimed.get("exhausted"):
+            return {"status": "EXHAUSTED"}
+        # Deadline starts at admission, before process creation.
+        request = AlertRequest(
+            config=self.config,
+            message=claimed["message"],
+            payload_sha256=claimed["digest"],
+            token_file=self.token_file,
+            ca_file=self.ca_file,
+            ca_sha256=self.ca_sha256,
+            parent_pid=os.getpid(),
+            deadline_monotonic=time.monotonic() + self.config.limits.timeout_seconds,
+        )
+        try:
+            await _send(request)
+        except asyncio.CancelledError:
+            # Preserve IN_FLIGHT until its conservative lease expires; never assume nondelivery.
+            raise
+        except Exception:  # noqa: BLE001 -- no endpoint/credential/response exception text in audit
+            status = (
+                "EXHAUSTED"
+                if claimed["batch_attempts"] >= self.config.limits.max_attempts
+                else "RETRY"
             )
-            try:
-                await _send(request)
-            except asyncio.CancelledError:
-                # Preserve IN_FLIGHT until its conservative lease expires; never assume nondelivery.
-                raise
-            except Exception:  # noqa: BLE001 -- no endpoint/credential/response exception text in audit
-                status = (
-                    "EXHAUSTED"
-                    if claimed["batch_attempts"] >= self.config.limits.max_attempts
-                    else "RETRY"
-                )
-            else:
-                status = "DELIVERED"
-            done = self.clock()
-            _clock(done)
-            done = done.astimezone(UTC)
-            with self.engine.journal.write() as db:
-                self._state(db)
-                changed = db.execute(
-                    "UPDATE execution_alert_attempts SET status=?,completed_at=? WHERE event_sequence=? AND claim_id=? AND status='IN_FLIGHT'",
-                    (status, done.isoformat(), request.message.event_sequence, claimed["claim"]),
-                ).rowcount
-                if changed != 1:
-                    raise ValueError("Alert claim ownership changed")
-                self.engine.journal.event(
-                    db,
-                    done,
-                    "ALERT_DELIVERY_RESULT",
-                    {
-                        "event_sequence": request.message.event_sequence,
-                        "attempt": claimed["attempts"],
-                        "status": status,
-                    },
-                )
-            return {"status": status, "event_sequence": request.message.event_sequence}
-        finally:
-            os.close(fd)
+        else:
+            status = "DELIVERED"
+        done = self.clock()
+        _clock(done)
+        done = done.astimezone(UTC)
+        with self.engine.journal.write() as db:
+            self._state(db)
+            changed = db.execute(
+                "UPDATE execution_alert_attempts SET status=?,completed_at=? WHERE event_sequence=? AND claim_id=? AND status='IN_FLIGHT'",
+                (status, done.isoformat(), request.message.event_sequence, claimed["claim"]),
+            ).rowcount
+            if changed != 1:
+                raise ValueError("Alert claim ownership changed")
+            self.engine.journal.event(
+                db,
+                done,
+                "ALERT_DELIVERY_RESULT",
+                {
+                    "event_sequence": request.message.event_sequence,
+                    "attempt": claimed["attempts"],
+                    "status": status,
+                },
+            )
+        return {"status": status, "event_sequence": request.message.event_sequence}
 
     async def run(self, stop_event):
+        with alert_delivery_lease(self.engine.journal.path):
+            await self._run_owned(stop_event)
+
+    async def _run_owned(self, stop_event):
         while not stop_event.is_set():
-            await self.deliver_once()
+            await self._deliver_owned()
             try:
                 await asyncio.wait_for(stop_event.wait(), self.config.limits.poll_seconds)
             except TimeoutError:

@@ -34,6 +34,9 @@ def initialize(
     market_oauth_file=None,
     continuous_market=False,
     operator_key_file=None,
+    alert_origin=None,
+    alert_token_file=None,
+    alert_ca_file=None,
 ):
     if (
         capital <= 0
@@ -51,6 +54,25 @@ def initialize(
         from app.execution.control_api import _secret
 
         operator_key = bytes.fromhex(_secret(Path(operator_key_file).expanduser().absolute()))
+    alert_config = None
+    if (alert_origin is None) != (alert_token_file is None) or (
+        alert_ca_file is not None and alert_origin is None
+    ):
+        raise ValueError("Alert enrollment requires an explicit origin and token file")
+    if alert_origin is not None:
+        import ssl
+
+        from app.execution.alert_worker import private_token
+        from app.execution.alerts import AlertConfig, ca_bytes
+
+        alert_config = AlertConfig(origin=alert_origin)
+        alert_token_file = str(Path(alert_token_file).expanduser().absolute())
+        private_token(alert_token_file)
+        if alert_ca_file:
+            alert_ca_file = str(Path(alert_ca_file).expanduser().absolute())
+            ssl.create_default_context().load_verify_locations(
+                cadata=ca_bytes(alert_ca_file).decode("ascii")
+            )
     policy = CostPolicy(total_budget=total_budget, daily_budget=daily_budget) if key_file else None
     source = None
     if market_oauth_file:
@@ -78,6 +100,10 @@ def initialize(
             from app.execution.operator import OperatorControl
 
             OperatorControl.enroll(engine, operator_key, now=utc_now())
+        if alert_config is not None:
+            from app.execution.alerts import AlertDelivery
+
+            AlertDelivery(engine, alert_config, token_file=alert_token_file, ca_file=alert_ca_file)
         venue = DurableFixtureVenue(directory / "venue.db", capital=capital)
         feed = DurableQuoteFeed(
             directory / "quotes.db",
@@ -195,6 +221,9 @@ def main(argv=None):
     init.add_argument("--market-oauth-file")
     init.add_argument("--continuous-market", action="store_true")
     init.add_argument("--operator-key-file")
+    init.add_argument("--alert-origin")
+    init.add_argument("--alert-token-file")
+    init.add_argument("--alert-ca-file")
     for command in ("run", "report", "publish", "collect"):
         child = sub.add_parser(command)
         child.add_argument("--directory", required=True)
@@ -214,6 +243,9 @@ def main(argv=None):
                 market_oauth_file=args.market_oauth_file,
                 continuous_market=args.continuous_market,
                 operator_key_file=args.operator_key_file,
+                alert_origin=args.alert_origin,
+                alert_token_file=args.alert_token_file,
+                alert_ca_file=args.alert_ca_file,
             )
         elif args.command == "run":
             return asyncio.run(serve(args.directory))

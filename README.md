@@ -51,6 +51,10 @@ Opt-in HTTPS alert delivery now freezes a dedicated sink, persists attempts befo
 requires an exact acceptance receipt and retries the same alert ID within a bounded batch.
 Overdue/exhausted delivery blocks new entries and model calls; governed protective exits
 retain their existing checks. Delivery never acknowledges an alert or resumes execution.
+The independent `app.execution.alert_cli` now attaches without trader recovery and
+retains its own lifetime lease, delivering halt alerts even after the trader stops.
+New populations may explicitly enroll with `init --alert-origin --alert-token-file`;
+its run/once/report commands retain existing receipt, retry and backlog gates.
 This is verified with a local TLS sink; no external notifications or server changes were made.
 Private [execution evidence checkpoints](docs/EXECUTION_CHECKPOINTS.md) now capture the
 journal/authority pair consistently, support explicit verified-TLS archive retention/retrieval,

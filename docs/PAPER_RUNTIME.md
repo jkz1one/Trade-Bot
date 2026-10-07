@@ -306,3 +306,60 @@ returning. Startup errors print only the exception class. This remains a foregro
 companion needing future host/service provisioning. Real certificate/key lifecycle,
 deployed operator recovery, authenticated data/model evidence and broker integration
 remain gates. Do not update the current deployed SHADOW image for this component.
+
+## Independent alert service
+
+A new isolated PAPER population can explicitly enroll the existing HTTPS alert
+contract at initialization. Provision the sink and a dedicated current-owner
+mode-600 regular token file first, containing 32 bytes as 64 lowercase hex digits
+and an optional trailing newline. The exact HTTPS origin and credential/optional
+CA paths become immutable journal policy. Origin and token flags must appear
+together. Invalid credentials, origins or CA certificates fail before population
+creation. Initialization performs no network calls. Existing/default populations
+are never enrolled or changed by these flags.
+
+```bash
+python -m app.execution.runtime_cli init \
+  --directory /private/alert-paper --capital 10 --symbols SPY \
+  --alert-origin https://alerts.example.org \
+  --alert-token-file /private/alert-sink.hex
+python -m app.execution.alert_cli run \
+  --journal /private/alert-paper/execution.db
+python -m app.execution.alert_cli report \
+  --journal /private/alert-paper/execution.db --limit 25
+```
+
+The example origin is a placeholder, not a provisioned notification destination.
+The sink must implement POST `/v1/alerts`, bearer authentication and the existing
+exact delivery-ID/payload-hash acceptance receipt contract; a generic webhook does
+not automatically satisfy it. An optional `--alert-ca-file` at initialization pins
+that file's hash for private TLS trust. Without it, normal system trust applies.
+The sender CLI has no destination, token, CA, enrollment, rearm or resume override.
+
+Run this sender as an independent process from the trader, with its own service
+lifecycle. It attaches read-only to existing verified enrollment and engine policy,
+without owner startup recovery, schema changes or permission changes. Starting or
+reporting preserves SUBMITTING/UNKNOWN orders, reservations and retained halts.
+Reporting reads no sink token and makes no network calls. Delivery proceeds while
+the trader is halted, stopped or failed; it never acknowledges an alert, resolves
+an order, releases a reservation or resumes execution. A private single-host alert
+lease spans idle polls, all sends and child cleanup. It is distinct from runtime
+and control leases. Duplicate run commands fail; `once` reports BUSY while a sender
+owns the lease. `once` otherwise performs one bounded existing-policy attempt.
+
+Native SIGINT/SIGTERM stops polling and drains the current bounded send before
+returning. The existing maximum 30-second attempt deadline and child cleanup still
+apply. Cancellation of an embedding caller preserves uncertain IN_FLIGHT evidence
+and retains ownership through reaping, including repeated cancellation. Restart
+uses existing retry times, stable identities and attempt caps; exhausted alerts
+need explicit trusted-local review/rearm. A newly due alert can still be sent while
+an older one is exhausted. Existing backlog health gates remain in force: overdue,
+future-dated or exhausted pending alerts block new entries/model calls, while
+protective exits retain their existing rules. Delivery receipts are distinct from
+operator acknowledgment and proof that a person received a notification.
+
+The installed native sender is verified against a local TLS contract sink. This
+adds no daemon wrapper, remote notification destination or deployed SHADOW wiring.
+Independent host/service provisioning, credential lifecycle, recipient notification
+and host-failure tests remain integration gates. Do not rebuild the current SHADOW
+image for this isolated PAPER component; LIVE stays disabled.
