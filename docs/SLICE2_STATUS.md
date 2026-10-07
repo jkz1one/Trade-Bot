@@ -20,14 +20,17 @@ evidence remain deployment gates. LIVE is disabled.
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **926 tests in 131.12 seconds with warnings treated as errors**,
-including the previous 900 cases and 26 continuous-market composition cases. Interrupted
+full local suite passed **954 tests in 134.92 seconds with warnings treated as errors**,
+including the previous 926 cases and 28 companion attachment/native control cases. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
 The source-bound market-only PAPER feed now connects through a bounded headless
 read child; explicit new-population continuous refresh now joins the PAPER runtime.
 Installed-package scheduled HOLD, repeated native reads, blocked-child cleanup and
 native CLI SIGTERM proofs passed with local MCP fixtures.
+The operator API now has a native TLS companion CLI which attaches without trader
+startup recovery; installed-package tests preserved active SUBMITTING state, applied
+a signed HALT once and drained actual SIGTERM with exit 0.
 Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticated
 collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
@@ -966,6 +969,71 @@ image for this independent population. Operations: [PAPER_RUNTIME.md](PAPER_RUNT
 
 Estimated v1 execution-engine completeness: **about 89%**, a rough engineering
 component estimate excluding LIVE readiness and profitability.
+
+## Safe companion attachment and native operator CLI follow-up — 2026-10-07 UTC
+
+Starting a second engine with the trading owner's constructor can convert an active
+local SUBMITTING attempt to UNKNOWN and halt it as interrupted. That recovery remains
+correct for actual owner startup. A new exact built-in `attach_existing` path instead
+validates the retained private journal/authority pair and frozen current engine policy
+read-only. It creates no files/tables, runs no migration/recovery, changes no permissions
+and preserves reservations, order states, halts and runtime/source ownership. Every
+later companion mutation still enters the existing paired write fence. Missing,
+unfenced, foreign, rolled-back, publicly accessible or incompatible evidence fails
+without repair/adoption. It is a trusted local handle, not broker or owner authority;
+the existing complete-pair rollback/host-owner limitations remain.
+
+The existing operator transport now has a native TLS `app.execution.control_cli`
+entry point using this attachment path, without enrolling or automatically resuming.
+Only the existing read review and signed command routes are exposed. Exact origin,
+independent current read/signing credentials, action/revision/generation/evidence
+guards, bounded request handling and signed receipt replay remain in force. A new
+population may explicitly enroll its existing private signing key during runtime init
+with `--operator-key-file`, validated before population creation. Old populations and
+default init behavior remain unchanged; the key is not copied into runtime policy,
+arguments, audit or model packets.
+
+The companion defaults to literal loopback/8788, with explicit other IP/port binds.
+It requires bounded owned certificate/key files, a mode-600 TLS key, a matching
+noninteractive key pair and native TLS 1.2 or newer. Final symlinks/FIFOs, plaintext
+origins and interactive TLS passwords fail closed. One process, no proxy-header
+authority, no WebSockets/access logs and bounded concurrency/graceful shutdown apply.
+A private single-host control lease is distinct from the trader lease, so a control
+service can coexist without reclaiming the owner. Duplicate companions fail before
+serving or changing execution state. Native SIGINT/SIGTERM handling retains the lease
+through server/loop drainage, restores handlers and returns cleanly; startup errors
+emit only a sanitized exception class.
+
+Verification: **954 tests passed in 134.92s with warnings treated as errors**, including
+28 new cases for retained order/halt/pair preservation, actual pending submission,
+owner recovery compatibility, environment/config/authority/file boundaries, new-only
+enrollment, TLS/credentials, duplicate ownership and native signed replay/shutdown.
+Scoped fatal-error/import lint, formatting, pip check and whitespace checks passed.
+The installed wheel outside the checkout passed all **85 companion/control cases**
+with warnings treated as errors. Wheel SHA-256:
+`252e8f59c864c7b64403b4d0b9329534af262da27dd41a1777078b7be4155373`.
+
+The actual installed native CLI served verified loopback HTTPS against local fixture
+state. Startup and GET review left both retained files unchanged and preserved
+SUBMITTING without a halt; anonymous review and a duplicate CLI were rejected. An
+exact signed HALT committed once and replay returned the original result with its
+replayed flag. Actual SIGTERM returned exit 0, released the control lease and left
+the unresolved reservation/SUBMITTING state intact under VERIFIED authority. An
+independent test attached during a real stalled fake-venue acceptance child without
+mutating its active attempt; its owner's later cancellation retained UNKNOWN and
+reaped the child through the existing lifecycle. Zero remote broker/model calls
+occurred. This is installed local fixture/TLS evidence, not real broker semantics.
+
+Remaining: deployed service/certificate/key lifecycle and signed recovery, independent
+alert-service composition and external notification/archive provisioning, authenticated
+market/model validation, host-failure/restore proof and real broker capabilities.
+This adds no broker write adapter, LIVE switch or current server deployment. The
+deployed SHADOW release/virtual-v1, main and LIVE state remain unchanged. Do not rebuild
+the deployed SHADOW image for this isolated engine component. Operations:
+[PAPER_RUNTIME.md](PAPER_RUNTIME.md).
+
+Estimated v1 execution-engine completeness: **about 89%**, a rough component estimate
+excluding LIVE readiness and profitability.
 
 ## Sequential synthetic portfolio and build hardening
 

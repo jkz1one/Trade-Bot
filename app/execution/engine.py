@@ -5,10 +5,13 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import os
+import stat
 import time
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from decimal import ROUND_DOWN, Decimal
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from pydantic import ValidationError
@@ -25,7 +28,7 @@ from app.execution.alert_state import entry_reasons as alert_entry_reasons
 from app.execution.durable_fixture import DurableFixtureVenue
 from app.execution.economics import entry_reasons, summary
 from app.execution.fixture import LocalFixtureVenue
-from app.execution.journal import ExecutionJournal
+from app.execution.journal import SCHEMA, ExecutionJournal
 from app.execution.market_state import entry_reasons as market_entry_reasons
 from app.execution.models import (
     SHARE_STEP,
@@ -60,6 +63,24 @@ class ExecutionEngine:
     def __init__(
         self, path, settings: Settings, *, calendar=None, limits: ExecutionLimits | None = None
     ):
+        self._configure(settings, calendar=calendar, limits=limits)
+        self.journal = ExecutionJournal(path, self._configuration())
+        with self.journal.write() as db:
+            interrupted = db.execute(
+                "SELECT client_id FROM execution_orders WHERE status='SUBMITTING'"
+            ).fetchall()
+            if interrupted:
+                db.execute("UPDATE execution_orders SET status='UNKNOWN' WHERE status='SUBMITTING'")
+                db.execute(
+                    "UPDATE execution_control SET halted=1,halt_reason='INTERRUPTED_EXECUTION_ATTEMPT' WHERE id=1"
+                )
+                # Startup cannot establish acceptance. Keep reservations and require evidence.
+                for row in interrupted:
+                    self.journal.event(
+                        db, datetime.now().astimezone(), "INTERRUPTED_ATTEMPT", {}, row[0]
+                    )
+
+    def _configure(self, settings, *, calendar=None, limits=None):
         if settings.normalized_mode != "PAPER" or settings.live_enabled:
             raise ValueError("Execution rehearsal requires PAPER with LIVE disabled")
         self.settings = Settings.model_validate(settings.model_dump())
@@ -76,44 +97,84 @@ class ExecutionEngine:
         if self.limits.total_loss_limit > settings.starting_capital:
             raise ValueError("Total loss limit cannot exceed allocated starting capital")
         self.calendar = calendar if calendar is not None else XNYSCalendar()
-        self.journal = ExecutionJournal(
-            path,
-            {
-                "capital": str(settings.starting_capital),
-                "execution_limits": self.limits.model_dump(mode="json"),
-                "symbols": settings.initial_symbols,
-                "risk_settings": {
-                    k: str(getattr(settings, k))
-                    for k in (
-                        "min_order_notional",
-                        "quote_max_age_seconds",
-                        "max_daily_entries",
-                        "exit_cooldown_minutes",
-                    )
-                },
-                "risk_policy_hash": hashlib.sha256(
-                    json.dumps(
-                        [(str(bound), asdict(policy)) for bound, policy in TIERS],
-                        sort_keys=True,
-                        default=str,
-                    ).encode()
-                ).hexdigest(),
-            },
-        )
-        with self.journal.write() as db:
-            interrupted = db.execute(
-                "SELECT client_id FROM execution_orders WHERE status='SUBMITTING'"
-            ).fetchall()
-            if interrupted:
-                db.execute("UPDATE execution_orders SET status='UNKNOWN' WHERE status='SUBMITTING'")
-                db.execute(
-                    "UPDATE execution_control SET halted=1,halt_reason='INTERRUPTED_EXECUTION_ATTEMPT' WHERE id=1"
+
+    def _configuration(self):
+        return {
+            "capital": str(self.settings.starting_capital),
+            "execution_limits": self.limits.model_dump(mode="json"),
+            "symbols": self.settings.initial_symbols,
+            "risk_settings": {
+                k: str(getattr(self.settings, k))
+                for k in (
+                    "min_order_notional",
+                    "quote_max_age_seconds",
+                    "max_daily_entries",
+                    "exit_cooldown_minutes",
                 )
-                # Startup cannot establish acceptance. Keep reservations and require evidence.
-                for row in interrupted:
-                    self.journal.event(
-                        db, datetime.now().astimezone(), "INTERRUPTED_ATTEMPT", {}, row[0]
-                    )
+            },
+            "risk_policy_hash": hashlib.sha256(
+                json.dumps(
+                    [(str(bound), asdict(policy)) for bound, policy in TIERS],
+                    sort_keys=True,
+                    default=str,
+                ).encode()
+            ).hexdigest(),
+        }
+
+    @classmethod
+    def attach_existing(cls, path):
+        """Attach a companion without initialization, migration or owner recovery.
+
+        The retained pair and current frozen engine policy must already match.
+        This is a trusted local engine handle, not broker or runtime ownership.
+        """
+        from app.execution import restore
+
+        if cls is not ExecutionEngine:
+            raise ValueError("Only the built-in execution engine can attach")
+        path = Path(path).expanduser().absolute()
+        for retained in (path, restore.authority_path(path)):
+            fd = os.open(retained, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+            try:
+                info = os.fstat(fd)
+                if (
+                    not stat.S_ISREG(info.st_mode)
+                    or stat.S_IMODE(info.st_mode) != 0o600
+                    or info.st_uid != os.geteuid()
+                ):
+                    raise ValueError("Private owned retained execution files required")
+            finally:
+                os.close(fd)
+        journal = ExecutionJournal(path)  # Read-only construction; never create files/tables.
+        with journal.read() as db:
+            frozen = json.loads(
+                db.execute("SELECT config_json FROM execution_control WHERE id=1").fetchone()[0]
+            )
+            if restore.status(db, restore.authority_path(journal.path))["status"] != "VERIFIED":
+                raise ValueError("Verified retained execution authority required")
+            risk = frozen["risk_settings"]
+            engine = object.__new__(cls)
+            engine._configure(
+                Settings(
+                    _env_file=None,
+                    mode="PAPER",
+                    live_enabled=False,
+                    starting_capital=frozen["capital"],
+                    initial_symbols=frozen["symbols"],
+                    min_order_notional=risk["min_order_notional"],
+                    quote_max_age_seconds=risk["quote_max_age_seconds"],
+                    max_daily_entries=risk["max_daily_entries"],
+                    exit_cooldown_minutes=risk["exit_cooldown_minutes"],
+                ),
+                limits=ExecutionLimits.model_validate(frozen["execution_limits"]),
+            )
+            if frozen != {"schema": SCHEMA, **engine._configuration()}:
+                raise ValueError("Existing execution policy does not match this engine")
+            engine.journal = journal
+            engine._control(db)
+        # Every later companion mutation still enters the paired write fence.
+        journal.writable = True
+        return engine
 
     def _control(self, db):
         row = db.execute("SELECT * FROM execution_control WHERE id=1").fetchone()

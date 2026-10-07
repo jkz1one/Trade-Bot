@@ -239,9 +239,70 @@ This composition is verified offline and through installed native children with
 local MCP fixtures. Authenticated collector latency, current full-universe
 availability and real service-host operation remain verification gates.
 
-This runner does not provision an operator API, external alert/archive sink, daemon
-wrapper or real broker adapter. Those contracts are separate
+This runner does not provision an external alert/archive sink, daemon wrapper or
+real broker adapter. The native operator companion below is explicitly separate.
+Those contracts are separate
 components and production integration gates. Do not pull/rebuild the deployed
 SHADOW image for this fixture-only follow-up. It neither deploys this runner nor
 changes the active experiment's population/policy. Engineering completeness does
 not establish LIVE readiness, provider billing correctness or trading signal.
+
+## Native operator companion
+
+The operator transport now has a native TLS CLI for an existing isolated PAPER
+journal. Starting the companion must use `ExecutionEngine.attach_existing`, rather
+than the trading owner's constructor: owner startup legitimately converts interrupted
+SUBMITTING attempts to UNKNOWN, whereas a companion can start during a live local
+fixture submission and must preserve it. Attachment performs only read-only
+validation of the retained private journal/authority pair and exact current frozen
+engine policy. It creates no tables, migrates nothing, changes no permissions and
+does not reclaim runtime/supervisor/source ownership. Later signed mutations still
+enter the existing paired write fence. This is a trusted local engine handle,
+not a broker capability or protection against a host owner controlling both files.
+
+For a **new** population, an existing private signing key can be explicitly enrolled
+at initialization. Use independently provisioned, distinct 32-byte lowercase hex
+signing/read credentials, each in a current-owner mode-600 regular file. A single
+trailing newline is allowed. Initialization validates the signing file before
+creating the population and performs no network calls; omitting the flag leaves
+existing/default behavior unchanged. Existing populations are never auto-enrolled.
+
+```bash
+python -m app.execution.runtime_cli init \
+  --directory /private/operator-paper --capital 10 --symbols SPY \
+  --operator-key-file /private/operator-signing.hex
+python -m app.execution.control_cli \
+  --journal /private/operator-paper/execution.db \
+  --origin https://127.0.0.1:8788 \
+  --operator-key-file /private/operator-signing.hex \
+  --read-token-file /private/operator-read.hex \
+  --certfile /private/operator-chain.pem \
+  --keyfile /private/operator-tls.key
+```
+
+Supply a previously provisioned certificate chain matching the exact origin and a
+private current-owner TLS key. Both TLS files must be regular, bounded to 1 MiB;
+final symlinks/FIFOs are rejected. TLS keys must have mode 600. Encrypted keys that
+would request an interactive password fail startup. Clients must verify the chain
+against their trusted CA; the test suite's local certificate is fixture evidence.
+The listener defaults to literal IP 127.0.0.1 and port 8788; other IP/port binds
+require explicit flags. There is no plaintext fallback or proxy-header authority.
+Native TLS 1.2 or newer, one process, disabled WebSockets/access logs and the API's
+existing bounded request/admission rules apply. No DNS, proxy, firewall or service
+unit is configured by this command.
+
+Only the existing GET `/v1/review` and POST `/v1/commands` routes are served. Review
+requires the separate bearer credential; writes additionally require the current
+signed envelope, exact revision/generation and existing action/evidence guards.
+Startup never enrolls, resumes, releases reservations or replaces credentials.
+Retired/revoked or mismatched signing capabilities fail startup. Signed replay
+retains its original result and reports replay status, without applying it twice.
+
+A private single-host control lease is distinct from the trader runtime lease,
+allowing the services to coexist. Duplicate companions fail before serving or
+changing execution state. Uvicorn drains native SIGINT/SIGTERM request work; the CLI
+retains its lease through server/loop cleanup and restores signal handlers before
+returning. Startup errors print only the exception class. This remains a foreground
+companion needing future host/service provisioning. Real certificate/key lifecycle,
+deployed operator recovery, authenticated data/model evidence and broker integration
+remain gates. Do not update the current deployed SHADOW image for this component.

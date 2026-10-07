@@ -98,6 +98,13 @@ compose repeated bounded refreshes into that population's PAPER runtime. Cold fl
 accounts have bounded warmup; failed refreshes halt and revoke entry/model admission.
 Authenticated timing and deployment remain pending; see `docs/PAPER_RUNTIME.md`.
 
+The isolated PAPER operator API now has a native TLS entry point:
+`python -m app.execution.control_cli`. It attaches to existing verified state
+without running trader startup recovery, so starting the companion cannot convert
+an active submission to UNKNOWN. New populations can explicitly enroll their signing
+capability with `init --operator-key-file`; credentials and TLS must be provisioned
+separately. This companion is not deployed to the current SHADOW server.
+
 Quote freshness conservatively uses the oldest bid, ask and selected trade clock.
 A fresh component cannot hide stale executable prices; missing, naive or future
 required timestamps fail collection closed. The governor retains its configured
