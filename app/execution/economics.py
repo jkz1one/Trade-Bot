@@ -16,6 +16,7 @@ from pydantic import Field, field_validator, model_validator
 
 from app.domain.models import TradeDecision
 from app.execution.models import ZERO, Contract, Ledger, Snapshot
+from app.execution.supervisor_state import entry_reasons as supervisor_entry_reasons
 
 
 class CostPolicy(Contract):
@@ -198,6 +199,8 @@ class CostAccounting:
             if expected_revision is not None and engine.journal.revision(db) != expected_revision:
                 raise ExecutionBlocked("MODEL_ACCOUNT_REVIEW_CHANGED")
             engine._ready(control, now)
+            if supervisor_entry_reasons(db, now):
+                raise ExecutionBlocked("EXECUTION_SUPERVISOR_NOT_READY")
             if db.execute("SELECT 1 FROM execution_orders WHERE active_lock=1").fetchone():
                 raise ExecutionBlocked("ORDER_ALREADY_IN_FLIGHT")
             if engine.calendar.current_window(now) is None:

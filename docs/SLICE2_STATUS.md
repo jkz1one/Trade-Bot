@@ -20,10 +20,11 @@ evidence remain deployment gates. LIVE is disabled.
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **526 tests in 37.82 seconds with warnings treated as errors**, including 40 execution
+full local suite passed **557 tests in 51.80 seconds with warnings treated as errors**, including 40 execution
 lifecycle tests, 26 position-supervision tests, 35 execution-limit/dispatch tests
 and 22 isolated-process/durable-venue tests, plus 35 operator/alert tests and
-26 credential/restore tests, 30 model-cost/economics tests and 36 bounded-judgment tests.
+26 credential/restore tests, 30 model-cost/economics tests, 36 bounded-judgment tests
+and 31 independent-supervisor tests.
 The deployed application release remains the one recorded below.
 
 ## Target-host evidence — 2026-10-06 UTC
@@ -427,6 +428,63 @@ off-host/multi-host restore protection with host-failure proof. First scheduled
 authenticated market-session evidence from the deployed cohort remains unobserved.
 The existing server and paired synthetic SPY experiment remain unchanged. This
 mocked execution proof establishes neither live readiness nor profitable signal.
+
+## Independent fixture supervisor follow-up — 2026-10-07 UTC
+
+Fresh canonical branch state matched `dcf1b5fd2771bb5b81c56aa6eae06c9fe1d1a9ef`
+before this slice; PR #1 remains draft and main is unchanged. A new opt-in
+`ExecutionSupervisor` runs account reconciliation and stop/session supervision
+without awaiting model reasoning. It accepts only the built-in execution engine,
+durable fake venue and private manually published `DurableQuoteFeed`.
+
+Enrollment before orders freezes venue/feed/account identity, paths, universe and
+poll/tick/freshness limits. Defaults are 5/10/20 seconds respectively; poll plus
+whole-tick deadline must fit the lease, which cannot exceed quote freshness. A
+single-host lifetime file lock prevents duplicate owner claims. Completed OK ticks
+alone renew entry health. After enrollment, BUY preparation/dispatch and new model
+receipts require that fresh RUNNING result. STOPPING revokes health before child
+cleanup completes; failed/interrupted/stopped-with-risk runners retain a dispatch halt.
+Interrupted recovery needs explicit reasoned review; reads never auto-resume.
+
+The loop reads complete fixture history in the existing bounded private child,
+validates quote feed identity/sequence/freshness, supervises owned risk, and may
+prepare/reuse only a governed protective SELL. It never creates a BUY or cancellation.
+Original invalidation, session policy, one active reservation and partial-fill
+ownership stay in the existing engine. Read fencing captures account/order/fill
+state before awaiting and atomically discards superseded results before applying
+them, without renewing health. Unchanged-epoch mismatches still halt. Quote/account
+freshness is checked again at completion. Blocked result alerts deduplicate.
+
+Verification: **557 tests passed in 51.80s with warnings treated as errors**, including
+**31 new supervisor tests**. They cover protective fake SELL while a real model child
+is blocked with an unknown receipt; idempotent polls; stop/session exits; unresolved
+partial BUY and definitively canceled partial SELL; stale/future/missing/oversized/
+foreign/regressed quote evidence; freshness gates before preparation, dispatch and
+model receipt; shutdown admission while cleanup is pending; immutable/runtime
+policy; duplicate owner; read/tick deadlines; health-commit rollback; repeated
+cancellation; and older read completion after new intent/fill evidence. A real
+parent `os._exit(93)` leaves an interrupted owner and its actual read child exits
+through the parent-death watchdog. Restart cannot claim healthy entry authority
+until fresh reconciliation and explicit review; the authority pair stays VERIFIED.
+
+Changed-code Ruff checks/format, pip check and whitespace checks passed. The wheel
+installed outside the checkout passed an optimized-Python, warnings-as-errors proof.
+The installed supervisor completed a governed fake SELL and reconciled flat with
+two fake fills while the installed model child was blocked in mocked SDK generation.
+The cancelled model attempt stayed unknown, prior known cost remained $0.00015 and
+net economics stayed unavailable. Children were reaped; all journal/authority/venue/
+feed files remained private, the authority pair was VERIFIED, and read-only reporting
+did not change bytes. Wheel SHA-256:
+`c7bb42c651abdd0d57c3da689a4595d279fdb0ff0d06b5508c755b80d57d94c3`.
+
+Estimated v1 execution-engine completeness: **about 80%**, a rough component estimate.
+This loop is local fixture library infrastructure, not a deployed daemon, broker
+stop order or hard real-time guarantee. Synchronous local storage/calendar work can
+still stall its parent event loop. Actual broker contracts, authenticated model
+validation/adoption, deployed supervision/operator transport/alerts, off-host
+protection and host-failure proof remain. The server release, SHADOW experiment and
+first scheduled regular-session evidence gate are unchanged. No authenticated
+model/broker call, server update or LIVE capability was introduced.
 
 ## Sequential synthetic portfolio and build hardening
 

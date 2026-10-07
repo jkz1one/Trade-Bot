@@ -32,6 +32,7 @@ from app.execution.models import (
     Snapshot,
 )
 from app.execution.supervision import assess_position
+from app.execution.supervisor_state import entry_reasons as supervisor_entry_reasons
 from app.risk.governor import govern
 from app.risk.policy import TIERS
 from app.robinhood.schedule import XNYSCalendar
@@ -210,6 +211,7 @@ class ExecutionEngine:
         )
         if decision.action == Action.OPEN_LONG:
             reasons = list(risk.rejection_reasons)
+            reasons.extend(supervisor_entry_reasons(db, now))
             cost_reasons, costs = entry_reasons(db, source_key, decision, packet, now)
             reasons.extend(cost_reasons)
             known_cost = Decimal(costs["known_cost"])
@@ -829,7 +831,19 @@ class ExecutionEngine:
                 raise
             return OrderState.UNKNOWN
 
-    async def reconcile_fixture(self, venue: DurableFixtureVenue, *, now):
+    @staticmethod
+    def _reconciliation_epoch(db):
+        """Fence account/order evidence, independently of supervision heartbeat churn."""
+        payload = [
+            db.execute("SELECT snapshot_json FROM execution_control WHERE id=1").fetchone()[0],
+            [dict(r) for r in db.execute("SELECT * FROM execution_orders ORDER BY client_id")],
+            [dict(r) for r in db.execute("SELECT * FROM execution_fills ORDER BY fill_id")],
+        ]
+        return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+
+    async def reconcile_fixture(
+        self, venue: DurableFixtureVenue, *, now, fence_account_changes=False
+    ):
         """Bounded complete-history fake read; failed reads never invent outcomes."""
         from app.execution.process import run_fixture_process
 
@@ -837,6 +851,8 @@ class ExecutionEngine:
         if type(venue) is not DurableFixtureVenue:
             raise ValueError("Only the built-in durable fixture venue is supported")
         self._bind_fixture(venue, now=now)
+        with self.journal.read() as db:
+            epoch = self._reconciliation_epoch(db) if fence_account_changes else None
         try:
             result = await run_fixture_process(
                 venue, now=now, timeout_seconds=self.limits.process_timeout_seconds
@@ -848,7 +864,7 @@ class ExecutionEngine:
                     db, now, "FIXTURE_READ_FAILED", {"error_class": type(exc).__name__}
                 )
             raise
-        return self.reconcile(result.snapshot, now=now)
+        return self.reconcile(result.snapshot, now=now, _expected_epoch=epoch)
 
     @staticmethod
     def _reason(reason):
@@ -907,10 +923,17 @@ class ExecutionEngine:
         with self.journal.write() as db:
             self._resume(db, reason, now)
 
-    def reconcile(self, snapshot: Snapshot, *, now):
+    def reconcile(self, snapshot: Snapshot, *, now, _expected_epoch=None):
         _clock(now)
         with self.journal.write() as db:
             c = self._control(db)
+            if _expected_epoch is not None and self._reconciliation_epoch(db) != _expected_epoch:
+                self.journal.event(db, now, "FIXTURE_READ_SUPERSEDED", {})
+                return {
+                    "reconciled": False,
+                    "issues": ["SUPERSEDED_FIXTURE_READ"],
+                    "superseded": True,
+                }
             issues = []
             try:
                 snapshot = Snapshot.model_validate(snapshot.model_dump())

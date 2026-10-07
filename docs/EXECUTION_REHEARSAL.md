@@ -491,12 +491,74 @@ subject to the existing account/ownership/quote/halt requirements.
 
 The child never receives broker tools or engine/operator signing authority. Trusted
 local orchestration supplies the API credential and completion clock; this is not
-a remote control service. The fixture engine still requires independently invoked
-position supervision, refreshed account/market evidence and governed dispatch.
+a remote control service. The fixture engine requires refreshed account/market
+evidence and governed dispatch. The optional independent loop below supplies local
+fixture supervision without awaiting model reasoning.
 Actual authenticated API validation, discount/invoice adjustments, verified no-charge
 resolution, deployed orchestration and independent supervision remain pending.
 No new deployed cohort, API request or server update occurs when importing/enrolling
 this opt-in interface. Tests and package proof use mocked SDK HTTP responses only.
+
+## Independent fixture supervision loop
+
+`DurableQuoteFeed(path, symbols=...)` exclusively creates a private local SQLite
+market fixture. `publish(sample_id, packet)` appends a bounded, validated packet;
+exact sample replay is idempotent and changed content under the same identity fails.
+Universe, aware clocks and nonregressing packet/quote timestamps are checked.
+`DurableQuoteFeed(path).latest()` opens an existing feed read-only without creating
+or migrating it. Feed identity is pinned, payloads are capped at 256 KiB, and the
+supervisor rejects sequence rollback or changed content at its last observed sequence.
+This is a manually supplied fixture feed, not a broker or market-data adapter.
+
+`ExecutionSupervisor(engine, durable_venue, feed, limits=..., clock=...)` optionally
+enrolls before any order preparation. Exact built-in fixture types, feed/venue/account
+identities, paths, universe and limits are frozen in the execution journal. Defaults
+are a 5-second poll, 10-second whole-tick deadline and 20-second health lease. Poll
+plus deadline must fit the lease, which cannot exceed the engine's quote-age limit.
+`await supervisor.run(stop_event)` holds a single-host POSIX lifetime file lock;
+duplicate runners cannot claim ownership or advance the durable owner generation.
+
+Every active-session tick performs a bounded child-process complete-history read,
+checks fresh sane market evidence, runs deterministic position supervision and,
+when required, prepares/reuses a governed protective SELL. It never creates BUY
+intents, supplies model judgments, cancels orders or invents fills. Original stop,
+session-exit policy, active-order ownership and quantity rounding remain in the
+existing engine. Unknown/rejected outcomes block health. An unresolved partial BUY
+halts rather than selling through the outstanding remainder. A definitively terminal
+partial SELL permits only a newly governed residual exit. Flat closed sessions are
+IDLE and do not launch fixture reads or grant entry health.
+
+The loop can continue while the model is awaiting its private child, including an
+uncosted in-flight model receipt. Protective closes remain subject to ownership,
+fresh account/quotes, frozen limits and the dispatch halt; cost/health entry gates
+do not grant permission to bypass those controls. No broker credential or live
+placement/cancellation capability enters this loop.
+
+Each read optionally captures an account/order/fill epoch before awaiting its child.
+If those records change before reconciliation commits, the transaction discards the
+superseded read and records `FIXTURE_READ_SUPERSEDED`. It neither applies older
+account evidence nor renews supervision health, and the loop polls fresh truth again.
+Unchanged-epoch mismatches still halt through the existing full reconciliation.
+Heartbeat/quote-management audit churn alone does not invalidate the account epoch.
+
+The heartbeat renews only after reconciliation, quote checks, position supervision
+and any governed fake dispatch finish. Account and quote freshness are checked again
+at completion. `ExecutionJournal.report(now=...)` exposes policy, generation,
+completion time/age, last feed sequence and last result through read-only access.
+After enrollment, new model receipts and BUY preparation/dispatch require a RUNNING,
+OK result within the frozen lease. STOPPING revokes this gate before read cleanup
+finishes. Failed ticks retain a halt, stopping with owned risk halts, and an interrupted
+STARTING/RUNNING/IDLE/STOPPING owner requires explicit reasoned review before resume.
+Valid reads/ticks never clear a halt. Failed/changed blocked tick results enter the
+local alert outbox; unchanged blocked results do not repeat the alert.
+
+This is opt-in library infrastructure, not a deployed daemon or broker stop order.
+Trusted local orchestration provides quote samples, fixture fills, the clock and stop
+signal. Model work is isolated; synchronous local SQLite/filesystem/calendar work
+can still stall the parent event loop. The sampled poll/deadline is not a hard real-time
+or host-survival guarantee. Secure deployed supervision, external alerts, host-failure
+proof, off-host fencing and actual broker semantics remain required. The existing
+SHADOW worker, observer and synthetic experiment are unchanged.
 
 ## SignalFlow adaptation and remaining engineering
 

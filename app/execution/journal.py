@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
 
-from app.execution import economics, restore
+from app.execution import economics, restore, supervisor_state
 from app.execution.models import Ledger
 
 SCHEMA = "execution-rehearsal-v1"
@@ -59,12 +59,14 @@ class ExecutionJournal:
                 "execution_cost_policy",
                 "execution_model_calls",
                 "execution_judgment_policy",
+                "execution_supervisor",
                 "sqlite_sequence",
             }
             if tables - allowed:
                 raise ValueError("Execution rehearsal requires a separate database")
             # Individual statements preserve the surrounding BEGIN IMMEDIATE.
             for sql in (
+                "CREATE TABLE IF NOT EXISTS execution_supervisor (id INTEGER PRIMARY KEY CHECK(id=1), policy_json TEXT NOT NULL,status TEXT NOT NULL,owner TEXT,generation INTEGER NOT NULL,heartbeat_at TEXT,result_json TEXT,feed_sequence INTEGER,feed_hash TEXT)",
                 "CREATE TABLE IF NOT EXISTS execution_judgment_policy (id INTEGER PRIMARY KEY CHECK(id=1), policy_json TEXT NOT NULL, blocked_reason TEXT)",
                 "CREATE TABLE IF NOT EXISTS execution_cost_policy (id INTEGER PRIMARY KEY CHECK(id=1), policy_json TEXT NOT NULL)",
                 "CREATE TABLE IF NOT EXISTS execution_model_calls (source_key TEXT PRIMARY KEY, packet_hash TEXT NOT NULL, started_at TEXT NOT NULL, usage_json TEXT, request_id TEXT UNIQUE, decision_hash TEXT, cost TEXT)",
@@ -160,6 +162,12 @@ class ExecutionJournal:
         alert = kind in ALERT_KINDS
         if kind in {"MODEL_JUDGMENT_INTERRUPTED", "MODEL_JUDGMENT_RECORDED"}:
             alert = kind == "MODEL_JUDGMENT_INTERRUPTED" or payload["result"]["error"] is not None
+        if kind == "SUPERVISOR_TICK" and payload["result"]["status"] in {"FAILED", "BLOCKED"}:
+            previous = db.execute(
+                "SELECT payload FROM execution_events WHERE kind=? AND sequence<? ORDER BY sequence DESC LIMIT 1",
+                (kind, cursor.lastrowid),
+            ).fetchone()
+            alert = previous is None or json.loads(previous[0])["result"] != payload["result"]
         if kind == "POSITION_SUPERVISED" and payload["status"] in {"BLOCKED", "EXIT_REQUIRED"}:
             previous = db.execute(
                 "SELECT payload FROM execution_events WHERE kind=? AND sequence<? ORDER BY sequence DESC LIMIT 1",
@@ -217,6 +225,7 @@ class ExecutionJournal:
                 "mode": "EXECUTION_REHEARSAL",
                 "revision": self.revision(db),
                 "economics": economics.economics_report(db, c, now or datetime.now().astimezone()),
+                "supervisor": supervisor_state.report(db, now or datetime.now().astimezone()),
                 "restore_fence": restore.status(db, restore.authority_path(self.path)),
                 "alerts": self._alerts(db, 0, 100),
                 "unacknowledged_alerts": db.execute(

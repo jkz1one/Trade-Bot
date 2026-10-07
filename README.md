@@ -38,6 +38,11 @@ stays separate and deterministic protective exits remain available.
 The optional fixture-engine judgment coordinator now counts the exact Responses
 request before one tool-less generation, caps output, and atomically records response
 identity/usage with the decision. It has no broker capability or deployed-worker wiring.
+An opt-in independent fixture supervisor now reconciles complete account history,
+checks a durable quote feed and dispatches only governed protective SELL intents.
+Fresh completed supervision is required for new model calls and BUY admission;
+stale reads, duplicate runners and interrupted recovery cannot renew entry authority.
+This remains offline infrastructure, with no deployed service or broker writes.
 
 ## Slice 2 — Robinhood read / SHADOW
 
