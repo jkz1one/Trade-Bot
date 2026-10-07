@@ -240,8 +240,9 @@ over the canonical revalidated envelope. Application authenticates before any
 write and rechecks enrollment inside the write transaction. Neither raw key nor
 signature is stored in the audit. Signed command bodies and outcome receipts are.
 
-The only actions are HALT, RESUME, ABANDON_PREPARED, ACK_ALERT, ROTATE_KEY and
-REVOKE_KEY. None submits,
+The actions are HALT, RESUME, ABANDON_PREPARED, ACK_ALERT, ROTATE_KEY,
+REVOKE_KEY and RESOLVE_CYCLE. The additional cycle action is described in
+[PAPER_RUNTIME.md](PAPER_RUNTIME.md). None submits,
 reviews or cancels a broker order, changes cash/limits, edits evidence or clears a
 stop. New commands from the future or at/after expiry receive a durable rejection.
 Recovery, abandonment and acknowledgment require the exact reviewed revision;
@@ -572,7 +573,7 @@ PAPER application or deployed read-only SHADOW observer.
 | Endpoint | Authority |
 | --- | --- |
 | `GET /v1/review` | Read token; bounded, authenticated review of current revision, operator generation, cash/position, active intent, snapshot freshness timestamp, supervisor and oldest 25 unacknowledged alert summaries. |
-| `POST /v1/commands` | Read token plus an exact signed `OperatorCommand`; only HALT, RESUME, ABANDON_PREPARED, ACK_ALERT, ROTATE_KEY and REVOKE_KEY. |
+| `POST /v1/commands` | Read token plus an exact signed `OperatorCommand`; only HALT, RESUME, ABANDON_PREPARED, ACK_ALERT, ROTATE_KEY, REVOKE_KEY and RESOLVE_CYCLE. |
 
 The review's binding, revision and evidence share one read-only SQLite snapshot.
 Prompts, full order/fill history, event payloads and signing fingerprints/keys are
@@ -766,3 +767,10 @@ or interrupted evidence never replays. Stopped/stale runtime authority blocks en
 and model receipts while protective SELL retains its existing guard policy. Native
 CLI initialization, fixture publication, run and read-only reporting are separate from
 the deployed SHADOW worker; no real broker write adapter or automatic fills exist.
+
+Signed RESOLVE_CYCLE now adds reviewed no-replay abandonment of an interrupted runtime
+claim. It requires a stopped, halted, exclusively owned fixture runtime and verified
+authority, fresh account/position evidence, settled bound model usage and definitive
+terminal linked orders. The overlay, audit and replay receipt commit atomically while
+the original claim, fills/costs, reservations and halt remain unchanged. A separate
+RESUME remains necessary. Existing six-action canonical signatures remain compatible.

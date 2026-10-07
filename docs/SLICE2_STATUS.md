@@ -20,11 +20,12 @@ evidence remain deployment gates. LIVE is disabled.
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **757 tests in 126.65 seconds with warnings treated as errors**,
-including the previous 730 cases and 27 new fixture PAPER runtime cases. The runtime
-now connects scheduled judgment and guarded fake dispatch to independent supervision,
-with durable claims, entry-health gates and verified cancellation/shutdown ownership.
-Changed-code checks and installed-package proofs passed; see the latest follow-up below.
+full local suite passed **809 tests in 123.91 seconds with warnings treated as errors**,
+including the previous 757 cases and 52 new signed cycle-recovery cases. Interrupted
+PAPER claims now support reviewed no-replay resolution through the existing control
+transport, preserving the original cycle and its halt until a separate RESUME.
+Changed-code checks and installed native HTTPS/runtime continuation proof passed;
+see the latest follow-up below.
 The deployed application release remains the one recorded below.
 
 ## Target-host evidence — 2026-10-06 UTC
@@ -754,6 +755,61 @@ signal evidence. Operator/alert/archive service provisioning, real data integrat
 authenticated bounded-model validation/adoption, host failure/recovery and actual
 broker capability contracts remain. The deployed worker stays at its recorded release;
 no server update, real broker write, LIVE capability or experiment policy change occurred.
+
+## Signed PAPER interruption recovery follow-up — 2026-10-07 UTC
+
+RESOLVE_CYCLE extends the existing operator capability/control transport with a signed
+exact cycle_slot target. Fresh revision, journal/generation/actor/reason/expiry/MAC
+checks and atomic durable command receipts remain. The six original action envelopes
+retain their canonical signatures and existing receipt fingerprints. No endpoint,
+model tool, broker write adapter or automatic recovery path was added.
+
+Resolution requires VERIFIED authority, a halted STOPPED/FAILED runtime and its free
+lifetime lease through commit. Active-owner cleanup cannot race resolution. Only a
+completed INTERRUPTED claim can be resolved; remaining CLAIMED rows first need normal
+startup review. Fresh complete account reconciliation, no issues/active reservations
+and fresh owned-position supervision are mandatory. Unknown model costs/violations
+block it. Linked model evidence must match frozen policy, original packet, provider
+identity/count/usage/decision/audit/token limits and pinned-rate cost. Any linked order
+must already be terminal, with fresh matching terminal history after an actual fake
+attempt. Unattempted PREPARED orders require the existing explicit abandonment first.
+
+An immutable overlay saves the original-cycle hash, reviewed snapshot/ledger/model/
+order evidence and signed command identity. The original cycle remains INTERRUPTED;
+model usage, orders/fills, positions, alert acknowledgments, limits and dispatch halt
+remain. Only a hash-matched resolved interruption ceases blocking future slots. The
+original slot stays attempted forever, and other unresolved claims still block.
+A separate reviewed RESUME retains its risk checks and fresh service/supervisor gates.
+There is no declaration that an unknown model call was free and no automatic replay.
+
+Verification: **809 tests passed in 123.91s with warnings treated as errors**, including
+**52 new recovery cases**. These cover receipt replay across restart/expiry,
+concurrent commands, exact target/signature/revision and six-action compatibility,
+runtime lease/status/clock guards, fresh account/owned-position evidence, unknown
+cost blocking, original packet/usage/decision/count/policy bindings, terminal order
+reconciliation, immutable claim/halt/fill/cost preservation, storage/event/receipt/
+authority rollback, changed resolution lineage, read-only bounded review, signed
+HTTP transport and later-slot continuation only after separate resume. Changed-code
+Ruff/format, pip check and whitespace checks passed.
+
+The wheel installed outside the checkout passed optimized-Python/Werror proof via
+real native verified loopback HTTPS. A signed resolution applied and its repeated
+command returned the original receipt. Review confirmed the retained halt before a
+separate signed RESUME. After the API process stopped and was reaped, the installed
+runtime rejected the original slot, attempted one later scheduled stub HOLD and
+stopped cleanly. Original interrupted evidence was unchanged, the resolution stayed
+singular, read-only store bytes were unchanged and the authority pair remained
+VERIFIED. Server and all bounded read children were reaped; zero broker/model calls
+occurred. Wheel SHA-256:
+`e1d929df12ae9b175104585a7638c865a73a52f43d564c5ee77d0c3820b83d30`.
+
+Estimated v1 execution-engine completeness: **about 88%**, a rough component estimate.
+This proves reviewed recovery of known fixture evidence, not active-order release,
+unknown/no-charge cost recovery, authenticated provider semantics or deployed controls.
+Actual read-data integration, bounded-provider validation/adoption, external control/
+alert/archive provisioning, host failure/recovery and broker capability proof remain.
+The deployed SHADOW release/cohort, main and LIVE state are unchanged. No broker
+placement, cancellation, real-account mutation or server update was performed.
 
 ## Sequential synthetic portfolio and build hardening
 

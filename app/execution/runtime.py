@@ -263,9 +263,7 @@ class PaperRuntime:
                 "SELECT 1 FROM execution_runtime_cycles WHERE slot=?", (slot,)
             ).fetchone():
                 return {"status": "SKIPPED", "reason": "SLOT_ALREADY_ATTEMPTED"}
-            if db.execute(
-                "SELECT 1 FROM execution_runtime_cycles WHERE status IN ('CLAIMED','INTERRUPTED')"
-            ).fetchone():
+            if runtime_state.unresolved(db):
                 return {"status": "SKIPPED", "reason": "UNRESOLVED_CYCLE"}
             health = supervisor_state.report(db, now)
             if not health["fresh"] or health["last_feed_sequence"] != sequence:

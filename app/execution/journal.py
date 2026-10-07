@@ -65,6 +65,7 @@ class ExecutionJournal:
                 "execution_alert_attempts",
                 "execution_runtime",
                 "execution_runtime_cycles",
+                "execution_runtime_resolutions",
                 "sqlite_sequence",
             }
             if tables - allowed:

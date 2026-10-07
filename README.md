@@ -43,8 +43,8 @@ checks a durable quote feed and dispatches only governed protective SELL intents
 Fresh completed supervision is required for new model calls and BUY admission;
 stale reads, duplicate runners and interrupted recovery cannot renew entry authority.
 This remains offline infrastructure, with no deployed service or broker writes.
-An isolated native-TLS control API now exposes bounded operator review and the six
-existing signed recovery actions. Separate read/signing credentials, reviewed revisions,
+An isolated native-TLS control API now exposes bounded operator review and signed
+recovery actions, including reviewed interruption resolution without replay. Separate read/signing credentials, reviewed revisions,
 restore fencing and durable replay receipts remain mandatory. It is not deployed and
 adds no routes to the current SHADOW observer or PAPER app.
 Opt-in HTTPS alert delivery now freezes a dedicated sink, persists attempts before sending,
@@ -154,7 +154,9 @@ proposal samples are separate from portfolio fills, profit and compounding retur
 The opt-in [fixture PAPER service](docs/PAPER_RUNTIME.md) now connects independent
 supervision, durable XNYS cycle claims, bounded judgment, deterministic admission and
 fake dispatch. Default is audited stub HOLD. Restarts never replay an attempted slot;
-shutdown revokes entry health and retains interrupted claims for review. It requires
+shutdown revokes entry health and retains interrupted claims for signed review.
+Resolution requires fresh reconciled truth, settled model evidence and terminal
+orders, preserves the original cycle and retains the halt until separate RESUME. It requires
 separate fixture stores and does not upgrade the deployed SHADOW worker or enable LIVE.
 
 ## Sequential virtual bankroll

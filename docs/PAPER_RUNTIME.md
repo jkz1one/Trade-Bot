@@ -34,8 +34,9 @@ or dispatch an order, though its known usage is still charged.
 CLAIMED/interrupted cycles are never automatically retried. Shutdown/cancellation
 interrupts unfinished cycles, preserves unknown model receipts/order reservations
 and halts. A restart after an unclean RUNNING/STOPPING owner halts and marks orphaned
-claims INTERRUPTED; this state blocks later slots even after a manual engine resume.
-There is deliberately no cycle-resolution, replay or auto-resume command in this slice.
+claims INTERRUPTED; unresolved claims block later slots even after a manual engine
+resume. Signed RESOLVE_CYCLE can record reviewed abandonment as described below;
+it never enables replay or automatically resumes.
 
 Runtime STOPPING/stopped/stale/failed health blocks BUY admission/dispatch and new
 model receipts. HOLD stays auditable. Existing protective SELL checks remain in
@@ -51,6 +52,53 @@ it cannot interpret pre-acceptance absence as definitive missing-order evidence.
 It does not renew account evidence or supervisor heartbeat. After the attempt
 settles or becomes UNKNOWN, normal complete-history reconciliation applies again.
 Existing superseded-read, missing-order, partial-fill and uncertainty guards remain.
+
+## Signed interruption resolution
+
+`RESOLVE_CYCLE` is an additional existing-control-transport command with an exact
+`cycle_slot` target. It requires prior operator enrollment, the current credential
+generation, HMAC-bound journal/actor/reason/target, an exact fresh reviewed revision
+and a maximum-five-minute command lifetime. Existing six-action envelopes/signatures
+and saved replay receipts remain compatible: absent/null cycle_slot is omitted from
+the canonical body for those actions. No new HTTP endpoint or model tool exists.
+
+Resolution requires all of the following in one fenced SQLite transaction:
+
+- VERIFIED retained execution authority and a halted, STOPPED/FAILED runtime; its
+  lifetime lease must be free through commit, including any failed-owner cleanup.
+- An exact completed INTERRUPTED claim, with no remaining CLAIMED cycles, no prior
+  resolution and no future-dated start/completion. An orphan CLAIMED row first needs
+  normal startup review, which marks it interrupted and preserves its halt.
+- Fresh complete current-account reconciliation, no issues or active reservations,
+  and fresh owned-position supervision when a position remains.
+- No unknown model costs or judgment evidence violations. A linked model receipt
+  must match frozen policy, original packet, provider usage/identity, decision/audit,
+  token ceilings and exact pinned-rate cost. No model call is allowed for a stub
+  claim. A claim interrupted before invocation can have no receipt/decision.
+- Any linked order is already definitively terminal. An attempted order needs its
+  matching terminal observation in fresh complete account history. Unattempted
+  PREPARED intents must first be explicitly abandoned; resolution cannot release
+  them. Known fills/owned positions remain intact.
+
+Success adds a separate immutable resolution record with original-cycle hash,
+command identity and reviewed snapshot/ledger/model/order evidence. The original
+cycle remains INTERRUPTED; packet, decision, model receipt/cost, orders/fills, alert
+acknowledgments and halt are preserved. Scheduling ignores only a hash-matched
+resolved interruption. Same-slot attempts remain forbidden; modified resolution
+lineage remains blocking. Another unresolved claim continues blocking later slots.
+
+The existing control API's GET review exposes bounded runtime health, counts and
+latest 20 cycle/resolution summaries without packets/prompts. Submit the usual
+signed POST command using action RESOLVE_CYCLE and the reviewed exact cycle_slot;
+there is no unauthenticated CLI bypass. A lost response repeats the same signed
+command for its original receipt; changed evidence requires a newly reviewed command.
+Resolution, event, receipt and authority advance commit together or all roll back.
+
+Resolution does not resume, acknowledge alerts, clear stop requirements, cancel
+orders, change account/model evidence or limits, or claim a potentially billed call
+was free. RESUME is a separate reviewed command with its existing risk guards; fresh
+runtime/supervisor health still gates new entries/judgments. Missing usage remains a
+blocker requiring future verified provider evidence, not an operator assertion.
 
 ## Local use
 

@@ -11,12 +11,13 @@ import hashlib
 import hmac
 import json
 import uuid
+from contextlib import ExitStack
 from datetime import datetime
 from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from app.execution import alert_state, restore, supervisor_state
+from app.execution import alert_state, restore, runtime_state, supervisor_state
 from app.execution.engine import ExecutionBlocked, ExecutionEngine, _clock
 from app.execution.models import Contract, Ledger
 
@@ -25,17 +26,26 @@ class OperatorCommand(Contract):
     journal_id: str = Field(min_length=1, max_length=64)
     command_id: str = Field(min_length=1, max_length=128)
     actor: str = Field(min_length=1, max_length=80)
-    action: Literal["HALT", "RESUME", "ABANDON_PREPARED", "ACK_ALERT", "ROTATE_KEY", "REVOKE_KEY"]
+    action: Literal[
+        "HALT",
+        "RESUME",
+        "ABANDON_PREPARED",
+        "ACK_ALERT",
+        "ROTATE_KEY",
+        "REVOKE_KEY",
+        "RESOLVE_CYCLE",
+    ]
     reason: str = Field(min_length=1, max_length=300)
     expected_revision: int = Field(ge=0, strict=True)
     issued_at: datetime
     expires_at: datetime
     client_id: str | None = Field(default=None, min_length=1, max_length=128)
+    cycle_slot: str | None = Field(default=None, min_length=1, max_length=128)
     alert_sequence: int | None = Field(default=None, gt=0, strict=True)
     credential_generation: int = Field(default=1, gt=0, strict=True)
     replacement_fingerprint: str | None = Field(default=None, min_length=64, max_length=64)
 
-    @field_validator("journal_id", "command_id", "actor", "reason", "client_id")
+    @field_validator("journal_id", "command_id", "actor", "reason", "client_id", "cycle_slot")
     @classmethod
     def nonblank(cls, value):
         if value is not None and not value.strip():
@@ -48,6 +58,8 @@ class OperatorCommand(Contract):
             raise ValueError("Commands require a positive lifetime of at most five minutes")
         if (self.action == "ABANDON_PREPARED") != (self.client_id is not None):
             raise ValueError("Only abandonment has an order target")
+        if (self.action == "RESOLVE_CYCLE") != (self.cycle_slot is not None):
+            raise ValueError("Only cycle resolution has a cycle target")
         if (self.action == "ACK_ALERT") != (self.alert_sequence is not None):
             raise ValueError("Only acknowledgment has an alert target")
         if (self.action == "ROTATE_KEY") != (self.replacement_fingerprint is not None):
@@ -67,7 +79,11 @@ def _key_hash(key):
 
 def _body(command):
     command = OperatorCommand.model_validate(command.model_dump())
-    return json.dumps(command.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
+    wire = command.model_dump(mode="json")
+    if wire["cycle_slot"] is None:
+        # Preserve canonical HMAC/fingerprints for existing six-action envelopes.
+        del wire["cycle_slot"]
+    return json.dumps(wire, sort_keys=True, separators=(",", ":"))
 
 
 def sign_command(command: OperatorCommand, key: bytes):
@@ -207,6 +223,7 @@ class OperatorControl:
                 if active
                 else None,
                 "supervisor": supervisor_state.report(db, now),
+                "runtime": runtime_state.report(db, now),
                 "alert_delivery": alert_state.report(db, now),
                 "restore_fence": fence,
                 "alerts": [
@@ -235,7 +252,7 @@ class OperatorControl:
             raise ValueError("Operator authentication failed")
         fingerprint = hashlib.sha256(body.encode()).hexdigest()
         journal = self.engine.journal
-        with journal.write() as db:
+        with ExitStack() as ownership, journal.write() as db:
             binding = db.execute("SELECT * FROM execution_operator WHERE id=1").fetchone()
             if (
                 not binding
@@ -267,7 +284,17 @@ class OperatorControl:
                 reason = "OPERATOR_REVIEW_STALE"
             if reason is None:
                 try:
-                    self._execute(db, command, now)
+                    if command.action == "RESOLVE_CYCLE":
+                        from app.execution.cycle_recovery import resolve_cycle
+                        from app.execution.runtime import RuntimeAlreadyRunning, runtime_lease
+
+                        try:
+                            ownership.enter_context(runtime_lease(journal.path))
+                        except RuntimeAlreadyRunning:
+                            raise ExecutionBlocked("PAPER_RUNTIME_RUNNING") from None
+                        resolve_cycle(self.engine, db, command, now)
+                    else:
+                        self._execute(db, command, now)
                 except ExecutionBlocked as exc:
                     reason = str(exc)
             result = {
