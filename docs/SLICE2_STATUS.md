@@ -20,10 +20,10 @@ evidence remain deployment gates. LIVE is disabled.
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **460 tests in 32.76 seconds**, including 40 execution
+full local suite passed **490 tests in 33.46 seconds**, including 40 execution
 lifecycle tests, 26 position-supervision tests, 35 execution-limit/dispatch tests
 and 22 isolated-process/durable-venue tests, plus 35 operator/alert tests and
-26 credential/restore tests.
+26 credential/restore tests and 30 model-cost/economics tests.
 The deployed application release remains the one recorded below.
 
 ## Target-host evidence — 2026-10-06 UTC
@@ -306,6 +306,62 @@ protection, verified restoration and host failure testing. Rolling back both loc
 files together or duplicating the valid pair across machines is not detected by
 this local safeguard; full-history digest growth is also unmeasured. LIVE readiness
 and profitability remain unverified. Deployed release/experiment remain unchanged.
+
+## Offline model-cost and economics follow-up — 2026-10-07 UTC
+
+Fresh canonical branch state matched `f3ec2445a94d2bfa47abb784604c13b001dd6871`
+before editing. Opt-in engine cost enrollment freezes model, configured standard
+rates, total/daily budgets and a per-call reservation. A durable receipt commits
+before a future model invocation; exact source/packet replay never calls again.
+Unknown usage blocks additional calls/entries and suppresses net economics.
+Current account/session/quote evidence and no active order are required before
+granting a new invocation receipt. This module never invokes an API.
+
+Trusted local usage evidence must carry pinned model, positive input tokens,
+nonnegative output tokens and unique request identity. Decimal charges, immutable
+decision fingerprint and audit commit atomically. Duplicate settlement is a no-op;
+conflicts cannot double-charge or erase uncertainty. All charges above the assumed
+per-call bound remain counted, produce an alert and block further calls/entries.
+Every new attempt reserves room in total and New York daily budgets. Daily charges
+belong to the attempt date, including late settlement; total costs persist.
+
+BUY admission requires matching settled decision and original packet evidence.
+Fresh dispatch retains decision/cost authority and reruns cost-aware entry gates.
+Total/daily loss floors include known reasoning charges alongside trading equity
+or fee-adjusted realized P&L. Brokerage/simulated cash and buying power are not
+debited by external model costs. HOLD costs count; deterministic protective CLOSE
+still works with uncosted reasoning, subject to normal reconciliation/ownership/
+quote/halt rules. Reports expose known/unknown costs and net equity/return only
+with complete usage and fresh account/position marks.
+
+Verification: **490 tests passed in 33.46s with warnings treated as errors**,
+including **30 new model-cost/economics tests**, on Linux CPython 3.12.14. Coverage
+includes receipt/settlement replay, concurrent requests, source/decision/packet
+binding, missing/invalid/foreign usage, provider ID conflicts, frozen/runtime-policy
+changes, reserved/exhausted budgets, full over-bound charges, daily attribution,
+economic loss gates, preserved broker cash, protective exit under unknown costs,
+stale/mismatched net marks, rollback/restore fencing and actual child `os._exit(98)`
+after receipt commit. Restart retains the potentially charged call and cannot replay.
+
+Ruff check/format, pip check and whitespace checks passed. The installed wheel ran
+outside the repo under optimized Python with warnings as errors: two fake fills,
+protective exit while a HOLD cost was unknown, $0.00030 final scripted model cost,
+exact cash-minus-cost net equity, VERIFIED restore pair and unchanged read-only
+files. Wheel SHA-256:
+`0c2063a16a01e70a59aab1de8117f2fbf393dd443e9277dd804754cbba2f0d09`.
+No broker/model calls, actual billing proof, server changes or LIVE capability.
+The saved `economics-run` exclusively creates a new fixture file.
+
+Estimated v1 execution-engine completeness: **about 76%**, a rough component estimate.
+Remaining: actual broker/order/fill/deadline verification, real-account/capital
+enablement, deployed independent supervision and operator transport, external
+alerts, off-host/multi-host restore protection and host failure testing. Actual API
+request/token ceilings, invoice/discount treatment and verified noncharge recovery
+must still support this cost ledger before integration; its rates are configured
+assumptions, not current-price verification. Isolated economics exclude SPY pairing,
+corporate actions, taxes, hosting/setup charges and real invoice adjustments. The
+server's paired synthetic SPY experiment remains separate and unchanged. LIVE
+readiness and profitability remain unverified.
 
 ## Sequential synthetic portfolio and build hardening
 

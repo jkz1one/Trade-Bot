@@ -32,6 +32,9 @@ deployed recovery controls remain unimplemented.
 Credential rotation/revocation retain a dispatch halt and reject retired keys.
 An opt-in separate authority file blocks journal-only rollback before any write.
 Rolling back both files together remains outside this local safeguard.
+Opt-in model-cost receipts now freeze configured rates/budgets, block entries on
+unknown costs, and include reasoning charges in economic loss limits. Broker cash
+stays separate and deterministic protective exits remain available.
 
 ## Slice 2 — Robinhood read / SHADOW
 

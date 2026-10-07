@@ -355,6 +355,75 @@ dispatch is blocked, and puts back the exact known-current fixture bytes without
 changing authority. It is not a utility for restoring arbitrary/user databases.
 Only one fake submission occurred; no broker/model calls or deployment changes.
 
+## Opt-in model receipts and economic authority
+
+`CostAccounting(engine, CostPolicy(...))` enrolls an immutable offline cost policy
+before any order preparation. It freezes model identity, configured standard token
+rates, total/daily model budgets and a per-call cost reservation. The defaults reuse
+the project's configured `gpt-6-luna` $0.10/M input and $0.50/M output assumptions;
+they are not a new assertion about current provider pricing. The rates, receipt
+state and costs belong only to this rehearsal journal, never a deployed population.
+Existing unenrolled rehearsals report UNCONFIGURED and retain their earlier gates.
+
+`begin(source_key, packet, now=...)` commits a durable potentially billed receipt
+before a future model invocation. It requires current reconciled account truth,
+an open market session, valid fresh packet/quotes, no active order and room for the
+entire per-call reservation in both budgets. There can be only one uncosted call.
+Repeated exact source/packet identity returns `invoke_model: false`, including
+after restart; source reuse with changed packet data fails. A crash after receipt
+commit cannot hide potentially billed work or trigger automatic model replay.
+This API does not call a model, and real request/token limits must still be verified
+in orchestration before its per-call assumption can be trusted against API billing.
+
+`settle` accepts revalidated usage with positive input tokens, nonnegative output
+tokens, pinned model and unique provider request identity, plus the exact decision.
+It calculates Decimal cost from frozen rates and atomically stores usage, decision
+fingerprint, amount and audit evidence. Repeated identical settlement is a no-op;
+conflicting counts/decisions or reused request IDs fail. Zero/missing usage is not
+invented for failures. The caller is trusted local orchestration; fixture records
+are not provider billing proof. Known noncharge evidence/resolution of failed calls
+remains future engineering. Operator resume cannot waive unknown costs.
+
+Usage that exceeds the assumed per-call bound is recorded at its full estimated
+amount and creates a durable alert. It permanently blocks new model calls/entries
+under that policy rather than truncating cost or discarding billing evidence.
+Budget gates apply to known cumulative charges; daily attribution uses the New
+York date of the original attempt, even if evidence arrives later. The next day's
+daily allowance resets, while total charges and bounds remain in force.
+
+With a policy enrolled, BUY admission requires a settled receipt whose decision
+and original packet fingerprints match the proposal. Fresh dispatch reruns cost
+and risk checks against that immutable decision and updated market/account data.
+Unknown cost, exhausted model budgets or exceeded per-call bounds block entry.
+The total dollar-loss test uses current trading equity minus known model charges;
+the daily test subtracts that day's model charges from fee-adjusted realized P&L.
+Model costs do not debit simulated/brokerage cash, alter fill conservation or raise
+buying-power ceilings. The governor's other broker-account values remain trading
+values, with explicit additional economic entry gates.
+
+HOLD judgment counts toward cost. Deterministic CLOSE/prepared protective exits
+need no model receipt and remain available under unknown/exhausted cost conditions,
+subject to the existing reconciliation, quote, ownership and dispatch-halt rules.
+Reports show known cost, uncosted attempts, daily charges and bound violations.
+Cost-adjusted equity/return is available only with complete usage and fresh matching
+account evidence; owned positions also require fresh valid supervised bid marks.
+Missing usage, stale marks/account or reconciliation issues suppress net metrics.
+Gross reported trading equity remains the stored trading ledger mark.
+
+```bash
+python -m app.execution.cli economics-run --db execution-economics.db
+python -m app.execution.cli report --db execution-economics.db
+```
+
+The exclusive-file proof uses scripted token counts and two fake fills. It opens
+through matching usage evidence, starts an uncosted HOLD attempt, makes a sampled
+deterministic protective exit, then settles HOLD cost and verifies net equity.
+The report embeds that historical fixture valuation; subsequent current-clock
+reports suppress stale net metrics. The proof needs no model API credits or broker
+connection and is not trading signal/performance evidence. This engine report does
+not add a SPY portfolio, corporate actions, taxes, hosting/setup costs or real invoice
+adjustments. The deployed synthetic experiment's paired SPY economics stay separate.
+
 ## SignalFlow adaptation and remaining engineering
 
 Fresh GitHub inspection confirms SignalFlow `main` remains
@@ -384,7 +453,7 @@ persists independently. Neither is real brokerage capability evidence.
 
 Then verify deadlines with the actual broker adapter and implement independent live enablement, actual-account
 identity pinning and verified bankroll controls, real-adapter owned-position reconciliation,
-deployed stop/session supervision, model-cost integration, external alert delivery and
+deployed stop/session supervision, real model/billing receipt integration, external alert delivery and
 deployed authenticated operator recovery. The local capability/outbox above must
 also gain secure transport, off-host/multi-host restore fencing and host failure
 verification before use.

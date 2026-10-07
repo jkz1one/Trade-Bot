@@ -5,10 +5,11 @@ from __future__ import annotations
 import json
 import sqlite3
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
 
-from app.execution import restore
+from app.execution import economics, restore
 from app.execution.models import Ledger
 
 SCHEMA = "execution-rehearsal-v1"
@@ -20,6 +21,7 @@ ALERT_KINDS = {
     "MANUAL_HALT",
     "FIXTURE_READ_FAILED",
     "FIXTURE_BINDING_BLOCKED",
+    "MODEL_COST_BOUND_EXCEEDED",
 }
 
 
@@ -54,12 +56,16 @@ class ExecutionJournal:
                 "execution_alerts",
                 "execution_restore_binding",
                 "execution_retired_keys",
+                "execution_cost_policy",
+                "execution_model_calls",
                 "sqlite_sequence",
             }
             if tables - allowed:
                 raise ValueError("Execution rehearsal requires a separate database")
             # Individual statements preserve the surrounding BEGIN IMMEDIATE.
             for sql in (
+                "CREATE TABLE IF NOT EXISTS execution_cost_policy (id INTEGER PRIMARY KEY CHECK(id=1), policy_json TEXT NOT NULL)",
+                "CREATE TABLE IF NOT EXISTS execution_model_calls (source_key TEXT PRIMARY KEY, packet_hash TEXT NOT NULL, started_at TEXT NOT NULL, usage_json TEXT, request_id TEXT UNIQUE, decision_hash TEXT, cost TEXT)",
                 "CREATE TABLE IF NOT EXISTS execution_retired_keys (key_hash TEXT PRIMARY KEY, retired_at TEXT NOT NULL, generation INTEGER NOT NULL)",
                 "CREATE TABLE IF NOT EXISTS execution_operator (id INTEGER PRIMARY KEY CHECK(id=1), journal_id TEXT NOT NULL UNIQUE, key_hash TEXT NOT NULL)",
                 "CREATE TABLE IF NOT EXISTS execution_commands (command_id TEXT PRIMARY KEY, fingerprint TEXT NOT NULL, result_json TEXT NOT NULL)",
@@ -192,7 +198,7 @@ class ExecutionJournal:
             )
         ]
 
-    def report(self):
+    def report(self, *, now=None):
         with self.read() as db:
             c = db.execute("SELECT * FROM execution_control WHERE id=1").fetchone()
             orders = db.execute("SELECT * FROM execution_orders ORDER BY rowid").fetchall()
@@ -206,6 +212,7 @@ class ExecutionJournal:
             return {
                 "mode": "EXECUTION_REHEARSAL",
                 "revision": self.revision(db),
+                "economics": economics.economics_report(db, c, now or datetime.now().astimezone()),
                 "restore_fence": restore.status(db, restore.authority_path(self.path)),
                 "alerts": self._alerts(db, 0, 100),
                 "unacknowledged_alerts": db.execute(

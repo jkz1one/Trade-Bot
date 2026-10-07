@@ -15,6 +15,7 @@ from pathlib import Path
 from app.config import Settings
 from app.domain.models import AccountState, Candidate, MarketPacket, Quote, TradeDecision
 from app.execution.durable_fixture import DurableFixtureVenue
+from app.execution.economics import CostAccounting, CostPolicy, UsageEvidence
 from app.execution.engine import ExecutionBlocked, ExecutionEngine
 from app.execution.fixture import LocalFixtureVenue
 from app.execution.journal import ExecutionJournal
@@ -313,10 +314,71 @@ def run_recovery_rehearsal(path):
     return report
 
 
+def run_economics_rehearsal(path):
+    path = Path(path)
+    _reserve_file(path)
+    settings = Settings(_env_file=None, mode="PAPER", live_enabled=False, starting_capital=10)
+    engine = ExecutionEngine(path, settings)
+    at = datetime(2026, 10, 6, 15, tzinfo=UTC)
+    venue = LocalFixtureVenue(Decimal(10))
+    engine.reconcile(venue.snapshot(at), now=at)
+    engine.journal.enable_restore_fence(now=at)
+    costs = CostAccounting(engine, CostPolicy(total_budget=1, daily_budget=1))
+    _require(costs.begin("cost-entry", _packet(at), now=at)["invoke_model"])
+    costs.settle(
+        "cost-entry",
+        UsageEvidence(
+            request_id="fixture-entry", model="gpt-6-luna", input_tokens=1000, output_tokens=100
+        ),
+        _decision(),
+        now=at,
+    )
+    entry = engine.prepare("cost-entry", _decision(), _packet(at), now=at)
+    _require(engine.dispatch(entry.client_id, venue, now=at, packet=_packet(at)) == "OPEN")
+    venue.fill(entry.client_id, entry.quantity, Decimal(10), at, fill_id="cost-buy")
+    engine.reconcile(venue.snapshot(at), now=at)
+    _require(costs.begin("cost-hold", _packet(at), now=at)["invoke_model"])
+    p = _packet(at)
+    p.candidates[0].quote.bid, p.candidates[0].quote.ask = Decimal("9.4"), Decimal("9.41")
+    exit_intent = engine.prepare_protective_exit(p, now=at)
+    _require(engine.dispatch(exit_intent.client_id, venue, now=at, packet=p) == "OPEN")
+    venue.fill(
+        exit_intent.client_id,
+        exit_intent.quantity,
+        exit_intent.limit_price,
+        at,
+        fill_id="cost-sell",
+    )
+    engine.reconcile(venue.snapshot(at), now=at)
+    _require(engine.journal.report(now=at)["economics"]["net_equity"] is None)
+    hold = TradeDecision.model_validate({**_decision().model_dump(), "action": "HOLD"})
+    costs.settle(
+        "cost-hold",
+        UsageEvidence(
+            request_id="fixture-hold", model="gpt-6-luna", input_tokens=1000, output_tokens=100
+        ),
+        hold,
+        now=at,
+    )
+    report = engine.journal.report(now=at)
+    _require(Decimal(report["economics"]["known_cost"]) == Decimal(".00030"))
+    _require(
+        Decimal(report["economics"]["net_equity"])
+        == Decimal(report["ledger"]["cash"]) - Decimal(".00030")
+    )
+    _require(venue.submit_count == 2 and report["restore_fence"]["status"] == "VERIFIED")
+    report.update(
+        status="OK",
+        measurement_note="Scripted token usage and fake fills test accounting, not API billing or trading signal.",
+    )
+    return report
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "command", choices=["run", "deadline-run", "operator-run", "recovery-run", "report"]
+        "command",
+        choices=["run", "deadline-run", "operator-run", "recovery-run", "economics-run", "report"],
     )
     parser.add_argument("--db", default="execution-rehearsal.db")
     args = parser.parse_args(argv)
@@ -330,6 +392,8 @@ def main(argv=None):
             if args.command == "operator-run"
             else run_recovery_rehearsal(args.db)
             if args.command == "recovery-run"
+            else run_economics_rehearsal(args.db)
+            if args.command == "economics-run"
             else ExecutionJournal(args.db).report()
         )
         print(json.dumps(report, indent=2))

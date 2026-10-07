@@ -8,7 +8,7 @@ import json
 import time
 from dataclasses import asdict
 from datetime import datetime, timedelta
-from decimal import ROUND_DOWN
+from decimal import ROUND_DOWN, Decimal
 from zoneinfo import ZoneInfo
 
 from pydantic import ValidationError
@@ -16,6 +16,7 @@ from pydantic import ValidationError
 from app.config import Settings
 from app.domain.models import AccountState, Action, MarketPacket, Position, TradeDecision
 from app.execution.durable_fixture import DurableFixtureVenue
+from app.execution.economics import entry_reasons, summary
 from app.execution.fixture import LocalFixtureVenue
 from app.execution.journal import ExecutionJournal
 from app.execution.models import (
@@ -166,7 +167,7 @@ class ExecutionEngine:
             if q.bid > q.ask:
                 raise ExecutionBlocked("INSANE_QUOTE")
 
-    def _govern(self, decision, packet, state, snapshot, now):
+    def _govern(self, decision, packet, state, snapshot, now, db, source_key):
         position = state.position
         if position:
             mark = next(
@@ -209,9 +210,16 @@ class ExecutionEngine:
         )
         if decision.action == Action.OPEN_LONG:
             reasons = list(risk.rejection_reasons)
-            if equity <= self.settings.starting_capital - self.limits.total_loss_limit:
+            cost_reasons, costs = entry_reasons(db, source_key, decision, packet, now)
+            reasons.extend(cost_reasons)
+            known_cost = Decimal(costs["known_cost"])
+            if equity - known_cost <= self.settings.starting_capital - self.limits.total_loss_limit:
                 reasons.append("EXECUTION_TOTAL_LOSS_LIMIT")
-            if state.daily_net_pnl.get(today.isoformat(), ZERO) <= -self.limits.daily_loss_limit:
+            daily_cost = Decimal(costs["daily_cost"].get(today.isoformat(), "0"))
+            if (
+                state.daily_net_pnl.get(today.isoformat(), ZERO) - daily_cost
+                <= -self.limits.daily_loss_limit
+            ):
                 reasons.append("EXECUTION_DAILY_LOSS_LIMIT")
             if reasons:
                 risk = risk.model_copy(
@@ -459,7 +467,19 @@ class ExecutionEngine:
             candidate = next(
                 (c for c in packet.candidates if c.quote.symbol == decision.symbol), None
             )
-            risk, governed_packet = self._govern(decision, packet, state, snapshot, now)
+            risk, governed_packet = self._govern(
+                decision, packet, state, snapshot, now, db, source_key
+            )
+            costs = summary(db)
+            if decision.action == Action.OPEN_LONG and costs["status"] != "UNCONFIGURED":
+                from app.execution.economics import _hash
+
+                call = db.execute(
+                    "SELECT packet_hash FROM execution_model_calls WHERE source_key=?",
+                    (source_key,),
+                ).fetchone()
+                if call is None or call[0] != _hash(packet):
+                    raise ExecutionBlocked("EXECUTION_MODEL_PACKET_EVIDENCE_REQUIRED")
             governed_packet = governed_packet.model_copy(
                 update={"session_context": window.context()}
             )
@@ -642,7 +662,9 @@ class ExecutionEngine:
                         ]
                     }
                 )
-            risk, current_packet = self._govern(proposed, packet, state, snapshot, now)
+            risk, current_packet = self._govern(
+                proposed, packet, state, snapshot, now, db, intent.source_key
+            )
             window = self.calendar.current_window(now)
             if intent.side == "BUY":
                 quote = next(c.quote for c in packet.candidates if c.quote.symbol == intent.symbol)
