@@ -93,8 +93,10 @@ SHADOW uses real Robinhood account/market data and may call `review_equity_order
 New isolated PAPER populations can explicitly bind their quote feed to the bounded
 Robinhood market-only collector. Its headless child returns no real account values;
 the engine supplies virtual ledger authority. Existing fixture populations and the
-deployed worker remain separate. This is a one-shot bridge pending authenticated
-verification and continuous service wiring; see `docs/PAPER_RUNTIME.md`.
+deployed worker remain separate. Add `--continuous-market` at initialization to
+compose repeated bounded refreshes into that population's PAPER runtime. Cold flat
+accounts have bounded warmup; failed refreshes halt and revoke entry/model admission.
+Authenticated timing and deployment remain pending; see `docs/PAPER_RUNTIME.md`.
 
 Quote freshness conservatively uses the oldest bid, ask and selected trade clock.
 A fresh component cannot hide stale executable prices; missing, naive or future

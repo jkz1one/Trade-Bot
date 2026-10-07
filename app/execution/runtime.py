@@ -16,9 +16,16 @@ from uuid import uuid4
 from pydantic import Field, model_validator
 
 from app.domain.models import TradeDecision, utc_now
-from app.execution import alert_state, restore, runtime_state, supervisor_state
+from app.execution import (
+    alert_state,
+    market_state,
+    restore,
+    runtime_state,
+    supervisor_state,
+)
 from app.execution.engine import ExecutionBlocked, _clock
 from app.execution.judgment import JudgmentCoordinator, configuration
+from app.execution.market_service import PaperMarketService
 from app.execution.models import Contract, Ledger, Snapshot
 from app.execution.supervisor import ExecutionSupervisor
 
@@ -82,12 +89,28 @@ def model_key(path):
 
 
 class PaperRuntime:
-    def __init__(self, supervisor, *, limits=None, judgment=None, key_file=None, clock=utc_now):
+    def __init__(
+        self,
+        supervisor,
+        *,
+        limits=None,
+        judgment=None,
+        key_file=None,
+        market_service=None,
+        clock=utc_now,
+    ):
         if type(supervisor) is not ExecutionSupervisor:
             raise ValueError("Built-in fixture supervision is required")
         self.supervisor, self.engine, self.clock = supervisor, supervisor.engine, clock
         self.limits = RuntimeLimits.model_validate((limits or RuntimeLimits()).model_dump())
         self.judgment = judgment
+        self.market_service = market_service
+        if market_service is not None and (
+            type(market_service) is not PaperMarketService
+            or market_service.engine is not self.engine
+            or market_service.feed is not supervisor.feed
+        ):
+            raise ValueError("Continuous market service must share the exact engine/feed")
         self.key_file = str(Path(key_file).absolute()) if key_file is not None else None
         if judgment is not None:
             if (
@@ -121,6 +144,7 @@ class PaperRuntime:
             else None,
             "key_file": self.key_file,
             "calendar": "XNYS-15minute-current-slot",
+            **({"market_service": self.market_service._policy()} if self.market_service else {}),
         }
 
     @property
@@ -139,6 +163,8 @@ class PaperRuntime:
                 raise ValueError("Verified paired execution authority required")
         with self.engine.journal.write() as db:
             self.engine._control(db)
+            if self.market_service:
+                self.market_service._state(db)
             for sql in (
                 "CREATE TABLE IF NOT EXISTS execution_runtime(id INTEGER PRIMARY KEY CHECK(id=1),policy_json TEXT NOT NULL,status TEXT NOT NULL,owner TEXT,generation INTEGER NOT NULL,heartbeat_at TEXT)",
                 "CREATE TABLE IF NOT EXISTS execution_runtime_cycles(slot TEXT PRIMARY KEY,owner TEXT NOT NULL,status TEXT NOT NULL,started_at TEXT NOT NULL,completed_at TEXT,feed_sequence INTEGER NOT NULL,feed_hash TEXT NOT NULL,packet_json TEXT NOT NULL,decision_json TEXT,result_json TEXT)",
@@ -165,6 +191,8 @@ class PaperRuntime:
             raise ExecutionBlocked("RUNTIME_CONFIGURATION_CHANGED")
         if self.owner is not None and row["owner"] != self.owner:
             raise ExecutionBlocked("RUNTIME_OWNER_CHANGED")
+        if self.market_service:
+            self.market_service._state(db)
         return row
 
     def _claim(self):
@@ -273,7 +301,11 @@ class PaperRuntime:
             ).fetchone()[0]
             if observed != digest:
                 raise ExecutionBlocked("RUNTIME_QUOTE_HISTORY_CHANGED")
-            if runtime_state.entry_reasons(db, now) or alert_state.entry_reasons(db, now):
+            if (
+                runtime_state.entry_reasons(db, now)
+                or alert_state.entry_reasons(db, now)
+                or market_state.entry_reasons(db, now)
+            ):
                 return {"status": "SKIPPED", "reason": "SERVICE_NOT_READY"}
             control = self.engine._control(db)
             try:
@@ -375,11 +407,18 @@ class PaperRuntime:
         """Private entry point used only while runtime_lease is held."""
         self._claim()
         supervision_stop = asyncio.Event()
+        # The source claims COLLECTING before the first supervision tick can wait
+        # for a missing/stale flat-account sample.
+        source = asyncio.create_task(self.market_service.run(stop)) if self.market_service else None
         tasks = [
             asyncio.create_task(self.supervisor.run(supervision_stop, drain_tick_on_stop=True)),
             asyncio.create_task(self._heartbeat(stop)),
             asyncio.create_task(self._cycles(stop)),
         ]
+        names = ["supervisor", "heartbeat", "cycles"]
+        if source:
+            tasks.append(source)
+            names.append("market")
         stopping = asyncio.create_task(stop.wait())
         failed = False
 
@@ -404,6 +443,12 @@ class PaperRuntime:
                     and tasks[0].exception() is None
                     and tasks[0].result() != 0
                 )
+                or (
+                    source in done
+                    and not source.cancelled()
+                    and source.exception() is None
+                    and source.result() != 0
+                )
             )
         finally:
             # Revoke entry authority before draining judgment/dispatch; keep protective
@@ -425,12 +470,17 @@ class PaperRuntime:
                                     self.clock(),
                                     "RUNTIME_TASK_FAILED",
                                     {
-                                        "component": ("supervisor", "heartbeat", "cycles")[index],
+                                        "component": names[index],
                                         "error_class": error,
                                     },
                                 )
                 self._publish("FAILED" if failed else "STOPPING")
             finally:
+                if self.market_service:
+                    try:
+                        self.market_service.revoke()
+                    except Exception:  # noqa: BLE001 -- failed revocation must still drain every child
+                        failed = True
                 cleanup = asyncio.create_task(drain())
                 interrupted = False
                 while not cleanup.done():
@@ -449,6 +499,7 @@ class PaperRuntime:
                         and not isinstance(value, asyncio.CancelledError)
                         for value in other_results
                     )
+                    or (source is not None and other_results[-1] == 1)
                 )
                 try:
                     self._publish("FAILED" if failed else "STOPPED")

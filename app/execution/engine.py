@@ -14,12 +14,19 @@ from zoneinfo import ZoneInfo
 from pydantic import ValidationError
 
 from app.config import Settings
-from app.domain.models import AccountState, Action, MarketPacket, Position, TradeDecision
+from app.domain.models import (
+    AccountState,
+    Action,
+    MarketPacket,
+    Position,
+    TradeDecision,
+)
 from app.execution.alert_state import entry_reasons as alert_entry_reasons
 from app.execution.durable_fixture import DurableFixtureVenue
 from app.execution.economics import entry_reasons, summary
 from app.execution.fixture import LocalFixtureVenue
 from app.execution.journal import ExecutionJournal
+from app.execution.market_state import entry_reasons as market_entry_reasons
 from app.execution.models import (
     SHARE_STEP,
     TERMINAL,
@@ -215,6 +222,7 @@ class ExecutionEngine:
             reasons = list(risk.rejection_reasons)
             reasons.extend(supervisor_entry_reasons(db, now))
             reasons.extend(runtime_entry_reasons(db, now))
+            reasons.extend(market_entry_reasons(db, now))
             reasons.extend(alert_entry_reasons(db, now))
             cost_reasons, costs = entry_reasons(db, source_key, decision, packet, now)
             reasons.extend(cost_reasons)

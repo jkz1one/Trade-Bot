@@ -22,7 +22,8 @@ creation is exclusive; failed provisioning can leave an incomplete directory for
 inspection and must not silently reuse it.
 
 Three supervised tasks share the exact engine: independent position supervision,
-runtime heartbeat and scheduled decisions. A cycle requires fresh successful
+runtime heartbeat and scheduled decisions. Explicit continuous-market enrollment
+adds a fourth market-only collection task. A cycle requires fresh successful
 supervision of its exact quote sequence/hash, reconciled account truth and entry
 health. Before any model invocation it atomically claims the current regular-session
 slot and saves its governed account packet and quote lineage. It never backfills
@@ -185,12 +186,58 @@ with no positions, working orders, lessons or model session metadata. The schedu
 engine still rebuilds account authority from its own reconciled virtual ledger.
 Real quotes do not turn fake orders/fills into brokerage evidence or grant LIVE authority.
 
-The collector is currently a bounded one-shot bridge. It does not maintain fresh
-quotes continuously or provision a daemon. Authenticated collection latency, full
-universe availability, source-specific feed scheduling and continuous service failure
-behavior still need verification; do not start an unattended runtime expecting one
-sample to stay fresh. Failed refreshes retain the old sample, whose existing age
-checks revoke admission as it expires. No stale timestamps are renewed.
+## Continuous PAPER market service
+
+Opt into continuous collection explicitly when creating a **new** population:
+
+```bash
+python -m app.execution.runtime_cli init \
+  --directory /private/continuous-paper --capital 10 --symbols SPY \
+  --market-oauth-file /private/paper-market-robinhood-oauth.json \
+  --continuous-market
+python -m app.execution.runtime_cli run --directory /private/continuous-paper
+python -m app.execution.runtime_cli report --directory /private/continuous-paper
+```
+
+The existing credential requirements above apply. Initialization performs no network
+calls. The additional service policy freezes source/feed/universe identities,
+polling cadence, read deadline and health/quote age limits before attempts. Existing
+fixture and one-shot populations retain their enrollment and behavior. Run/restart
+never adds this service to an existing population.
+
+The market task owns the per-feed reader lease for its entire lifetime, including
+closed-session waits and child cleanup. A concurrent one-shot collect fails without
+starting another child. Each read retains the bridge's 30-second whole-process
+deadline, protocol validation, credential isolation and complete atomic publication.
+Default polling waits five seconds after each completed read. It currently fetches
+the full frozen seven-day history on each refresh; it does not cache histories or
+claim this cadence is verified for the live 20-symbol universe.
+
+While closed and flat with no active reservation, the service remains IDLE without
+OAuth reads or market/model/venue children. At session opening or cold startup, a
+flat supervisor can WAIT only within the bounded source attempt or recent IDLE poll
+grace while samples are missing/stale. WAITING cannot grant entry health; malformed
+or future-dated evidence still fails. Owned positions and active reservations cannot
+use this grace, and keep their existing immediate quote/reconciliation requirements.
+The collector keeps reading outside a session when local risk remains.
+
+Successful samples persist sequence/hash, oldest quote time and success time under
+the execution authority fence. Entry, dispatch and new model receipts require source
+health in addition to independent successful supervision. Health expires after
+45 seconds by default and respects the frozen quote-age ceiling; no timestamps are
+renewed by failed reads. Protective SELL and auditable HOLD retain their existing
+rules. Pending refresh does not by itself stop protective supervision.
+
+A failed read persists only its sanitized exception class, halts the engine and
+ends the runtime without retrying. Old quote samples remain unchanged. Shutdown
+revokes source authority before cancelling reads and retains both runtime/feed
+leases through child reaping. An interrupted market owner retains a halt on restart
+and discards inherited source health; fresh reads never automatically resume it.
+Reports and operator reviews expose bounded source health without network calls.
+
+This composition is verified offline and through installed native children with
+local MCP fixtures. Authenticated collector latency, current full-universe
+availability and real service-host operation remain verification gates.
 
 This runner does not provision an operator API, external alert/archive sink, daemon
 wrapper or real broker adapter. Those contracts are separate

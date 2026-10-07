@@ -17,7 +17,13 @@ from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from app.execution import alert_state, restore, runtime_state, supervisor_state
+from app.execution import (
+    alert_state,
+    market_state,
+    restore,
+    runtime_state,
+    supervisor_state,
+)
 from app.execution.engine import ExecutionBlocked, ExecutionEngine, _clock
 from app.execution.models import Contract, Ledger
 
@@ -224,6 +230,7 @@ class OperatorControl:
                 else None,
                 "supervisor": supervisor_state.report(db, now),
                 "runtime": runtime_state.report(db, now),
+                "market_service": market_state.report(db, now),
                 "alert_delivery": alert_state.report(db, now),
                 "restore_fence": fence,
                 "alerts": [
@@ -286,7 +293,10 @@ class OperatorControl:
                 try:
                     if command.action == "RESOLVE_CYCLE":
                         from app.execution.cycle_recovery import resolve_cycle
-                        from app.execution.runtime import RuntimeAlreadyRunning, runtime_lease
+                        from app.execution.runtime import (
+                            RuntimeAlreadyRunning,
+                            runtime_lease,
+                        )
 
                         try:
                             ownership.enter_context(runtime_lease(journal.path))

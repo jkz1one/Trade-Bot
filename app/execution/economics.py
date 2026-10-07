@@ -16,6 +16,7 @@ from pydantic import Field, field_validator, model_validator
 
 from app.domain.models import TradeDecision
 from app.execution.alert_state import entry_reasons as alert_entry_reasons
+from app.execution.market_state import entry_reasons as market_entry_reasons
 from app.execution.models import ZERO, Contract, Ledger, Snapshot
 from app.execution.runtime_state import entry_reasons as runtime_entry_reasons
 from app.execution.supervisor_state import entry_reasons as supervisor_entry_reasons
@@ -205,6 +206,8 @@ class CostAccounting:
                 raise ExecutionBlocked("EXECUTION_RUNTIME_NOT_READY")
             if supervisor_entry_reasons(db, now):
                 raise ExecutionBlocked("EXECUTION_SUPERVISOR_NOT_READY")
+            if market_entry_reasons(db, now):
+                raise ExecutionBlocked("EXECUTION_MARKET_SERVICE_NOT_READY")
             if alert_entry_reasons(db, now):
                 raise ExecutionBlocked("EXECUTION_ALERT_DELIVERY_NOT_READY")
             if db.execute("SELECT 1 FROM execution_orders WHERE active_lock=1").fetchone():

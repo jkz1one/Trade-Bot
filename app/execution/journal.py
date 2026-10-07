@@ -9,7 +9,14 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
 
-from app.execution import alert_state, economics, restore, runtime_state, supervisor_state
+from app.execution import (
+    alert_state,
+    economics,
+    market_state,
+    restore,
+    runtime_state,
+    supervisor_state,
+)
 from app.execution.models import Ledger
 
 SCHEMA = "execution-rehearsal-v1"
@@ -66,6 +73,7 @@ class ExecutionJournal:
                 "execution_runtime",
                 "execution_runtime_cycles",
                 "execution_runtime_resolutions",
+                "execution_market_service",
                 "sqlite_sequence",
             }
             if tables - allowed:
@@ -235,6 +243,7 @@ class ExecutionJournal:
                 "economics": economics.economics_report(db, c, now or datetime.now().astimezone()),
                 "supervisor": supervisor_state.report(db, now or datetime.now().astimezone()),
                 "runtime": runtime_state.report(db, now or datetime.now().astimezone()),
+                "market_service": market_state.report(db, now or datetime.now().astimezone()),
                 "alert_delivery": alert_state.report(db, now or datetime.now().astimezone()),
                 "restore_fence": restore.status(db, restore.authority_path(self.path)),
                 "alerts": self._alerts(db, 0, 100),

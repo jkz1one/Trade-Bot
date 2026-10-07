@@ -16,6 +16,7 @@ from app.execution.economics import CostAccounting, CostPolicy
 from app.execution.engine import ExecutionEngine
 from app.execution.journal import ExecutionJournal
 from app.execution.judgment import JudgmentCoordinator, JudgmentLimits
+from app.execution.market_service import MarketServiceLimits, PaperMarketService
 from app.execution.models import ExecutionLimits
 from app.execution.quote_feed import DurableQuoteFeed
 from app.execution.runtime import PaperRuntime, RuntimeLimits, runtime_lease
@@ -31,6 +32,7 @@ def initialize(
     total_budget=None,
     daily_budget=None,
     market_oauth_file=None,
+    continuous_market=False,
 ):
     if (
         capital <= 0
@@ -41,6 +43,8 @@ def initialize(
         raise ValueError("Positive capital and an explicit unique equity fixture universe required")
     if key_file is None and (total_budget is not None or daily_budget is not None):
         raise ValueError("Model budgets require explicit model key opt-in")
+    if continuous_market and not market_oauth_file:
+        raise ValueError("Continuous collection requires explicit market OAuth opt-in")
     policy = CostPolicy(total_budget=total_budget, daily_budget=daily_budget) if key_file else None
     source = None
     if market_oauth_file:
@@ -71,12 +75,17 @@ def initialize(
             source=source.model_dump(mode="json") if source else None,
         )
         supervisor = ExecutionSupervisor(engine, venue, feed)
+        market = PaperMarketService(engine, feed) if continuous_market else None
+        if market:
+            market.enroll()
         judgment = (
             JudgmentCoordinator(CostAccounting(engine, policy), JudgmentLimits())
             if policy
             else None
         )
-        runtime = PaperRuntime(supervisor, judgment=judgment, key_file=key_file)
+        runtime = PaperRuntime(
+            supervisor, judgment=judgment, key_file=key_file, market_service=market
+        )
         runtime.enroll()
     return {
         "status": "INITIALIZED",
@@ -136,6 +145,13 @@ def load(directory):
         limits=RuntimeLimits.model_validate(policy["limits"]),
         judgment=judgment,
         key_file=policy["key_file"],
+        market_service=PaperMarketService(
+            engine,
+            feed,
+            limits=MarketServiceLimits.model_validate(policy["market_service"]["limits"]),
+        )
+        if "market_service" in policy
+        else None,
     )
     with engine.journal.read() as db:
         runtime._state(db)
@@ -167,6 +183,7 @@ def main(argv=None):
     init.add_argument("--total-budget", type=Decimal)
     init.add_argument("--daily-budget", type=Decimal)
     init.add_argument("--market-oauth-file")
+    init.add_argument("--continuous-market", action="store_true")
     for command in ("run", "report", "publish", "collect"):
         child = sub.add_parser(command)
         child.add_argument("--directory", required=True)
@@ -184,6 +201,7 @@ def main(argv=None):
                 total_budget=args.total_budget,
                 daily_budget=args.daily_budget,
                 market_oauth_file=args.market_oauth_file,
+                continuous_market=args.continuous_market,
             )
         elif args.command == "run":
             return asyncio.run(serve(args.directory))

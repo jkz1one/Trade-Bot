@@ -13,6 +13,7 @@ from uuid import uuid4
 from pydantic import Field, model_validator
 
 from app.domain.models import utc_now
+from app.execution import market_state
 from app.execution.durable_fixture import DurableFixtureVenue
 from app.execution.engine import ExecutionBlocked, ExecutionEngine, _clock
 from app.execution.models import Contract, Ledger, Snapshot
@@ -185,6 +186,37 @@ class ExecutionSupervisor:
         if idle:
             self._publish("IDLE", {"status": "IDLE", "reason": "MARKET_CLOSED"}, now)
             return
+        # A bounded source read may warm an empty/stale feed only while flat.
+        # WAITING cannot renew entry health or mask malformed/future evidence.
+        if flat and active is None:
+            with self.engine.journal.read() as db:
+                warming = market_state.report(db, now).get("waiting_flat", False)
+            if warming:
+                try:
+                    _, pending = self.feed.latest()
+                except ValueError as exc:
+                    if str(exc) != "FIXTURE_QUOTES_UNAVAILABLE":
+                        raise
+                    pending = None
+                ages = (
+                    [
+                        (now - stamp).total_seconds()
+                        for stamp in [
+                            pending.as_of,
+                            *(c.quote.timestamp for c in pending.candidates),
+                        ]
+                    ]
+                    if pending is not None
+                    else []
+                )
+                if pending is None or (
+                    all(age >= 0 for age in ages)
+                    and any(age > self.engine.settings.quote_max_age_seconds for age in ages)
+                ):
+                    self._publish(
+                        "WAITING", {"status": "WAITING", "reason": "MARKET_SOURCE_WARMING"}, now
+                    )
+                    return
         reconciled = await self.engine.reconcile_fixture(
             self.venue, now=now, fence_account_changes=True
         )

@@ -20,14 +20,16 @@ evidence remain deployment gates. LIVE is disabled.
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **900 tests in 128.38 seconds with warnings treated as errors**,
-including the previous 837 cases and 63 new market-read bridge cases. Interrupted
+full local suite passed **926 tests in 131.12 seconds with warnings treated as errors**,
+including the previous 900 cases and 26 continuous-market composition cases. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
 The source-bound market-only PAPER feed now connects through a bounded headless
-read child; installed-package scheduled HOLD proof passed with local MCP fixtures.
+read child; explicit new-population continuous refresh now joins the PAPER runtime.
+Installed-package scheduled HOLD, repeated native reads, blocked-child cleanup and
+native CLI SIGTERM proofs passed with local MCP fixtures.
 Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticated
-collector latency and continuous source refresh remain unverified.
+collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
 
 ## Target-host evidence — 2026-10-06 UTC
@@ -894,7 +896,7 @@ changed no execution/authority bytes, reporting changed no store bytes, the pair
 VERIFIED and both actual children were reaped. There were zero remote broker/model
 calls. This is installed orchestration evidence, not authenticated MCP/provider proof.
 
-Remaining: authenticated full-universe collection timing/availability, continuous
+Remaining at that checkpoint: authenticated full-universe collection timing/availability, continuous
 source refresh and failure composition, bounded model validation/adoption, deployed
 operator/alert/archive services, host recovery and actual broker capabilities.
 Do not rebuild the deployed image for this separate population. Deployed SHADOW,
@@ -903,6 +905,67 @@ Operations: [PAPER_RUNTIME.md](PAPER_RUNTIME.md).
 
 Estimated v1 execution-engine completeness: **about 89%**, a rough component estimate,
 excluding LIVE readiness and profitability.
+
+## Continuous PAPER market composition follow-up — 2026-10-07 UTC
+
+New isolated populations may explicitly add `--continuous-market` alongside the
+private market OAuth opt-in before runtime enrollment. Existing fixture and one-shot
+populations keep their frozen policy and behavior; no migration or implicit adoption
+occurs. The added service requires the exact built-in engine/feed and VERIFIED paired
+authority, and freezes identities, universe, source hash, cadence and freshness bounds.
+
+The runtime now owns market collection alongside independent supervision, heartbeat
+and scheduled decisions. The market service holds its reader lease for its whole
+lifetime, including closed-session polling and bounded child cleanup; one-shot readers
+cannot compete. Each read keeps the child isolated from model credentials and venue
+handles, with a market-only gateway, 30-second deadline and atomic publication checks.
+Default cadence waits five seconds after completion. Full seven-day histories are
+currently fetched each time; authenticated 20-symbol timing is not established.
+
+Closed, flat accounts without active reservations idle without OAuth reads or any
+market/model/venue child. At cold start or session opening, missing/stale feed warmup
+is bounded to the pending source read or recent idle polling grace and only while
+flat without reservations. WAITING cannot grant entry health. Owned risk keeps the
+existing immediate quote requirements; malformed/future evidence cannot use grace.
+Reads continue outside sessions when a position or active reservation remains.
+
+Success commits sample sequence/hash and original oldest-quote/success times under
+the execution fence. New BUY preparation/dispatch, model receipts and scheduled
+claims require source health as well as independent supervision. Pending refresh
+preserves protective SELL checks; HOLD remains auditable. Failure preserves the old
+sample, persists only a sanitized exception class, halts and ends all tasks without
+automatic retries. Shutdown revokes source health before child cancellation and
+retains both reader/runtime leases through reaping. Interrupted owners retain a halt
+and discard inherited health on restart; fresh collection never resumes authority.
+Journal and existing operator reviews expose read-only bounded service health.
+
+Verification: **926 tests passed in 131.12s with warnings treated as errors**, including
+26 new cases for cold/open-session warmup, closed idle, duplicate readers, refresh
+failure, freshness/configuration/authority gates, no-retry behavior, protective exits,
+owned-risk missing quotes, interruption and repeated-cancellation cleanup. Scoped
+fatal-error/import lint, format, pip check and whitespace checks passed. The installed
+wheel outside the checkout passed all **89 market cases** with warnings treated as
+errors. Wheel SHA-256:
+`c4088480ce1e316538b89546353295993e0b57c046209bf9e22f5c8d63ae30a8`.
+
+Installed native proof ran the real collector entry point/protocol against local MCP
+fixtures for two published samples and completed one scheduled stub HOLD using the
+virtual ledger's $10 cash. Source account value remained zero. A third actual child
+blocked until stop; all five source/venue children were reaped before both leases
+released. All tasks ended STOPPED, reporting changed no store bytes and paired
+authority remained VERIFIED. A separate installed native CLI ran closed/flat with its
+OAuth file removed, idled without samples/cycles, handled actual SIGTERM with exit 0
+and retained VERIFIED authority. Both proofs made zero remote broker/model calls.
+
+Remaining: authenticated full-universe source latency/availability, bounded model
+validation/adoption, actual host composition and operator/alert/archive services,
+restore/host-failure evidence and real broker capabilities. No automatic fixture
+fills, broker write adapter or deployed worker integration was added. Main, deployed
+SHADOW/virtual-v1 and LIVE state remain unchanged. Do not rebuild the deployed SHADOW
+image for this independent population. Operations: [PAPER_RUNTIME.md](PAPER_RUNTIME.md).
+
+Estimated v1 execution-engine completeness: **about 89%**, a rough engineering
+component estimate excluding LIVE readiness and profitability.
 
 ## Sequential synthetic portfolio and build hardening
 
