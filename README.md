@@ -43,6 +43,10 @@ checks a durable quote feed and dispatches only governed protective SELL intents
 Fresh completed supervision is required for new model calls and BUY admission;
 stale reads, duplicate runners and interrupted recovery cannot renew entry authority.
 This remains offline infrastructure, with no deployed service or broker writes.
+An isolated native-TLS control API now exposes bounded operator review and the six
+existing signed recovery actions. Separate read/signing credentials, reviewed revisions,
+restore fencing and durable replay receipts remain mandatory. It is not deployed and
+adds no routes to the current SHADOW observer or PAPER app.
 
 ## Slice 2 — Robinhood read / SHADOW
 

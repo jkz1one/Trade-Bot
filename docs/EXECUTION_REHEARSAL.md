@@ -560,6 +560,72 @@ or host-survival guarantee. Secure deployed supervision, external alerts, host-f
 proof, off-host fencing and actual broker semantics remain required. The existing
 SHADOW worker, observer and synthetic experiment are unchanged.
 
+## Isolated native-TLS operator transport
+
+`app.execution.control_api.create_control_app(engine, config, operator_key_file=...,
+read_token_file=..., clock=...)` optionally creates a separate FastAPI application
+for the fixture engine. It does not enroll keys, migrate a journal, create an engine,
+resume execution or call a broker/model. Startup requires an already enrolled signing
+capability and a VERIFIED journal/authority pair. No route is added to the existing
+PAPER application or deployed read-only SHADOW observer.
+
+| Endpoint | Authority |
+| --- | --- |
+| `GET /v1/review` | Read token; bounded, authenticated review of current revision, operator generation, cash/position, active intent, snapshot freshness timestamp, supervisor and oldest 25 unacknowledged alert summaries. |
+| `POST /v1/commands` | Read token plus an exact signed `OperatorCommand`; only HALT, RESUME, ABANDON_PREPARED, ACK_ALERT, ROTATE_KEY and REVOKE_KEY. |
+
+The review's binding, revision and evidence share one read-only SQLite snapshot.
+Prompts, full order/fill history, event payloads and signing fingerprints/keys are
+not included. Restore status must be VERIFIED; the response has a 64 KiB ceiling.
+Commands retain the core's journal identity, credential generation, expiry, exact
+reviewed revision, ownership/freshness and atomic action/audit/receipt rules. A
+signed replay returns the original APPLIED/rejected result; it never reapplies the
+action or turns a rejection into approval. Replays may advance restore bookkeeping
+inside the existing fenced transaction, without changing command audit revision.
+
+`ControlAPIConfig(origin="https://control.example:9443")` requires one exact HTTPS
+origin. Serve this app with **native ASGI-server TLS and proxy-header handling
+disabled**, for example `uvicorn.run(control_app, host="127.0.0.1", port=9443,
+ssl_certfile=..., ssl_keyfile=..., proxy_headers=False, ws="none", access_log=False)`.
+This describes the interface contract, not a deployment instruction for the current
+server. Clients must validate its certificate. This app rejects plaintext, mismatched
+Host/Origin, cross-site fetches, forwarding headers and duplicate security/body
+headers. Forwarding headers cannot grant TLS/origin authority. WebSockets, forms,
+cookie authentication, CORS access, documentation and enrollment/recovery/order/LIVE
+routes are not provided. The existing Caddy observer configuration is unchanged;
+this native-TLS API is not intended to be attached to its forwarding route.
+
+Both credential files contain an independently generated 32-byte lowercase hex
+secret, optionally followed by one newline, and must be regular, current-user-owned
+files with mode 0600. The final file component cannot be a symlink. The read token
+must differ from the signing key. Requests use `Authorization: Bearer <read-token>`;
+clients sign the command locally and send `{"command": ..., "signature": ...}`.
+No raw signing key is accepted in a request. Files are checked again per request;
+missing/changed permissions or retired capability fail closed. Signed rotation keeps
+the halt and requires trusted local replacement of the signing file to the new key.
+Revocation recovery remains trusted-local only. The shared signing capability still
+does not separately authenticate the actor label as a person.
+
+Command parsing caps known-length and chunked bodies at 16 KiB and body reception
+at 5 seconds by default. JSON is UTF-8 without compression; duplicate fields,
+nonfinite numbers, extra fields and bad signed-envelope shapes are rejected without
+echoing request/validation details. Up to four requests are admitted by default
+(configurable to eight); excess returns 429 rather than queuing unbounded work.
+No-store/privacy headers apply to all responses. Rejected/stale signed commands
+return 409 with the durable core receipt; invalid authority returns a sanitized
+403, and unavailable state/credentials return a sanitized 503.
+
+The pure ASGI boundary retains admission while a cancelled request drains its local
+thread, even after repeated cancellation. A lost HTTP response cannot prove whether
+a command committed. Inspect/replay the **same signed command ID/content** while its
+capability remains active, rather than generating a new command. Core transactions
+and receipts remain the authority after process death. Local SQLite/hash work has
+no hard real-time completion guarantee; body timeout does not abort a committing
+command. Runtime TLS/host limits, OS ownership, certificate lifecycle, secure key
+provisioning, actual deployed recovery, external alerts and off-host restore proof
+remain deployment requirements. No actual host or experiment is changed by this
+factory or the fixture tests.
+
 ## SignalFlow adaptation and remaining engineering
 
 Fresh GitHub inspection confirms SignalFlow `main` remains

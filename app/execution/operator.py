@@ -16,6 +16,7 @@ from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 
+from app.execution import restore, supervisor_state
 from app.execution.engine import ExecutionBlocked, ExecutionEngine, _clock
 from app.execution.models import Contract, Ledger
 
@@ -76,6 +77,18 @@ def sign_command(command: OperatorCommand, key: bytes):
 
 
 class OperatorControl:
+    def _authenticated_binding(self, db):
+        row = db.execute("SELECT * FROM execution_operator WHERE id=1").fetchone()
+        if (
+            not row
+            or row["revoked"]
+            or row["generation"] != self.credential_generation
+            or row["journal_id"] != self.journal_id
+            or not hmac.compare_digest(row["key_hash"], _key_hash(self._key))
+        ):
+            raise ValueError("Operator capability retired or unavailable")
+        return row
+
     @staticmethod
     def enroll(engine: ExecutionEngine, key: bytes, *, now):
         """Explicit local provisioning; no automatic key adoption or replacement."""
@@ -145,19 +158,68 @@ class OperatorControl:
     def review(self):
         """Read the exact revision/evidence to bind the next recovery request."""
         with self.engine.journal.read() as db:
-            binding = db.execute("SELECT * FROM execution_operator WHERE id=1").fetchone()
-            if (
-                not binding
-                or binding["revoked"]
-                or binding["generation"] != self.credential_generation
-                or binding["journal_id"] != self.journal_id
-                or not hmac.compare_digest(binding["key_hash"], _key_hash(self._key))
-            ):
-                raise ValueError("Operator capability retired or unavailable")
+            self._authenticated_binding(db)
         result = self.engine.journal.report()
         result["operator_journal_id"] = self.journal_id
         result["operator_credential_generation"] = self.credential_generation
         return result
+
+    def review_summary(self, *, now, limit=25):
+        """One read-only snapshot for a bounded control transport, no prompt/key material."""
+        _clock(now)
+        if not 1 <= limit <= 100:
+            raise ValueError("Invalid operator review page")
+        journal = self.engine.journal
+        with journal.read() as db:
+            binding = self._authenticated_binding(db)
+            control = self.engine._control(db)
+            fence = restore.status(db, restore.authority_path(journal.path))
+            if fence["status"] != "VERIFIED":
+                raise ValueError("Verified restore authority required for control transport")
+            snapshot = json.loads(control["snapshot_json"]) if control["snapshot_json"] else None
+            active = db.execute("SELECT * FROM execution_orders WHERE active_lock=1").fetchone()
+            return {
+                "operator_journal_id": binding["journal_id"],
+                "operator_credential_generation": binding["generation"],
+                "revision": journal.revision(db),
+                "halted": bool(control["halted"]),
+                "halt_reason": control["halt_reason"],
+                "issues": json.loads(control["issues_json"]),
+                "ledger": json.loads(control["ledger_json"]),
+                "snapshot": {
+                    key: snapshot[key]
+                    for key in (
+                        "snapshot_id",
+                        "account_id",
+                        "captured_at",
+                        "complete",
+                        "cash",
+                        "safe_buying_power",
+                    )
+                }
+                if snapshot
+                else None,
+                "active_order": {
+                    "intent": json.loads(active["intent_json"]),
+                    "status": active["status"],
+                    "attempted_at": active["attempted_at"],
+                }
+                if active
+                else None,
+                "supervisor": supervisor_state.report(db, now),
+                "restore_fence": fence,
+                "alerts": [
+                    dict(row)
+                    for row in db.execute(
+                        "SELECT a.event_sequence,a.acknowledged_at,e.occurred_at,e.kind,e.client_id "
+                        "FROM execution_alerts a JOIN execution_events e ON e.sequence=a.event_sequence "
+                        "WHERE a.acknowledged_at IS NULL ORDER BY a.event_sequence LIMIT ?",
+                        (limit,),
+                    )
+                ],
+                "network_calls": False,
+                "live_enabled": False,
+            }
 
     def apply(self, command: OperatorCommand, signature: str, *, now):
         _clock(now)

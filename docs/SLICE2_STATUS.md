@@ -20,11 +20,11 @@ evidence remain deployment gates. LIVE is disabled.
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **557 tests in 51.80 seconds with warnings treated as errors**, including 40 execution
+full local suite passed **614 tests in 54.07 seconds with warnings treated as errors**, including 40 execution
 lifecycle tests, 26 position-supervision tests, 35 execution-limit/dispatch tests
 and 22 isolated-process/durable-venue tests, plus 35 operator/alert tests and
-26 credential/restore tests, 30 model-cost/economics tests, 36 bounded-judgment tests
-and 31 independent-supervisor tests.
+26 credential/restore tests, 30 model-cost/economics tests, 36 bounded-judgment tests,
+31 independent-supervisor tests and 57 control-transport tests.
 The deployed application release remains the one recorded below.
 
 ## Target-host evidence — 2026-10-06 UTC
@@ -485,6 +485,72 @@ validation/adoption, deployed supervision/operator transport/alerts, off-host
 protection and host-failure proof remain. The server release, SHADOW experiment and
 first scheduled regular-session evidence gate are unchanged. No authenticated
 model/broker call, server update or LIVE capability was introduced.
+
+## Isolated operator transport follow-up — 2026-10-07 UTC
+
+Fresh canonical branch state matched `97aa22b7718b1c65f028777d90d6e38019cedd9d`
+before editing. PR #1 remains draft and main is unchanged. The opt-in fixture
+engine now has a separate native-TLS control application exposing only authenticated
+bounded review and the six existing signed operator commands. Startup requires
+explicit prior key enrollment and a VERIFIED journal/authority pair; it never
+creates an engine, enrolls credentials, migrates state or resumes execution.
+
+The read token and signing key are separate 32-byte hex secrets in private,
+owner-only regular files. Files/capability retirement are rechecked per request.
+The API pins an exact HTTPS origin, rejects forwarding/ambiguous headers and
+cross-origin requests, provides no cookie/CORS or order/LIVE/enrollment/recovery
+routes, and disables documentation. Native ASGI TLS with proxy-header handling
+disabled is required; this is not wired into the current observer's Caddy route.
+
+Review binding/revision/evidence share one read-only snapshot and omit prompts,
+full event/order/fill history and signing material. Responses are capped at 64 KiB.
+Commands require the read token and exact HMAC envelope. Existing expiry, reviewed
+revision, generation, reservation ownership, fresh recovery evidence and atomic
+action/audit/receipt rules are preserved. Replays never reapply an action or turn
+a rejection into approval. Signed rotation/revocation retain the halt, retired
+keys cannot obtain replay receipts, and trusted local key provisioning/recovery
+remains required.
+
+Known-length/chunked request bodies are capped at 16 KiB, with a default five-second
+body deadline and four admitted requests (maximum eight). Malformed/duplicate/
+nonfinite/extra JSON is rejected without echoing validation details. All responses
+carry privacy/no-store headers. A cancellation test caught early admission release
+in the generic HTTP middleware wrapper; the final pure ASGI boundary retains the
+slot until cancelled local thread work drains, even after repeated cancellation.
+A lost response does not prove nonapplication: inspect/replay the same signed
+command while its capability remains active. A body timeout cannot abort a
+committing SQLite transaction or establish a hard real-time storage guarantee.
+
+Verification: **614 tests passed in 54.07s with warnings treated as errors**, including
+**57 new control-transport tests**. Tests cover read-only bytes; startup provisioning,
+restore and private-file requirements; auth/TLS/origin/header rejection; parser,
+body and admission bounds; cancellation/committed receipt retention; durable replay;
+stale reviews; unknown/attempted-order recovery rejection; unattempted abandonment;
+alert acknowledgment without resume; fresh owned-position supervision; rotation,
+revocation and read-token changes; runtime engine changes; journal-only rollback;
+and oversized review rejection. Changed-code Ruff check/format, pip check and
+whitespace checks passed.
+
+The wheel installed outside the checkout passed a native Uvicorn HTTPS proof under
+optimized Python and warnings as errors. The client validated the generated
+loopback certificate, anonymous and forwarded-header requests were denied, signed
+halt/resume and exact replay succeeded, and a client closed its connection after a
+third command committed but before receiving the reply. Replaying that same command
+returned its original receipt without reapplying it. Three durable command receipts,
+private credentials/state, VERIFIED restore authority, unchanged read-only bytes,
+zero broker/model calls and a reaped server were verified. The proof harness was
+corrected to treat HTTP header names case-insensitively before its completed run.
+Wheel SHA-256:
+`06993ae79c130b449c4d9d99dec138035ce3e2c8f29b0f47062d02104fe50fbf`.
+
+Estimated v1 execution-engine completeness: **about 82%**, a rough component estimate.
+This proves the isolated fixture transport, not actual-host TLS/certificate lifecycle,
+key provisioning, deployed recovery, user identity or broker authority. Actual broker
+contracts, authenticated model validation/adoption, deployed supervision and alerts,
+off-host restoration and host-failure proof remain. The deployed release and SHADOW
+cohort are unchanged; first scheduled regular-session evidence remains unobserved
+in this workspace. No LIVE capability, actual server update or outbound broker/model
+call was introduced.
 
 ## Sequential synthetic portfolio and build hardening
 
