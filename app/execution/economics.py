@@ -82,6 +82,13 @@ def summary(db, now=None):
                 .isoformat()
             )
             daily[day] = daily.get(day, ZERO) + amount
+    blocked, judgment_policy = None, None
+    if db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_judgment_policy'").fetchone():
+        judgment = db.execute(
+            "SELECT policy_json,blocked_reason FROM execution_judgment_policy WHERE id=1"
+        ).fetchone()
+        judgment_policy = json.loads(judgment[0]) if judgment else None
+        blocked = judgment[1] if judgment else None
     return {
         "status": "INCOMPLETE" if unknown else "COMPLETE",
         "policy": policy.model_dump(mode="json"),
@@ -89,6 +96,8 @@ def summary(db, now=None):
         "unknown_calls": unknown,
         "calls_exceeding_bound": exceeded,
         "daily_cost": {k: str(v) for k, v in daily.items()},
+        "judgment_blocked": blocked,
+        "judgment_policy": judgment_policy,
     }
 
 
@@ -100,6 +109,8 @@ def entry_reasons(db, source_key, decision, packet, now):
     policy = CostPolicy.model_validate(costs["policy"])
     if costs["unknown_calls"]:
         reasons.append("EXECUTION_MODEL_COST_UNKNOWN")
+    if costs.get("judgment_blocked"):
+        reasons.append("EXECUTION_MODEL_EVIDENCE_VIOLATION")
     if costs["calls_exceeding_bound"]:
         reasons.append("EXECUTION_MODEL_COST_BOUND_EXCEEDED")
     day = now.astimezone(ZoneInfo("America/New_York")).date().isoformat()
@@ -112,6 +123,20 @@ def entry_reasons(db, source_key, decision, packet, now):
     ).fetchone()
     if not call or not call["usage_json"] or call["decision_hash"] != _hash(decision):
         reasons.append("EXECUTION_MODEL_DECISION_EVIDENCE_REQUIRED")
+    if costs.get("judgment_policy"):
+        record = db.execute(
+            "SELECT payload FROM execution_events WHERE kind='MODEL_JUDGMENT_RECORDED' AND json_extract(payload,'$.source_key')=? ORDER BY sequence DESC LIMIT 1",
+            (source_key,),
+        ).fetchone()
+        evidence = json.loads(record[0])["result"] if record else None
+        if (
+            not evidence
+            or evidence["error"] is not None
+            or not call
+            or evidence["usage"] != json.loads(call["usage_json"] or "null")
+            or _hash(TradeDecision.model_validate(evidence["decision"])) != _hash(decision)
+        ):
+            reasons.append("EXECUTION_BOUNDED_JUDGMENT_EVIDENCE_REQUIRED")
     # Dispatch can use refreshed market data; original packet lineage is checked
     # during admission, while immutable decision/cost evidence remains required.
     return reasons, costs
@@ -150,7 +175,7 @@ class CostAccounting:
         if row is None or row[0] != self.policy.model_dump_json():
             raise ExecutionBlocked("EXECUTION_COST_CONFIGURATION_CHANGED")
 
-    def begin(self, source_key, packet, *, now):
+    def begin(self, source_key, packet, *, now, expected_revision=None):
         """Commit before a future external model invocation. Never automatically retry."""
         from app.execution.engine import ExecutionBlocked, _clock
 
@@ -170,6 +195,8 @@ class CostAccounting:
                 if old["packet_hash"] != fingerprint:
                     raise ValueError("MODEL_SOURCE_CONTENT_CONFLICT")
                 return {"status": "EXISTING", "source_key": source_key, "invoke_model": False}
+            if expected_revision is not None and engine.journal.revision(db) != expected_revision:
+                raise ExecutionBlocked("MODEL_ACCOUNT_REVIEW_CHANGED")
             engine._ready(control, now)
             if db.execute("SELECT 1 FROM execution_orders WHERE active_lock=1").fetchone():
                 raise ExecutionBlocked("ORDER_ALREADY_IN_FLIGHT")
@@ -184,9 +211,13 @@ class CostAccounting:
             ):
                 raise ExecutionBlocked("INVALID_MODEL_PACKET_TIME")
             costs = summary(db)
+            if costs.get("judgment_policy") and expected_revision is None:
+                raise ExecutionBlocked("JUDGMENT_ACCOUNT_REVIEW_REQUIRED")
             day = now.astimezone(ZoneInfo("America/New_York")).date().isoformat()
             if costs["unknown_calls"]:
                 raise ExecutionBlocked("EXECUTION_MODEL_COST_UNKNOWN")
+            if costs.get("judgment_blocked"):
+                raise ExecutionBlocked("EXECUTION_MODEL_EVIDENCE_VIOLATION")
             if costs["calls_exceeding_bound"]:
                 raise ExecutionBlocked("EXECUTION_MODEL_COST_BOUND_EXCEEDED")
             if (
@@ -208,6 +239,10 @@ class CostAccounting:
             return {"status": "STARTED", "source_key": source_key, "invoke_model": True}
 
     def settle(self, source_key, usage: UsageEvidence, decision: TradeDecision, *, now):
+        with self.engine.journal.write() as db:
+            return self._settle(db, source_key, usage, decision, now=now)
+
+    def _settle(self, db, source_key, usage, decision, *, now):
         from app.execution.engine import _clock
 
         _clock(now)
@@ -219,48 +254,47 @@ class CostAccounting:
             Decimal(usage.input_tokens) * self.policy.input_per_million
             + Decimal(usage.output_tokens) * self.policy.output_per_million
         ) / Decimal(1_000_000)
-        with self.engine.journal.write() as db:
-            self.engine._control(db)
-            self._policy(db)
-            row = db.execute(
-                "SELECT * FROM execution_model_calls WHERE source_key=?", (source_key,)
-            ).fetchone()
-            if not row or now < datetime.fromisoformat(row["started_at"]):
-                raise ValueError("MODEL_RECEIPT_REQUIRED")
-            if row["usage_json"]:
-                if row["usage_json"] != usage.model_dump_json() or row["decision_hash"] != _hash(
-                    decision
-                ):
-                    raise ValueError("MODEL_USAGE_CONTENT_CONFLICT")
-                return amount
-            db.execute(
-                "UPDATE execution_model_calls SET usage_json=?,request_id=?,decision_hash=?,cost=? WHERE source_key=?",
-                (
-                    usage.model_dump_json(),
-                    usage.request_id,
-                    _hash(decision),
-                    str(amount),
-                    source_key,
-                ),
-            )
+        self.engine._control(db)
+        self._policy(db)
+        row = db.execute(
+            "SELECT * FROM execution_model_calls WHERE source_key=?", (source_key,)
+        ).fetchone()
+        if not row or now < datetime.fromisoformat(row["started_at"]):
+            raise ValueError("MODEL_RECEIPT_REQUIRED")
+        if row["usage_json"]:
+            if row["usage_json"] != usage.model_dump_json() or row["decision_hash"] != _hash(
+                decision
+            ):
+                raise ValueError("MODEL_USAGE_CONTENT_CONFLICT")
+            return amount
+        db.execute(
+            "UPDATE execution_model_calls SET usage_json=?,request_id=?,decision_hash=?,cost=? WHERE source_key=?",
+            (
+                usage.model_dump_json(),
+                usage.request_id,
+                _hash(decision),
+                str(amount),
+                source_key,
+            ),
+        )
+        self.engine.journal.event(
+            db,
+            now,
+            "MODEL_USAGE_SETTLED",
+            {
+                "source_key": source_key,
+                "usage": usage.model_dump(mode="json"),
+                "decision": decision.model_dump(mode="json"),
+                "estimated_cost": str(amount),
+            },
+        )
+        if amount > self.policy.max_call_cost:
             self.engine.journal.event(
                 db,
                 now,
-                "MODEL_USAGE_SETTLED",
-                {
-                    "source_key": source_key,
-                    "usage": usage.model_dump(mode="json"),
-                    "decision": decision.model_dump(mode="json"),
-                    "estimated_cost": str(amount),
-                },
+                "MODEL_COST_BOUND_EXCEEDED",
+                {"source_key": source_key, "actual_estimated_cost": str(amount)},
             )
-            if amount > self.policy.max_call_cost:
-                self.engine.journal.event(
-                    db,
-                    now,
-                    "MODEL_COST_BOUND_EXCEEDED",
-                    {"source_key": source_key, "actual_estimated_cost": str(amount)},
-                )
         return amount
 
 

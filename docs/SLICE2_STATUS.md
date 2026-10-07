@@ -20,10 +20,10 @@ evidence remain deployment gates. LIVE is disabled.
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **490 tests in 33.46 seconds**, including 40 execution
+full local suite passed **526 tests in 37.82 seconds with warnings treated as errors**, including 40 execution
 lifecycle tests, 26 position-supervision tests, 35 execution-limit/dispatch tests
 and 22 isolated-process/durable-venue tests, plus 35 operator/alert tests and
-26 credential/restore tests and 30 model-cost/economics tests.
+26 credential/restore tests, 30 model-cost/economics tests and 36 bounded-judgment tests.
 The deployed application release remains the one recorded below.
 
 ## Target-host evidence — 2026-10-06 UTC
@@ -362,6 +362,71 @@ assumptions, not current-price verification. Isolated economics exclude SPY pair
 corporate actions, taxes, hosting/setup charges and real invoice adjustments. The
 server's paired synthetic SPY experiment remains separate and unchanged. LIVE
 readiness and profitability remain unverified.
+
+## Bounded model judgment follow-up — 2026-10-07 UTC
+
+Fresh canonical branch state matched `3f377a146c1e009dfecc72cab8e329473002f09f`
+before editing. The optional fixture-engine `JudgmentCoordinator` now connects
+frozen cost authority to a private OpenAI Responses child. Existing Trader
+instructions, strict `AgentOutputSchema(TradeDecision)` and runtime validation
+remain the judgment contract; the deployed Agents SDK/SHADOW path is unchanged.
+
+Enrollment before model receipts freezes prompt/schema/cost hashes and request
+bounds. Defaults: 16,000 input tokens, 1,024 output tokens, 30-second process and
+20-second request deadlines. Their maximum configured token cost must fit the
+existing per-call reservation. Reconciled journal cash/position replaces proposed
+account values in the model packet. A revision check atomically binds that review
+to the durable pre-model receipt. Receipt commit/storage failure and replay cannot
+launch another child or silently charge zero.
+
+The fixed child gets only an explicit model key plus basic locale/path environment,
+with a pinned OpenAI API origin, no SDK retries, suppressed logs and no tracing.
+It counts the exact instruction/input/tools/schema payload, rejects bad/excessive
+counts and generates at most once with bounded output, empty tools, no tool choice,
+disabled truncation, no streaming/background and `store=false`. A watchdog exits on
+parent death/deadline; parent cleanup kills/drains/reaps even after repeated cancel.
+
+Provider response identity/usage is captured before structured decision parsing.
+Incomplete/refused/invalid output becomes HOLD with full valid reported usage cost;
+failed requests or absent usage stay unknown. Exact model, usage bounds and counted
+versus returned input are checked. Violations preserve reported evidence, count all
+valid pinned-rate charges and persist a new-call/entry block. Foreign model usage
+cannot inherit pinned pricing. Settlement, decision audit and violation state commit
+together; enrolled BUY authority requires the matching bounded judgment record.
+No model judgment prepares or dispatches an order. Protective closes retain their
+existing deterministic path under cost/evidence entry gates.
+
+Verification: **526 tests passed in 37.82s with warnings treated as errors**, with
+**36 new bounded-judgment tests**. Native pinned SDK calls use local HTTP mock
+transport to prove count/generation payload equality, empty tools/strict schema,
+output cap, missing usage, invalid/incomplete/refused/unexpected output and no
+retry after quota failure. Tests cover source restart, frozen/runtime policy,
+review races, cash reconstruction, receipt/audit rollback, direct-settlement entry
+rejection, full usage under violations, private child environment, real deadlines,
+crash/oversized protocol, repeated cancellation and a real parent `os._exit(94)`.
+The actual worker watchdog exits its orphan with code 99; the cost receipt remains
+unknown and cannot replay after restart, with the authority pair still VERIFIED.
+
+Ruff check/format, pip check and whitespace checks passed. The installed wheel ran
+outside the repo with optimized Python and warnings as errors. Both real subprocesses
+loaded installed package code and the pinned SDK used mock transport, producing a
+valid entry and a billed incomplete HOLD, two fake fills, flat final state, exact
+$0.00030 cost/net conservation, private files, a VERIFIED authority pair and
+unchanged read-only report bytes. The first proof's alert-count assertion was adjusted
+to account for the existing protective-exit alert alongside the model HOLD alert;
+the corrected proof completed. Wheel SHA-256:
+`013026d933f9f3dc5886e83fdbb5cd547d09837a5842592e40813a5c3d4f76c8`.
+No authenticated API or broker call, server update or LIVE capability was added.
+
+Estimated v1 execution-engine completeness: **about 78%**, a rough component estimate.
+Remaining: authenticated token-count/generation/model-identity verification before
+adopting this optional interface; invoice/discount treatment and verified noncharge
+recovery; actual broker/order/fill/deadline contracts and account/capital enablement;
+deployed independent supervision, secure operator transport, external alerts and
+off-host/multi-host restore protection with host-failure proof. First scheduled
+authenticated market-session evidence from the deployed cohort remains unobserved.
+The existing server and paired synthetic SPY experiment remain unchanged. This
+mocked execution proof establishes neither live readiness nor profitable signal.
 
 ## Sequential synthetic portfolio and build hardening
 

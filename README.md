@@ -35,6 +35,9 @@ Rolling back both files together remains outside this local safeguard.
 Opt-in model-cost receipts now freeze configured rates/budgets, block entries on
 unknown costs, and include reasoning charges in economic loss limits. Broker cash
 stays separate and deterministic protective exits remain available.
+The optional fixture-engine judgment coordinator now counts the exact Responses
+request before one tool-less generation, caps output, and atomically records response
+identity/usage with the decision. It has no broker capability or deployed-worker wiring.
 
 ## Slice 2 — Robinhood read / SHADOW
 

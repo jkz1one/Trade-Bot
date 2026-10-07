@@ -58,12 +58,14 @@ class ExecutionJournal:
                 "execution_retired_keys",
                 "execution_cost_policy",
                 "execution_model_calls",
+                "execution_judgment_policy",
                 "sqlite_sequence",
             }
             if tables - allowed:
                 raise ValueError("Execution rehearsal requires a separate database")
             # Individual statements preserve the surrounding BEGIN IMMEDIATE.
             for sql in (
+                "CREATE TABLE IF NOT EXISTS execution_judgment_policy (id INTEGER PRIMARY KEY CHECK(id=1), policy_json TEXT NOT NULL, blocked_reason TEXT)",
                 "CREATE TABLE IF NOT EXISTS execution_cost_policy (id INTEGER PRIMARY KEY CHECK(id=1), policy_json TEXT NOT NULL)",
                 "CREATE TABLE IF NOT EXISTS execution_model_calls (source_key TEXT PRIMARY KEY, packet_hash TEXT NOT NULL, started_at TEXT NOT NULL, usage_json TEXT, request_id TEXT UNIQUE, decision_hash TEXT, cost TEXT)",
                 "CREATE TABLE IF NOT EXISTS execution_retired_keys (key_hash TEXT PRIMARY KEY, retired_at TEXT NOT NULL, generation INTEGER NOT NULL)",
@@ -156,6 +158,8 @@ class ExecutionJournal:
             (at.isoformat(), kind, client_id, json.dumps(payload, sort_keys=True)),
         )
         alert = kind in ALERT_KINDS
+        if kind in {"MODEL_JUDGMENT_INTERRUPTED", "MODEL_JUDGMENT_RECORDED"}:
+            alert = kind == "MODEL_JUDGMENT_INTERRUPTED" or payload["result"]["error"] is not None
         if kind == "POSITION_SUPERVISED" and payload["status"] in {"BLOCKED", "EXIT_REQUIRED"}:
             previous = db.execute(
                 "SELECT payload FROM execution_events WHERE kind=? AND sequence<? ORDER BY sequence DESC LIMIT 1",

@@ -424,6 +424,80 @@ connection and is not trading signal/performance evidence. This engine report do
 not add a SPY portfolio, corporate actions, taxes, hosting/setup costs or real invoice
 adjustments. The deployed synthetic experiment's paired SPY economics stay separate.
 
+## Bounded model judgments for the fixture engine
+
+`JudgmentCoordinator(costs, JudgmentLimits(...))` optionally connects the cost
+authority above to a private OpenAI Responses subprocess. It uses the existing
+Trader instructions and `AgentOutputSchema(TradeDecision)` strict wire schema,
+then applies the same post-parse runtime validation. The current deployed Agents
+SDK adapter, SHADOW population, scheduler and observer are unchanged. There is no
+broker client, order preparation/dispatch or database handle in the model child.
+
+Enrollment precedes every model receipt and freezes the cost-policy hash, prompt
+version/content hash, output schema hash, token ceilings and process/request
+deadlines. Changed runtime configuration or a reopened policy cannot loosen it.
+Default ceilings are 16,000 input tokens and 1,024 output tokens, a 30-second whole
+process and 20-second SDK request timeout. Both token ceilings, at the configured
+rates, must fit the existing per-call cost reservation. These are engineering
+bounds; authenticated model support and practical output headroom remain to be
+verified before adoption.
+
+`await coordinator.decide(source_key, packet, api_key=..., now=..., clock=...)`
+rebuilds the model's account from reconciled journal truth and supplies current
+regular-session context. A reviewed audit revision is checked atomically when the
+durable receipt commits, before the child can launch. Invalid keys, oversized
+requests, changed account review, storage failure or missing authority cannot grant
+invocation. Stable source reuse never invokes again, including after restart.
+The returned packet is the original model/cost lineage for later governed admission;
+the coordinator returns evidence only and does not prepare or dispatch any order.
+
+The child receives only the explicitly supplied model credential and basic locale/
+path environment, no Robinhood credentials, OAuth paths or parent API-origin overrides.
+Its API origin is pinned to `https://api.openai.com/v1`, retries are disabled and
+stdout/stderr logs are suppressed. There is no SDK agent tracing. It counts the
+exact instruction/input/tool/schema payload through `responses.input_tokens.count`,
+rejects unavailable/invalid/excessive input counts, then performs at most one
+`responses.create` with `tools=[]`, `tool_choice=none`, disabled truncation, bounded
+output, no background execution, no streaming and `store=false`. Count and generation
+share their request content; no token-count request grants trading authority.
+
+The [official input-token guidance](https://developers.openai.com/api/docs/guides/token-counting)
+documents counting request structure, tools and schemas, and that the output cap
+includes generated reasoning/non-visible tokens. The pinned SDK exposes both
+endpoints; native SDK tests exercise their exact serialized requests through a
+local mock transport. This does not prove the endpoint/model combination is
+accepted by the user's actual API project. A provider response's `id` is saved in
+the existing usage `request_id` field; this is the response object identity, not the
+HTTP request header identity.
+
+Valid response usage is captured before decision parsing. Incomplete output,
+refusal, invalid decision JSON/runtime validation or unexpected tool output becomes
+auditable HOLD while retaining valid reported input/output cost. Missing usage,
+request failure, timeout, malformed/oversized protocol or child crash retains an
+uncosted receipt and blocks further calls/entries; failures are never invented as
+free calls. Cancellation propagates after termination/escalation/draining/reaping.
+A child watchdog also exits on parent death or its absolute monotonic deadline.
+Killing a child cannot prove a remotely started generation stopped or was unbilled.
+
+Exact model identity, usage ceilings and counted-versus-returned input tokens are
+checked in the parent. Violations yield HOLD and permanently block new judgments/
+entries under the enrolled policy; full valid pinned-model usage is still charged.
+Foreign-model usage remains auditable but uncosted under the pinned rates. Cost,
+decision audit and evidence-violation state commit atomically. An enrolled bounded
+policy requires its matching recorded judgment for BUY approval, so directly
+supplied token settlement alone cannot grant entry. Resume cannot waive this gate.
+Normal deterministic protective closes remain available under cost/evidence gates,
+subject to the existing account/ownership/quote/halt requirements.
+
+The child never receives broker tools or engine/operator signing authority. Trusted
+local orchestration supplies the API credential and completion clock; this is not
+a remote control service. The fixture engine still requires independently invoked
+position supervision, refreshed account/market evidence and governed dispatch.
+Actual authenticated API validation, discount/invoice adjustments, verified no-charge
+resolution, deployed orchestration and independent supervision remain pending.
+No new deployed cohort, API request or server update occurs when importing/enrolling
+this opt-in interface. Tests and package proof use mocked SDK HTTP responses only.
+
 ## SignalFlow adaptation and remaining engineering
 
 Fresh GitHub inspection confirms SignalFlow `main` remains
@@ -453,7 +527,8 @@ persists independently. Neither is real brokerage capability evidence.
 
 Then verify deadlines with the actual broker adapter and implement independent live enablement, actual-account
 identity pinning and verified bankroll controls, real-adapter owned-position reconciliation,
-deployed stop/session supervision, real model/billing receipt integration, external alert delivery and
+deployed stop/session supervision, authenticated verification/adoption of model receipts,
+invoice/noncharge recovery, external alert delivery and
 deployed authenticated operator recovery. The local capability/outbox above must
 also gain secure transport, off-host/multi-host restore fencing and host failure
 verification before use.
