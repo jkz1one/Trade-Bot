@@ -78,6 +78,15 @@ class ExecutionSupervisor:
             "feed_id": self.feed.feed_id,
             "feed_path": str(self.feed.path),
             "symbols": self.feed.symbols,
+            **(
+                {
+                    "feed_source_hash": hashlib.sha256(
+                        json.dumps(self.feed.source, sort_keys=True).encode()
+                    ).hexdigest()
+                }
+                if self.feed.source is not None
+                else {}
+            ),
         }
 
     def _state(self, db):

@@ -20,12 +20,14 @@ evidence remain deployment gates. LIVE is disabled.
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **837 tests in 125.01 seconds**, with no reported warnings,
-including the previous 809 cases and 28 new quote-component freshness cases. Interrupted
+full local suite passed **900 tests in 128.38 seconds with warnings treated as errors**,
+including the previous 837 cases and 63 new market-read bridge cases. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
-Changed-code checks and installed native HTTPS/runtime continuation proof passed;
-see the latest follow-up below.
+The source-bound market-only PAPER feed now connects through a bounded headless
+read child; installed-package scheduled HOLD proof passed with local MCP fixtures.
+Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticated
+collector latency and continuous source refresh remain unverified.
 The deployed application release remains the one recorded below.
 
 ## Target-host evidence — 2026-10-06 UTC
@@ -840,6 +842,67 @@ Scoped fatal-error/import lint, formatting, pip check and whitespace checks pass
 No broker/model calls, deployment, experiment migration or LIVE capability was added.
 The deployed worker stays on its recorded release; this is not a rebuild instruction.
 Engine completeness remains about 88%, excluding LIVE readiness and profitability.
+
+## Source-bound PAPER market-read bridge follow-up — 2026-10-07 UTC
+
+New isolated PAPER populations may explicitly opt into a Robinhood market source
+through init's private `--market-oauth-file`. Enrollment precedes supervisor/runtime
+policy freeze; existing manual feeds are neither adopted nor migrated. Source policy
+pins endpoint, existing redirect registration, credential path, universe, five-minute
+bars/seven-day history and bounded collection/freshness limits. Its hash joins the
+supervisor policy; source metadata changes fail closed during publication/reload.
+Default manual publication cannot mix packets into a sourced feed. Provenance is
+trusted local configuration, not protection against a host owner controlling code/files.
+
+The one-shot collect CLI uses a fixed headless child with only explicit broker OAuth
+storage and market request identity. Its gateway allows exactly get_accounts,
+get_equity_quotes, get_equity_tradability and get_equity_historicals. It rejects broker
+review, portfolio/position/order reads, placement, cancellation and other tools before
+the client. It selects exactly one active eligible account solely for tradability;
+no account identifier/value is returned to the parent. The child receives no model
+key, execution journal/authority or venue handle. Existing OAuth refresh persistence
+is bounded private authentication state; authorization walls never launch a browser.
+
+Collection has a default/max 30-second monotonic process deadline, bounded pipes,
+parent watchdog and kill/drain/reap cleanup. A private nonblocking per-feed lease
+spans awaits and publication, including repeated cancellation cleanup. Failed,
+malformed/oversized or timed-out reads publish nothing and leave old samples to expire
+under their original clock. The parent checks exact source/feed/request identity,
+complete unique universe, aware collection clocks and sane fresh quotes before atomic
+publication. Quotes cannot be newer than their collection or borrow freshness.
+
+Packets contain only candidates/regime with zero account values, no positions,
+orders, lessons or session metadata. Independent supervision and scheduled judgment
+continue to rebuild account authority from the virtual ledger; real prices cannot
+authorize real orders or invent simulated fills. This bridge does not add an automatic
+fill policy or an autonomous continuous refresh service.
+
+Verification: **900 tests passed in 128.38s with warnings treated as errors**, including
+63 new cases. These cover source separation, account privacy, frozen policies,
+invalid lineage/universe/time evidence, gateway denials, private OAuth/lock files,
+duplicate readers, real child success/failure/timeout/cancellation, repeated-cancellation
+lease retention and source reload rejection. Scoped fatal-error/import lint, format,
+pip check and whitespace checks passed. The installed wheel outside the checkout
+also passed all **63 bridge cases** with warnings treated as errors. Wheel SHA-256:
+`910b8b024d8e10fe9510af347ff0b837ea85d4c9c0327d6205c72cf855467f10`.
+
+Separate installed proof exercised the native collector entry point/protocol with
+local MCP response fixtures, published one source-bound sample, completed independent
+supervision and a current-slot stub HOLD, and stopped both runtime components. Source
+account value was zero; the saved governed packet used virtual $10 cash. Collection
+changed no execution/authority bytes, reporting changed no store bytes, the pair stayed
+VERIFIED and both actual children were reaped. There were zero remote broker/model
+calls. This is installed orchestration evidence, not authenticated MCP/provider proof.
+
+Remaining: authenticated full-universe collection timing/availability, continuous
+source refresh and failure composition, bounded model validation/adoption, deployed
+operator/alert/archive services, host recovery and actual broker capabilities.
+Do not rebuild the deployed image for this separate population. Deployed SHADOW,
+virtual-v1, main and LIVE state are unchanged; no real placement/cancellation occurred.
+Operations: [PAPER_RUNTIME.md](PAPER_RUNTIME.md).
+
+Estimated v1 execution-engine completeness: **about 89%**, a rough component estimate,
+excluding LIVE readiness and profitability.
 
 ## Sequential synthetic portfolio and build hardening
 

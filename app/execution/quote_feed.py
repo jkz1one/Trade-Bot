@@ -11,8 +11,18 @@ from app.domain.models import MarketPacket
 
 
 class DurableQuoteFeed:
-    def __init__(self, path, *, symbols=None):
+    def __init__(self, path, *, symbols=None, source=None):
         self.path = Path(path).expanduser().resolve()
+        if source is not None:
+            from app.execution.market_reads import MarketReadPolicy
+
+            source = MarketReadPolicy.model_validate(source).model_dump(mode="json")
+            if symbols is None:
+                raise ValueError("Source enrollment requires a new feed")
+            if len(symbols) > 20 or any(
+                not s.isascii() or not s.isalpha() or not s.isupper() or len(s) > 5 for s in symbols
+            ):
+                raise ValueError("Source enrollment requires a bounded equity universe")
         if symbols is not None:
             if not symbols or len(symbols) != len(set(symbols)):
                 raise ValueError("An explicit unique fixture universe is required")
@@ -34,6 +44,7 @@ class DurableQuoteFeed:
                                 "schema": "local-fixture-quotes-v1",
                                 "feed_id": uuid4().hex,
                                 "symbols": list(symbols),
+                                **({"source": source} if source is not None else {}),
                             },
                             sort_keys=True,
                         ),
@@ -42,6 +53,7 @@ class DurableQuoteFeed:
         with self._db() as db:
             meta = self._meta(db)
         self.feed_id, self.symbols = meta["feed_id"], meta["symbols"]
+        self.source = meta.get("source")
 
     @contextmanager
     def _db(self, *, write=False):
@@ -75,7 +87,11 @@ class DurableQuoteFeed:
 
     def _binding(self, db):
         meta = self._meta(db)
-        if meta["feed_id"] != self.feed_id or meta["symbols"] != self.symbols:
+        if (
+            meta["feed_id"] != self.feed_id
+            or meta["symbols"] != self.symbols
+            or meta.get("source") != self.source
+        ):
             raise ValueError("Fixture quote feed identity changed")
 
     def _validate_packet(self, packet):
@@ -88,9 +104,23 @@ class DurableQuoteFeed:
             or set(symbols) - set(self.symbols)
         ):
             raise ValueError("Invalid fixture quote clock or universe")
+        if self.source is not None and (
+            set(symbols) != set(self.symbols)
+            or packet.account.model_dump()
+            != MarketPacket(
+                as_of=packet.as_of,
+                account={"equity": 0, "cash": 0, "buying_power": 0, "high_watermark": 0},
+                candidates=[],
+            ).account.model_dump()
+            or packet.recent_lessons
+            or packet.session_context is not None
+        ):
+            raise ValueError("Sourced quotes require a complete universe and no account authority")
         return packet
 
-    def publish(self, sample_id, packet):
+    def publish(self, sample_id, packet, *, source=None):
+        if source != self.source:
+            raise ValueError("Quote publisher source does not match the frozen feed")
         if not isinstance(sample_id, str) or not sample_id.strip() or len(sample_id) > 128:
             raise ValueError("A bounded stable quote sample identity is required")
         packet = self._validate_packet(packet)

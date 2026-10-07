@@ -8,7 +8,6 @@ from typing import Any
 
 from app.robinhood.client import ToolClient
 
-
 REQUIRED_SLICE2_READ_TOOLS = frozenset(
     {
         "get_accounts",
@@ -157,4 +156,18 @@ class RobinhoodReadOnlyGateway(RobinhoodSafeGateway):
     async def call_safe(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         if name == "review_equity_order":
             raise UnsafeRobinhoodToolError("Synthetic PAPER cannot review broker orders")
+        return await super().call_safe(name, arguments)
+
+
+class RobinhoodMarketReadGateway(RobinhoodSafeGateway):
+    """Dedicated PAPER data collector: account selection and market reads only."""
+
+    async def call_safe(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+        if name not in {
+            "get_accounts",
+            "get_equity_quotes",
+            "get_equity_historicals",
+            "get_equity_tradability",
+        }:
+            raise UnsafeRobinhoodToolError("Tool is outside the PAPER market-read capability")
         return await super().call_safe(name, arguments)

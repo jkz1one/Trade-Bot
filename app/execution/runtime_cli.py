@@ -22,7 +22,16 @@ from app.execution.runtime import PaperRuntime, RuntimeLimits, runtime_lease
 from app.execution.supervisor import ExecutionSupervisor, SupervisorLimits
 
 
-def initialize(directory, *, capital, symbols, key_file=None, total_budget=None, daily_budget=None):
+def initialize(
+    directory,
+    *,
+    capital,
+    symbols,
+    key_file=None,
+    total_budget=None,
+    daily_budget=None,
+    market_oauth_file=None,
+):
     if (
         capital <= 0
         or not symbols
@@ -33,6 +42,12 @@ def initialize(directory, *, capital, symbols, key_file=None, total_budget=None,
     if key_file is None and (total_budget is not None or daily_budget is not None):
         raise ValueError("Model budgets require explicit model key opt-in")
     policy = CostPolicy(total_budget=total_budget, daily_budget=daily_budget) if key_file else None
+    source = None
+    if market_oauth_file:
+        from app.execution.market_reads import MarketReadPolicy, private_oauth
+
+        source = MarketReadPolicy(oauth_file=str(Path(market_oauth_file).expanduser().absolute()))
+        private_oauth(source.oauth_file)
     directory = Path(directory).absolute()
     directory.mkdir(mode=0o700)  # Exclusive, never reuse/reset an existing population.
     settings = Settings(
@@ -50,7 +65,11 @@ def initialize(directory, *, capital, symbols, key_file=None, total_budget=None,
         engine = ExecutionEngine(directory / "execution.db", settings)
         engine.journal.enable_restore_fence(now=utc_now())
         venue = DurableFixtureVenue(directory / "venue.db", capital=capital)
-        feed = DurableQuoteFeed(directory / "quotes.db", symbols=symbols)
+        feed = DurableQuoteFeed(
+            directory / "quotes.db",
+            symbols=symbols,
+            source=source.model_dump(mode="json") if source else None,
+        )
         supervisor = ExecutionSupervisor(engine, venue, feed)
         judgment = (
             JudgmentCoordinator(CostAccounting(engine, policy), JudgmentLimits())
@@ -147,7 +166,8 @@ def main(argv=None):
     init.add_argument("--key-file")
     init.add_argument("--total-budget", type=Decimal)
     init.add_argument("--daily-budget", type=Decimal)
-    for command in ("run", "report", "publish"):
+    init.add_argument("--market-oauth-file")
+    for command in ("run", "report", "publish", "collect"):
         child = sub.add_parser(command)
         child.add_argument("--directory", required=True)
         if command == "publish":
@@ -163,11 +183,16 @@ def main(argv=None):
                 key_file=args.key_file,
                 total_budget=args.total_budget,
                 daily_budget=args.daily_budget,
+                market_oauth_file=args.market_oauth_file,
             )
         elif args.command == "run":
             return asyncio.run(serve(args.directory))
         elif args.command == "report":
             result = ExecutionJournal(Path(args.directory) / "execution.db").report()
+        elif args.command == "collect":
+            from app.execution.market_reads import collect_once
+
+            result = asyncio.run(collect_once(DurableQuoteFeed(Path(args.directory) / "quotes.db")))
         else:
             # Publishing is trusted local fixture input, no fabricated prices/fills.
             with Path(args.packet_file).open("rb") as source:

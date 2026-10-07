@@ -138,8 +138,62 @@ The existing bounded Responses coordinator owns token/process/request ceilings,
 cost reservations and fail-closed HOLD. Its fixed child receives no broker tools or
 credentials. Authenticated provider/model validation is still required separately.
 
+## Explicit market-read bridge
+
+A **new** isolated PAPER population can opt into Robinhood market reads using
+`init --market-oauth-file /private/paper-market-robinhood-oauth.json`. The file must
+already contain authorized OAuth tokens and client metadata, be a bounded current-owner
+mode-600 regular file and use the existing `http://127.0.0.1:8765/callback` registration.
+Use an exclusively managed credential file for this collector, rather than concurrent
+refresh writers sharing the deployed worker's OAuth state. Initialization makes no
+network calls and freezes source policy before supervisor/runtime enrollment.
+Existing manual fixture feeds/populations are not migrated or implicitly enrolled.
+
+The separate one-shot command is:
+
+```bash
+python -m app.execution.runtime_cli collect --directory /private/market-paper
+```
+
+It runs a fixed headless child with the Robinhood endpoint, explicit OAuth path and
+feed/universe/request identities. It receives no model key, journal, authority or
+venue handle. Its gateway permits only account selection, quotes, tradability and
+historical OHLCV. Account selection requires exactly one active eligible account;
+its identifier is used for tradability only and is never returned to the parent.
+Review, portfolio/position/order reads, placement, cancellation and other tools are
+rejected before the MCP client. OAuth refresh persistence is an authentication
+operation, not a broker trade mutation. Authorization walls fail without launching
+a browser or prompting. Historical reads remain one symbol per call.
+
+A default/max 30-second monotonic whole-process deadline, bounded pipes and parent
+watchdog limit the request. Timeout, failure, malformed/oversized output or cancellation
+publishes no new quote sample. A private nonblocking per-feed lock spans child cleanup
+and publication; repeated cancellation cannot admit a second reader before reaping.
+This is single-host ownership, not a lock shared across independent feeds/hosts.
+
+Before publication the parent verifies source/feed/request identities, aware
+nonregressing collection clocks, exact complete unique universe, sane fresh quotes
+and a maximum 90-second age. Quotes cannot be newer than their reported collection.
+Feed publication atomically checks immutable source metadata and existing clock/sample
+constraints. Default manual `publish` cannot mix packets into a sourced feed.
+The source hash also joins the frozen supervisor policy; source changes are rejected
+on runtime reload. This is trusted local provenance, not authentication against a
+host owner who controls files/code.
+
+Published packets contain only market candidates/regime and **zero account values**,
+with no positions, working orders, lessons or model session metadata. The scheduled
+engine still rebuilds account authority from its own reconciled virtual ledger.
+Real quotes do not turn fake orders/fills into brokerage evidence or grant LIVE authority.
+
+The collector is currently a bounded one-shot bridge. It does not maintain fresh
+quotes continuously or provision a daemon. Authenticated collection latency, full
+universe availability, source-specific feed scheduling and continuous service failure
+behavior still need verification; do not start an unattended runtime expecting one
+sample to stay fresh. Failed refreshes retain the old sample, whose existing age
+checks revoke admission as it expires. No stale timestamps are renewed.
+
 This runner does not provision an operator API, external alert/archive sink, daemon
-wrapper, market-data collector or real broker adapter. Those contracts are separate
+wrapper or real broker adapter. Those contracts are separate
 components and production integration gates. Do not pull/rebuild the deployed
 SHADOW image for this fixture-only follow-up. It neither deploys this runner nor
 changes the active experiment's population/policy. Engineering completeness does
