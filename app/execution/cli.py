@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import secrets
 import sqlite3
@@ -239,9 +240,84 @@ def run_operator_rehearsal(path):
     return report
 
 
+def run_recovery_rehearsal(path):
+    """Exclusive offline stores, retired keys and deliberately restored stale fixture bytes."""
+    path = Path(path)
+    _reserve_file(path)
+    settings = Settings(_env_file=None, mode="PAPER", live_enabled=False, starting_capital=10)
+    engine = ExecutionEngine(path, settings)
+    at = datetime(2026, 10, 6, 15, tzinfo=UTC)
+    venue = LocalFixtureVenue(Decimal(10))
+    _require(engine.reconcile(venue.snapshot(at), now=at)["reconciled"])
+    _require(engine.journal.enable_restore_fence(now=at)["status"] == "VERIFIED")
+    keys = [secrets.token_bytes(32) for _ in range(3)]
+    OperatorControl.enroll(engine, keys[0], now=at)
+    operator = OperatorControl(engine, keys[0])
+
+    def request(action, key, **targets):
+        envelope = OperatorCommand(
+            journal_id=operator.journal_id,
+            command_id="recovery-" + secrets.token_hex(8),
+            actor="offline-operator",
+            action=action,
+            reason="Reviewed offline recovery proof",
+            credential_generation=operator.credential_generation,
+            expected_revision=operator.review()["revision"],
+            issued_at=at,
+            expires_at=at + timedelta(minutes=1),
+            **targets,
+        )
+        return operator.apply(envelope, sign_command(envelope, key), now=at)
+
+    intent = engine.prepare("recovery-entry", _decision(), _packet(at), now=at)
+    older = path.read_bytes()
+    venue.lose_next_ack = True
+    _require(engine.dispatch(intent.client_id, venue, now=at, packet=_packet(at)) == "UNKNOWN")
+    _require(
+        request("ROTATE_KEY", keys[0], replacement_fingerprint=hashlib.sha256(keys[1]).hexdigest())[
+            "status"
+        ]
+        == "APPLIED"
+    )
+    operator = OperatorControl(engine, keys[1])
+    _require(request("REVOKE_KEY", keys[1])["status"] == "APPLIED")
+    _require(
+        OperatorControl.recover_revoked(engine, keys[2], "New fixture capability", now=at) == 4
+    )
+    operator = OperatorControl(engine, keys[2])
+    _require(request("RESUME", keys[2])["status"] == "REJECTED")
+    venue.terminal(intent.client_id, "CANCELED", at)
+    _require(engine.reconcile(venue.snapshot(at), now=at)["reconciled"])
+    _require(request("RESUME", keys[2])["status"] == "APPLIED")
+    current = path.read_bytes()
+    try:
+        # This is a controlled proof on the brand-new fixture file only. There is
+        # no reset/rebind command to advance authority from a restored journal.
+        path.write_bytes(older)
+        _require(ExecutionJournal(path).report()["restore_fence"]["status"] == "BLOCKED")
+        try:
+            engine.dispatch(intent.client_id, venue, now=at, packet=_packet(at))
+        except ValueError as exc:
+            _require(str(exc) == "RESTORED_OR_CHANGED_EXECUTION_JOURNAL")
+        else:
+            raise RuntimeError("Restored fixture unexpectedly dispatched")
+    finally:
+        path.write_bytes(current)  # Exact current fixture bytes, no authority rewrite.
+    report = engine.journal.report()
+    _require(report["restore_fence"]["status"] == "VERIFIED" and venue.submit_count == 1)
+    report.update(
+        status="OK",
+        restored_journal_blocked=True,
+        measurement_note="Offline credential/restore proof only. Retained authority detects journal-only rollback; rolling back both files is not detectable.",
+    )
+    return report
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["run", "deadline-run", "operator-run", "report"])
+    parser.add_argument(
+        "command", choices=["run", "deadline-run", "operator-run", "recovery-run", "report"]
+    )
     parser.add_argument("--db", default="execution-rehearsal.db")
     args = parser.parse_args(argv)
     try:
@@ -252,6 +328,8 @@ def main(argv=None):
             if args.command == "deadline-run"
             else run_operator_rehearsal(args.db)
             if args.command == "operator-run"
+            else run_recovery_rehearsal(args.db)
+            if args.command == "recovery-run"
             else ExecutionJournal(args.db).report()
         )
         print(json.dumps(report, indent=2))

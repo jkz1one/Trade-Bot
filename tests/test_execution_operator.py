@@ -39,6 +39,7 @@ def command(operator, action="HALT", at=NOW, **updates):
             "expected_revision": operator.review()["revision"],
             "issued_at": at,
             "expires_at": at + timedelta(minutes=1),
+            "credential_generation": operator.credential_generation,
             **updates,
         }
     )
@@ -312,7 +313,7 @@ def test_alert_pages_preserve_all_pending_events_and_read_only_report(context):
     assert len(page1 + page2) == 105
     original = engine.journal.path.read_bytes()
     assert ExecutionJournal(engine.journal.path).report() == {
-        k: v for k, v in report.items() if k != "operator_journal_id"
+        k: v for k, v in report.items() if not k.startswith("operator_")
     }
     # review adds only a caller-side journal identity; underlying report omits it.
     assert engine.journal.path.read_bytes() == original

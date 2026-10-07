@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from urllib.parse import quote
 
+from app.execution import restore
 from app.execution.models import Ledger
 
 SCHEMA = "execution-rehearsal-v1"
@@ -33,6 +34,8 @@ class ExecutionJournal:
                     raise ValueError("Not an execution rehearsal database")
             return
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        if not self.path.exists() and restore.authority_path(self.path).exists():
+            raise ValueError("RESTORED_EXECUTION_JOURNAL_MISSING")
         try:
             self.path.touch(mode=0o600, exist_ok=False)
         except FileExistsError:
@@ -49,12 +52,15 @@ class ExecutionJournal:
                 "execution_operator",
                 "execution_commands",
                 "execution_alerts",
+                "execution_restore_binding",
+                "execution_retired_keys",
                 "sqlite_sequence",
             }
             if tables - allowed:
                 raise ValueError("Execution rehearsal requires a separate database")
             # Individual statements preserve the surrounding BEGIN IMMEDIATE.
             for sql in (
+                "CREATE TABLE IF NOT EXISTS execution_retired_keys (key_hash TEXT PRIMARY KEY, retired_at TEXT NOT NULL, generation INTEGER NOT NULL)",
                 "CREATE TABLE IF NOT EXISTS execution_operator (id INTEGER PRIMARY KEY CHECK(id=1), journal_id TEXT NOT NULL UNIQUE, key_hash TEXT NOT NULL)",
                 "CREATE TABLE IF NOT EXISTS execution_commands (command_id TEXT PRIMARY KEY, fingerprint TEXT NOT NULL, result_json TEXT NOT NULL)",
                 "CREATE TABLE IF NOT EXISTS execution_alerts (event_sequence INTEGER PRIMARY KEY REFERENCES execution_events(sequence), acknowledged_at TEXT, actor TEXT, command_id TEXT)",
@@ -84,6 +90,15 @@ class ExecutionJournal:
                 ),
             ):
                 db.execute(sql)
+            columns = {r[1] for r in db.execute("PRAGMA table_info(execution_operator)")}
+            if "generation" not in columns:
+                db.execute(
+                    "ALTER TABLE execution_operator ADD COLUMN generation INTEGER NOT NULL DEFAULT 1"
+                )
+            if "revoked" not in columns:
+                db.execute(
+                    "ALTER TABLE execution_operator ADD COLUMN revoked INTEGER NOT NULL DEFAULT 0"
+                )
             frozen = json.dumps({"schema": SCHEMA, **config}, sort_keys=True)
             control = db.execute("SELECT config_json FROM execution_control WHERE id=1").fetchone()
             if control is not None:
@@ -101,12 +116,16 @@ class ExecutionJournal:
     def write(self):
         if not self.writable:
             raise ValueError("Journal was opened read-only")
-        db = sqlite3.connect(self.path, timeout=10, isolation_level=None)
+        db = sqlite3.connect(
+            "file:" + quote(str(self.path)) + "?mode=rw", uri=True, timeout=10, isolation_level=None
+        )
         db.row_factory = sqlite3.Row
         try:
             db.execute("PRAGMA foreign_keys=ON")
-            db.execute("BEGIN IMMEDIATE")
+            fenced = restore.begin_fenced_write(db, restore.authority_path(self.path))
             yield db
+            if fenced:
+                restore.advance(db)
             db.commit()
         except BaseException:
             db.rollback()
@@ -156,6 +175,9 @@ class ExecutionJournal:
         with self.read() as db:
             return self._alerts(db, after, limit)
 
+    def enable_restore_fence(self, *, now):
+        return restore.enable(self, now=now)
+
     @staticmethod
     def _alerts(db, after, limit):
         if not db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_alerts'").fetchone():
@@ -184,6 +206,7 @@ class ExecutionJournal:
             return {
                 "mode": "EXECUTION_REHEARSAL",
                 "revision": self.revision(db),
+                "restore_fence": restore.status(db, restore.authority_path(self.path)),
                 "alerts": self._alerts(db, 0, 100),
                 "unacknowledged_alerts": db.execute(
                     "SELECT COUNT(*) FROM execution_alerts WHERE acknowledged_at IS NULL"

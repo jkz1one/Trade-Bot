@@ -20,9 +20,10 @@ evidence remain deployment gates. LIVE is disabled.
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **434 tests in 32.58 seconds**, including 40 execution
+full local suite passed **460 tests in 32.76 seconds**, including 40 execution
 lifecycle tests, 26 position-supervision tests, 35 execution-limit/dispatch tests
-and 22 isolated-process/durable-venue tests, plus 35 operator/alert tests.
+and 22 isolated-process/durable-venue tests, plus 35 operator/alert tests and
+26 credential/restore tests.
 The deployed application release remains the one recorded below.
 
 ## Target-host evidence — 2026-10-06 UTC
@@ -254,6 +255,57 @@ enablement/capital gates, deployed independent supervision, integrated model cos
 secure operator transport/key lifecycle/restore handling, external alert delivery
 and host failure testing. LIVE readiness and profitability remain unverified.
 The deployed release and earlier host/market-session gates remain unchanged.
+
+## Offline credential lifecycle and restore follow-up — 2026-10-07 UTC
+
+Fresh canonical branch state matched `e029afa3a8b9b77dafccfd1b8be0350c3f04addf`
+before editing. Signed ROTATE_KEY/REVOKE_KEY and credential generations now retire
+old capabilities and latch dispatch halts. Retired keys cannot be reused, including
+through trusted local recovery. Revoked-capability recovery requires a new key and
+reason, advances generation and preserves the halt, active reservation and ledger.
+Recovery still needs definitive venue evidence and ordinary signed RESUME.
+Retired controls cannot read a review or replay old command receipts. Shared key
+capability authentication remains local; no per-person login or HTTP control exists.
+
+Explicit restore-fence enrollment creates a private separate authority file. Fenced
+writes verify journal UUID, commit generation and complete logical-state digest
+under attached-database locks before mutation, then advance both checkpoints in
+one transaction. Files use DELETE journal mode and writer connections synchronous
+FULL; unsupported modes fail without persistent-mode changes. Missing/replaced
+authority, journal-only rollback, a restore before fence enrollment, or same-audit-
+revision state changes block writes and cannot silently rebind authority. Reports
+remain read-only and show VERIFIED, BLOCKED or UNFENCED. The fence is opt-in for
+offline rehearsals; nothing is enrolled on the server.
+
+Verification: **460 tests passed in 32.76s**, with **26 new credential/restore tests
+in 1.48s**, on Linux CPython 3.12.14. Tests cover retirement/re-enrollment, stale
+review, competing rotations, preservation of uncertainty, retired-generation
+re-signing, receipt/authority rollback, private/idempotent provisioning, restores
+before/after enrollment, accepted-order retry prevention, missing/foreign files,
+unsupported WAL, unchanged read-only reports, concurrent writers, failed fence
+initialization and an actual child `os._exit(97)` while both files are uncommitted.
+Both files recovered consistently after reopening. This is not a host power-loss
+or mid-COMMIT crash test. A saved exclusive-file `recovery-run` proves rotation,
+revocation, unknown-order blocking, definitive fake cancellation and rollback
+rejection, then restores the exact known-current fixture bytes without changing
+authority. No arbitrary database restore/reset utility was introduced.
+
+Ruff check/format, pip check and whitespace checks passed. The built wheel installed
+outside the repo; its optimized-Python recovery scenario verified credential
+generation 4, two retired keys, four receipts, one canceled fake order, blocked old
+journal retry and a VERIFIED current pair. Read-only reports left both private
+files unchanged. Wheel SHA-256:
+`b343bd90c56ae2aad357051cc5ff2aaca5c761c78affa182882e370f7671bad9`.
+No broker/model calls, external notifications, deployment changes or LIVE path.
+
+Estimated v1 execution-engine completeness: **about 74%**, a rough component estimate.
+Remaining: actual broker identity/order/fill/deadline contract proof, real-account
+enablement/capital gates, deployed independent supervision, model-cost integration,
+secure operator transport, external alert delivery, off-host/multi-host checkpoint
+protection, verified restoration and host failure testing. Rolling back both local
+files together or duplicating the valid pair across machines is not detected by
+this local safeguard; full-history digest growth is also unmeasured. LIVE readiness
+and profitability remain unverified. Deployed release/experiment remain unchanged.
 
 ## Sequential synthetic portfolio and build hardening
 

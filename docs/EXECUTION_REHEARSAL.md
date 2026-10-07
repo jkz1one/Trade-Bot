@@ -223,8 +223,9 @@ SLICE2_STATUS.md for executed results.
 The isolated engine now has an explicitly enrolled operator capability. A random
 key of at least 32 bytes remains with trusted operator code; the journal stores
 only its SHA-256 fingerprint and a generated journal UUID. Enrollment is explicit,
-idempotent for the same key, and rejects replacement. Key rotation/revocation,
-per-person login, remote transport and deployment are future work. A shared key
+idempotent for the same active key, and rejects implicit replacement. Explicit
+rotation/revocation are described below; per-person login, remote transport and
+deployment are future work. A shared key
 authenticates the capability; the signed actor field is an audit label, not proof
 of a separately authenticated person. Existing Python engine methods remain a
 trusted local API. These controls are not a sandbox against code or filesystem
@@ -232,13 +233,15 @@ owners, and the model receives neither the key nor a command tool.
 
 `OperatorControl.review()` returns one read-only journal snapshot and its audit
 revision. `OperatorCommand` freezes a stable ID, journal UUID, actor, bounded
-reason, exact action/target, expected revision and aware issue/expiry times. Its
+reason, exact action/target, expected revision, credential generation and aware
+issue/expiry times. Its
 lifetime is positive and at most five minutes. `sign_command` uses HMAC-SHA256
 over the canonical revalidated envelope. Application authenticates before any
 write and rechecks enrollment inside the write transaction. Neither raw key nor
 signature is stored in the audit. Signed command bodies and outcome receipts are.
 
-The only actions are HALT, RESUME, ABANDON_PREPARED and ACK_ALERT. None submits,
+The only actions are HALT, RESUME, ABANDON_PREPARED, ACK_ALERT, ROTATE_KEY and
+REVOKE_KEY. None submits,
 reviews or cancels a broker order, changes cash/limits, edits evidence or clears a
 stop. New commands from the future or at/after expiry receive a durable rejection.
 Recovery, abandonment and acknowledgment require the exact reviewed revision;
@@ -247,7 +250,9 @@ HALT can reduce authority even after revision/config changes. Every mutation,
 audit record and receipt commits atomically. Storage failure rolls back all three.
 
 An authenticated repeat of the exact ID/content returns its original receipt even
-after expiry, without reapplying or changing current state. Reusing an ID with
+after expiry, without reapplying or changing current state, while its credential
+is still active. Retired/revoked credentials cannot even obtain replay receipts.
+Reusing an ID with
 different signed content fails. Concurrent identical requests apply once; distinct
 requests against one review serialize, with the second requiring a new review.
 Rejected requests also have stable receipts: retrying the same ID after obtaining
@@ -270,8 +275,9 @@ resolve risk, clear a halt or release a reservation. There is no automatic deliv
 or Slack/email integration. Alert rows apply to new events after this feature;
 historical events are not retrospectively declared delivered or acknowledged.
 
-Opening a compatible current journal for execution adds the three operator/receipt/
-alert tables without changing its frozen envelope. Read-only reports of prior
+Opening a compatible current journal for execution adds operator/receipt/alert and
+retired-key tables, plus credential generation/revocation fields, without changing
+its frozen envelope. Read-only reports of prior
 journals do not initialize or enroll anything. Journals lacking earlier frozen
 limits remain incompatible with execution as before.
 
@@ -286,6 +292,68 @@ It uses an ephemeral random capability and scripted fake outcomes: lost ack,
 rejected recovery, alert acknowledgment while still halted, reopen, definitive
 canceled outcome and explicit signed recovery. It proves no retry, not brokerage
 or trading performance. No server update or deployment key is needed.
+
+## Credential lifecycle and journal restore fence
+
+ROTATE_KEY requires a current signed review and an exact replacement key
+fingerprint. It advances the credential generation, retires the old key and
+latches a dispatch halt. The new key must be supplied independently to construct
+an operator control; no key material is sent through the command or stored in
+audit. REVOKE_KEY can reduce authority even after the review changes. It advances
+the generation, retires the key, disables all commands/review by that capability
+and halts dispatch. Both operations preserve uncertain orders and owned positions.
+
+`OperatorControl.recover_revoked` is an explicit trusted local provisioning API,
+not a remotely signed override. It requires a different, never-retired key and a
+bounded reason, advances generation and retains a halt. It cannot resume, release
+a reservation, repair evidence or reset a stop. Generations also prevent re-signing
+an earlier command envelope under a newer key. Older command wire signatures
+without the generation field are rejected, rather than silently migrated.
+Current operators must still obtain fresh evidence and use normal signed RESUME.
+
+The optional `ExecutionJournal.enable_restore_fence(now=...)` exclusively creates
+`<journal>.authority.db` with permissions 600. Provisioning is local and explicit;
+existing unfenced rehearsals report UNFENCED, and no server state is enrolled.
+The separate authority binds a UUID, monotonically advanced commit generation and
+SHA-256 hash of complete logical journal schema/state, including ledger, orders,
+fills, snapshots, operator credentials, retired keys, receipts, alerts and events.
+The journal keeps the matching binding/generation. Every fenced write attaches
+the current authority, locks both files, verifies their exact state before any
+mutation, then advances their checkpoint in the same transaction.
+
+Both files must use DELETE rollback journals; each writer sets synchronous FULL.
+WAL or other unsupported modes are rejected without changing persistent mode.
+This follows [SQLite's documented ATTACH transaction requirements](https://www.sqlite.org/lang_attach.html).
+The authority is opened in existing-file mode and is never guessed or recreated.
+Missing/foreign authority, changed state at the same audit revision, journal-only
+rollback or a restore predating fence enrollment blocks every engine write before
+attempt preparation or dispatch. A read-only report shows BLOCKED with the reason
+while leaving both files unchanged. Even HALT or local credential recovery cannot
+rewrite an untrusted restored journal. A failed provisioning transaction leaves
+its exclusively reserved authority file blocked rather than automatically rebound.
+
+This is rollback detection against a separately retained current file, not an
+off-host monotonic witness or protection against filesystem owners. Rolling back
+both files together, losing both files or copying a valid pair to another machine
+cannot establish which history is newest or enforce single-host ownership. Keep
+the current authority outside journal-only restore operations; secure off-host
+checkpoint retention, fencing across machines and a verified restoration workflow
+remain required before deployment. There is no reset/rebind/resume bypass for a
+mismatched pair. The full-state digest also scales with retained history; production
+growth and latency have not been measured.
+
+```bash
+python -m app.execution.cli recovery-run --db execution-recovery.db
+python -m app.execution.cli report --db execution-recovery.db
+```
+
+This exclusive-file proof uses ephemeral fixture keys, lost acknowledgment,
+rotation, revocation, local re-enrollment and rejected recovery while the attempt
+remains active. Definitive scripted CANCELED evidence then permits a signed RESUME.
+It deliberately restores old bytes of its new fixture journal, proves a duplicate
+dispatch is blocked, and puts back the exact known-current fixture bytes without
+changing authority. It is not a utility for restoring arbitrary/user databases.
+Only one fake submission occurred; no broker/model calls or deployment changes.
 
 ## SignalFlow adaptation and remaining engineering
 
@@ -318,7 +386,8 @@ Then verify deadlines with the actual broker adapter and implement independent l
 identity pinning and verified bankroll controls, real-adapter owned-position reconciliation,
 deployed stop/session supervision, model-cost integration, external alert delivery and
 deployed authenticated operator recovery. The local capability/outbox above must
-also gain secure transport, key lifecycle and host failure verification before use.
+also gain secure transport, off-host/multi-host restore fencing and host failure
+verification before use.
 Test these independently before connecting them to a live capability.
 The deployed SHADOW worker and its continuing market-session verification stay on
 their current release; no server update is needed for this offline slice.

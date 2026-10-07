@@ -29,6 +29,9 @@ does not change the deployed SHADOW experiment.
 Signed local operator commands now test atomic halt/recovery, revision checks,
 replay receipts and persistent alert acknowledgment. External alert delivery and
 deployed recovery controls remain unimplemented.
+Credential rotation/revocation retain a dispatch halt and reject retired keys.
+An opt-in separate authority file blocks journal-only rollback before any write.
+Rolling back both files together remains outside this local safeguard.
 
 ## Slice 2 — Robinhood read / SHADOW
 

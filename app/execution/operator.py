@@ -24,13 +24,15 @@ class OperatorCommand(Contract):
     journal_id: str = Field(min_length=1, max_length=64)
     command_id: str = Field(min_length=1, max_length=128)
     actor: str = Field(min_length=1, max_length=80)
-    action: Literal["HALT", "RESUME", "ABANDON_PREPARED", "ACK_ALERT"]
+    action: Literal["HALT", "RESUME", "ABANDON_PREPARED", "ACK_ALERT", "ROTATE_KEY", "REVOKE_KEY"]
     reason: str = Field(min_length=1, max_length=300)
     expected_revision: int = Field(ge=0, strict=True)
     issued_at: datetime
     expires_at: datetime
     client_id: str | None = Field(default=None, min_length=1, max_length=128)
     alert_sequence: int | None = Field(default=None, gt=0, strict=True)
+    credential_generation: int = Field(default=1, gt=0, strict=True)
+    replacement_fingerprint: str | None = Field(default=None, min_length=64, max_length=64)
 
     @field_validator("journal_id", "command_id", "actor", "reason", "client_id")
     @classmethod
@@ -47,6 +49,12 @@ class OperatorCommand(Contract):
             raise ValueError("Only abandonment has an order target")
         if (self.action == "ACK_ALERT") != (self.alert_sequence is not None):
             raise ValueError("Only acknowledgment has an alert target")
+        if (self.action == "ROTATE_KEY") != (self.replacement_fingerprint is not None):
+            raise ValueError("Only rotation has a replacement fingerprint")
+        if self.replacement_fingerprint and any(
+            c not in "0123456789abcdef" for c in self.replacement_fingerprint
+        ):
+            raise ValueError("Invalid replacement fingerprint")
         return self
 
 
@@ -78,14 +86,48 @@ class OperatorControl:
         with engine.journal.write() as db:
             old = db.execute("SELECT * FROM execution_operator WHERE id=1").fetchone()
             if old:
-                if not hmac.compare_digest(old["key_hash"], key_hash):
+                if old["revoked"] or not hmac.compare_digest(old["key_hash"], key_hash):
                     raise ValueError("Operator capability is already enrolled")
                 return old["journal_id"]
             engine._control(db)
             journal_id = str(uuid.uuid4())
-            db.execute("INSERT INTO execution_operator VALUES(1,?,?)", (journal_id, key_hash))
+            db.execute(
+                "INSERT INTO execution_operator(id,journal_id,key_hash) VALUES(1,?,?)",
+                (journal_id, key_hash),
+            )
             engine.journal.event(db, now, "OPERATOR_ENROLLED", {"journal_id": journal_id})
             return journal_id
+
+    @staticmethod
+    def recover_revoked(engine: ExecutionEngine, key: bytes, reason: str, *, now):
+        """Trusted local recovery only; does not resume or release any reservation."""
+        _clock(now)
+        if type(engine) is not ExecutionEngine:
+            raise ValueError("Only the offline execution engine is supported")
+        engine._reason(reason)
+        fingerprint = _key_hash(key)
+        with engine.journal.write() as db:
+            row = db.execute("SELECT * FROM execution_operator WHERE id=1").fetchone()
+            if not row or not row["revoked"]:
+                raise ValueError("Only a revoked capability can be recovered locally")
+            if hmac.compare_digest(row["key_hash"], fingerprint):
+                raise ValueError("Recovery requires a different operator key")
+            if db.execute(
+                "SELECT 1 FROM execution_retired_keys WHERE key_hash=?", (fingerprint,)
+            ).fetchone():
+                raise ValueError("Retired operator keys cannot be recovered")
+            db.execute(
+                "UPDATE execution_operator SET key_hash=?,generation=generation+1,revoked=0 WHERE id=1",
+                (fingerprint,),
+            )
+            engine._halt(db, "OPERATOR_CAPABILITY_RECOVERED", now)
+            engine.journal.event(
+                db,
+                now,
+                "OPERATOR_RECOVERED",
+                {"reason": reason, "generation": row["generation"] + 1},
+            )
+            return row["generation"] + 1
 
     def __init__(self, engine: ExecutionEngine, key: bytes):
         if type(engine) is not ExecutionEngine:
@@ -93,16 +135,28 @@ class OperatorControl:
         key_hash = _key_hash(key)
         with engine.journal.read() as db:
             row = db.execute("SELECT * FROM execution_operator WHERE id=1").fetchone()
-            if not row or not hmac.compare_digest(row["key_hash"], key_hash):
+            if not row or row["revoked"] or not hmac.compare_digest(row["key_hash"], key_hash):
                 raise ValueError("Operator authentication failed")
             self.journal_id = row["journal_id"]
+            self.credential_generation = row["generation"]
         self.engine = engine
         self._key = key
 
     def review(self):
         """Read the exact revision/evidence to bind the next recovery request."""
+        with self.engine.journal.read() as db:
+            binding = db.execute("SELECT * FROM execution_operator WHERE id=1").fetchone()
+            if (
+                not binding
+                or binding["revoked"]
+                or binding["generation"] != self.credential_generation
+                or binding["journal_id"] != self.journal_id
+                or not hmac.compare_digest(binding["key_hash"], _key_hash(self._key))
+            ):
+                raise ValueError("Operator capability retired or unavailable")
         result = self.engine.journal.report()
         result["operator_journal_id"] = self.journal_id
+        result["operator_credential_generation"] = self.credential_generation
         return result
 
     def apply(self, command: OperatorCommand, signature: str, *, now):
@@ -122,6 +176,9 @@ class OperatorControl:
             binding = db.execute("SELECT * FROM execution_operator WHERE id=1").fetchone()
             if (
                 not binding
+                or binding["revoked"]
+                or binding["generation"] != self.credential_generation
+                or command.credential_generation != binding["generation"]
                 or binding["journal_id"] != self.journal_id
                 or not hmac.compare_digest(binding["key_hash"], _key_hash(self._key))
                 or command.journal_id != self.journal_id
@@ -140,7 +197,10 @@ class OperatorControl:
                 reason = "COMMAND_FROM_FUTURE"
             elif now >= command.expires_at:
                 reason = "COMMAND_EXPIRED"
-            elif command.action != "HALT" and command.expected_revision != journal.revision(db):
+            elif command.action not in {
+                "HALT",
+                "REVOKE_KEY",
+            } and command.expected_revision != journal.revision(db):
                 reason = "OPERATOR_REVIEW_STALE"
             if reason is None:
                 try:
@@ -189,7 +249,7 @@ class OperatorControl:
             engine._resume(db, command.reason, now)
         elif command.action == "ABANDON_PREPARED":
             engine._abandon_prepared(db, command.client_id, command.reason, now)
-        else:
+        elif command.action == "ACK_ALERT":
             row = db.execute(
                 "SELECT * FROM execution_alerts WHERE event_sequence=?", (command.alert_sequence,)
             ).fetchone()
@@ -200,4 +260,37 @@ class OperatorControl:
             db.execute(
                 "UPDATE execution_alerts SET acknowledged_at=?,actor=?,command_id=? WHERE event_sequence=?",
                 (now.isoformat(), command.actor, command.command_id, command.alert_sequence),
+            )
+        else:
+            if command.action == "ROTATE_KEY":
+                row = db.execute("SELECT key_hash FROM execution_operator WHERE id=1").fetchone()
+                if (
+                    hmac.compare_digest(row["key_hash"], command.replacement_fingerprint)
+                    or db.execute(
+                        "SELECT 1 FROM execution_retired_keys WHERE key_hash=?",
+                        (command.replacement_fingerprint,),
+                    ).fetchone()
+                ):
+                    raise ExecutionBlocked("DIFFERENT_OPERATOR_KEY_REQUIRED")
+                db.execute(
+                    "INSERT INTO execution_retired_keys SELECT key_hash,?,generation FROM execution_operator WHERE id=1",
+                    (now.isoformat(),),
+                )
+                db.execute(
+                    "UPDATE execution_operator SET key_hash=?,generation=generation+1 WHERE id=1",
+                    (command.replacement_fingerprint,),
+                )
+            else:
+                db.execute(
+                    "INSERT INTO execution_retired_keys SELECT key_hash,?,generation FROM execution_operator WHERE id=1",
+                    (now.isoformat(),),
+                )
+                db.execute(
+                    "UPDATE execution_operator SET revoked=1,generation=generation+1 WHERE id=1"
+                )
+            engine._halt(
+                db,
+                "OPERATOR_CAPABILITY_"
+                + ("ROTATED" if command.action == "ROTATE_KEY" else "REVOKED"),
+                now,
             )
