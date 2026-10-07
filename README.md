@@ -90,6 +90,12 @@ python -m app.robinhood.cli shadow-cycle --agent openai
 
 SHADOW uses real Robinhood account/market data and may call `review_equity_order` to preview a hypothetical order. It cannot place or cancel an order. Robinhood-backed state is stored separately in `./robinhood.db` by default.
 
+Quote freshness conservatively uses the oldest bid, ask and selected trade clock.
+A fresh component cannot hide stale executable prices; missing, naive or future
+required timestamps fail collection closed. The governor retains its configured
+age limit. This adapter change is locally verified, not deployed or authenticated
+against the current account; see `docs/SLICE2_STATUS.md`.
+
 Inspect persisted evidence without network calls:
 
 ```bash

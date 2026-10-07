@@ -20,8 +20,8 @@ evidence remain deployment gates. LIVE is disabled.
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **809 tests in 123.91 seconds with warnings treated as errors**,
-including the previous 757 cases and 52 new signed cycle-recovery cases. Interrupted
+full local suite passed **837 tests in 125.01 seconds**, with no reported warnings,
+including the previous 809 cases and 28 new quote-component freshness cases. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
 Changed-code checks and installed native HTTPS/runtime continuation proof passed;
@@ -810,6 +810,36 @@ Actual read-data integration, bounded-provider validation/adoption, external con
 alert/archive provisioning, host failure/recovery and broker capability proof remain.
 The deployed SHADOW release/cohort, main and LIVE state are unchanged. No broker
 placement, cancellation, real-account mutation or server update was performed.
+
+## Robinhood quote-component freshness follow-up — 2026-10-07 UTC
+
+The read adapter previously assigned the newest bid/ask/trade timestamp to the
+whole quote. A current trade could therefore hide an old executable bid or ask.
+It now uses the oldest timestamp of the bid, ask and the exact selected last-trade
+price. Unused older trade prices cannot age a newer selected trade, and an unpriced
+update cannot refresh it. All market timestamps must be timezone-aware. Missing or
+malformed required timestamps fail the collection closed; any required component
+in the future is rejected individually before the oldest timestamp is selected.
+
+An injectable collection clock checks future components at completion, allowing
+honest updates received after request start. A naive or regressing collection clock
+fails closed. Existing governor age limits still own staleness: the adapter retains
+old evidence rather than replacing its clock, allowing audited STALE_QUOTE rejection
+for both entries and closes. This conservative single-clock contract can reject a
+current spread when its selected trade is old; it does not infer unseen freshness.
+
+Offline tests cover each component independently, entry/close governor rejection,
+missing/malformed/naive/future clocks, selected price/time pairing, timezone offsets,
+request/completion timing and collection clock regression. Authenticated adapter
+verification and connection into the independent PAPER runtime remain pending.
+The full suite passed **837 tests in 125.01 seconds**. The wheel installed outside
+the checkout passed **30 adapter cases** with warnings treated as errors, importing
+the installed package rather than repository code. Wheel SHA-256:
+`4640e69dd21432e892300694c5976553317b4709c0ad3c48c4b5cfd52823eb04`.
+Scoped fatal-error/import lint, formatting, pip check and whitespace checks passed.
+No broker/model calls, deployment, experiment migration or LIVE capability was added.
+The deployed worker stays on its recorded release; this is not a rebuild instruction.
+Engine completeness remains about 88%, excluding LIVE readiness and profitability.
 
 ## Sequential synthetic portfolio and build hardening
 
