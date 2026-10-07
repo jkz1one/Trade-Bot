@@ -707,6 +707,18 @@ files and read-only bytes passed, and halt/ack state stayed unchanged. There wer
 broker/model calls. Deployed sink provisioning, real notification routing, credential
 lifecycle and off-host alert/restore availability remain unproven.
 
+## Private execution evidence checkpoints
+
+See [EXECUTION_CHECKPOINTS.md](EXECUTION_CHECKPOINTS.md) for the opt-in paired export,
+strict independent-pin verification, bounded isolated archive client and quarantine-only
+recovery commands. The tool copies journal/authority under retained writer locks without
+advancing source authority, preserves unresolved orders/costs/halt/credential evidence,
+and never produces a normal executable restore pair. A separate installed TLS archive
+proof deletes all original state before retrieval; this is simulated source loss.
+Actual off-host deployment, latest-generation witness retention, host power-loss behavior
+and authenticated active-state recovery remain unproven. The deployed SHADOW database,
+backup cron and credential files are not altered by these commands.
+
 ## SignalFlow adaptation and remaining engineering
 
 Fresh GitHub inspection confirms SignalFlow `main` remains

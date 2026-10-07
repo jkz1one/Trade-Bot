@@ -52,6 +52,11 @@ requires an exact acceptance receipt and retries the same alert ID within a boun
 Overdue/exhausted delivery blocks new entries and model calls; governed protective exits
 retain their existing checks. Delivery never acknowledges an alert or resumes execution.
 This is verified with a local TLS sink; no external notifications or server changes were made.
+Private [execution evidence checkpoints](docs/EXECUTION_CHECKPOINTS.md) now capture the
+journal/authority pair consistently, support explicit verified-TLS archive retention/retrieval,
+and require an independently retained hash before recovery staging. Recovery preserves
+unresolved evidence and supplies no usable execution authority. Archive provisioning and
+actual off-host/host-failure verification remain pending; deployed SHADOW backups are unchanged.
 
 ## Slice 2 — Robinhood read / SHADOW
 

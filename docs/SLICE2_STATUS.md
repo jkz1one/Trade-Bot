@@ -612,6 +612,84 @@ and multi-host coordination remain outside local fencing. The deployed release,
 SHADOW cohort and unobserved first scheduled regular-session evidence gate are
 unchanged. No LIVE, broker write path or external recipient notification was added.
 
+## Paired evidence checkpoint and archive follow-up — 2026-10-07 UTC
+
+Fresh canonical branch state matched `a4a154ca77d8f50c0a7c60a4f8781755646add8d`
+before editing. PR #1 remains draft, main is unchanged and the deployed SHADOW
+worker/backup cron remain on their existing release. This adds explicit fixture
+execution evidence export, inspection, archive transfer and quarantine staging;
+it does not update the deployed Robinhood database, secrets or services.
+
+Export requires a compatible private journal and VERIFIED authority pair. It holds
+both SQLite RESERVED locks and uses separate read connections for the two backup
+copies, blocking source writers until both captures finish. It then rolls back the
+lock transaction without changing source bytes or authority generation. Copies
+pass integrity/logical authority verification. A fixed uncompressed envelope has
+no arbitrary paths, caps the artifact at 64 MiB and the manifest at 4 KiB, binds
+member hashes/sizes and records original authority identity/generation/state hash.
+The private file is fsynced and published exclusively without overwriting targets.
+Signing/API/OAuth credential files are not included; journal audit data remains
+private and the envelope itself is not encrypted at rest.
+
+An independent retained full-file SHA-256 pin is mandatory before inspection,
+retrieval or staging. Wrong/truncated/trailing/duplicate/misbound/corrupt evidence
+and complete older-pair substitution against a newer pin fail before publication.
+A user-selected old pin still represents historical evidence; this does not create
+an online latest-generation witness or cure paired rollback.
+
+Explicit one-request PUT/GET archive operations use a separate exact HTTPS origin,
+a dedicated private token, verified native TLS, optional bound CA and a fixed
+isolated child. No redirects, proxy discovery, SDK retries, engine handles or
+broker/model credentials are provided. Bounded pipes, a maximum-30-second process
+deadline, cancellation TERM/KILL/drain/reap and parent-death watchdog retain the
+existing capability boundary. A private receipt lock and fsynced IN_FLIGHT record
+precede upload. Only an exact strict retention receipt becomes REMOTE_ACCEPTED;
+lost replies/errors leave UNKNOWN and cancellation/crash leaves IN_FLIGHT. Same-ID
+retry is explicit and destination-bound; attempts accumulate and no upload is
+automatically repeated. A saved receipt records historical acceptance; retrieval
+separately validates the stored bytes and publishes no failed/older download.
+
+Recovery creates only a new private evidence directory with differently named
+journal/authority files and a final verification marker. Original unresolved
+orders, reservations, fills, costs, model receipts, halt and credential generations
+are retained. No broker truth, terminal outcome, cost resolution or fresh risk
+approval is invented. There is no normal journal authority sidecar; engine opening
+fails before mutation. The tool cannot initialize, migrate, re-enroll, release,
+resume or replay execution. A privileged filesystem owner remains outside this
+local boundary.
+
+Verification: **730 tests passed in 117.54s with warnings treated as errors**, including
+**57 new checkpoint/archive tests**. Changed-code Ruff check/format, pip check and
+whitespace checks passed. Tests cover private/bounded inputs, source-byte preservation,
+concurrent source writes blocked across both copies, authority/pin/format/integrity
+rejection, source-loss evidence recovery, original unknown model/order state, strict
+TLS receipts, explicit retry, no retargeting, corrupt/older retrieval, copy/deadline/
+receipt storage failures, repeated cancellation, actual parent death/watchdog exit
+and reaping, and execution denial. Fixture registration was corrected before the
+completed focused/full runs; the final source and transport checks passed.
+
+The installed wheel outside the checkout passed under optimized Python and warnings
+as errors with a separate durable native-TLS archive process. The first upload was
+stored but its reply was lost. After archive restart, explicit same-ID/bytes retry
+returned one durable object for two upload attempts. All original source journal,
+authority and local bundle files were then deleted in the fixture. Download matched
+the retained SHA-256; quarantine retained the dispatch halt and one active UNKNOWN
+order, and ordinary engine opening was denied without changing evidence bytes.
+Private-file checks passed and all three transfer children plus both archive server
+instances were reaped. There were zero broker/model calls. Wheel SHA-256:
+`0657480b6c7d50420e6708d54e8ad944c0852520bd71ce1c50d9785ee766758b`.
+
+Estimated v1 execution-engine completeness: **about 86%**, a rough component estimate.
+This proves simulated source loss and the archive client contract, not actual
+cross-host retention, deployed backups, power-loss behavior or active-state recovery.
+A real independent archive endpoint/pin custody, retention/encryption/credential
+lifecycle, latest-generation witness and authenticated recovery still need proof.
+Export can delay source writes and local storage/hash work is not hard real-time.
+Actual broker contracts, authenticated bounded-model validation/adoption and deployed
+supervision/control/notifications remain. The existing SHADOW cohort and unobserved
+first scheduled regular-session evidence gate are unchanged. No LIVE capability,
+broker mutation, external recipient notification or server update was introduced.
+
 ## Sequential synthetic portfolio and build hardening
 
 The opt-in synthetic profile runs the sole trader against its own virtual cash and
