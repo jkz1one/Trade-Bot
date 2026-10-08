@@ -44,6 +44,16 @@ blocking filesystem operations, Python logical-state hashing and hardware stalls
 not hard real-time guarantees. The export locks can delay engine/supervisor writes;
 this is not wired into a deployed scheduler.
 
+Export, archive receipt admission, download and quarantine staging now prepare their
+output parent hierarchies durably. The existing anchor directory and its parent are
+flushed first, including an anchor left by a failed earlier preparation. Each new
+mode-700 ancestor is then flushed together with the parent entry naming it before
+evidence work or an archive child is admitted. Existing directory modes and unrelated
+files are unchanged. Preparation failure can leave private empty ancestors for review;
+it does not automatically remove or reuse execution state. This addresses directory
+entry durability separately from file bytes, as described by
+[Linux fsync(2)](https://man7.org/linux/man-pages/man2/fsync.2.html).
+
 Example against explicitly provisioned fixture evidence:
 
 ```bash
@@ -193,6 +203,14 @@ Staging creates a new private directory containing `execution.evidence.db`,
 `authority.evidence.db` and a final `verified-evidence.json` marker. Existing recovery
 directories are never replaced. Missing final markers represent incomplete staging.
 Failure cleanup removes only the new directory created by that call.
+
+Before reporting QUARANTINED_EVIDENCE, staging flushes the member files and final
+marker, the new quarantine directory, and its parent entry. A parent flush error
+returns failure and follows the existing cleanup path. Storage/interruption failures
+still require inspection; cleanup is not a guarantee against evidence reappearing
+after power loss. These filesystem-call/order and failure checks do not substitute
+for a target-host power-loss drill, storage durability verification or independent
+off-host retention. No recovery authority or promotion path is added.
 
 Member bytes retain original orders, fills, reservations, costs, model receipts,
 halts, operator generations/retired fingerprints, commands, alerts, supervisor and

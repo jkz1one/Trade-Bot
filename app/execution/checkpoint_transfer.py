@@ -21,6 +21,7 @@ from app.execution.alerts import AlertConfig, ca_bytes
 from app.execution.checkpoint import (
     HASH,
     MAX_BYTES,
+    _durable_directory,
     _fsync_dir,
     _pin,
     inspect_checkpoint,
@@ -189,7 +190,7 @@ async def upload_checkpoint(
         ).encode()
     ).hexdigest()
     state_path = Path(receipt_file).expanduser().absolute()
-    state_path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    _durable_directory(state_path.parent)
     lock_path = Path(str(state_path) + ".lock")
     lock = os.open(lock_path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
     try:
@@ -274,7 +275,7 @@ async def download_checkpoint(output, config, *, expected_sha256, token_file):
     target = Path(output).expanduser().absolute()
     if target.exists() or target.is_symlink():
         raise ValueError("Download requires a new output file")
-    target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    _durable_directory(target.parent)
     fd, name = tempfile.mkstemp(prefix=".checkpoint-download-", dir=target.parent)
     os.close(fd)
     try:

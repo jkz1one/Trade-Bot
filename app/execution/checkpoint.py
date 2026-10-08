@@ -111,6 +111,24 @@ def _fsync_dir(path):
         os.close(fd)
 
 
+def _durable_directory(path):
+    """Persist created ancestors before admitting evidence below them."""
+    missing = []
+    ancestor = Path(path)
+    while not ancestor.exists():
+        missing.append(ancestor)
+        ancestor = ancestor.parent
+    if not ancestor.is_dir():
+        raise NotADirectoryError("Evidence parent must be a directory")
+    # An existing anchor may be the last directory left by a failed prior call.
+    _fsync_dir(ancestor)
+    _fsync_dir(ancestor.parent)
+    for directory in reversed(missing):
+        directory.mkdir(mode=0o700, exist_ok=True)
+        _fsync_dir(directory)
+        _fsync_dir(directory.parent)
+
+
 def _backup(source, target, deadline):
     with target.open("xb"):
         target.chmod(0o600)
@@ -175,7 +193,7 @@ def export_checkpoint(journal_path, output, *, now=None, timeout_seconds=10):
     for path in (source, authority):
         with private_file(path):
             pass
-    target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    _durable_directory(target.parent)
     stage = Path(tempfile.mkdtemp(prefix=".checkpoint-", dir=target.parent))
     lock = None
     try:
@@ -319,7 +337,7 @@ def inspect_checkpoint(bundle, *, expected_sha256, timeout_seconds=10):
 
 def stage_checkpoint(bundle, output_directory, *, expected_sha256, timeout_seconds=10):
     destination = Path(output_directory).expanduser().absolute()
-    destination.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    _durable_directory(destination.parent)
     destination.mkdir(mode=0o700, exist_ok=False)
     try:
         manifest, summary = _unpack(
@@ -340,6 +358,7 @@ def stage_checkpoint(bundle, output_directory, *, expected_sha256, timeout_secon
             stream.flush()
             os.fsync(stream.fileno())
         _fsync_dir(destination)
+        _fsync_dir(destination.parent)
         return result
     except BaseException:
         shutil.rmtree(destination)

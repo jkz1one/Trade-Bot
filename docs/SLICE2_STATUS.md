@@ -26,8 +26,8 @@ the newer bounded isolated model/market components still need verification. LIVE
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full installed-package suite passed **1,090 tests in 299.94 seconds with warnings treated as errors**,
-including the previous 1,074 cases and 16 publication-deadline cases. Installed native
+full installed-package suite passed **1,100 tests in 303.37 seconds with warnings treated as errors**,
+including the previous 1,090 cases and 10 evidence parent-durability cases. Installed native
 runtime/control/alert and checkpoint entry points were used in that full run. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
@@ -49,6 +49,42 @@ installation and sandbox enforcement remain unverified.
 Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticated
 collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
+
+## Execution evidence parent durability follow-up — 2026-10-08 UTC
+
+Fresh GitHub branch/PR state matched `6baed0baa6caff68853d6048f15ec3ff9f6fc2e4`,
+source tree `fe596b9cfc99e488d0b5f2201dcb25e7eb3ec970`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 draft and checkout clean.
+
+Recovery staging flushed its final marker and directory but omitted the parent entry
+that names the new quarantine. Output ancestors created by evidence commands also
+used ordinary recursive mkdir without directory flushes. Export, receipt admission,
+download and quarantine now flush their existing anchor/parent, then each new private
+ancestor and its parent entry before evidence work or child admission. An existing
+anchor left by a failed preparation is re-flushed on a separate explicit attempt.
+Staging also flushes its parent after the verified marker/directory before success.
+Existing modes, unrelated files, frozen enrollment and no-overwrite rules remain.
+
+Ten focused regressions passed: real filesystem flush order, nested export/staging,
+ancestor storage failures and explicit retry, final quarantine-parent failure with
+sanitized CLI error/cleanup, archive admission denial before a durable parent, existing
+mode/evidence preservation, and a native-TLS upload/download round trip after original
+source/bundle deletion. Unknown model evidence survives in quarantine; engine opening
+still fails with RESTORE_AUTHORITY_MISSING before mutation. This is local fixture
+proof, not actual power-loss, cross-host durability or independently retained storage.
+
+Verification: **1,100 installed-package tests passed in 303.37s**, warnings treated
+as errors, including native runtime/control/alert/market, checkpoint/capture/archive
+and host entry points. All 10 focused source regressions passed in 2.11s. Scoped Ruff
+lint/format, compilation, pinned-dependency check, `pip check` and whitespace passed.
+All 92 application files matched source, wheel and installed bytes. Wheel SHA-256:
+`72cfea67beb9d3d19096197f0b8f86c0fbfd103a894dc4ee7f2dd26fc27e297a`.
+
+No host or deployed experiment was changed. Remaining gates are target-host namespace,
+boot/lifecycle verification, authenticated market/model evidence, external alert/archive
+acceptance and independent retention, host-loss recovery, and the old worker/slot audit.
+Engine completeness remains approximately **89%**, excluding LIVE readiness and
+demonstrated profitability.
 
 ## Isolated PAPER credential namespace follow-up — 2026-10-08 UTC
 
