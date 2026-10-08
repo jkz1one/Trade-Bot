@@ -62,6 +62,12 @@ and require an independently retained hash before recovery staging. Recovery pre
 unresolved evidence and supplies no usable execution authority. Archive provisioning and
 actual off-host/host-failure verification remain pending; deployed SHADOW backups are unchanged.
 
+A separate [isolated PAPER host layout](docs/PAPER_HOST.md) now provides independent
+systemd units for runtime, operator control and alerts, with frozen paths and separate
+credential namespaces. Runtime failure does not automatically restart trading or
+terminate the companions. Native fixture lifecycle tests and parser validation are
+separate from actual target-host installation and sandbox verification.
+
 ## Slice 2 — Robinhood read / SHADOW
 
 Development lives on `slice2/robinhood-read-shadow`.

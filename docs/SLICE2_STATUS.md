@@ -1,27 +1,33 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
-## Current checkpoint — 2026-10-07 UTC
+## Current checkpoint — 2026-10-08 UTC
 
 Branch: `slice2/robinhood-read-shadow`. PR #1 remains draft. `main` remains untouched.
 The authenticated core path is verified: strict OpenAI output, real Robinhood reads,
 model judgment, deterministic governor and persisted SHADOW audit. Scheduling is
-installed and its closed-session behavior is verified on the Mac. A scheduled
-authenticated regular-session cycle remains to be observed. Forward quote outcome
+installed and its closed-session behavior is verified on the Mac. Provided synthetic
+regular-session decisions/usage now support scheduled operation on the server; exact
+claim completion still needs the worker audit. Forward quote outcome
 tracking and a persistent Linux SHADOW service are implemented and verified offline.
 The service and private read-only observer are now running on the permanent
 DigitalOcean server, with both containers healthy. The opt-in synthetic bankroll
-profile is initialized but has no market-session cycles yet. Automatic container
+profile now has operator-provided regular-session API evidence: a 25-row window,
+one simulated XLV round trip and known model usage/costs. That first session ended
+flat with negative net return; it does not establish signal. Worker/slot completeness
+still needs the separate audit response. Automatic container
 restart and experiment configuration persistence passed the operator's host reboot
 check. The operator confirmed the HTTPS dashboard login/page works. An integrity-checked
 local backup succeeded and a nightly cron job is installed. Off-host protection,
 mobile inspection, failure recovery and authenticated scheduled model-process
-evidence remain deployment gates. LIVE is disabled.
+evidence remain deployment gates. The existing deployed synthetic path has now
+provided scheduled-session decisions/usage/fills, while its worker/claim audit and
+the newer bounded isolated model/market components still need verification. LIVE is disabled.
 
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **986 tests in 157.21 seconds with warnings treated as errors**,
-including the previous 954 cases and 32 independent alert-service cases. Interrupted
+full local suite passed **992 tests in 297.76 seconds with warnings treated as errors**,
+including the previous 986 cases and six host-contract/native composition cases. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
 The source-bound market-only PAPER feed now connects through a bounded headless
@@ -35,9 +41,56 @@ The independent alert CLI now uses the same safe attachment, retains lifetime
 ownership and delivers halt alerts after the trader stops. All 91 installed
 alert cases passed; actual native SIGTERM drained bounded work and restart did not
 replay confirmed delivery. This is local TLS evidence, not external notifications.
+Three independent systemd unit specifications now define isolated host lifecycles,
+with no automatic trader-failure restart or coupling to the control/alert services.
+All six host cases passed with installed native role processes; actual target-host
+installation and sandbox enforcement remain unverified.
 Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticated
 collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
+
+## Operator API evidence — 2026-10-07 regular session
+
+The operator supplied a 13-page PDF of the authenticated
+`/api/synthetic/virtual-v1` response, printed October 7 at 21:26 America/New_York.
+Source PDF SHA-256: `f6a38f2376e2d346e78f80882414dd2c4779d2ddbc95fd39c2bc5641445e3779`.
+This is user-provided printed API evidence, not a direct credentialed fetch or a
+complete journal/packet archive. Numeric fields/fill records were extracted and the
+final page visually checked; wrapped prose is not preserved as canonical JSON.
+
+The response is OK, revision 26, with 25 displayed cycle records (IDs 2–26) from
+13:45:31.848366 to 19:45:11.125865 UTC, October 7. Cycle 1 is outside this default
+25-row window. It records 24 attempted model calls in that window, no agent errors,
+and a last rules-only HOLD with no model attempt. The visible decisions comprise
+23 HOLDs, one OPEN_LONG and one CLOSE. Release identity remains
+`de5dd1c7bd3a2d3b85a2d6bb7f624e0d3a3f9245`; frozen virtual-v1 policy, $10 capital,
+5 bps slippage, zero per-fill fee, prompt hash and configured token rates remain
+as recorded at initialization. The quarter-hour timestamps support regular-session
+operation, but service heartbeat and exact scheduler-claim completion need the
+separate authenticated `/api/shadow?limit=100` evidence.
+
+One synthetic XLV round trip completed. Cycle 6 requested entry; cycle 7 bought
+0.01473545 shares for $2.499202460742 at 15:00:15.856226 UTC. Cycle 24 requested
+close; cycle 25 sold the same quantity for $2.48683669213375 at 19:30:22.468451 UTC.
+Both fills reference their earlier source cycle, consistent with the frozen
+next-quote policy. These are simulated executions, never real broker fills.
+Latest state at 19:45 UTC has no position or pending intent, and reports fresh
+position/benchmark valuations, zero unknown model calls and zero unaccounted attempts.
+
+Price P&L is -$0.01236576860825. Cumulative estimated model cost is $0.0142248;
+net-after-model equity is $9.97340943139175, a -0.2659056860825% return. Matching
+SPY liquidation equity is $10.0046793323244, +0.046793323244%; reported net excess
+is -0.3126990093265 percentage points. This measures the frozen synthetic execution
+and configured model-cost assumptions, without hosting/setup costs, taxes, dividends
+or splits. It is the first provided operational session sample, not profitability
+or useful-signal proof. Model rates remain configured estimates, not verified invoices.
+
+This closes the prior absence of provided regular-session synthetic decisions,
+usage and fill evidence for the deployed release. It does not validate the newer
+isolated execution engine, broker writes, full packet/input provenance, every
+scheduler slot, fresh post-close worker health, off-host backups or host recovery.
+A raw `/api/synthetic/virtual-v1?limit=100` response plus `/api/shadow?limit=100`
+would retain the earlier row and worker/claim evidence without PDF wrapping.
 
 ## Target-host evidence — 2026-10-06 UTC
 
@@ -1097,6 +1150,56 @@ real broker write adapter, LIVE enablement or server change. The deployed releas
 remains `de5dd1c7bd3a2d3b85a2d6bb7f624e0d3a3f9245`. Do not rebuild the deployed
 SHADOW image for this isolated PAPER component. Operations:
 [PAPER_RUNTIME.md](PAPER_RUNTIME.md).
+
+Estimated v1 execution-engine completeness: **about 89%**, a rough component estimate
+excluding LIVE readiness and profitability.
+
+## Isolated PAPER host layout follow-up — 2026-10-08 UTC
+
+Three reviewable systemd units now define independent runtime, native TLS operator
+control and alert service lifecycles under a dedicated service UID and Python 3.12
+installation. They use a separate private population and role credential directories,
+Python isolated mode, read-only code/system paths, private temporary directories,
+no new privileges and explicit shared SQLite write paths. Peer credential and
+deployed SHADOW directories are hidden from each role. Operator TLS stays loopback.
+No unit installs dependencies, pulls code, initializes/migrates a population or
+promotes LIVE. Startup conditions require retained journal/authority, with venue/feed
+also required for runtime. A skipped condition is not healthy service evidence.
+
+No cross-service Requires/BindsTo/PartOf links exist. Runtime has Restart=no;
+failure does not auto-retry model/order work. Explicit owner restart/boot retains
+existing halt, interrupted-claim and no-replay guards. Control/alerts have bounded
+on-failure restart delay/start limits and immutable attachment; restart never resets
+alert attempts or resumes/acknowledges trading. SIGTERM reaches the main process
+first; cgroup kill deadlines allow 240 seconds for runtime and 45 for companions.
+A hard owner death cannot invent an alert; its retained state is detected on later
+owner startup, and external dead-process/host-loss monitoring remains required.
+
+Verification: **992 tests passed in 297.76s with warnings treated as errors**. Scoped lint/format, pip check and whitespace
+checks passed. The actual systemd 255 parser accepted all three units with only the
+local executable/UID/GID mapping. All six host-contract/native composition cases
+passed with installed native role processes outside the checkout: **6 passed in 144.91s with warnings treated as errors**.
+Wheel SHA-256: `84ef0c4908453ae4d66136d39ed63f571f97e84d100f4eb68aff94f415a19921`.
+
+The held-session disposable fixture completed one scheduled stub HOLD under native
+owner/control/alert processes. A malformed fake-account read produced a FAILED
+runtime and retained halt; a separate actual SIGKILL proof retained unclean RUNNING
+state and detected it on explicit owner restart. Both preserved the completed slot,
+with no model generation, fake order submission or replay. Operator HTTPS review
+and alert receipt delivery survived the owner. Exact signed ACK committed without
+resuming; companion restart preserved receipt replay and did not resend confirmed
+alerts. Actual SIGTERM exited cleanly and freed all three leases under VERIFIED
+paired authority. The test-only held clock is not a production override/replay
+feature. Native control drainage includes open verified TLS clients within the
+unit's stop allowance. Zero remote broker/model calls occurred.
+
+This validates unit syntax and native role composition, not target-host systemd
+installation, namespace enforcement, memory/cgroup behavior, reboot, external
+notification acceptance or off-host protection. Actual host provisioning and recovery,
+credential/certificate lifecycle, full-universe authenticated market timing and model
+billing still require verification. No units were installed on DigitalOcean, no
+existing worker/data/OAuth files were changed, main remains untouched and LIVE is
+disabled. Operations: [PAPER_HOST.md](PAPER_HOST.md).
 
 Estimated v1 execution-engine completeness: **about 89%**, a rough component estimate
 excluding LIVE readiness and profitability.

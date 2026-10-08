@@ -1,0 +1,46 @@
+[Unit]
+Description=Trade-Bot isolated PAPER native TLS operator control
+Wants=network-online.target
+After=network-online.target
+RequiresMountsFor=/var/lib/trade-bot-paper/population
+ConditionPathExists=/var/lib/trade-bot-paper/population/execution.db
+ConditionPathExists=/var/lib/trade-bot-paper/population/execution.db.authority.db
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+Type=exec
+User=tradebot-paper
+Group=tradebot-paper
+WorkingDirectory=/var/lib/trade-bot-paper
+ExecStart=/opt/trade-bot-paper/venv/bin/python -I -m app.execution.control_cli --journal /var/lib/trade-bot-paper/population/execution.db --origin https://127.0.0.1:8788 --operator-key-file /etc/trade-bot-paper/operator/signing.hex --read-token-file /etc/trade-bot-paper/operator/read.hex --certfile /etc/trade-bot-paper/operator/chain.pem --keyfile /etc/trade-bot-paper/operator/tls.key
+Restart=on-failure
+RestartSec=10
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=45
+UMask=0077
+Environment=PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/lib/trade-bot-paper/population
+ReadOnlyPaths=/etc/trade-bot-paper/operator
+InaccessiblePaths=-/etc/trade-bot-paper/model -/etc/trade-bot-paper/market -/etc/trade-bot-paper/alerts
+InaccessiblePaths=-/var/lib/trade-bot -/etc/trade-bot -/opt/trade-bot
+TasksMax=32
+MemoryMax=256M
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=trade-bot-paper-control
+
+[Install]
+WantedBy=multi-user.target

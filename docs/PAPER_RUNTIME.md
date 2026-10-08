@@ -7,6 +7,9 @@ worker and `virtual-v1`. It has no real broker placement/cancellation adapter.
 Default agent is an explicit, auditable stub HOLD. PAPER and LIVE-disabled settings
 are supplied explicitly; trading-mode environment variables cannot promote it.
 
+The [isolated host layout](PAPER_HOST.md) supplies three independent systemd units
+for runtime, control and alert roles. It is not installed on the active server.
+
 ## Ownership and scheduling
 
 A private lifetime POSIX file lock owns one journal on one host. The CLI acquires
