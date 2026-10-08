@@ -26,8 +26,8 @@ the newer bounded isolated model/market components still need verification. LIVE
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full installed-package suite passed **1,195 tests in 342.90 seconds with warnings treated as errors**,
-including the previous 1,140 cases and 55 read-only host audit cases. Installed native
+full installed-package suite passed **1,205 tests in 318.07 seconds with warnings treated as errors**,
+including the previous 1,195 cases and ten checkpoint extraction pin cases. Installed native
 runtime/control/alert and checkpoint entry points were used in that full run. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
@@ -49,6 +49,51 @@ installation and sandbox enforcement remain unverified.
 Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticated
 collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
+
+## Checkpoint extraction pin binding — 2026-10-08 UTC
+
+Fresh GitHub matched branch/PR head `f7f1482995bbe3f8dc375f8ac7c4ed2ca9402698`
+and source tree `8b7150e3f2e9647c97d4912d85498f17c89b9d30`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6` and PR #1 draft.
+
+Two pre-fix regressions reproduced inspection and staging accepting a complete
+older pair after an in-place bundle rewrite between the initial hash scan and
+extraction. The input kept the same inode and byte count; its older member hashes,
+schema and paired authority were valid. Verification nevertheless reported the
+newer independent pin, so the initial scan did not bind the evidence actually read.
+
+Extraction now hashes the exact consumed magic, length, manifest and both member
+payloads, checks final EOF and compares that digest to the independent pin before
+opening any SQLite member. Changed consumed bytes and newly appended trailing
+bytes reject inspection/staging; staging removes its incomplete quarantine and
+publishes no verified marker. A later rewrite of header bytes already consumed
+can still preserve the original pinned extracted snapshot. This checks snapshot
+identity, not ongoing path retention or protection against the filesystem owner.
+No source state, replay, promotion or usable execution authority is added.
+
+All **137 source checkpoint/catalog/durability/restore tests passed in 34.42s**,
+warnings treated as errors. Ten added cases cover old-pair substitution,
+same-size header changes, appended bytes, mutation of already-consumed headers,
+no SQLite opening on changed pins, incomplete staging cleanup, unchanged source
+pairs, preserved unknown model evidence, execution denial and sanitized CLI failure.
+The first two regressions failed before the production fix. A subsequent fixture
+mistake changed JSON header lengths; it was corrected with same-size byte rewrites
+before complete affected-suite verification.
+
+Final verification: **1,205 installed-package tests passed in 318.07s**, warnings
+treated as errors, outside the checkout against the verified final wheel. The run
+used installed native runtime/control/alert/market/model and checkpoint/catalog/archive
+entry points. Scoped Ruff lint/format, compilation, pinned dependencies, pip check
+and whitespace passed. All 93 application files matched source, wheel and installed
+bytes. Wheel SHA-256:
+`474cab3e04c40c56cf3d1af3702878ffe737b9c8986be435f1a04390f20e9d64`.
+
+The frozen deployed synthetic experiment, host and provider accounts remain
+untouched. Local race fixtures do not prove independent archive retention or a
+real host-loss drill. Actual isolated-host namespace/boot/lifecycle checks,
+authenticated market/model evidence, external alert/archive acceptance and recovery,
+and the old worker/slot audit remain open. Engine completeness remains approximately
+**89%**, excluding LIVE readiness and demonstrated profitability.
 
 ## Read-only isolated host snapshot audit — 2026-10-08 UTC
 

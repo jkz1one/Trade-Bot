@@ -78,6 +78,16 @@ by the same untrusted backup is not independent verification. Choosing an older 
 pin deliberately selects older historical evidence; this is not an online monotonic
 witness or an automatic assertion of the latest generation.
 
+The exact header and database bytes consumed during extraction are also hashed
+against that independent pin, with a final end-of-file check, before opening either
+SQLite member. The first hash scan does not freeze an owner-writable inode: an
+in-place rewrite could otherwise substitute another valid pair between scanning
+and extraction. Changed consumed bytes or newly appended trailing bytes fail
+inspection/staging and cannot publish a verification marker. A later change to
+bytes already consumed does not invalidate the original verified snapshot; the
+report describes those extracted bytes, not ongoing retention of the source path.
+This is evidence integrity, not a host-owner sandbox or execution recovery authority.
+
 ## Opt-in bounded local capture catalog
 
 An explicitly initialized private catalog freezes the canonical source journal,

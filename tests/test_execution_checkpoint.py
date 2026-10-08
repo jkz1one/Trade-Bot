@@ -78,6 +78,14 @@ def rewrite(c, *, header_changes=None, body_change=None):
     return hashlib.sha256(c.bundle.read_bytes()).hexdigest()
 
 
+def rewrite_created_at_same_size(c):
+    old = json.dumps(c.result["manifest"]["created_at"]).encode()
+    new = json.dumps((NOW + timedelta(seconds=1)).isoformat().replace("+00:00", "Z")).encode()
+    data = c.bundle.read_bytes()
+    assert old in data and len(old) == len(new)
+    c.bundle.write_bytes(data.replace(old, new, 1))
+
+
 def test_consistent_pair_preserves_unknown_model_and_source_bytes(c):
     before = pair_bytes(c)
     second = c.root / "second.tbcp"
@@ -143,6 +151,133 @@ def test_pinned_new_checkpoint_rejects_a_complete_older_pair(c):
     fresh.write_bytes(old)
     with pytest.raises(ValueError, match="retained pin"):
         stage_checkpoint(fresh, c.root / "review", expected_sha256=result["checkpoint_sha256"])
+    assert not (c.root / "review").exists()
+
+
+@pytest.mark.parametrize("operation", ["inspect", "stage"])
+def test_changed_bundle_after_pin_scan_cannot_verify_an_older_pair(c, monkeypatch, operation):
+    old = c.bundle.read_bytes()
+    c.engine.halt("later retained halt", now=NOW + timedelta(seconds=1))
+    fresh = c.root / "fresh.tbcp"
+    result = export_checkpoint(c.engine.journal.path, fresh, now=NOW + timedelta(seconds=1))
+    assert result["manifest"]["generation"] > c.result["manifest"]["generation"]
+    assert len(fresh.read_bytes()) == len(old)
+    before = pair_bytes(c)
+    scan = checkpoint.file_hash
+    calls = []
+
+    def replace_after_scan(stream):
+        verified = scan(stream)
+        # An in-place rewrite preserves the descriptor's inode. Both complete
+        # pairs are valid, so member/schema/authority checks alone cannot catch it.
+        fresh.write_bytes(old)
+        return verified
+
+    db = checkpoint._db
+
+    def observe_db(*args, **kwargs):
+        calls.append(args[0])
+        return db(*args, **kwargs)
+
+    monkeypatch.setattr(checkpoint, "file_hash", replace_after_scan)
+    monkeypatch.setattr(checkpoint, "_db", observe_db)
+    with pytest.raises(ValueError, match="retained pin"):
+        if operation == "inspect":
+            inspect_checkpoint(fresh, expected_sha256=result["checkpoint_sha256"])
+        else:
+            stage_checkpoint(fresh, c.root / "review", expected_sha256=result["checkpoint_sha256"])
+    assert calls == [] and pair_bytes(c) == before
+    assert not (c.root / "review").exists()
+
+
+@pytest.mark.parametrize("operation", ["inspect", "stage"])
+@pytest.mark.parametrize("mutation", ["header", "trailing"])
+def test_changed_header_or_trailing_bytes_after_pin_scan_are_rejected(
+    c, monkeypatch, operation, mutation
+):
+    before = pair_bytes(c)
+    scan = checkpoint.file_hash
+    opened = []
+
+    def change_after_scan(stream):
+        verified = scan(stream)
+        if mutation == "header":
+            size = c.bundle.stat().st_size
+            rewrite_created_at_same_size(c)
+            assert c.bundle.stat().st_size == size
+        else:
+            with c.bundle.open("ab") as output:
+                output.write(b"unexpected trailing bytes")
+        return verified
+
+    def forbidden_database(*args, **kwargs):
+        opened.append(args)
+        pytest.fail("Changed pinned bytes must fail before any SQLite opening")
+
+    monkeypatch.setattr(checkpoint, "file_hash", change_after_scan)
+    monkeypatch.setattr(checkpoint, "_db", forbidden_database)
+    with pytest.raises(ValueError, match="retained pin"):
+        if operation == "inspect":
+            inspect_checkpoint(c.bundle, expected_sha256=c.pin)
+        else:
+            stage_checkpoint(c.bundle, c.root / "review", expected_sha256=c.pin)
+    assert not opened and pair_bytes(c) == before
+    assert not (c.root / "review").exists()
+
+
+@pytest.mark.parametrize("operation", ["inspect", "stage"])
+def test_verification_binds_consumed_bytes_not_a_later_header_rewrite(c, monkeypatch, operation):
+    before = pair_bytes(c)
+    validate = checkpoint.CheckpointManifest.model_validate
+    manifest = c.result["manifest"]
+
+    def change_consumed_header(value):
+        validated = validate(value)
+        # The original header has already been read. Change only its on-disk
+        # bytes; the remaining member bytes still produce the original snapshot.
+        size = c.bundle.stat().st_size
+        rewrite_created_at_same_size(c)
+        assert c.bundle.stat().st_size == size
+        return validated
+
+    monkeypatch.setattr(checkpoint.CheckpointManifest, "model_validate", change_consumed_header)
+    result = (
+        inspect_checkpoint(c.bundle, expected_sha256=c.pin)
+        if operation == "inspect"
+        else stage_checkpoint(c.bundle, c.root / "review", expected_sha256=c.pin)
+    )
+    assert result["checkpoint_sha256"] == c.pin and result["manifest"] == manifest
+    assert result["summary"]["unknown_model_calls"] == 1 and not result["execution_authority"]
+    assert hashlib.sha256(c.bundle.read_bytes()).hexdigest() != c.pin
+    assert pair_bytes(c) == before
+    if operation == "stage":
+        evidence = c.root / "review" / "execution.evidence.db"
+        retained = evidence.read_bytes()
+        with pytest.raises(ValueError, match="RESTORE_AUTHORITY_MISSING"):
+            ExecutionEngine(evidence, c.engine.settings)
+        assert evidence.read_bytes() == retained
+
+
+@pytest.mark.parametrize("operation", ["inspect", "stage"])
+def test_cli_changed_pinned_input_reports_only_failure(c, monkeypatch, capsys, operation):
+    scan = checkpoint.file_hash
+
+    def change_after_scan(stream):
+        verified = scan(stream)
+        with c.bundle.open("ab") as output:
+            output.write(b"private changed archive material")
+        return verified
+
+    monkeypatch.setattr(checkpoint, "file_hash", change_after_scan)
+    args = [operation, "--bundle", str(c.bundle), "--sha256", c.pin]
+    if operation == "stage":
+        args += ["--output", str(c.root / "review")]
+    assert main(args) == 1
+    assert json.loads(capsys.readouterr().out) == {
+        "status": "ERROR",
+        "error_class": "ValueError",
+        "execution_authority": False,
+    }
     assert not (c.root / "review").exists()
 
 

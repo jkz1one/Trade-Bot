@@ -61,6 +61,8 @@ journal/authority pair consistently, support explicit verified-TLS archive reten
 and require an independently retained hash before recovery staging. Recovery preserves
 unresolved evidence and supplies no usable execution authority. Archive provisioning and
 actual off-host/host-failure verification remain pending; deployed SHADOW backups are unchanged.
+Inspection/staging bind the exact extracted envelope bytes to the independent pin
+before SQLite validation, rejecting in-place changes between scanning and extraction.
 An opt-in private capture catalog now freezes source identity and capacity, preserves
 incomplete attempts after crashes, and verifies local artifacts without restoring
 authority. Its optional isolated nightly systemd timer has no network or credentials;

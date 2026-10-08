@@ -269,7 +269,8 @@ def _unpack(bundle, stage, expected_sha256, deadline):
         if digest != expected_sha256:
             raise ValueError("Checkpoint does not match independently retained pin")
         stream.seek(0)
-        if stream.read(len(MAGIC)) != MAGIC:
+        magic = stream.read(len(MAGIC))
+        if magic != MAGIC:
             raise ValueError("Invalid checkpoint envelope")
         length = stream.read(4)
         if (
@@ -280,6 +281,7 @@ def _unpack(bundle, stage, expected_sha256, deadline):
         header = stream.read(header_size)
         if len(header) != header_size:
             raise ValueError("Truncated checkpoint manifest")
+        consumed = hashlib.sha256(magic + length + header)
         manifest = CheckpointManifest.model_validate(json.loads(header, object_pairs_hook=_unique))
         if (
             len(MAGIC) + 4 + header_size + manifest.journal_bytes + manifest.authority_bytes
@@ -301,11 +303,16 @@ def _unpack(bundle, stage, expected_sha256, deadline):
                         raise ValueError("Truncated checkpoint database")
                     output.write(chunk)
                     digest.update(chunk)
+                    consumed.update(chunk)
                     remaining -= len(chunk)
                 output.flush()
                 os.fsync(output.fileno())
                 if digest.hexdigest() != expected:
                     raise ValueError("Checkpoint member hash mismatch")
+        # The initial pin scan cannot freeze an owner-writable inode. Bind the
+        # exact extracted header/member bytes too, before opening any SQLite DB.
+        if stream.read(1) or consumed.hexdigest() != expected_sha256:
+            raise ValueError("Extracted checkpoint does not match independently retained pin")
     journal, authority = stage / "execution.evidence.db", stage / "authority.evidence.db"
     for path in (journal, authority):
         db = _db(path, deadline=deadline)
