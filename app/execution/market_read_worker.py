@@ -18,8 +18,8 @@ from app.execution.market_reads import (
     private_oauth,
     source_hash,
 )
+from app.execution.market_validation import PaperMarketReadGateway
 from app.robinhood.client import JsonOAuthStorage, RobinhoodMcpConnection
-from app.robinhood.gateway import RobinhoodMarketReadGateway
 from app.robinhood.market import RobinhoodMarketData
 from app.robinhood.read import RobinhoodReadService
 
@@ -54,7 +54,7 @@ def connection(policy):
 async def collect(request):
     private_oauth(request.policy.oauth_file)
     async with connection(request.policy).client() as client:
-        gateway = RobinhoodMarketReadGateway(client, request.policy.endpoint)
+        gateway = PaperMarketReadGateway(client, request.policy.endpoint)
         account = await RobinhoodReadService(gateway).get_agentic_account()
         market = RobinhoodMarketData(
             gateway,

@@ -169,6 +169,25 @@ rejected before the MCP client. OAuth refresh persistence is an authentication
 operation, not a broker trade mutation. Authorization walls fail without launching
 a browser or prompting. Historical reads remain one symbol per call.
 
+The isolated collector validates raw market responses before they reach the
+shared indicator adapter. Each quote, tradability and per-symbol history response
+must contain exactly the requested unique symbols. Missing, extra, duplicate, null
+or foreign rows and MCP error flags fail the complete refresh, rather than being
+silently dropped or overwritten. Historical interval/bounds must match the request;
+each nonempty history is bounded to 2,048 bars, with timezone-aware strictly increasing
+timestamps inside the requested window, finite positive consistent OHLC values,
+nonnegative integer volume and explicit boolean interpolation flags. Interpolated
+bars retain the existing exclusion from indicators. No bars are sorted, repaired,
+filled, cached or replaced with another symbol's evidence.
+
+These are integrity checks, not proof of current-session bar completeness, adjustment
+correctness or authenticated full-universe latency. The existing complete-candidate,
+quote freshness, whole-child deadline and atomic publication gates still apply.
+Validation failure preserves the previous quote sample; continuous collection retains
+its existing halt/no-retry behavior. The stricter gateway is used only by the isolated
+PAPER child, with the same four permitted tools and no source-policy migration. The
+deployed frozen synthetic/SHADOW experiment and shared legacy adapter are unchanged.
+
 A default/max 30-second monotonic whole-process deadline, bounded pipes and parent
 watchdog limit the request. Timeout, failure, malformed/oversized output or cancellation
 publishes no new quote sample. A private nonblocking per-feed lock spans child cleanup

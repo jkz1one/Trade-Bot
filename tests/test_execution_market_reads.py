@@ -26,6 +26,7 @@ from app.execution.quote_feed import DurableQuoteFeed
 from app.execution.runtime import runtime_lease
 from app.execution.runtime_cli import initialize, load, main
 from app.robinhood.gateway import RobinhoodMarketReadGateway, UnsafeRobinhoodToolError
+from app.robinhood.market import RobinhoodMarketData
 from tests.test_execution_rehearsal import NOW, packet
 from tests.test_robinhood_market import FakeGateway
 
@@ -244,6 +245,11 @@ async def test_worker_reads_four_tools_without_account_authority_output(tmp_path
 
     monkeypatch.setattr(market_read_worker, "connection", lambda policy: Connection())
     monkeypatch.setattr(market_read_worker, "utc_now", lambda: NOW)
+    monkeypatch.setattr(
+        market_read_worker,
+        "RobinhoodMarketData",
+        lambda gateway, **kwargs: RobinhoodMarketData(gateway, clock=lambda: NOW, **kwargs),
+    )
     output = await market_read_worker.collect(request(policy))
     assert {name for name, _ in calls} == {
         "get_accounts",

@@ -26,8 +26,8 @@ the newer bounded isolated model/market components still need verification. LIVE
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **1,026 tests in 298.92 seconds with warnings treated as errors**,
-including the previous 992 cases and 34 local capture cases. Installed native
+full installed-package suite passed **1,074 tests in 309.35 seconds with warnings treated as errors**,
+including the previous 1,026 cases and 48 strict market-response cases. Installed native
 runtime/control/alert and checkpoint entry points were used in that full run. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
@@ -49,6 +49,70 @@ installation and sandbox enforcement remain unverified.
 Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticated
 collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
+
+## Isolated PAPER market integrity and installed-package follow-up — 2026-10-08 UTC
+
+Fresh GitHub references matched the supplied baseline before editing:
+`952f992f04b24e1c5cc5f9d2dce5e83c8bd9eda0`, source tree
+`e888f5aef03c7b577a78f1bfd227eaae29155d35` and main
+`b5359aaf396e692d2142d7e02908f1544e045ee6`. PR #1 remained draft and the
+recovered checkout was clean. No continuation or AGENTS.md was found in the repository.
+
+Inspection found that dictionary construction in the shared market adapter could
+silently collapse duplicate response rows or accept a historical response for a
+different requested symbol. Historical timestamps and OHLC ranges were not checked
+before indicator calculation. The isolated PAPER child now uses a strict subclass
+of its existing four-tool market firewall; the shared legacy adapter and frozen
+deployed experiment keep their existing behavior.
+
+Quote, tradability and single-symbol history responses must each contain exactly
+their requested unique symbols. Missing, extra, foreign, duplicate and null rows,
+and MCP error flags, reject the whole refresh. Historical interval/bounds must match
+the request. Each nonempty history has at most 2,048 bars, strictly increasing aware
+timestamps inside its requested window, finite positive consistent OHLC values,
+nonnegative integer volume and explicit boolean interpolation flags. Interpolated
+bars keep their existing exclusion from indicators. No sorting, repair, substitution,
+cache, extra capability, source-policy migration or automatic retry was added.
+
+The parent retains existing complete-universe, quote freshness, child deadline,
+lease/cleanup and atomic publication checks. A failed child leaves the prior sample
+unchanged; the continuous service retains its existing halt/no-retry behavior.
+Successful validation is not proof of contiguous/current-session bars, split-adjustment
+correctness, authenticated availability, provider latency or deployed operation.
+
+Full installed-package verification exposed a separate existing PAPER dashboard
+asset-path defect: 1,073 tests passed, but its template lookup depended on the source
+checkout working directory. The PAPER routes now resolve bundled templates relative
+to their installed module, as the separate SHADOW observer already did. The dashboard
+regression changes to an unrelated temporary directory before rendering and running
+the existing stub HOLD cycle. This changes no observer routes or execution authority.
+
+Final full installed-package suite: **1,074 tests passed in 309.35s with warnings
+treated as errors**. The combined market/dashboard source run passed **143 tests
+in 6.55s**, and the final installed-wheel focused run passed **143 tests in 6.64s**,
+with warnings treated as errors. Scoped lint/format, compilation, pip check, exact
+dependency-lock verification and whitespace checks passed.
+The 48 new cases include the configured 20-symbol universe, reversed valid response
+ordering, 10-symbol tradability batches, individual historical request bindings and
+malformed history/identity rejection. Actual isolated native children made two
+successful complete refreshes, or rejected cross-bound history, duplicate quotes,
+future bars and invalid OHLC after a prior success. Failure preserved the prior
+database bytes/sample, reaped children and released the reader lease. The native
+fixture returned fake account selection solely for tradability and emitted no account
+authority or private values. No remote broker/model call occurred.
+
+All 92 application files were byte-verified against the source, wheel and installed
+package. Dependency loading reuses the already verified pinned runtime environment;
+application module/template origins resolve inside the wheel's installed package,
+and the copied test workspace contains no application checkout. Final wheel SHA-256:
+`aca65b5b7a1cd3c7a7f0d06f6d812e95a1825a63c70d3f47c0fbaff3866339b7`.
+
+Next gates remain isolated target-host namespace/lifecycle validation, authenticated
+full-universe timing/data and bounded model-process evidence, independently retained
+archive recovery and a host-loss drill. The deployed virtual-v1 experiment stays
+frozen and needs further sessions plus its separate worker/slot audit. LIVE remains
+disabled. Rough engine completeness remains about 89%, excluding LIVE readiness and
+demonstrated profitability.
 
 ## Bounded local checkpoint capture follow-up — 2026-10-08 UTC
 

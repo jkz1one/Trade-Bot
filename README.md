@@ -111,6 +111,9 @@ deployed worker remain separate. Add `--continuous-market` at initialization to
 compose repeated bounded refreshes into that population's PAPER runtime. Cold flat
 accounts have bounded warmup; failed refreshes halt and revoke entry/model admission.
 Authenticated timing and deployment remain pending; see `docs/PAPER_RUNTIME.md`.
+The isolated collector rejects ambiguous symbol rows and malformed historical
+indicator inputs before publication. Its full 20-symbol native-child fixtures
+remain local contract proof; authenticated market timing is still a separate gate.
 
 The isolated PAPER operator API now has a native TLS entry point:
 `python -m app.execution.control_cli`. It attaches to existing verified state
