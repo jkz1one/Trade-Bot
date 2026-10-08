@@ -71,6 +71,9 @@ systemd units for runtime, operator control and alerts, with frozen paths and se
 credential namespaces. Runtime failure does not automatically restart trading or
 terminate the companions. Native fixture lifecycle tests and parser validation are
 separate from actual target-host installation and sandbox verification.
+The installed read-only `app.execution.host_audit` collects reviewed unit/process/
+credential-mount metadata for those three services. Matching snapshots retain
+`host_acceptance=UNVERIFIED`; boot, lifecycle, provider and recovery gates remain open.
 
 ## Slice 2 — Robinhood read / SHADOW
 

@@ -26,8 +26,8 @@ the newer bounded isolated model/market components still need verification. LIVE
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full installed-package suite passed **1,140 tests in 347.68 seconds with warnings treated as errors**,
-including the previous 1,125 cases and 15 native child-import isolation cases. Installed native
+full installed-package suite passed **1,195 tests in 342.90 seconds with warnings treated as errors**,
+including the previous 1,140 cases and 55 read-only host audit cases. Installed native
 runtime/control/alert and checkpoint entry points were used in that full run. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
@@ -49,6 +49,58 @@ installation and sandbox enforcement remain unverified.
 Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticated
 collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
+
+## Read-only isolated host snapshot audit — 2026-10-08 UTC
+
+Fresh GitHub matched branch/PR head `a2fd63d7043b798bc01bc2745cf813e1641078c5`
+and source tree `40edad38ed7d8984c38aa56af815f192c71176f0`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 draft and checkout clean.
+
+Host acceptance previously required manual unit/process/mount inspection. The
+installed `python -I -B -m app.execution.host_audit` now collects a bounded,
+read-only `paper-host-audit-v1` report for the three separately installed PAPER
+services. It pins exact reviewed root-owned unit bytes, rejects drop-ins/reload
+drift, checks fixed manager properties and running process UID/GID/command/start
+identity, then observes the credential root tmpfs and role bind identities/options
+through that process's root view. Unexpected credential names, nested mounts,
+visible peers and changing process/mount/unit/boot observations block the snapshot.
+Absent optional runtime credentials and empty mode-000 inaccessible placeholders
+are handled without opening any credential contents. Each fixed read-only manager
+query explicitly retains empty requested properties with `--all` and has a
+five-second deadline, 64KiB response limit, sanitized failures and
+retained child ownership across cancellation. There are no path/unit overrides.
+
+The audit opens no execution/authority database, journal or credential file and
+performs no installation, service lifecycle action, provider call or execution.
+Even matching snapshots retain `host_acceptance=UNVERIFIED` and no execution
+authority. Observations are sequential, not atomic host acceptance. Full namespace,
+service-UID access, cgroup/children, peer creation after startup, boot/lifecycle,
+provider/alert/archive operation, optional checkpoint timer and host-loss recovery
+remain independent gates. See [the command and limits](PAPER_HOST.md).
+
+Local fixture/native query proof: **55 final audit tests passed in 0.45s**; all **61
+focused audit/host tests passed in 145.91s**, warnings treated as errors. Tests cover
+unit symlink/special-file/writable/content drift, manager protocol/settings,
+credential bind ownership/inode/options, visible peers, nested/stacked mounts,
+read-only per-mount versus superblock options, metadata-only process collection,
+changed PID/mount/unit/boot identity, sanitized errors and actual query
+timeout/overflow/cancellation cleanup. No namespace fixture is target-host proof.
+The installed CLI on this workspace's non-systemd host returned exit 1 with
+`SYSTEMD_MANAGER_UNAVAILABLE`, no role queries or setup/fallback and no authority.
+
+Final verification: **1,195 installed-package tests passed in 342.90s**, warnings
+treated as errors, outside the checkout against the final wheel. Native isolated
+runtime/control/alert/market/model and checkpoint/catalog/archive entry points were
+used. A query regression rejected the missing `--all` flag before its correction;
+the earlier full run and subsequent final run were retained separately. Scoped Ruff
+lint/format, compilation, pinned dependencies, pip check and whitespace passed.
+All 93 application files matched source, wheel and installed bytes. Wheel SHA-256:
+`c8ec849d015c32675542e8328ce7f07dd6a978a66d9a7418147fd5f0649a330d`.
+
+No DigitalOcean installation, host access, credential provisioning, experiment
+retuning or broker/model account action occurred. The frozen deployed synthetic
+experiment and its worker/slot audit remain separate. Engine completeness remains
+approximately **89%**, excluding LIVE readiness and demonstrated profitability.
 
 ## Fixed execution-child import isolation follow-up — 2026-10-08 UTC
 

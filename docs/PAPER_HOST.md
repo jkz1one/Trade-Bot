@@ -125,6 +125,56 @@ from a host owner changing mount topology. Actual target-host namespace verifica
 must test the role view and absent-then-created peer directories;
 parser acceptance and local native process tests do not prove kernel enforcement.
 
+## Read-only host snapshot audit
+
+After the separate PAPER installation is running, collect a snapshot using its
+trusted installed environment. This command requires root metadata access:
+
+```bash
+sudo /opt/trade-bot-paper/venv/bin/python -I -B -m app.execution.host_audit
+```
+
+It prints one `paper-host-audit-v1` JSON report. Exit 0 means all three role
+snapshots matched; exit 1 means a prerequisite or observation was blocked. Neither
+result completes host acceptance: `host_acceptance` always remains `UNVERIFIED`
+and `execution_authority` is always false. Preserve the report alongside the
+release/wheel identity and separately collected host acceptance evidence.
+
+The audit pins the reviewed unit byte digests, rejects symlinks, writable units,
+drop-ins and a manager needing reload, and queries only fixed `systemctl show`
+properties with `--all` so empty requested fields such as DropInPaths are retained.
+Each query has a five-second deadline, a 64KiB output limit and child
+cleanup. It checks active process identity, the exact isolated interpreter command,
+dedicated UID/GID and a mount namespace distinct from PID 1. In that process view,
+it checks the credential root's read-only tmpfs, allowed bind identities/options,
+private directory ownership/modes, nested mounts and absent or empty inaccessible
+peer placeholders. Two reads of process/mount/unit/manager identity detect changes
+during each role observation; the boot identity must also remain stable. The roles
+are observed sequentially, not as one atomic host snapshot.
+
+The command reads only the reviewed unit files, selected `/proc` metadata and
+credential directory names/stat metadata. It never opens credential contents,
+execution databases, authority files or journals; never installs, starts, stops,
+restarts or enables services; and makes no broker/model/archive/alert calls. Raw
+manager stderr, command lines, unexpected paths/names and exception messages are
+excluded from its public report. Missing root access, a non-systemd PID 1, missing
+services or inaccessible metadata fail closed without attempting setup or fallback.
+There are no supplied unit/path/proc-root overrides or mutation switches.
+
+This is a structural snapshot, not service-UID access testing, continuous monitoring,
+a cgroup/child-bound proof, complete filesystem isolation, a boot/restart/failure
+exercise, checkpoint timer verification or an independent host-owner witness.
+Absent-then-created peer credentials, deployed SHADOW path exclusion, full namespace
+enforcement, authenticated provider operation, external alerts/archives and host-loss
+recovery remain separate gates even after all three snapshots match. Local metadata
+fixtures and native bounded query tests do not prove DigitalOcean kernel enforcement.
+No command in this section has been run against the deployed SHADOW host.
+
+The Linux [mount metadata](https://man7.org/linux/man-pages/man5/proc_pid_mountinfo.5.html)
+and [process root view](https://man7.org/linux/man-pages/man5/proc_pid_root.5.html)
+contracts define the observations; per-mount read-only options are checked separately
+from the backing filesystem's superblock options.
+
 ## Optional local checkpoint timer
 
 `trade-bot-paper-checkpoint.service` and `.timer` add an independent local-only

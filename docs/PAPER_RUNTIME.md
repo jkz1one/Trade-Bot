@@ -17,6 +17,9 @@ isolation or change any child's approved capabilities, protocol, deadline or cle
 
 The [isolated host layout](PAPER_HOST.md) supplies three independent systemd units
 for runtime, control and alert roles. It is not installed on the active server.
+Its read-only `app.execution.host_audit` inspects reviewed unit/process/mount
+metadata without attaching to this runtime or opening execution authority. Even a
+matching snapshot leaves host acceptance unverified; see the host checklist.
 
 ## Ownership and scheduling
 
