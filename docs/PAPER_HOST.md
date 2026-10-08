@@ -127,6 +127,13 @@ parser acceptance and local native process tests do not prove kernel enforcement
 
 ## Read-only host snapshot audit
 
+Before application installation, the opt-in
+[disposable sandbox integration](PAPER_SANDBOX_ACCEPTANCE.md) can exercise all four
+reviewed credential-mask/bind patterns as the dedicated service UID on a systemd
+host. Unique transient units and harmless files check read/write denials and peers
+created after startup. This supplies no execution state or full host acceptance;
+local harness tests/parser results do not prove target-host kernel enforcement.
+
 After the separate PAPER installation is running, collect a snapshot using its
 trusted installed environment. This command requires root metadata access:
 

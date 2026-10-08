@@ -26,8 +26,8 @@ the newer bounded isolated model/market components still need verification. LIVE
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full installed-package suite passed **1,205 tests in 318.07 seconds with warnings treated as errors**,
-including the previous 1,195 cases and ten checkpoint extraction pin cases. Installed native
+full installed-package suite passed **1,242 tests in 327.00 seconds with warnings treated as errors**,
+including the previous 1,205 cases and 37 disposable sandbox harness cases. Installed native
 runtime/control/alert and checkpoint entry points were used in that full run. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
@@ -49,6 +49,58 @@ installation and sandbox enforcement remain unverified.
 Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticated
 collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
+
+## Disposable systemd sandbox integration — 2026-10-08 UTC
+
+Fresh GitHub matched branch/PR head `c02f645413b1d16204df352a4a858692f9962eda`
+and source tree `4e73d3059c06d9eb396ca4b08f733d2a28262299`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 draft and checkout clean.
+
+The next host namespace gate now has an explicit executable integration harness,
+`scripts/paper-sandbox-acceptance.py --run`, with trusted-source transfer and result
+instructions in [PAPER_SANDBOX_ACCEPTANCE.md](PAPER_SANDBOX_ACCEPTANCE.md). It requires
+root, systemd PID 1 and a pre-provisioned non-root service user/group; prerequisites
+and all four reviewed source-unit digests are checked before transient admission.
+It neither creates an account nor installs, enables or changes a production unit.
+It never touches a real credential, database, authority or deployed SHADOW checkout.
+
+Eight unique transient probe cases preserve all reviewed `[Service]` restrictions
+with only disposable PAPER path, command/type and test lifecycle substitutions.
+Service-UID reads/writes check allowed read-only versus market-refresh access,
+denied peers, read-only system paths, an unlisted directory created after startup,
+and initially absent known peers created while the same probe remains alive.
+Absent optional binds cannot acquire access without restart. Reports retain both
+matrices, identity, source-unit digest and transient name. Probe/manager waits and
+runtime are bounded; lost start responses still require stop. Unconfirmed cleanup
+retains fixtures and the exact transient name, blocks further cases and grants no
+success. No daemon-reload, application startup or provider/network request occurs.
+
+All **37 source harness tests passed in 0.33s**, warnings treated as errors, including
+four native parser cases and an actual stdlib probe handshake/SIGTERM. Mocked manager
+and access matrices prove orchestration, not kernel enforcement. Tests also reject
+unrestricted dummy access as proof, final-template drift before any admission,
+missing prerequisites and failed/expired probes; uncertain starts are stopped and
+failed cleanup preserves fixtures. The native CLI on this workspace returned exit 1
+with `SYSTEMD_MANAGER_UNAVAILABLE`, no fixture setup or transient service submission.
+
+Final verification: **1,242 installed-package tests passed in 327.00s**, warnings
+treated as errors, outside the checkout against the retained verified wheel. Native
+runtime/control/alert/market/model and checkpoint/catalog/archive entry points ran.
+The final harness/test bytes matched the full-suite stage. All 93 application files
+remain byte-identical to source, installed package and the earlier verified wheel;
+no application or reviewed production unit bytes changed. Scoped Ruff lint/format,
+compilation, pinned dependencies, pip check, document links and whitespace passed.
+Retained wheel SHA-256:
+`474cab3e04c40c56cf3d1af3702878ffe737b9c8986be435f1a04390f20e9d64`.
+
+Even matching actual-host probe reports retain `host_acceptance=UNVERIFIED`, no
+execution authority and LIVE disabled. The substituted paths/dummy command do not
+prove fixed installed mounts, SHADOW path access denial, real credentials, all network
+or cgroup restrictions, application/boot/lifecycle or checkpoint timer behavior.
+Actual target-host execution, authenticated market/model evidence, independent
+alerts/archive recovery and the old worker/slot audit remain open. The frozen deployed
+experiment is unchanged. Engine completeness remains approximately **89%**, excluding
+LIVE readiness and demonstrated profitability.
 
 ## Checkpoint extraction pin binding — 2026-10-08 UTC
 

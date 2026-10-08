@@ -76,6 +76,10 @@ separate from actual target-host installation and sandbox verification.
 The installed read-only `app.execution.host_audit` collects reviewed unit/process/
 credential-mount metadata for those three services. Matching snapshots retain
 `host_acceptance=UNVERIFIED`; boot, lifecycle, provider and recovery gates remain open.
+An opt-in [disposable sandbox harness](docs/PAPER_SANDBOX_ACCEPTANCE.md) now tests
+the four reviewed role credential patterns on a systemd host with harmless files,
+including peers created after startup. Local harness proof is separate from an
+actual target-host run and full application acceptance.
 
 ## Slice 2 — Robinhood read / SHADOW
 
