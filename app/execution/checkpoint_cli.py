@@ -4,13 +4,31 @@ import argparse
 import asyncio
 import json
 
-from app.execution.checkpoint import export_checkpoint, inspect_checkpoint, stage_checkpoint
-from app.execution.checkpoint_transfer import archive_config, download_checkpoint, upload_checkpoint
+from app.execution.checkpoint import (
+    export_checkpoint,
+    inspect_checkpoint,
+    stage_checkpoint,
+)
+from app.execution.checkpoint_catalog import capture, initialize_catalog, report
+from app.execution.checkpoint_transfer import (
+    archive_config,
+    download_checkpoint,
+    upload_checkpoint,
+)
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    init = commands.add_parser("capture-init")
+    init.add_argument("--journal", required=True)
+    init.add_argument("--directory", required=True)
+    init.add_argument("--timeout", type=float, default=10)
+    init.add_argument("--max-captures", type=int, default=30)
+    commands.add_parser("capture").add_argument("--directory", required=True)
+    catalog = commands.add_parser("capture-report")
+    catalog.add_argument("--directory", required=True)
+    catalog.add_argument("--limit", type=int, default=25)
     export = commands.add_parser("export")
     export.add_argument("--journal", required=True)
     export.add_argument("--output", required=True)
@@ -36,7 +54,18 @@ def main(argv=None):
             )
     args = parser.parse_args(argv)
     try:
-        if args.command == "export":
+        if args.command == "capture-init":
+            result = initialize_catalog(
+                args.journal,
+                args.directory,
+                timeout_seconds=args.timeout,
+                max_captures=args.max_captures,
+            )
+        elif args.command == "capture":
+            result = capture(args.directory)
+        elif args.command == "capture-report":
+            result = report(args.directory, limit=args.limit)
+        elif args.command == "export":
             result = export_checkpoint(args.journal, args.output, timeout_seconds=args.timeout)
         elif args.command == "inspect":
             result = inspect_checkpoint(args.bundle, expected_sha256=args.sha256)

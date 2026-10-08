@@ -61,6 +61,10 @@ journal/authority pair consistently, support explicit verified-TLS archive reten
 and require an independently retained hash before recovery staging. Recovery preserves
 unresolved evidence and supplies no usable execution authority. Archive provisioning and
 actual off-host/host-failure verification remain pending; deployed SHADOW backups are unchanged.
+An opt-in private capture catalog now freezes source identity and capacity, preserves
+incomplete attempts after crashes, and verifies local artifacts without restoring
+authority. Its optional isolated nightly systemd timer has no network or credentials;
+local captures do not provide off-host protection or automatic retention deletion.
 
 A separate [isolated PAPER host layout](docs/PAPER_HOST.md) now provides independent
 systemd units for runtime, operator control and alerts, with frozen paths and separate

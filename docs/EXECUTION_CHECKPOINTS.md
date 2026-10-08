@@ -68,6 +68,61 @@ by the same untrusted backup is not independent verification. Choosing an older 
 pin deliberately selects older historical evidence; this is not an online monotonic
 witness or an automatic assertion of the latest generation.
 
+## Opt-in bounded local capture catalog
+
+An explicitly initialized private catalog freezes the canonical source journal,
+its verified authority UUID, a cooperative capture timeout (default 10 seconds,
+maximum 30), and a capacity (default 30 admitted captures, maximum 90). Initialization
+is exclusive and never adopts or resets an existing directory. Use the installed
+package and the source's owning UID:
+
+```bash
+python -I -m app.execution.checkpoint_cli capture-init \
+  --journal /var/lib/trade-bot-paper/population/execution.db \
+  --directory /var/lib/trade-bot-paper/checkpoints \
+  --max-captures 30
+python -I -m app.execution.checkpoint_cli capture \
+  --directory /var/lib/trade-bot-paper/checkpoints
+python -I -m app.execution.checkpoint_cli capture-report \
+  --directory /var/lib/trade-bot-paper/checkpoints --limit 25
+```
+
+Each activation retains a nonblocking catalog lease through source validation,
+paired export and receipt publication. It uses a new private UUID directory, fsynced
+before export, followed by an exclusive mode-600 checkpoint and fsynced receipt.
+Completed source generations may advance under the same frozen authority UUID;
+foreign/unverified/missing sources fail before admitting a capture. Capture's source
+check and export share one cooperative deadline. Slow hardware and filesystem calls
+remain subject to the export limitations above. No runtime/control/alert service
+lease is acquired. Paired SQLite locks can briefly delay their writes.
+
+An admitted directory without a completed receipt is INCOMPLETE, including a crash
+after bundle publication. It consumes capacity and is never automatically completed,
+replayed, overwritten or pruned. A later activation admits a separate capture of
+current evidence; it does not backfill the failed time. Capacity exhaustion fails
+the next job. After review and separately retained evidence, an operator can explicitly
+provision another catalog; there is no automatic retention deletion or rotation.
+The space check requires at least 128 MiB plus 8 KiB free before admission, covering
+the bounded temporary pair/bundle. It does not reserve disk space against other writers.
+
+Reporting reads only the catalog, even after source loss. It counts all admitted
+jobs and returns at most 25 rows by default (maximum 100), checks bounded private
+receipts, source-UUID/directory bindings, whole-artifact size/digest, and the embedded
+manifest against the receipt. Corrupt or unexpected catalog entries fail closed.
+It does not reopen source databases, recheck every archived SQLite member, prove
+source freshness, or certify that a host condition skipped by systemd was healthy.
+Completed-row ordering uses checkpoint creation times; incomplete rows have no
+completed capture time and remain visible in aggregate counts.
+
+Every result declares `off_host_protection: false` and `execution_authority: false`.
+A local receipt/digest is a corruption check, **not an independently retained pin**:
+the host owner or a whole-catalog rollback can replace both evidence and receipt.
+Retain the pin separately before remote transfer or quarantine recovery. Staging
+remains the existing explicit `stage` operation and never restores execution authority.
+The optional [isolated host timer](PAPER_HOST.md#optional-local-checkpoint-timer)
+captures locally only; it has no network or credential access and does not alter
+the deployed SHADOW backup cron.
+
 ## Explicit remote retention and retrieval
 
 Archive operations use a separate HTTPS origin and dedicated private 32-byte lowercase

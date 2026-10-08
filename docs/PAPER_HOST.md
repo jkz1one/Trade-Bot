@@ -1,6 +1,6 @@
 # Isolated PAPER host service layout
 
-The three units in `deploy/paper/` provide separate runtime, native TLS operator
+The three long-running services in `deploy/paper/` provide separate runtime, native TLS operator
 control and alert lifecycles on a Linux systemd host. They are a reviewable deployment
 layout for the isolated fixture engine, not an upgrade of the running SHADOW worker
 or `virtual-v1`. No unit has a broker write adapter or LIVE promotion path.
@@ -18,6 +18,7 @@ protection against that UID outside the service sandbox or the host owner.
 | --- | --- |
 | Installed Python environment | `/opt/trade-bot-paper/venv` |
 | Runtime population | `/var/lib/trade-bot-paper/population` |
+| Optional bounded local checkpoint catalog | `/var/lib/trade-bot-paper/checkpoints` |
 | Signing/read credentials and native TLS pair | `/etc/trade-bot-paper/operator` |
 | Dedicated alert token and optional CA | `/etc/trade-bot-paper/alerts` |
 | Optional private model key | `/etc/trade-bot-paper/model` |
@@ -94,6 +95,46 @@ leases. Each role blocks peer credential directories and the deployed SHADOW pat
 Control/alerts do not see model/OAuth secrets. Runtime does not see operator/sink
 secrets. These restrictions require actual target-host namespace verification;
 parser acceptance and local native process tests do not prove kernel enforcement.
+
+## Optional local checkpoint timer
+
+`trade-bot-paper-checkpoint.service` and `.timer` add an independent local-only
+oneshot capture at 01:15 UTC. Explicitly initialize the catalog under the service
+UID with the installed `checkpoint_cli capture-init`, using the fixed journal and
+catalog paths above. The parent must already exist; initialization exclusively
+creates the mode-700 catalog. Capture freezes the existing authority UUID, timeout
+and admitted-job limit. The unit never initializes an engine or adopts missing evidence.
+
+The service has `Restart=no`, private networking, AF_UNIX only, and hides the entire
+`/etc/trade-bot-paper` credential tree plus the deployed SHADOW paths. It has no
+HTTP archive destination or upload operation. Source population and catalog are
+the only writable namespaces: paired SQLite RESERVED locks require opening the
+source databases read/write, but capture rolls back those lock transactions without
+advancing generation or mutating source state. These filesystem permissions alone
+are not protection against arbitrary code running as the owning UID.
+
+The application timeout is cooperative and shared across validation/export, at
+most 30 seconds. Systemd bounds startup at 45 seconds, with a 10-second stop allowance;
+final termination preserves incomplete admission rather than manufacturing success.
+SIGTERM is not a successful capture receipt or graceful partial-export completion.
+The timer's `Persistent=true` attempts a missed activation when enabled/booted;
+it captures current evidence, not the missed historical state. There is no coupling
+to runtime, control, alerts or the deployed cron. Missing path conditions skip the
+job, which is not evidence of a successful backup.
+
+Complete and incomplete jobs count toward the frozen capacity (default 30, maximum
+90); nothing is automatically deleted. Capacity or space failures need review and
+will recur on later timer activations until addressed. Inspect journalctl, timer
+state and `capture-report`; no external missed-backup monitor is supplied here.
+Keep pins and verified archives independently off-host before treating this as
+host-loss protection. See [capture and quarantine semantics](EXECUTION_CHECKPOINTS.md).
+
+After reviewing provisioning, optionally install both checkpoint units alongside
+the three role services, verify them on the actual host, then explicitly enable/start
+the timer. They are not installed or enabled by this code change. Native tests cover
+CLI capture, source-loss reporting/quarantine, SIGKILL during paired copy, retained
+incomplete jobs and subsequent distinct capture; parser validation covers both units.
+Target-host namespace enforcement, nightly execution and off-host recovery remain gates.
 
 ## Validation and deployment boundary
 

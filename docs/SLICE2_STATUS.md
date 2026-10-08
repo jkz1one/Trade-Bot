@@ -26,8 +26,9 @@ the newer bounded isolated model/market components still need verification. LIVE
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full local suite passed **992 tests in 297.76 seconds with warnings treated as errors**,
-including the previous 986 cases and six host-contract/native composition cases. Interrupted
+full local suite passed **1,026 tests in 298.92 seconds with warnings treated as errors**,
+including the previous 992 cases and 34 local capture cases. Installed native
+runtime/control/alert and checkpoint entry points were used in that full run. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
 The source-bound market-only PAPER feed now connects through a bounded headless
@@ -48,6 +49,50 @@ installation and sandbox enforcement remain unverified.
 Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticated
 collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
+
+## Bounded local checkpoint capture follow-up — 2026-10-08 UTC
+
+The isolated PAPER engine now has explicit `checkpoint_cli capture-init`, `capture`
+and `capture-report` commands. A new private catalog freezes the canonical source,
+verified authority UUID, cooperative timeout and admission capacity. One independent
+lease spans source validation, paired export and fsynced exclusive receipt publication.
+Source transactions acquire paired RESERVED locks and roll back without advancing
+generation or performing trader startup recovery. Source failure/rebinding is rejected.
+
+Each admitted UUID directory is retained after interruption. Missing receipts remain
+INCOMPLETE, consume capacity and are never automatically promoted/replayed/deleted.
+A later capture uses a different ID and current evidence. Default capacity is 30
+(maximum 90); free-space admission requires 128 MiB plus 8 KiB. Space is checked,
+not reserved against concurrent writers. Reporting needs no surviving source and
+checks private/bounded receipts, UUID bindings, whole-artifact digest/size and
+manifest equality. It provides local integrity evidence, not an independent off-host
+pin, latest-source witness, invoice record or usable execution authority.
+
+An optional independent systemd oneshot/timer schedules local capture at 01:15 UTC,
+with persistent missed-activation handling, no network or credential access, no
+process restart loop and explicit startup/stop bounds. Both reviewed units pass the
+native systemd parser with only executable/UID/GID mapped locally. They are not
+installed on DigitalOcean, do not alter deployed cron, and do not upload archives.
+
+Verification: **1,026 full-suite tests passed in 298.92s with warnings treated as errors**.
+Scoped lint/format, compilation, pip check and whitespace checks passed. The installed wheel passed **91 checkpoint,
+catalog and archive cases in 30.58s with warnings treated as errors**, including
+34 new catalog cases. Installed `-I` native entry points captured evidence, reported
+and quarantined after deleting the source pair, and survived actual SIGKILL during
+paired copy: incomplete admission remained, locks released, and a later capture used
+a distinct ID. Unknown orders/HALT and unknown model-cost evidence remained auditable;
+quarantine could not construct execution authority. Tampered receipt manifests,
+digests, private-file boundaries, duplicate capture, capacity and space failures were
+covered. Wheel SHA-256:
+`ea971c91f0f6ff07bf3cec2fe3c3a8ac7f027b3f92d77591c1cf03e1e59e9108`.
+No broker/model calls, native target-host installation or archive provisioning occurred.
+
+Next gates remain target-host isolated population/namespace/lifecycle validation,
+authenticated full-universe latency and bounded model-process evidence, independent
+archive retention/retrieval and a host-loss recovery drill. The running virtual-v1
+experiment keeps its frozen deployed release/configuration and continues collecting.
+LIVE remains disabled. Rough engineering estimate stays about 89%, excluding LIVE
+readiness and demonstrated profitability.
 
 ## Operator API evidence — 2026-10-07 regular session
 
