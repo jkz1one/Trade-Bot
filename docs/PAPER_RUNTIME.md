@@ -142,6 +142,19 @@ The existing bounded Responses coordinator owns token/process/request ceilings,
 cost reservations and fail-closed HOLD. Its fixed child receives no broker tools or
 credentials. Authenticated provider/model validation is still required separately.
 
+The isolated child accepts exactly one completed assistant decision message with
+one `output_text` block and no intermediate commentary phase. Completed reasoning
+items, or reasoning items with the SDK's optional status absent, may accompany it.
+Refusals, multiple messages/blocks, foreign roles, incomplete messages/reasoning,
+unknown phases/statuses and tool output fail to HOLD. It parses that block directly;
+the SDK's text aggregation cannot hide a refusal or assemble JSON from fragments.
+Reported valid usage is captured before these checks and remains billable evidence
+on failure. The journal records the failed judgment/alert, grants no entry authority
+and prohibits replay of the same model source. This changes response acceptance,
+not the frozen prompt, schema, model, budgets or request ceilings. Pinned-SDK and
+actual private-worker proofs use local HTTP fixtures, not authenticated provider
+responses or verified billing.
+
 ## Explicit market-read bridge
 
 A **new** isolated PAPER population can opt into Robinhood market reads using

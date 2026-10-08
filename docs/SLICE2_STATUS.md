@@ -26,8 +26,8 @@ the newer bounded isolated model/market components still need verification. LIVE
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full installed-package suite passed **1,100 tests in 303.37 seconds with warnings treated as errors**,
-including the previous 1,090 cases and 10 evidence parent-durability cases. Installed native
+full installed-package suite passed **1,125 tests in 323.84 seconds with warnings treated as errors**,
+including the previous 1,100 cases and 25 model response-acceptance cases. Installed native
 runtime/control/alert and checkpoint entry points were used in that full run. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
@@ -49,6 +49,45 @@ installation and sandbox enforcement remain unverified.
 Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticated
 collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
+
+## Isolated model response acceptance follow-up — 2026-10-08 UTC
+
+Fresh GitHub branch/PR state matched `56a994a65f1821a341427d1e312ef5d71a27e8eb`,
+source tree `977a231b9e2a1a6d7391fbfeb72fdd97e6e73964`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 draft and checkout clean.
+
+A pinned-SDK regression reproduced an OPEN_LONG being accepted from completed
+output containing both valid decision text and a refusal. The SDK convenience
+property also joins text across messages/blocks, omitting non-text content and
+message completion/role/phase checks. The isolated child now parses exactly one
+text block from one completed assistant final decision message. Mixed refusals,
+multiple/fragmented messages or blocks, foreign roles, intermediate/unknown phases,
+unfinished/unknown reasoning status and non-message/reasoning output fail to HOLD.
+Optional reasoning status may be absent or completed. Provider usage is retained
+before decision checks; prompt, schema, model, rates, ceilings and tools are unchanged.
+
+Twenty-five new cases cover 18 ambiguous pinned-SDK envelopes, five valid decision/
+reasoning shapes including HOLD, and two actual private worker/main runs with local
+HTTP transports. Native parent bounds/watchdog and durable accounting run normally:
+the failure settles reported usage, emits one sanitized judgment alert, creates no
+order, rejects substituting the hidden OPEN_LONG and rejects replay of the same source.
+The pre-fix refusal case failed as expected. All 61 focused source judgment cases
+passed in 12.05s with warnings treated as errors.
+
+Verification: **1,125 installed-package tests passed in 323.84s**, warnings treated
+as errors, including native runtime/control/alert/market/model and checkpoint/catalog/archive
+entry points. Scoped Ruff lint/format, compilation,
+pinned-dependency check, `pip check` and whitespace checks passed. All 92 application
+files matched source, wheel and installed bytes. Wheel SHA-256:
+`559f071e2a0c4baf2016e7bbb445e0f124f4f6edd66bebbe2b19520190ee4817`.
+
+These are local response/accounting fixtures, not authenticated model output, real
+billing, target-host operation or profitability. No deployed experiment or host was
+changed. Remaining gates are target-host namespace/boot/lifecycle validation,
+authenticated full-universe market/model evidence, external alert/archive acceptance
+and independent retention, host-loss recovery, and the old worker/slot audit.
+Engine completeness remains approximately **89%**, excluding LIVE readiness and
+demonstrated profitability.
 
 ## Execution evidence parent durability follow-up — 2026-10-08 UTC
 

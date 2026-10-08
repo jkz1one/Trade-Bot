@@ -26,6 +26,33 @@ from app.execution.judgment import (
 )
 
 
+def _decision_text(response):
+    """Accept one final decision message, never aggregate away refusals or fragments."""
+    messages = []
+    for item in response.output:
+        if item.type == "reasoning":
+            if item.status not in {None, "completed"}:
+                raise ValueError("Reasoning output did not complete")
+        elif item.type == "message":
+            messages.append(item)
+        else:
+            raise ValueError("Unexpected tool or other output")
+    if len(messages) != 1:
+        raise ValueError("Exactly one decision message is required")
+    message = messages[0]
+    if (
+        message.role != "assistant"
+        or message.status != "completed"
+        or message.phase not in {None, "final_answer"}
+        or len(message.content) != 1
+    ):
+        raise ValueError("Decision message is not a single completed final answer")
+    content = message.content[0]
+    if content.type != "output_text" or not isinstance(content.text, str):
+        raise ValueError("Decision message must contain only output text")
+    return content.text
+
+
 def perform(request, client):
     """Count the exact text/schema/tools payload, generate once, preserve valid usage on HOLD."""
     usage, count = None, None
@@ -68,9 +95,7 @@ def perform(request, client):
         )
         if response.status != "completed" or response.error is not None:
             raise ValueError("Response did not complete")
-        if any(item.type not in {"message", "reasoning"} for item in response.output):
-            raise ValueError("Unexpected tool or other output")
-        decision = AgentOutputSchema(TradeDecision).validate_json(response.output_text)
+        decision = AgentOutputSchema(TradeDecision).validate_json(_decision_text(response))
         return JudgmentResult(decision=decision, usage=usage, counted_input_tokens=count)
     except Exception as exc:  # noqa: BLE001 -- preserve usage even when decision parsing fails
         return JudgmentResult(
