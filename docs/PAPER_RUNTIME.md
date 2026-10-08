@@ -7,6 +7,14 @@ worker and `virtual-v1`. It has no real broker placement/cancellation adapter.
 Default agent is an explicit, auditable stub HOLD. PAPER and LIVE-disabled settings
 are supplied explicitly; trading-mode environment variables cannot promote it.
 
+Fixed venue, judgment, market, alert and archive children launch the selected Python
+interpreter with `-I -m` and no `PYTHONPATH`. Writable working directories, user-site
+imports and Python environment overrides cannot select those child modules. The
+application/dependencies must already be installed in that environment; production
+uses the trusted read-only wheel installation described in [PAPER_HOST.md](PAPER_HOST.md).
+Installed package hooks remain trusted, and this does not add filesystem/network
+isolation or change any child's approved capabilities, protocol, deadline or cleanup.
+
 The [isolated host layout](PAPER_HOST.md) supplies three independent systemd units
 for runtime, control and alert roles. It is not installed on the active server.
 

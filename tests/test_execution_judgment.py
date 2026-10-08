@@ -441,9 +441,9 @@ async def test_real_child_protocol_and_environment_exclude_broker_keys_and_mutab
     )
 
     async def spawn(*args, **kwargs):
-        assert args == (sys.executable, "-m", "app.execution.judgment_worker")
+        assert args == (sys.executable, "-I", "-m", "app.execution.judgment_worker")
         assert set(kwargs["env"]) <= {"PATH", "LANG", "LC_ALL", "OPENAI_API_KEY"}
-        return await real_spawn(sys.executable, "-c", source, **kwargs)
+        return await real_spawn(*args[:2], "-c", source, **kwargs)
 
     monkeypatch.setattr(asyncio, "create_subprocess_exec", spawn)
     assert await judgment.run_judgment_process(request, "fixture-only") == expected

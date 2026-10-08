@@ -114,6 +114,7 @@ async def run_judgment_process(request, api_key):
     spawn = asyncio.create_task(
         asyncio.create_subprocess_exec(
             sys.executable,
+            "-I",
             "-m",
             "app.execution.judgment_worker",
             env=env,

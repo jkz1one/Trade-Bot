@@ -26,8 +26,8 @@ the newer bounded isolated model/market components still need verification. LIVE
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full installed-package suite passed **1,125 tests in 323.84 seconds with warnings treated as errors**,
-including the previous 1,100 cases and 25 model response-acceptance cases. Installed native
+full installed-package suite passed **1,140 tests in 347.68 seconds with warnings treated as errors**,
+including the previous 1,125 cases and 15 native child-import isolation cases. Installed native
 runtime/control/alert and checkpoint entry points were used in that full run. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
@@ -49,6 +49,52 @@ installation and sandbox enforcement remain unverified.
 Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticated
 collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
+
+## Fixed execution-child import isolation follow-up — 2026-10-08 UTC
+
+Fresh GitHub matched branch/PR head `f07a2b4b80e3c19ff1ed7113cf645f3631cc8c5e`
+and source tree `682525ce2662d435499c469190216e9871189646`; main stayed
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 draft and checkout clean.
+
+Systemd's parent `-I` did not carry into its newly launched execution interpreters.
+All five fixed child commands omitted isolation; four also inherited PYTHONPATH.
+A native pre-fix regression executed a planted working-directory `app` package
+before fixture request validation. Fixture venue, judgment, market, alert and archive
+children now launch `sys.executable -I -m` with PATH/LANG/LC_ALL only, plus the explicit
+model key for judgment. No Python path/settings variables are forwarded. The selected
+interpreter must already have the application/dependencies installed. Root-owned
+installed packages/hooks remain trusted; this is not OS or same-UID/host-owner isolation.
+
+Fifteen native regressions cross all five fixed workers with planted current-directory
+packages, PYTHONPATH packages and startup hooks. Bad private requests exercise native
+error protocols without clients/credentials/network; the venue child instead completes
+a valid local snapshot with unchanged database bytes. All children are reaped, no
+poison marker executes, and ambient model/broker/Python settings are excluded. Existing
+model/MCP test transports now preserve/assert the child isolation flag. All 124 focused
+source cases passed in 29.89s with warnings treated as errors.
+
+The first full run exposed an existing fixture race: a deliberately paused market
+read expired under its half-second test deadline while native entry/reconciliation
+ran, leaving an unbounded callback wait after runtime failure. That disposable test
+now enrolls a five-second read/eight-second source-health policy before attempts,
+uses bounded failure-aware waits and always drains its owner. Production deadlines,
+freshness and frozen policies are unchanged. All 26 source composition cases passed
+in 8.93s; the interrupted full-run log was retained before complete re-verification.
+
+Verification: **1,140 installed-package tests passed in 347.68s**, warnings treated
+as errors, including native runtime/control/alert/market/model, checkpoint/catalog/archive
+and host entry points. Scoped Ruff lint/format, compilation,
+pinned-dependency check, pip check and whitespace passed; the modified legacy market
+tests retain their pre-existing lint baselines (4 read findings, 20 service findings), with
+none introduced.
+All 92 application files matched source, wheel and installed bytes. Wheel SHA-256:
+`981a6316a1343706e298031fafb39453e8a0360fb5225a7a569173107debb320`.
+
+No deployed code/experiment, host or broker/model account was changed. Local import
+proof does not satisfy actual target-host namespace/boot/lifecycle gates. Authenticated
+full-universe market/model evidence, independent alert/archive acceptance and retention,
+host-loss recovery and the old worker/slot audit remain open. Engine completeness is
+approximately **89%**, excluding LIVE readiness and demonstrated profitability.
 
 ## Isolated model response acceptance follow-up — 2026-10-08 UTC
 

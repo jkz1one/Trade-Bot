@@ -30,6 +30,19 @@ do not run from a writable checkout. The units use Python isolated mode (`-I`), 
 PYTHONPATH, user-site imports and Python environment overrides cannot select code.
 No service executes `git pull`, installs packages or creates an experiment at startup.
 
+That interpreter isolation also applies to every fixed execution child: fixture venue,
+model judgment, market reads, alert delivery and checkpoint archive transfer launch
+the same interpreter with `-I -m` and exclude `PYTHONPATH` from their environment.
+A parent's `-I` flag is not inherited by a newly launched interpreter. Without the
+child flag, a writable working directory could select another `app` package before
+request validation; retained `PYTHONPATH` could also select modules/startup hooks.
+Each child now uses the selected environment's installed package instead. Install
+the application and dependencies into that interpreter before running the engine;
+an absent installation fails closed instead of falling back to checkout imports.
+Trusted installed site packages and their installation hooks still remain trusted.
+This is an import boundary, not an OS sandbox or protection against modification of
+the installed environment, arbitrary same-UID processes or the host owner.
+
 Before installing/enabling units, explicitly initialize a new population under the
 service UID using the installed `app.execution.runtime_cli init`. Match the fixed
 population directory and credential paths. Enroll the operator signing credential

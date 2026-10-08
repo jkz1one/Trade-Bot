@@ -107,17 +107,14 @@ async def _run(request):
     spawn = asyncio.create_task(
         asyncio.create_subprocess_exec(
             sys.executable,
+            "-I",
             "-m",
             "app.execution.checkpoint_worker",
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.DEVNULL,
             start_new_session=True,
-            env={
-                k: os.environ[k]
-                for k in ("PATH", "LANG", "LC_ALL", "PYTHONPATH")
-                if k in os.environ
-            },
+            env={k: os.environ[k] for k in ("PATH", "LANG", "LC_ALL") if k in os.environ},
         )
     )
     process = None

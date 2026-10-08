@@ -124,14 +124,11 @@ async def run_fixture_process(
     if len(payload) > MAX_REQUEST_BYTES:
         raise FixtureProcessProtocolError("Fixture request exceeded protocol limit")
     # Deliberately exclude broker/model secrets, settings and OAuth state from the child environment.
-    env = {
-        key: os.environ[key]
-        for key in ("PATH", "LANG", "LC_ALL", "PYTHONPATH")
-        if key in os.environ
-    }
+    env = {key: os.environ[key] for key in ("PATH", "LANG", "LC_ALL") if key in os.environ}
     spawn = asyncio.create_task(
         asyncio.create_subprocess_exec(
             sys.executable,
+            "-I",
             "-m",
             "app.execution.worker",
             stdin=asyncio.subprocess.PIPE,

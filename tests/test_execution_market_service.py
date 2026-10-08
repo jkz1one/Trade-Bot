@@ -25,7 +25,7 @@ from tests.test_execution_rehearsal import NOW, decision, packet
 from tests.test_execution_supervisor import wait_until
 
 
-def context(tmp_path, *, model=False):
+def context(tmp_path, *, model=False, read_timeout=0.5, source_max_age=4):
     directory = tmp_path / "population"
     initialize(directory, capital=10, symbols=["SPY"], market_oauth_file=oauth(tmp_path))
     with runtime_lease(directory / "execution.db"):
@@ -34,7 +34,7 @@ def context(tmp_path, *, model=False):
     # A new explicit test population, before any attempts, with bounded fast-source policy.
     with sqlite3.connect(feed.path) as db:
         meta = json.loads(db.execute("SELECT payload FROM quote_meta").fetchone()[0])
-        meta["source"]["timeout_seconds"] = 0.5
+        meta["source"]["timeout_seconds"] = read_timeout
         db.execute("UPDATE quote_meta SET payload=?", (json.dumps(meta),))
     feed = DurableQuoteFeed(feed.path)
     # Remove only provisioning enrollments in this disposable setup, never an existing service.
@@ -52,7 +52,7 @@ def context(tmp_path, *, model=False):
     service = PaperMarketService(
         base.engine,
         feed,
-        limits=MarketServiceLimits(poll_seconds=0.05, max_age_seconds=4),
+        limits=MarketServiceLimits(poll_seconds=0.05, max_age_seconds=source_max_age),
         clock=lambda: clock[0],
     )
     service.enroll()
@@ -334,7 +334,9 @@ async def test_protective_sell_continues_while_market_refresh_waits(tmp_path, mo
 
     from tests.test_execution_supervisor import enter
 
-    runtime, engine, feed, clock, _ = context(tmp_path)
+    # Deliberately pause a source read across native entry/fill/reconciliation.
+    # Keep the test policy bounded without coupling it to subsecond child startup.
+    runtime, engine, feed, clock, _ = context(tmp_path, read_timeout=5, source_max_age=8)
     second, release, blocked = asyncio.Event(), asyncio.Event(), asyncio.Event()
     calls = []
 
@@ -354,22 +356,32 @@ async def test_protective_sell_continues_while_market_refresh_waits(tmp_path, mo
 
     monkeypatch.setattr(market_reads, "_read", read)
     stop, task = await begin(runtime)
-    await second.wait()
-    await wait_until(lambda: engine.journal.report(now=NOW)["supervisor"]["fresh"])
-    venue = runtime.supervisor.venue
-    await enter(engine, venue, p=feed.latest()[1])
-    release.set()
-    await blocked.wait()
-    await wait_until(lambda: venue.submit_count == 2)
-    order = engine.journal.report(now=NOW)["orders"][-1]["intent"]
-    assert order["side"] == "SELL" and not task.done()
-    venue.fill(
-        order["client_id"], Decimal(order["quantity"]), Decimal("9.4"), NOW, fill_id="protective"
-    )
-    await wait_until(lambda: engine.journal.report(now=NOW)["ledger"]["position"] is None)
-    stop.set()
-    assert await task == 0
-    assert not engine.journal.report(now=NOW)["halted"]
+    try:
+        await wait_until(lambda: second.is_set() or task.done())
+        assert second.is_set() and not task.done()
+        await wait_until(lambda: engine.journal.report(now=NOW)["supervisor"]["fresh"])
+        venue = runtime.supervisor.venue
+        await enter(engine, venue, p=feed.latest()[1])
+        release.set()
+        await wait_until(lambda: blocked.is_set() or task.done())
+        assert blocked.is_set() and not task.done()
+        await wait_until(lambda: venue.submit_count == 2)
+        order = engine.journal.report(now=NOW)["orders"][-1]["intent"]
+        assert order["side"] == "SELL" and not task.done()
+        venue.fill(
+            order["client_id"],
+            Decimal(order["quantity"]),
+            Decimal("9.4"),
+            NOW,
+            fill_id="protective",
+        )
+        await wait_until(lambda: engine.journal.report(now=NOW)["ledger"]["position"] is None)
+        stop.set()
+        assert await asyncio.wait_for(task, 10) == 0
+        assert not engine.journal.report(now=NOW)["halted"]
+    finally:
+        stop.set()
+        await asyncio.wait_for(task, 10)
 
 
 @pytest.mark.anyio

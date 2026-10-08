@@ -535,8 +535,8 @@ async def test_real_child_protocol_success_publishes_without_private_values(tmp_
     )
 
     async def spawn(*args, **kwargs):
-        assert args[2] == "app.execution.market_read_worker"
-        proc = await real_spawn(sys.executable, "-c", code, **kwargs)
+        assert args == (sys.executable, "-I", "-m", "app.execution.market_read_worker")
+        proc = await real_spawn(*args[:2], "-c", code, **kwargs)
         processes.append(proc)
         return proc
 

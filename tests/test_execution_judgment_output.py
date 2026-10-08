@@ -2,7 +2,6 @@
 
 import asyncio
 import json
-import sys
 from decimal import Decimal
 
 import pytest
@@ -131,7 +130,7 @@ raise SystemExit(worker.main())
 """.replace("OUTPUT", repr(json.dumps(response(output=output))))
 
     async def spawn(*args, **kwargs):
-        child = await real_spawn(sys.executable, "-c", source, **kwargs)
+        child = await real_spawn(*args[:2], "-c", source, **kwargs)
         children.append(child)
         return child
 

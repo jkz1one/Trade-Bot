@@ -275,7 +275,7 @@ async def test_native_twenty_symbol_child_publishes_atomically_or_retains_old_sa
     real_spawn = asyncio.create_subprocess_exec
 
     async def spawn(*args, **kwargs):
-        assert args[2] == "app.execution.market_read_worker"
+        assert args == (sys.executable, "-I", "-m", "app.execution.market_read_worker")
         child = await real_spawn(
             PYTHON, "-I", "-c", NATIVE_READER, str(responses), str(calls), **kwargs
         )
