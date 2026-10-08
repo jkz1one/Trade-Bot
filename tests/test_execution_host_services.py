@@ -89,6 +89,22 @@ def test_unit_boundaries_do_not_couple_failures_or_expose_peer_credentials(role)
         "true"
     ]
     assert values(text, "PrivateTmp") == ["true"] and values(text, "UMask") == ["0077"]
+    # A missing peer directory must not remove the credential-root mask.
+    assert values(text, "TemporaryFileSystem") == ["/etc/trade-bot-paper:ro,mode=0755,size=1M"]
+    assert (
+        values(text, "BindReadOnlyPaths")
+        == {
+            "runtime": ["-/etc/trade-bot-paper/model"],
+            "control": ["/etc/trade-bot-paper/operator"],
+            "alerts": ["/etc/trade-bot-paper/alerts"],
+        }[role]
+    )
+    assert values(text, "BindPaths") == (
+        ["-/etc/trade-bot-paper/market"] if role == "runtime" else []
+    )
+    assert values(text, "ReadWritePaths") == ["/var/lib/trade-bot-paper/population"] + (
+        ["-/etc/trade-bot-paper/market"] if role == "runtime" else []
+    )
     blocked = " ".join(values(text, "InaccessiblePaths"))
     assert all(
         "-/etc/trade-bot-paper/" + p in blocked

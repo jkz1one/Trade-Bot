@@ -50,6 +50,48 @@ Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticate
 collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
 
+## Isolated PAPER credential namespace follow-up — 2026-10-08 UTC
+
+Fresh GitHub branch/PR state matched `9b9a4a89df47846fe3b1bd398f84a3ae9bd8a764`,
+tree `d27731a548b66c28de6e470cbd68e2277869ede6`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 draft and checkout clean.
+
+The existing optional peer-directory blocks were skipped when those host paths did
+not exist at service startup. That leaves an incomplete direct credential view if
+a peer or previously unlisted credential directory is provisioned later. Each of the
+four isolated role units now mounts an unconditional empty read-only 1MiB tmpfs over
+the credential root, then binds only permitted directories. Runtime gets read-only
+model files and writable market OAuth; control gets read-only operator files;
+alerts get read-only alert files; checkpoint gets no credential bind. Bound private
+file/directory modes remain unchanged. Existing peer/SHADOW blocks, population access,
+process lifecycles, restart limits and frozen enrollment remain unchanged.
+
+The pattern follows the
+[Ubuntu 24.04 systemd execution manual](https://manpages.ubuntu.com/manpages/noble/man5/systemd.exec.5.html).
+It does not establish isolation from arbitrary same-UID processes or a host owner
+changing mounts. This workspace has no systemd service manager; its nested user
+namespace probe failed with `Operation not permitted`. No target-host service was
+installed or accessed. The role contract/parser tests cannot prove kernel namespace
+enforcement; target-host verification must inspect permitted read/write behavior and
+absent-then-created peer directory visibility, along with boot/lifecycle behavior.
+
+Application files are unchanged from the previous verified wheel and 1,090-test full
+installed-package baseline. This follow-up changes unit specifications, their focused
+contract assertions and host/status documentation only. **All 40 affected installed
+host/checkpoint-catalog cases passed in 146.90s**, warnings treated as errors. The
+native systemd 255 parser accepted all four role services and the checkpoint timer.
+Existing installed native process tests cover failure halt, explicit restart,
+surviving companions, signed ACK, graceful shutdown, capture interruption and source
+loss; they launch role commands without applying systemd namespaces. Scoped E/F
+lint, formatting and whitespace checks passed. All 92 application files still match
+the previously verified wheel and installed bytes. The full suite was not repeated
+for this unit-only follow-up; the 1,090-test application baseline is unchanged.
+
+Engine completeness remains
+approximately **89%**, excluding LIVE readiness and demonstrated profitability. The
+remaining target-host, authenticated market/model, independent alert/archive retention
+and host-loss gates, plus the old deployed worker/slot audit, remain open.
+
 ## Isolated PAPER publication deadline follow-up — 2026-10-08 UTC
 
 Fresh branch and PR references matched `605297ea905d8614278a51b55eb02cc666802a01`,

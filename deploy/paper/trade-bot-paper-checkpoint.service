@@ -31,7 +31,8 @@ RestrictSUIDSGID=true
 LockPersonality=true
 RestrictAddressFamilies=AF_UNIX
 ReadWritePaths=/var/lib/trade-bot-paper/population /var/lib/trade-bot-paper/checkpoints
-InaccessiblePaths=-/etc/trade-bot-paper -/var/lib/trade-bot -/etc/trade-bot -/opt/trade-bot
+TemporaryFileSystem=/etc/trade-bot-paper:ro,mode=0755,size=1M
+InaccessiblePaths=-/var/lib/trade-bot -/etc/trade-bot -/opt/trade-bot
 TasksMax=16
 MemoryMax=256M
 StandardOutput=journal

@@ -91,9 +91,25 @@ External dead-process/host-loss monitoring remains a separate requirement.
 All units use an owner-private umask, no new privileges, a read-only system tree,
 protected home/kernel/device namespaces and separate private temporary directories.
 The shared population remains writable for SQLite paired transactions and native
-leases. Each role blocks peer credential directories and the deployed SHADOW paths.
-Control/alerts do not see model/OAuth secrets. Runtime does not see operator/sink
-secrets. These restrictions require actual target-host namespace verification;
+leases. Every role mounts an empty read-only 1MiB tmpfs over `/etc/trade-bot-paper`,
+then binds only its permitted credential directories into that view. Runtime binds
+model credentials read-only and market OAuth read/write for refresh. Control binds
+only operator credentials read-only; alerts bind only alert credentials read-only.
+Checkpoint binds no credential directory. The tmpfs root explicitly uses mode 0755
+for traversal; bound private directories/files retain their original owner/modes.
+
+The credential-root mask is unconditional. It does not depend on peer directories
+existing at startup, unlike optional `InaccessiblePaths=-...` entries, which systemd
+ignores when absent. Unlisted host credential content, including directories created
+later, is outside the masked view. Optional runtime binds are omitted when their
+source is absent and require an explicit role restart after separate provisioning;
+there is no enrollment, credential discovery or automatic experiment change.
+Existing explicit peer blocks and deployed SHADOW path blocks remain additional
+restrictions. This follows the
+[Ubuntu 24.04 systemd empty-tree/bind pattern](https://manpages.ubuntu.com/manpages/noble/man5/systemd.exec.5.html).
+It does not isolate one role from arbitrary processes using the same host UID or
+from a host owner changing mount topology. Actual target-host namespace verification
+must test the role view and absent-then-created peer directories;
 parser acceptance and local native process tests do not prove kernel enforcement.
 
 ## Optional local checkpoint timer
@@ -105,8 +121,9 @@ catalog paths above. The parent must already exist; initialization exclusively
 creates the mode-700 catalog. Capture freezes the existing authority UUID, timeout
 and admitted-job limit. The unit never initializes an engine or adopts missing evidence.
 
-The service has `Restart=no`, private networking, AF_UNIX only, and hides the entire
-`/etc/trade-bot-paper` credential tree plus the deployed SHADOW paths. It has no
+The service has `Restart=no`, private networking, AF_UNIX only, and masks the entire
+`/etc/trade-bot-paper` credential tree with the same read-only tmpfs and no binds,
+including when the host tree was absent at startup. It also blocks deployed SHADOW paths. It has no
 HTTP archive destination or upload operation. Source population and catalog are
 the only writable namespaces: paired SQLite RESERVED locks require opening the
 source databases read/write, but capture rolls back those lock transactions without

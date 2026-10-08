@@ -365,7 +365,9 @@ def test_native_systemd_parser_and_network_disabled_checkpoint_contract(tmp_path
         pytest.skip("Native systemd parser unavailable")
     service = (UNITS / "trade-bot-paper-checkpoint.service").read_text()
     assert "PrivateNetwork=yes" in service and "RestrictAddressFamilies=AF_UNIX" in service
-    assert "Restart=no" in service and "-/etc/trade-bot-paper" in service
+    assert "Restart=no" in service
+    assert "TemporaryFileSystem=/etc/trade-bot-paper:ro,mode=0755,size=1M" in service
+    assert "BindPaths=" not in service and "BindReadOnlyPaths=" not in service
     assert "Requires=" not in service and "PartOf=" not in service
     paths = []
     for suffix in ("service", "timer"):

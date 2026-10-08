@@ -33,7 +33,8 @@ RestrictSUIDSGID=true
 LockPersonality=true
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 ReadWritePaths=/var/lib/trade-bot-paper/population
-ReadOnlyPaths=/etc/trade-bot-paper/operator
+TemporaryFileSystem=/etc/trade-bot-paper:ro,mode=0755,size=1M
+BindReadOnlyPaths=/etc/trade-bot-paper/operator
 InaccessiblePaths=-/etc/trade-bot-paper/model -/etc/trade-bot-paper/market -/etc/trade-bot-paper/alerts
 InaccessiblePaths=-/var/lib/trade-bot -/etc/trade-bot -/opt/trade-bot
 TasksMax=32
