@@ -194,6 +194,17 @@ publishes no new quote sample. A private nonblocking per-feed lock spans child c
 and publication; repeated cancellation cannot admit a second reader before reaping.
 This is single-host ownership, not a lock shared across independent feeds/hosts.
 
+The original monotonic request deadline also fences publication admission after
+child cleanup. Expiry observed before packet validation, after transaction acquisition
+or immediately before commit rejects the refresh and rolls back any uncommitted
+sample, including an idempotent receipt. SQLite acquisition and commit lock waits
+use the remaining budget, capped at the existing 100ms wait. Late continuous reads
+retain the prior sample and successful-health timestamps, halt and do not retry.
+Cleanup still completes under the reader lease even after expiry. These checks
+bound lock waits and reject observed expiry; they are not a hard filesystem/fsync
+completion deadline or authenticated provider latency evidence. Manual fixture
+publication retains its existing behavior without a supplied deadline.
+
 Before publication the parent verifies source/feed/request identities, aware
 nonregressing collection clocks, exact complete unique universe, sane fresh quotes
 and a maximum 90-second age. Quotes cannot be newer than their reported collection.

@@ -1,13 +1,26 @@
 """Private durable, manually published market fixtures. Never a broker/data client."""
 
 import json
+import math
 import sqlite3
+import time
 from contextlib import contextmanager
 from pathlib import Path
 from urllib.parse import quote
 from uuid import uuid4
 
 from app.domain.models import MarketPacket
+
+
+def _publication_remaining(deadline):
+    if deadline is None:
+        return 0.1
+    if isinstance(deadline, bool) or not math.isfinite(deadline) or deadline <= 0:
+        raise ValueError("A finite positive publication deadline is required")
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise TimeoutError("Market collection publication deadline exceeded")
+    return min(0.1, remaining)
 
 
 class DurableQuoteFeed:
@@ -56,19 +69,28 @@ class DurableQuoteFeed:
         self.source = meta.get("source")
 
     @contextmanager
-    def _db(self, *, write=False):
+    def _db(self, *, write=False, deadline_monotonic=None):
         db = sqlite3.connect(
             "file:" + quote(str(self.path)) + ("?mode=rw" if write else "?mode=ro"),
             uri=True,
-            timeout=0.1,
+            timeout=_publication_remaining(deadline_monotonic),
             isolation_level=None,
         )
         db.row_factory = sqlite3.Row
         try:
             db.execute("BEGIN IMMEDIATE" if write else "BEGIN")
+            _publication_remaining(deadline_monotonic)
             yield db
             if write:
+                remaining = _publication_remaining(deadline_monotonic)
+                if deadline_monotonic is not None:
+                    db.execute(f"PRAGMA busy_timeout={int(remaining * 1000)}")
+                    _publication_remaining(deadline_monotonic)
                 db.commit()
+        except sqlite3.OperationalError:
+            db.rollback()
+            _publication_remaining(deadline_monotonic)
+            raise
         except BaseException:
             db.rollback()
             raise
@@ -118,7 +140,9 @@ class DurableQuoteFeed:
             raise ValueError("Sourced quotes require a complete universe and no account authority")
         return packet
 
-    def publish(self, sample_id, packet, *, source=None):
+    def publish(self, sample_id, packet, *, source=None, deadline_monotonic=None):
+        """Atomically publish; optional deadline fences admission, not filesystem completion."""
+        _publication_remaining(deadline_monotonic)
         if source != self.source:
             raise ValueError("Quote publisher source does not match the frozen feed")
         if not isinstance(sample_id, str) or not sample_id.strip() or len(sample_id) > 128:
@@ -127,7 +151,7 @@ class DurableQuoteFeed:
         payload = packet.model_dump_json()
         if len(payload.encode()) > 256 * 1024:
             raise ValueError("Fixture market packet too large")
-        with self._db(write=True) as db:
+        with self._db(write=True, deadline_monotonic=deadline_monotonic) as db:
             self._binding(db)
             old = db.execute(
                 "SELECT sequence,payload FROM quote_samples WHERE sample_id=?", (sample_id,)

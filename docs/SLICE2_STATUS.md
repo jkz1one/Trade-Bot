@@ -26,8 +26,8 @@ the newer bounded isolated model/market components still need verification. LIVE
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full installed-package suite passed **1,074 tests in 309.35 seconds with warnings treated as errors**,
-including the previous 1,026 cases and 48 strict market-response cases. Installed native
+full installed-package suite passed **1,090 tests in 299.94 seconds with warnings treated as errors**,
+including the previous 1,074 cases and 16 publication-deadline cases. Installed native
 runtime/control/alert and checkpoint entry points were used in that full run. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
@@ -49,6 +49,45 @@ installation and sandbox enforcement remain unverified.
 Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticated
 collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
+
+## Isolated PAPER publication deadline follow-up — 2026-10-08 UTC
+
+Fresh branch and PR references matched `605297ea905d8614278a51b55eb02cc666802a01`,
+source tree `c97ffd034cd90708150c5ade2b72ac1ca11a7422`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 draft and checkout clean.
+This bounded follow-up supports the existing market-deadline gate. It adds no source
+configuration, retry policy, market cache or deployment step.
+
+The child timeout previously ended before cleanup and parent publication. A valid
+child result could therefore admit a sample after the original request deadline.
+The parent now passes that same monotonic deadline into publication. Observed expiry
+before packet validation, after transaction acquisition or immediately before commit
+rejects the refresh and rolls back uncommitted evidence. Acquisition and commit lock
+waits use the remaining budget, capped at the existing 100ms. An expired idempotent
+receipt cannot report success. Existing manual fixture publication remains unchanged.
+
+Six injected expiry boundaries, actual native child cleanup under retained reader
+ownership, before-deadline success, expired idempotency, real SQLite writer/reader
+contention, and finite deadline validation are covered. The continuous-service case
+first publishes successfully, then proves that late collection preserves its sample
+and successful-health timestamps, halts, releases ownership and does not retry or
+submit an order. These are local fixture proofs. Cleanup still completes after
+expiry; filesystem/fsync stalls are not hard real-time bounded by these admission
+checks. No authenticated provider timing or actual host integration was established.
+
+Verification: **1,090 installed-package tests passed in 299.94s**, warnings treated
+as errors, with the installed native runtime/control/alert, checkpoint and host
+entry points. All 16 new deadline cases passed in the focused source run. Scoped
+Ruff lint/format, compilation, pinned-dependency verification, `pip check` and
+whitespace checks passed. All 92 application files matched source, wheel and installed
+bytes; verified wheel SHA-256:
+`db2fee1fe9e007f61795ab0826ef2143a1f3eb69b28ecdd2a8de7b612a4b645d`.
+
+Engine completeness remains approximately **89%**, excluding LIVE readiness and
+demonstrated profitability. The frozen deployed experiment remains unchanged. The
+remaining gates are target-host namespace/boot/lifecycle validation, authenticated
+full-universe market latency and model-process/billing evidence, independent alert
+and archive acceptance/retention, a host-loss drill and the old worker/slot audit.
 
 ## Isolated PAPER market integrity and installed-package follow-up — 2026-10-08 UTC
 

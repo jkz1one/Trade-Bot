@@ -237,7 +237,12 @@ async def _collect_owned(feed, *, clock):
         regime=result.regime,
         account={"equity": 0, "cash": 0, "buying_power": 0, "high_watermark": 0},
     )
-    sequence = feed.publish(request.request_id, packet, source=policy.model_dump(mode="json"))
+    sequence = feed.publish(
+        request.request_id,
+        packet,
+        source=policy.model_dump(mode="json"),
+        deadline_monotonic=request.deadline_monotonic,
+    )
     return {
         "status": "PUBLISHED",
         "mode": "FIXTURE_PAPER",
