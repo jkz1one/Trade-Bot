@@ -293,6 +293,28 @@ async def test_native_twenty_symbol_child_publishes_atomically_or_retains_old_sa
     refresh_quotes()
     first = await collect_once(feed)
     assert first["candidate_count"] == 20 and first["feed_sequence"] == 1
+    evidence = first["evidence"]
+    assert evidence["symbols"] == SYMBOLS
+    assert evidence["tool_observations_status"] == "OBSERVED"
+    assert evidence["provider_acceptance"] == "UNVERIFIED" and not evidence["execution_authority"]
+    assert evidence["expected_tool_calls"] == {
+        "get_accounts": 1,
+        "get_equity_quotes": 1,
+        "get_equity_tradability": 2,
+        "get_equity_historicals": 20,
+    }
+    assert (
+        0 < evidence["tool_observations"]["collection_seconds"] <= evidence["read_and_reap_seconds"]
+    )
+    assert 0 <= evidence["validation_and_publication_seconds"] < evidence["total_seconds"]
+    assert evidence["total_seconds"] < evidence["timeout_seconds"]
+    for name, count in evidence["expected_tool_calls"].items():
+        assert (
+            evidence["tool_observations"][name]["attempted"]
+            == evidence["tool_observations"][name]["completed"]
+            == count
+        )
+    assert "PRIVATE" not in json.dumps(first) and str(tmp_path) not in json.dumps(first)
     before = feed.path.read_bytes()
     saved = feed.latest()
     if fault == "cross-bound-history":

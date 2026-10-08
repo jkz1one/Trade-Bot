@@ -123,6 +123,10 @@ Authenticated timing and deployment remain pending; see `docs/PAPER_RUNTIME.md`.
 The isolated collector rejects ambiguous symbol rows and malformed historical
 indicator inputs before publication. Its full 20-symbol native-child fixtures
 remain local contract proof; authenticated market timing is still a separate gate.
+Successful isolated collection now returns measured read/reaping/publication time,
+observed safe-tool counts and saved sample lineage. The
+[full-universe procedure](docs/PAPER_MARKET_ACCEPTANCE.md) preserves explicit
+one-shot ownership and keeps provider acceptance unverified until actual evidence.
 
 The isolated PAPER operator API now has a native TLS entry point:
 `python -m app.execution.control_cli`. It attaches to existing verified state

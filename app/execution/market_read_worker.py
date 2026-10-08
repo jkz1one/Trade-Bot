@@ -13,6 +13,7 @@ from app.domain.models import utc_now
 from app.execution.market_reads import (
     MAX_REQUEST_BYTES,
     MAX_RESPONSE_BYTES,
+    MarketReadDiagnostics,
     MarketReadRequest,
     MarketReadResult,
     private_oauth,
@@ -51,10 +52,40 @@ def connection(policy):
     return result
 
 
+class ObservedGateway(PaperMarketReadGateway):
+    """Count/timestamp only the four fixed safe calls, retaining no arguments/results."""
+
+    def __init__(self, client, endpoint):
+        super().__init__(client, endpoint)
+        self.observations = {
+            name: {"attempted": 0, "completed": 0, "elapsed_seconds": 0.0}
+            for name in (
+                "get_accounts",
+                "get_equity_quotes",
+                "get_equity_tradability",
+                "get_equity_historicals",
+            )
+        }
+
+    async def call_safe(self, name, arguments):
+        if name not in self.observations:
+            return await super().call_safe(name, arguments)
+        observation = self.observations[name]
+        observation["attempted"] += 1
+        started = time.monotonic()
+        try:
+            result = await super().call_safe(name, arguments)
+            observation["completed"] += 1
+            return result
+        finally:
+            observation["elapsed_seconds"] += time.monotonic() - started
+
+
 async def collect(request):
+    started = time.monotonic()
     private_oauth(request.policy.oauth_file)
     async with connection(request.policy).client() as client:
-        gateway = PaperMarketReadGateway(client, request.policy.endpoint)
+        gateway = ObservedGateway(client, request.policy.endpoint)
         account = await RobinhoodReadService(gateway).get_agentic_account()
         market = RobinhoodMarketData(
             gateway,
@@ -62,14 +93,19 @@ async def collect(request):
             lookback_days=request.policy.lookback_days,
         )
         candidates = await market.candidates(account.account_number, request.symbols)
-        return MarketReadResult(
-            feed_id=request.feed_id,
-            request_id=request.request_id,
-            source_hash=source_hash(request.policy),
-            collected_at=utc_now(),
-            candidates=candidates,
-            regime=market.regime(candidates),
-        )
+        collected_at = utc_now()
+        regime = market.regime(candidates)
+    return MarketReadResult(
+        feed_id=request.feed_id,
+        request_id=request.request_id,
+        source_hash=source_hash(request.policy),
+        collected_at=collected_at,
+        candidates=candidates,
+        regime=regime,
+        diagnostics=MarketReadDiagnostics(
+            collection_seconds=time.monotonic() - started, **gateway.observations
+        ),
+    )
 
 
 def _watch(request):

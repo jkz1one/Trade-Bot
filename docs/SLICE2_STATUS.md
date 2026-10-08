@@ -26,8 +26,8 @@ the newer bounded isolated model/market components still need verification. LIVE
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full installed-package suite passed **1,242 tests in 327.00 seconds with warnings treated as errors**,
-including the previous 1,205 cases and 37 disposable sandbox harness cases. Installed native
+full installed-package suite passed **1,264 tests in 328.42 seconds with warnings treated as errors**,
+including the previous 1,242 cases and 22 measured market evidence cases. Installed native
 runtime/control/alert and checkpoint entry points were used in that full run. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
@@ -49,6 +49,62 @@ installation and sandbox enforcement remain unverified.
 Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticated
 collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
+
+## Measured full-universe market evidence — 2026-10-08 UTC
+
+Fresh GitHub matched branch/PR head `2ef2938d1ab236367619660f7055b072666b679c`
+and source tree `131c817fc9b5e24c14500dc9b1c40cd6fd89dd5f`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 draft and checkout clean.
+
+The existing one-shot collector previously returned publication/candidate counts
+without measured latency or observed tool counts for the authenticated 20-symbol
+gate. It now returns `paper-market-read-evidence-v1`: feed/request/source identity,
+exact universe, collection/check/oldest quote clocks, saved packet hash, the original
+timeout, parent read/reaping, validation/publication and total monotonic intervals.
+The child observes only its four existing safe gateway methods, counts attempted
+and validated completed calls and measures cumulative method duration. Collection
+time includes connection closure. Arguments, account IDs, credential paths/contents
+and raw responses are not retained in those observations.
+
+Twenty symbols require 24 observed gateway calls: one account selection, one quote
+batch, two tradability batches and 20 single-symbol histories. Coherent counts and
+child/parent timing receive `OBSERVED`; absent/incoherent diagnostics remain
+`UNVERIFIED`. These observations do not gate publication, grant provider acceptance
+or change entry policy. Invalid diagnostic types/bounds fail the existing bounded
+child protocol. There is no new command, reader, automatic retry, quote schema,
+execution-journal field, policy migration or model-visible packet data. Continuous
+health/admission, private credentials, original deadline and atomic publication
+rules remain intact. The [collection procedure](PAPER_MARKET_ACCEPTANCE.md) provides
+an explicit new disposable full-universe one-shot population and retained report.
+
+All **175 focused source market cases passed in 12.11s**, warnings treated as errors.
+Twenty-two new tests bind report hashes/identities to the actual saved sample,
+measure parent interval boundaries, reject invalid counters/times, retain incomplete
+counts after cancellation/failure, preserve the capability firewall and keep
+missing/incoherent observations from claiming acceptance. Five existing actual
+20-symbol child cases now assert complete safe-call counts, measured intervals and
+no private data while preserving failure atomicity and reaping. An earlier focused
+run stalled at a test wait and was stopped; the complete rerun with per-test logging
+and traceback deadlines passed. No diagnosis or successful result is inferred from
+the interrupted run.
+
+Final verification: **1,264 installed-package tests passed in 328.42s**, warnings
+treated as errors, outside the checkout against the final wheel. Installed native
+runtime/control/alert/market/model and checkpoint/catalog/archive entry points ran;
+the market fixture child explicitly used the final installed interpreter. Final
+staged test bytes and all 93 application source/wheel/installed files matched.
+Scoped Ruff lint/format, compilation, pinned dependencies, pip check, document
+links and whitespace passed. Wheel SHA-256:
+`5ed2575bcf70242040dbc43b6a4282497eaf772f506d7cbfeddec3e54c9085e6`.
+
+Every report retains `provider_acceptance=UNVERIFIED`, `execution_authority=false`
+and LIVE disabled. Local MCP fixtures can produce the same report shape; gateway
+invocations are not every HTTP/OAuth exchange or provider-internal retry. Actual
+authenticated regular-session latency/coverage and continuous cadence remain open,
+alongside target-host namespace/application lifecycle, bounded authenticated model
+usage/billing, independent alerts/archive recovery, host-loss and the old worker/slot
+audit. No host, deployed frozen experiment or provider account was changed. Engine
+completeness remains approximately **89%**, excluding LIVE readiness and profitability.
 
 ## Disposable systemd sandbox integration — 2026-10-08 UTC
 

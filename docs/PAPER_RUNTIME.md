@@ -193,6 +193,33 @@ rejected before the MCP client. OAuth refresh persistence is an authentication
 operation, not a broker trade mutation. Authorization walls fail without launching
 a browser or prompting. Historical reads remain one symbol per call.
 
+Successful collection now includes `paper-market-read-evidence-v1` in its `evidence`
+object: feed/request/source identities, exact symbols, collection/check/oldest quote
+clocks, saved packet SHA-256, original timeout and measured parent read/reaping,
+validation/publication and total intervals. The fixed child reports per-tool
+attempt/completion counts and cumulative call time, plus collection time through
+connection closure. It retains no tool arguments, account identifiers, credential
+contents/paths or raw responses in those observations.
+
+For 20 symbols the existing collector makes 24 tool invocations: one account
+selection, one quote batch, two tradability batches and 20 individual histories.
+Counts with coherent child/parent timing receive `tool_observations_status=OBSERVED`;
+absent or incoherent diagnostics remain `UNVERIFIED` without changing publication
+or entry policy. Invalid diagnostic types/bounds fail the existing child protocol.
+These count gateway invocations, not every HTTP/OAuth exchange or provider-internal
+retry. Parent timings include spawn, protocol/connection work and child cleanup;
+child call timings exclude setup/closure overhead. The monotonic parent total starts
+at the original request deadline origin and ends after publication, rather than
+using potentially adjusted wall-clock timestamps.
+
+Observations are returned, not stored in the execution journal or quote schema.
+Continuous service health/admission, packet contents, policy hashes and source
+enrollment stay unchanged. Reports always retain `provider_acceptance=UNVERIFIED`
+and `execution_authority=false`; fixture traffic can produce the same shape.
+Failure still returns the sanitized CLI error and no successful evidence report.
+There is no added retry, credential discovery or authenticated provider call during
+development verification. See the [full-universe collection procedure](PAPER_MARKET_ACCEPTANCE.md).
+
 The isolated collector validates raw market responses before they reach the
 shared indicator adapter. Each quote, tradability and per-symbol history response
 must contain exactly the requested unique symbols. Missing, extra, duplicate, null

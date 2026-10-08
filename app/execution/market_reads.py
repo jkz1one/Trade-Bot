@@ -128,6 +128,20 @@ class MarketReadRequest(Contract):
         return value
 
 
+class MarketToolObservation(Contract):
+    attempted: int = Field(ge=0, le=24, strict=True)
+    completed: int = Field(ge=0, le=24, strict=True)
+    elapsed_seconds: float = Field(ge=0, le=300, strict=True)
+
+
+class MarketReadDiagnostics(Contract):
+    collection_seconds: float = Field(ge=0, le=300, strict=True)
+    get_accounts: MarketToolObservation
+    get_equity_quotes: MarketToolObservation
+    get_equity_tradability: MarketToolObservation
+    get_equity_historicals: MarketToolObservation
+
+
 class MarketReadResult(Contract):
     feed_id: str
     request_id: str
@@ -135,6 +149,7 @@ class MarketReadResult(Contract):
     collected_at: datetime
     candidates: list[Candidate] = Field(min_length=1, max_length=20)
     regime: Literal["bullish", "bearish", "mixed"]
+    diagnostics: MarketReadDiagnostics | None = None
 
 
 async def _read(request):
@@ -206,6 +221,7 @@ async def _collect_owned(feed, *, clock):
         deadline_monotonic=time.monotonic() + policy.timeout_seconds,
     )
     result = await _read(request)
+    read_finished = time.monotonic()
     completed = clock()
     _clock(completed)
     if (
@@ -234,12 +250,32 @@ async def _collect_owned(feed, *, clock):
         regime=result.regime,
         account={"equity": 0, "cash": 0, "buying_power": 0, "high_watermark": 0},
     )
+    packet_digest = hashlib.sha256(packet.model_dump_json().encode()).hexdigest()
     sequence = feed.publish(
         request.request_id,
         packet,
         source=policy.model_dump(mode="json"),
         deadline_monotonic=request.deadline_monotonic,
     )
+    published = time.monotonic()
+    expected_calls = {
+        "get_accounts": 1,
+        "get_equity_quotes": 1,
+        "get_equity_tradability": (len(feed.symbols) + 9) // 10,
+        "get_equity_historicals": len(feed.symbols),
+    }
+    diagnostics = result.diagnostics.model_dump(mode="json") if result.diagnostics else None
+    observed = diagnostics is not None and all(
+        diagnostics[name]["attempted"] == diagnostics[name]["completed"] == count
+        for name, count in expected_calls.items()
+    )
+    if observed:
+        observed = (
+            sum(diagnostics[name]["elapsed_seconds"] for name in expected_calls)
+            <= diagnostics["collection_seconds"] + 0.000001
+            and diagnostics["collection_seconds"]
+            <= read_finished - (request.deadline_monotonic - policy.timeout_seconds) + 0.000001
+        )
     return {
         "status": "PUBLISHED",
         "mode": "FIXTURE_PAPER",
@@ -247,4 +283,26 @@ async def _collect_owned(feed, *, clock):
         "feed_sequence": sequence,
         "candidate_count": len(result.candidates),
         "live_enabled": False,
+        "evidence": {
+            "schema": "paper-market-read-evidence-v1",
+            "feed_id": request.feed_id,
+            "request_id": request.request_id,
+            "source_hash": result.source_hash,
+            "symbols": list(request.symbols),
+            "started_at": started.isoformat(),
+            "collected_at": result.collected_at.isoformat(),
+            "checked_at": completed.isoformat(),
+            "oldest_quote_at": min(c.quote.timestamp for c in result.candidates).isoformat(),
+            "packet_sha256": packet_digest,
+            "timeout_seconds": policy.timeout_seconds,
+            "read_and_reap_seconds": read_finished
+            - (request.deadline_monotonic - policy.timeout_seconds),
+            "validation_and_publication_seconds": published - read_finished,
+            "total_seconds": published - (request.deadline_monotonic - policy.timeout_seconds),
+            "expected_tool_calls": expected_calls,
+            "tool_observations": diagnostics,
+            "tool_observations_status": "OBSERVED" if observed else "UNVERIFIED",
+            "provider_acceptance": "UNVERIFIED",
+            "execution_authority": False,
+        },
     }
