@@ -14,7 +14,9 @@ reconciliation and independent exits. The first **M3 Degen path is fixture verif
 [completed setups, bounded exact contract selection and durable PAPER coordination](docs/DEGEN_PAPER.md).
 The [headless options schema/sample capture](docs/OPTIONS_READ_CAPTURE.md) now has
 fixture and native-process proof. The next gate is authenticated samples and exact
-normalized collection, followed by optional model selection.
+normalized collection. The [optional tool-less candidate model selector](docs/OPTIONS_MODEL_SELECTION.md)
+also has fixture/native proof, with durable costs and original admission ceilings;
+authenticated model acceptance remains open.
 The [second operator report](docs/SHADOW2_EVIDENCE.md) records the October 8 frozen
 synthetic results separately from new-engine acceptance.
 

@@ -148,5 +148,6 @@ entitlement. Bind candidate-first requests to the frozen symbols/expiry and reta
 held instrument, verify exact coverage and measured latency, then connect normalized
 publication to Degen and independent fast supervision. Missing metadata must produce
 HOLD, not inferred defaults. This capture alone does not close M3 provider acceptance.
-Optional bounded model selection, M4 observer/cohort evaluation and M5 actual isolated
-host/alerts/archive/source-host-loss proof remain separate. LIVE stays disabled.
+The [optional bounded model selector](OPTIONS_MODEL_SELECTION.md) has separate
+fixture/native proof; authenticated model acceptance, M4 observer/cohort evaluation
+and M5 actual isolated host/alerts/archive/source-host-loss proof remain open. LIVE stays disabled.

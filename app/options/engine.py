@@ -29,6 +29,7 @@ from app.options.lifecycle import (
 )
 from app.options.models import (
     OptionAccount,
+    OptionAdmission,
     OptionHolding,
     OptionLimits,
     OptionProposal,
@@ -326,7 +327,15 @@ class OptionExecution:
 
     @exact
     def prepare(
-        self, source_key, proposal, quote=None, underlying=None, *, now, origin="DETERMINISTIC"
+        self,
+        source_key,
+        proposal,
+        quote=None,
+        underlying=None,
+        *,
+        now,
+        origin="DETERMINISTIC",
+        ceiling=None,
     ):
         now = clock(now)
         proposal = OptionProposal.model_validate(proposal.model_dump(warnings=False))
@@ -349,9 +358,17 @@ class OptionExecution:
             "underlying": underlying.model_dump(mode="json") if underlying else None,
             "origin": origin,
         }
-        digest = fingerprint(
-            {"proposal": proposal, "quote": quote, "underlying": underlying, "origin": origin}
-        )
+        bound_inputs = {
+            "proposal": proposal,
+            "quote": quote,
+            "underlying": underlying,
+            "origin": origin,
+        }
+        if ceiling is not None:
+            ceiling = OptionAdmission.model_validate(ceiling.model_dump(warnings=False))
+            inputs["ceiling"] = ceiling.model_dump(mode="json")
+            bound_inputs["ceiling"] = ceiling
+        digest = fingerprint(bound_inputs)
         with self.journal.write() as db:
             self._control(db)
             old = db.execute(
@@ -385,6 +402,34 @@ class OptionExecution:
             except (ValueError, ExecutionBlocked) as exc:
                 reason = str(exc)
                 result = None
+            if ceiling is not None:
+                if (
+                    ceiling.outcome != "APPROVED"
+                    or ceiling.action != "OPEN_LONG"
+                    or proposal.action != "OPEN_LONG"
+                    or proposal.contract is None
+                    or ceiling.contract_id != proposal.contract.contract_id
+                    or ceiling.valid_until is None
+                    or not ceiling.approved_at <= now < ceiling.valid_until
+                    or min(
+                        ceiling.quantity,
+                        ceiling.limit_price,
+                        ceiling.entry_debit,
+                        ceiling.full_premium_loss,
+                    )
+                    <= 0
+                ):
+                    reason = "OPTION_ORIGINAL_ADMISSION_REQUIRED"
+                elif result is not None and result.outcome == "APPROVED":
+                    if any(
+                        getattr(result, field) > getattr(ceiling, field)
+                        for field in ("quantity", "limit_price", "entry_debit", "full_premium_loss")
+                    ):
+                        reason = "OPTION_ORIGINAL_ADMISSION_CEILING_EXCEEDED"
+                    else:
+                        result = result.model_copy(
+                            update={"valid_until": min(result.valid_until, ceiling.valid_until)}
+                        )
             output = {
                 "status": "REJECTED",
                 "reason": reason,

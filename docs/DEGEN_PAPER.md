@@ -2,7 +2,8 @@
 
 This is the first **M3 fixture implementation**, layered on the separate M2 local
 options owner. It does not complete authenticated option collection, deploy an
-options service, invoke a model or enable LIVE. The frozen deployed synthetic
+options service or enable LIVE. An [optional bounded model selector](OPTIONS_MODEL_SELECTION.md)
+now has separate fixture/native proof; its actual provider acceptance remains open. The frozen deployed synthetic
 experiment and existing equities services are unchanged.
 
 ## Delivered path
@@ -47,7 +48,10 @@ quote bound across its one or two frozen SPY/QQQ symbols.
 Only that exact shortlist may supply entry quotes. M1's deterministic governor
 admits each setup/contract against authoritative account/cost authority and actual
 session limits. Ordered first-approved selection is deterministic, not a model
-ranking, probability or return prediction. M2 prepares the fixed DAY limit intent,
+ranking, probability or return prediction. A new cohort may explicitly opt into
+the frozen tool-less selector on these same candidates. Its choice cannot change
+their authority; costs settle before fresh admission and original ceilings/expiry
+remain binding. M2 prepares the fixed DAY limit intent,
 then independently re-admits current evidence before its single native local-venue
 attempt. Quantity, full-premium funding, fees and maximum loss remain software-owned.
 
@@ -104,7 +108,8 @@ read-tool schemas and responses, with bounded native process/output/latency, exa
 source/universe/entitlement/metadata identity and held-contract coverage. This code
 accepts normalized fixture evidence; it does not guess Robinhood wire schemas or
 claim authenticated option reads. The legacy broker firewall has not been expanded.
-Then test the optional bounded tool-less model selector on exactly the same admitted
-candidates and account for actual usage. M4 observer/cohort evaluation, mixed
+The optional tool-less model selector now has local fixture/native proof on these
+same candidates, with durable costs and original approval ceilings. Authenticate
+its usage and latency before provider acceptance. M4 observer/cohort evaluation, mixed
 stock/options runtime integration and M5 actual host/alert/archive/source-loss
 acceptance remain open. Broker writes, review calls and LIVE are absent here.

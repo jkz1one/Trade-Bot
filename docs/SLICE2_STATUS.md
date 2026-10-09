@@ -1,5 +1,80 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## M3 optional candidate model selector: fixture proof, 2026-10-09 UTC
+
+[SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md), version 1.5, preserves the settled scope
+and milestones. [OPTIONS_MODEL_SELECTION.md](OPTIONS_MODEL_SELECTION.md) describes
+the delivered opt-in library API. Authenticated normalized collection still requires
+actual schema/sample artifacts; this independent model slice did not invent mappings.
+
+Added a frozen, tool-less candidate chooser to the separate Degen options PAPER
+owner. Only already admitted candidate IDs or HOLD are allowed; the model cannot
+supply contract, price, quantity, risk, invalidation, budget or deadline fields.
+Default deterministic selection and existing model-off cohort identities remain
+unchanged. Opt-in needs a new untraded population, explicit frozen cost/token/time
+policies and an absolute private model-key path. Supervision never reads the key.
+
+The installed fixed native child counts the exact prompt/schema/packet before one
+Responses generation, with no tools, retries, storage, streaming or background work.
+Minimal environment excludes broker credentials and mutable API origin; the official
+model origin is fixed. Bounded protocol, deadline/cancellation cleanup and independent
+parent-death watching prevent lingering workers. Request/packet/configuration binding
+and strict final-message parsing reject wrong lineage, fragments, tool output,
+refusal, incomplete output and invented IDs. All provider responses in tests are faked.
+
+Durable model admission precedes launch. Returned usage evidence is saved before
+settlement, charged on matching-model HOLD/rejection/late replies, and checked against
+exact input count and token ceilings. Unknown/wrong-model/unbound usage, interruption
+or failed receipt storage remains unresolved and blocks entry without automatic
+retry/fallback. Receipt identities are unique. Fresh sizing after cost settlement can
+reduce quantity. Original admission quantity, price, entry debit, full-premium funding
+and approval expiry remain upper bounds through model waiting and native dispatch.
+The wait also cannot cross the original five-minute slot or frozen process deadline.
+
+Protective management remains a separate fast deterministic path. A missing model
+key cannot prevent a held-position stop. Accepted orders remain unfilled until
+authoritative fill evidence arrives. No options service or actual broker feed was
+installed, and the old deployed synthetic experiment stays frozen.
+
+Fresh canonical/local/PR state matched `0b4521dbe7317159f8ec7d7eb4952459eed282c6`,
+tree `91e20556693bfd48c89538cfd017aa02b4ed67df`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR open/draft and checkout clean.
+
+Verification: **104 existing Degen/options lifecycle tests passed in 33.30 seconds**,
+warnings as errors. The initial new-test run had 11 failures from fixture assumptions
+about unfilled orders, supervision fields, enrollment and intercepting unrelated
+venue children; those fixtures were corrected. Review also found that selected-model
+evidence could mask a later execution-rejection reason. The merge order was fixed,
+current-clock admission restored and a concurrent-halt test added. The final **72
+new selector tests passed in 25.96 seconds**, warnings as errors. Actual owner SIGKILL
+left the model attempt unknown, retained interrupted opportunity evidence, released
+ownership and stopped its native child with watcher exit 99; restart did not replay.
+The native worker main used the real installed SDK with mocked HTTP transport.
+
+An earlier installed full run was deliberately interrupted for that final
+admission/report correction; it is not counted as completed verification.
+The final installed full suite outside the source checkout passed **all 1,757
+tests in 439.24 seconds**, warnings as errors. Installed native runtime/control/
+alert/checkpoint/option/capture/model entry points were exercised, with explicitly
+faked market/model provider behavior in their relevant tests.
+
+All **111 application Python files** match source, final wheel and installation.
+Final wheel SHA-256: `8d0976de0b8bf1131aef815e59b16e7a0523f5d498dfaeb58aae978225b5b942`.
+Scoped Ruff lint/format, installed compilation and `pip check` pass.
+**55 current continuation-document links** resolve; whitespace checks pass.
+
+No authenticated model/broker call, order review, broker write, target-host operation,
+LIVE enablement or deployed credential/experiment change occurred. Configured model
+rates remain estimates. Local fixture process proof is not provider latency, real
+billing, host namespace/boot behavior or independently retained recovery protection.
+
+**Next gate:** obtain actual discovery and bounded samples with
+[OPTIONS_READ_CAPTURE.md](OPTIONS_READ_CAPTURE.md), then implement the exact normalized
+candidate/held-contract collector. Actual read/model latency, usage and supervised
+sessions remain provider gates. M4 stored observer/cohort evaluation, mixed stock/options
+ownership, M5 isolated host/alert/off-host archive/source-loss acceptance, M6 explicit
+LIVE review/authorization and M7 Swing/Scope-specific acceptance remain open.
+
 ## M3 headless options schema/sample acquisition: fixture proof, 2026-10-09 UTC
 
 [SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md), version 1.4, retains the existing scope
