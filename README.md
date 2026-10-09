@@ -10,8 +10,9 @@ M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.
 The M2 local options PAPER lifecycle is implemented. Read
 [OPTIONS_EXECUTION.md](docs/OPTIONS_EXECUTION.md) for durable attempts, fills,
-reconciliation and independent exits. The next engineering slice is **M3: Degen
-candidates and the real option-read boundary**.
+reconciliation and independent exits. The first **M3 Degen path is fixture verified**:
+[completed setups, bounded exact contract selection and durable PAPER coordination](docs/DEGEN_PAPER.md).
+The next gate is the authenticated bounded options collector and optional model selector.
 The [second operator report](docs/SHADOW2_EVIDENCE.md) records the October 8 frozen
 synthetic results separately from new-engine acceptance.
 

@@ -1,7 +1,7 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.2. Adopted product direction and working delivery contract, 2026-10-09 UTC.
-M1 admission and M2 local lifecycle core are fixture verified; next is M3.
+Version 1.3. Adopted product direction and working delivery contract, 2026-10-09 UTC.
+M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 Scope and milestone order unchanged. Report capabilities and gates, not completion percentages.
 
 ## Goal and definition of completion
@@ -156,7 +156,8 @@ HOLD/error costs; do not switch the frozen legacy model as part of this work.
 M1 is fixture verified; [its implementation contract](OPTIONS_ADMISSION.md) records
 the offline API and limits. [M2 local lifecycle core](OPTIONS_EXECUTION.md) is fixture
 verified, with conservative regular-hours calendar and explicit receipt boundaries.
-**Next work is M3.** Each milestone
+The [first M3 Degen execution path](DEGEN_PAPER.md) has local fixture proof.
+**Next is the authenticated bounded options collector, then optional model selection.** Each milestone
 ends with reviewed code, meaningful tests, status proof, commit and branch push.
 Milestones are acceptance contracts, not fixed session or calendar promises.
 
@@ -279,7 +280,10 @@ Current milestone state: M0 research complete; **M1 fixture verified** with
 `app.options.models`, `app.options.governor` and `tests/test_option_admission.py`.
 **M2 local lifecycle core is fixture verified** with `app.options.engine`, its separate
 durable local venue and `tests/test_option_execution.py`. See [OPTIONS_EXECUTION.md](OPTIONS_EXECUTION.md)
-for proof and precise boundaries. M3–M7 are not delivered for options. Existing
+for proof and precise boundaries. **M3's completed-bar Degen/contract selection and
+durable PAPER coordination are fixture verified** with `app.options.degen`,
+`selection`, `coordinator` and `tests/test_degen_options.py`; see [DEGEN_PAPER.md](DEGEN_PAPER.md).
+M3 authenticated collection/model acceptance and M4–M7 are not delivered for options. Existing
 runtime services still execute equities only; local M2 is not an options deployment.
 Some underlying stock-engine/host procedures already exist and are reused, but do
 not mark an options milestone complete from that prior work. Report concrete
@@ -295,6 +299,7 @@ remain unestablished.
 - [Second printed operator report](SHADOW2_EVIDENCE.md); first report remains in status.
 - [M1 delivered options admission](OPTIONS_ADMISSION.md).
 - [M2 delivered local options lifecycle](OPTIONS_EXECUTION.md).
+- [First M3 Degen execution path and remaining collector gate](DEGEN_PAPER.md).
 - [Isolated runtime](PAPER_RUNTIME.md), [host acceptance](PAPER_HOST.md),
   [bounded model acceptance](PAPER_MODEL_ACCEPTANCE.md),
   [evidence checkpoints](EXECUTION_CHECKPOINTS.md) and

@@ -1,5 +1,63 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## First M3 Degen execution path: local fixture proof, 2026-10-09 UTC
+
+[SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md), version 1.3, keeps scope and milestone
+order. [DEGEN_PAPER.md](DEGEN_PAPER.md) describes delivered APIs and the remaining
+authenticated collector gate. This is a concrete Degen-to-order implementation,
+not a completed provider integration or options deployment.
+
+Added versioned completed-bar opening-range continuation, VWAP/trend pullback and
+observed failed-break reversal for frozen SPY/QQQ symbols. CALL and PUT setups need
+real supplied volume, directional VWAP and completed fifteen-minute confirmation;
+forming bars cannot vote. Missing, delayed, stale, gapped, duplicated, foreign or
+interpolated history blocks. Three adapted SignalFlow source blobs were rechecked
+against the pinned manifest. Rules are an explicit smaller adaptation, not the full
+SignalFlow strategy graph. Preceding-bar volume ratio is not historical same-slot RVOL.
+
+Bounded exact 0DTE metadata selection requires observed delta, option volume/open
+interest and complete supported contract identities. Stable shortlist ranking and
+quote capacity precede M1 deterministic admission. Selected evidence flows into M2
+fixed-intent prepare and fresh dispatch approval, followed by one native local-venue
+attempt. No model chooses size or receives broker tools.
+
+The owned coordinator freezes explicit strategy/selection policy before trading,
+claims one durable five-minute entry opportunity, retains inputs/HOLD/candidate/order
+evidence and prevents duplicate/concurrent attempts. Interrupted slots retain selected
+evidence, halt entry and never replay. Exact held/pending identity comes from the
+journal rather than the current chain. A separate fast supervision method can exit
+inside an already claimed entry slot. Stored reports perform no provider/model/order
+work. New tables remain part of paired restore fencing; stock defaults are unchanged.
+
+Fresh branch/local/PR state matched `cf2d9c84ab08e33eca5b81296f614599c820aa96`,
+tree `523e0faf38d7b804ec048e7db7d56bb603a75b66`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6` and PR #1 stays draft.
+
+Verification: **288 focused options tests passed in 33.32 seconds**, warnings as
+errors, including **41 new Degen cases**. A first focused run exposed inconsistent
+immediate/stored rejection serialization; production reporting now returns the same
+durable JSON outcome. Positive CALL/PUT fixtures prove all three setups, native PAPER
+entry, owned stops, fast in-slot exits, concurrent deduplication and interruption
+retention. The final installed-package full run outside the source checkout passed
+**all 1,635 tests in 418.03 seconds**, warnings as errors. It used installed native
+runtime/control/alert/checkpoint/option entry points and includes the repaired
+archive fixture. This is new full-run proof, separate from the accurately retained
+M2 failure and targeted retest below.
+
+All **105 application Python files** match source, wheel and installation. Final
+wheel SHA-256: `401ce412f6dc675ed93f85e208a674a132347613fed25bcabdde5c56e285cc3f`.
+Scoped Ruff lint/format, installed compilation, `pip check`, **41 current document
+links** and whitespace checks passed. No authenticated provider/model call, preview,
+broker write, deployment update or LIVE enablement occurred.
+
+**Next:** actual-schema authenticated options collector with bounded native
+process/output/latency and exact source/universe/entitlement/held-contract evidence;
+then optional tool-less model selection with actual cost receipts. M4 observer/cohort
+evaluation, mixed stock/options service integration, actual options host/namespace/
+boot/alert/archive/host-loss acceptance and future LIVE account/capital/release review
+remain open. No fabricated wire mapper, scheduler deployment or off-host protection
+is claimed. The old deployed SHADOW experiment remains frozen and separate.
+
 ## M2 durable local options PAPER lifecycle — 2026-10-09 UTC
 
 M1 admission and **M2 local lifecycle core are fixture verified**.

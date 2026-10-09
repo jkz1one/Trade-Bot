@@ -84,7 +84,14 @@ def fingerprint(value):
 class OptionJournal(ExecutionJournal):
     schema = "option-paper-execution-v1"
     ledger_type = OptionLedger
-    extra_tables = frozenset({"execution_option_decisions", "execution_option_receipts"})
+    extra_tables = frozenset(
+        {
+            "execution_option_decisions",
+            "execution_option_receipts",
+            "execution_option_strategy",
+            "execution_option_opportunities",
+        }
+    )
 
     def report(self, *, now=None):
         with self.read() as db:
