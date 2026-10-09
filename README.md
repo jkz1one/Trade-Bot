@@ -4,6 +4,12 @@ Small, auditable experiment for testing whether an autonomous reasoning trader c
 
 ## Current product direction
 
+Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
+rules, implementation milestones, acceptance gates and continuation discipline.
+The next engineering slice is **M1: option identity and deterministic admission**.
+The [second operator report](docs/SHADOW2_EVIDENCE.md) records the October 8 frozen
+synthetic results separately from new-engine acceptance.
+
 The user clarified the goal on 2026-10-09: **stocks and options, with eventual
 governed LIVE trading**, adapting SignalFlow's Degen/0DTE, Swing, Scope Wizard and UI.
 The [source-backed pivot research](docs/OPTIONS_LIVE_PIVOT_RESEARCH.md) records reuse,

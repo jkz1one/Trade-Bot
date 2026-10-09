@@ -1,5 +1,53 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Source of truth and second operator report — 2026-10-09 UTC
+
+[SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md), version 1.0, now owns current product
+scope, working engineering decisions, milestone dependencies and acceptance gates.
+The expanded goal is stocks and fully funded long calls/puts using one trader,
+bankroll, brokerage and position, adapting Degen/0DTE, Swing and exact SPXW Scope.
+Next work is **M1 option identity and deterministic admission**, then M2 durable
+options PAPER lifecycle. Model-independent exits, UI/data truth, actual host/provider
+acceptance and a reviewed live path have distinct gates. Swing/Scope follow on the
+same foundation without delaying a separately accepted first-family research canary.
+LIVE stays disabled and no real broker writes are authorized by this document change.
+
+Fresh GitHub matched branch/PR `a55b6bcf512669a8ebb0afa84fd271ff4deca1ad`, tree
+`9399594922eea2ba59a5759281fb0d1ff72e3af2`; main stayed
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 draft, checkout clean before edits.
+
+The operator supplied a 12-page second PDF, printed October 9 at 01:16 ET, describing
+the October 8 session. [SHADOW2_EVIDENCE.md](SHADOW2_EVIDENCE.md) retains aggregate
+findings, extraction limits and source identity. PDF SHA-256:
+`e5cd5ec7278cdced234f54080fb15593c0c3d4e6d8b7f5631c3935c23a468987`.
+This is supplied printed API evidence, not our authenticated fetch. Revision 52
+shows cycles 28–52, 23 HOLDs/one OPEN_LONG/one CLOSE, 24 attempted calls and no
+visible agent errors. Cycle 27 is outside the default window. Latest state is flat,
+no pending intent, zero unknown/unaccounted calls. Exact scheduler completeness
+still needs the separate worker/slot audit.
+
+A new synthetic XLE pair bought/sold 0.03051699 shares in cycles 44/51 after source
+proposals 43/50. Price profit is $0.0004482945831. The earlier XLV pair is unchanged.
+Cumulative price P&L is -$0.01191747402515, configured model cost $0.0281580, net
+equity $9.95992452597485, net return -0.4007547402515%; matching SPY return
+-0.453936060819%, net excess +0.0531813205675 percentage points. Incremental model
+cost is $0.0139332, versus visible-window receipts totaling $0.0134582; the $0.0004750
+difference cannot be attributed to a specific omitted receipt from this PDF.
+
+Decimal checks reconcile all fill notionals, pair/cumulative P&L, gross/net equity,
+return/excess and each visible usage charge. Rendered first/last pages were checked.
+Visible old-worker latency is 10.087–26.349 seconds, median 12.0435; it does not
+prove newer bounded model-process acceptance. Current collector source deliberately
+sets relative volume to None, explaining an observed missing confirmation input.
+Keep the old experiment frozen; new setup evidence belongs in the new population.
+Two trades and a small benchmark lead do not establish profitability.
+
+This is documentation/evidence work only, with no application/dependency/wheel,
+deployment, SignalFlow or provider change. No authenticated broker/model/market
+call or host access occurred. Prior application-suite and source-audit test results
+remain historical proof, not newly rerun or options acceptance. The old PAPER engine
+estimate remains approximately 89%; expanded options and LIVE readiness unassessed.
+
 ## Active goal correction and research — 2026-10-09 UTC
 
 The user's latest direction is stocks **and options**, adapting SignalFlow's Degen/

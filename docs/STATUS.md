@@ -1,5 +1,10 @@
 # Slice 1 status — 2026-09-08
 
+Historical Slice 1 checkpoint. Current product scope and delivery gates are in
+[SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md); current engineering/operator evidence is in
+[SLICE2_STATUS.md](SLICE2_STATUS.md). Do not use this archived checkpoint as current
+dependency, scheduling, options or deployment status.
+
 ## Implemented
 
 - Python/FastAPI/Jinja one-page application with SQLite persistence.

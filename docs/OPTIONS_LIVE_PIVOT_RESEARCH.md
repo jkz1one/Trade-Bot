@@ -1,5 +1,9 @@
 # Options and eventual LIVE pivot research
 
+The [source of truth](SOURCE_OF_TRUTH.md) now owns the current delivery order and
+completion gates. This document preserves the research rationale and primary
+sources. Its sequence below is the research recommendation, not a second roadmap.
+
 Reviewed 2026-10-09 UTC. Product direction: stocks **and options**, borrowing
 SignalFlow's Degen/0DTE, Swing and Scope Wizard work and UI, with eventual governed
 LIVE execution. This records the user's scope correction. Earlier stock-only
