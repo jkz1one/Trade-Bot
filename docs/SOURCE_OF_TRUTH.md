@@ -1,7 +1,8 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.1. Adopted product direction and working delivery contract, 2026-10-09 UTC.
-M1 offline admission is fixture verified; next is M2. Scope and milestone order unchanged.
+Version 1.2. Adopted product direction and working delivery contract, 2026-10-09 UTC.
+M1 admission and M2 local lifecycle core are fixture verified; next is M3.
+Scope and milestone order unchanged. Report capabilities and gates, not completion percentages.
 
 ## Goal and definition of completion
 
@@ -60,7 +61,7 @@ a blocker instead of quietly changing the plan or relabeling results.
 | --- | --- | --- |
 | Deployed `virtual-v1` | Frozen $10 synthetic stock experiment on release `de5dd1c7bd3a2d3b85a2d6bb7f624e0d3a3f9245`; operator provides regular-session decisions, usage and simulated fills | Real broker fills, options behavior, useful signal, newer engine acceptance or profitability |
 | Isolated execution engine | Durable fake-venue orders/model attempts, reconciliation, budgets, supervision, reviewed control/recovery, alerts, checkpoints and archive contracts implemented and tested locally | Actual target-host installation, authenticated full-universe/model evidence, independent archive retention or host-loss acceptance |
-| Options foundation | M1 exact contract identity and deterministic whole-contract admission implemented and fixture verified; no option execution implementation yet | Options runtime PAPER readiness, provider/host acceptance or live safety |
+| Options foundation | M1 admission and M2 durable local fixture lifecycle with whole fills, reconciliation, independent exits and explicit settlement implemented and fixture verified | Authenticated options integration, mixed runtime PAPER readiness, provider/host acceptance or live safety |
 | SignalFlow reuse | 60 pinned reference files audited; reusable strategy/UI concepts; draft management fixes distinguished from main | A ready live adapter, healthy deployed options feed or a replicated profitable strategy |
 
 The legacy $10 population remains untouched. New options PAPER execution uses a
@@ -153,7 +154,9 @@ HOLD/error costs; do not switch the frozen legacy model as part of this work.
 ## Milestones, dependencies and acceptance
 
 M1 is fixture verified; [its implementation contract](OPTIONS_ADMISSION.md) records
-the offline API and limits. **Next work is M2.** Each milestone
+the offline API and limits. [M2 local lifecycle core](OPTIONS_EXECUTION.md) is fixture
+verified, with conservative regular-hours calendar and explicit receipt boundaries.
+**Next work is M3.** Each milestone
 ends with reviewed code, meaningful tests, status proof, commit and branch push.
 Milestones are acceptance contracts, not fixed session or calendar promises.
 
@@ -274,13 +277,15 @@ separately from our own observations and record failures openly.
 
 Current milestone state: M0 research complete; **M1 fixture verified** with
 `app.options.models`, `app.options.governor` and `tests/test_option_admission.py`.
-M2–M7 are not delivered for options. The current runtime still executes equities
-only; M1 cannot submit, reserve or settle an option order.
+**M2 local lifecycle core is fixture verified** with `app.options.engine`, its separate
+durable local venue and `tests/test_option_execution.py`. See [OPTIONS_EXECUTION.md](OPTIONS_EXECUTION.md)
+for proof and precise boundaries. M3–M7 are not delivered for options. Existing
+runtime services still execute equities only; local M2 is not an options deployment.
 Some underlying stock-engine/host procedures already exist and are reused, but do
-not mark an options milestone complete from that prior work. The older isolated
-PAPER engine estimate remains approximately **89%**, excluding LIVE/profitability.
-Expanded options and LIVE readiness are unassessed. Show concrete completed gates
-and the next blocker instead of inventing a percentage for the expanded product.
+not mark an options milestone complete from that prior work. Report concrete
+delivered capabilities, their evidence level, and the next acceptance gate.
+Do not use engineering completion percentages. LIVE readiness and profitability
+remain unestablished.
 
 ## References and evidence checkpoint
 
@@ -289,6 +294,7 @@ and the next blocker instead of inventing a percentage for the expanded product.
 - [Latest engineering and historical operator status](SLICE2_STATUS.md).
 - [Second printed operator report](SHADOW2_EVIDENCE.md); first report remains in status.
 - [M1 delivered options admission](OPTIONS_ADMISSION.md).
+- [M2 delivered local options lifecycle](OPTIONS_EXECUTION.md).
 - [Isolated runtime](PAPER_RUNTIME.md), [host acceptance](PAPER_HOST.md),
   [bounded model acceptance](PAPER_MODEL_ACCEPTANCE.md),
   [evidence checkpoints](EXECUTION_CHECKPOINTS.md) and

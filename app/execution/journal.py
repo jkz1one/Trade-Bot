@@ -34,13 +34,17 @@ ALERT_KINDS = {
 
 
 class ExecutionJournal:
+    schema = SCHEMA
+    ledger_type = Ledger
+    extra_tables = frozenset()
+
     def __init__(self, path: str | Path, config: dict | None = None):
         self.path = Path(path).expanduser().resolve()
         self.writable = config is not None
         if config is None:
             with self.read() as db:
                 row = db.execute("SELECT config_json FROM execution_control WHERE id=1").fetchone()
-                if row is None or json.loads(row[0]).get("schema") != SCHEMA:
+                if row is None or json.loads(row[0]).get("schema") != self.schema:
                     raise ValueError("Not an execution rehearsal database")
             return
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -76,7 +80,7 @@ class ExecutionJournal:
                 "execution_market_service",
                 "sqlite_sequence",
             }
-            if tables - allowed:
+            if tables - (allowed | self.extra_tables):
                 raise ValueError("Execution rehearsal requires a separate database")
             # Individual statements preserve the surrounding BEGIN IMMEDIATE.
             for sql in (
@@ -123,13 +127,13 @@ class ExecutionJournal:
                 db.execute(
                     "ALTER TABLE execution_operator ADD COLUMN revoked INTEGER NOT NULL DEFAULT 0"
                 )
-            frozen = json.dumps({"schema": SCHEMA, **config}, sort_keys=True)
+            frozen = json.dumps({"schema": self.schema, **config}, sort_keys=True)
             control = db.execute("SELECT config_json FROM execution_control WHERE id=1").fetchone()
             if control is not None:
                 if control[0] != frozen:
                     raise ValueError("Execution rehearsal configuration is immutable")
             else:
-                ledger = Ledger(cash=config["capital"], high_watermark=config["capital"])
+                ledger = self.ledger_type(cash=config["capital"], high_watermark=config["capital"])
                 db.execute(
                     "INSERT INTO execution_control VALUES(1,?,?,0,NULL,NULL,'[]')",
                     (frozen, ledger.model_dump_json()),

@@ -1,5 +1,90 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## M2 durable local options PAPER lifecycle — 2026-10-09 UTC
+
+M1 admission and **M2 local lifecycle core are fixture verified**.
+[SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md), version 1.2, retains the adopted scope
+and milestone order. **Next: M3 Degen candidates and the real option-read boundary.**
+[OPTIONS_EXECUTION.md](OPTIONS_EXECUTION.md) describes the delivered API and limits.
+Engineering completion percentages are retired at the user's direction. Historical
+estimates below remain historical; current reporting uses capabilities and gates.
+
+Added `app.options.lifecycle`, `accounting`, `venue`, `process`, `worker` and
+`engine`. The options owner reuses journal transactions, paired restore fencing,
+lifetime ownership, native child cleanup, calendar and usage contracts, with a
+separate option schema/ledger. Stock defaults remain unchanged and stock readers
+reject the option schema. Frozen explicit fixture capital/limits/venue/population
+stay outside model authority; no existing deployed bankroll was reset or adopted.
+
+HOLD/rejections and fixed DAY-limit approvals retain their source, complete inputs
+and outcome. Fresh dispatch re-admission cannot increase original quantity/price/
+funding authority or renew the approval lease. SUBMITTING commits before the one
+native attempt. Invalid/lost acknowledgments, crashes, timeout, cancellation and
+interrupted ownership retain uncertainty/reservations and never replay. Actual
+SIGKILL proved restart recovery, lock release and orphan exit, with one accepted
+order retained and no duplicate submission.
+
+Whole partial fills retain exact contract/quote/size/price/fee/sequence evidence.
+FIFO cash/settled funds, premium basis, realized P&L and all fees reconstruct from
+complete immutable history. Sale proceeds require an explicit settlement receipt.
+Entry reserves worst-case one closing order fee per contract. Low-value one-contract
+catastrophe closes conserve cash without borrowing. Missing history, changed terms/
+IDs, bad quote/fill/receipt evidence, cash/basis mismatch and unsupported underlying
+exposure halt without replacing prior authority or assuming flatness.
+
+Original/tightened call/put invalidation, executable-bid premium catastrophe and
+fixed time/expiry exits operate without model judgment and survive restart/rebound.
+Unpriced/stale exposure remains owned and halted. Actual size-limited close progress
+can authorize a distinct remaining close; rejected/canceled/expired closes require
+review rather than automatic replacement. Native XNYS holiday/half-day behavior is
+clamped by exact supplied contract instants and frozen cutoffs. Explicit AM/PM cash
+settlement and worthless-expiry receipts are distinct from fills; clocks alone do
+not flatten. Scripted exercise-created stock/short exposure is preserved as rejected
+evidence, never permitted or exercised by the engine.
+
+Durable optional model attempts retain unknown costs across restart. Matching
+immutable usage/proposal receipts charge configured rates even on HOLD, reduce
+loss allowances and enforce frozen call/session/total budgets. These are fixture
+receipts, not actual model calls or provider billing proof.
+
+Fresh pre-edit branch/local/PR state matched
+`b67e4f1a89418608a58205cbfc02fa99b7f39bc0`, tree
+`57e52f5c1b014e2563236f91573a16cbb07eeef3`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR open/draft and checkout clean.
+
+Verification: **331 focused options/shared stock journal/restore/process tests passed
+in 51.70 seconds** before four final additional cases. The final installed-package
+run outside the source checkout executed **1,594 tests: 1,593 passed and one existing
+archive TLS fixture failed in 432.77 seconds**, warnings as errors. All **63 new
+options lifecycle tests passed** in that run. The archive fixture sent a large body
+after an incomplete-admission retry was already rejected, racing the intentional
+connection close. The repaired fixture sends the same authenticated identity/length
+headers and reads the early 409 without streaming the rejected body; it still proves
+SIGKILL retention, no overwrite and distinct recovery upload. All **44 installed
+archive receiver tests passed in 20.32 seconds**, warnings as errors. No archive
+production change was needed. The initial full run is not described as a clean
+full-suite pass; unaffected tests were not repeated after this test-only repair.
+
+All **102 application Python files** match source, final wheel and installation.
+Wheel SHA-256:
+`764e0ca2a2425cb3e1fefaa1c2a36f1a667bdfde960a7e509805767b4a6d3da3`.
+Scoped Ruff lint/format, compilation, installed `pip check`, **37 current document
+links** and staged whitespace passed. Native tests use installed entry points and
+the option child uses fixed `python -I -m app.options.worker` with a stripped
+environment. No provider/account/model call, preview, broker write or deployment
+operation occurred.
+
+Remaining gates: authenticated exact option universe/source/entitlement/latency and
+model usage evidence; mixed stock/options selector and service/observer integration;
+actual options host namespace/boot/lifecycle and independent alert/archive/host-loss
+acceptance; Swing overnight and authentic Scope/SPXW session/cutoff/feed acceptance;
+reviewed broker/account/capital/loss configuration and explicit future LIVE-write
+authorization. The local options calendar is a conservative XNYS regular-hours
+intersection, not broker/CBOE acceptance. Existing equity service/control/alert/
+checkpoint tools are not options runtime adapters. Old deployed SHADOW stays frozen;
+its worker/slot audit and more sessions remain separate. LIVE disabled, main untouched,
+PR #1 draft and profitability unestablished.
+
 ## M1 offline options admission — 2026-10-09 UTC
 
 M1 is **fixture verified**. [SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md), version 1.1,

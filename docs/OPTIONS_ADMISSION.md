@@ -4,8 +4,9 @@
 options milestone. This is a pure PAPER calculation over supplied immutable inputs.
 It has no database, model, provider, credential, broker tool or dispatch capability.
 The stock engine and frozen `virtual-v1` deployment do not call it. It cannot trade
-options yet. [SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md) owns the delivery sequence;
-next is M2, durable option PAPER execution.
+options itself. [SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md) owns the delivery sequence;
+M2's separate durable local PAPER lifecycle now wraps this API; see
+[OPTIONS_EXECUTION.md](OPTIONS_EXECUTION.md). The pure governor remains tool-less.
 
 ## Inputs and identity
 
@@ -76,15 +77,15 @@ and the entry cutoff. A session window is supplied reviewed evidence, not a gues
 weekday or an actual calendar integration. No option is admitted after last trading,
 including an AM contract whose last trading session is already past.
 
-## Execution boundary and next slice
+## Execution boundary
 
 An `OptionAdmission` is an offline result, never a receipt or reusable dispatch
-authority. M2 must atomically persist frozen policy, proposal, complete evidence,
-approval and reservations; independently reconstruct authoritative account truth;
-and re-admit fresh evidence before any fixture attempt. It must preserve original
+authority. The [M2 local lifecycle](OPTIONS_EXECUTION.md) now persists frozen policy,
+proposal, complete evidence, approval and reservations; independently reconstructs authoritative account truth;
+and re-admits fresh evidence before any fixture attempt. It preserves original
 invalidation, whole partial fills, unknown attempts and costs, model-independent
-exit requirements, exact calendar/cutoff/settlement behavior and authoritative
-reconciliation. Cash settlement and exercise-created exposure are not implemented
+exit requirements, conservative calendar/explicit cutoff and settlement receipts,
+and authoritative reconciliation. Cash settlement and exercise-created exposure are not implemented
 by accepting their identity metadata here.
 
 There is no options runtime enrollment, strategy/model schema wiring, actual option

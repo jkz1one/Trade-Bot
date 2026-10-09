@@ -79,7 +79,16 @@ def local_server(a, *, timeout_seconds=2):
             assert not thread.is_alive()
 
 
-def request(a, *, method="PUT", body=b"private opaque bytes", pin=None, headers=None, path=None):
+def request(
+    a,
+    *,
+    method="PUT",
+    body=b"private opaque bytes",
+    pin=None,
+    headers=None,
+    path=None,
+    send_body=True,
+):
     pin = pin or hashlib.sha256(body).hexdigest()
     metadata = {"Authorization": "Bearer " + TOKEN}
     if method == "PUT":
@@ -98,7 +107,7 @@ def request(a, *, method="PUT", body=b"private opaque bytes", pin=None, headers=
         client.request(
             method,
             path or "/v1/checkpoints/" + pin,
-            body=body if method == "PUT" else None,
+            body=body if method == "PUT" and send_body else None,
             headers=metadata,
         )
         response = client.getresponse()
@@ -463,7 +472,9 @@ def test_native_sigkill_retains_incomplete_admission_releases_lease_and_allows_d
     with ArchiveStore(a.root) as store:
         assert store.report()["objects"] == [{"checkpoint_sha256": pin, "status": "INCOMPLETE"}]
     with native_server(a):
-        assert request(a, body=body)[0] == 409
+        # An incomplete admission is rejected from headers without draining the
+        # upload. Sending 128 KiB first races that intentional connection close.
+        assert request(a, body=body, send_body=False)[0] == 409
         assert request(a, body=b"distinct recovery object")[0] == 201
         assert target.read_bytes() == retained
 

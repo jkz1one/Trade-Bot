@@ -8,7 +8,10 @@ Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative g
 rules, implementation milestones, acceptance gates and continuation discipline.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.
-The next engineering slice is **M2: durable options PAPER lifecycle**.
+The M2 local options PAPER lifecycle is implemented. Read
+[OPTIONS_EXECUTION.md](docs/OPTIONS_EXECUTION.md) for durable attempts, fills,
+reconciliation and independent exits. The next engineering slice is **M3: Degen
+candidates and the real option-read boundary**.
 The [second operator report](docs/SHADOW2_EVIDENCE.md) records the October 8 frozen
 synthetic results separately from new-engine acceptance.
 
@@ -17,13 +20,13 @@ governed LIVE trading**, adapting SignalFlow's Degen/0DTE, Swing, Scope Wizard a
 The [source-backed pivot research](docs/OPTIONS_LIVE_PIVOT_RESEARCH.md) records reuse,
 current broker capabilities, profitability evidence limits and the ordered delivery
 queue. Exact option contracts and deterministic whole-contract admission now exist
-as an offline PAPER module. Existing runtime support remains equities PAPER/SHADOW;
-options execution is not implemented and LIVE stays disabled. The deployed $10
+as an offline PAPER module, with a separate durable local options fixture engine.
+Existing deployed/runtime service support remains equities PAPER/SHADOW;
+authenticated options integration remains open and LIVE stays disabled. The deployed $10
 synthetic experiment remains frozen and separate.
 
-The approximately 89% estimate applies only to the older isolated PAPER equities
-engine. Expanded options and LIVE readiness are unassessed; research does not advance
-their implementation or close target-host/provider/recovery acceptance gates.
+Progress is reported as delivered capabilities, evidence and remaining acceptance
+gates. Local tests do not close target-host/provider/recovery or LIVE gates.
 
 ## PAPER
 
