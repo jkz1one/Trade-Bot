@@ -1,5 +1,72 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## M3 headless options schema/sample acquisition: fixture proof, 2026-10-09 UTC
+
+[SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md), version 1.4, retains the existing scope
+and milestone order. [OPTIONS_READ_CAPTURE.md](OPTIONS_READ_CAPTURE.md) supplies
+the operator procedure and exact limits. The normalized Degen data mapper is still
+pending actual authenticated schemas/responses; acquisition is evidence only.
+
+Added a separate fixed six-tool options/equity market-read gateway, SHA-256 metadata
+pinning and whole-plan input-schema validation before the first request. Schema
+drift, missing inputs, contradictory annotations, external references, invalid
+arguments, tool errors and oversized/invalid advertised outputs fail closed.
+Missing output schemas can yield explicitly unvalidated raw samples for review;
+they never imply normalized/real-time/complete market evidence. Existing broker
+firewalls are unchanged; review, placement, cancellation, exercise, account/order/
+position management and model tools are absent from the new capability.
+
+Discovery and up-to-eight-call acquisition use the installed fixed native worker,
+isolated imports, stripped environment, bounded stdin/stdout and at-most-30-second
+deadline. Current-owner private existing OAuth authorization is reused headlessly;
+refresh persistence is not a broker write. A capture-only OAuth-path lease remains
+held through cancellation/termination cleanup; other clients/hosts still require
+exclusive credential management. Native parent-death/deadline watching prevents an
+orphaned provider child from continuing after owner loss.
+
+The CLI exclusively creates a private artifact before collection, flushes an
+INCOMPLETE admission and records completed or sanitized failed evidence. Existing
+files/symlinks are rejected; console output never echoes credentials/arguments/raw
+results. Ordinary worker errors retain a successful prefix; hard death can lose an
+unreturned prefix or leave incomplete/partial JSON. Every artifact explicitly has
+no execution authority and no verified normalized data. Declared symbols/instrument
+IDs are intended scope, not proof that raw requests/responses match that universe.
+No automatic feed publication, model invocation, order action, polling or deployment
+is wired to this evidence command.
+
+Fresh canonical/local/PR state matched `e65585b8efbc660820905d812be7eea31d155716`,
+tree `f175500369ce1db71f9f9537d7022a1c5d925da3`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR open/draft and checkout clean.
+
+Verification: **166 focused capture/legacy market/gateway/client/Degen tests passed
+in 16.76 seconds**, warnings as errors, including **50 new capture cases**. Native
+discovery and pinned capture, uncancelable read deadline, cancellation/reaping and
+actual parent SIGKILL/orphan exit were exercised with explicit fake clients. The
+SIGKILL child exited with the parent-death watcher code 92, not an assumed timeout.
+Private admission-before-read, no overwrite, reviewed pin failure, partial evidence,
+safe console output and unchanged legacy denies have proof. The final installed
+full run outside the source checkout passed **all 1,685 tests in 415.23 seconds**,
+warnings as errors. Installed native runtime/control/alert/checkpoint/option/capture
+entry points were used; provider behavior in capture cases was explicitly faked.
+
+All **109 application Python files** match source, final wheel and installation.
+Wheel SHA-256: `9d2e72022d5079e284f764befe72748c11840dce323be1ef1db1928daf744cbb`.
+Scoped Ruff lint/format, installed compilation, `pip check`, **46 current document
+links**, installed isolated CLI help and whitespace checks pass. `jsonschema` is
+now an explicit dependency; the installed MCP SDK already requires it.
+
+No authenticated Robinhood/model call, preview, broker write, target-host operation
+or deployed OAuth/experiment change occurred. Public read-tool documentation does
+not replace authentic schemas, exact expiry/deliverable/Greek/entitlement/coverage
+evidence or observed provider latency. Local captures are not off-host protection.
+
+**Next gate:** operator discovery and bounded actual samples using the documented
+installed command, then an exact normalized mapper and candidate/held-contract
+collector that can publish usable Degen/fast-supervision evidence. Optional governed
+model selection, M4 observer/cohort evaluation, mixed stock/options runtime and M5
+actual namespace/boot/alerts/archive/source-host-loss acceptance remain open. M6 LIVE
+review/authorization and M7 Swing/Scope-specific acceptance remain future gates.
+
 ## First M3 Degen execution path: local fixture proof, 2026-10-09 UTC
 
 [SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md), version 1.3, keeps scope and milestone

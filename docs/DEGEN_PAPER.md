@@ -95,7 +95,11 @@ durable HOLD, concurrent deduplication, frozen policy, cancellation and interrup
 restart without replay. Full installed-package results are recorded in
 [SLICE2_STATUS.md](SLICE2_STATUS.md).
 
-**Next M3 gate:** implement the isolated authenticated options collector from actual
+The [private headless schema/sample acquisition](OPTIONS_READ_CAPTURE.md) now has
+fixture/native proof and an operator procedure. It produces evidence only and is not
+a normalized feed or deployment.
+
+**Next M3 gate:** obtain actual artifacts and implement normalized options collection from actual
 read-tool schemas and responses, with bounded native process/output/latency, exact
 source/universe/entitlement/metadata identity and held-contract coverage. This code
 accepts normalized fixture evidence; it does not guess Robinhood wire schemas or
