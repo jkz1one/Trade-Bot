@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.5. Adopted product direction and working delivery contract, 2026-10-09 UTC.
+Version 1.6. Adopted product direction and working delivery contract, 2026-10-09 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 Scope and milestone order unchanged. Report capabilities and gates, not completion percentages.
 
@@ -159,7 +159,9 @@ verified, with conservative regular-hours calendar and explicit receipt boundari
 The [first M3 Degen execution path](DEGEN_PAPER.md) has local fixture proof.
 The [headless options schema/sample acquisition](OPTIONS_READ_CAPTURE.md) is fixture verified.
 The [optional candidate model selector](OPTIONS_MODEL_SELECTION.md) also has fixture/native
-proof. **Next is authenticated schema/sample evidence and exact normalized collection,
+proof. The [first M4 stored options observer](OPTIONS_OBSERVER.md) has fixture/native
+proof; browser visual acceptance and matched cost/benchmark/cohort evaluation remain open.
+**Next is authenticated schema/sample evidence and exact normalized collection,
 with actual read/model usage and latency acceptance.** Each milestone
 ends with reviewed code, meaningful tests, status proof, commit and branch push.
 Milestones are acceptance contracts, not fixed session or calendar promises.
@@ -290,8 +292,11 @@ Its separate headless schema/sample capture also has fixture/native process proo
 see [OPTIONS_READ_CAPTURE.md](OPTIONS_READ_CAPTURE.md). It produces evidence only,
 not an execution feed. [Optional bounded model selection](OPTIONS_MODEL_SELECTION.md)
 also has fixture/native proof, including durable usage, HOLD and original admission
-ceilings. M3 authenticated normalized collection/model acceptance and
-M4–M7 are not delivered for options. Existing
+ceilings. The [first M4 stored observer](OPTIONS_OBSERVER.md) has fixture/native proof
+for opportunities, exact positions, management, order/fill distinctions and unknown
+costs. M4 browser visual acceptance and full economic/cohort evaluation remain open.
+M3 authenticated normalized collection/model acceptance and M5–M7 are not delivered
+for options. Existing
 runtime services still execute equities only; local M2 is not an options deployment.
 Some underlying stock-engine/host procedures already exist and are reused, but do
 not mark an options milestone complete from that prior work. Report concrete
@@ -310,6 +315,7 @@ remain unestablished.
 - [First M3 Degen execution path and remaining collector gate](DEGEN_PAPER.md).
 - [M3 private schema/sample acquisition and operator procedure](OPTIONS_READ_CAPTURE.md).
 - [M3 optional candidate model selection and cost authority](OPTIONS_MODEL_SELECTION.md).
+- [First M4 private stored observer and remaining acceptance](OPTIONS_OBSERVER.md).
 - [Isolated runtime](PAPER_RUNTIME.md), [host acceptance](PAPER_HOST.md),
   [bounded model acceptance](PAPER_MODEL_ACCEPTANCE.md),
   [evidence checkpoints](EXECUTION_CHECKPOINTS.md) and

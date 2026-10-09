@@ -17,6 +17,10 @@ fixture and native-process proof. The next gate is authenticated samples and exa
 normalized collection. The [optional tool-less candidate model selector](docs/OPTIONS_MODEL_SELECTION.md)
 also has fixture/native proof, with durable costs and original admission ceilings;
 authenticated model acceptance remains open.
+The [separate private stored options observer](docs/OPTIONS_OBSERVER.md) now shows
+opportunities, exact positions, orders versus fills, management and cost uncertainty.
+It is read-only local fixture proof; browser visual acceptance and matched economic
+evaluation remain open.
 The [second operator report](docs/SHADOW2_EVIDENCE.md) records the October 8 frozen
 synthetic results separately from new-engine acceptance.
 

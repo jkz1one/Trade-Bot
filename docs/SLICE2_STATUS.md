@@ -1,5 +1,70 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## First M4 stored options observer: fixture/native proof, 2026-10-09 UTC
+
+[SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md), version 1.6, retains the settled goal,
+rules and milestone order. [OPTIONS_OBSERVER.md](OPTIONS_OBSERVER.md) documents the
+new separate authenticated read-only app and installed loopback CLI. It consumes
+existing options journal evidence without opening an execution owner, attaching
+venue/model authority or initializing/recovering a population.
+
+The dashboard displays stored opportunities and HOLDs, admitted exact contracts and
+ceilings, locked owned positions, original/tightened invalidation, retained exit
+requirements, order attempts versus authoritative local fixture fills, known model
+costs and unresolved usage. Current-position evidence is independent of history
+pagination. Degen enrollment and model/setup versions are visible; Swing/Scope stay
+explicitly unimplemented. Worker/session/release remain unknown and restore authority
+is explicitly not checked. Local alerts do not imply independent options delivery.
+
+Each bounded report reads a single committed read-only SQLite snapshot. Private
+schema/population binding, file identity, cooperative deadline and capacities reject
+unusable sources without adopting or repairing them. Missing files yield EMPTY and
+no fabricated zero/flat/healthy state. Latest exact stored bids need qualifying
+metadata, source/timestamps/entitlement and enough observed size; a newer invalid
+or conflicting quote cannot reuse an older mark. Unknown orders/account evidence
+and reconciliation issues suppress equity; unknown model costs suppress the
+after-cost estimate. Exit/data/host costs and matched SPY/cash/model-off/on cohort
+evaluation remain explicitly unimplemented.
+
+Fresh GitHub/local/PR state matched `8ab66cca80d02cb3183ab4d8025359a645939442`,
+tree `677abc455069f4d784c5c539d5cb311fb6296114`; main was
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR open/draft and checkout clean.
+
+Verification: **85 focused options/legacy web tests passed in 9.16 seconds**, warnings
+as errors, including 53 new observer cases. The initial new-test run had two fixture
+failures: Decimal presentation precision and unvalidated string fields introduced
+by a fixture model-copy update. Both fixtures were corrected. Repeated authenticated
+API/HTML reads preserve journal, authority, venue and model-key bytes; forbidden
+execution/model/venue entry points are never called. Concurrent writes do not mix
+report revisions, and interrupted opportunities remain interrupted without recovery.
+
+The final installed full suite outside the source checkout passed **1,810 tests in
+438.47 seconds**, warnings as errors, including native execution/control/alert/
+checkpoint/options/capture/model regressions with faked provider behavior.
+All **114 application Python files plus the observer template** match source, wheel
+and installation. Wheel SHA-256:
+`13dd4aaf4d097d5e7f65e0cb8b8db01aa0f7d5cf5426c2d828d0622a067638fa`.
+Actual installed `-I` observer CLI HTTP checks passed health, unauthenticated 401,
+authenticated EMPTY, no database creation, clean shutdown and no access-log/secret
+output. Scoped Ruff lint/format, installed compilation, `pip check`, 87 local
+documentation links and whitespace checks passed.
+
+**Browser visual acceptance remains open.** The official browser-binary download
+returned an unusable empty archive; the remote browser could not reach the local
+fixture-only loopback preview. No rendered desktop/mobile proof is claimed. The
+preview server was stopped. Responsive CSS and server-rendered page branch tests
+do not substitute for visual acceptance.
+
+No authenticated broker/model provider call, order review, broker write, host
+operation, service/Caddy install, LIVE enablement or deployed experiment change
+occurred. This is the first M4 stored-observer capability, not completion of M4 or
+options deployment. **Next independent work:** point-in-time matched economic
+evaluation with explicit SPY/cash/model-off/on comparisons and complete cost
+uncertainty. Authenticated schema/samples and exact normalized collection remain
+M3 provider gates. Mixed stock/options ownership, M4 visual acceptance, M5 isolated
+host/independent alert/off-host restore/source-loss proof, M6 explicit LIVE review
+and authorization, and M7 Swing/Scope-specific acceptance remain open.
+
 ## M3 optional candidate model selector: fixture proof, 2026-10-09 UTC
 
 [SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md), version 1.5, preserves the settled scope

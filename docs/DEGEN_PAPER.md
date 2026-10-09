@@ -83,7 +83,9 @@ values, not a newly selected live trading configuration.
    at the accepted supervision cadence even when entry logic is idle or blocked.
 4. `report()` reads stored evidence only. It cannot collect data, invoke a model,
    supervise or submit. It returns the latest 100 durable cycles with truthful
-   fixture mode. It is an API foundation for M4, not a delivered dashboard.
+   fixture mode. The [separate stored observer](OPTIONS_OBSERVER.md) now consumes
+   journal evidence without opening this coordinator. Its dashboard has local
+   fixture/native proof; browser visual and full economic acceptance remain open.
 
 On reopening, use exactly the same policies with `create=False`. Policy changes,
 reenrollment and adopting an already traded population are rejected. Strategy and
