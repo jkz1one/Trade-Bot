@@ -67,6 +67,8 @@ actual off-host/host-failure verification remain pending; deployed SHADOW backup
 The standalone [native TLS archive receiver](docs/CHECKPOINT_ARCHIVE.md) provides
 private bounded append-only storage, durable receipts and original-byte retrieval.
 It is opt-in, independently provisioned and not installed on the trader host.
+Its separate [archive host service](docs/CHECKPOINT_ARCHIVE_HOST.md) supplies reviewed
+UID/storage/credential boundaries and bounded restart/shutdown without trader coupling.
 Inspection/staging bind the exact extracted envelope bytes to the independent pin
 before SQLite validation, rejecting in-place changes between scanning and extraction.
 An opt-in private capture catalog now freezes source identity and capacity, preserves

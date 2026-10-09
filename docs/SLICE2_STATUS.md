@@ -50,6 +50,68 @@ Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticate
 collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
 
+## Independent archive service lifecycle — 2026-10-09 UTC
+
+Fresh GitHub matched branch/PR head `d8e3eaca5b12a334b4816bdc8aa3d8578cc33470`
+and source tree `387274cea769e1add362af567c0b7960f2fee5c6`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 draft and checkout clean.
+
+The implemented archive receiver lacked a reviewed independent host lifecycle.
+`deploy/archive/trade-bot-archive.service` now supplies a separate `tradebot-archive`
+UID/group and installed isolated interpreter, only the preinitialized object store
+writable, and an unconditional read-only archive credential-root mask with just the
+receiver directory bound back read-only. Additional optional PAPER/SHADOW path blocks
+do not replace actual namespace testing. No unit is coupled to the trader services.
+No hooks initialize/adopt/reset state, upload, prune, report, repair or restore authority.
+
+The original native 30-second shared socket budget stays unchanged. SIGTERM drains
+current work before releasing the lease, with a 45-second host cgroup stop bound;
+hardware/filesystem stalls can still reach final kill. Ten-second failure restart
+and three starts per five minutes bound process retries. Restart only reopens the
+same store/listener and cannot replay a client upload or replace incomplete evidence.
+Missing provisioning conditions can skip startup and are not readiness evidence.
+The source unit's explicit `archive.invalid` hostname is a placeholder requiring
+reviewed substitution to the actual independent TLS origin before installation.
+No secret value is in unit arguments/environment; user/storage/TLS/quota/encryption/
+network provisioning remains explicit and separate from this repository change.
+
+All **162 installed-package archive/receiver/checkpoint/catalog/durability cases
+passed in 87.10s**, warnings treated as errors, outside the checkout against the
+unchanged verified wheel. Seven new service cases exercise the real unit-derived
+command with only interpreter, disposable paths and loopback origin/listener/port
+substitutions; the production 30-second budget remains intact. Native SIGTERM drains
+an admitted stalled upload within the 45-second bound; actual SIGKILL/restart retains
+its original incomplete bytes, releases ownership and permits a later distinct
+upload. Complete object bytes/inode and authenticated retrieval survive both paths;
+duplicate native owners fail without replacing evidence. Missing store/token/key
+cannot initialize/adopt state. Native systemd parser validation passes with only
+local executable/user/group substitutions. None of this imposes systemd cgroups
+or namespaces on the workspace processes.
+
+The final seven installed service cases also passed in **32.07s**, warnings treated
+as errors, after a test-only missing-key path adjustment preserved the shared TLS
+fixture. Final staged test/unit bytes match source. The initial seven source cases
+passed in 32.05s; the adjusted three missing-provisioning source cases passed in 0.45s.
+
+The existing 95 application source/wheel/installed files remain identical. No new
+application release or dependency change is needed; the prior full installed suite
+remains **1,340 passing cases in 348.79s**, not a newly claimed 1,347-case full run.
+Wheel SHA-256 remains
+`ae3f8b7fe34d13b54718c7aabe66f5bc81dc3fac9ff0d1c7d07126f4ab214bd2`.
+Scoped new-test Ruff lint/format, compilation, dependency pins, pip check, local
+document links and whitespace passed.
+
+The [archive host procedure](CHECKPOINT_ARCHIVE_HOST.md) describes the exact reviewed
+paths, origin substitution, boot/failure/stop and authenticated recovery evidence.
+No archive/trader host was accessed, unit installed/enabled, credential requested,
+remote object uploaded or deployment changed. Reports retain off_host_protection
+UNVERIFIED and execution_authority false. Actual independent archive namespace/
+cgroup/boot/storage/retention/retrieval and real source-host-loss still need operator
+evidence, alongside target PAPER host acceptance, authenticated market/model usage/
+billing, independent alerts and the frozen worker/slot audit. LIVE stays disabled;
+engine completeness remains approximately **89%**, excluding LIVE readiness and
+demonstrated profitability.
+
 ## Measured bounded model-process evidence — 2026-10-09 UTC
 
 Fresh GitHub matched branch/PR head `63d6f059e128d8c58782f2849a4a2291fa6c2767`

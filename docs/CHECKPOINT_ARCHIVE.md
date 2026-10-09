@@ -21,8 +21,10 @@ TLS key passwords are rejected.
 The receiver does not create users, issue certificates, change firewalls, install
 systemd units or accept TLS termination/forwarded authority from a proxy. Do not add
 it to frozen SHADOW or share its UID/secrets with trader, model, market, operator or
-alert roles. Use a separately reviewed host lifecycle, with only its archive
-directory/token/TLS material available. Initialize once as the archive UID; the
+alert roles. The optional [independent archive service](CHECKPOINT_ARCHIVE_HOST.md)
+provides a reviewed lifecycle specification with only its archive directory and
+receiver token/TLS material available. Actual host installation/acceptance remains
+separate. Initialize once as the archive UID; the
 parent must already exist:
 
 ```bash
