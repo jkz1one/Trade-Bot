@@ -1,5 +1,13 @@
 # SignalFlow reuse assessment
 
+2026-10-09 scope correction: the user wants options as well as stocks and eventual
+governed LIVE execution. The historical stock-only restrictions and recommendation
+below apply to the frozen original experiment. They no longer define the expanded
+product goal. Read [OPTIONS_LIVE_PIVOT_RESEARCH.md](OPTIONS_LIVE_PIVOT_RESEARCH.md)
+for the fresh pinned Degen/0DTE, Swing, Scope and UI audit, broker/data research,
+test exception and concrete options implementation queue. Current application
+capabilities and LIVE-disabled behavior remain unchanged by this documentation.
+
 Reviewed 2026-10-05 UTC. This is an implementation assessment, not a new master
 roadmap, an integration, or approval to deploy/change SignalFlow.
 

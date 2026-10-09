@@ -2,6 +2,21 @@
 
 Small, auditable experiment for testing whether an autonomous reasoning trader can add value while deterministic software owns authority and risk.
 
+## Current product direction
+
+The user clarified the goal on 2026-10-09: **stocks and options, with eventual
+governed LIVE trading**, adapting SignalFlow's Degen/0DTE, Swing, Scope Wizard and UI.
+The [source-backed pivot research](docs/OPTIONS_LIVE_PIVOT_RESEARCH.md) records reuse,
+current broker capabilities, profitability evidence limits and the ordered delivery
+queue. The next slice is broker-neutral exact option contracts and deterministic
+whole-contract admission. Existing application support remains equities PAPER/SHADOW;
+options execution is not implemented and LIVE stays disabled. The deployed $10
+synthetic experiment remains frozen and separate.
+
+The approximately 89% estimate applies only to the older isolated PAPER equities
+engine. Expanded options and LIVE readiness are unassessed; research does not advance
+their implementation or close target-host/provider/recovery acceptance gates.
+
 ## PAPER
 
 `main` is the known-good deterministic PAPER core.

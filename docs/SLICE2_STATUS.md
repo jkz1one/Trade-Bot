@@ -1,5 +1,46 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Active goal correction and research — 2026-10-09 UTC
+
+The user's latest direction is stocks **and options**, adapting SignalFlow's Degen/
+0DTE, Swing, Scope Wizard and UI toward eventual governed LIVE trading. Historical
+stock-only continuation rules describe the frozen original experiment. Current
+code is still equities PAPER/SHADOW with LIVE disabled and no broker write adapter.
+See [OPTIONS_LIVE_PIVOT_RESEARCH.md](OPTIONS_LIVE_PIVOT_RESEARCH.md) for the new
+implementation queue and evidence boundaries. Continue next with broker-neutral
+exact option contracts, Decimal full-premium limits and whole-contract deterministic
+admission, then options PAPER lifecycle and candidate/UI adaptation. Avoid another
+generic infrastructure slice without a demonstrated missing requirement.
+
+Fresh GitHub verified branch/PR head `607ab623191e70716a3086d5a967571f60d460ce`,
+tree `678c4251ea55e26ec28bb3db8d6d9f0ef1850db5`, unchanged main
+`b5359aaf396e692d2142d7e02908f1544e045ee6` and draft PR #1 before edits.
+SignalFlow main remains `f9eaf2c1b5d13dca287ee7138126883065b00395`.
+Sixty selected reference documents/modules/components/tests match canonical Git
+blob hashes; the [manifest](research/signalflow_options_sources.json) separately
+records unmerged draft management PR #102 at `3cd8015da171e272ac25617f2b7ae459e41da00f`.
+
+Sixteen unchanged reference Scope/Swing tests ran after recovery of storage
+dependencies: 15 passed, one failed because the fixed August 3 evidence is pruned
+by Scope's actual-time 45-day retention on October 9. A diagnostic confirmed the
+row is absent after the first save and neither save is recognized as a duplicate.
+The 15 remaining decision/evidence tests passed in 0.08s with warnings as errors;
+the retention test was explicitly deselected, not fixed or represented as passing.
+No full SignalFlow suite, UI rendering or deployment was verified.
+
+Primary broker/market/rule and strategy/LLM research now distinguishes public
+capability from account entitlement, published backtests from reproduced net option
+returns, and source UI from observed operation. Current Robinhood documentation
+lists external-agent options tools; verify the existing brokerage before migrating.
+This is documentation-only work, with no application/dependency/wheel changes,
+broker/model/market calls, SignalFlow edits or host access. The prior 1,340-case
+installed suite remains historical verification of unchanged application code.
+The deployed synthetic cohort remains frozen. Intended options capital/loss limits,
+authenticated account/feed evidence and actual isolated host/archive/host-loss
+acceptance remain open. Do not activate LIVE or implement real writes from this
+research. Keep the old PAPER engine estimate approximately 89%; expanded options
+and LIVE readiness remain unassessed.
+
 ## Current checkpoint — 2026-10-09 UTC
 
 Branch: `slice2/robinhood-read-shadow`. PR #1 remains draft. `main` remains untouched.

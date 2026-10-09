@@ -1,0 +1,256 @@
+{
+  "repository": "jkz1one/SignalFlow",
+  "commit": "f9eaf2c1b5d13dca287ee7138126883065b00395",
+  "reviewed_at": "2026-10-09",
+  "scope": "Targeted reference recovery, not full repository or deployment acceptance",
+  "files": [
+    {
+      "path": "app/components/ContractQuoteSummary.tsx",
+      "sha": "220fb0d00e9d17d53bc8730c2e7a0b532b5e587f"
+    },
+    {
+      "path": "app/components/DynamicManagementPanel.tsx",
+      "sha": "f4c51a97a7f4a753c56e5d0f6ef6c5470ec23ce4"
+    },
+    {
+      "path": "app/components/PlayProgressRail.tsx",
+      "sha": "ca213373d1e7bb8f999331796b4441537dd8a522"
+    },
+    {
+      "path": "app/components/PositionSizingPanel.tsx",
+      "sha": "2624a033c8c7453602d6e4fd49dc3d5c9fa91153"
+    },
+    {
+      "path": "app/outcome-intelligence/OutcomeIntelligenceWorkspace.tsx",
+      "sha": "98369a84242c704cb1ae4122644c501c06c221a2"
+    },
+    {
+      "path": "app/trade-desk/PaperTradeHistory.tsx",
+      "sha": "fee985ef41d8b28488242053a1eb11a912ae093e"
+    },
+    {
+      "path": "app/trade-desk/ScopeWizardPanel.tsx",
+      "sha": "840d8b14e32dee12870d1e27a8f08a863d07fc9d"
+    },
+    {
+      "path": "app/trade-desk/SwingLab.tsx",
+      "sha": "ab65addf2b9ea8885864301ab545de3bd7b50e54"
+    },
+    {
+      "path": "app/trade-desk/TradeDesk.tsx",
+      "sha": "5ede02ee68771e98126c5f5ef65da8e0870c3ae3"
+    },
+    {
+      "path": "app/trade-desk/ZeroDteLab.tsx",
+      "sha": "f88cfe7117441c1b1aa20d0adbe624ca7c22bed0"
+    },
+    {
+      "path": "backend/platform/ai_boundary.py",
+      "sha": "ac9938ae4eb5a13d45749ca02afc9d6b47a31f84"
+    },
+    {
+      "path": "backend/platform/bot_loss_lockouts.py",
+      "sha": "29a9ff831f7afdc5257d826a12fcacfd0dcb5c5e"
+    },
+    {
+      "path": "backend/platform/bot_strategy_intelligence.py",
+      "sha": "f70faa40ddb0dcbc1a7d2867db28e19f68ebbd35"
+    },
+    {
+      "path": "backend/platform/commons_brokerage.py",
+      "sha": "a5af39c2981a88bb5e65866ad2bcead953b04a63"
+    },
+    {
+      "path": "backend/platform/config.py",
+      "sha": "99031ba714b2c3c0de14a0098689e1717c047e32"
+    },
+    {
+      "path": "backend/platform/data_paths.py",
+      "sha": "1c968f54ef3400bfcd40309a3ce85d9a4af9a892"
+    },
+    {
+      "path": "backend/platform/lab_candidates.py",
+      "sha": "3e5418ad2b264c5aaab94a0d5c3aa371dd8b47df"
+    },
+    {
+      "path": "backend/platform/outcome_analysis.py",
+      "sha": "bfa9276337f252a54d370a0f3d8949449310fe45"
+    },
+    {
+      "path": "backend/platform/outcome_warehouse_models.py",
+      "sha": "817e9376040ceb8655dd144864cc6019b4e93b92"
+    },
+    {
+      "path": "backend/platform/play_contracts.py",
+      "sha": "4689a7cfe36e2defbdfefbe61eb11b80a0b05b00"
+    },
+    {
+      "path": "backend/platform/play_integrity.py",
+      "sha": "9dc4259c430677bc85591692268a79c463bf5450"
+    },
+    {
+      "path": "backend/platform/play_management.py",
+      "sha": "49cc56bad6ea4565efb23529561e235ec8470319"
+    },
+    {
+      "path": "backend/platform/play_orchestration.py",
+      "sha": "4bf16750735442dbb7e8696a7a2c0375ba99249c"
+    },
+    {
+      "path": "backend/platform/play_session_lifecycle.py",
+      "sha": "aa2a8f646257b258622d26de98daf5afca7afc11"
+    },
+    {
+      "path": "backend/platform/play_sizing.py",
+      "sha": "4a42d61ec5a1d7fa94a470c23d3f2d3cde4b6f2a"
+    },
+    {
+      "path": "backend/platform/play_stop_authority.py",
+      "sha": "8cccefdc624b7c6a9ec8371d6c91f3384f010d05"
+    },
+    {
+      "path": "backend/platform/plays.py",
+      "sha": "e02b65f6ab73c16634dd8569d8790ab0dda891fd"
+    },
+    {
+      "path": "backend/platform/point_in_time_replay.py",
+      "sha": "2c2c8894f83f35ec0c8891a676f6793cb010fa60"
+    },
+    {
+      "path": "backend/platform/portfolio_broker_store.py",
+      "sha": "9c343e346ffbc274f210a0f8019fa3efa23a29d0"
+    },
+    {
+      "path": "backend/platform/portfolio_brokerage.py",
+      "sha": "d2dc56d440201f88823158f0bba1064aae265cab"
+    },
+    {
+      "path": "backend/platform/portfolio_reconciliation.py",
+      "sha": "c4d0a2aa0a37be62930506a2ce5a870db29746b1"
+    },
+    {
+      "path": "backend/platform/portfolio_risk.py",
+      "sha": "36c33215edc1042a7c5dd48b4e06433652e5f157"
+    },
+    {
+      "path": "backend/platform/premium_scaling.py",
+      "sha": "aa619e04c8c75fe967eb51553321287dac8e998e"
+    },
+    {
+      "path": "backend/platform/rejection_value.py",
+      "sha": "18bc0ffea71f2e0c0ba27f629960b1bd0670ba01"
+    },
+    {
+      "path": "backend/platform/scope_wizard_controls.py",
+      "sha": "5bed60829090dffd58179b3df65df0463fa4dfeb"
+    },
+    {
+      "path": "backend/platform/scope_wizard_evaluation.py",
+      "sha": "9e5bce5f584e0a59cc985882249e5c7f53ea1005"
+    },
+    {
+      "path": "backend/platform/scope_wizard_lifecycle.py",
+      "sha": "a13a110e26904b581c98238599e78b371aea7656"
+    },
+    {
+      "path": "backend/platform/scope_wizard_policy.py",
+      "sha": "099f49a89db3f0dd2b2e1233496cbbb1e6f3000b"
+    },
+    {
+      "path": "backend/platform/scope_wizard_scheduler.py",
+      "sha": "9a62a84ebfa3a8d059c819a4da446081058bef6d"
+    },
+    {
+      "path": "backend/platform/scope_wizard_store.py",
+      "sha": "456e457d1ccaf3b09188a2626455adcfc05dc4ff"
+    },
+    {
+      "path": "backend/platform/scope_wizard_trade_desk.py",
+      "sha": "3ebe85501f1329e277939216a2b22684ff2edca7"
+    },
+    {
+      "path": "backend/platform/scope_wizard.py",
+      "sha": "061203e7d098faa240d2dcab449c93b1c16c191d"
+    },
+    {
+      "path": "backend/platform/setup_engine.py",
+      "sha": "af7912bc06dbf0bee94c148cfe7fb1540842d85b"
+    },
+    {
+      "path": "backend/platform/sqlite_utils.py",
+      "sha": "494aa175ff986e78d3948e2e2faaf066903639f4"
+    },
+    {
+      "path": "backend/platform/swing_candidate_lifecycle.py",
+      "sha": "3f1a433e4a55f68f1ab14bb42a6ec860e5b00cbc"
+    },
+    {
+      "path": "backend/platform/swing_candidate_revalidation.py",
+      "sha": "904adb21d107d6a5e8665c1d49455638e5dc13d4"
+    },
+    {
+      "path": "backend/platform/swing_contracts.py",
+      "sha": "34e5928033a50349bb210158a259520359233e42"
+    },
+    {
+      "path": "backend/platform/swing_entry_selection.py",
+      "sha": "07530bd70832835389f683a6cac49aea5982d3a2"
+    },
+    {
+      "path": "backend/platform/zero_dte.py",
+      "sha": "cc92642a2ccdce438e7da04667ef33fdfa8453fc"
+    },
+    {
+      "path": "docs/architecture.md",
+      "sha": "ff412e4454eec7bf3344d58c14eb1cb793b67263"
+    },
+    {
+      "path": "docs/audits/phase29b/PHASE29B_R8_5_PIPELINES_PRODUCT_DEGEN_INTEGRITY.md",
+      "sha": "7eea3479374cf2ec707cf3aeafe963185db23c23"
+    },
+    {
+      "path": "docs/CURRENT_MASTER_ROADMAP.md",
+      "sha": "740f58dd402a453849e8d69af7d78243db257ae9"
+    },
+    {
+      "path": "docs/paper-execution.md",
+      "sha": "307083b7d242cde03d9c0e0f3f728c84073bbab3"
+    },
+    {
+      "path": "docs/PHASE_J2_3_CONTRACT_SELECTION_RECOVERY.md",
+      "sha": "7e4b87927eae9b634f22afc934337e4e4804c675"
+    },
+    {
+      "path": "docs/SCOPE_WIZARD_SPXW_PLAYBOOK_DRAFT.md",
+      "sha": "81108ab8419b8636818004208e33bf86b1eee94b"
+    },
+    {
+      "path": "docs/SCOPE_WIZARD_SPXW_PLAYBOOK_V2.md",
+      "sha": "497440161b0a4665218a925520de77317c758666"
+    },
+    {
+      "path": "docs/swing-next-session-promotion.md",
+      "sha": "8da449d6c8a903e35b1b0f93b8bd4f4d3db6dfad"
+    },
+    {
+      "path": "tests/test_roadmap_phase15a_scope_wizard.py",
+      "sha": "35b3b938320f78fb50daebac0a2abf751ea0a296"
+    },
+    {
+      "path": "tests/test_roadmap_phase15b_scope_wizard_hardening.py",
+      "sha": "6b266c4c815cf27971e75f328f5a5d3e2d99dd95"
+    },
+    {
+      "path": "tests/test_roadmap_phase17b_swing_entry.py",
+      "sha": "07240e338c52e741e2fd43034cbf3f28b9117321"
+    }
+  ],
+  "draft_reference": {
+    "pr": 102,
+    "head": "3cd8015da171e272ac25617f2b7ae459e41da00f",
+    "path": "backend/platform/play_management.py",
+    "sha": "2a01d89dc0194a39930ee9bc31b48bf8ef4a3a48",
+    "merged": false,
+    "draft": true
+  }
+}
