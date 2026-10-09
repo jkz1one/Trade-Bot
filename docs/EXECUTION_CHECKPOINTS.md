@@ -1,5 +1,10 @@
 # Execution evidence checkpoints
 
+The optional [native TLS archive receiver](CHECKPOINT_ARCHIVE.md) implements the
+transfer contract below on separately provisioned private storage. Its installed
+entry point is `app.execution.archive_cli`; no endpoint is provisioned or scheduled
+by this tool, and local fixture retention does not prove off-host protection.
+
 This opt-in tool preserves the fixture execution engine's journal and separately
 retained authority as one private checkpoint. It does not operate on the deployed
 SHADOW database, credential files or observer. It does not enroll, migrate, initialize,

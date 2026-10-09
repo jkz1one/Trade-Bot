@@ -1,6 +1,6 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
-## Current checkpoint — 2026-10-08 UTC
+## Current checkpoint — 2026-10-09 UTC
 
 Branch: `slice2/robinhood-read-shadow`. PR #1 remains draft. `main` remains untouched.
 The authenticated core path is verified: strict OpenAI output, real Robinhood reads,
@@ -26,9 +26,9 @@ the newer bounded isolated model/market components still need verification. LIVE
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full installed-package suite passed **1,264 tests in 328.42 seconds with warnings treated as errors**,
-including the previous 1,242 cases and 22 measured market evidence cases. Installed native
-runtime/control/alert and checkpoint entry points were used in that full run. Interrupted
+full installed-package suite passed **1,308 tests in 347.43 seconds with warnings treated as errors**,
+including the previous 1,264 cases and 44 independent archive receiver cases. Installed native
+runtime/control/alert, checkpoint and archive receiver entry points were used in that full run. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
 The source-bound market-only PAPER feed now connects through a bounded headless
@@ -49,6 +49,73 @@ installation and sandbox enforcement remain unverified.
 Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticated
 collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
+
+## Independent native TLS checkpoint archive — 2026-10-09 UTC
+
+Fresh GitHub matched branch/PR head `f94ad6ac434dd38cb59c73f5ba2bc8240bcb07a6`
+and source tree `4ecae1ba8a6639e0a1e8b51c10528053019ff6af`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 draft and checkout clean.
+
+The archive transfer client had only a local fixture receiver. The standalone
+`app.execution.archive_cli init/serve/report` now implements its existing exact
+native HTTPS PUT/GET contract on explicitly provisioned independent storage.
+It uses only the standard library, retains opaque bytes and opens no checkpoint
+database, engine, broker/model client or deployed state. It neither installs a
+service nor schedules uploads or changes the frozen SHADOW experiment.
+
+Explicit initialization exclusively creates a private capacity-bound store.
+A retained directory descriptor and nonblocking lifetime lease admit one receiver
+or report owner. Authenticated exact content-addressed PUT durably reserves a new
+private directory before reading a bounded body, hashes complete bytes, fsyncs the
+file and exclusively publishes/fsyncs its identity before confirming retention.
+Wrong framing/identity/authentication/origin, ambiguous/forwarded metadata, traversal,
+encodings and oversized inputs cannot claim acceptance. Stored identity retries
+recheck private size/hash/durability and hash their complete body without replacement.
+Interrupted/corrupt admissions remain retained, consume capacity and cannot be
+overwritten or repaired by retry. No delete/prune/restore/promotion endpoint exists.
+
+Native TLS 1.2+ is mandatory, with private separate token/key material, explicit
+origin/listener and no proxy/plaintext fallback. One connection at a time shares a
+maximum 30-second socket watchdog across handshake, headers, body and reply.
+Filesystem hashing/fsync still cannot guarantee hard deadlines under hardware stalls.
+SIGTERM drains the current request loop; SIGKILL preserves admitted evidence and
+releases process ownership. GET checks original private bytes before transmission;
+the existing isolated download client independently verifies its separately retained
+pin. Local exclusive reports distinguish VERIFIED/INCOMPLETE/UNAVAILABLE and always
+retain `off_host_protection=UNVERIFIED`, `execution_authority=false`.
+
+The initial receiver run failed because a test helper treated the stdlib HTTP client
+as a context manager. The helper was corrected; all 42 initial receiver cases passed
+in 17.64s. The strengthened combined source receiver/checkpoint/catalog/durability
+run passed **153 tests in 51.46s**, warnings treated as errors. The final full suite
+also includes two added storage-permission cases, for **44 new receiver cases**.
+Actual native SIGKILL during a partial body retained incomplete admission/bytes,
+released the lease and allowed a distinct upload after restart without replacing the
+partial evidence. TLS/header stalls expired independently; an admitted stalled body
+drained actual SIGTERM. Fsync failures never claimed retention; a lost publication
+confirmation retried an unchanged complete inode. A separate native receiver process
+accepted the existing client upload, restarted after source journal/authority/bundle
+deletion, returned the original object and staged unresolved model evidence.
+Engine attachment still failed `RESTORE_AUTHORITY_MISSING`.
+
+Final verification: **1,308 installed-package tests passed in 347.43s**, warnings treated as errors, outside the checkout
+against the final installed wheel. Native receiver and existing runtime/control/alert/
+market/model/checkpoint entry points ran with installed interpreters. Final staged
+tests and all 95 application source/wheel/installed files matched. Scoped Ruff
+lint/format, compilation, dependency pins, pip check, document links and whitespace
+passed. Wheel SHA-256:
+`43f16245bca5c8b03e72cc685f7d39ff134979b3875311fb778584f0c7965e59`.
+
+The [receiver provisioning and acceptance procedure](CHECKPOINT_ARCHIVE.md) requires
+a dedicated independently hosted UID/storage/quota/retention/encryption/native TLS
+endpoint, secret and lifecycle. No such host was accessed or deployed. The local
+source-loss test is simulated process/source loss within one workspace, not actual
+off-host durability or host-loss recovery. Independent alerts/archive acceptance and
+a real host-loss drill remain open, with target-host namespace/boot/application
+lifecycle, authenticated full-universe market latency, bounded model usage/billing
+and the old worker/slot audit. Main, deployment and provider accounts remain unchanged;
+LIVE disabled. Engine completeness remains approximately **89%**, excluding LIVE
+readiness and demonstrated profitability.
 
 ## Measured full-universe market evidence — 2026-10-08 UTC
 

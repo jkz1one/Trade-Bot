@@ -61,6 +61,9 @@ journal/authority pair consistently, support explicit verified-TLS archive reten
 and require an independently retained hash before recovery staging. Recovery preserves
 unresolved evidence and supplies no usable execution authority. Archive provisioning and
 actual off-host/host-failure verification remain pending; deployed SHADOW backups are unchanged.
+The standalone [native TLS archive receiver](docs/CHECKPOINT_ARCHIVE.md) provides
+private bounded append-only storage, durable receipts and original-byte retrieval.
+It is opt-in, independently provisioned and not installed on the trader host.
 Inspection/staging bind the exact extracted envelope bytes to the independent pin
 before SQLite validation, rejecting in-place changes between scanning and extraction.
 An opt-in private capture catalog now freezes source identity and capacity, preserves
