@@ -1,5 +1,63 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## M1 offline options admission — 2026-10-09 UTC
+
+M1 is **fixture verified**. [SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md), version 1.1,
+retains the adopted scope and milestone order; next is **M2 durable options PAPER
+lifecycle**. [OPTIONS_ADMISSION.md](OPTIONS_ADMISSION.md) describes the implemented
+API and its execution boundary.
+
+Added `app.options.models` and pure `app.options.governor.admit_option`. Exact
+broker-neutral identities bind underlying/root/right/strike/expiry, multiplier,
+deliverable, US market, exercise/settlement and trading-time/tick metadata. Provider
+IDs cannot override conflicting metadata. Frozen explicit PAPER policy and
+reconciled account/population evidence stay outside the model proposal. The model
+cannot grant quantity, bankroll, mode, tools or risk settings.
+
+Admission checks exact identities, complete REALTIME two-sided entry quotes,
+source/receipt freshness and lag, synchronization, opposite call/put underlying
+stop geometry, session and last-trading boundaries, existing stock/options holdings,
+unresolved orders and entry health/cost blockers. Whole-contract quantity floors
+independent cash, entry/exposure, full-premium, remaining daily/total-loss, observed
+size and contract caps, with adverse tick-rounded slippage and explicit entry/
+reserved-exit fees. No minimum-one rounding or stop-risk discount. Adjusted/OTC/
+non-US/incompatible metadata and below-floor underlyings remain ineligible.
+
+Exact owned closes use bid/whole size and signed cash change. Entry/model/unknown
+budget blockers do not veto a valid funded close; missing bid, stale/unowned/
+unresolved evidence cannot invent flatness. Low-value closes can spend settled cash
+on fees without borrowing. A bounded approval expires with its earliest evidence,
+session, cutoff or last-trading deadline. Money/quantity schemas reject binary
+float, nonfinite, fractional and malformed inputs. UTC normalization preserves
+actual DST instants; Decimal arithmetic does not inherit ambient precision/range.
+
+Fresh pre-edit GitHub/local branch and PR #1 matched
+`f3e244e333f00de310f50cc272ca7b35f1c1162e`, tree
+`eef983c73da982df02347b2725b19f402f88b2b0`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR open/draft and checkout clean.
+
+Source checks: **184 options tests passed in 0.25 seconds**, warnings as errors.
+**139 existing equity/risk/rehearsal/broker/trader tests passed in 3.79 seconds**,
+warnings as errors. **1,531 full-suite tests passed in 384.34 seconds**, warnings
+as errors, from copied tests/deploy/scripts outside the checkout against the final
+installed wheel. Native runtime/control/alert/checkpoint/archive children used that
+installation. All **96 application Python files** match source, wheel and installed
+bytes. Wheel SHA-256:
+`c02b38f9dd729973cc24428cedd1aa0c7394fc9479f2f996fa265b786c89c977`.
+Scoped Ruff lint/format, compilation, installed-environment `pip check`, **53 local
+document links** and staged whitespace passed. Preliminary installed runs were
+stopped during code review and are not counted as completed verification.
+
+This is local fixture/package proof only. No option provider read, authenticated
+account check, model call, SHADOW preview, actual host installation or broker write
+occurred. The module does not reserve, submit, reconcile fills, exercise or settle
+options, and is not wired into the current runtime. M2 must persist policy/evidence/
+reservations, re-admit fresh authoritative inputs and implement the durable option
+lifecycle and independent exits. No SignalFlow or frozen deployment change.
+LIVE remains disabled; PR stays draft and main untouched. Original stock PAPER
+engine estimate remains approximately 89%; options M1 fixture verified, M2–M7 open,
+expanded LIVE readiness and profitability unassessed.
+
 ## Source of truth and second operator report — 2026-10-09 UTC
 
 [SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md), version 1.0, now owns current product

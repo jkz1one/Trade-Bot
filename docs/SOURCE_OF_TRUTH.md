@@ -1,6 +1,7 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.0. Adopted product direction and working delivery contract, 2026-10-09 UTC.
+Version 1.1. Adopted product direction and working delivery contract, 2026-10-09 UTC.
+M1 offline admission is fixture verified; next is M2. Scope and milestone order unchanged.
 
 ## Goal and definition of completion
 
@@ -59,7 +60,7 @@ a blocker instead of quietly changing the plan or relabeling results.
 | --- | --- | --- |
 | Deployed `virtual-v1` | Frozen $10 synthetic stock experiment on release `de5dd1c7bd3a2d3b85a2d6bb7f624e0d3a3f9245`; operator provides regular-session decisions, usage and simulated fills | Real broker fills, options behavior, useful signal, newer engine acceptance or profitability |
 | Isolated execution engine | Durable fake-venue orders/model attempts, reconciliation, budgets, supervision, reviewed control/recovery, alerts, checkpoints and archive contracts implemented and tested locally | Actual target-host installation, authenticated full-universe/model evidence, independent archive retention or host-loss acceptance |
-| Options foundation | Source research complete; no option admission or option execution implementation yet | Options PAPER readiness or live safety |
+| Options foundation | M1 exact contract identity and deterministic whole-contract admission implemented and fixture verified; no option execution implementation yet | Options runtime PAPER readiness, provider/host acceptance or live safety |
 | SignalFlow reuse | 60 pinned reference files audited; reusable strategy/UI concepts; draft management fixes distinguished from main | A ready live adapter, healthy deployed options feed or a replicated profitable strategy |
 
 The legacy $10 population remains untouched. New options PAPER execution uses a
@@ -151,7 +152,8 @@ HOLD/error costs; do not switch the frozen legacy model as part of this work.
 
 ## Milestones, dependencies and acceptance
 
-Research is complete for starting implementation. **Next work is M1.** Each milestone
+M1 is fixture verified; [its implementation contract](OPTIONS_ADMISSION.md) records
+the offline API and limits. **Next work is M2.** Each milestone
 ends with reviewed code, meaningful tests, status proof, commit and branch push.
 Milestones are acceptance contracts, not fixed session or calendar promises.
 
@@ -270,7 +272,10 @@ references. These states are not interchangeable. A passing local test never gra
 provider, deployment or profitability proof. Preserve source/operator evidence
 separately from our own observations and record failures openly.
 
-Current milestone state: M0 research complete; M1–M7 not delivered for options.
+Current milestone state: M0 research complete; **M1 fixture verified** with
+`app.options.models`, `app.options.governor` and `tests/test_option_admission.py`.
+M2–M7 are not delivered for options. The current runtime still executes equities
+only; M1 cannot submit, reserve or settle an option order.
 Some underlying stock-engine/host procedures already exist and are reused, but do
 not mark an options milestone complete from that prior work. The older isolated
 PAPER engine estimate remains approximately **89%**, excluding LIVE/profitability.
@@ -283,13 +288,16 @@ and the next blocker instead of inventing a percentage for the expanded product.
   [pinned source manifest](research/signalflow_options_sources.json).
 - [Latest engineering and historical operator status](SLICE2_STATUS.md).
 - [Second printed operator report](SHADOW2_EVIDENCE.md); first report remains in status.
+- [M1 delivered options admission](OPTIONS_ADMISSION.md).
 - [Isolated runtime](PAPER_RUNTIME.md), [host acceptance](PAPER_HOST.md),
   [bounded model acceptance](PAPER_MODEL_ACCEPTANCE.md),
   [evidence checkpoints](EXECUTION_CHECKPOINTS.md) and
   [independent archive host](CHECKPOINT_ARCHIVE_HOST.md).
 
-Pre-edit canonical branch/PR head `a55b6bcf512669a8ebb0afa84fd271ff4deca1ad`, tree
+Initial planning checkpoint: pre-edit branch/PR head
+`a55b6bcf512669a8ebb0afa84fd271ff4deca1ad`, tree
 `9399594922eea2ba59a5759281fb0d1ff72e3af2`; main
 `b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 draft. Source-of-truth/evidence
-work changes documentation only. It does not install services, alter application
-code, call a model/broker/provider or validate profitability.
+work changed documentation only. It did not install services, alter application
+code, call a model/broker/provider or validate profitability. The current M1
+implementation and verification checkpoint is recorded at the top of status.
