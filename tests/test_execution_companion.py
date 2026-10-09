@@ -258,6 +258,8 @@ def test_control_lock_is_distinct_from_runtime_and_retained_through_server_retur
         def __init__(self, config):
             assert not config.proxy_headers and config.workers == 1 and config.ws == "none"
             assert config.ssl is not None and config.ssl.minimum_version >= ssl.TLSVersion.TLSv1_2
+            # TLS peer-close must fit inside application drain and the fixed host cgroup bound.
+            assert asyncio.constants.SSL_SHUTDOWN_TIMEOUT < config.timeout_graceful_shutdown < 45
 
         def handle_exit(self, *args):
             pass

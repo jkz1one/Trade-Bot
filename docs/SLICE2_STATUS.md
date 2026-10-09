@@ -26,8 +26,8 @@ the newer bounded isolated model/market components still need verification. LIVE
 Parallel engineering now includes a separate offline execution lifecycle rehearsal,
 informed by SignalFlow's reservation and authoritative reconciliation contracts.
 It has no broker write adapter or connection to the deployed experiment. The latest
-full installed-package suite passed **1,308 tests in 347.43 seconds with warnings treated as errors**,
-including the previous 1,264 cases and 44 independent archive receiver cases. Installed native
+full installed-package suite passed **1,340 tests in 348.79 seconds with warnings treated as errors**,
+including the previous 1,308 cases and 32 measured model-process evidence cases. Installed native
 runtime/control/alert, checkpoint and archive receiver entry points were used in that full run. Interrupted
 PAPER claims now support reviewed no-replay resolution through the existing control
 transport, preserving the original cycle and its halt until a separate RESUME.
@@ -49,6 +49,83 @@ installation and sandbox enforcement remain unverified.
 Earlier native HTTPS/runtime recovery proof remains recorded below. Authenticated
 collector latency, full-universe availability and deployed composition remain unverified.
 The deployed application release remains the one recorded below.
+
+## Measured bounded model-process evidence — 2026-10-09 UTC
+
+Fresh GitHub matched branch/PR head `63d6f059e128d8c58782f2849a4a2291fa6c2767`
+and source tree `6cfc0155dae61a32d0bead37ff604488d51c4740`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 draft and checkout clean.
+
+The existing bounded model path retained usage and decisions but lacked measured
+count/generation and invocation/reaping observations for authenticated acceptance.
+Its fixed child now measures only the existing input-count and generation SDK
+methods: strict 0/1 attempted/completed counts, cumulative elapsed intervals and
+whole perform time. Completion means the SDK returned, before usage/decision
+acceptance; refusals/invalid usage still fail to HOLD with their existing accounting.
+No new request, tool, model input, raw response, credential path or key is retained.
+
+Existing MODEL_JUDGMENT_RECORDED and MODEL_JUDGMENT_INTERRUPTED events now retain
+`paper-model-process-evidence-v1`: model, saved attempt packet hash, exact frozen
+configuration, original process/request limits, monotonic admission, invocation
+and child-reaping intervals, total and optional child observations. Cancellation
+records timing only after owned work cleanup, preserves unknown cost and cannot
+replay its durable attempt. Native timing includes spawning/imports, client
+creation/closure, protocol validation and reaping; child perform timing includes
+local validation/decision parsing. Total ends before settlement/recording.
+Missing/incoherent observations remain UNVERIFIED; coherent observations are
+OBSERVED only as measurements. Provider and billing acceptance always remain
+UNVERIFIED and execution_authority false. Invalid diagnostic types/bounds fail
+the existing child protocol. There is no new journal schema/event kind, approval
+gate, policy hash, prompt, request ceiling, SDK retry, model price or runtime command.
+
+All **120 focused judgment/output/runtime cases passed in 19.18s**, warnings treated
+as errors, including **32 new evidence cases**. They bind measurements to unchanged
+provider payloads, exact durable packet/configuration/usage/cost identity, successful
+deterministic approval and paired restore verification; partial failures/refusals,
+missing/incoherent/invalid diagnostics and cancelled work preserve existing HOLD,
+usage/uncertainty and no-replay behavior. An actual isolated private worker with a
+local pinned-SDK transport recorded both calls and was reaped before parent evidence.
+An initial new test incorrectly assumed its fixture was fenced; explicit enrollment
+corrected that test, without changing production fencing or accepting UNFENCED proof.
+
+The first installed full run recorded **2 failures and 1,338 passes in 326.65s**:
+native control shutdown emitted an empty-task grace timeout, and an existing
+closed-to-open market fixture timed out waiting for a complete cycle. Both passed
+in isolation in 75.01s. Pinned Uvicorn awaits native TLS server closure; CPython's
+TLS close budget and the configured control grace both used 30 seconds, allowing
+a deadline race. Control grace is now 35 seconds, still inside the unchanged
+45-second host cgroup bound. The companion test explicitly checks that ordering.
+The disposable market fixture now holds the first exact sample for native
+reconciliation, freezes a five-second test read/eight-second source age budget,
+observes early task failure and always drains in finally. Production freshness/
+collection/approval guards are unchanged. All **60 source market/companion/host
+integration cases passed in 150.33s**, warnings treated as errors, including actual
+read-failure/hard-kill restart, independent companion operation and SIGTERM.
+These supporting fixes resolve verification races; they do not complete host acceptance.
+
+Final verification: **1,340 installed-package tests passed in 348.79s**, warnings treated as errors, outside the checkout
+against the final installed wheel. Native runtime/control/alert/market/model/checkpoint/
+archive processes ran with installed interpreters. Final staged test bytes and all
+95 application source/wheel/installed files matched. Scoped Ruff lint/format,
+compilation, pinned dependencies, pip check, document links and whitespace passed.
+The touched market/companion fixture files retain 20/5 baseline lint findings;
+comparison to the parent confirmed no new findings, and both formats passed.
+Wheel SHA-256:
+`ae3f8b7fe34d13b54718c7aabe66f5bc81dc3fac9ff0d1c7d07126f4ab214bd2`.
+
+The [authenticated model acceptance procedure](PAPER_MODEL_ACCEPTANCE.md) uses a new
+full-universe continuous-market population with the existing prompt/limits and total/
+daily budgets equal to the frozen single-call reservation. Positive known cost or
+unknown usage prevents a second full reservation. The existing run command receives
+an explicit outer timeout; its report retains the latest bounded event/cycle window.
+Neither wrapper exit status, skipped HOLD, SDK method counts nor configured-rate
+generation cost proves provider acceptance, invoice correctness, preflight billing
+or full scheduler completeness. No authenticated call occurred in this workspace,
+no credentials were requested and no deployed population/provider/host was changed.
+Target-host namespace/boot/application lifecycle, authenticated market/model usage/
+billing, independent alert/archive retention/retrieval, real host-loss and the old
+worker/slot audit remain open. LIVE disabled; engine completeness remains approximately
+**89%**, excluding LIVE readiness and demonstrated profitability.
 
 ## Independent native TLS checkpoint archive — 2026-10-09 UTC
 

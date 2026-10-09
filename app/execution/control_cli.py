@@ -113,7 +113,9 @@ def serve(journal, *, origin, operator_key_file, read_token_file, certfile, keyf
             access_log=False,
             log_level="error",
             timeout_keep_alive=5,
-            timeout_graceful_shutdown=30,
+            # CPython's native TLS close budget is 30s. Leave margin before the
+            # independent host unit's 45s cgroup deadline, rather than racing TLS.
+            timeout_graceful_shutdown=35,
             limit_concurrency=8,
         )
         config.load()

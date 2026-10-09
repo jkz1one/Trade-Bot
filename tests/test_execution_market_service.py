@@ -152,11 +152,17 @@ async def test_closed_flat_service_waits_without_credentials_or_child_calls(tmp_
 async def test_closed_to_open_waits_for_fresh_source_without_misreporting_health(
     tmp_path, monkeypatch
 ):
-    runtime, engine, _, clock, _ = context(tmp_path)
+    runtime, engine, _, clock, _ = context(tmp_path, read_timeout=5, source_max_age=8)
     clock[0] = NOW.replace(hour=13, minute=29, second=59)
     entered, release = asyncio.Event(), asyncio.Event()
+    attempts = []
 
     async def read(req):
+        attempts.append(req)
+        if len(attempts) > 1:
+            # Keep the first exact sample stable while native reconciliation
+            # completes; the next bounded refresh is cancelled on runtime stop.
+            await asyncio.Event().wait()
         entered.set()
         await release.wait()
         output = result(req).model_copy(update={"collected_at": clock[0]})
@@ -165,20 +171,27 @@ async def test_closed_to_open_waits_for_fresh_source_without_misreporting_health
 
     monkeypatch.setattr(market_reads, "_read", read)
     stop, task = await begin(runtime)
-    await wait_until(
-        lambda: engine.journal.report(now=clock[0])["market_service"]["status"] == "IDLE"
-    )
-    clock[0] += timedelta(seconds=1)
-    await asyncio.wait_for(entered.wait(), 10)
-    await wait_until(
-        lambda: engine.journal.report(now=clock[0])["supervisor"]["status"] == "WAITING"
-    )
-    release.set()
-    await wait_until(
-        lambda: engine.journal.report(now=clock[0])["runtime"]["cycles"] == {"COMPLETE": 1}
-    )
-    stop.set()
-    assert await task == 0
+    try:
+        await wait_until(
+            lambda: engine.journal.report(now=clock[0])["market_service"]["status"] == "IDLE"
+        )
+        clock[0] += timedelta(seconds=1)
+        await asyncio.wait_for(entered.wait(), 10)
+        await wait_until(
+            lambda: engine.journal.report(now=clock[0])["supervisor"]["status"] == "WAITING"
+        )
+        release.set()
+        await wait_until(
+            lambda: (
+                task.done()
+                or engine.journal.report(now=clock[0])["runtime"]["cycles"] == {"COMPLETE": 1}
+            )
+        )
+        assert engine.journal.report(now=clock[0])["runtime"]["cycles"] == {"COMPLETE": 1}
+    finally:
+        release.set()
+        stop.set()
+        assert await asyncio.wait_for(task, 10) == 0
 
 
 @pytest.mark.anyio

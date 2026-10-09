@@ -82,11 +82,30 @@ class JudgmentRequest(Contract):
     parent_pid: int = Field(gt=0, strict=True)
 
 
+class JudgmentCallObservation(Contract):
+    attempted: int = Field(ge=0, le=1, strict=True)
+    completed: int = Field(ge=0, le=1, strict=True)
+    elapsed_seconds: float = Field(ge=0, le=120, strict=True)
+
+    @model_validator(mode="after")
+    def ordered(self):
+        if self.completed > self.attempted:
+            raise ValueError("Completed model calls require an attempt")
+        return self
+
+
+class JudgmentDiagnostics(Contract):
+    perform_seconds: float = Field(ge=0, le=120, strict=True)
+    input_count: JudgmentCallObservation
+    generation: JudgmentCallObservation
+
+
 class JudgmentResult(Contract):
     decision: TradeDecision
     usage: UsageEvidence | None = None
     counted_input_tokens: int | None = Field(default=None, gt=0, strict=True)
     error: str | None = Field(default=None, max_length=64, pattern=r"^[A-Za-z_][A-Za-z0-9_]*$")
+    diagnostics: JudgmentDiagnostics | None = None
 
     @model_validator(mode="after")
     def evidence(self):
@@ -102,6 +121,42 @@ class JudgmentOutcome:
     packet: MarketPacket
     result: JudgmentResult
     estimated_cost: Decimal | None
+
+
+def process_evidence(request, result, *, started, invoked, finished):
+    """Measurements only. Missing/incoherent diagnostics never grant provider acceptance."""
+    observed = result.diagnostics if result is not None else None
+    coherent = False
+    if observed is not None:
+        count, generation = observed.input_count, observed.generation
+        coherent = (
+            count.elapsed_seconds + generation.elapsed_seconds <= observed.perform_seconds + 1e-6
+            and observed.perform_seconds <= finished - invoked + 1e-6
+            and (count.attempted or count.elapsed_seconds == 0)
+            and (generation.attempted or generation.elapsed_seconds == 0)
+            and (not generation.attempted or count.completed == 1)
+            and (result.counted_input_tokens is None or count.completed == 1)
+            and (result.usage is None or generation.completed == 1)
+            and (result.error is not None or (count.completed == generation.completed == 1))
+        )
+    return {
+        "schema": "paper-model-process-evidence-v1",
+        "model": request.model,
+        "packet_hash": hashlib.sha256(
+            json.dumps(request.packet.model_dump(mode="json"), sort_keys=True).encode()
+        ).hexdigest(),
+        "configuration": request.configuration,
+        "process_timeout_seconds": request.limits.process_timeout_seconds,
+        "request_timeout_seconds": request.limits.request_timeout_seconds,
+        "admission_seconds": invoked - started,
+        "invocation_and_reap_seconds": finished - invoked,
+        "total_seconds": finished - started,
+        "observations": observed.model_dump(mode="json") if observed else None,
+        "observations_status": "OBSERVED" if coherent else "UNVERIFIED",
+        "provider_acceptance": "UNVERIFIED",
+        "billing_acceptance": "UNVERIFIED",
+        "execution_authority": False,
+    }
 
 
 async def run_judgment_process(request, api_key):
@@ -227,6 +282,7 @@ class JudgmentCoordinator:
                 raise ExecutionBlocked("MARKET_CLOSED")
             packet = packet.model_copy(update={"session_context": window.context()})
             reviewed_revision = engine.journal.revision(db)
+        started = time.monotonic()
         request = JudgmentRequest(
             model=self.costs.policy.model,
             packet=packet,
@@ -241,18 +297,31 @@ class JudgmentCoordinator:
             "invoke_model"
         ]:
             raise ExecutionBlocked("MODEL_SOURCE_ALREADY_ATTEMPTED")
+        invoked = time.monotonic()
         try:
             result = await run_judgment_process(request, api_key)
         except asyncio.CancelledError:
+            evidence = process_evidence(
+                request, None, started=started, invoked=invoked, finished=time.monotonic()
+            )
             with engine.journal.write() as db:
                 engine.journal.event(
-                    db, now, "MODEL_JUDGMENT_INTERRUPTED", {"source_key": source_key}
+                    db,
+                    now,
+                    "MODEL_JUDGMENT_INTERRUPTED",
+                    {
+                        "source_key": source_key,
+                        "process_evidence": evidence,
+                    },
                 )
             raise
         except Exception as exc:  # noqa: BLE001 -- model boundary always yields fail-closed HOLD
             result = JudgmentResult(
                 decision=fail_closed_agent_run(exc).decision, error=type(exc).__name__
             )
+        evidence = process_evidence(
+            request, result, started=started, invoked=invoked, finished=time.monotonic()
+        )
         completed = clock()
         _clock(completed)
         if completed < now:
@@ -291,6 +360,7 @@ class JudgmentCoordinator:
                     "source_key": source_key,
                     "result": result.model_dump(mode="json"),
                     "estimated_cost": str(amount) if amount is not None else None,
+                    "process_evidence": evidence,
                 },
             )
         return JudgmentOutcome(packet, result, amount)

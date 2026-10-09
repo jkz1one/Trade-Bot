@@ -20,6 +20,7 @@ from app.execution.economics import UsageEvidence
 from app.execution.judgment import (
     MAX_REQUEST_BYTES,
     MAX_RESPONSE_BYTES,
+    JudgmentDiagnostics,
     JudgmentRequest,
     JudgmentResult,
     request_content,
@@ -56,6 +57,35 @@ def _decision_text(response):
 def perform(request, client):
     """Count the exact text/schema/tools payload, generate once, preserve valid usage on HOLD."""
     usage, count = None, None
+    started = time.monotonic()
+    observations = {
+        name: {"attempted": 0, "completed": 0, "elapsed_seconds": 0.0}
+        for name in ("input_count", "generation")
+    }
+
+    def observe(name, function):
+        entry = observations[name]
+        entry["attempted"] += 1
+        before = time.monotonic()
+        try:
+            value = function()
+            entry["completed"] += 1
+            return value
+        finally:
+            entry["elapsed_seconds"] += time.monotonic() - before
+
+    def finish(decision, error=None):
+        return JudgmentResult(
+            decision=decision,
+            usage=usage,
+            counted_input_tokens=count,
+            error=error,
+            diagnostics=JudgmentDiagnostics(
+                perform_seconds=time.monotonic() - started,
+                **observations,
+            ),
+        )
+
     try:
         content = request_content(request.model, request.packet)
 
@@ -73,18 +103,23 @@ def perform(request, client):
             raise ValueError("Judgment configuration changed")
         if time.monotonic() >= request.deadline_monotonic:
             raise TimeoutError("Judgment deadline expired")
-        count = client.responses.input_tokens.count(**content).input_tokens
+        count = observe(
+            "input_count", lambda: client.responses.input_tokens.count(**content)
+        ).input_tokens
         if type(count) is not int or not 0 < count <= request.limits.max_input_tokens:
             count = None
             raise ValueError("Input count is unavailable or exceeds the ceiling")
         if time.monotonic() >= request.deadline_monotonic:
             raise TimeoutError("Judgment deadline expired")
-        response = client.responses.create(
-            **content,
-            max_output_tokens=request.limits.max_output_tokens,
-            store=False,
-            background=False,
-            stream=False,
+        response = observe(
+            "generation",
+            lambda: client.responses.create(
+                **content,
+                max_output_tokens=request.limits.max_output_tokens,
+                store=False,
+                background=False,
+                stream=False,
+            ),
         )
         # Capture provider usage before parsing, refusals or incomplete output can fail.
         usage = UsageEvidence(
@@ -96,14 +131,9 @@ def perform(request, client):
         if response.status != "completed" or response.error is not None:
             raise ValueError("Response did not complete")
         decision = AgentOutputSchema(TradeDecision).validate_json(_decision_text(response))
-        return JudgmentResult(decision=decision, usage=usage, counted_input_tokens=count)
+        return finish(decision)
     except Exception as exc:  # noqa: BLE001 -- preserve usage even when decision parsing fails
-        return JudgmentResult(
-            decision=fail_closed_agent_run(exc).decision,
-            usage=usage,
-            counted_input_tokens=count,
-            error=type(exc).__name__,
-        )
+        return finish(fail_closed_agent_run(exc).decision, type(exc).__name__)
 
 
 def _watch(request):

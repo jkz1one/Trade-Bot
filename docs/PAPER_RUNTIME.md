@@ -153,6 +153,12 @@ The existing bounded Responses coordinator owns token/process/request ceilings,
 cost reservations and fail-closed HOLD. Its fixed child receives no broker tools or
 credentials. Authenticated provider/model validation is still required separately.
 
+Existing judgment/interruption events now retain measured fixed-method count/generation
+intervals and parent admission/invocation/reaping evidence. These observations do not
+change frozen policy or authorize provider/billing acceptance. The separate
+[bounded model acceptance procedure](PAPER_MODEL_ACCEPTANCE.md) collects actual
+evidence on a new budget-bound population using the existing run/report commands.
+
 The isolated child accepts exactly one completed assistant decision message with
 one `output_text` block and no intermediate commentary phase. Completed reasoning
 items, or reasoning items with the SDK's optional status absent, may accompany it.

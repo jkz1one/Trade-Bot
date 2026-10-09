@@ -95,9 +95,11 @@ archive availability guarantees.
 SIGTERM goes to the main process first (`KillMode=mixed`). Each native entry point
 retains its lease while it drains/reaps children. Runtime has 240 seconds before the
 host's final cgroup kill, allowing its configured maximum cycle/supervision bounds.
-Control/alerts have 45 seconds for their bounded current work and cleanup. If those
-bounds are exceeded, systemd's final kill cannot fabricate a successful receipt or
-release uncertainty in journal evidence. Unclean death is detected on subsequent
+Control/alerts have 45 seconds for their bounded current work and cleanup.
+The native control server uses a 35-second graceful drain, leaving margin around
+CPython's 30-second TLS peer-close budget before the 45-second host cgroup deadline.
+If those bounds are exceeded, systemd's final kill cannot fabricate a successful
+receipt or release uncertainty in journal evidence. Unclean death is detected on subsequent
 owner startup; the alert sender alone cannot infer a missing halt event from SIGKILL.
 External dead-process/host-loss monitoring remains a separate requirement.
 
