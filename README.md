@@ -6,6 +6,10 @@ Small, auditable experiment for testing whether an autonomous reasoning trader c
 
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
 rules, implementation milestones, acceptance gates and continuation discipline.
+The [October 10 reasoning-trader plan](docs/AI_TRADER_RESEARCH_PLAN.md) defines the
+requested broader AI role, pinned external comparisons, evaluation and delivery
+packages. Entry planning and position reasoning are planned; current code still
+implements the narrower SELECT/HOLD model.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.
 The M2 local options PAPER lifecycle is implemented. Read
@@ -41,8 +45,11 @@ and host wheel identity; no options trading service was started.
 The subsequent operator sandbox run passed all eight credential-isolation cases,
 including peers created after startup. This closes the disposable namespace probe
 gate; installed application lifecycle, authentic data and full host acceptance
-remain open. The [pinned next discovery command](docs/OPTIONS_READ_CAPTURE.md#pinned-discovery-after-the-passing-host-probes)
-reuses that installed release and requires separate managed authorization.
+remain open. Authenticated discovery has since returned all six read-tool schemas;
+the supplied schema digest was verified locally. Zero market reads were completed.
+Next are bounded actual samples and exact normalization, alongside the new proposal
+contract. [Read evidence and procedures](docs/OPTIONS_READ_CAPTURE.md) retain the
+separate managed authorization boundary.
 
 Progress is reported as delivered capabilities, evidence and remaining acceptance
 gates. Local tests do not close target-host/provider/recovery or LIVE gates.

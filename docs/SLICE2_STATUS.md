@@ -1,5 +1,65 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Reasoning-trader research and actual schema evidence: 2026-10-10 UTC
+
+The user requested a strong research/design pass before further coding and a
+larger useful AI role. [Source of truth v1.7](SOURCE_OF_TRUTH.md) now references
+the [bounded research and completion plan](AI_TRADER_RESEARCH_PLAN.md). The working
+design expands the future model from SELECT/HOLD to entry thesis/geometry and
+then exact-position MAINTAIN/EXIT_ALL/TIGHTEN proposals. Deterministic authority,
+one owner/position, frozen populations and independent mandatory exits remain.
+These broader proposals are **not implemented**. Existing selector cohorts and
+the deployed experiment are unchanged. P0 research/design is complete as a plan;
+P1 actual samples/normalization and P2 offline proposal contracts are next.
+
+Targeted TradingAgents and AI Hedge Fund source files were inspected at pinned
+commits; all five recovered source bytes matched canonical Git blob hashes, with
+[the manifest](research/ai_trader_sources.json) retaining identities. Relevant
+FinMem, LiveOption, financial-LLM bias and backtest-overfitting research plus official
+broker/0DTE documentation were reviewed within the limits recorded in the plan.
+No external framework was executed, fully audited or shown to be profitable.
+SignalFlow main and draft #102 pins remain unchanged; all 60 retained main reference
+files again matched their existing manifest. Prior test limitations remain historical.
+
+**New operator evidence:** authenticated read discovery returned exit 0, COMPLETE,
+capture `bc8356d41540421d903e5fe8295c1542`, no missing tools/input/output schemas,
+zero completed market reads, `execution_authority=false` and
+`normalized_data_verified=false`. Private evidence remains at
+`/root/trade-bot-options-auth-BqLFmz` on the operator host; no direct SSH inspection
+or independent off-host archive is claimed.
+
+The operator subsequently supplied only the read-schema export as a text attachment.
+Its local bytes have SHA-256
+`7642124d02d45a9a9c1cac50e1f6e79b7db93eef03cebaa836e4cb167b59bd1a`.
+Parsing that supplied artifact with the installed `ReadSchemas` model verified:
+
+- Captured time: `2026-10-10T20:00:43.613542Z`.
+- Schema SHA-256: `d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15`.
+- All six allowed read tools, both schema kinds, read-only annotations and empty
+  missing lists. No OAuth content was read or committed.
+
+This closes the **supplied authenticated schema discovery** gate only. Read shapes
+are now known; actual samples, normalized identity, exercise/deliverable metadata,
+entitlement, coverage, market-hours freshness/latency and model usage remain open.
+The next sample must use exact reviewed arguments and actual returned instrument
+IDs. Saturday discovery is not real-time market acceptance. Earlier entries below
+requesting discovery describe historical next steps, now superseded by this result.
+
+Canonical pre-edit branch/local/PR head:
+`dc43e7482c64db5a4cf75ed57b4e1ef1ee877c7b`, tree
+`ed2a208b6024abd16d52db26960fc5de546081ad`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 stays open/draft.
+This checkpoint changes documentation and a source manifest only. Application,
+tests, scripts, units and lockfiles remain identical to installed validation
+release `618d464f1cbde622d7c05170a99d50cca97c8ca2`. Retain its operator 1,815-test
+pass and eight sandbox cases; no suite/probe rerun is warranted for this plan.
+Local documentation checks passed: 116 relative links/anchors, 15 shell blocks,
+research JSON parsing and whitespace. Schema validation and all 65 pinned external
+reference file hashes passed (60 SignalFlow, five new comparison files). These
+checks validate documentation/provenance, not model efficacy or trading behavior.
+No new provider/model call, deployment, service start or broker write was made.
+Full application host acceptance, economic evidence and LIVE readiness remain open.
+
 ## Operator target-host credential probes passed: 2026-10-10 UTC
 
 **Operator-provided evidence:** the existing disposable systemd harness returned

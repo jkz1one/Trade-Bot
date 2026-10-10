@@ -1,8 +1,10 @@
 # Private options read evidence acquisition
 
 The first M3 [Degen-to-PAPER path](DEGEN_PAPER.md) accepts normalized fixture
-evidence. Actual authenticated option schemas/responses have not been supplied to
-this workspace. This installed command acquires that missing evidence using the
+evidence. Authenticated schemas for all six read tools have now been supplied and
+their digest verified locally; actual market responses remain outstanding. See
+[the October 10 evidence record](SLICE2_STATUS.md). This installed command acquires
+bounded evidence using the
 existing headless Robinhood MCP connection. It does not initialize an engine, publish
 a feed, submit/review an order, invoke a model or install a service.
 

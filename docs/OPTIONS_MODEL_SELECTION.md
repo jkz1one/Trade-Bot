@@ -6,6 +6,10 @@ optional and must be frozen in a new, untraded population. No authenticated mode
 or options provider acceptance, options deployment, broker write or LIVE activation
 is evidenced by this module.
 
+The broader entry/position reasoning in [the October 10 plan](AI_TRADER_RESEARCH_PLAN.md)
+is not implemented by this API. This selector is retained as comparison arm B;
+existing populations do not acquire the planned behavior.
+
 ## Capability and authority
 
 `app.options.judgment.CandidateChoice` permits only `SELECT`, one supplied candidate

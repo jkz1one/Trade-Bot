@@ -2,7 +2,11 @@
 
 The [source of truth](SOURCE_OF_TRUTH.md) now owns the current delivery order and
 completion gates. This document preserves the research rationale and primary
-sources. Its sequence below is the research recommendation, not a second roadmap.
+sources. Its sequence below is the historical research recommendation, not a second roadmap.
+The [October 10 AI-role research plan](AI_TRADER_RESEARCH_PLAN.md) extends the initial
+selector design into planned entry/position reasoning and supplies the current
+bounded delivery packages. Old implementation and percentage statements below
+describe the October 9 research checkpoint, not current status.
 
 Reviewed 2026-10-09 UTC. Product direction: stocks **and options**, borrowing
 SignalFlow's Degen/0DTE, Swing and Scope Wizard work and UI, with eventual governed

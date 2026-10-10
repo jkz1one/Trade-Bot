@@ -1,8 +1,9 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.6. Adopted product direction and working delivery contract, 2026-10-09 UTC.
+Version 1.7. Adopted product direction and working delivery contract, 2026-10-10 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
-Scope and milestone order unchanged. Report capabilities and gates, not completion percentages.
+The requested broader AI role is now a planned extension of M3/M4, not delivered code.
+Report capabilities and gates, not completion percentages.
 
 ## Goal and definition of completion
 
@@ -19,6 +20,11 @@ single-leg options scope, milestone contracts and UI layout below are working
 engineering decisions for delivering it. Actual LIVE capital/loss limits, account
 capability and activation remain unresolved. This document does not authorize real
 broker writes or silently replace the deployed experiment's configuration.
+
+The [reasoning-trader research and completion plan](AI_TRADER_RESEARCH_PLAN.md)
+defines the requested stronger AI role, source comparisons, decision contract and
+P0–P7 delivery packages within these milestones. This is the working design for
+new cohorts; the delivered SELECT/HOLD model remains unchanged.
 
 This document owns current scope and implementation order. Latest explicit user
 instructions take precedence. README is the entry point, research explains the
@@ -76,7 +82,9 @@ This closes those specific host compatibility/probe gates. It does not establish
 the fixed production service topology, actual application boot/lifecycle,
 independent alerts/archive or host-loss acceptance. No options trader was started;
 M5 remains incomplete. See [the exact evidence record](SLICE2_STATUS.md) and
-[pinned next discovery procedure](OPTIONS_READ_CAPTURE.md#pinned-discovery-after-the-passing-host-probes).
+[read evidence procedure](OPTIONS_READ_CAPTURE.md). Authenticated six-tool schema
+discovery is now operator observed and its supplied schema digest locally verified.
+Zero market reads were completed; actual samples, normalization and latency remain open.
 
 The [second operator report](SHADOW2_EVIDENCE.md) shows cumulative net equity
 $9.95992452597485, net return -0.4007547402515%, SPY -0.453936060819% and net excess
@@ -152,12 +160,22 @@ needs real point-in-time volume evidence if an ORB rule requires it. Optional fl
 dealer features remain optional until coverage and incremental value are measured.
 Do not import the entire SignalFlow OPRA/Redis service graph to add a few features.
 
-Start with a deterministic selector and one bounded tool-less model choosing among
-the same evidence candidates or HOLD. Compare them with equivalent capital, timing,
-governor and execution assumptions. No model name is adopted as a proven profitable
-trader. Its subjective confidence is not win probability or risk permission. Late
-model output cannot renew stale contract approval. Preserve all calls, including
-HOLD/error costs; do not switch the frozen legacy model as part of this work.
+The delivered deterministic selector and bounded SELECT/HOLD model become comparison
+arms A/B. The planned reasoning trader adds evidence-linked entry thesis, contract
+choice and geometry within frozen family limits (arm C), then discretionary
+MAINTAIN/EXIT_ALL/TIGHTEN proposals for the exact held position (arm D). This is a
+larger strategic role while deterministic software retains sizing, admission,
+execution and mandatory exit authority. Full contracts, source rationale, event
+bounds and acceptance are in [the research plan](AI_TRADER_RESEARCH_PLAN.md).
+
+The AI receives verified bounded evidence and no tools. It cannot invent contracts,
+change strategies/risk policy, widen original/effective invalidation, postpone an
+exit, add to a position or renew a deadline. Mandatory protection wins races with
+model advice. Unknown usage still halts new risk. Compare equivalent capital, data,
+timing, governor and fill assumptions, retaining all costs and incomplete outcomes.
+No model name or subjective confidence is adopted as proven alpha or probability.
+New roles, prompts and management create separate frozen populations. The old
+experiment and existing SELECT/HOLD cohorts remain unchanged.
 
 ## Milestones, dependencies and acceptance
 
@@ -169,17 +187,19 @@ The [headless options schema/sample acquisition](OPTIONS_READ_CAPTURE.md) is fix
 The [optional candidate model selector](OPTIONS_MODEL_SELECTION.md) also has fixture/native
 proof. The [first M4 stored options observer](OPTIONS_OBSERVER.md) has fixture/native
 proof; browser visual acceptance and matched cost/benchmark/cohort evaluation remain open.
-**Next is authenticated schema/sample evidence and exact normalized collection,
-with actual read/model usage and latency acceptance.** Each milestone
+**Next is P1 actual bounded market samples and exact normalized collection; P2
+broader entry proposal implementation can proceed offline while operator capture
+is pending.** Schema discovery has passed its narrow gate. Actual read/model usage,
+latency, P3 comparative evaluation and P4 runtime acceptance remain open. Each milestone
 ends with reviewed code, meaningful tests, status proof, commit and branch push.
 Milestones are acceptance contracts, not fixed session or calendar promises.
 
 | ID | Deliverable | Required proof before marking delivered |
 | --- | --- | --- |
-| M0 | Source audit and authoritative scope | Pinned SignalFlow sources, primary broker/data/strategy research, evidence limits and this document. Complete at this checkpoint; not a runtime gate. |
+| M0 | Source audit and authoritative scope | Pinned SignalFlow sources, primary broker/data/strategy research, evidence limits and this document. The October 10 requested AI-role research/design pass P0 is recorded separately and complete as a plan, not a runtime gate. |
 | M1 | Broker-neutral option identity and deterministic admission | Positive call/put approval plus rejection of identity/expiry mismatch, bad timestamps/quotes, unsupported deliverables, fractional/unaffordable quantity, wrong-side closes, duplicate position and exceeded full-premium/account caps. Equities regressions pass. No broker writes. |
 | M2 | Option PAPER lifecycle in the durable engine | Cash/contract conservation, whole partial fills, unknown acknowledgments, no replay, restart/reconciliation, original-stop and model-independent exits, single-contract allocation, half-day/expiry/settlement and unexpected underlying exposure. No assumed flat state from missing history. |
-| M3 | Degen candidates and real option-read boundary | Versioned setup/contract selection and HOLD reasons; candidate-first bounded collection and held-contract supervision. Fixture proof first, then authenticated exact-universe/source/latency/entitlement evidence. Optional governed preview is separate from writes. |
+| M3 | Degen candidates, reasoning proposals and real option-read boundary | Versioned setup/contract selection, bounded evidence-linked entry/management proposals with independent deterministic authority, and HOLD reasons; candidate-first bounded collection and held-contract supervision. Fixture proof first, then authenticated exact-universe/source/latency/entitlement evidence. Optional governed preview is separate from writes. |
 | M4 | Integrated observer and experiment evaluation | Read-only stored opportunities/position/health/history, truthful stale/unknown/error states, visible mode/cohort/costs, desktop/mobile checks. Browser reads cause zero model/provider/order work. Model-off/on and SPY/cash/eligible-underlying comparisons preserve point-in-time inputs and all costs. |
 | M5 | Actual isolated-host PAPER acceptance | Installed verified package on a separate namespace/population, boot/lifetime ownership/shutdown/orphan tests, independently delivered alerts, actual off-host archive retrieval and source-host-loss evidence. Matching metadata or local TLS/process fixtures cannot close it. |
 | M6 | Concrete single-broker LIVE release review and bounded canary | Account identity/product/settled funds/fee/cutoff/approval settings; reviewed order identity and authoritative partial/terminal/unknown evidence; explicit capital/per-trade/full-premium/daily/drawdown limits; independent supervision and halt/alerts; approved release and explicit real-write authorization. LIVE stays disabled until these are satisfied. |
@@ -271,8 +291,10 @@ Before editing, recover fresh GitHub branch/main/PR references and relevant curr
 code/documents. Use `slice2/robinhood-read-shadow`; main stays untouched and PR #1
 draft until its verification gates are satisfied. Keep the frozen deployment separate.
 Read this file first after README, then current status and the next milestone's code.
-Do not restart strategy/broker research unless a specific implementation question or
-changed primary evidence requires it.
+Do not restart strategy/broker research unless a specific implementation question,
+changed primary evidence or explicit user direction requires it. The requested
+October 10 AI-role pass is complete as [P0](AI_TRADER_RESEARCH_PLAN.md); continue
+through its bounded delivery packages, not another open-ended research cycle.
 
 Every slice must deliver a milestone capability or reproduce and close a concrete
 blocker to it. Record the failing case, fix and acceptance evidence. Generic
@@ -314,6 +336,7 @@ remain unestablished.
 
 ## References and evidence checkpoint
 
+- [Reasoning trader research, decision contract and completion plan](AI_TRADER_RESEARCH_PLAN.md).
 - [Options/SignalFlow/broker/model research](OPTIONS_LIVE_PIVOT_RESEARCH.md) and
   [pinned source manifest](research/signalflow_options_sources.json).
 - [Latest engineering and historical operator status](SLICE2_STATUS.md).
