@@ -1,7 +1,7 @@
 # Reasoning trader: research decisions and completion plan
 
 Reviewed 2026-10-10. This is the design and acceptance specification supporting
-[source of truth v1.8](SOURCE_OF_TRUTH.md), not a second roadmap or implemented
+[source of truth v1.9](SOURCE_OF_TRUTH.md), not a second roadmap or implemented
 capability. The user requested a stronger research foundation before more coding.
 The broader AI role below is the resulting working design. Funded limits, model
 selection, cohort enrollment and LIVE activation are not approved by this document.
@@ -21,8 +21,9 @@ It cannot propose a trade plan or manage a position. Preserve that implementatio
 as a frozen comparison arm. The durable engine, governor, process bounds, costs,
 reconciliation, supervisor and stored observer are foundations to extend, not
 replace. The initial planning checkpoint changed no application behavior. The subsequent
-[first P2 entry contract](OPTIONS_ENTRY_REASONING.md) adds offline validation only;
-current model/coordinator behavior remains unchanged.
+[P2 entry contract and bounded native worker](OPTIONS_ENTRY_REASONING.md) have
+offline/installed-package proof with fake provider responses. Durable integration
+of the complete plan remains open; current coordinator behavior is unchanged.
 
 ## Research findings and limits
 

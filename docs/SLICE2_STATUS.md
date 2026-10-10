@@ -1,5 +1,63 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P2 bounded entry model worker: 2026-10-10 UTC
+
+`app/options/entry_judgment.py` and `entry_judgment_worker.py` add the separate
+native request protocol for the broader entry contract. See
+[its API and durable integration boundary](OPTIONS_ENTRY_REASONING.md).
+This is **local fixture and installed-package proof**, with fake provider
+responses, not authentic model acceptance, deployment or a changed trading cohort.
+
+The request freezes prompt/schema/configuration hashes, model/cost/token limits,
+policy, parent identity and remaining original opportunity deadline. One tool-less
+strict-schema payload is counted before a single generation attempt; maximum
+configured charge must fit the per-call reservation. The child uses a fixed SDK
+origin, no retries, stripped environment and bounded pipes. The parent reaps
+children on protocol failure, timeout and repeated cancellation; the existing
+parent/deadline watchdog is reused. The model receives explicit evidence IDs and
+binding hashes. Returned plans must match identity, usage and original geometry.
+Rejected responses become bound HOLDs with valid captured usage retained; missing
+or mismatched usage remains evidence for the future durable caller, never assumed
+zero cost. Provider error text is not echoed. No broker handles or tools are passed.
+This process boundary is not an OS sandbox.
+
+**Next P2 slice:** durably admit/freeze the new request, retain the complete plan
+and receipt, settle known usage or halt on uncertainty, then fresh-review at
+dispatch and enforce target/absolute horizon independently. The existing engine
+stores an exit time but not this model target; forwarding only its old proposal
+would lose required terms. The current SELECT/HOLD coordinator remains unchanged.
+No new service or population invokes this worker. P1 actual market samples and
+normalization, P3 management/evaluation, P4 runtime and M8 dashboard remain open.
+
+Verification:
+
+- **160 passed in 33.79s**, warnings as errors, in the noneditable installed wheel
+  outside source on Ubuntu Python 3.12.3/OpenSSL 3.0.13. Includes 39 new worker
+  cases, 49 entry-contract cases and 72 existing selector cases.
+- Real SDK serialization with mock responses covers CALL/PUT/HOLD, exact count
+  and generation payloads, refusal/incomplete/tool/fragmented/malformed output,
+  invalid evidence/geometry, wrong model, count/usage ceilings, missing usage,
+  deadline expiration and configuration tampering. Native subprocess tests cover
+  actual worker `main` with fake SDK transport, environment filtering, overflow,
+  invalid lineage/usage, nonzero exit, timeout and repeated cancellation cleanup.
+- Initial native fixture failure was traced to an omitted test-package import
+  root under `-I`; corrected the fixture, then reran the combined suite successfully.
+  Production deadlines and import isolation were not relaxed.
+- Scoped Ruff lint/format, compilation, pip check and whitespace checks passed.
+  Wheel module bytes match source. No dependency lock or previously tracked
+  application module was changed. No full equity/options-suite rerun is claimed.
+- Verified wheel SHA-256:
+  `bc0c899e1aaaf6495523c895ae9f61dce502afc08be48e52284b0e4643300298`.
+
+Pre-edit canonical branch/local/PR head:
+`22b1161db036e5475e77c053ff12d521a3e35027`, tree
+`11342c9dd00de2cd7054639005dbd4e40b5e4ee3`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 stays draft.
+Source of truth v1.9 records capability progress without changing the roadmap.
+No authentic provider call, broker write, hosted CI or deployment was performed.
+The old frozen experiment and previously evidenced host release remain unchanged.
+LIVE stays disabled. No profitability claim follows from these tests.
+
 ## P2 offline entry reasoning and dashboard completion gate: 2026-10-10 UTC
 
 The first code slice of the broader AI role is implemented in

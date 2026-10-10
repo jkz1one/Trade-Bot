@@ -9,9 +9,10 @@ rules, implementation milestones, acceptance gates and continuation discipline.
 The [October 10 reasoning-trader plan](docs/AI_TRADER_RESEARCH_PLAN.md) defines the
 requested broader AI role, pinned external comparisons, evaluation and delivery
 packages, including the user-requested dedicated dashboard design/visual finish.
-The [first broader entry-plan contract](docs/OPTIONS_ENTRY_REASONING.md) now validates
-thesis geometry and original limits offline. Native model/durable integration and
-position reasoning remain open; the active model API still uses SELECT/HOLD.
+The [broader entry-plan contract and bounded model worker](docs/OPTIONS_ENTRY_REASONING.md)
+have fixture/installed-package proof for thesis geometry, original limits and one
+tool-less reasoning request. Durable integration and position reasoning remain
+open; the active coordinator still uses SELECT/HOLD.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.
 The M2 local options PAPER lifecycle is implemented. Read
