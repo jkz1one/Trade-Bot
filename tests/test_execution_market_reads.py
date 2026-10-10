@@ -438,6 +438,7 @@ def test_market_read_lock_must_be_private_regular_file(fault, tmp_path):
         os.mkfifo(lock, 0o600)
     else:
         lock.touch(mode=0o644)
+        lock.chmod(0o644)  # Keep this deliberately unsafe even under umask 077.
     with pytest.raises((ValueError, OSError)):
         with market_reads.market_read_lease(feed.path):
             raise AssertionError("Unsafe lock accepted")

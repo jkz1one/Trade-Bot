@@ -119,8 +119,11 @@ def serve(journal, *, origin, operator_key_file, read_token_file, certfile, keyf
             limit_concurrency=8,
         )
         config.load()
-        if config.ssl is None or config.ssl.minimum_version < ssl.TLSVersion.TLSv1_2:
+        if config.ssl is None:
             raise ValueError("Native TLS 1.2 or newer is required")
+        # OpenSSL builds differ in their implicit floor. Set the served context
+        # explicitly while preserving a stronger existing minimum.
+        config.ssl.minimum_version = max(config.ssl.minimum_version, ssl.TLSVersion.TLSv1_2)
         server = uvicorn.Server(config)
         # Uvicorn replays captured signals after draining. Keep those replays in
         # its graceful handler so our lease and handler cleanup can finish too.

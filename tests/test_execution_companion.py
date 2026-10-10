@@ -246,18 +246,30 @@ def arguments(engine, signing, token, certificate, port=8788):
     )
 
 
+@pytest.mark.parametrize(
+    "minimum", (ssl.TLSVersion.MINIMUM_SUPPORTED, ssl.TLSVersion.TLSv1_2, ssl.TLSVersion.TLSv1_3)
+)
 def test_control_lock_is_distinct_from_runtime_and_retained_through_server_return(
-    tmp_path, certificate, monkeypatch
+    tmp_path, certificate, monkeypatch, minimum
 ):
     engine, signing, token = context(tmp_path)
     before = pair(engine)
     previous = {s: signal.getsignal(s) for s in (signal.SIGINT, signal.SIGTERM)}
     observed = []
+    create_ssl_context = control_cli.uvicorn.config.create_ssl_context
+
+    def platform_context(*args, **kwargs):
+        context = create_ssl_context(*args, **kwargs)
+        context.minimum_version = minimum
+        return context
+
+    monkeypatch.setattr(control_cli.uvicorn.config, "create_ssl_context", platform_context)
 
     class Server:
         def __init__(self, config):
             assert not config.proxy_headers and config.workers == 1 and config.ws == "none"
-            assert config.ssl is not None and config.ssl.minimum_version >= ssl.TLSVersion.TLSv1_2
+            assert config.ssl is not None
+            assert config.ssl.minimum_version == max(minimum, ssl.TLSVersion.TLSv1_2)
             # TLS peer-close must fit inside application drain and the fixed host cgroup bound.
             assert asyncio.constants.SSL_SHUTDOWN_TIMEOUT < config.timeout_graceful_shutdown < 45
 
@@ -346,7 +358,10 @@ def test_control_cli_sanitizes_startup_failure(tmp_path, capsys):
     assert json.loads(output)["error_class"] == "FileNotFoundError" and "PRIVATE" not in output
 
 
-def test_native_tls_companion_preserves_submission_and_commits_signed_halt(tmp_path, certificate):
+@pytest.mark.parametrize("protocol", (ssl.TLSVersion.TLSv1_2, ssl.TLSVersion.TLSv1_3))
+def test_native_tls_companion_preserves_submission_and_commits_signed_halt(
+    tmp_path, certificate, protocol
+):
     engine, signing, token = context(tmp_path)
     submitting(engine)
     with socket.socket() as port_socket:
@@ -361,6 +376,7 @@ def test_native_tls_companion_preserves_submission_and_commits_signed_halt(tmp_p
     process = subprocess.Popen(argv, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     try:
         tls = ssl.create_default_context(cafile=str(certificate[0]))
+        tls.minimum_version = tls.maximum_version = protocol
         with httpx2.Client(verify=tls, trust_env=False, timeout=2) as client:
             started = time.monotonic()
             while True:
@@ -417,4 +433,4 @@ def test_native_tls_companion_preserves_submission_and_commits_signed_halt(tmp_p
     finally:
         if process.poll() is None:
             process.kill()
-            process.communicate(timeout=5)
+        process.communicate(timeout=5)

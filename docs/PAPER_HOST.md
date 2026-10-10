@@ -58,6 +58,10 @@ must differ. The certificate must cover literal IP 127.0.0.1, and clients must v
 its chain with their trusted CA. Native TLS remains on loopback port 8788. Remote
 operator access needs a separately verified authenticated tunnel/access arrangement;
 these units add no public route, firewall rule, Caddy rule or DNS change.
+The served SSL context explicitly requires TLS 1.2 or newer and preserves a stronger
+existing minimum. This floor does not depend on the Python/OpenSSL build's defaults;
+Ubuntu's OpenSSL 3.0 context can otherwise report `MINIMUM_SUPPORTED`. Certificate
+and key validation, trusted client verification and plaintext rejection still apply.
 
 Default runtime initialization uses stub HOLD and manual fixture quotes. Optional
 model opt-in must freeze `--key-file /etc/trade-bot-paper/model/openai.key` and explicit

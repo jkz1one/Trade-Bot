@@ -87,8 +87,20 @@ def install_success(monkeypatch, calls, clock):
 
 
 @pytest.mark.anyio
-async def test_cold_session_warms_with_no_entry_and_runs_scheduled_hold(tmp_path, monkeypatch):
-    runtime, engine, feed, clock, _ = context(tmp_path)
+@pytest.mark.parametrize("account_delay", (0, 0.75))
+async def test_cold_session_warms_with_no_entry_and_runs_scheduled_hold(
+    tmp_path, monkeypatch, account_delay
+):
+    # The fixture deliberately holds a source read across a native account read.
+    # Its source budget must cover that synchronization, not race a 0.5s deadline.
+    runtime, engine, feed, clock, _ = context(tmp_path, read_timeout=5, source_max_age=8)
+    reconcile = type(engine).reconcile_fixture
+
+    async def delayed_account(self, *args, **kwargs):
+        await asyncio.sleep(account_delay)
+        return await reconcile(self, *args, **kwargs)
+
+    monkeypatch.setattr(type(engine), "reconcile_fixture", delayed_account)
     entered, release, advance = asyncio.Event(), asyncio.Event(), asyncio.Event()
     calls = []
 

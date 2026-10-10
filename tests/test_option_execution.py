@@ -740,7 +740,8 @@ def test_admission_deadline_covers_durable_write_and_spawn_delay(tmp_path, monke
         assert venue.submit_count == 0
 
 
-def test_sigkill_owner_releases_lock_retains_attempt_and_child_exits(tmp_path):
+@pytest.mark.parametrize("startup_delay", (0, 5))
+def test_sigkill_owner_releases_lock_retains_attempt_and_child_exits(tmp_path, startup_delay):
     with owned(tmp_path) as (engine, venue, data):
         prepared = engine.prepare(
             "kill-owner", data["proposal"], data["quote"], data["underlying"], now=NOW
@@ -771,6 +772,10 @@ with OptionExecution.open(sys.argv[1], OptionLimits.model_validate_json(sys.argv
     asyncio.run(engine.dispatch(sys.argv[5], OptionQuote.model_validate_json(sys.argv[6]), UnderlyingQuote.model_validate_json(sys.argv[7]), now=at))
 """
     child_pid = None
+    child_reaped = False
+    # Interpreter startup precedes the engine's unchanged five-second dispatch
+    # budget. Deliberately delay startup to prove the harness separates the two.
+    script = f"import time; time.sleep({startup_delay})\n" + script
     parent = subprocess.Popen(
         [
             sys.executable,
@@ -791,9 +796,9 @@ with OptionExecution.open(sys.argv[1], OptionLimits.model_validate_json(sys.argv
         stderr=subprocess.PIPE,
     )
     try:
-        deadline = time.monotonic() + 4
+        deadline = time.monotonic() + 15
         while venue.submit_count != 1 and time.monotonic() < deadline:
-            assert parent.poll() is None
+            assert parent.poll() is None, parent.communicate(timeout=3)[1].decode()
             time.sleep(0.01)
         assert venue.submit_count == 1
         child_pid = int(pid_path.read_text())
@@ -804,6 +809,7 @@ with OptionExecution.open(sys.argv[1], OptionLimits.model_validate_json(sys.argv
             reaped, status = os.waitpid(child_pid, os.WNOHANG)
             if reaped:
                 child_pid = None
+                child_reaped = True
                 assert os.waitstatus_to_exitcode(status) == 96
                 break
             time.sleep(0.01)
@@ -828,9 +834,14 @@ with OptionExecution.open(sys.argv[1], OptionLimits.model_validate_json(sys.argv
             parent.wait(timeout=3)
         if parent.stderr is not None:
             parent.stderr.close()
+        if child_pid is None and not child_reaped and pid_path.exists():
+            child_pid = int(pid_path.read_text())
         if child_pid is not None:
-            os.kill(child_pid, signal.SIGKILL)
-            os.waitpid(child_pid, 0)
+            try:
+                os.kill(child_pid, signal.SIGKILL)
+                os.waitpid(child_pid, 0)
+            except (ProcessLookupError, ChildProcessError):
+                pass
         libc.prctl(36, original.value, 0, 0, 0)
 
 

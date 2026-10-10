@@ -235,6 +235,7 @@ def test_archive_parent_flush_failure_prevents_child_admission(c, monkeypatch, o
 def test_existing_parent_modes_and_unrelated_evidence_are_not_changed(c):
     parent = c.root / "existing"
     parent.mkdir(mode=0o750)
+    parent.chmod(0o750)  # The fixture's existing mode must not depend on the operator's umask.
     sentinel = parent / "retained-evidence"
     sentinel.write_bytes(b"retained")
     before = pair_bytes(c)

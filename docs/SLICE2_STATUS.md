@@ -1,5 +1,80 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Target-host validation repair: 2026-10-10 UTC
+
+Fresh GitHub branch/local/PR state matched `e4d09575d6f4bc331ebc405f63cb3495a8a78342`,
+tree `b3079f86e020fab4c84e1a7832f79c119be01ca9`. PR #1 remains open/draft;
+main remains `b5359aaf396e692d2142d7e02908f1544e045ee6`.
+
+**Operator evidence:** the separate installed-release validation on Ubuntu 24.04
+finished with **1,800 passed, 10 failed in 601.27 seconds**, warnings as errors,
+exit code 1. Installation/import and `pip check` succeeded. This was a validation
+installation, not an options trading-service launch. The supplied complete failure
+log SHA-256 is `5db2e26d49edfb826126053298a72078d9c472de81a9f6d61697c4fee197ba89`.
+The operator reported Python 3.12.3/OpenSSL 3.0.13 and dependency versions matching
+the locks. No authenticated provider, trading session or deployment acceptance
+is established by this run.
+
+The failures break down as follows:
+
+- Two permission fixtures relied on creation modes despite validation's `umask 077`.
+  The existing-directory fixture became 0700 rather than 0750; the intentionally
+  unsafe market-read lock became safe 0600 rather than 0644. Explicit fixture chmod
+  now establishes the intended existing modes. Production permission guards stay intact.
+- Four native companion/lifecycle failures shared one actual startup defect.
+  Ubuntu's server SSL context reports `MINIMUM_SUPPORTED`, while the prior local
+  build defaults to TLS 1.2. The served context now explicitly sets a TLS 1.2 floor
+  and preserves a stronger existing minimum. Plaintext, credential, certificate,
+  key and proxy restrictions remain unchanged.
+- Two neighboring HTTP/model-count tests failed on unclosed subprocess-pipe warnings
+  from earlier failed native startups, not their own authority/count assertions.
+  Both affected native harnesses now drain/reap exited children as well as kill
+  running children on failure; warnings remain errors.
+- The warming test held a mocked read across native account processing but gave that
+  read only 0.5 seconds. A deliberate 0.75-second account delay reproduces its exact
+  failure. Its disposable source fixture now uses the existing bounded five-second
+  policy used by other synchronized native-read tests, with delayed/normal cases.
+- The options SIGKILL harness allowed four seconds for both parent startup and child
+  acceptance, racing the unchanged five-second dispatch allowance. A deliberate
+  five-second pre-dispatch parent delay reproduces the exact submit-count failure.
+  The harness now bounds startup plus acceptance separately from that production
+  dispatch allowance, diagnoses early exits, and reaps a captured child on failure.
+
+**Local reproduction:** installed-wheel tests using system Ubuntu Python 3.12.3,
+OpenSSL 3.0.13 and `umask 077` reproduced the TLS startup failures and later garbage
+collection of leaked pipes. Separate delayed fixtures reproduced both timing
+signatures. Exact target-host scheduling remains unobserved; these are local
+reproductions and regression proof, not a new successful operator run.
+
+**Local focused verification:** **294 tests passed in 200.90 seconds** on Ubuntu
+Python 3.12.3/OpenSSL 3.0.13 with `umask 077`, warnings as errors and the installed
+wheel outside the source checkout. All affected suites passed, including actual
+TLS 1.2/1.3 HTTP/signing/restart paths, weak/strong initial context floors and both
+deliberately delayed timing regressions. An additional **15 tests passed in 2.43
+seconds** on Python 3.12.14/OpenSSL 3.5.8 with the same private umask, covering the
+context floor, startup rejection and permission fixtures.
+
+**Final local installed verification:** **1,815 tests passed in 463.34 seconds**
+on Ubuntu Python 3.12.3/OpenSSL 3.0.13 under `umask 077`, warnings as errors, outside
+the source checkout. This includes native runtime/control/alert/checkpoint/options
+and model-child paths with fixture/faked providers. All 114 application Python files
+and three web templates match source, wheel and installed package. All 69 entries
+across runtime/dev/build locks match installed dependency versions. Wheel SHA-256:
+`8b19080883c5db09fa38f977ad5f86f1edcdcf414e7b0508527974915fc44ace`.
+Production-file Ruff and scoped test lint/format, installed compilation under both
+interpreters, `pip check`, documentation links, retest shell syntax and whitespace
+checks passed. No warning filters, skips, automatic retries or production timeout
+extensions were added. The operator's actual low-priority host retest remains pending.
+
+**Next action:** rerun the newly pinned installed release on the actual host and
+retain its full log and exit receipt using the [single logged retest](TARGET_HOST_RETEST.md).
+No newer PAPER service, Caddy route, LIVE mode,
+broker write or frozen deployed SHADOW checkout has been started or changed.
+A successful retest would establish installed target-host test compatibility, not
+actual namespace/boot/provider/alert/off-host recovery or options-trader acceptance.
+The milestone order and remaining product scope in [SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md)
+are unchanged.
+
 ## First M4 stored options observer: fixture/native proof, 2026-10-09 UTC
 
 [SOURCE_OF_TRUTH.md](SOURCE_OF_TRUTH.md), version 1.6, retains the settled goal,

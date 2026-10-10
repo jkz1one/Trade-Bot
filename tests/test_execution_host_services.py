@@ -350,4 +350,4 @@ raise SystemExit(runtime_cli.main(sys.argv[1:]))
         for process in processes:
             if process.poll() is None:
                 process.kill()
-                process.communicate(timeout=5)
+            process.communicate(timeout=5)
