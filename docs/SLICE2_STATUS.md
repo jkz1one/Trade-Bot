@@ -1,5 +1,61 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Operator target-host installed release passed: 2026-10-10 UTC
+
+**Operator-provided host evidence:** the pinned detached validation installation
+of `618d464f1cbde622d7c05170a99d50cca97c8ca2`, source tree
+`d744b2478862d6c1620728b1d024e49090717744`, completed with **1,815 passed in
+783.51 seconds (13:03)**, warnings as errors, and an **exit receipt of 0**.
+The operator supplied the saved log tail and receipt directly in chat. The preceding
+installation output showed successful locked dependency installation, wheel build,
+noneditable package installation and `pip check` with no broken requirements.
+The final log showed the options observer CLI help and the launcher's explicit
+`Validation passed. No trading service started.` completion line.
+
+The supplied launcher used `umask 077`, low-priority tests, empty `PYTHONPATH` and
+`-o pythonpath=` outside the source checkout, with no copied application source.
+It checked the exact detached commit/source tree before building. The supplied
+installed import path was:
+`/opt/trade-bot-validation/618d464f1cbde622d7c05170a99d50cca97c8ca2/venv/lib/python3.12/site-packages/app/__init__.py`.
+The log and receipt remain at that release directory's `output.log` and `exit-code`.
+
+Host-built wheel SHA-256, from the earlier supplied installation output:
+`0ebc2e7efb1df30bbd3532fc4a418a71d41ecf1eb637deafbd426d99c75bc725`.
+This separately built host artifact differs from the local wheel digest recorded
+below; byte-identical reproducible builds and independent host byte inspection are
+not established. This record is supplied operator evidence, not direct SSH access,
+a downloaded full host log, independently retained artifacts or off-host protection.
+The previously reported host platform was Ubuntu 24.04/Python 3.12.3/OpenSSL 3.0.13.
+
+**Closed blocker:** installed target-host compatibility of this tested release,
+including the repaired Ubuntu native TLS startup and permission/cleanup/timing
+regressions. No additional suite run or application reinstall is required merely
+to record this evidence. The old failed release/log is retained as history.
+
+**Still open:** actual systemd namespace/boot/lifecycle and independent alert/archive/
+source-host-loss acceptance; authenticated option-read schemas/samples and exact
+normalized collection; actual model/read usage/latency; mixed stock/options runtime;
+matched economic evaluation and browser visual acceptance. M5 is not complete,
+no options trading service has started, and provider/profitability/LIVE acceptance
+is not granted by a fixture-provider test suite.
+
+**Next host action:** use the existing [disposable sandbox integration](PAPER_SANDBOX_ACCEPTANCE.md)
+from the already validated `618d464f...` source. Provision only its dedicated
+non-login service identity if absent; eight unique transient probes use harmless
+dummy credential files and substituted disposable paths. They install/enable no
+production unit, initialize no population, read no real credentials and make no
+provider call. Their narrow namespace/access results must be separately supplied;
+none have been observed on DigitalOcean yet. No new host abstraction is needed.
+
+**Options integration gate:** obtain exclusively managed authorization and actual
+[read discovery/sample artifacts](OPTIONS_READ_CAPTURE.md), then implement the
+normalization and options runner from that evidence. The existing stock runtime
+units cannot be relabeled as an options trader. The source-of-truth v1.6 milestone
+order is unchanged, main stays `b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1
+stays draft, the frozen deployed SHADOW experiment stays untouched and LIVE stays
+disabled. Independent economic evaluation work remains available while authentic
+provider artifacts are pending.
+
 ## Target-host validation repair: 2026-10-10 UTC
 
 Fresh GitHub branch/local/PR state matched `e4d09575d6f4bc331ebc405f63cb3495a8a78342`,
@@ -64,10 +120,10 @@ across runtime/dev/build locks match installed dependency versions. Wheel SHA-25
 Production-file Ruff and scoped test lint/format, installed compilation under both
 interpreters, `pip check`, documentation links, retest shell syntax and whitespace
 checks passed. No warning filters, skips, automatic retries or production timeout
-extensions were added. The operator's actual low-priority host retest remains pending.
+extensions were added. The subsequent operator retest passed as recorded above.
 
-**Next action:** rerun the newly pinned installed release on the actual host and
-retain its full log and exit receipt using the [single logged retest](TARGET_HOST_RETEST.md).
+**Retest procedure:** the [single logged retest](TARGET_HOST_RETEST.md) was subsequently
+completed successfully, as recorded above.
 No newer PAPER service, Caddy route, LIVE mode,
 broker write or frozen deployed SHADOW checkout has been started or changed.
 A successful retest would establish installed target-host test compatibility, not

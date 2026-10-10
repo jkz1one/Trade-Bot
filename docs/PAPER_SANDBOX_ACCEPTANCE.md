@@ -110,3 +110,93 @@ and actual application lifecycle exercises. Authenticated market/model operation
 independent alerts, archive retention/retrieval and host-loss recovery remain gates.
 Local mocked matrices, native probe tests and parser acceptance verify the harness
 only. No DigitalOcean kernel result is supplied by this implementation.
+
+## Pinned follow-up after the passing 2026-10-10 installed run
+
+The operator's `618d464f1cbde622d7c05170a99d50cca97c8ca2` installation passed all
+1,815 tests, exit 0; see [the retained record](SLICE2_STATUS.md). The following
+complete command reuses that verified source directory and needs no application
+reinstall. It verifies the pinned source and unchanged probe/unit files, requires
+systemd PID 1, provisions only the dedicated non-login account if absent, then runs
+the existing eight disposable cases. Existing account/group authority is validated;
+no account is retuned. Account provisioning is an explicit operator step outside
+the harness, whose prerequisites above remain unchanged.
+
+Run this as root on that same host. It prints a compact result and saves full JSON,
+host/kernel/systemd metadata, stderr and an exit receipt in a unique private
+directory below the already validated release. The account persists for separate
+future provisioning; transient dummy units and their fixtures are cleaned up only
+when their termination is confirmed. This does not install/enable/start a production
+PAPER trader or change the frozen SHADOW experiment. An abrupt shell/host kill
+before the receipt remains incomplete evidence; retain the report and any named
+leftover transient unit for inspection.
+
+```bash
+bash <<'BASH'
+set -euo pipefail
+umask 077
+
+tb_dir=/opt/trade-bot-validation/618d464f1cbde622d7c05170a99d50cca97c8ca2
+tb_source="$tb_dir/source"
+test "$(cat "$tb_dir/exit-code")" = 0
+test "$(git -C "$tb_source" rev-parse HEAD)" = 618d464f1cbde622d7c05170a99d50cca97c8ca2
+test "$(git -C "$tb_source" rev-parse HEAD^{tree})" = d744b2478862d6c1620728b1d024e49090717744
+git -C "$tb_source" diff --exit-code HEAD -- scripts/paper-sandbox-acceptance.py scripts/paper-sandbox-probe.py deploy/paper
+test "$(cat /proc/1/comm)" = systemd
+
+if ! /usr/bin/getent passwd tradebot-paper >/dev/null; then
+  if /usr/bin/getent group tradebot-paper >/dev/null; then
+    /usr/bin/python3 -I -c 'import grp; assert grp.getgrnam("tradebot-paper").gr_gid > 0'
+    /usr/sbin/useradd --system --gid tradebot-paper --no-create-home \
+      --home-dir /nonexistent --shell /usr/sbin/nologin tradebot-paper
+  else
+    /usr/sbin/useradd --system --user-group --no-create-home \
+      --home-dir /nonexistent --shell /usr/sbin/nologin tradebot-paper
+  fi
+fi
+
+/usr/bin/python3 -I -c 'import pwd, grp; u=pwd.getpwnam("tradebot-paper"); g=grp.getgrnam("tradebot-paper"); assert u.pw_uid > 0 and g.gr_gid > 0 and u.pw_gid == g.gr_gid, "Dedicated service identity mismatch"'
+
+tb_run=$(mktemp -d "$tb_dir/sandbox-verification-XXXXXX")
+{
+  echo "Validated release: 618d464f1cbde622d7c05170a99d50cca97c8ca2"
+  date -u
+  uname -srm
+  cat /etc/os-release
+  /usr/bin/systemctl --version
+} > "$tb_run/host-metadata.txt"
+
+if /usr/bin/python3 -I -B "$tb_source/scripts/paper-sandbox-acceptance.py" --run \
+  > "$tb_run/report.json" 2> "$tb_run/stderr.log"; then
+  tb_status=0
+else
+  tb_status=$?
+fi
+printf "%s\n" "$tb_status" > "$tb_run/exit-code"
+printf 'Exit code: %s\nSaved evidence: %s\n' "$tb_status" "$tb_run"
+
+/usr/bin/python3 -I - "$tb_run/report.json" <<'PY'
+import json, sys
+with open(sys.argv[1]) as stream:
+    report = json.load(stream)
+print("Result:", report.get("status"))
+print("Cases:", len(report.get("cases", [])))
+for case in report.get("cases", []):
+    print(case["role"], case["initial_peers"], case["status"],
+          "separate namespace:", case.get("separate_mount_namespace"))
+for key in ("reason", "current_case", "transient_unit", "retained_transient_unit"):
+    if key in report:
+        print(key + ":", report[key])
+print("Full host acceptance:", report.get("host_acceptance"))
+print("LIVE enabled:", report.get("live_enabled"))
+PY
+exit "$tb_status"
+BASH
+```
+
+Exit 0 with eight OBSERVED cases supplies narrow credential-namespace proof on
+substituted fixture paths. The report deliberately keeps full host acceptance
+UNVERIFIED. Installed application/real credential topology, lifecycle/boot,
+independent alerts and recovery still need their separate evidence. Send the compact
+result and retain the full private report. No actual DigitalOcean probe result has
+been supplied at this documentation checkpoint.

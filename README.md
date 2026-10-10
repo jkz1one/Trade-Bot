@@ -34,6 +34,11 @@ Existing deployed/runtime service support remains equities PAPER/SHADOW;
 authenticated options integration remains open and LIVE stays disabled. The deployed $10
 synthetic experiment remains frozen and separate.
 
+The operator-provided Ubuntu installed-release validation now passed all 1,815 tests
+for `618d464f1cbde622d7c05170a99d50cca97c8ca2`, exit 0.
+[Current proof and next host/data gates](docs/SLICE2_STATUS.md) retain its exact release
+and host wheel identity; no options trading service was started.
+
 Progress is reported as delivered capabilities, evidence and remaining acceptance
 gates. Local tests do not close target-host/provider/recovery or LIVE gates.
 
