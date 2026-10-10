@@ -70,6 +70,14 @@ Research comparisons may use separate simulated ledgers; they never grant severa
 owners access to a funded brokerage account. Do not reset, retune, pull or rebuild
 the deployed SHADOW checkout. Its helper selects images by HEAD.
 
+Operator target-host evidence now establishes the separate installed validation
+release's 1,815-test pass and all eight disposable credential-namespace probe cases.
+This closes those specific host compatibility/probe gates. It does not establish
+the fixed production service topology, actual application boot/lifecycle,
+independent alerts/archive or host-loss acceptance. No options trader was started;
+M5 remains incomplete. See [the exact evidence record](SLICE2_STATUS.md) and
+[pinned next discovery procedure](OPTIONS_READ_CAPTURE.md#pinned-discovery-after-the-passing-host-probes).
+
 The [second operator report](SHADOW2_EVIDENCE.md) shows cumulative net equity
 $9.95992452597485, net return -0.4007547402515%, SPY -0.453936060819% and net excess
 +0.0531813205675 percentage points. It contains one new XLE round trip with

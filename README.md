@@ -38,6 +38,11 @@ The operator-provided Ubuntu installed-release validation now passed all 1,815 t
 for `618d464f1cbde622d7c05170a99d50cca97c8ca2`, exit 0.
 [Current proof and next host/data gates](docs/SLICE2_STATUS.md) retain its exact release
 and host wheel identity; no options trading service was started.
+The subsequent operator sandbox run passed all eight credential-isolation cases,
+including peers created after startup. This closes the disposable namespace probe
+gate; installed application lifecycle, authentic data and full host acceptance
+remain open. The [pinned next discovery command](docs/OPTIONS_READ_CAPTURE.md#pinned-discovery-after-the-passing-host-probes)
+reuses that installed release and requires separate managed authorization.
 
 Progress is reported as delivered capabilities, evidence and remaining acceptance
 gates. Local tests do not close target-host/provider/recovery or LIVE gates.
@@ -126,8 +131,8 @@ credential-mount metadata for those three services. Matching snapshots retain
 `host_acceptance=UNVERIFIED`; boot, lifecycle, provider and recovery gates remain open.
 An opt-in [disposable sandbox harness](docs/PAPER_SANDBOX_ACCEPTANCE.md) now tests
 the four reviewed role credential patterns on a systemd host with harmless files,
-including peers created after startup. Local harness proof is separate from an
-actual target-host run and full application acceptance.
+including peers created after startup. The operator's target-host run observed all
+eight cases; dummy probe results remain separate from full application acceptance.
 
 ## Slice 2 — Robinhood read / SHADOW
 

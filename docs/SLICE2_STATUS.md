@@ -1,5 +1,63 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Operator target-host credential probes passed: 2026-10-10 UTC
+
+**Operator-provided evidence:** the existing disposable systemd harness returned
+exit 0, `status=OBSERVED`, and eight OBSERVED cases. Runtime, control, alerts and
+checkpoint each passed with initially present and missing credential peers; every
+case reported a separate mount namespace. The reviewed harness checks the access
+matrix before and after creating missing peers. Its exit-0 contract also requires
+confirmed transient-unit termination and exclusive fixture cleanup.
+
+The supplied command reused validated commit
+`618d464f1cbde622d7c05170a99d50cca97c8ca2`, tree
+`d744b2478862d6c1620728b1d024e49090717744`, checked unchanged probe/unit files,
+required systemd PID 1 and validated the dedicated non-root service identity.
+The account-provisioning branch creates that identity only if absent; the summary
+does not establish whether it was newly created. No production unit or trader was
+installed, enabled or started by this harness.
+
+Retained operator evidence directory:
+`/opt/trade-bot-validation/618d464f1cbde622d7c05170a99d50cca97c8ca2/sandbox-verification-OgTIGn`.
+The command saves `report.json`, `stderr.log`, `host-metadata.txt` and `exit-code`
+there. The supplied compact summary establishes the reported result; the raw files,
+their digests and kernel/systemd metadata have not been independently inspected or
+retained off host. This is operator evidence, not direct authenticated host access.
+
+**Closed gate:** actual target-host kernel/service-identity behavior of all eight
+dummy credential-namespace cases, including late-created peers. No repeat run or
+application reinstall is needed to record this result.
+
+**Remaining boundary:** the report deliberately retains
+`host_acceptance=UNVERIFIED` and `live_enabled=false`. Substituted paths and dummy
+code do not establish the fixed installed credential topology, actual SHADOW path
+denial, application boot/lifetime ownership/shutdown/orphan behavior, independent
+alerts, archive retrieval or source-host-loss recovery. M5 remains incomplete.
+
+**Next integration action:** obtain authentic read schemas with the
+[complete pinned discovery command](OPTIONS_READ_CAPTURE.md#pinned-discovery-after-the-passing-host-probes).
+It reuses the already tested installation, prompts for a separately managed OAuth
+file path on the server and makes one tool-list discovery, with no market read,
+model invocation or broker write. Separate authorization is a real prerequisite;
+the frozen deployed experiment's active/default OAuth file must not be reused.
+Review the retained schema artifact before preparing any sample arguments; no
+provider schemas or normalization defaults can be guessed. Matched economic
+evaluation remains independent unfinished M4 work, not a substitute for this M3
+data gate. The engine is not yet running an options SHADOW session.
+
+Fresh canonical branch/local/PR head before this evidence update was
+`67777ac101de06e9fcd495fe95eb3f71a9fc2c85`, tree
+`685997506a96c4ee3dff3bcf781672ad7f48f9ac`; main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6` and PR #1 remains open/draft.
+This checkpoint changes documentation only. Existing 1,815-test installed host
+proof and the new eight-case operator probe proof are retained without rerunning
+the suite. Local checks passed for 99 documentation links/anchors, 18 bash blocks,
+the embedded Python preflight and five offline private-file cases (valid private,
+symlink, public, absent and relative). Application/scripts/units/tests and dependency
+locks remain identical to validated `618d464f...`; whitespace checks passed.
+These checks do not exercise provider authorization. No application code, provider call, service or frozen experiment was
+changed from this workspace. LIVE remains disabled.
+
 ## Operator target-host installed release passed: 2026-10-10 UTC
 
 **Operator-provided host evidence:** the pinned detached validation installation
@@ -32,7 +90,7 @@ including the repaired Ubuntu native TLS startup and permission/cleanup/timing
 regressions. No additional suite run or application reinstall is required merely
 to record this evidence. The old failed release/log is retained as history.
 
-**Still open:** actual systemd namespace/boot/lifecycle and independent alert/archive/
+**Still open:** fixed installed systemd topology/boot/lifecycle and independent alert/archive/
 source-host-loss acceptance; authenticated option-read schemas/samples and exact
 normalized collection; actual model/read usage/latency; mixed stock/options runtime;
 matched economic evaluation and browser visual acceptance. M5 is not complete,
@@ -45,7 +103,8 @@ non-login service identity if absent; eight unique transient probes use harmless
 dummy credential files and substituted disposable paths. They install/enable no
 production unit, initialize no population, read no real credentials and make no
 provider call. Their narrow namespace/access results must be separately supplied;
-none have been observed on DigitalOcean yet. No new host abstraction is needed.
+all eight were subsequently supplied as OBSERVED in the record above. No new host
+abstraction or repeat probe run is needed.
 
 **Options integration gate:** obtain exclusively managed authorization and actual
 [read discovery/sample artifacts](OPTIONS_READ_CAPTURE.md), then implement the

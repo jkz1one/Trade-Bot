@@ -151,3 +151,86 @@ HOLD, not inferred defaults. This capture alone does not close M3 provider accep
 The [optional bounded model selector](OPTIONS_MODEL_SELECTION.md) has separate
 fixture/native proof; authenticated model acceptance, M4 observer/cohort evaluation
 and M5 actual isolated host/alerts/archive/source-host-loss proof remain open. LIVE stays disabled.
+
+## Pinned discovery after the passing host probes
+
+The operator's separate installed release passed 1,815 tests and then all eight
+disposable credential-namespace probes; see [the evidence record](SLICE2_STATUS.md).
+Reuse that installation. Do not install another wheel, rerun the suite, modify
+`/opt/trade-bot`, or start an options trader for schema discovery.
+
+This complete command has its release pins filled in. Its only required input is
+the **absolute path to separately managed existing Robinhood OAuth JSON**, entered
+at the terminal prompt on the server. Do not enter token text or paste the OAuth
+file into chat. The capture must exclusively own refresh use of that authorization.
+It rejects the known legacy default file and files within the frozen checkout;
+this path check cannot detect every other concurrent client or a copied token.
+The operator must establish exclusive management, as required above. If no separate
+authorization exists, stop here; this headless command cannot enroll one. Do not
+work around that prerequisite with the running experiment's file or token copy.
+
+```bash
+bash <<'BASH'
+set -euo pipefail
+umask 077
+
+tb_dir=/opt/trade-bot-validation/618d464f1cbde622d7c05170a99d50cca97c8ca2
+tb_source="$tb_dir/source"
+test "$(cat "$tb_dir/exit-code")" = 0
+test "$(git -C "$tb_source" rev-parse HEAD)" = 618d464f1cbde622d7c05170a99d50cca97c8ca2
+test "$(git -C "$tb_source" rev-parse HEAD^{tree})" = d744b2478862d6c1620728b1d024e49090717744
+git -C "$tb_source" diff --exit-code HEAD -- app pyproject.toml \
+  requirements-runtime.lock requirements-dev.lock requirements-build.lock
+
+printf 'Use separate exclusively managed authorization, never the frozen experiment file.\n'
+read -r -p 'Absolute path to separate Robinhood OAuth JSON (blank to stop): ' tb_oauth < /dev/tty
+if test -z "$tb_oauth"; then
+  echo 'Blocked: separate authorization is required. No provider call made.'
+  exit 1
+fi
+
+"$tb_dir/venv/bin/python" -I -B - "$tb_oauth" <<'PY'
+import os, sys
+from pathlib import Path
+from app.execution.market_reads import private_oauth
+
+try:
+    supplied = Path(sys.argv[1])
+    if not supplied.is_absolute():
+        raise ValueError("Absolute path required")
+    path = supplied.resolve(strict=True)
+    legacy = Path("/root/.trade-bot/robinhood-oauth.json")
+    if path.is_relative_to(Path("/opt/trade-bot").resolve()) or path == legacy:
+        raise ValueError("Frozen/default experiment authorization forbidden")
+    if legacy.exists() and os.path.samefile(path, legacy):
+        raise ValueError("Shared authorization inode forbidden")
+    private_oauth(str(supplied))
+except Exception:
+    raise SystemExit("Blocked: private separate authorization prerequisite failed. No provider call made.") from None
+PY
+
+tb_run=$(mktemp -d "$tb_dir/options-read-discovery-XXXXXX")
+cd /
+if "$tb_dir/venv/bin/python" -I -B -m app.options.read_cli discover \
+  --oauth-file "$tb_oauth" --output "$tb_run/discovery.json" \
+  > "$tb_run/summary.json" 2> "$tb_run/stderr.log"; then
+  tb_status=0
+else
+  tb_status=$?
+fi
+printf '%s\n' "$tb_status" > "$tb_run/exit-code"
+printf 'Exit code: %s\nPrivate evidence: %s\n' "$tb_status" "$tb_run"
+cat "$tb_run/summary.json"
+exit "$tb_status"
+BASH
+```
+
+Discovery makes one authenticated tool-list request, not market reads or order
+reviews. It retains only the six allowed read tools' metadata; refresh persistence
+may update the separate authorization file. The existing 30-second collection and
+bounded child-cleanup limits apply. The command starts no service, model or engine.
+The console summary is the useful next status input. Retain the private discovery
+artifact for schema review; do not paste its neighboring OAuth file. Completed
+discovery can still report missing metadata and grants no execution authority.
+Sample acquisition needs a reviewed plan built from those actual schemas; no
+guessed argument template or automatic next batch is included.

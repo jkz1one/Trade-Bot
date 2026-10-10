@@ -109,7 +109,8 @@ Follow with the installed [host snapshot](PAPER_HOST.md#read-only-host-snapshot-
 and actual application lifecycle exercises. Authenticated market/model operation,
 independent alerts, archive retention/retrieval and host-loss recovery remain gates.
 Local mocked matrices, native probe tests and parser acceptance verify the harness
-only. No DigitalOcean kernel result is supplied by this implementation.
+only. The subsequent operator target-host result is recorded below; it remains
+distinct from full application acceptance.
 
 ## Pinned follow-up after the passing 2026-10-10 installed run
 
@@ -198,5 +199,23 @@ Exit 0 with eight OBSERVED cases supplies narrow credential-namespace proof on
 substituted fixture paths. The report deliberately keeps full host acceptance
 UNVERIFIED. Installed application/real credential topology, lifecycle/boot,
 independent alerts and recovery still need their separate evidence. Send the compact
-result and retain the full private report. No actual DigitalOcean probe result has
-been supplied at this documentation checkpoint.
+result and retain the full private report.
+
+## Observed operator result: 2026-10-10 UTC
+
+The operator ran the pinned command above and supplied exit 0, overall OBSERVED,
+and eight OBSERVED cases: each of runtime/control/alerts/checkpoint with present
+and missing initial peers. All eight reported a separate mount namespace.
+The harness validates both pre-creation and post-creation access and requires
+confirmed transient-unit cleanup before returning success. The full report remains
+private at the validated release's `sandbox-verification-OgTIGn/report.json`, with
+the exit receipt and host metadata beside it. Only the compact result was supplied
+to this workspace; raw-file digests and platform metadata were not supplied.
+
+This closes the disposable target-host credential-isolation probe gate. Do not
+repeat the command merely to record it. The result correctly retains full host
+acceptance UNVERIFIED and LIVE disabled. Actual application topology/lifecycle,
+independent alert/archive and host-loss acceptance remain open, as described above.
+The [next pinned read discovery](OPTIONS_READ_CAPTURE.md#pinned-discovery-after-the-passing-host-probes)
+reuses the installed verified application; no production service installation is
+implied by either result.
