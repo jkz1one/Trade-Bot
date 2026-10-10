@@ -1,5 +1,74 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P2 offline entry reasoning and dashboard completion gate: 2026-10-10 UTC
+
+The first code slice of the broader AI role is implemented in
+`app/options/entry_reasoning.py`; see [the exact API and integration boundary](OPTIONS_ENTRY_REASONING.md).
+This is **fixture/installed-package verified offline review**, not a model call,
+durable trader integration, new runtime, deployed strategy or proof of alpha.
+
+Software constructs a bounded packet from exact confirmed Degen candidates and
+reproduces their original admission before exposing evidence. Serialized evidence
+IDs, candidate/decision/configuration binding and original opportunity expiry are
+explicit. The strict model-output contract permits HOLD or an entry plan with
+underlying condition, target, invalidation, horizon, thesis and uncertainty. It
+forbids model quantity, contract creation, premium/underlying ambiguity and extra
+authority fields. Decimal validation and full revalidation reject malformed or
+unchecked copied inputs.
+
+Review rejects foreign/stale output, unknown references, widened invalidation,
+wrong CALL/PUT geometry and targets/triggers/horizons outside the supplied frozen
+envelope. Fresh deterministic admission checks exact source/entitlement, executable
+quotes, reconciled account and budgets. Reduced funds can reduce size; cheaper
+premiums cannot increase original quantity; required price, debit, full-premium
+loss and validity cannot exceed original admission. Unmet entry conditions yield
+HOLD with no standing instruction. ELIGIBLE always retains
+`execution_authority=false`; target and absolute exit time remain in the complete
+review. The caller must supply already settled cost/account truth.
+
+**Integration still required:** a versioned native model worker and durable
+coordinator must retain the complete plan, bind frozen enrollment, record and
+settle usage, enforce target/time protection independently and revalidate at
+dispatch. Passing only its nested old `OptionProposal` to execution would discard
+required terms and is explicitly unsupported. Existing SELECT/HOLD coordinator,
+protective supervisor, schema, populations and deployed experiment are unchanged.
+Position-management proposals remain future P3 work.
+
+The user-requested **step 8 / M8 visual dashboard finish** is now recorded in
+[source of truth v1.8](SOURCE_OF_TRUTH.md) and the delivery plan. Functional UI is
+still part of P4; dedicated dark styling, charts/hierarchy, real state handling,
+desktop/mobile screenshots, keyboard and contrast acceptance are required for
+the finished product. No visual redesign is claimed in this code slice.
+
+Verification:
+
+- New entry reasoning: 49 tests; together with existing admission, **233 passed
+  in 2.15s**, warnings as errors.
+- Noneditable installed wheel, outside source, Ubuntu Python 3.12.3/OpenSSL 3.0.13:
+  **513 options-suite tests passed in 106.74s**, warnings as errors. Includes
+  admission, Degen, old model selection, durable execution, observer and capture.
+- Scoped Ruff lint/format, compilation, pip check and whitespace passed. The four
+  current delivery documents passed 68 local links/anchors. Wheel module bytes
+  match source. Existing dependency locks and all previously tracked app code are
+  unchanged; only the new module extends application code.
+- Verified wheel SHA-256:
+  `3a511b859bcf1194c3d2c19946706672f771e367c45884d8d0c01e08388dabc1`.
+
+Pre-edit canonical branch/local/PR head:
+`21286b77a243649db2452020e2bababc00424870`, tree
+`07e5dafd10371bbbb51958912921e0e94c4ff050`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 stays draft.
+No hosted CI, provider/model call, broker write or deployment was performed.
+The actual host remains on its prior separately validated release; these 513 cases
+are local installed-package proof, not a new operator-host run. No full equity
+suite rerun is claimed for this isolated additive module.
+
+**Next:** continue P2 native/durable plan integration without changing old cohorts;
+P1 bounded actual market samples and normalization remain pending operator capture.
+Authenticated discovery is already complete. Full options runtime, independent
+host lifecycle/alerts/archive recovery, prospective economic evidence, M7 families
+and M8 visual acceptance remain open. LIVE stays disabled.
+
 ## Reasoning-trader research and actual schema evidence: 2026-10-10 UTC
 
 The user requested a strong research/design pass before further coding and a

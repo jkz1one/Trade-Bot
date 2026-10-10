@@ -1,8 +1,10 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.7. Adopted product direction and working delivery contract, 2026-10-10 UTC.
+Version 1.8. Adopted product direction and working delivery contract, 2026-10-10 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
-The requested broader AI role is now a planned extension of M3/M4, not delivered code.
+The broader AI role is an extension of M3/M4. Its first offline entry contract is
+fixture verified; native/durable model integration remains open. M8 adds the
+user-requested dedicated dashboard design and visual acceptance.
 Report capabilities and gates, not completion percentages.
 
 ## Goal and definition of completion
@@ -24,7 +26,9 @@ broker writes or silently replace the deployed experiment's configuration.
 The [reasoning-trader research and completion plan](AI_TRADER_RESEARCH_PLAN.md)
 defines the requested stronger AI role, source comparisons, decision contract and
 P0–P7 delivery packages within these milestones. This is the working design for
-new cohorts; the delivered SELECT/HOLD model remains unchanged.
+new cohorts; the delivered SELECT/HOLD model remains unchanged. The first
+[offline entry-plan contract](OPTIONS_ENTRY_REASONING.md) is now implemented
+alongside it, without model calls or execution integration.
 
 This document owns current scope and implementation order. Latest explicit user
 instructions take precedence. README is the entry point, research explains the
@@ -188,8 +192,8 @@ The [optional candidate model selector](OPTIONS_MODEL_SELECTION.md) also has fix
 proof. The [first M4 stored options observer](OPTIONS_OBSERVER.md) has fixture/native
 proof; browser visual acceptance and matched cost/benchmark/cohort evaluation remain open.
 **Next is P1 actual bounded market samples and exact normalized collection; P2
-broader entry proposal implementation can proceed offline while operator capture
-is pending.** Schema discovery has passed its narrow gate. Actual read/model usage,
+native model/durable coordination can proceed offline from the implemented entry
+contract while operator capture is pending.** Schema discovery has passed its narrow gate. Actual read/model usage,
 latency, P3 comparative evaluation and P4 runtime acceptance remain open. Each milestone
 ends with reviewed code, meaningful tests, status proof, commit and branch push.
 Milestones are acceptance contracts, not fixed session or calendar promises.
@@ -204,6 +208,7 @@ Milestones are acceptance contracts, not fixed session or calendar promises.
 | M5 | Actual isolated-host PAPER acceptance | Installed verified package on a separate namespace/population, boot/lifetime ownership/shutdown/orphan tests, independently delivered alerts, actual off-host archive retrieval and source-host-loss evidence. Matching metadata or local TLS/process fixtures cannot close it. |
 | M6 | Concrete single-broker LIVE release review and bounded canary | Account identity/product/settled funds/fee/cutoff/approval settings; reviewed order identity and authoritative partial/terminal/unknown evidence; explicit capital/per-trade/full-premium/daily/drawdown limits; independent supervision and halt/alerts; approved release and explicit real-write authorization. LIVE stays disabled until these are satisfied. |
 | M7 | Swing and Scope completion on the shared foundation | Each family's frozen setup/contract/management and UI behavior, authentic required data, calendar/overnight or SPXW cutoff/exposure proof, separately measured cohort and explicit mode eligibility. Family-specific failure never redirects into a different strategy. |
+| M8 | Visually polished trading dashboard | Cohesive visual system; clear equity/benchmark, opportunities, AI thesis, exact position/protection and decision/fill timeline; truthful stale/unknown states; desktop/mobile visual, keyboard and contrast acceptance. Functional UI arrives in M4; this dedicated finish is required for product completion, not a new live-authority surface. |
 
 Dependencies: M1 before M2; M1/M2 support M3; M4 consumes their stored evidence.
 Prepare the existing M5 host acceptance procedure while offline implementation
@@ -211,7 +216,9 @@ continues, rather than making more host abstractions. M6 requires the selected
 family's M1–M5 operational gates. M7 can develop after M2 in parallel with later
 acceptance work; completing every strategy family does not gate a first reviewed
 Degen canary. The complete requested product includes all three families and the UI,
-with each live-enabled family separately accepted. This turn does not enable them.
+with each live-enabled family separately accepted. M8 completes the requested
+visual product quality after functional M4 integration; it can proceed alongside
+strategy acceptance and never changes trading authority. This turn does not enable them.
 
 Robinhood remains the first capability investigation because it is the existing
 brokerage. Current documentation is recorded in the [research](OPTIONS_LIVE_PIVOT_RESEARCH.md).
@@ -240,6 +247,22 @@ Reuse SignalFlow's information hierarchy, not its whole frontend/runtime:
 Viewing the observer reads bounded persisted records only. Research runs and signed
 operator actions are separate explicit controls with receipts. A dashboard demo,
 saved automation setting or healthy web process does not certify trader health.
+
+### Dedicated dashboard finish (M8 / user step 8)
+
+Build a distinctive, cohesive dark dashboard with restrained accents, readable
+charts, deliberate spacing/typography and clear desktop/mobile hierarchy. Lead
+with mode, bankroll/net equity versus SPY and health; follow with opportunities,
+the AI thesis and its uncertainty, exact held position/protection, and a decision
+timeline distinguishing proposal, approval, order and fill. Explain HOLD visibly.
+Costs and data age must stay legible rather than hidden behind decoration.
+
+Before visual acceptance, verify realistic populated, empty, stale, halted, unknown
+cost/order and long-text states at desktop and mobile widths, keyboard operation,
+contrast, chart labels and no clipping. Retain screenshots and review actual
+rendering. Design polish cannot imply live data or profitable results; dashboard
+reads stay side-effect free. Existing server-rendered fixture tests alone do not
+close this milestone.
 
 ## Economic evaluation and live progression
 
@@ -325,7 +348,7 @@ also has fixture/native proof, including durable usage, HOLD and original admiss
 ceilings. The [first M4 stored observer](OPTIONS_OBSERVER.md) has fixture/native proof
 for opportunities, exact positions, management, order/fill distinctions and unknown
 costs. M4 browser visual acceptance and full economic/cohort evaluation remain open.
-M3 authenticated normalized collection/model acceptance and M5–M7 are not delivered
+M3 authenticated normalized collection/model acceptance and M5–M8 are not delivered
 for options. Existing
 runtime services still execute equities only; local M2 is not an options deployment.
 Some underlying stock-engine/host procedures already exist and are reused, but do
@@ -345,6 +368,7 @@ remain unestablished.
 - [M2 delivered local options lifecycle](OPTIONS_EXECUTION.md).
 - [First M3 Degen execution path and remaining collector gate](DEGEN_PAPER.md).
 - [M3 private schema/sample acquisition and operator procedure](OPTIONS_READ_CAPTURE.md).
+- [First P2 offline entry-plan contract and remaining native integration](OPTIONS_ENTRY_REASONING.md).
 - [M3 optional candidate model selection and cost authority](OPTIONS_MODEL_SELECTION.md).
 - [First M4 private stored observer and remaining acceptance](OPTIONS_OBSERVER.md).
 - [Isolated runtime](PAPER_RUNTIME.md), [host acceptance](PAPER_HOST.md),

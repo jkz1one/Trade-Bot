@@ -1,7 +1,7 @@
 # Reasoning trader: research decisions and completion plan
 
 Reviewed 2026-10-10. This is the design and acceptance specification supporting
-[source of truth v1.7](SOURCE_OF_TRUTH.md), not a second roadmap or implemented
+[source of truth v1.8](SOURCE_OF_TRUTH.md), not a second roadmap or implemented
 capability. The user requested a stronger research foundation before more coding.
 The broader AI role below is the resulting working design. Funded limits, model
 selection, cohort enrollment and LIVE activation are not approved by this document.
@@ -20,7 +20,9 @@ only SELECT of an already admitted candidate or HOLD, plus a 500-character thesi
 It cannot propose a trade plan or manage a position. Preserve that implementation
 as a frozen comparison arm. The durable engine, governor, process bounds, costs,
 reconciliation, supervisor and stored observer are foundations to extend, not
-replace. No application behavior changes in this planning checkpoint.
+replace. The initial planning checkpoint changed no application behavior. The subsequent
+[first P2 entry contract](OPTIONS_ENTRY_REASONING.md) adds offline validation only;
+current model/coordinator behavior remains unchanged.
 
 ## Research findings and limits
 
@@ -67,7 +69,9 @@ separate engines must never be connected to one bankroll as two traders.
 
 ## Proposed AI decision contract
 
-These are planned types and rules, not claims about the current Python API.
+These describe the complete planned contract. The first offline entry types and
+review are now implemented in [OPTIONS_ENTRY_REASONING.md](OPTIONS_ENTRY_REASONING.md);
+native model, durable coordination and position management remain open.
 
 | Boundary | Model may propose | Software must decide |
 | --- | --- | --- |
@@ -198,7 +202,8 @@ it is distinct from profitability claims or permission to scale.
 
 ## Bounded delivery queue and done criteria
 
-These packages refine M3/M4; they do not replace M1–M7 or reopen completed gates.
+These packages refine the existing milestones; they do not reopen completed gates.
+The user subsequently added P8/M8 for a dedicated visually polished dashboard.
 
 | Order | Deliverable and owner | Done evidence / stop condition |
 | --- | --- | --- |
@@ -210,6 +215,7 @@ These packages refine M3/M4; they do not replace M1–M7 or reopen completed gat
 | P5 | Prospective PAPER evidence, operator + engineering analysis | Freeze enrollment manifest, then collect planned/missed slots and complete quote/decision/cost/fill paths; issue operational and economic reports with PASS/FAIL/INCONCLUSIVE separately. No silent tuning or automatic promotion. |
 | P6 | Concrete LIVE adapter/canary review, engineering + user | M6 account/order semantics, explicit capital/loss limits, broker reconciliation/exits, reviewed release and separate real-write authorization. No implementation/call of broker writes under this plan. |
 | P7 | Swing, Scope and combined stock/options completion | Family-specific M7 proof and single-owner arbitration before each mode is enabled. Can progress after the common foundation without holding the first Degen acceptance hostage. |
+| P8 | Strong visual dashboard finish, engineering + user visual review | Cohesive dark styling, charts and hierarchy for bankroll/benchmark, opportunities, AI thesis, exact position/protection and decision/fill history. Functional UI in P4; dedicated desktop/mobile, keyboard, contrast and populated/empty/stale/error screenshot acceptance in M8. Stored data remains truthful and page reads cause no trading work. |
 
 Do not wait for every real-market result before useful offline implementation.
 Do not resume generic hardening: every new change must close a named queue gate,
