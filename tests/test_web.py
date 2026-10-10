@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 
 
 def test_dashboard_smoke(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("TRADER_DB_URL", f"sqlite:///{tmp_path/'web.db'}")
     monkeypatch.setenv("TRADER_MODE", "PAPER")
     from app import config

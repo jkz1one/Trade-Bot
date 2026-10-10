@@ -1,0 +1,47 @@
+[Unit]
+Description=Trade-Bot isolated PAPER independent alert delivery
+Wants=network-online.target
+After=network-online.target
+RequiresMountsFor=/var/lib/trade-bot-paper/population
+ConditionPathExists=/var/lib/trade-bot-paper/population/execution.db
+ConditionPathExists=/var/lib/trade-bot-paper/population/execution.db.authority.db
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+Type=exec
+User=tradebot-paper
+Group=tradebot-paper
+WorkingDirectory=/var/lib/trade-bot-paper
+ExecStart=/opt/trade-bot-paper/venv/bin/python -I -m app.execution.alert_cli run --journal /var/lib/trade-bot-paper/population/execution.db
+Restart=on-failure
+RestartSec=10
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=45
+UMask=0077
+Environment=PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/lib/trade-bot-paper/population
+TemporaryFileSystem=/etc/trade-bot-paper:ro,mode=0755,size=1M
+BindReadOnlyPaths=/etc/trade-bot-paper/alerts
+InaccessiblePaths=-/etc/trade-bot-paper/model -/etc/trade-bot-paper/market -/etc/trade-bot-paper/operator
+InaccessiblePaths=-/var/lib/trade-bot -/etc/trade-bot -/opt/trade-bot
+TasksMax=32
+MemoryMax=128M
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=trade-bot-paper-alerts
+
+[Install]
+WantedBy=multi-user.target

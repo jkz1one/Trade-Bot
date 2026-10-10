@@ -1,14 +1,20 @@
 from __future__ import annotations
 
+import json
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.exc import IntegrityError
 
 from app.domain.models import AccountState, ExecutionResult, MarketPacket, Position, RiskDecision, TradeDecision
+from app.config import Settings
 from app.storage.models import (
     AccountSnapshotRow, BenchmarkSnapshotRow, CapitalEventRow, DecisionCycleRow,
-    FillRow, ModelUsageRow, OrderRow, PositionEpisodeRow,
+    FillRow, ModelUsageRow, OrderRow, PositionEpisodeRow, ShadowCycleEvidenceRow,
+    ShadowScheduleSlotRow, ShadowForwardOutcomeRow, ShadowServiceStateRow, SystemEventRow,
 )
 
 
@@ -72,13 +78,256 @@ class Repository:
         with self.session_factory.begin() as s:
             s.add(AccountSnapshotRow(equity=a.equity, cash=a.cash, high_watermark=a.high_watermark, realized_pnl=a.realized_pnl))
 
-    def save_cycle(self, packet: MarketPacket, decision: TradeDecision, risk: RiskDecision, execution: ExecutionResult, model: str, latency_ms: int = 0) -> None:
+    def save_cycle(
+        self,
+        packet: MarketPacket,
+        decision: TradeDecision,
+        risk: RiskDecision,
+        execution: ExecutionResult,
+        model: str,
+        latency_ms: int = 0,
+        prompt_version: str = "v1",
+    ) -> None:
         with self.session_factory.begin() as s:
             s.add(DecisionCycleRow(
-                packet_json=packet.model_dump_json(), model_identifier=model,
+                packet_json=packet.model_dump_json(),
+                prompt_version=prompt_version,
+                model_identifier=model,
+                decision_json=decision.model_dump_json(),
+                risk_json=risk.model_dump_json(),
+                execution_json=execution.model_dump_json(),
+                latency_ms=latency_ms,
+            ))
+
+    def save_shadow_cycle(
+        self, packet: MarketPacket, decision: TradeDecision, risk: RiskDecision,
+        execution: ExecutionResult, model: str, *, prompt_version: str,
+        latency_ms: int, input_tokens: int, output_tokens: int,
+        input_price: Decimal, output_price: Decimal, benchmark_symbol: str,
+        reconciliation: dict,
+        slot_key: str | None = None, claim_token: str | None = None,
+        outcome_settings: Settings | None = None, completed_at: datetime | None = None,
+    ) -> int:
+        """Commit all evidence together, including explicit cycle-to-usage attribution."""
+        if input_tokens < 0 or output_tokens < 0 or input_price < 0 or output_price < 0:
+            raise ValueError("Model usage and pricing must be nonnegative")
+        with self.session_factory.begin() as s:
+            slot = s.get(ShadowScheduleSlotRow, slot_key) if slot_key is not None else None
+            if slot_key is not None and (
+                slot is None or slot.status != "CLAIMED" or slot.claim_token != claim_token
+            ):
+                raise RuntimeError("SHADOW scheduled cycle does not own its active claim")
+            row = DecisionCycleRow(
+                timestamp=packet.as_of, packet_json=packet.model_dump_json(),
+                prompt_version=prompt_version, model_identifier=model,
                 decision_json=decision.model_dump_json(), risk_json=risk.model_dump_json(),
                 execution_json=execution.model_dump_json(), latency_ms=latency_ms,
+            )
+            account = packet.account
+            snapshot = AccountSnapshotRow(
+                timestamp=packet.as_of, equity=account.equity, cash=account.cash,
+                high_watermark=account.high_watermark, realized_pnl=account.realized_pnl,
+            )
+            usage = None
+            if input_tokens or output_tokens:
+                cost = (
+                    Decimal(input_tokens) * input_price + Decimal(output_tokens) * output_price
+                ) / Decimal("1000000")
+                usage = ModelUsageRow(
+                    timestamp=packet.as_of, model=model, input_tokens=input_tokens,
+                    output_tokens=output_tokens, input_price_per_million=input_price,
+                    output_price_per_million=output_price, estimated_cost=cost,
+                )
+                s.add(usage)
+            spy = next((c for c in packet.candidates
+                        if c.quote.symbol == benchmark_symbol), None)
+            benchmark = None
+            if spy is not None:
+                benchmark = BenchmarkSnapshotRow(
+                    timestamp=packet.as_of, symbol=benchmark_symbol, price=spy.quote.last,
+                )
+                s.add(benchmark)
+            s.add_all([row, snapshot])
+            s.flush()
+            s.add(ShadowCycleEvidenceRow(
+                cycle_id=row.id, model_usage_id=usage.id if usage else None,
+                account_snapshot_id=snapshot.id,
+                benchmark_snapshot_id=benchmark.id if benchmark else None,
+                reconciliation_json=json.dumps(reconciliation),
             ))
+            if outcome_settings is not None:
+                from app.metrics.shadow_outcomes import record_forward_outcomes
+
+                record_forward_outcomes(
+                    s, row.id, packet, decision, risk, execution,
+                    reconciliation=reconciliation, model=model, usage=usage,
+                    benchmark_symbol=benchmark_symbol,
+                    quote_max_age_seconds=outcome_settings.quote_max_age_seconds,
+                    completed_at=completed_at or datetime.now(timezone.utc),
+                )
+            if slot is not None:
+                code = (3 if not reconciliation["reconciled"] else
+                        8 if execution.agent_error else 9 if execution.review_error else 0)
+                slot.cycle_id = row.id
+                slot.status = "COMPLETED" if code == 0 else "FAILED"
+                slot.exit_code = code
+                slot.error_class = execution.agent_error or execution.review_error
+                slot.finished_at = datetime.now(timezone.utc)
+                slot.active_lock = None
+            s.flush()
+            return row.id
+
+    def shadow_forward_outcomes(self, limit: int = 100) -> list[ShadowForwardOutcomeRow]:
+        # The limit counts source cycles, so both horizons remain visible together.
+        with self.session_factory() as s:
+            ids = select(ShadowForwardOutcomeRow.source_cycle_id).distinct().order_by(
+                ShadowForwardOutcomeRow.source_cycle_id.desc()
+            ).limit(limit)
+            return list(s.scalars(select(ShadowForwardOutcomeRow).where(
+                ShadowForwardOutcomeRow.source_cycle_id.in_(ids)
+            ).order_by(ShadowForwardOutcomeRow.source_cycle_id.desc(),
+                       ShadowForwardOutcomeRow.horizon_minutes)))
+
+    def shadow_service_state(self) -> dict | None:
+        with self.session_factory() as s:
+            row = s.get(ShadowServiceStateRow, 1)
+            if row is None:
+                return None
+            stamp = row.heartbeat_at
+            if stamp.tzinfo is None:
+                stamp = stamp.replace(tzinfo=timezone.utc)
+            return {"status": row.status, "heartbeat_at": stamp.isoformat(),
+                    "release_sha": row.release_sha,
+                    "last_result": json.loads(row.last_result_json) if row.last_result_json else None}
+
+    def set_shadow_service_state(self, status: str, now: datetime, release: str,
+                                 result: dict | None = None) -> None:
+        with self.session_factory.begin() as s:
+            row = s.get(ShadowServiceStateRow, 1)
+            prior = row.status if row is not None else None
+            if row is None:
+                row = ShadowServiceStateRow(id=1, status=status, heartbeat_at=now, release_sha=release)
+                s.add(row)
+            row.status = status
+            row.heartbeat_at = now
+            row.release_sha = release
+            if result is not None:
+                row.last_result_json = json.dumps(result)
+            if status == "HALTED" and prior != "HALTED":
+                s.add(SystemEventRow(level="ERROR", message="SHADOW service halted: " + json.dumps(result)))
+
+    def heartbeat_shadow_service(self, now: datetime) -> None:
+        with self.session_factory.begin() as s:
+            row = s.get(ShadowServiceStateRow, 1)
+            if row is not None:
+                row.heartbeat_at = now
+
+    def resume_shadow_service(self, now: datetime, release: str) -> None:
+        with self.session_factory.begin() as s:
+            active = s.scalar(select(ShadowScheduleSlotRow).where(ShadowScheduleSlotRow.active_lock == 1))
+            if active is not None:
+                raise RuntimeError("An active scheduled claim must be inspected before service resume")
+            row = s.get(ShadowServiceStateRow, 1)
+            if row is None or row.status != "HALTED":
+                raise RuntimeError("No halted SHADOW service state to resume")
+            row.status = "STOPPED"
+            row.heartbeat_at = now
+            row.release_sha = release
+            s.add(SystemEventRow(level="WARNING", message="Operator resumed halted SHADOW service; next startup rechecks credentials"))
+
+    def abandon_shadow_slot(self, slot_key: str, now: datetime) -> None:
+        with self.session_factory.begin() as s:
+            row = s.get(ShadowScheduleSlotRow, slot_key)
+            if row is None or row.status != "CLAIMED":
+                raise RuntimeError("Only an interrupted CLAIMED slot can be abandoned")
+            row.status = "ABANDONED"
+            row.active_lock = None
+            row.finished_at = now
+            row.exit_code = 11
+            row.error_class = "OperatorAbandonedInterruptedClaim"
+            s.add(SystemEventRow(level="WARNING", message="Operator abandoned interrupted SHADOW slot " + slot_key + "; same slot remains non-replayable"))
+
+    def claim_shadow_slot(self, window, claim_token: str, claimed_at: datetime) -> bool:
+        try:
+            with self.session_factory.begin() as s:
+                s.add(ShadowScheduleSlotRow(
+                    slot_key=window.key, claim_token=claim_token, active_lock=1,
+                    scheduled_for=window.scheduled_for, session_date=window.session_date,
+                    session_open=window.opens_at, session_close=window.closes_at,
+                    claimed_at=claimed_at, status="CLAIMED",
+                ))
+            return True
+        except IntegrityError:
+            # Primary-key and unique-lock constraints arbitrate concurrent workers.
+            return False
+
+    def shadow_slot(self, slot_key: str) -> ShadowScheduleSlotRow | None:
+        with self.session_factory() as s:
+            return s.get(ShadowScheduleSlotRow, slot_key)
+
+    def fail_shadow_slot(self, slot_key: str, claim_token: str, code: int, error: str) -> None:
+        with self.session_factory.begin() as s:
+            row = s.get(ShadowScheduleSlotRow, slot_key)
+            if row is not None and row.status == "CLAIMED" and row.claim_token == claim_token:
+                row.status = "FAILED"
+                row.exit_code = code
+                row.error_class = error
+                row.finished_at = datetime.now(timezone.utc)
+                row.active_lock = None
+
+    def shadow_schedule_slots(self, limit: int = 100) -> list[ShadowScheduleSlotRow]:
+        with self.session_factory() as s:
+            return list(s.scalars(select(ShadowScheduleSlotRow)
+                                 .order_by(ShadowScheduleSlotRow.scheduled_for.desc())
+                                 .limit(limit)))
+
+    def active_shadow_slot(self) -> ShadowScheduleSlotRow | None:
+        with self.session_factory() as s:
+            return s.scalar(select(ShadowScheduleSlotRow)
+                            .where(ShadowScheduleSlotRow.active_lock == 1))
+
+    def shadow_review_activity(self, now: datetime) -> tuple[int, datetime | None]:
+        """Daily reviewed entries and most recent reviewed close survive restarts."""
+        local = now.astimezone(ZoneInfo("America/New_York"))
+        day_start = local.replace(hour=0, minute=0, second=0, microsecond=0)
+        start = day_start.astimezone(timezone.utc)
+        with self.session_factory() as s:
+            rows = list(s.scalars(select(DecisionCycleRow)
+                                  .where(DecisionCycleRow.timestamp >= start - timedelta(days=1),
+                                         DecisionCycleRow.timestamp <= now)))
+        entries = 0
+        last_close = None
+        for row in rows:
+            decision = json.loads(row.decision_json)
+            risk = json.loads(row.risk_json)
+            execution = json.loads(row.execution_json)
+            if not risk["approved"] or execution.get("broker_review") is None:
+                continue
+            stamp = row.timestamp.replace(tzinfo=timezone.utc) if row.timestamp.tzinfo is None else row.timestamp
+            if decision["action"] == "OPEN_LONG" and stamp >= start:
+                entries += 1
+            if decision["action"] == "CLOSE":
+                last_close = max(last_close, stamp) if last_close else stamp
+        return entries, last_close
+
+    def shadow_cycle_evidence(self, cycle_id: int) -> dict:
+        with self.session_factory() as s:
+            evidence = s.get(ShadowCycleEvidenceRow, cycle_id)
+            if evidence is None:
+                return {"status": "LEGACY_UNLINKED", "model_usage": None,
+                        "reconciliation": None}
+            usage = s.get(ModelUsageRow, evidence.model_usage_id) if evidence.model_usage_id else None
+            return {
+                "status": "LINKED",
+                "model_usage": {
+                    "model": usage.model, "input_tokens": usage.input_tokens,
+                    "output_tokens": usage.output_tokens,
+                    "input_price_per_million": str(usage.input_price_per_million),
+                    "output_price_per_million": str(usage.output_price_per_million),
+                    "estimated_cost": str(usage.estimated_cost),
+                } if usage else None,
+                "reconciliation": json.loads(evidence.reconciliation_json),
+            }
 
     def save_fill(self, order_id: str, symbol: str, notional: Decimal, price: Decimal, quantity: Decimal, invalidation: Decimal, thesis: str) -> None:
         with self.session_factory.begin() as s:
@@ -116,6 +365,14 @@ class Repository:
         with self.session_factory() as s:
             value = s.scalar(select(func.coalesce(func.sum(ModelUsageRow.estimated_cost), 0)))
             return Decimal(str(value))
+
+    def latest_model_usage(self) -> ModelUsageRow | None:
+        with self.session_factory() as s:
+            return s.scalar(
+                select(ModelUsageRow)
+                .order_by(ModelUsageRow.id.desc())
+                .limit(1)
+            )
 
     def save_benchmark(self, symbol: str, price: Decimal) -> None:
         with self.session_factory.begin() as s:

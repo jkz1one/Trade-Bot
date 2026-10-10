@@ -16,10 +16,20 @@ dependencies = [
   "pydantic>=2.8",
   "pydantic-settings>=2.4",
   "openai-agents>=0.2",
+  "mcp>=2.0,<3.0",
+  "exchange-calendars>=4.11,<5",
+  "jsonschema>=4.20,<5",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.2", "ruff>=0.6"]
+
+[tool.setuptools.packages.find]
+include = ["app", "app.*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+"app.web" = ["templates/*.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

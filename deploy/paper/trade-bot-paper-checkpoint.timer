@@ -1,0 +1,10 @@
+[Unit]
+Description=Trade-Bot isolated PAPER nightly local evidence capture
+
+[Timer]
+OnCalendar=*-*-* 01:15:00 UTC
+Persistent=true
+Unit=trade-bot-paper-checkpoint.service
+
+[Install]
+WantedBy=timers.target
