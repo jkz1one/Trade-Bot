@@ -171,16 +171,21 @@ def _benchmark(value, session, source):
     return (end.bid + end.ask) / (start.bid + start.ask) - 1
 
 
-def evaluate(bundle):
+def evaluate(bundle, *, tapes=None):
     """Replay supplied immutable evidence. Hashes bind content, not provider truth."""
     bundle = EvaluationBundle.model_validate(bundle.model_dump(warnings=False))
     if len(bundle.model_dump_json().encode()) > MAX_BUNDLE_BYTES:
         raise ValueError("Evaluation evidence capacity exceeded")
+    recorded = None
+    if tapes is not None:
+        from app.options.recorded_evaluation import tape_issues
+
+        recorded = tape_issues(bundle, tapes)
     with localcontext(Context(prec=192)):
-        return _evaluate(bundle)
+        return _evaluate(bundle, recorded)
 
 
-def _evaluate(bundle):
+def _evaluate(bundle, recorded=None):
     m = bundle.manifest
     evidence = {(a.session_key, a.arm): a for a in bundle.evidence}
     benchmarks = {b.session_key: b for b in bundle.benchmarks}
@@ -268,7 +273,7 @@ def _evaluate(bundle):
                 "cycle_counts": counts,
             }
         paired = all(a["status"] == "COMPLETE" for a in arms.values())
-        pair_reasons = []
+        pair_reasons = list(recorded[s.key]) if recorded is not None else []
         if len(frames) != 3 or any(frames.get(a) != frames.get("A") for a in ("B", "C")):
             pair_reasons.append("UNMATCHED_MARKET_FRAME_COVERAGE")
         if spy is None:
@@ -328,6 +333,10 @@ def _evaluate(bundle):
         "execution_authority": False,
         "live_enabled": False,
         "network_calls": False,
+        "market_evidence": "SEALED_LOCAL_FIXTURE_TAPES"
+        if recorded is not None
+        else "SUPPLIED_HASHES_ONLY",
+        "recorded_market_verified": recorded is not None and not any(recorded.values()),
         "status": "COMPLETE_ARITHMETIC" if complete else "INCONCLUSIVE",
         "economic_conclusion": "INCONCLUSIVE",
         "planned_sessions": len(rows),

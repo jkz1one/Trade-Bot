@@ -1,5 +1,84 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P3 sealed shared market tape and recorded comparison: 2026-10-11 UTC
+
+`app/options/market_tape.py` adds a separate create-only fixture recorder and
+source-independent sealed reader. `recorded_evaluation.py` connects its retained
+content to the paired evaluator. [Source of truth v1.12](SOURCE_OF_TRUTH.md) and
+[the tape API/boundaries](OPTIONS_MARKET_TAPE.md) distinguish delivered market-stage
+replay from the still-open full A/B/C portfolio runner and automatic ledger exporter.
+No existing cohort, provider collector, execution service or dashboard uses the new
+recorder yet. Authenticated normalized acquisition remains unverified.
+
+The header binds one exact complete XNYS session, declared experiment/time, setup,
+contract-selection policy and limits. Each frame retains source/receipt/recording
+times, a contiguous sequence and previous-content hash. Cycle slots are unique;
+only completed bars are accepted, and future receipts/nested metadata or foreign
+sources/universes are rejected. Quote-only updates support subsequent fill evidence
+and SPY boundaries. Missing inputs can be retained as empty cycle frames. Recording
+a slot is not proof of usable data or actual strategy execution.
+
+The API creates a new owned private file, syncs each successful append and writes
+an explicit final seal. Close never seals; no overwrite/reopen/resume/prune/retry
+operation exists. Partial write/sync failure poisons the writer. The reader rejects
+unsealed/truncated/changed/oversized/non-private/symlink/special files and verifies
+the entire chain. Boundaries: 4,096 events, 256 KiB per line, 32 MiB per tape and
+64 MiB combined normalized tape evidence for evaluation. Same-host owner replacement
+remains possible; no authentication, prospective enrollment witness, hardware
+immutability or off-host protection is claimed.
+
+The replay view exposes only recorded events available by the requested instant.
+`replay_shortlist` reruns the existing completed-bar scanner and exact contract
+planner at the original cycle time. It never substitutes later history or a current
+chain. It does not perform account admission, model calls, portfolio management or
+order simulation. Independent A/B/C portfolio state still requires the next runner.
+
+`evaluate(bundle, tapes=...)` and optional repeated CLI `--tape` arguments verify
+exact experiment/session/limits/digest bindings, all planned cycle slots, frame
+hashes, model/entry timing, actual fill-quote availability and both recorded SPY
+endpoints. Existing accounting checks remain authoritative. Missing content retains
+the denominator and suppresses paired/aggregate totals; malformed tapes are
+unavailable. Reports distinguish supplied hashes from sealed local fixture content.
+Economic conclusion remains INCONCLUSIVE, even with complete recorded arithmetic.
+
+Verification:
+
+- Noneditable installed wheel outside source, Ubuntu Python 3.12.3/OpenSSL 3.0.13:
+  **671 passed in 113.00s**, warnings as errors. All eleven options/Degen files,
+  including 49 new tape cases and all prior accounting, admission, native execution,
+  model/entry, observer and capture regressions.
+- Includes native PAPER round-trip quote binding; matched after-cost accounting;
+  missing/hash/frame/source/limits/SPY mismatches; delayed fill/cycle observations;
+  original-time shortlist replay with no future fallback; metadata/bar/clock guards;
+  changed seals/order/truncation; private create-only files; typed-copy revalidation;
+  installed CLI complete/inconclusive/unavailable outcomes and unchanged sources.
+- Actual SIGKILL after a synced append preserved the header/event prefix; it could
+  not load as a sealed tape or resume. Injected partial write also prevented sealing.
+- Initial focused run exposed the new adapter's mistaken `quote_source` field name
+  (corrected to existing `option_source`) and a tuple-versus-mapping fixture mistake.
+  A subsequent run passed 44 cases with one decimal-display assertion mismatch;
+  corrected to exact Decimal comparison. No production protection was relaxed.
+- Scoped Ruff lint/format, compilation, pip check, four installed/source module
+  byte comparisons, 78 local documentation paths and whitespace checks passed.
+  No dependency locks, deployment scripts, service units or existing engine behavior
+  were changed. No full equity-suite rerun or hosted CI was performed.
+- Verified installed wheel SHA-256:
+  `3bd55dfd43685c4f8c1e78aa5191569d3cdfc35540a19161d4461e381026f5e3`.
+
+Pre-edit canonical branch/local/PR head:
+`2b2b3c987dc7515b2e5ed19f9642a46b3b828733`, tree
+`0e5e5a3107bf7354b42e3f51fbb0dbfdd2f78a8e`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 stays draft.
+This release is not installed on the target host. No authentic provider/model call,
+broker write, production capture, new experiment enrollment or deployment occurred.
+The frozen deployed experiment remains unchanged and LIVE disabled.
+
+**Next P3:** run A/B/C strategies with their independent ledgers against this common
+tape and export their complete ledger/model receipts automatically, then add exact-
+position reasoning and observer attribution. Actual normalized market/model evidence,
+continuous options runtime/UI, independent host/alert/archive recovery, prospective
+frozen evaluation, M7 families and M8 visual finish remain open.
+
 ## P3 first paired session accounting evaluator: 2026-10-11 UTC
 
 `app/options/evaluation_models.py`, `evaluation.py` and `evaluation_cli.py` add

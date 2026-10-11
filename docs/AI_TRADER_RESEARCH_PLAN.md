@@ -1,7 +1,7 @@
 # Reasoning trader: research decisions and completion plan
 
 Reviewed 2026-10-10. This is the design and acceptance specification supporting
-[source of truth v1.11](SOURCE_OF_TRUTH.md), not a second roadmap or implemented
+[source of truth v1.12](SOURCE_OF_TRUTH.md), not a second roadmap or implemented
 capability. The user requested a stronger research foundation before more coding.
 The broader AI role below is the resulting working design. Funded limits, model
 selection, cohort enrollment and LIVE activation are not approved by this document.
@@ -160,8 +160,10 @@ Use one recorder and independent simulated ledgers, never extra funded owners.
 
 The [first P3 paired accounting evaluator](OPTIONS_EVALUATION.md) now reconstructs
 supplied A/B/C fixture session ledgers and refuses incomplete comparison totals.
-It does not rerun strategies or authenticate its source artifacts. Shared recorder/
-export, strategy replay, position-management arm D and prospective proof remain open.
+The [sealed common tape](OPTIONS_MARKET_TAPE.md) now verifies recorded cycle/fill/
+benchmark content and reruns the existing setup/contract-planning stage. Full A/B/C
+portfolio replay, automatic ledger export, authenticated collection, position-
+management arm D and prospective proof remain open.
 
 | Arm | Difference under test |
 | --- | --- |
@@ -218,7 +220,7 @@ The user subsequently added P8/M8 for a dedicated visually polished dashboard.
 | P0 | This research/design pass, engineering | Source pins, actual capability gap, authority contract, comparison protocol and ordered queue recorded. Done as documentation; subsequent P2 implementation evidence is recorded separately. |
 | P1 | Verified data packet, engineering + operator capture | Actual bounded responses mapped with no guessed metadata; installed normalizer rejects stale/future/interpolated/mismatched/partial inputs; held-contract priority and market-hours read coverage/latency receipts. Missing provider semantics become a named blocker. |
 | P2 | Broader entry reasoning, engineering | Versioned packet/proposal/admission, native bounded worker and durable full-plan execution now have local fixture proof, including target/horizon protection and preserved old cohorts. Authentic model completion/latency with P1 evidence remains required before accepted use. |
-| P3 | Comparative ledgers and position reasoning, engineering | First supplied-evidence paired accounting evaluator has fixture proof. Shared recorder/export and A/B/C strategy replay remain, then D with revision races, mandatory-exit precedence and monotone protection tests. Visible stored proposal/approval/fill attribution in observer. |
+| P3 | Comparative ledgers and position reasoning, engineering | Paired accounting, sealed common tape and setup/shortlist replay have fixture proof. A/B/C portfolio replay and automatic ledger export remain, then D with revision races, mandatory-exit precedence and monotone protection tests. Visible stored proposal/approval/fill attribution in observer. |
 | P4 | Integrated options PAPER runtime and UI, engineering + operator | One owner, continuous exact data, independent supervision, scheduled decisions, restart/unknown recovery, installed entry point and desktop/mobile observer. Exercise actual fixed host topology, boot/orphan behavior, independent alert receipt and off-host archive/source-loss drill under M5. Existing equity units alone do not close this. |
 | P5 | Prospective PAPER evidence, operator + engineering analysis | Freeze enrollment manifest, then collect planned/missed slots and complete quote/decision/cost/fill paths; issue operational and economic reports with PASS/FAIL/INCONCLUSIVE separately. No silent tuning or automatic promotion. |
 | P6 | Concrete LIVE adapter/canary review, engineering + user | M6 account/order semantics, explicit capital/loss limits, broker reconciliation/exits, reviewed release and separate real-write authorization. No implementation/call of broker writes under this plan. |

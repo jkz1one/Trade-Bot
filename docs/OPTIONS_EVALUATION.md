@@ -34,7 +34,9 @@ Hashes establish correspondence only. The declared timestamp, strategy identity,
 frame hashes, completeness and allocations are supplied assertions. This API does
 not authenticate a provider, prove enrollment happened before outcomes, verify that
 a claimed strategy produced a decision, or establish omitted calls do not exist.
-An immutable recorder/exporter and A/B/C strategy-run harness remain required.
+The optional [sealed common tape](OPTIONS_MARKET_TAPE.md) now checks recorded
+content and timing. Automatic ledger export and a full A/B/C strategy/portfolio
+runner remain required.
 
 ## Replay and uncertainty
 
@@ -89,6 +91,9 @@ The report includes:
   arithmetic completeness, a hurdle or enough fixture rows cannot establish alpha.
 
 The installed command is `python -I -m app.options.evaluation_cli --bundle PATH`.
+Optional repeated `--tape PATH` inputs enable mandatory sealed-content checks for
+every declared session. Reports distinguish supplied hashes from verified recorded
+market content; neither is authentic provider or strategy provenance.
 `PATH` must identify an already-created bounded regular JSON bundle; it is not a
 journal, OAuth file or an enrollment command. No production bundle exists yet.
 The CLI reads once, rejects symlinks/special/oversized/changing files, prints JSON
@@ -98,8 +103,9 @@ validation details are not echoed. Input examples live in `tests/test_option_eva
 
 ## Remaining P3 work
 
-Connect an immutable shared recorder and evidence exporter, replay all strategies
-against the same point-in-time availability with their own resulting portfolios,
+The [shared tape and setup/shortlist replay](OPTIONS_MARKET_TAPE.md) are now
+implemented. Connect automatic ledger/model-receipt export and replay all strategies
+against that recorded availability with their own resulting portfolios,
 and attribute decisions/fills/costs visibly in the stored observer. Add the eligible
 long-underlying baseline, exact-position management arm D, appropriate statistical
 session-block analysis and prospective enrollment/coverage proof. These are not
