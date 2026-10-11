@@ -1,5 +1,79 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P2 full-plan durable PAPER integration: 2026-10-11 UTC
+
+The broader entry model now connects to the existing single-owner options PAPER
+coordinator, accounting and independent protection. This is **local fixture and
+installed-package proof**, not authentic provider acceptance or deployment.
+[Source of truth v1.10](SOURCE_OF_TRUTH.md) and
+[the delivered entry API](OPTIONS_ENTRY_REASONING.md) record the current boundary.
+
+New healthy, untraded populations can explicitly enroll `entry_policy` alongside
+their model limits/key path. The frozen strategy stores the exact entry-model
+configuration. Existing selector populations cannot adopt it or change policy.
+The new `entry_coordination` module records the complete request before durable
+model admission, retains result/completion evidence before usage settlement, and
+never replays an interrupted slot. Known charges survive HOLD, late or rejected
+output. Missing/foreign usage halts with unknown cost; mismatched count/usage
+retains known cost and halts. The existing native worker still has no broker tools.
+
+Preparation and dispatch require the full stored matching request/result and
+paid plan receipt. They freshly review geometry, entry condition, account/budget,
+session binding and original authority. Passing only the old nested proposal is
+rejected for this new cohort. The order retains complete evidence plus immutable
+packet/plan hashes, underlying target and absolute horizon. Both entry order
+lifetime and position exit time are capped by the earlier plan/deterministic limit.
+Partial fills and replayed authoritative accounting preserve these exact terms.
+Changed or missing protection in a venue snapshot is rejected.
+
+Independent supervision latches CALL targets on bid and PUT targets on ask, with
+existing invalidation/catastrophe/time/expiry precedence. Targets and exit horizons
+survive restart without another model call. Time exits latch even when quotes are
+missing, retaining blocked/unpriced exposure. A working partial entry can block a
+protective close; its actual fills, protection and sticky exit are retained without
+an invented cancellation, replacement or flat state. These are fixture order
+semantics, not accepted broker behavior. Legacy absent fields serialize exactly
+as before; no new tables or migration of frozen cohorts are introduced.
+
+Verification:
+
+- Noneditable installed wheel outside source, Ubuntu Python 3.12.3/OpenSSL 3.0.13:
+  **574 passed in 89.71s**, warnings as errors. All nine options/Degen test files,
+  including 22 new integration cases and existing admission, execution/native
+  children, entry/selector workers, observer and capture regressions.
+- New cases cover CALL/PUT entry, complete paid receipts, fill/restart/target exit,
+  conservative spread sides, sticky exit, partial fills, time exit without quotes,
+  no fill beyond horizon, old cohort rejection, proposal-only bypass rejection,
+  HOLD/unknown/foreign/late/malformed/count/error outputs, cancellation without
+  replay, removed receipt/cost/protection and fresh dispatch rejection when target,
+  condition or horizon changes. Real venue children are used; model responses are
+  mocked. Prior worker main/SDK mock tests are included in the regression run.
+- The first broad run had 573 passes and one test-fixture failure: a modified
+  snapshot reused its old ID and hit the earlier identity-conflict guard. Giving
+  the fixture a distinct snapshot ID exercised the intended protection mismatch;
+  the full rerun passed. No production guard was relaxed.
+- Scoped Ruff lint/format, compilation, pip check, 78 local linked paths,
+  six changed wheel/source module byte comparisons and whitespace checks passed.
+  A truncated local cryptography binary initially prevented test collection; the
+  same locked version was reinstalled locally. Repository locks were unchanged.
+- Verified wheel SHA-256:
+  `72a78ebf58c17170a7953ca3126a92f0c3faa694210c48a9662bb5ddbab0715b`.
+
+Pre-edit canonical branch/local/PR head:
+`1e01aab135147eeedefdc09067572e213f0a6108`, tree
+`ea429c018bfe41782598a6c71e4bc9a36421ccb1`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 stays draft.
+No full equity-suite rerun, hosted CI, authentic market/model call, broker write
+or deployment is claimed. The frozen deployed experiment and separate previously
+validated host release remain unchanged. LIVE stays disabled.
+
+**Next:** P1 actual bounded market samples/normalization and authentic model
+latency/usage acceptance remain pending. P3 comparative economic ledgers and then
+exact-position reasoning can proceed locally from this complete entry path.
+P4 continuous options runtime/functional UI, host lifecycle/independent alerts/
+off-host recovery, prospective frozen evidence, M7 families and M8 visual finish
+remain open. No profitability or LIVE-readiness conclusion follows from this slice.
+
 ## P2 bounded entry model worker: 2026-10-10 UTC
 
 `app/options/entry_judgment.py` and `entry_judgment_worker.py` add the separate

@@ -45,6 +45,7 @@ class DegenCoordinator:
         clock=utc_now,
         judgment_limits=None,
         key_file=None,
+        entry_policy=None,
     ):
         if type(engine) is not OptionExecution or getattr(engine, "_degen_owner", None) is not None:
             raise ValueError("One active built-in options owner is required")
@@ -61,6 +62,15 @@ class DegenCoordinator:
             else None
         )
         self.key_file = Path(key_file) if key_file is not None else None
+        from app.options.entry_reasoning import EntryReasoningPolicy
+
+        self.entry_policy = (
+            EntryReasoningPolicy.model_validate(entry_policy.model_dump(warnings=False))
+            if entry_policy is not None
+            else None
+        )
+        if self.entry_policy is not None and self.judgment_limits is None:
+            raise ValueError("Broader entry reasoning requires explicit model configuration")
         if self.key_file is not None and (
             not self.key_file.is_absolute() or engine.policy.cost_policy is None
         ):
@@ -143,6 +153,12 @@ class DegenCoordinator:
                 ),
                 "key_file": str(self.key_file),
             }
+        if self.entry_policy is not None:
+            from app.options.entry_judgment import configuration
+
+            config["entry_model"] = configuration(
+                self.engine.policy.cost_policy, self.judgment_limits, self.entry_policy
+            ).model_dump(mode="json")
         return json.dumps(config, sort_keys=True)
 
     def _bound(self, db):
@@ -500,6 +516,12 @@ class DegenCoordinator:
                     key, {"status": "HOLD", "reason": "NO_ADMITTED_CONTRACT", **evidence}
                 )
             selected = candidates[0]
+            if self.entry_policy is not None:
+                from app.options.entry_coordination import run_entry_cycle
+
+                return await run_entry_cycle(
+                    self, key, candidates, planned["scans"], account, quotes, underlyings, evidence
+                )
             proposal, prepare_at, origin = selected.proposal, self.now(), "DETERMINISTIC"
             if self.judgment_limits is not None:
                 selected, proposal, prepare_at = await self._choose(

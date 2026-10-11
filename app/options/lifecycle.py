@@ -48,6 +48,15 @@ class OptionExecutionPolicy(OptionRecord):
         return self
 
 
+class EntryProtection(OptionRecord):
+    """Immutable independently enforceable terms, bound to the complete stored plan."""
+
+    packet_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    plan_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    underlying_target: Money = Field(gt=0)
+    exit_by: datetime
+
+
 class OptionIntent(OptionRecord):
     client_id: Name
     source_key: Name
@@ -64,6 +73,7 @@ class OptionIntent(OptionRecord):
     original_underlying_invalidation: Money = Field(gt=0)
     thesis: str = Field(min_length=1, max_length=500)
     time_in_force: Literal["DAY"] = "DAY"
+    entry_protection: EntryProtection | None = Field(default=None, exclude_if=lambda v: v is None)
 
     @model_validator(mode="after")
     def lifetime(self):
@@ -71,6 +81,12 @@ class OptionIntent(OptionRecord):
             raise ValueError("Distinct fresh approval and DAY-order deadlines required")
         if self.order_expires_at > self.instrument.contract.last_trading_at:
             raise ValueError("DAY order cannot outlive the exact contract trading instant")
+        if self.entry_protection is not None and (
+            self.side != "BUY"
+            or not self.prepared_at < self.exit_at <= self.entry_protection.exit_by
+            or self.order_expires_at > self.exit_at
+        ):
+            raise ValueError("Entry plan must bound entry order and independent exit lifetime")
         return self
 
 
@@ -127,8 +143,15 @@ class OptionPosition(OptionHolding):
     lots: tuple[OptionLot, ...] = Field(min_length=1, max_length=1000)
     exit_at: datetime
     tightened_underlying_invalidation: Money = Field(gt=0)
+    entry_protection: EntryProtection | None = Field(default=None, exclude_if=lambda v: v is None)
     exit_reason: (
-        Literal["UNDERLYING_INVALIDATION", "PREMIUM_CATASTROPHE", "TIME_EXIT", "EXPIRY_GUARD"]
+        Literal[
+            "UNDERLYING_INVALIDATION",
+            "PREMIUM_CATASTROPHE",
+            "TIME_EXIT",
+            "EXPIRY_GUARD",
+            "UNDERLYING_TARGET",
+        ]
         | None
     ) = None
     exit_required_at: datetime | None = None
@@ -136,6 +159,8 @@ class OptionPosition(OptionHolding):
 
     @model_validator(mode="after")
     def owned(self):
+        if self.entry_protection is not None and self.exit_at > self.entry_protection.exit_by:
+            raise ValueError("Owned position cannot extend the original plan horizon")
         if self.quantity != sum(lot.quantity for lot in self.lots):
             raise ValueError("Owned quantity must match complete lots")
         if (self.exit_reason is None) != (self.exit_required_at is None):

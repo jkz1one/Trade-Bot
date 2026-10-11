@@ -1,9 +1,10 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.9. Adopted product direction and working delivery contract, 2026-10-10 UTC.
+Version 1.10. Adopted product direction and working delivery contract, 2026-10-11 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
-The broader AI role is an extension of M3/M4. Its entry contract and bounded native
-model worker are fixture verified; durable integration remains open. M8 adds the
+The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
+durable full-plan PAPER execution are fixture verified; authentic model/feed
+acceptance and position reasoning remain open. M8 adds the
 user-requested dedicated dashboard design and visual acceptance.
 Report capabilities and gates, not completion percentages.
 
@@ -25,10 +26,10 @@ broker writes or silently replace the deployed experiment's configuration.
 
 The [reasoning-trader research and completion plan](AI_TRADER_RESEARCH_PLAN.md)
 defines the requested stronger AI role, source comparisons, decision contract and
-P0–P7 delivery packages within these milestones. This is the working design for
-new cohorts; the delivered SELECT/HOLD model remains unchanged. The first
-[offline entry-plan contract](OPTIONS_ENTRY_REASONING.md) is now implemented
-alongside it, without model calls or execution integration.
+P0–P8 delivery packages within these milestones. This is the working design for
+new cohorts; the delivered SELECT/HOLD model remains unchanged. The
+[full entry-plan path](OPTIONS_ENTRY_REASONING.md) now has local fixture proof
+through durable PAPER execution and independent protection, alongside that arm.
 
 This document owns current scope and implementation order. Latest explicit user
 instructions take precedence. README is the entry point, research explains the
@@ -165,8 +166,8 @@ dealer features remain optional until coverage and incremental value are measure
 Do not import the entire SignalFlow OPRA/Redis service graph to add a few features.
 
 The delivered deterministic selector and bounded SELECT/HOLD model become comparison
-arms A/B. The planned reasoning trader adds evidence-linked entry thesis, contract
-choice and geometry within frozen family limits (arm C), then discretionary
+arms A/B. The entry reasoning implementation adds evidence-linked thesis, contract
+choice and geometry within frozen family limits (arm C). P3 will add discretionary
 MAINTAIN/EXIT_ALL/TIGHTEN proposals for the exact held position (arm D). This is a
 larger strategic role while deterministic software retains sizing, admission,
 execution and mandatory exit authority. Full contracts, source rationale, event
@@ -192,8 +193,8 @@ The [optional candidate model selector](OPTIONS_MODEL_SELECTION.md) also has fix
 proof. The [first M4 stored options observer](OPTIONS_OBSERVER.md) has fixture/native
 proof; browser visual acceptance and matched cost/benchmark/cohort evaluation remain open.
 **Next is P1 actual bounded market samples and exact normalized collection; P2
-durable coordination must retain and enforce the full plan from the implemented
-entry contract/native worker while operator capture is pending.** Schema discovery has passed its narrow gate. Actual read/model usage,
+full-plan entry now has local durable integration proof. P3 comparative ledgers
+and position reasoning can proceed while operator capture is pending.** Schema discovery has passed its narrow gate. Actual read/model usage,
 latency, P3 comparative evaluation and P4 runtime acceptance remain open. Each milestone
 ends with reviewed code, meaningful tests, status proof, commit and branch push.
 Milestones are acceptance contracts, not fixed session or calendar promises.
@@ -368,7 +369,7 @@ remain unestablished.
 - [M2 delivered local options lifecycle](OPTIONS_EXECUTION.md).
 - [First M3 Degen execution path and remaining collector gate](DEGEN_PAPER.md).
 - [M3 private schema/sample acquisition and operator procedure](OPTIONS_READ_CAPTURE.md).
-- [P2 entry-plan contract, native worker and remaining durable integration](OPTIONS_ENTRY_REASONING.md).
+- [P2 entry-plan contract, native worker and durable PAPER integration](OPTIONS_ENTRY_REASONING.md).
 - [M3 optional candidate model selection and cost authority](OPTIONS_MODEL_SELECTION.md).
 - [First M4 private stored observer and remaining acceptance](OPTIONS_OBSERVER.md).
 - [Isolated runtime](PAPER_RUNTIME.md), [host acceptance](PAPER_HOST.md),

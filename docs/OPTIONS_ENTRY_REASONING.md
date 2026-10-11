@@ -1,10 +1,11 @@
-# Broader entry reasoning contract and bounded worker
+# Broader entry reasoning and durable PAPER execution
 
-P2 contract and native worker slices. `app.options.entry_reasoning` adds a pure, tool-less
+P2 contract, native worker and durable coordination slices. `app.options.entry_reasoning` adds a pure, tool-less
 proposal/review boundary alongside the unchanged SELECT/HOLD model. It makes no
 model/provider call, opens no database and has no order or execution authority.
-The separate `entry_judgment` / `entry_judgment_worker` protocol can request a plan
-from the model. Neither is wired into the current coordinator, runtime or observer.
+The `entry_judgment` / `entry_judgment_worker` protocol requests a plan from the
+model. `entry_coordination` connects it to an explicitly enrolled new Degen PAPER
+cohort. Existing selector cohorts are unchanged. No deployed runtime uses it yet.
 
 ## Inputs and review
 
@@ -83,22 +84,49 @@ Missing usage, a lost child or an undecodable receipt remains unknown to the
 future durable caller; none establishes that no billable request occurred.
 
 Tests use real SDK serialization with fake responses and native subprocesses.
-They do not establish authentic model latency, compatibility or economics. No
-service, cohort enrollment or broker path invokes this worker yet.
+They do not establish authentic model latency, compatibility or economics. An
+explicitly enrolled local cohort can invoke it; no deployed service or broker path does.
 
-## Integration boundary and next work
+## Durable integration
 
-Do not pass only the nested `OptionProposal` to existing execution and claim broader
-reasoning is enabled: that type does not retain this target/horizon/condition.
-Next P2 work must add durable coordinator receipts for the versioned native
-request, freeze enrollment, persist the full plan and its exit requirements,
-settle usage before review, and revalidate at dispatch without renewing authority.
-Target/time management must be enforced independently of future model availability.
-Existing protective exits remain authoritative. No API here changes a frozen cohort.
+Construct `DegenCoordinator(..., entry_policy=..., judgment_limits=..., key_file=...,
+create=True)` only on a new healthy, untraded separate population. All values must
+be explicitly selected; test policies are fixtures, not approved trading limits.
+The existing frozen strategy record now includes the exact entry model configuration
+only for this opt-in path. Reopening requires it unchanged; an old selector cohort
+cannot adopt it. No new database schema/table or migration of prior cohorts occurs.
+
+One cycle records its complete request before model-attempt admission and starts
+the existing bounded child once. It stores result/completion evidence before
+settling usage. Trustworthy usage is charged even for late, rejected or HOLD
+output; missing or foreign usage halts with an unknown attempt. Existing source
+deduplication and interruption handling retain evidence and prohibit replay.
+Crashes between the separate durable writes do not infer completion or free cost.
+
+Only a full matching stored request/result, frozen configuration, settled usage
+and exact plan hash may reach preparation. Fresh account admission after cost
+settlement and full-plan review run again immediately before dispatch. Conditions,
+geometry, budget reductions and original deadlines remain binding. A projection
+to the old proposal-only path is rejected for this cohort. Preparation stores the
+complete request/result with admission evidence. The immutable order protection
+contains packet/plan hashes, underlying target and original absolute exit horizon.
+
+The earlier deterministic cutoff and model horizon cap position exit time and
+entry order lifetime. Fills and authoritative reconciliation carry protection to
+the exact position; changed snapshot terms are rejected. Independent supervision
+latches CALL target on bid or PUT target on ask, while stop/catastrophe/time/expiry
+rules remain authoritative. Missing/stale evidence cannot manufacture a target
+hit or fill. A time exit still latches without quotes, but remains blocked until
+executable evidence and order state permit a close. Partial working entry exposure
+is retained and can block that close; no cancellation, automatic replay or assumed
+flatness is introduced. The model need not be available for these exit obligations.
+
+## Remaining acceptance
 
 Adversarial tests cover both CALL and PUT, changed geometry, foreign/stale outputs,
 unknown references, invalid terms, HOLD, trigger sides, cost-reduced sizing,
 original ceilings/deadlines, fresh admission and tampered packet revalidation.
 Installed-package regression proof is recorded in [status](SLICE2_STATUS.md).
-Authentic market/model acceptance, durable integration, position-management proposals
-and deployment remain open. See [the completion plan](AI_TRADER_RESEARCH_PLAN.md).
+Authentic market/model acceptance, position-management proposals, comparative
+economic ledgers and deployed runtime/UI remain open. These are fixture fills,
+not broker fills or profitability evidence. See [the completion plan](AI_TRADER_RESEARCH_PLAN.md).

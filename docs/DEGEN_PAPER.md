@@ -6,6 +6,12 @@ options service or enable LIVE. An [optional bounded model selector](OPTIONS_MOD
 now has separate fixture/native proof; its actual provider acceptance remains open. The frozen deployed synthetic
 experiment and existing equities services are unchanged.
 
+A separately enrolled cohort may now opt into the [broader entry-plan path](OPTIONS_ENTRY_REASONING.md)
+with `entry_policy`, `judgment_limits` and `key_file`. It stores full model plans
+and usage, fresh-reviews before preparation/dispatch, and enforces target/time exits
+independently. This local fixture integration cannot upgrade an existing frozen
+selector cohort and has no authentic provider or deployment acceptance yet.
+
 ## Delivered path
 
 `app.options.degen` evaluates version `degen-completed-bars-v1` against the owner's

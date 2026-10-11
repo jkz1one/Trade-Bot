@@ -181,8 +181,8 @@ class EntryReview(OptionRecord):
 def review_entry_plan(packet, plan, *, quote, underlying, account, now):
     """Pure review after cost settlement using fresh caller-owned account/quotes.
 
-    ELIGIBLE is not an order approval for dispatch. A future durable coordinator
-    must retain the complete review/target/horizon and independently re-admit.
+    ELIGIBLE is not an order approval for dispatch. The durable coordinator
+    retains the complete review/target/horizon and independently re-admits.
     No receipt, model call, reservation, journal mutation or recovery occurs here.
     """
     now = clock(now)

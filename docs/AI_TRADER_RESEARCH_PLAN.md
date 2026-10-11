@@ -1,7 +1,7 @@
 # Reasoning trader: research decisions and completion plan
 
 Reviewed 2026-10-10. This is the design and acceptance specification supporting
-[source of truth v1.9](SOURCE_OF_TRUTH.md), not a second roadmap or implemented
+[source of truth v1.10](SOURCE_OF_TRUTH.md), not a second roadmap or implemented
 capability. The user requested a stronger research foundation before more coding.
 The broader AI role below is the resulting working design. Funded limits, model
 selection, cohort enrollment and LIVE activation are not approved by this document.
@@ -15,15 +15,17 @@ useful hypothesis is better selection, abstention and discretionary management
 after its costs and delay. More agents, longer explanations or more trades are not
 success criteria. A model must earn its operational cost through measured value.
 
-Current code is narrower: `CandidateChoice` in `app/options/judgment.py` accepts
+The original comparison arm is narrower: `CandidateChoice` in `app/options/judgment.py` accepts
 only SELECT of an already admitted candidate or HOLD, plus a 500-character thesis.
 It cannot propose a trade plan or manage a position. Preserve that implementation
 as a frozen comparison arm. The durable engine, governor, process bounds, costs,
 reconciliation, supervisor and stored observer are foundations to extend, not
 replace. The initial planning checkpoint changed no application behavior. The subsequent
-[P2 entry contract and bounded native worker](OPTIONS_ENTRY_REASONING.md) have
-offline/installed-package proof with fake provider responses. Durable integration
-of the complete plan remains open; current coordinator behavior is unchanged.
+[P2 entry contract, bounded native worker and durable coordination](OPTIONS_ENTRY_REASONING.md)
+have local installed-package proof with fake provider responses. A newly enrolled
+cohort can opt into full entry plans with independently enforced target/horizon;
+existing selector cohorts remain unchanged. Authentic model/feed acceptance and
+P3 position-management reasoning remain open.
 
 ## Research findings and limits
 
@@ -208,9 +210,9 @@ The user subsequently added P8/M8 for a dedicated visually polished dashboard.
 
 | Order | Deliverable and owner | Done evidence / stop condition |
 | --- | --- | --- |
-| P0 | This research/design pass, engineering | Source pins, actual capability gap, authority contract, comparison protocol and ordered queue recorded. Done as documentation; broader model behavior remains not implemented. |
+| P0 | This research/design pass, engineering | Source pins, actual capability gap, authority contract, comparison protocol and ordered queue recorded. Done as documentation; subsequent P2 implementation evidence is recorded separately. |
 | P1 | Verified data packet, engineering + operator capture | Actual bounded responses mapped with no guessed metadata; installed normalizer rejects stale/future/interpolated/mismatched/partial inputs; held-contract priority and market-hours read coverage/latency receipts. Missing provider semantics become a named blocker. |
-| P2 | Broader entry reasoning, engineering | Versioned packet/proposal/admission and native bounded worker; adversarial evidence/geometry tests, cost/deadline failures and preserved old cohorts. Fixture proof first, authentic model completion before accepted use. Can implement offline while P1 operator evidence is pending. |
+| P2 | Broader entry reasoning, engineering | Versioned packet/proposal/admission, native bounded worker and durable full-plan execution now have local fixture proof, including target/horizon protection and preserved old cohorts. Authentic model completion/latency with P1 evidence remains required before accepted use. |
 | P3 | Comparative ledgers and position reasoning, engineering | A/B/C replay with cash/quantity conservation and honest exclusions, then D with revision races, mandatory-exit precedence and monotone protection tests. Visible stored proposal/approval/fill attribution in observer. |
 | P4 | Integrated options PAPER runtime and UI, engineering + operator | One owner, continuous exact data, independent supervision, scheduled decisions, restart/unknown recovery, installed entry point and desktop/mobile observer. Exercise actual fixed host topology, boot/orphan behavior, independent alert receipt and off-host archive/source-loss drill under M5. Existing equity units alone do not close this. |
 | P5 | Prospective PAPER evidence, operator + engineering analysis | Freeze enrollment manifest, then collect planned/missed slots and complete quote/decision/cost/fill paths; issue operational and economic reports with PASS/FAIL/INCONCLUSIVE separately. No silent tuning or automatic promotion. |

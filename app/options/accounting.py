@@ -50,6 +50,7 @@ def apply_fill(ledger, intent, fill):
                     entry_client_id=intent.client_id,
                     lots=lots,
                     exit_at=intent.exit_at,
+                    entry_protection=intent.entry_protection,
                 )
             cash = ledger.cash - premium - fill.fee
             settled = ledger.settled_cash - premium - fill.fee

@@ -22,6 +22,7 @@ from app.options.governor import _fresh, _tick_price, admit_option
 from app.options.lifecycle import (
     CALENDAR_SOURCE,
     TERMINAL,
+    EntryProtection,
     OptionExecutionPolicy,
     OptionIntent,
     OptionLedger,
@@ -336,6 +337,8 @@ class OptionExecution:
         now,
         origin="DETERMINISTIC",
         ceiling=None,
+        entry_request=None,
+        entry_result=None,
     ):
         now = clock(now)
         proposal = OptionProposal.model_validate(proposal.model_dump(warnings=False))
@@ -352,6 +355,10 @@ class OptionExecution:
             or origin not in {"DETERMINISTIC", "MODEL", "PROTECTIVE"}
         ):
             raise ValueError("Bounded source and explicit proposal origin required")
+        if (entry_request is None) != (entry_result is None) or (
+            entry_request is not None and (origin != "MODEL" or ceiling is not None)
+        ):
+            raise ValueError("Full paired model entry receipt required without a separate ceiling")
         inputs = {
             "proposal": proposal.model_dump(mode="json"),
             "quote": quote.model_dump(mode="json") if quote else None,
@@ -364,6 +371,14 @@ class OptionExecution:
             "underlying": underlying,
             "origin": origin,
         }
+        if entry_request is not None:
+            from app.options.entry_judgment import EntryRequest, EntryResult
+
+            entry_request = EntryRequest.model_validate(entry_request.model_dump(warnings=False))
+            entry_result = EntryResult.model_validate(entry_result.model_dump(warnings=False))
+            for key, value in (("entry_request", entry_request), ("entry_result", entry_result)):
+                inputs[key] = value.model_dump(mode="json")
+                bound_inputs[key] = value
         if ceiling is not None:
             ceiling = OptionAdmission.model_validate(ceiling.model_dump(warnings=False))
             inputs["ceiling"] = ceiling.model_dump(mode="json")
@@ -379,6 +394,24 @@ class OptionExecution:
                     raise ExecutionBlocked("OPTION_SOURCE_IDENTITY_CONFLICT")
                 return json.loads(old["result_json"])
             reason = None
+            entry_review = None
+            strategy_table = db.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_option_strategy'"
+            ).fetchone()
+            strategy = (
+                db.execute(
+                    "SELECT policy_json FROM execution_option_strategy WHERE id=1"
+                ).fetchone()
+                if strategy_table
+                else None
+            )
+            if (
+                proposal.action == "OPEN_LONG"
+                and strategy
+                and "entry_model" in json.loads(strategy[0])
+                and entry_request is None
+            ):
+                reason = "FULL_ENTRY_PLAN_REQUIRED"
             if origin == "MODEL":
                 model = db.execute(
                     "SELECT * FROM execution_model_calls WHERE source_key=?", (source_key,)
@@ -386,7 +419,8 @@ class OptionExecution:
                 if (
                     model is None
                     or model["cost"] is None
-                    or model["decision_hash"] != fingerprint(proposal)
+                    or model["decision_hash"]
+                    != fingerprint(entry_result.plan if entry_result is not None else proposal)
                 ):
                     reason = "OPTION_MODEL_RECEIPT_REQUIRED"
             try:
@@ -396,9 +430,27 @@ class OptionExecution:
                     else None
                 )
                 session = self._session(proposal.contract, now) if proposal.contract else None
-                result = admit_option(
-                    proposal, quote, underlying, account, self._effective_limits(), session, now=now
-                )
+                if entry_request is not None:
+                    from app.options.entry_coordination import review_for_execution
+
+                    entry_review = review_for_execution(
+                        self, db, source_key, entry_request, entry_result, quote, underlying, now
+                    )
+                    if entry_review.outcome != "ELIGIBLE" or entry_review.proposal != proposal:
+                        raise ExecutionBlocked(
+                            "OPTION_ENTRY_PLAN_REJECTED:" + ";".join(entry_review.reasons)
+                        )
+                    result = entry_review.admission
+                else:
+                    result = admit_option(
+                        proposal,
+                        quote,
+                        underlying,
+                        account,
+                        self._effective_limits(),
+                        session,
+                        now=now,
+                    )
             except (ValueError, ExecutionBlocked) as exc:
                 reason = str(exc)
                 result = None
@@ -448,6 +500,15 @@ class OptionExecution:
                         proposal.contract.last_trading_at
                         - timedelta(seconds=self.policy.expiry_guard_seconds),
                     )
+                    protection = None
+                    if entry_review is not None:
+                        exit_at = min(exit_at, entry_review.exit_by)
+                        protection = EntryProtection(
+                            packet_hash=entry_review.packet_hash,
+                            plan_hash=fingerprint(entry_review.plan),
+                            underlying_target=entry_review.plan.underlying_target,
+                            exit_by=entry_review.exit_by,
+                        )
                     stop = (
                         proposal.underlying_invalidation
                         if proposal.action == "OPEN_LONG"
@@ -464,12 +525,15 @@ class OptionExecution:
                         approved_full_premium_loss=result.full_premium_loss,
                         prepared_at=now,
                         approval_expires_at=result.valid_until,
-                        order_expires_at=session.closes_at,
+                        order_expires_at=min(session.closes_at, exit_at)
+                        if protection
+                        else session.closes_at,
                         exit_at=exit_at
                         if proposal.action == "OPEN_LONG"
                         else ledger.position.exit_at,
                         original_underlying_invalidation=stop,
                         thesis=proposal.thesis,
+                        entry_protection=protection,
                     )
                     approval = {
                         **inputs,
@@ -524,6 +588,8 @@ class OptionExecution:
                     raise ExecutionBlocked("OPTION_APPROVAL_EXPIRED")
                 if quote.instrument != intent.instrument:
                     raise ExecutionBlocked("OPTION_INSTRUMENT_MAPPING_CHANGED")
+                if (intent.entry_protection is None) != ("entry_request" not in approval):
+                    raise ExecutionBlocked("OPTION_ENTRY_PROTECTION_MISSING")
                 account = self._account(db, now, exclude=client_id, closing=intent.side == "SELL")
                 result = admit_option(
                     proposal,
@@ -534,6 +600,34 @@ class OptionExecution:
                     self._session(intent.instrument.contract, now),
                     now=now,
                 )
+                if intent.entry_protection is not None:
+                    from app.options.entry_coordination import review_for_execution
+                    from app.options.entry_judgment import EntryRequest, EntryResult
+
+                    review = review_for_execution(
+                        self,
+                        db,
+                        intent.source_key,
+                        EntryRequest.model_validate(approval["entry_request"]),
+                        EntryResult.model_validate(approval["entry_result"]),
+                        quote,
+                        underlying,
+                        now,
+                        exclude=client_id,
+                    )
+                    if review.outcome != "ELIGIBLE" or review.proposal != proposal:
+                        raise ExecutionBlocked(
+                            "OPTION_ENTRY_DISPATCH_REJECTED:" + ";".join(review.reasons)
+                        )
+                    expected = EntryProtection(
+                        packet_hash=review.packet_hash,
+                        plan_hash=fingerprint(review.plan),
+                        underlying_target=review.plan.underlying_target,
+                        exit_by=review.exit_by,
+                    )
+                    if expected != intent.entry_protection or intent.exit_at > review.exit_by:
+                        raise ExecutionBlocked("OPTION_ENTRY_PROTECTION_CHANGED")
+                    result = review.admission
                 if result.outcome != "APPROVED" or result.quantity < intent.quantity:
                     raise ExecutionBlocked(
                         "OPTION_FRESH_ADMISSION_REJECTED:" + ";".join(result.reasons)
@@ -878,6 +972,7 @@ class OptionExecution:
             != snap.position.original_underlying_invalidation
             or state.position.exit_at != snap.position.exit_at
             or state.position.entry_client_id != snap.position.entry_client_id
+            or state.position.entry_protection != snap.position.entry_protection
         ):
             raise ValueError("OPTION_POSITION_TERMS_MISMATCH")
         prior = OptionLedger.model_validate_json(c["ledger_json"])
@@ -1029,6 +1124,21 @@ class OptionExecution:
                     1 - self.policy.premium_catastrophe_fraction
                 ):
                     reason = reason or "PREMIUM_CATASTROPHE"
+                if (
+                    underlying_ok
+                    and p.entry_protection is not None
+                    and (
+                        (
+                            p.contract.right == "CALL"
+                            and underlying.bid >= p.entry_protection.underlying_target
+                        )
+                        or (
+                            p.contract.right == "PUT"
+                            and underlying.ask <= p.entry_protection.underlying_target
+                        )
+                    )
+                ):
+                    reason = reason or "UNDERLYING_TARGET"
                 if not quote_ok:
                     issue = "OPTION_UNPRICED_OR_STALE"
                 elif not underlying_ok:
@@ -1231,8 +1341,18 @@ class OptionExecution:
 
     @exact
     def record_model_usage(self, source_key, usage, proposal, *, now):
-        usage = UsageEvidence.model_validate(usage.model_dump(warnings=False))
         proposal = OptionProposal.model_validate(proposal.model_dump(warnings=False))
+        return self._record_model_usage(source_key, usage, proposal, now=now)
+
+    def record_entry_usage(self, source_key, usage, plan, *, now):
+        from app.options.entry_reasoning import EntryPlan
+
+        plan = EntryPlan.model_validate(plan.model_dump(warnings=False))
+        return self._record_model_usage(source_key, usage, plan, now=now)
+
+    @exact
+    def _record_model_usage(self, source_key, usage, proposal, *, now):
+        usage = UsageEvidence.model_validate(usage.model_dump(warnings=False))
         policy = self.policy.cost_policy
         if policy is None or usage.model != policy.model:
             raise ValueError("Frozen model identity required")

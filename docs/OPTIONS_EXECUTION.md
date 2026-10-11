@@ -36,6 +36,7 @@ in `tests/test_option_execution.py` for complete explicit fixture configurations
 | `tighten_invalidation(...)` | Preserves the original stop and rejects widening/crossing or erasure of a latched exit |
 | `resume(reason, expected_revision=..., now=...)` | Explicit local reviewed recovery requires current revision, fresh reconciliation/supervision and no unresolved attempt/cost |
 | `begin_model_attempt(...)` / `record_model_usage(...)` | Stores an attempt before external orchestration, retains unknown cost, binds immutable usage/proposal receipts and freezes configured cost budgets |
+| `record_entry_usage(...)` / `prepare(..., entry_request=..., entry_result=...)` | For a newly enrolled broader-entry cohort, binds paid usage to the full plan and retains complete request/result/review authority; proposal-only entry is rejected |
 
 Model proposals cannot supply cash, sizing, limits or authority. MODEL-origin
 decisions require the matching known usage/proposal receipt; all HOLD costs remain
@@ -87,6 +88,17 @@ or stale executable evidence records unpriced exposure and halt; it never fabric
 a fill. One contract cannot scale out fractionally. After a completed size-limited
 close, a distinct close can address actual remaining ownership. A rejected,
 canceled or expired close requires review, with no automatic reprice/replay.
+
+The opt-in [broader entry path](OPTIONS_ENTRY_REASONING.md) adds immutable target
+and horizon protection. CALL targets use fresh underlying bid and PUT targets
+use ask. The plan's original absolute horizon caps both the entry order lifetime
+and independent position exit time. Full plan hashes/terms survive fills and
+restart; authoritative snapshot terms must match. Earlier invalidation, catastrophe
+and expiry protections still win. A working partial entry can block a protective
+close; its exposure and latched exit remain visible, with no invented cancellation
+or fill. These are local fixture semantics, not accepted broker order semantics.
+Absent protection fields are omitted when serializing legacy records, preserving
+their prior snapshot identities and frozen behavior.
 
 The first cohort's frozen time rule is **intraday**. `XNYS_REGULAR_INTERSECTION_V1`
 uses the actual XNYS holiday/DST/early-close calendar, then clamps the exact supplied
