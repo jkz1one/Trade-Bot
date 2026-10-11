@@ -4,7 +4,7 @@ Delivered P3 first-session export, 2026-10-11. `app.options.evaluation_export`
 connects native Degen PAPER journals to the [paired evaluator](OPTIONS_EVALUATION.md)
 and [sealed common tape](OPTIONS_MARKET_TAPE.md). It does not run strategies, call
 a model/provider, simulate a fill or open execution authority. The independently
-clocked A/B/C replay runner remains the next integration step.
+clocked [A/B/C replay runner](OPTIONS_REPLAY.md) now uses this exporter for scripted first sessions.
 
 ## Scope and API
 
@@ -79,7 +79,7 @@ to paginate away or silently omit relevant records.
 mode-0600 bounded JSON `ExportRequest`. It contains the exact `EvaluationManifest`,
 existing tape path, and three `ExportSource` records with arm, journal and cost
 allocations. There is no production request artifact or deployment command yet.
-The replay runner will construct these from its frozen experiment configuration.
+The [replay runner](OPTIONS_REPLAY.md) constructs these from its frozen experiment configuration.
 
 The command prints a JSON envelope containing `bundle`, `source_proof` and `report`.
 The nested `bundle` is the evaluator's input format; the whole envelope is not an
@@ -89,12 +89,12 @@ paths and raw database/provider content.
 
 ## Remaining work
 
-The tests run the native A/B/C coordinators independently with mocked model replies
-and the real local fixture venue. That verifies automatic extraction, not a shipped
-replay scheduler or an authenticated AI experiment. Next connect the dedicated
-runner's virtual clocks, model-completion timing, independent positions and
-subsequent tape-driven fills to this exporter. Add explicit multi-session opening
-state and settlement handling before prospective multi-day comparisons.
+The exporter tests run native A/B/C coordinators with mocked responses and the
+real local fixture venue. The separate [first-session scheduler](OPTIONS_REPLAY.md)
+now connects independent clocks, scripted completion timing, positions and
+subsequent tape-driven fills to this exporter. Neither establishes an authenticated
+AI experiment. Add explicit multi-session opening state and settlement handling
+before prospective multi-day comparisons.
 
 Position reasoning, observer attribution, authentic data/model acceptance,
 continuous options runtime/UI and host/recovery gates remain in the

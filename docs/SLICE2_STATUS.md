@@ -1,5 +1,70 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P3 native first-session A/B/C replay scheduler: 2026-10-11 UTC
+
+The dedicated scheduler is now implemented in `app/options/replay.py`, with a
+private installed CLI and explicit scripted model protocol. It consumes the
+sealed common tape through independent native A/B/C PAPER owners, then invokes
+the existing automatic journal exporter and paired accounting evaluator.
+[Source of truth v1.14](SOURCE_OF_TRUTH.md) and the
+[replay contract](OPTIONS_REPLAY.md) record scope and continuation.
+
+Each arm has its own virtual clock, bankroll, journal, venue and position. Model
+completion suspends only that arm; delivered market updates continue. Fresh entry
+approval uses the latest available quotes, with all equal-time receipts processed
+before a scripted completion. Original leases/process limits still reject late
+responses. Known usage remains charged; missing/unknown responses retain unknown
+cost. Occupied intervening slots are reported as skipped, never backdated.
+
+Only subsequent delivered quotes with source time strictly after decision creation
+can fill. Exact identity, entitlement, freshness, fixed limits, adverse slippage
+and unused whole-contract size remain enforced by the native fixture venue.
+Independent protection runs on market changes and exit timers. DAY expiration is a
+local fixture outcome, not a broker cancel. Missing exit quotes retain exposure;
+no fill, close, settlement or missing model receipt is invented.
+
+The create-only private run directory retains original settings/tape admission,
+exact strategy/script hashes before any cycle, three native sources and the
+exported result. Interruptions leave evidence and no result receipt; existing
+targets cannot resume or be overwritten. Scripted response/usage attribution is
+explicit. No API key, model/provider call, live placement or broker write occurs.
+Default native model paths and previously enrolled cohorts retain their existing
+configuration and validation. This wheel has not been deployed.
+
+Verification:
+
+- **707 passed in 298.26s**, warnings as errors, on the noneditable installed wheel
+  outside source using Ubuntu Python 3.12.3/OpenSSL 3.0.13. All thirteen
+  options/Degen files: the first 13 scheduler cases and the existing 694
+  accounting/tape/export/admission/execution/model/entry/observer/capture cases.
+- Final timing review added an explicit all-equal-time-receipts-before-completion
+  rule and its regression case. The targeted source test passed in 5.76s.
+  Rebuilt final wheel: **14 replay tests passed in 126.85s**, warnings as errors,
+  outside source. The broader 707-case run preceded that scheduler-only correction;
+  it was not repeated or counted as 721 distinct tests.
+- The full-session fixture runs all 78 cycles separately for A/B/C. Scripted delays
+  produce first fills at +1s (A), +3s (B) and +2s (C), with later independent exits
+  and automatic complete arithmetic. This is mechanical fixture proof, not AI
+  performance or profitability evidence.
+- Late/paid HOLD/unknown/missing responses, busy-slot omission, changed-market
+  rejection during reasoning, whole partial fills, missing exit quotes, unfilled
+  DAY expiration, task interruption retaining unknown cost, create-only refusal,
+  mismatched tape rejection and installed CLI/private-input checks pass.
+- Scoped Ruff lint/format, compilation, pip check, 99 local documentation paths,
+  five final installed/source module byte comparisons and whitespace passed.
+  No dependency, deployment script or service-unit changes. No full equity-suite
+  rerun, hosted CI, authentic provider/model acceptance or target-host claim.
+
+Final wheel SHA-256:
+`6957f942474ad8615a0494dd1148782716ea06720efc24a960a3c4d168bd2fd4`.
+
+Next bounded P3 step: explicit multi-session opening state and settlement in the
+runner/exporter without resetting capital or losing unknown history, then position
+reasoning and stored proposal/approval/fill attribution. P1 authenticated normalized
+market/model evidence, continuous options runtime, required finished UI,
+prospective sessions and host/recovery acceptance remain open. The older deployed
+experiment stays frozen; LIVE remains disabled, main untouched and PR #1 draft.
+
 ## P3 automatic native A/B/C first-session export: 2026-10-11 UTC
 
 `app/options/evaluation_export.py` and its installed CLI now build the paired

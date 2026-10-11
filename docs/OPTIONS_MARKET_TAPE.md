@@ -101,8 +101,9 @@ the economic conclusion as INCONCLUSIVE.
 
 [Native first-session A/B/C journal export](OPTIONS_EVALUATION_EXPORT.md) now
 connects stored orders, fills, calls and cycles to this tape and the evaluator.
-The next P3 slice is the independently clocked strategy/portfolio replay runner
-and explicit multi-session state, with exact arm versions bound to their decisions. Then add position-management reasoning and stored
+The [independent first-session replay runner](OPTIONS_REPLAY.md) now consumes this
+tape through native A/B/C owners with scripted model delays. Next add explicit
+multi-session state/export, preserving exact arm versions and opening balances. Then add position-management reasoning and stored
 observer attribution. Authenticated normalized collection, prospective enrollment,
 runtime/UI, independent retention and host acceptance remain open. Tests and wheel
 proof are recorded in [status](SLICE2_STATUS.md); the [source of truth](SOURCE_OF_TRUTH.md)

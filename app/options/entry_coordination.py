@@ -1,12 +1,10 @@
 """Frozen broader-entry PAPER coordination on the existing single-owner journal."""
 
 import json
-import time
 from datetime import datetime
 from uuid import uuid4
 
 from app.execution.engine import ExecutionBlocked
-from app.execution.runtime import model_key
 from app.options import entry_judgment as judgment
 from app.options.engine import fingerprint
 from app.options.entry_reasoning import EntryOpportunity, EntryPacket, review_entry_plan
@@ -59,7 +57,7 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
     """One durable slot, one bounded child, no replay after interruption or uncertainty."""
     at = c.now()
     try:
-        secret = model_key(c.key_file)
+        secret = c._model_secret()
     except (OSError, ValueError):
         return c._finish(
             key, {**evidence, "status": "HOLD", "reason": "PRIVATE_MODEL_KEY_UNAVAILABLE"}
@@ -112,13 +110,13 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
     c._pending_evidence(key, {**evidence, "status": "MODEL_PENDING"})
     c.engine.begin_model_attempt(key, evidence["model_input_hash"], now=at)
     try:
-        result = await judgment.run_entry_process(request, secret)
+        result = await c._model_run(request, secret, broad=True)
         result = judgment.EntryResult.model_validate(result.model_dump(warnings=False))
         evidence["entry_result"] = result.model_dump(mode="json")
         completed = c.now()
         evidence["entry_completed_at"] = completed.isoformat()
         evidence["entry_timely"] = (
-            time.monotonic() < request.deadline_monotonic and at <= completed < packet.valid_until
+            c._model_timely(request, at, completed) and at <= completed < packet.valid_until
         )
         c._pending_evidence(key, evidence)
         if (
@@ -166,6 +164,7 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
     if selected is None:
         c._model_halt("OPTION_MODEL_EVIDENCE_REJECTED", completed)
         return c._finish(key, {**evidence, "status": "HOLD", "reason": "UNKNOWN_ENTRY_CANDIDATE"})
+    quotes, underlyings = c._execution_market(quotes, underlyings)
     quote, underlying = quotes[selected.instrument.instrument_id], underlyings[selected.symbol]
     with c.engine.journal.read() as db:
         c._bound(db)

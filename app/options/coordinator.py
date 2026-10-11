@@ -46,6 +46,7 @@ class DegenCoordinator:
         judgment_limits=None,
         key_file=None,
         entry_policy=None,
+        replay_model=None,
     ):
         if type(engine) is not OptionExecution or getattr(engine, "_degen_owner", None) is not None:
             raise ValueError("One active built-in options owner is required")
@@ -54,7 +55,19 @@ class DegenCoordinator:
         self.selection = ContractSelectionPolicy.model_validate(
             selection.model_dump(warnings=False)
         )
-        if (judgment_limits is None) != (key_file is None):
+        from app.options.replay_model import ReplayModel
+
+        if replay_model is not None and (
+            type(replay_model) is not ReplayModel
+            or key_file is not None
+            or judgment_limits is None
+            or engine.policy.cost_policy is None
+            or (replay_model.script.arm == "C") != (entry_policy is not None)
+        ):
+            raise ValueError("Explicit isolated scripted model configuration required")
+        self.replay_model = replay_model
+        self._replay_quotes, self._replay_underlyings = {}, {}
+        if replay_model is None and (judgment_limits is None) != (key_file is None):
             raise ValueError("Model limits and private key path must be paired")
         self.judgment_limits = (
             JudgmentLimits.model_validate(judgment_limits.model_dump(warnings=False))
@@ -153,6 +166,8 @@ class DegenCoordinator:
                 ),
                 "key_file": str(self.key_file),
             }
+        if self.replay_model is not None:
+            config["replay_model"] = self.replay_model.configuration()
         if self.entry_policy is not None:
             from app.options.entry_judgment import configuration
 
@@ -160,6 +175,30 @@ class DegenCoordinator:
                 self.engine.policy.cost_policy, self.judgment_limits, self.entry_policy
             ).model_dump(mode="json")
         return json.dumps(config, sort_keys=True)
+
+    def _execution_market(self, quotes, underlyings):
+        # Only the explicit fixture scheduler updates these current-prefix caches.
+        if self.replay_model is not None:
+            return quotes | self._replay_quotes, underlyings | self._replay_underlyings
+        return quotes, underlyings
+
+    def _model_secret(self):
+        return None if self.replay_model is not None else model_key(self.key_file)
+
+    async def _model_run(self, request, secret, *, broad=False):
+        if self.replay_model is not None:
+            return await self.replay_model.run(request)
+        if broad:
+            from app.options.entry_judgment import run_entry_process
+
+            return await run_entry_process(request, secret)
+        return await judgment.run_candidate_process(request, secret)
+
+    def _model_timely(self, request, started, completed):
+        return time.monotonic() < request.deadline_monotonic and (
+            self.replay_model is None
+            or (completed - started).total_seconds() < self.judgment_limits.process_timeout_seconds
+        )
 
     def _bound(self, db):
         self.engine._control(db)
@@ -285,7 +324,7 @@ class DegenCoordinator:
     async def _choose(self, key, candidates, scans, account, evidence):
         at = self.now()
         try:
-            secret = model_key(self.key_file)
+            secret = self._model_secret()
         except (OSError, ValueError):
             evidence["reason"] = "PRIVATE_MODEL_KEY_UNAVAILABLE"
             return None, None, at
@@ -324,7 +363,7 @@ class DegenCoordinator:
         self._pending_evidence(key, {**evidence, "status": "MODEL_PENDING"})
         self.engine.begin_model_attempt(key, evidence["model_input_hash"], now=at)
         try:
-            result = await judgment.run_candidate_process(request, secret)
+            result = await self._model_run(request, secret)
             result = judgment.CandidateResult.model_validate(result.model_dump(warnings=False))
             evidence["model_result"] = result.model_dump(mode="json")
             self._pending_evidence(key, evidence)
@@ -354,7 +393,7 @@ class DegenCoordinator:
             (c for c in candidates if c.candidate_id == result.choice.candidate_id), None
         )
         timely = (
-            time.monotonic() < request.deadline_monotonic
+            self._model_timely(request, at, completed)
             and key == "degen:" + str(int(completed.timestamp()) // 300)
             and selected is not None
             and completed < selected.admission.valid_until
@@ -548,6 +587,7 @@ class DegenCoordinator:
                         key,
                     ),
                 )
+            quotes, underlyings = self._execution_market(quotes, underlyings)
             prepared = self.engine.prepare(
                 key,
                 proposal,
