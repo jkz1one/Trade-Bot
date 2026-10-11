@@ -1,14 +1,15 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.12. Adopted product direction and working delivery contract, 2026-10-11 UTC.
+Version 1.13. Adopted product direction and working delivery contract, 2026-10-11 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
 acceptance and position reasoning remain open. M8 adds the
 user-requested dedicated dashboard design and visual acceptance.
-P3 paired accounting, a sealed common market tape and setup/shortlist replay are
-fixture verified. Full A/B/C portfolio replay, automatic ledger export, authentic
-collection/coverage and position-management reasoning remain open.
+P3 paired accounting, sealed market tapes, setup/shortlist replay and automatic
+native first-session A/B/C journal export are fixture verified. Full replay
+scheduling, multi-session export, authentic collection/coverage and position
+reasoning remain open.
 Report capabilities and gates, not completion percentages.
 
 ## Goal and definition of completion
@@ -197,8 +198,10 @@ proof. The [first M4 stored options observer](OPTIONS_OBSERVER.md) has fixture/n
 proof; browser visual acceptance and matched cost/benchmark/cohort evaluation remain open.
 **Next is P1 actual bounded market samples and exact normalized collection; P2
 full-plan entry now has local durable integration proof. P3 has a supplied-evidence
-accounting evaluator and sealed shared tape; next connect A/B/C portfolio replay
-and automatic ledger export, then position reasoning while operator capture is pending.** Schema discovery has passed its narrow gate. Actual read/model usage,
+accounting evaluator, sealed shared tape and native first-session journal export;
+next connect A/B/C replay scheduling and multi-session state, then position
+reasoning while operator capture is pending.** Schema discovery has passed its narrow
+gate. Actual read/model usage,
 latency, P3 comparative evaluation and P4 runtime acceptance remain open. Each milestone
 ends with reviewed code, meaningful tests, status proof, commit and branch push.
 Milestones are acceptance contracts, not fixed session or calendar promises.
@@ -374,7 +377,7 @@ remain unestablished.
 - [First M3 Degen execution path and remaining collector gate](DEGEN_PAPER.md).
 - [M3 private schema/sample acquisition and operator procedure](OPTIONS_READ_CAPTURE.md).
 - [P2 entry-plan contract, native worker and durable PAPER integration](OPTIONS_ENTRY_REASONING.md).
-- [Paired session accounting evaluator](OPTIONS_EVALUATION.md) and [sealed common market tape/shortlist replay](OPTIONS_MARKET_TAPE.md).
+- [Paired session accounting evaluator](OPTIONS_EVALUATION.md), [sealed common tape](OPTIONS_MARKET_TAPE.md) and [native first-session A/B/C export](OPTIONS_EVALUATION_EXPORT.md).
 - [M3 optional candidate model selection and cost authority](OPTIONS_MODEL_SELECTION.md).
 - [First M4 private stored observer and remaining acceptance](OPTIONS_OBSERVER.md).
 - [Isolated runtime](PAPER_RUNTIME.md), [host acceptance](PAPER_HOST.md),

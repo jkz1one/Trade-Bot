@@ -35,8 +35,9 @@ frame hashes, completeness and allocations are supplied assertions. This API doe
 not authenticate a provider, prove enrollment happened before outcomes, verify that
 a claimed strategy produced a decision, or establish omitted calls do not exist.
 The optional [sealed common tape](OPTIONS_MARKET_TAPE.md) now checks recorded
-content and timing. Automatic ledger export and a full A/B/C strategy/portfolio
-runner remain required.
+content and timing. [Native first-session export](OPTIONS_EVALUATION_EXPORT.md)
+now supplies automatic journal evidence. Full A/B/C replay scheduling and multi-
+session export remain required.
 
 ## Replay and uncertainty
 
@@ -104,9 +105,9 @@ validation details are not echoed. Input examples live in `tests/test_option_eva
 ## Remaining P3 work
 
 The [shared tape and setup/shortlist replay](OPTIONS_MARKET_TAPE.md) are now
-implemented. Connect automatic ledger/model-receipt export and replay all strategies
-against that recorded availability with their own resulting portfolios,
-and attribute decisions/fills/costs visibly in the stored observer. Add the eligible
+implemented, alongside [native first-session journal export](OPTIONS_EVALUATION_EXPORT.md).
+Connect the independent strategy/portfolio replay scheduler and multi-session state
+against that recorded availability, and attribute decisions/fills/costs visibly in the stored observer. Add the eligible
 long-underlying baseline, exact-position management arm D, appropriate statistical
 session-block analysis and prospective enrollment/coverage proof. These are not
 implemented by this accounting kernel. Actual model/data acceptance, runtime,

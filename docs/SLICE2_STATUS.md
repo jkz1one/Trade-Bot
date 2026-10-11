@@ -1,5 +1,85 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P3 automatic native A/B/C first-session export: 2026-10-11 UTC
+
+`app/options/evaluation_export.py` and its installed CLI now build the paired
+comparison from actual retained native PAPER journals, rather than requiring
+caller-assembled orders, costs and closing balances. [Source of truth v1.13](SOURCE_OF_TRUTH.md)
+and [the export contract](OPTIONS_EVALUATION_EXPORT.md) define this bounded step.
+The independent virtual-clock strategy replay runner is still open; this slice
+completes its native result-extraction dependency. Existing engine, coordinator,
+provider collection and deployed populations are unchanged.
+
+The reader uses the existing private bounded observer transaction, without opening
+an execution owner, venue, model key or authority pair. Each arm must match its
+frozen native limits/policy, population and A/B/C strategy configuration. The
+strategy digest retains setup/selection and model/entry configuration while
+excluding only the private key-file path. The exact common tape binds session and
+market limits. Sources may be detached journal copies with no execution authority.
+
+Extraction checks contiguous audit events, cycle starts/completions and frame
+hashes, exact order attempts/observations, full matching fill rows, receipt IDs,
+model admission/usage events and frozen-rate costs. Retained model results cannot
+lose their attempt/cost rows and appear free. Native closing cash/settled funds/
+ownership and snapshot order/receipt coverage are checked. Known HOLD costs stay
+charged; legitimate unknown calls, interrupted cycles, absent slots/allocations and
+incomplete closing evidence remain inconclusive. Structural contradictions fail
+export. No fills, settlement, balances or missing scheduler rows are invented.
+
+The first version supports exactly one first session per native journal. Earlier
+activity is rejected rather than resetting capital or inferring a historical
+opening balance. Multi-session opening state and settlement boundaries remain
+unimplemented. Every arm read is internally consistent; the three independent
+journals are not one global atomic snapshot or a funded multi-owner system.
+
+The export returns an evaluator-ready bundle, path-free source revisions/hashes
+and the sealed-tape comparison report. The installed private request CLI prints
+that envelope without writing source/output files; exit 0 is complete arithmetic,
+1 inconclusive and 2 sanitized unavailable evidence. The economic conclusion always
+remains INCONCLUSIVE. This does not authenticate provider data, actual paid model
+behavior, source completeness against owner tampering or prospective enrollment.
+
+Verification:
+
+- Noneditable installed wheel outside source, Ubuntu Python 3.12.3/OpenSSL 3.0.13:
+  **694 passed in 181.51s**, warnings as errors. All twelve options/Degen files,
+  including 23 new exporter cases and all prior tape/accounting/admission/native
+  execution/model/entry/observer/capture regressions.
+- Native test fixture runs all 78 session cycles separately for A, B and C. A opens
+  and closes a real local-venue whole-contract position using subsequent recorded
+  quotes and independent protection. Mocked B/C responses HOLD and retain known
+  model usage. Native accounting exports A net change -$23.23 and B/C -$0.03015 each
+  after explicit fixture costs. These are test expectations, not observed strategy
+  performance or model-selection evidence.
+- Detached source copies have no authority pair/venue/key; export succeeds without
+  creating them or changing database bytes. Damaged definitions/strategy/events/
+  attempts/fills/cycles/costs/snapshots fail. Missing scheduler slots and unknown
+  costs/closing state remain visible. Decimal-context independence and installed
+  CLI complete/unavailable behavior pass; output omits source paths and credentials.
+- Initial 22 focused cases passed in 68.06s. Final review added an omitted-attempt/
+  cost case where the native model result is still retained, plus receipt identity,
+  venue and common-limit checks. No existing protection was relaxed.
+- Scoped Ruff lint/format, compilation, pip check, two installed/source module byte
+  comparisons, 88 local documentation paths and whitespace checks passed. No dependency
+  lock, deployment script, service unit or existing engine behavior changed.
+- Verified installed wheel SHA-256:
+  `2b9ceb59bad1c43a6d1bc1c08b721d5f2f2002ad2c2acf4aaeb0b5d43f2ba1bd`.
+
+Pre-edit canonical branch/local/PR head:
+`a586a4be34a678131f2525340002c93defef4563`, tree
+`a29f12d1cc0cb40e706e79a15a3a8eed919d84a0`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 stays draft.
+No full equity-suite rerun, hosted CI, actual provider/model call, production
+capture, new deployed enrollment or deployment occurred. The frozen deployed
+experiment remains unchanged and LIVE disabled.
+
+**Next P3:** connect the dedicated A/B/C replay scheduler with independent virtual
+clocks/portfolios, actual completion delays and subsequent tape-driven fills to
+this exporter; add explicit multi-session opening/settlement state. Then position
+reasoning and observer attribution. Authentic data/model acceptance, continuous
+options runtime/UI, independent host/alert/archive recovery, prospective evidence,
+M7 families and M8 visual finish remain open.
+
 ## P3 sealed shared market tape and recorded comparison: 2026-10-11 UTC
 
 `app/options/market_tape.py` adds a separate create-only fixture recorder and

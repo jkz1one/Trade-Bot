@@ -18,7 +18,9 @@ The [first paired performance ledger](docs/OPTIONS_EVALUATION.md) reconstructs
 independent A/B/C session accounting and compares supplied costs and SPY evidence.
 The [sealed common market tape](docs/OPTIONS_MARKET_TAPE.md) now binds cycles,
 subsequent fill quotes and SPY endpoints to recorded inputs and replays setup/contract
-planning. Full A/B/C portfolio replay and prospective evidence remain open.
+planning. [Native first-session export](docs/OPTIONS_EVALUATION_EXPORT.md) now builds
+comparisons directly from independent PAPER journals. Full A/B/C replay scheduling,
+multi-session export and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.
 The M2 local options PAPER lifecycle is implemented. Read
