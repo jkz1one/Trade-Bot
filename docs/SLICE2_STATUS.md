@@ -1,5 +1,82 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P3 first paired session accounting evaluator: 2026-10-11 UTC
+
+`app/options/evaluation_models.py`, `evaluation.py` and `evaluation_cli.py` add
+bounded, read-only A/B/C **accounting replay of supplied fixture evidence**.
+[Source of truth v1.11](SOURCE_OF_TRUTH.md) and
+[the delivered API/boundaries](OPTIONS_EVALUATION.md) distinguish this kernel from
+the still-open shared recorder/export and strategy-rerun harness. No active
+strategy, cohort, provider, execution service or dashboard uses the evaluator yet.
+
+The manifest declares distinct virtual populations, matching capital/risk/fill
+assumptions, strategy/tape bindings, complete ordered XNYS sessions, enrollment
+time, explicit model/data/host cost assumptions and a descriptive hurdle/sample
+minimum. Hashes bind supplied content; they do not authenticate enrollment, market
+data, source completeness or the strategy that produced an outcome. Only the
+`LOCAL_FIXTURE` evidence kind is accepted. No additional funded owner is created.
+
+Replay uses existing exact cash/lot/fill/settlement accounting and the engine's
+extracted pure fill-evidence validator. The authoritative engine delegates to the
+same unchanged validation logic. All observed fills must use quotes strictly after
+decision completion, fit exact order/attempt/lifetime/price/size/debit constraints,
+and preserve complete event sequence and cash/ownership conservation. Known
+model costs include HOLD calls; unknown usage or missing data/host allocation is
+never zero. Between-session funds settlement preserves cash and sequence. Missing
+prior ledger evidence cannot reset capital and resume a later comparison.
+
+All declared sessions remain visible. Unresolved orders/cycles, open boundary
+positions, missing slots, mismatched frame coverage or invalid SPY endpoints make
+the pair inconclusive. Any incomplete pair suppresses overall comparison totals,
+preventing complete-case cherry-picking. Complete arithmetic reports price P&L,
+fees, turnover, costs, net changes/returns, B/C differences versus A, worst session
+and session-boundary drawdown. SPY is explicitly midpoint price-only, with session
+compounding that excludes overnight gaps, dividends and benchmark execution costs;
+it is not buy-and-hold total return. Cash price return is zero. The economic
+conclusion always stays INCONCLUSIVE; fixture arithmetic/sample counts cannot
+establish alpha. Underlying-only and management-D baselines remain unimplemented.
+
+The installed CLI accepts an existing bounded regular JSON bundle, rejects links/
+special/oversized/changing files, emits sanitized unavailable results for invalid
+input, and writes no trading state or output file. No production bundle exists yet.
+It cannot create/adopt/recover a journal, collect data, call a model or place orders.
+
+Verification:
+
+- Noneditable installed wheel outside source, Ubuntu Python 3.12.3/OpenSSL 3.0.13:
+  **622 passed in 111.73s**, warnings as errors. All ten options/Degen files,
+  including 48 new evaluator cases and existing execution, native workers, entry
+  coordination, observer and capture regressions.
+- New proof includes replay of real native local-venue round trips; cash/fees/
+  turnover, model-funded entries, HOLD costs, multi-session continuity/settlement,
+  incomplete denominator retention, no invented open-position marks, old-quote
+  exclusion, duplicate order/source identity, receipt/sequence/debit/fee/price
+  damage, definition/calendar/money
+  validation, source matching, SPY endpoint rejection, Decimal-context independence,
+  content hashes and the installed read-only CLI/symlink rejection.
+- Initial focused tests exposed a session-date versus scheduler-slot identifier
+  mismatch in the new calendar adapter. It was corrected to `session_date`; the
+  complete-session and enrollment requirements were retained. Final full run passed.
+- Scoped Ruff lint/format, compilation, pip check, 71 local linked paths, five
+  changed module wheel/source byte comparisons and whitespace checks passed.
+  Dependency locks, deployment scripts and service units are unchanged.
+- Verified wheel SHA-256:
+  `ed1c0303b7ea1834e4df5615aa92a84434bf3012a9b087f89278233ee34da966`.
+
+Pre-edit canonical branch/local/PR head:
+`6ffaa64dce9f8390e5c21df84fcf5f98b819650f`, tree
+`5efbd20721d4e3d58b069d59ab89d5cbb712e772`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 stays draft.
+No full equity-suite rerun, hosted CI, authentic market/model call, broker write
+or deployment is claimed. The frozen deployed experiment remains unchanged and
+LIVE disabled. No economic outcome is claimed from fixture tests.
+
+**Next P3:** connect an immutable common market recorder/evidence exporter and
+A/B/C strategy replay to these independent ledgers, then exact-position reasoning
+and observer attribution. P1 actual samples/normalization and authentic model
+acceptance, P4 options runtime/UI, independent host/alert/archive recovery,
+prospective frozen evidence, M7 families and M8 visual finish remain open.
+
 ## P2 full-plan durable PAPER integration: 2026-10-11 UTC
 
 The broader entry model now connects to the existing single-owner options PAPER

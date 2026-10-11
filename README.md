@@ -14,6 +14,10 @@ model worker to durable PAPER coordination, paid usage, fresh dispatch review an
 independent target/horizon exits. It is opt-in for a new frozen cohort; existing
 SELECT/HOLD cohorts are unchanged. Authentic provider acceptance, position
 reasoning and deployment remain open.
+The [first paired performance ledger](docs/OPTIONS_EVALUATION.md) reconstructs
+independent A/B/C session accounting and compares supplied costs and SPY evidence.
+It is an offline fixture evaluator; shared strategy replay and prospective evidence
+remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.
 The M2 local options PAPER lifecycle is implemented. Read
