@@ -1,4 +1,4 @@
-"""Export three existing native first-session journals without opening execution authority."""
+"""Export existing native session-boundary journals without opening execution authority."""
 
 import argparse
 import json
@@ -8,11 +8,11 @@ import stat
 import sys
 from pathlib import Path
 
-from pydantic import Field, field_validator
+from pydantic import Field, TypeAdapter, field_validator
 
-from app.options.evaluation_export import export_comparison
+from app.options.evaluation_export import export_comparison, export_series
 from app.options.evaluation_models import Arm, EvaluationManifest
-from app.options.market_tape import load_tape
+from app.options.market_tape import load_tape, validate_tape_series
 from app.options.models import Money, OptionRecord
 
 
@@ -34,6 +34,17 @@ class ExportRequest(OptionRecord):
     manifest: EvaluationManifest
     tape: str = Field(min_length=1, max_length=4096)
     sources: tuple[ExportSource, ExportSource, ExportSource]
+
+
+class ExportBoundary(OptionRecord):
+    session_key: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+    tape: str = Field(min_length=1, max_length=4096)
+    sources: tuple[ExportSource, ExportSource, ExportSource]
+
+
+class SeriesExportRequest(OptionRecord):
+    manifest: EvaluationManifest
+    boundaries: tuple[ExportBoundary, ...] = Field(min_length=1, max_length=60)
 
 
 def main(argv=None):
@@ -59,13 +70,31 @@ def main(argv=None):
                 before.st_ctime_ns,
             ) != (after.st_size, after.st_mtime_ns, after.st_ctime_ns):
                 raise ValueError("Export request changed")
-        request = ExportRequest.model_validate_json(raw)
-        if {s.arm for s in request.sources} != {"A", "B", "C"}:
-            raise ValueError("Unique A/B/C sources required")
-        tape = load_tape(request.tape)
-        result = export_comparison(
-            request.manifest, tape, {s.arm: s.model_dump(exclude={"arm"}) for s in request.sources}
-        )
+        request = TypeAdapter(ExportRequest | SeriesExportRequest).validate_json(raw)
+        if isinstance(request, ExportRequest):
+            if {s.arm for s in request.sources} != {"A", "B", "C"}:
+                raise ValueError("Unique A/B/C sources required")
+            result = export_comparison(
+                request.manifest,
+                load_tape(request.tape),
+                {s.arm: s.model_dump(exclude={"arm"}) for s in request.sources},
+            )
+        else:
+            if tuple(b.session_key for b in request.boundaries) != tuple(
+                s.key for s in request.manifest.sessions
+            ) or any(
+                {s.arm for s in b.sources} != {"A", "B", "C"} or not Path(b.tape).is_absolute()
+                for b in request.boundaries
+            ):
+                raise ValueError("Exact ordered private native boundaries required")
+            result = export_series(
+                request.manifest,
+                validate_tape_series(load_tape(b.tape) for b in request.boundaries),
+                {
+                    b.session_key: {s.arm: s.model_dump(exclude={"arm"}) for s in b.sources}
+                    for b in request.boundaries
+                },
+            )
         result["bundle"] = result["bundle"].model_dump(mode="json")
     except (OSError, sqlite3.Error, ValueError, KeyError, TypeError, IndexError, ArithmeticError):
         print(

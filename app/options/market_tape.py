@@ -341,3 +341,17 @@ def replay_shortlist(tape, cycle_key, *, as_of):
         "execution_authority": False,
         "live_enabled": False,
     }
+
+
+def validate_tape_series(values):
+    """Validate a bounded series incrementally, including lazily loaded tape files."""
+    tapes, size = [], 0
+    for value in values:
+        if len(tapes) == 60:
+            raise ValueError("Tape count exceeds session capacity")
+        tape = RecordedTape.model_validate(value.model_dump(warnings=False))
+        size += len(tape.model_dump_json().encode())
+        if size > 2 * MAX_TAPE_BYTES:
+            raise ValueError("Combined tape evidence capacity exceeded")
+        tapes.append(tape)
+    return tuple(tapes)

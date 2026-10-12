@@ -1,5 +1,61 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P3 continuous multi-session PAPER replay and boundary export: 2026-10-12 UTC
+
+The native A/B/C replay now accepts an ordered predeclared series of sealed tapes
+on the same three independent PAPER accounts. Bankroll, settled cash, positions,
+high watermark, fees, model attempts/costs, halts and sequence continue across
+sessions. No new day resets an account or clears uncertainty. Explicit frozen
+`FUNDS_SETTLED` receipts may release actual unsettled sale proceeds between
+sessions; there is no inferred settlement credit or invented exercise/expiry close.
+[Source of truth v1.15](SOURCE_OF_TRUTH.md) and the
+[multi-session contract](OPTIONS_REPLAY_SERIES.md) record scope and continuation.
+
+Each completed arm/session retains a private consistent closing journal snapshot
+and scheduler receipt. Snapshots contain no execution authority companion or venue
+and are not usable execution backups or proof of off-host protection. The series
+exporter reads cumulative snapshots without attaching authority, verifies native
+owner/configuration and prior audit/economic history, then extracts each day's
+new evidence. Later opening balances equal the preceding close exactly. Removing
+or changing old calls/orders, replacing an owner, resetting cash or omitting a
+boundary cannot silently create a complete comparison. Late historical corrections
+currently make export unavailable; no correction/revaluation protocol is claimed.
+
+Legacy single-session CLI requests remain supported. Both installed CLIs also
+accept ordered series requests. Tape loading is incremental and bounded; native
+journal/audit/venue capacities remain in force. No pruning/reset, automatic resume,
+provider/model call, broker write, service installation or LIVE activation occurs.
+Missing costs, skipped slots and carried exposure keep comparisons inconclusive.
+Even complete arithmetic and minimum sample count do not establish profitability.
+
+Verification:
+
+- **728 passed in 538.49s**, warnings as errors, on the noneditable installed
+  wheel outside source using Ubuntu Python 3.12.3/OpenSSL 3.0.13. All fourteen
+  options/Degen test files: 20 new series cases plus 708 existing replay,
+  accounting/tape/export/admission/execution/model/entry/observer/capture cases.
+- Two full 78-cycle sessions run through each native A/B/C owner. Original cash
+  1,000 carries to 976.80 and then 953.60; explicit 384.40 funds receipts change
+  spendable funds, not total cash. Fees and known model/data/host costs are charged
+  once, and each second-day opening equals the first-day close.
+- Tests cover no implicit settlement, retained unknown cost/halt and open exposure,
+  seven historical-source conflicts, invalid settlement amount/sequence/time/ID,
+  interruption retaining a completed boundary, authority-free read-only export,
+  both installed series CLIs and incremental combined tape capacity.
+- Scoped Ruff lint/format, compilation, pip check, 115 local documentation paths,
+  five final installed/source module byte comparisons and whitespace passed.
+  No dependency, deployment-script or service-unit changes. No full equity-suite
+  rerun, hosted CI, authenticated provider/model acceptance or deployment claimed.
+- Verified wheel SHA-256:
+  `283bf067c22d07d0d68980936fbfefcfa62121e109fc0ea693c6e68228e4938f`.
+
+Next P3: position reasoning with deterministic review, mandatory-exit precedence
+and monotone protection, then stored proposal/approval/fill attribution. Authentic
+normalized market/model evidence, continuous options PAPER runtime, polished UI,
+prospective frozen collection and actual host/recovery acceptance remain open.
+This wheel is local fixture proof and has not been deployed. The separate operator
+release and frozen legacy experiment below remain unchanged. LIVE stays disabled.
+
 ## P3 native first-session A/B/C replay scheduler: 2026-10-11 UTC
 
 The dedicated scheduler is now implemented in `app/options/replay.py`, with a

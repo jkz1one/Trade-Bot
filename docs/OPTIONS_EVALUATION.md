@@ -37,7 +37,8 @@ a claimed strategy produced a decision, or establish omitted calls do not exist.
 The optional [sealed common tape](OPTIONS_MARKET_TAPE.md) now checks recorded
 content and timing. [Native first-session export](OPTIONS_EVALUATION_EXPORT.md)
 now supplies automatic journal evidence. The [first-session scheduler](OPTIONS_REPLAY.md)
-runs scripted A/B/C comparisons; multi-session state/export remains required.
+runs scripted A/B/C comparisons. [Multi-session state/export](OPTIONS_REPLAY_SERIES.md)
+now supplies continuous native account evidence and explicit settlement.
 
 ## Replay and uncertainty
 
@@ -107,8 +108,9 @@ validation details are not echoed. Input examples live in `tests/test_option_eva
 The [shared tape and setup/shortlist replay](OPTIONS_MARKET_TAPE.md) are now
 implemented, alongside [native first-session journal export](OPTIONS_EVALUATION_EXPORT.md).
 The [independent first-session scheduler](OPTIONS_REPLAY.md) now drives native
-owners with scripted response delays and tape-driven fills. Add explicit multi-session
-state/export and attribute decisions/fills/costs visibly in the stored observer. Add the eligible
+owners with scripted response delays and tape-driven fills; [multi-session replay/export](OPTIONS_REPLAY_SERIES.md)
+now preserves balances and explicit settlement. Next attribute decisions/fills/costs
+visibly in the stored observer. Add the eligible
 long-underlying baseline, exact-position management arm D, appropriate statistical
 session-block analysis and prospective enrollment/coverage proof. These are not
 implemented by this accounting kernel. Actual model/data acceptance, runtime,

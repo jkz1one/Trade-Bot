@@ -22,7 +22,9 @@ planning. [Native first-session export](docs/OPTIONS_EVALUATION_EXPORT.md) now b
 comparisons directly from independent PAPER journals. The [first-session A/B/C
 replay scheduler](docs/OPTIONS_REPLAY.md) runs independent virtual clocks, scripted
 model delays, later-quote fills and protective exits through those owners.
-Multi-session state/export and authentic prospective evidence remain open.
+[Multi-session replay/export](docs/OPTIONS_REPLAY_SERIES.md) now preserves the
+same accounts, explicit settlement and saved closing evidence across sessions.
+Position reasoning and authentic prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.
 The M2 local options PAPER lifecycle is implemented. Read

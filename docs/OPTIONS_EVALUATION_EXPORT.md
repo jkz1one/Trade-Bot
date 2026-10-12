@@ -4,7 +4,8 @@ Delivered P3 first-session export, 2026-10-11. `app.options.evaluation_export`
 connects native Degen PAPER journals to the [paired evaluator](OPTIONS_EVALUATION.md)
 and [sealed common tape](OPTIONS_MARKET_TAPE.md). It does not run strategies, call
 a model/provider, simulate a fill or open execution authority. The independently
-clocked [A/B/C replay runner](OPTIONS_REPLAY.md) now uses this exporter for scripted first sessions.
+clocked [A/B/C replay runner](OPTIONS_REPLAY.md) uses this exporter; its
+[multi-session extension](OPTIONS_REPLAY_SERIES.md) adds ordered closing snapshots.
 
 ## Scope and API
 
@@ -25,11 +26,11 @@ definition. Excluding a credential location does not remove model configuration,
 prompt/schema identity, setup, selection or full entry policy from the binding.
 No key is read or exported. The helper does not prove when enrollment occurred.
 
-This first exporter supports **one first session per journal**, starting from its
-frozen virtual capital. All retained cycles, model attempts, orders and receipts
-must belong to that session. Prior activity cannot be skipped and presented as a
-fresh bankroll. Historical windows, carried positions and multi-session export
-need an explicit opening-state/sequence boundary and are not supported here.
+The compatible `export_comparison` API supports one first session. The new
+`export_series` API reads a saved cumulative journal at each session close and
+links prior audit/history and opening balances without resetting capital. See
+[the multi-session contract](OPTIONS_REPLAY_SERIES.md) for provenance, settlement,
+unknown history and historical-correction limits.
 
 ## Read and consistency checks
 
@@ -93,8 +94,9 @@ The exporter tests run native A/B/C coordinators with mocked responses and the
 real local fixture venue. The separate [first-session scheduler](OPTIONS_REPLAY.md)
 now connects independent clocks, scripted completion timing, positions and
 subsequent tape-driven fills to this exporter. Neither establishes an authenticated
-AI experiment. Add explicit multi-session opening state and settlement handling
-before prospective multi-day comparisons.
+AI experiment. The [multi-session extension](OPTIONS_REPLAY_SERIES.md) now handles
+opening state and explicit funds settlement; authentic prospective collection
+and historical-correction/revaluation remain separate work.
 
 Position reasoning, observer attribution, authentic data/model acceptance,
 continuous options runtime/UI and host/recovery gates remain in the

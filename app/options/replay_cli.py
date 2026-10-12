@@ -8,16 +8,28 @@ import sqlite3
 import stat
 import sys
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
-from app.options.market_tape import load_tape
+from app.options.market_tape import load_tape, validate_tape_series
 from app.options.models import OptionRecord
-from app.options.replay import ReplaySettings, run_replay
+from app.options.replay import ReplaySettings, run_replay_series
 
 
 class ReplayRequest(OptionRecord):
     settings: ReplaySettings
-    tape: str = Field(min_length=1, max_length=4096)
+    tape: str | None = Field(default=None, min_length=1, max_length=4096)
+    tapes: tuple[str, ...] = Field(default=(), max_length=60)
+
+    @model_validator(mode="after")
+    def one_source_form(self):
+        paths = (self.tape,) if self.tape is not None else self.tapes
+        if (
+            (self.tape is not None and self.tapes)
+            or not paths
+            or any(not os.path.isabs(p) or len(p) > 4096 or "\x00" in p for p in paths)
+        ):
+            raise ValueError("One absolute tape or an ordered tape series required")
+        return self
 
 
 def main(argv=None):
@@ -47,9 +59,14 @@ def main(argv=None):
             ) != (after.st_size, after.st_mtime_ns, after.st_ctime_ns):
                 raise ValueError("Replay request changed")
         request = ReplayRequest.model_validate_json(raw)
-        if not os.path.isabs(request.tape) or not os.path.isabs(args.output):
+        if not os.path.isabs(args.output):
             raise ValueError("Absolute tape and output paths required")
-        result = asyncio.run(run_replay(request.settings, load_tape(request.tape), args.output))
+        paths = (request.tape,) if request.tape is not None else request.tapes
+        result = asyncio.run(
+            run_replay_series(
+                request.settings, validate_tape_series(load_tape(p) for p in paths), args.output
+            )
+        )
     except (
         OSError,
         sqlite3.Error,

@@ -1,9 +1,13 @@
-# Native first-session A/B/C replay
+# Native A/B/C PAPER replay
 
 Delivered P3 scheduler, 2026-10-11. `app.options.replay` runs a sealed common tape
 through three independent native PAPER owners and automatically exports their
 journals. It is a **scripted local fixture experiment**, not an authenticated AI
 backtest, prospective enrollment or evidence of profitability.
+
+The [multi-session extension](OPTIONS_REPLAY_SERIES.md), delivered 2026-10-12,
+retains the same accounts and explicit settlement across ordered sessions. The
+one-session API below remains compatible.
 
 ## What runs
 
@@ -79,8 +83,9 @@ python -I -m app.options.replay_cli --request /absolute/private-request.json \
 
 The owned mode-600 request is limited to 256 KiB and contains `settings` serialized
 from `ReplaySettings`, plus `tape`, an absolute path to a sealed `TapeRecorder`
-file. The directory stores admission, the derived manifest, A/B/C native fixture
-journals/venues and `result.json`. Do not pass a deployed source directory. The
+file. The [series form](OPTIONS_REPLAY_SERIES.md) uses an ordered `tapes` array
+instead, with a 64 MiB combined tape bound. The directory stores admission, the derived manifest, A/B/C native fixture
+journals/venues, evidence-only closing journal snapshots and `result.json`. Do not pass a deployed source directory. The
 command never installs or starts a service. Each arm has a 900-second wall limit;
 script delays are virtual, bounded to 600 seconds and never sleep wall time.
 
@@ -93,9 +98,9 @@ the economic conclusion remains INCONCLUSIVE. The source retains explicit
 
 ## Next bounded work
 
-Add explicit multi-session state and settlement boundaries to this runner and the
-native exporter without resetting bankroll or missing-call history. Position
-reasoning and stored decision/approval/fill attribution follow in P3. Authentic
+The [multi-session extension](OPTIONS_REPLAY_SERIES.md) now carries balances,
+settlement and unknown history through saved native boundaries. Next implement
+position reasoning and stored decision/approval/fill attribution in P3. Authentic
 provider/model acceptance, continuous options runtime, the required finished UI,
 prospective collection and host/recovery acceptance remain separate gates.
 The deployed experiment stays frozen and LIVE disabled. Current measured proof is

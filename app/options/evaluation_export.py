@@ -1,7 +1,8 @@
-"""Read-only first-session exports from native PAPER journals, without authority attachment."""
+"""Read-only session-boundary exports from native PAPER journals, without authority attachment."""
 
 from datetime import datetime, timedelta
 from decimal import Decimal
+from itertools import pairwise
 
 from app.execution.economics import UsageEvidence
 from app.options.coordinator import DegenFrame
@@ -26,7 +27,7 @@ from app.options.lifecycle import (
     OptionReceipt,
     OptionVenueSnapshot,
 )
-from app.options.market_tape import RecordedTape
+from app.options.market_tape import RecordedTape, validate_tape_series
 from app.options.models import OptionLimits
 from app.options.observer import REQUIRED, OptionObserver, _json
 
@@ -67,8 +68,8 @@ def _event_map(events, kind, key):
 
 
 @exact
-def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=None):
-    """Export a journal's first session only; never reset or guess opening balances.
+def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=None, _history=()):
+    """Export a native boundary; prior boundaries are supplied only by export_series.
 
     Missing scheduler slots/unknown attempts stay incomplete. Structural conflicts
     fail export. There is no write, venue read, recovery or authority-file attachment.
@@ -78,6 +79,25 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
     from app.options.evaluation_models import EvaluationSession
 
     session = EvaluationSession.model_validate(session.model_dump(warnings=False))
+    history = tuple(
+        (
+            EvaluationSession.model_validate(s.model_dump()),
+            ArmSession.model_validate(r.model_dump()),
+            p,
+        )
+        for s, r, p in _history
+    )
+    windows = (*(s for s, _, _ in history), session)
+    if any(a.closes_at >= b.opens_at for a, b in pairwise(windows)) or any(
+        r.arm != definition.arm
+        or r.session_key != s.key
+        or r.definition_hash != fingerprint(definition)
+        or r.tape_hash != s.tape_hash
+        or p["export_hash"] != fingerprint(r)
+        for s, r, p in history
+    ):
+        raise ValueError("Exact ordered prior boundary evidence required")
+    in_session = lambda at: any(w.opens_at <= at < w.closes_at for w in windows)
     h = tape.header
     if (session.key, session.opens_at, session.closes_at, session.tape_hash) != (
         h.session_key,
@@ -117,13 +137,22 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
         events = sorted(_rows(db, "execution_events", MAX_EVENTS), key=lambda e: e["sequence"])
         if any(e["sequence"] != n for n, e in enumerate(events, 1)):
             raise ValueError("Native event sequence incomplete")
+        if history:
+            prior = history[-1][2]
+            if (
+                prior["configuration_hash"] != fingerprint(config)
+                or len(events) < prior["revision"]
+                or fingerprint([dict(e) for e in events[: prior["revision"]]])
+                != prior["event_hash"]
+            ):
+                raise ValueError("Native boundary history or owner changed")
         usage_events = _event_map(events, "OPTION_MODEL_USAGE_RECORDED", "source_key")
         admitted = _event_map(events, "OPTION_MODEL_ATTEMPT_ADMITTED", "source_key")
         attempts = _event_map(events, "OPTION_ATTEMPT_STARTED", "client_id")
         starts = _event_map(events, "DEGEN_CYCLE_STARTED", "cycle_key")
         finishes = _event_map(events, "DEGEN_CYCLE_COMPLETED", "cycle_key")
         calls = []
-        model_rows = _rows(db, "execution_model_calls", 100)
+        model_rows = _rows(db, "execution_model_calls", 100 * len(windows))
         if {r["source_key"] for r in model_rows} != set(admitted) or not set(usage_events) <= set(
             admitted
         ):
@@ -166,7 +195,7 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
                 )
             )
         orders, observed_fills = [], {}
-        order_rows = _rows(db, "execution_orders", 200)
+        order_rows = _rows(db, "execution_orders", min(1000, 200 * len(windows)))
         if {r["client_id"] for r in order_rows if r["attempted_at"] is not None} != set(attempts):
             raise ValueError("Native order attempt coverage mismatch")
         for r in order_rows:
@@ -210,14 +239,14 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
         }
         if stored_fills != observed_fills:
             raise ValueError("Native fill-table coverage mismatch")
-        receipt_rows = _rows(db, "execution_option_receipts", 200)
+        receipt_rows = _rows(db, "execution_option_receipts", min(1000, 200 * len(windows)))
         receipts = tuple(OptionReceipt.model_validate(_json(r["payload"])) for r in receipt_rows)
         if any(
             r["receipt_id"] != receipt.receipt_id
             for r, receipt in zip(receipt_rows, receipts, strict=True)
         ):
             raise ValueError("Native receipt identity mismatch")
-        cycle_rows = _rows(db, "execution_option_opportunities", 100)
+        cycle_rows = _rows(db, "execution_option_opportunities", 100 * len(windows))
         if {r["cycle_key"] for r in cycle_rows} != set(starts) or not set(finishes) <= set(starts):
             raise ValueError("Native scheduler event coverage mismatch")
         cycles = []
@@ -227,7 +256,7 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
             frame = DegenFrame.model_validate(_json(r["inputs_json"]))
             if (
                 key != "degen:" + str(int(at.timestamp()) // 300)
-                or not session.opens_at <= at < session.closes_at
+                or not in_session(at)
                 or r["fingerprint"] != fingerprint(frame)
                 or starts[key][1]["input_hash"] != fingerprint(frame)
                 or starts[key][0]["occurred_at"] != r["started_at"]
@@ -265,9 +294,16 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
         if not call_keys <= {c.key for c in cycles}:
             raise ValueError("Native model call has no retained cycle")
         if (
-            any(not session.opens_at <= o.intent.prepared_at < session.closes_at for o in orders)
-            or any(not session.opens_at <= c.started_at < session.closes_at for c in calls)
-            or any(not session.opens_at <= r.occurred_at <= session.closes_at for r in receipts)
+            any(not in_session(o.intent.prepared_at) for o in orders)
+            or any(not in_session(c.started_at) for c in calls)
+            or any(
+                not any(w.opens_at <= r.occurred_at <= w.closes_at for w in windows)
+                and not (
+                    r.kind == "FUNDS_SETTLED"
+                    and any(a.closes_at < r.occurred_at < b.opens_at for a, b in pairwise(windows))
+                )
+                for r in receipts
+            )
         ):
             raise ValueError("Export requires first-session history without a capital reset")
         closing = OptionLedger.model_validate(_json(control["ledger_json"]))
@@ -308,20 +344,52 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
             position = lambda p: p.model_dump(exclude=excluded) if p else None
             if position(snapshot.position) != position(closing.position):
                 raise ValueError("Native closing ownership mismatch")
+
+        # Native sources are cumulative. Every old economic row must remain exact;
+        # changed late history is unavailable, never silently reassigned to a new day.
+        def delta(values, field, identity):
+            earlier = {identity(v): v for _, row, _ in history for v in getattr(row, field)}
+            current = {identity(v): v for v in values}
+            if len(current) != len(values) or any(current.get(k) != v for k, v in earlier.items()):
+                raise ValueError("Retained native session history changed")
+            return tuple(v for v in values if identity(v) not in earlier)
+
+        current_orders = delta(orders, "orders", lambda o: o.intent.client_id)
+        current_calls = delta(calls, "calls", lambda c: c.source_key)
+        current_cycles = delta(cycles, "cycles", lambda c: c.key)
+        current_receipts = delta(receipts, "receipts", lambda r: r.receipt_id)
+        lower = history[-1][0].closes_at if history else session.opens_at
+        if (
+            any(
+                not session.opens_at <= o.intent.prepared_at < session.closes_at
+                for o in current_orders
+            )
+            or any(not session.opens_at <= c.started_at < session.closes_at for c in current_calls)
+            or any(
+                not int(session.opens_at.timestamp()) // 300
+                <= int(c.key.split(":")[1])
+                < int(session.closes_at.timestamp()) // 300
+                for c in current_cycles
+            )
+            or any(not lower <= r.occurred_at <= session.closes_at for r in current_receipts)
+        ):
+            raise ValueError("Prior native rows missing from retained boundaries")
         row = ArmSession(
             arm=definition.arm,
             session_key=session.key,
             definition_hash=fingerprint(definition),
             tape_hash=tape.digest,
-            initial=OptionLedger(
+            initial=history[-1][1].closing
+            if history
+            else OptionLedger(
                 cash=definition.policy.capital, high_watermark=definition.policy.capital
             ),
             closing=closing,
             closing_complete=complete,
-            orders=tuple(orders),
-            receipts=receipts,
-            calls=tuple(calls),
-            cycles=tuple(cycles),
+            orders=current_orders,
+            receipts=current_receipts,
+            calls=current_calls,
+            cycles=current_cycles,
             data_cost=data_cost,
             host_cost=host_cost,
         )
@@ -332,6 +400,10 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
             "export_hash": fingerprint(row),
             "execution_authority": False,
             "source_kind": "READ_ONLY_NATIVE_FIXTURE_JOURNAL",
+            "session_key": session.key,
+            "configuration_hash": fingerprint(config),
+            "event_hash": fingerprint([dict(e) for e in events]),
+            "previous_export_hash": history[-1][2]["export_hash"] if history else None,
         }
     return row, proof
 
@@ -345,33 +417,51 @@ def export_comparison(manifest, tape, sources):
     tape = RecordedTape.model_validate(tape.model_dump(warnings=False))
     if len(manifest.sessions) != 1 or set(sources) != {"A", "B", "C"}:
         raise ValueError("Exactly one first session and three independent sources required")
-    rows, proof = [], []
-    for definition in manifest.arms:
-        source = sources[definition.arm]
-        row, evidence = export_arm(
-            source["journal"],
-            definition,
-            manifest.sessions[0],
-            tape,
-            data_cost=source.get("data_cost"),
-            host_cost=source.get("host_cost"),
-        )
-        rows.append(row)
-        proof.append(evidence)
-    h = tape.header
-    spy = [q for e in tape.events for q in e.frame.underlyings if q.symbol == "SPY"]
-    starts = [q for q in spy if 0 <= (q.source_at - h.opens_at).total_seconds() <= 5]
-    ends = [q for q in spy if 0 <= (h.closes_at - q.source_at).total_seconds() <= 5]
-    benchmarks = ()
-    if starts and ends:
-        benchmarks = (
-            BenchmarkSession(
-                session_key=h.session_key,
-                start=min(starts, key=lambda q: q.source_at),
-                end=max(ends, key=lambda q: q.source_at),
-            ),
-        )
-    bundle = EvaluationBundle(manifest=manifest, evidence=tuple(rows), benchmarks=benchmarks)
+    return export_series(manifest, (tape,), {manifest.sessions[0].key: sources})
+
+
+def export_series(manifest, tapes, sources):
+    """Read ordered, private cumulative journal snapshots saved at every session close.
+
+    sources maps each session key to A/B/C {journal, data_cost, host_cost}. Each
+    boundary is read independently; these snapshots contain no restoration authority.
+    """
+    manifest = EvaluationManifest.model_validate(manifest.model_dump(warnings=False))
+    tapes = validate_tape_series(tapes)
+    if len(tapes) != len(manifest.sessions) or set(sources) != {s.key for s in manifest.sessions}:
+        raise ValueError("Exact ordered session tapes and boundary sources required")
+    rows, proofs, benchmarks = [], [], []
+    history = {d.arm: [] for d in manifest.arms}
+    for session, tape in zip(manifest.sessions, tapes, strict=True):
+        if set(sources[session.key]) != {"A", "B", "C"}:
+            raise ValueError("Every boundary requires three independent sources")
+        for definition in manifest.arms:
+            source = sources[session.key][definition.arm]
+            row, proof = export_arm(
+                source["journal"],
+                definition,
+                session,
+                tape,
+                data_cost=source.get("data_cost"),
+                host_cost=source.get("host_cost"),
+                _history=history[definition.arm],
+            )
+            rows.append(row)
+            proofs.append(proof)
+            history[definition.arm].append((session, row, proof))
+        h = tape.header
+        spy = [q for e in tape.events for q in e.frame.underlyings if q.symbol == "SPY"]
+        starts = [q for q in spy if 0 <= (q.source_at - h.opens_at).total_seconds() <= 5]
+        ends = [q for q in spy if 0 <= (h.closes_at - q.source_at).total_seconds() <= 5]
+        if starts and ends:
+            benchmarks.append(
+                BenchmarkSession(
+                    session_key=h.session_key,
+                    start=min(starts, key=lambda q: q.source_at),
+                    end=max(ends, key=lambda q: q.source_at),
+                )
+            )
+    bundle = EvaluationBundle(manifest=manifest, evidence=tuple(rows), benchmarks=tuple(benchmarks))
     if len(bundle.model_dump_json().encode()) > MAX_BUNDLE_BYTES:
         raise ValueError("Native export capacity exceeded")
-    return {"bundle": bundle, "source_proof": proof, "report": evaluate(bundle, tapes=(tape,))}
+    return {"bundle": bundle, "source_proof": proofs, "report": evaluate(bundle, tapes=tapes)}
