@@ -268,13 +268,24 @@ class OptionRuntime:
         self.stop = stop
         self.running = True
         failed = False
+        from app.options.release_identity import inspect_release
+
         try:
+            release = inspect_release(now=self.c.now())
             with self.c.engine.journal.write() as db:
-                self._bound(db)
+                previous = self._bound(db)
                 db.execute(
                     "UPDATE execution_option_runtime SET status='RUNNING',heartbeat_at=NULL,generation=generation+1,reason=NULL WHERE id=1"
                 )
-                self.c.engine.journal.event(db, self.c.now(), "OPTION_RUNTIME_STARTED", {})
+                self.c.engine.journal.event(
+                    db,
+                    self.c.now(),
+                    "OPTION_RUNTIME_STARTED",
+                    {
+                        "generation": previous["generation"] + 1,
+                        "release": release.model_dump(mode="json"),
+                    },
+                )
             while not stop.is_set():
                 await self.tick()
                 try:

@@ -37,6 +37,8 @@ now drives independent protection and five-minute decisions with explicit normal
 fixture inputs, durable runtime/slot evidence and stored observer integration.
 Optional [reviewed operator recovery](docs/OPTIONS_OPERATOR_RECOVERY.md) now adds
 a separate signed local halt/resume/revocation inbox with exact revision checks.
+[Installed-file identity](docs/OPTIONS_LOCAL_RUNTIME.md#installed-release-identity)
+is now recorded at each runtime start and shown from stored evidence in the observer.
 [Shared Degen/Swing candidate selection](docs/OPTIONS_SHARED_STRATEGIES.md) now lets
 a newly enrolled PAPER population use one AI, cash ledger and execution owner.
 The first Swing family uses locked next-session daily structure with current

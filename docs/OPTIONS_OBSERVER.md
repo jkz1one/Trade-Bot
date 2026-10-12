@@ -65,7 +65,10 @@ costs, not a complete net return or profitability proof.
 For explicitly enrolled [local runtime populations](OPTIONS_LOCAL_RUNTIME.md),
 runtime status/freshness, observed session and the latest accepted frame are read
 from the same committed snapshot. Other populations keep worker/session unknown.
-Actual release remains unknown. Restore authority is **not checked by the observer**.
+New runtime starts retain [installed-file identity](OPTIONS_LOCAL_RUNTIME.md#installed-release-identity)
+with their generation. The observer reads that saved evidence without inspecting
+its own package. Historical starts remain unknown; verified file consistency is
+not worker liveness or release approval. Restore authority is **not checked by the observer**.
 Local alert records do not establish independent options alert delivery. A fresh
 stored heartbeat does not prove a running worker, and the page grants no entry
 approval or recovery authority.

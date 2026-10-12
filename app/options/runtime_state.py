@@ -38,7 +38,10 @@ def report(db, now):
         if age < 0
         else ("STALE" if age >= policy.heartbeat_max_age_seconds else "FRESH")
     )
+    from app.options.release_identity import stored_release
+
     return {
+        "release": stored_release(db, row["generation"]),
         "status": row["status"],
         "freshness": freshness,
         "heartbeat_at": row["heartbeat_at"],

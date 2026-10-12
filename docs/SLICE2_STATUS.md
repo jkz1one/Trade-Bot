@@ -1,5 +1,49 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P4 installed-file release identity: 2026-10-12 UTC
+
+Each new local options runtime generation now stores its own bounded installed-file
+identity in `OPTION_RUNTIME_STARTED`. The observer displays that saved evidence;
+page reads never inspect the web process's package. Earlier generations remain
+explicitly unknown. The standalone `release` CLI inspects a noneditable wheel
+installation without opening a population or loading trading credentials.
+
+Inspection checks bounded metadata, the complete application inventory and each
+file's SHA-256/size against RECORD, then derives a reproducible application digest.
+The optional wheel hash is installer-declared provenance. Modified/missing/extra
+files, symlinks, special files, oversized inputs, editable installs and unrelated
+source imports cannot produce verified identity. This is local file consistency,
+not dependency or loaded-memory attestation, process liveness or release approval.
+Ordinary unavailable evidence has no execution authority; an unexpected inspection
+exception follows the runtime's existing halt and shutdown cleanup.
+
+Fresh pre-publish GitHub head was `393f57df5d5afc457b4ff7118971acb8fc0be01e`, tree
+`e4965cb00a72ba16a47675e2549d33b49558d745`. Main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 was open/draft.
+
+Verification:
+
+- **65 passed in 42.49s** on the final noneditable wheel outside source, warnings
+  as errors: release identity (27 cases) and continuous runtime (38). This includes
+  the final unexpected-inspection-failure cleanup change.
+- Before that final cleanup change, **207 passed in 108.87s** on the preceding
+  installed build: release identity, runtime, observer, shared strategies and
+  operator recovery. These overlapping results are not summed.
+- Installed CLI reports `VERIFIED_FILES`, 151 application files and digest
+  `590b4a5cabc7dfc00de18396c05291125f26e64a7711f57dbfa5a1f56b4c6e76`.
+- Final wheel SHA-256:
+  `728da7b89cde9c05287405d4e62e02f1959019528005a764d11301f4f18ff0b0`.
+  Pre-cleanup wheel: `dcf81764c1b017670c80ad499c645cfc965cc0ea3158faf4f8cd2d1aa7567a30`.
+- Scoped lint/format, compilation, dependency and whitespace checks pass. Changed
+  application files and copied tests match their installed verification inputs.
+
+See [source of truth v1.24](SOURCE_OF_TRUTH.md) and the
+[installed identity contract](OPTIONS_LOCAL_RUNTIME.md#installed-release-identity).
+Approved release provenance, target-host lifecycle/alerts/off-host recovery,
+authentic provider/model evidence and full dashboard visual acceptance remain
+open. No host unit, dependency, deployment, provider/model call or broker write
+changed. LIVE stays disabled and the deployed experiment stays frozen.
+
 ## P7 shared Degen/Swing PAPER selection: 2026-10-12 UTC
 
 The user's October 12 direction reinforces one AI selection boundary and one

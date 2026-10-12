@@ -305,7 +305,7 @@ class OptionObserver:
         return {
             "status": "OK",
             "revision": revision,
-            "release": None,
+            "release": runtime.get("release"),
             "restore_authority": "NOT_CHECKED_BY_OBSERVER",
             "worker_status": runtime["status"]
             if runtime["status"] != "NOT_ENROLLED"

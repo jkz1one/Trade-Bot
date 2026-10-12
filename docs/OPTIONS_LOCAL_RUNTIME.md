@@ -105,11 +105,12 @@ reviewed revisions or repairs unknown evidence. Other populations have no new re
 The [stored observer](OPTIONS_OBSERVER.md) reads runtime status/freshness/session
 and the latest accepted frame from the same committed snapshot. It does no feed
 read or worker operation. Fresh heartbeats are stored evidence, not proof of worker
-liveness. Stale/future/missing records remain labeled; actual installed release is
-still unknown. Old populations retain NOT_RECORDED fields without creating tables.
+liveness. Stale/future/missing records remain labeled. New runtime starts now retain
+installed-file identity as described below. Historical starts without that evidence
+remain unknown. Observer reads never create tables or inspect the web process's package.
 
 Remaining P4 acceptance: authenticated continuous exact data/model use, actual
-isolated-host lifecycle/alerts/off-host recovery, installed release identity,
+isolated-host lifecycle/alerts/off-host recovery, approved release provenance,
 key rotation/reprovisioning, desktop/mobile visual acceptance and the full dashboard.
 The separate local operator recovery surface is fixture implemented.
 This local runner does not close those gates or prospective economic acceptance.
@@ -122,3 +123,42 @@ with `RuntimeSettings.swing_policy` and one `SwingInput` per frozen symbol in
 `DegenFrame.swing`. It uses the same runtime, lease, ledger, protection cadence and
 optional signed operator inbox. This first Swing adaptation always retains
 session-close protection; it adds no overnight authority or second account.
+
+## Installed release identity
+
+`python -I -m app.options.runtime_cli release` inspects the currently imported
+noneditable package without opening a population, running a cycle or accessing
+credentials/network/Git. Exit 0 requires `VERIFIED_FILES`; exit 2 returns bounded
+`UNAVAILABLE` or `MISMATCH` evidence. The command reports package/Python versions,
+application SHA-256, file count and the optional installer-declared wheel SHA-256.
+It never prints the installation URL or local package paths.
+
+The local CPython wheel metadata backend supplies a bounded RECORD. The inspector
+requires the imported `app` root to match that installation, checks the complete
+application file inventory against RECORD, then compares each file's size and
+SHA-256. Missing/unrecorded/changed files, symlinks, unsupported hashes, editable or
+source imports and malformed metadata cannot receive a verified application digest.
+Limits are 512 application files/directories, 1 MiB per file, 16 MiB application
+bytes, 256 KiB RECORD, 64 KiB METADATA and 16 KiB installer-origin metadata. Generated
+`__pycache__` files are excluded. The application digest is SHA-256 of compact,
+key-sorted JSON mapping each relative application path to its SHA-256 hex digest.
+It covers the installed application sources/assets, not dependencies or loaded
+bytecode/memory. Metadata consistency is not a signed supply-chain attestation.
+
+Each `run` records this evidence once in its `OPTION_RUNTIME_STARTED` event with
+the new runtime generation. Restart records new evidence without relabeling older
+events. Inspection is inside normal failure/shutdown cleanup. Ordinary unavailable
+identity remains a visible diagnostic and cannot resume, halt, approve a release
+or grant execution authority. Existing PAPER admission/protection policy is unchanged.
+
+The observer displays the latest matching runtime generation's saved identity from
+its committed database snapshot. It never substitutes its own installation or does
+package hashing on page refresh. Old start events remain unknown; malformed or
+wrong-generation evidence becomes unavailable. A stale heartbeat or stopped runtime
+still remains stale/stopped even when its saved file identity was verified.
+
+The wheel hash comes from installer metadata; an independently retained release
+pin and approved installation procedure are still required for host acceptance.
+This closes local installed-file reporting, not provider/model/host/visual or LIVE
+acceptance. Compare the reported identity with the intended release before a host
+review; a matching hash alone is not a permission to trade.

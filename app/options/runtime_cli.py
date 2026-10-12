@@ -137,6 +137,7 @@ async def _serve(directory, seconds):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="operation", required=True)
+    commands.add_parser("release")
     enroll = commands.add_parser("init")
     enroll.add_argument("--directory", required=True)
     enroll.add_argument("--settings", required=True)
@@ -145,7 +146,11 @@ def main(argv=None):
     runner.add_argument("--seconds", type=int)
     args = parser.parse_args(argv)
     try:
-        if args.operation == "init":
+        if args.operation == "release":
+            from app.options.release_identity import inspect_release
+
+            result = inspect_release().model_dump(mode="json")
+        elif args.operation == "init":
             result = initialize(Path(args.directory), load(args.settings))
         else:
             if args.seconds is not None and not 1 <= args.seconds <= 86400:
@@ -163,7 +168,7 @@ def main(argv=None):
         )
         return 2
     print(json.dumps(result, sort_keys=True))
-    return 0
+    return 2 if args.operation == "release" and result["status"] != "VERIFIED_FILES" else 0
 
 
 if __name__ == "__main__":
