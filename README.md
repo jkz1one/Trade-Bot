@@ -30,7 +30,9 @@ a separate frozen cohort. [Arm D replay/export and stored attribution](docs/OPTI
 now compare independent A/B/C/D accounts with every entry and management charge.
 The [eligible long-underlying comparison](docs/OPTIONS_UNDERLYING_BASELINE.md)
 adds an independent share account with later sized quotes, explicit settlement
-and all execution/data/host costs. Authentic prospective evidence remains open.
+and all execution/data/host costs. Optional [whole-session analysis](docs/OPTIONS_SESSION_ANALYSIS.md)
+adds a frozen primary comparison, paired block uncertainty and time/regime
+concentration. Authentic prospective evidence remains open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.
 The M2 local options PAPER lifecycle is implemented. Read

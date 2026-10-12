@@ -1,5 +1,53 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P3 whole-session analysis diagnostics: 2026-10-12 UTC
+
+Optional manifest-frozen analysis now consumes the evaluator's verified paired
+session net-equity differences. It fixes one primary B/C/D arm against A, block
+length, minimum blocks, replicate count, seed, interval level and declared trial
+IDs. Circular blocks preserve whole sessions; time blocks, calendar months and
+optional predeclared regime labels expose concentration. All entry/management,
+venue and allocated costs remain in the native accounting inputs. Independent
+accounts, stored attribution and underlying benchmark gates remain intact.
+
+Any incomplete declared session withholds the overall mean and interval without
+shrinking the denominator. Incomplete group sums stay null. Secondary arms remain
+descriptive; even a diagnostic interval above the hurdle cannot change the
+INCONCLUSIVE economic conclusion or grant execution authority. Optional policy
+omission preserves existing manifest hashes. [Source of truth v1.20](SOURCE_OF_TRUTH.md)
+and the [analysis contract](OPTIONS_SESSION_ANALYSIS.md) specify the exact method,
+reproducibility algorithm and limits.
+
+Fresh pre-edit GitHub head was `72676fe0b021664f65b1da3596fead0eaf393708`,
+tree `7e3b8563b24925f2b937689e92ba000277a960c6`. Main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 was open/draft.
+
+Verification:
+
+- **239 passed in 1256.53s (0:20:56)**, warnings as errors, on the noneditable installed
+  wheel outside source using Python 3.12.14/OpenSSL 3.5.8. Eight files cover session
+  analysis (31 new cases), evaluation, market tapes, journal export, first-session
+  replay, multi-session replay, managed replay and the underlying benchmark.
+- Source analysis tests: **31 passed in 14.90s**. Coverage includes frozen policy
+  admission, legacy manifest identity, exact paired costs, known/unknown management
+  charges, missing sessions, circular wrapping/final block truncation, quantile
+  interpolation, deterministic seed/context, concentration and read-only CLI output.
+- Scoped Ruff lint/format, compilation, pip check and whitespace checks passed.
+  All 176 local documentation links checked resolve; three changed app modules
+  match installed bytes and all copied proof test files match source.
+- Wheel SHA-256: `be7327d0cda24bc22205df8b7d3c44eb841f093df4b76ee32b6cc0a38a2e454a`.
+
+The broader options/Degen and equity suites were not rerun for this bounded pure
+analysis change. The prior full options/Degen result remains recorded below.
+No dependency, database schema, deployment script or service unit changed.
+
+This is bounded offline diagnostic machinery, not completed statistical or
+prospective acceptance. P3 still needs authenticated collection/coverage, frozen
+trial/enrollment history and a justified untouched duration/precision design.
+P1 actual provider/model usage and latency and P4 continuous runtime/UI remain
+open. No deployment, broker writes, authenticated model calls or LIVE activation.
+The deployed experiment remains frozen; main and PR #1 draft status are unchanged.
+
 ## P3 eligible long-underlying benchmark: 2026-10-12 UTC
 
 The evaluator, native replay and exporter now support an explicitly enrolled

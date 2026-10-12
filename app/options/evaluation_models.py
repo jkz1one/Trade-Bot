@@ -57,6 +57,26 @@ class UnderlyingSettlement(OptionRecord):
     amount: Money = Field(gt=0)
 
 
+class SessionAnalysisPolicy(OptionRecord):
+    """Frozen diagnostic choices; never a promotion or prospective enrollment policy."""
+
+    version: Literal["paired-circular-block-v1"] = "paired-circular-block-v1"
+    primary_arm: Literal["B", "C", "D"]
+    block_sessions: int = Field(ge=2, le=15, strict=True)
+    minimum_blocks: int = Field(ge=4, le=30, strict=True)
+    replicates: int = Field(ge=1000, le=10000, strict=True)
+    seed: int = Field(ge=0, le=2**32 - 1, strict=True)
+    confidence: Money = Field(ge="0.80", le="0.99")
+    declared_trial_ids: tuple[Name, ...] = Field(min_length=1, max_length=100)
+    regime_labels: tuple[Name, ...] = Field(default=(), max_length=60, exclude_if=lambda v: not v)
+
+    @model_validator(mode="after")
+    def unique_trials(self):
+        if len(set(self.declared_trial_ids)) != len(self.declared_trial_ids):
+            raise ValueError("Distinct declared trial IDs required")
+        return self
+
+
 class EvaluationManifest(OptionRecord):
     version: Literal["option-paired-ledger-v1"] = "option-paired-ledger-v1"
     experiment_id: Name
@@ -67,12 +87,25 @@ class EvaluationManifest(OptionRecord):
     underlying_baseline: UnderlyingBaselinePolicy | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
+    session_analysis: SessionAnalysisPolicy | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     allocation_policy: Name
     hurdle_per_session: Money = Field(ge=0)
     minimum_sessions: int = Field(ge=2, le=60, strict=True)
 
     @model_validator(mode="after")
     def matched(self):
+        analysis = self.session_analysis
+        if analysis is not None:
+            if analysis.primary_arm not in {a.arm for a in self.arms}:
+                raise ValueError("Primary analysis arm must be enrolled")
+            if len(self.sessions) < max(
+                self.minimum_sessions, analysis.block_sessions * analysis.minimum_blocks
+            ):
+                raise ValueError("Declared horizon cannot satisfy analysis minimum")
+            if analysis.regime_labels and len(analysis.regime_labels) != len(self.sessions):
+                raise ValueError("Regime labels must cover every declared session in order")
         if [a.arm for a in self.arms] not in (["A", "B", "C"], ["A", "B", "C", "D"]) or len(
             {a.limits.population_id for a in self.arms}
         ) != len(self.arms):

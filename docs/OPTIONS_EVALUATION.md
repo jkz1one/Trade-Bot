@@ -127,8 +127,9 @@ The [independent first-session scheduler](OPTIONS_REPLAY.md) now drives native
 owners with scripted response delays and tape-driven fills; [multi-session replay/export](OPTIONS_REPLAY_SERIES.md)
 now preserves balances and explicit settlement. [Arm D and stored attribution](OPTIONS_MANAGED_REPLAY.md)
 now expose decisions, approvals, fills and all entry/management costs. The eligible
-long-underlying baseline is now implemented. Appropriate statistical session-block
-analysis and prospective enrollment/coverage proof remain open. Actual model/data acceptance, runtime,
+long-underlying baseline is now implemented. Optional [whole-session block analysis](OPTIONS_SESSION_ANALYSIS.md)
+now provides frozen primary-arm diagnostic intervals and time/regime concentration.
+Inferential adequacy and prospective enrollment/coverage proof remain open. Actual model/data acceptance, runtime,
 complete UI and host deployment remain separate gates in
 [the completion plan](AI_TRADER_RESEARCH_PLAN.md). Latest test proof and wheel digest
 are in [status](SLICE2_STATUS.md). LIVE remains disabled.

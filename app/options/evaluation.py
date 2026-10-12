@@ -8,6 +8,7 @@ from app.options.engine import fingerprint
 from app.options.evaluation_models import EvaluationBundle
 from app.options.fill_evidence import validate_fill
 from app.options.lifecycle import TERMINAL, OptionLedger
+from app.options.session_analysis import session_analysis
 
 MAX_BUNDLE_BYTES = 16 * 1024 * 1024
 ZERO = Decimal(0)
@@ -426,6 +427,7 @@ def _evaluate(bundle, recorded=None, tapes=None):
         "minimum_sessions_met": enough,
         "spy_session_compounded_price_return": str(spy_factor - 1) if complete else None,
         "eligible_underlying": underlying,
+        "session_analysis": session_analysis(m, rows),
         "sessions": rows,
         "totals": totals,
         "mean_paired_net_difference": {
