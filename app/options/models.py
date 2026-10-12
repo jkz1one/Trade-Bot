@@ -122,6 +122,9 @@ class OptionQuote(Evidence):
 
 
 class UnderlyingQuote(Evidence):
+    # Optional executable share sizes; omitted legacy values retain their tape hashes.
+    bid_size: Count | None = Field(default=None, exclude_if=lambda v: v is None)
+    ask_size: Count | None = Field(default=None, exclude_if=lambda v: v is None)
     symbol: Symbol
     bid: Money = Field(gt=0)
     ask: Money = Field(gt=0)

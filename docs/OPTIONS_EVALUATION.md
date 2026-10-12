@@ -107,6 +107,18 @@ and writes no output file or execution state. Exit 0 means `COMPLETE_ARITHMETIC`
 1 means `INCONCLUSIVE`, and 2 means unavailable/invalid source evidence. Sensitive
 validation details are not echoed. Input examples live in `tests/test_option_evaluation.py`.
 
+## Eligible underlying comparator
+
+The optional [eligible long-underlying baseline](OPTIONS_UNDERLYING_BASELINE.md)
+uses a separately enrolled continuous account, A-approved CALL opportunities,
+whole shares, later sized quotes, independent stop/time exits and explicit own
+settlement. PUT/index opportunities stay cash. All share fees, spread/slippage
+and data/host allocations are included; all A/B/C/D model charges remain included
+in their respective comparisons. Enrollment requires sealed tapes. Unknown costs,
+size or exposure suppress the enrolled comparison totals; legacy manifests can
+remain explicitly unenrolled. This opportunity benchmark is not an independently
+rerun stock strategy or proof of economic value.
+
 ## Remaining P3 work
 
 The [shared tape and setup/shortlist replay](OPTIONS_MARKET_TAPE.md) are now
@@ -114,10 +126,9 @@ implemented, alongside [native first-session journal export](OPTIONS_EVALUATION_
 The [independent first-session scheduler](OPTIONS_REPLAY.md) now drives native
 owners with scripted response delays and tape-driven fills; [multi-session replay/export](OPTIONS_REPLAY_SERIES.md)
 now preserves balances and explicit settlement. [Arm D and stored attribution](OPTIONS_MANAGED_REPLAY.md)
-now expose decisions, approvals, fills and all entry/management costs. Add the eligible
-long-underlying baseline, appropriate statistical
-session-block analysis and prospective enrollment/coverage proof. These are not
-implemented by this accounting kernel. Actual model/data acceptance, runtime,
+now expose decisions, approvals, fills and all entry/management costs. The eligible
+long-underlying baseline is now implemented. Appropriate statistical session-block
+analysis and prospective enrollment/coverage proof remain open. Actual model/data acceptance, runtime,
 complete UI and host deployment remain separate gates in
 [the completion plan](AI_TRADER_RESEARCH_PLAN.md). Latest test proof and wheel digest
 are in [status](SLICE2_STATUS.md). LIVE remains disabled.

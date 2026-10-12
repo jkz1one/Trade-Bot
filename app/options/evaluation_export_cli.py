@@ -11,7 +11,7 @@ from pathlib import Path
 from pydantic import Field, TypeAdapter, field_validator
 
 from app.options.evaluation_export import export_comparison, export_series
-from app.options.evaluation_models import Arm, EvaluationManifest
+from app.options.evaluation_models import Arm, EvaluationManifest, UnderlyingSettlement
 from app.options.market_tape import load_tape, validate_tape_series
 from app.options.models import Money, OptionRecord
 
@@ -32,6 +32,7 @@ class ExportSource(OptionRecord):
 
 class ExportRequest(OptionRecord):
     manifest: EvaluationManifest
+    underlying_settlements: tuple[UnderlyingSettlement, ...] = Field(default=(), max_length=180)
     tape: str = Field(min_length=1, max_length=4096)
     sources: tuple[ExportSource, ...] = Field(min_length=3, max_length=4)
 
@@ -44,6 +45,7 @@ class ExportBoundary(OptionRecord):
 
 class SeriesExportRequest(OptionRecord):
     manifest: EvaluationManifest
+    underlying_settlements: tuple[UnderlyingSettlement, ...] = Field(default=(), max_length=180)
     boundaries: tuple[ExportBoundary, ...] = Field(min_length=1, max_length=60)
 
 
@@ -80,6 +82,7 @@ def main(argv=None):
                 request.manifest,
                 load_tape(request.tape),
                 {s.arm: s.model_dump(exclude={"arm"}) for s in request.sources},
+                underlying_settlements=request.underlying_settlements,
             )
         else:
             if tuple(b.session_key for b in request.boundaries) != tuple(
@@ -100,6 +103,7 @@ def main(argv=None):
                     b.session_key: {s.arm: s.model_dump(exclude={"arm"}) for s in b.sources}
                     for b in request.boundaries
                 },
+                underlying_settlements=request.underlying_settlements,
             )
         result["bundle"] = result["bundle"].model_dump(mode="json")
     except (OSError, sqlite3.Error, ValueError, KeyError, TypeError, IndexError, ArithmeticError):

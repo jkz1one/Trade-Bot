@@ -35,6 +35,28 @@ class EvaluationSession(OptionRecord):
     tape_hash: Digest
 
 
+class UnderlyingBaselinePolicy(OptionRecord):
+    """Independent long-share comparator following A's approved CALL opportunities."""
+
+    version: Literal["eligible-long-underlying-v1"] = "eligible-long-underlying-v1"
+    account_id: Name
+    population_id: Name
+    tick_size: Money = Field(gt=0)
+    max_shares: int = Field(ge=1, le=1_000_000, strict=True)
+    entry_fee_per_share: Money = Field(ge=0)
+    exit_fee_per_share: Money = Field(ge=0)
+    entry_fee_per_order: Money = Field(ge=0)
+    exit_fee_per_order: Money = Field(ge=0)
+    data_cost_per_session: Money | None = Field(default=None, ge=0)
+    host_cost_per_session: Money | None = Field(default=None, ge=0)
+
+
+class UnderlyingSettlement(OptionRecord):
+    receipt_id: Name
+    occurred_at: datetime
+    amount: Money = Field(gt=0)
+
+
 class EvaluationManifest(OptionRecord):
     version: Literal["option-paired-ledger-v1"] = "option-paired-ledger-v1"
     experiment_id: Name
@@ -42,6 +64,9 @@ class EvaluationManifest(OptionRecord):
     evidence_kind: Literal["LOCAL_FIXTURE"] = "LOCAL_FIXTURE"
     arms: tuple[ArmDefinition, ...] = Field(min_length=3, max_length=4)
     sessions: tuple[EvaluationSession, ...] = Field(min_length=1, max_length=60)
+    underlying_baseline: UnderlyingBaselinePolicy | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     allocation_policy: Name
     hurdle_per_session: Money = Field(ge=0)
     minimum_sessions: int = Field(ge=2, le=60, strict=True)
@@ -52,6 +77,12 @@ class EvaluationManifest(OptionRecord):
             {a.limits.population_id for a in self.arms}
         ) != len(self.arms):
             raise ValueError("Distinct ordered simulated A/B/C or A/B/C/D populations required")
+        if self.underlying_baseline and any(
+            self.underlying_baseline.account_id == a.limits.account_id
+            or self.underlying_baseline.population_id == a.limits.population_id
+            for a in self.arms
+        ):
+            raise ValueError("Underlying baseline requires its own account and population")
         first = self.arms[0]
         for a in self.arms:
             if a.limits.model_dump(
@@ -148,3 +179,21 @@ class EvaluationBundle(OptionRecord):
     manifest: EvaluationManifest
     evidence: tuple[ArmSession, ...] = Field(max_length=240)
     benchmarks: tuple[BenchmarkSession, ...] = Field(default=(), max_length=60)
+    underlying_settlements: tuple[UnderlyingSettlement, ...] = Field(
+        default=(), max_length=180, exclude_if=lambda v: not v
+    )
+
+    @model_validator(mode="after")
+    def settlements_enrolled(self):
+        receipts = self.underlying_settlements
+        if receipts and self.manifest.underlying_baseline is None:
+            raise ValueError("Underlying settlement requires enrolled baseline")
+        if len({r.receipt_id for r in receipts}) != len(receipts) or any(
+            not any(
+                a.closes_at < r.occurred_at <= b.opens_at
+                for a, b in zip(self.manifest.sessions, self.manifest.sessions[1:])
+            )
+            for r in receipts
+        ):
+            raise ValueError("Unique between-session underlying settlement receipts required")
+        return self

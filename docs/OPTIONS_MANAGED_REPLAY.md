@@ -91,8 +91,9 @@ causal proof of management skill. Incomplete arms or sessions withhold totals;
 
 [Current measured proof](SLICE2_STATUS.md) records the installed-wheel tests and
 remaining limitations. [Source of truth](SOURCE_OF_TRUTH.md) owns continuation.
-Actual normalized market/model evidence and latency, eligible underlying baseline,
-prospective comparison/statistical evidence, continuous options PAPER runtime/UI,
+The [eligible underlying baseline](OPTIONS_UNDERLYING_BASELINE.md) is now implemented.
+Actual normalized market/model evidence and latency, prospective comparison/
+statistical evidence, continuous options PAPER runtime/UI,
 actual host lifecycle/alerts/off-host recovery, Swing/Scope/mixed ownership and the
 finished dashboard remain open. LIVE stays disabled; no broker writes, model/API
 calls, service changes or frozen deployed-experiment changes are part of this slice.

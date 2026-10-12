@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.18. Adopted product direction and working delivery contract, 2026-10-12 UTC.
+Version 1.19. Adopted product direction and working delivery contract, 2026-10-12 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -13,6 +13,9 @@ with scripted model delays are fixture verified. Multi-session replay/export now
 preserves native accounts, explicit funds settlement and saved closing evidence.
 [Arm D replay/export and stored attribution](OPTIONS_MANAGED_REPLAY.md) now extend
 that path to four independent accounts with all entry and management costs.
+The [eligible long-underlying comparator](OPTIONS_UNDERLYING_BASELINE.md) now adds
+an independently funded, explicitly enrolled share baseline on A's approved
+CALL opportunities, with later sized quotes, all costs and explicit settlement.
 Authentic collection/coverage and prospective economic evidence remain open.
 Report capabilities and gates, not completion percentages.
 
@@ -209,7 +212,8 @@ scripted A/B/C replay scheduling with multi-session state/export and explicit
 settlement. Position reasoning now has opt-in durable attempts/costs and atomic
 once-per-revision action consumption with independent protective-exit precedence.
 Arm D replay/export and stored attribution are implemented for independent accounts.
-Remaining P3 gates include the eligible-underlying comparison and evaluation evidence;
+The eligible long-underlying baseline is implemented as a separate offline account.
+Remaining P3 gates include whole-session statistical and prospective evaluation evidence;
 P1 provider capture and P4 continuous options runtime/UI are still open.** Schema discovery has passed its narrow
 gate. Actual read/model usage,
 latency, P3 comparative evaluation and P4 runtime acceptance remain open. Each milestone

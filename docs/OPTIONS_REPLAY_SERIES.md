@@ -123,3 +123,12 @@ Authentic normalized market/model evidence,
 continuous options runtime, finished UI, prospective evidence and host/recovery
 acceptance remain separate gates. LIVE stays disabled and the deployed population
 stays frozen. See [source of truth](SOURCE_OF_TRUTH.md) and [measured proof](SLICE2_STATUS.md).
+
+## Optional eligible underlying comparison
+
+The [long-underlying baseline](OPTIONS_UNDERLYING_BASELINE.md) can be frozen in
+`manifest.underlying_baseline`. Replay/export then includes its independent
+continuous cash/share report from the same tapes and A-approved opportunities.
+Optional `underlying_settlements` carry only that account's own explicit receipts;
+options-arm settlement and model charges remain separate. Missing share sizes
+never become assumed fills. See the contract for enrollment and cost fields.

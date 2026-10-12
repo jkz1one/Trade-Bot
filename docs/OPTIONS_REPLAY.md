@@ -109,3 +109,12 @@ provider/model acceptance, continuous options runtime, the required finished UI,
 prospective collection and host/recovery acceptance remain separate gates.
 The deployed experiment stays frozen and LIVE disabled. Current measured proof is
 in [status](SLICE2_STATUS.md); [source of truth](SOURCE_OF_TRUTH.md) owns delivery order.
+
+## Optional eligible underlying comparison
+
+The [long-underlying baseline](OPTIONS_UNDERLYING_BASELINE.md) can be frozen in
+`manifest.underlying_baseline`. Replay/export then includes its independent
+continuous cash/share report from the same tapes and A-approved opportunities.
+Optional `underlying_settlements` carry only that account's own explicit receipts;
+options-arm settlement and model charges remain separate. Missing share sizes
+never become assumed fills. See the contract for enrollment and cost fields.

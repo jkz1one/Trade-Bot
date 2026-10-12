@@ -469,7 +469,7 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
     return row, proof
 
 
-def export_comparison(manifest, tape, sources):
+def export_comparison(manifest, tape, sources, *, underlying_settlements=()):
     """Read three independent first-session sources and return an evaluator-ready bundle.
 
     sources maps A/B/C to {journal, data_cost, host_cost}; costs never default to zero.
@@ -478,10 +478,15 @@ def export_comparison(manifest, tape, sources):
     tape = RecordedTape.model_validate(tape.model_dump(warnings=False))
     if len(manifest.sessions) != 1 or set(sources) != {d.arm for d in manifest.arms}:
         raise ValueError("Exactly one first session and three independent sources required")
-    return export_series(manifest, (tape,), {manifest.sessions[0].key: sources})
+    return export_series(
+        manifest,
+        (tape,),
+        {manifest.sessions[0].key: sources},
+        underlying_settlements=underlying_settlements,
+    )
 
 
-def export_series(manifest, tapes, sources):
+def export_series(manifest, tapes, sources, *, underlying_settlements=()):
     """Read ordered, private cumulative journal snapshots saved at every session close.
 
     sources maps each session key to A/B/C {journal, data_cost, host_cost}. Each
@@ -526,7 +531,12 @@ def export_series(manifest, tapes, sources):
                     end=max(ends, key=lambda q: q.source_at),
                 )
             )
-    bundle = EvaluationBundle(manifest=manifest, evidence=tuple(rows), benchmarks=tuple(benchmarks))
+    bundle = EvaluationBundle(
+        manifest=manifest,
+        evidence=tuple(rows),
+        benchmarks=tuple(benchmarks),
+        underlying_settlements=underlying_settlements,
+    )
     if len(bundle.model_dump_json().encode()) > MAX_BUNDLE_BYTES:
         raise ValueError("Native export capacity exceeded")
     return {"bundle": bundle, "source_proof": proofs, "report": evaluate(bundle, tapes=tapes)}

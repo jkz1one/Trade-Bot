@@ -106,3 +106,12 @@ Position reasoning and stored observer attribution are implemented. Authentic da
 continuous options runtime/UI and host/recovery gates remain in the
 [source of truth](SOURCE_OF_TRUTH.md). The deployed experiment remains frozen;
 LIVE is disabled. Latest measured test proof is in [status](SLICE2_STATUS.md).
+
+## Optional eligible underlying comparison
+
+The [long-underlying baseline](OPTIONS_UNDERLYING_BASELINE.md) can be frozen in
+`manifest.underlying_baseline`. Replay/export then includes its independent
+continuous cash/share report from the same tapes and A-approved opportunities.
+Optional `underlying_settlements` carry only that account's own explicit receipts;
+options-arm settlement and model charges remain separate. Missing share sizes
+never become assumed fills. See the contract for enrollment and cost fields.

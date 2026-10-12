@@ -28,7 +28,9 @@ MAINTAIN/EXIT_ALL/TIGHTEN proposals to durable model costs, atomic decision
 consumption, tighter stops and freshly reviewed full PAPER exits. It is opt-in for
 a separate frozen cohort. [Arm D replay/export and stored attribution](docs/OPTIONS_MANAGED_REPLAY.md)
 now compare independent A/B/C/D accounts with every entry and management charge.
-Authentic prospective evidence remains open.
+The [eligible long-underlying comparison](docs/OPTIONS_UNDERLYING_BASELINE.md)
+adds an independent share account with later sized quotes, explicit settlement
+and all execution/data/host costs. Authentic prospective evidence remains open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.
 The M2 local options PAPER lifecycle is implemented. Read

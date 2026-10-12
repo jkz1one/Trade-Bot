@@ -17,7 +17,12 @@ from app.options.coordinator import DegenCoordinator
 from app.options.engine import OptionExecution
 from app.options.entry_reasoning import EntryReasoningPolicy
 from app.options.evaluation_export import export_series, strategy_hash
-from app.options.evaluation_models import Arm, EvaluationManifest
+from app.options.evaluation_models import (
+    Arm,
+    EvaluationBundle,
+    EvaluationManifest,
+    UnderlyingSettlement,
+)
 from app.options.governor import _fresh, _tick_price
 from app.options.lifecycle import TERMINAL, OptionIntent, OptionReceipt
 from app.options.market_tape import validate_tape_series
@@ -47,6 +52,7 @@ class ScriptedSettlement(OptionRecord):
 class ReplaySettings(OptionRecord):
     manifest: EvaluationManifest
     settlements: tuple[ScriptedSettlement, ...] = Field(default=(), max_length=180)
+    underlying_settlements: tuple[UnderlyingSettlement, ...] = Field(default=(), max_length=180)
     narrow: ReplayScript
     broad: ReplayScript
     managed: ReplayScript | None = None
@@ -305,6 +311,9 @@ async def run_replay_series(settings, tapes, directory):
     settings = ReplaySettings.model_validate(settings.model_dump(warnings=False))
     tapes = validate_tape_series(tapes)
     manifest = settings.manifest
+    EvaluationBundle(
+        manifest=manifest, evidence=(), underlying_settlements=settings.underlying_settlements
+    )
     if (
         len(tapes) != len(manifest.sessions)
         or settings.narrow.arm != "B"
@@ -463,7 +472,9 @@ async def run_replay_series(settings, tapes, directory):
                         "scheduling": scheduling[h.session_key][arm],
                     },
                 )
-    result = export_series(manifest, tapes, sources)
+    result = export_series(
+        manifest, tapes, sources, underlying_settlements=settings.underlying_settlements
+    )
     result["bundle"] = result["bundle"].model_dump(mode="json")
     result.update(
         model_evidence="SCRIPTED",

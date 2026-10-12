@@ -237,10 +237,10 @@ def evaluate(bundle, *, tapes=None):
 
         recorded = tape_issues(bundle, tapes)
     with localcontext(Context(prec=192)):
-        return _evaluate(bundle, recorded)
+        return _evaluate(bundle, recorded, tapes)
 
 
-def _evaluate(bundle, recorded=None):
+def _evaluate(bundle, recorded=None, tapes=None):
     m = bundle.manifest
     evidence = {(a.session_key, a.arm): a for a in bundle.evidence}
     benchmarks = {b.session_key: b for b in bundle.benchmarks}
@@ -365,6 +365,16 @@ def _evaluate(bundle, recorded=None):
             }
         )
         previous_close = s.closes_at
+    from app.options.underlying_baseline import underlying_report
+
+    underlying = underlying_report(bundle, tapes, recorded, rows)
+    if m.underlying_baseline is not None:
+        for row, baseline in zip(rows, underlying["sessions"], strict=True):
+            if baseline["status"] != "COMPLETE":
+                row["status"] = "INCONCLUSIVE"
+                row["reasons"].append("INCOMPLETE_UNDERLYING_BASELINE")
+                row["paired_net_difference"] = dict.fromkeys(row["paired_net_difference"])
+                row["management_net_difference_D_minus_C"] = None
     complete = all(r["status"] == "COMPLETE" for r in rows)
     spy_factor = Decimal(1)
     if complete:
@@ -384,6 +394,11 @@ def _evaluate(bundle, recorded=None):
             "net_return": str(sum(changes, ZERO) / m.arms[0].policy.capital) if complete else None,
             "worst_session": str(min(changes)) if changes else None,
             "session_boundary_drawdown": str(drawdown) if complete else None,
+            "net_excess_vs_eligible_underlying": str(
+                (sum(changes, ZERO) - Decimal(underlying["net_change"])) / m.arms[0].policy.capital
+            )
+            if complete and m.underlying_baseline is not None
+            else None,
             "net_excess_vs_spy_price": str(
                 sum(changes, ZERO) / m.arms[0].policy.capital - (spy_factor - 1)
             )
@@ -410,6 +425,7 @@ def _evaluate(bundle, recorded=None):
         "complete_paired_sessions": sum(r["status"] == "COMPLETE" for r in rows),
         "minimum_sessions_met": enough,
         "spy_session_compounded_price_return": str(spy_factor - 1) if complete else None,
+        "eligible_underlying": underlying,
         "sessions": rows,
         "totals": totals,
         "mean_paired_net_difference": {
@@ -430,6 +446,6 @@ def _evaluate(bundle, recorded=None):
             "SPY midpoint price return excludes dividends and benchmark execution costs",
             "SPY session compounding excludes overnight gaps; this is not buy-and-hold total return",
             "Session-boundary drawdown only; no intraday drawdown or statistical significance",
-            "Underlying-only baseline is not implemented; arm D requires explicit enrollment",
+            "Underlying-only baseline and arm D require explicit enrollment",
         ],
     }

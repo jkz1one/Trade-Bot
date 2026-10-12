@@ -1,5 +1,62 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P3 eligible long-underlying benchmark: 2026-10-12 UTC
+
+The evaluator, native replay and exporter now support an explicitly enrolled
+long-share comparator on A's approved deterministic CALL opportunities. It owns
+separate cash, settled funds and shares; PUT/index opportunities stay cash. It
+uses whole shares under the matched capital/risk envelope, later sized tape quotes,
+spread/slippage/tick rounding, all share fees and explicit data/host allocations.
+A/B/C/D retain their independent native accounts and all entry/management costs.
+[Source of truth v1.19](SOURCE_OF_TRUTH.md) and the
+[underlying benchmark contract](OPTIONS_UNDERLYING_BASELINE.md) define its exact
+opportunity-schedule scope; this is not a separately rerun stock signal strategy.
+
+Independent underlying stop/time exits require later executable bids. Partial
+closes retain ownership; repeated source timestamps cannot create new size and
+exit order fees are charged once. Optional underlying bid/ask share sizes preserve
+legacy serialization/hashes when absent. Missing liquidity/cost/source evidence,
+invalid settlement or open boundary exposure stays inconclusive and blocks a later
+reset. Separate explicit between-session receipts alone release sale proceeds.
+The enrolled comparison withholds totals when the baseline is incomplete.
+SPY midpoint/session price and cash benchmarks remain separate.
+
+Fresh pre-edit GitHub head was `26514e94fa18da767b54236a978fda430746a865`,
+tree `cdf4505a06bb0b7d3e3d87773d683e03460c1df0`. Main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 was open/draft.
+
+Verification:
+
+- **971 passed in 1601.84s**, warnings as errors, on the noneditable installed
+  wheel outside source using Python 3.12.14/OpenSSL 3.5.8. Nineteen options/Degen
+  files: the prior 945 cases plus 26 new underlying-comparison cases. Native
+  fixture workers and installed CLIs used the installed package.
+- The 26 new cases cover share fills and all fees/allocations; strict subsequent
+  quotes; missing/stale/zero size and limit rejection; partial exits; repeated
+  source/changed-receipt size; stop/time exits and low-priced liquidation;
+  independent settled/risk/fee/share ceilings; PUT cash; source/cost uncertainty;
+  old hash compatibility; separate identity/settlement admission; multi-session
+  cash/cost continuity and invalid credit; installed read-only evaluation CLI;
+  Decimal context independence; and native replay/export opt-in behavior.
+- Development: 26 new cases passed in 113.55s; the 112-case accounting/tape group
+  passed in 42.02s. These overlap the final suite and are not additional distinct
+  acceptance counts. The initial missing-size case exposed uncertainty being
+  erased by a later entry cancellation; the retained reason and regression now
+  prevent that.
+- Scoped Ruff lint/format, compilation, pip check, documentation links, seven
+  installed/source app-file comparisons and copied-test comparisons passed.
+  Whitespace checks passed. No dependencies, database schemas, deployment scripts
+  or service units changed. No full equity-suite rerun or hosted CI was invoked.
+- Installed wheel SHA-256:
+  `bd5c6798becde865765b268385729b70fbb281ae63a71a5b9b45548e8cd9b4d4`.
+
+This is local fixture/native-process proof. No provider/model call, broker write,
+deployment or profitability claim is made. Actual normalized market/model evidence,
+whole-session statistical/prospective evaluation, continuous options PAPER runtime/UI,
+actual host lifecycle/alerts/off-host recovery, Swing/Scope/mixed ownership and the
+finished dashboard remain open. LIVE is disabled, main remains untouched, PR #1
+remains draft, and the frozen deployed experiment is unchanged.
+
 ## P3 arm D replay/export and stored attribution: 2026-10-12 UTC
 
 Arm D now runs full entry reasoning plus bounded MAINTAIN/TIGHTEN/EXIT_ALL through
