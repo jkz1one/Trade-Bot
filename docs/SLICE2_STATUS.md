@@ -1,5 +1,84 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 shared Degen/Swing PAPER selection: 2026-10-12 UTC
+
+The user's October 12 direction reinforces one AI selection boundary and one
+execution owner across strategy families. A new opt-in `swing_policy` now adds
+`SWING_DAILY_BREAKOUT` to the existing options PAPER coordinator, journal, lease,
+cash ledger, order reservation and model budget. The full-entry AI receives both
+families in one bounded packet and selects at most one candidate or HOLD. A
+frozen family priority supplies the model-off comparison. Research A/B/C/D
+accounts remain independent and their existing enrollment/serialized inputs are
+preserved; joint-family replay enrollment is explicitly unsupported.
+
+Swing seeds retain complete consecutive daily exchange bars, the next actual
+XNYS session and a contract locked before that open. The first recorded valid
+seed is immutable per symbol/session, including across restarts. Current completed
+break-and-hold evidence, fresh explicit catalyst clearance, contract metadata and
+chase bounds precede execution. Preparation and dispatch both recheck shared
+candidate membership; Swing also rechecks its seed, session, current break/chase
+and catalyst expiry. One unresolved order or unknown model charge fences the
+common account. Existing deterministic sizing, full-premium funding, fees, all
+entry/management costs and independent protection remain authoritative.
+
+The stored observer now filters shared Degen/Swing candidates and shows their
+setup blockers without performing trading work. The installed runtime accepts
+joint-family settings and retains held-contract priority, one decision claim and
+the existing operator recovery path. See [source of truth v1.23](SOURCE_OF_TRUTH.md),
+[the delivered contract](OPTIONS_SHARED_STRATEGIES.md) and the
+[fixture settings example](../examples/options-local-runtime-shared.json).
+
+Fresh pre-edit GitHub head was `55d7beab938452ef07eb8b9bebff62f78d283322`, tree
+`401fd9b4aeb39e3b79a0c345f7144053693ffa43`. Main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 was open/draft.
+
+Verification:
+
+- **242 passed in 101.65s (0:01:41)** on the noneditable final wheel outside source,
+  warnings as errors. Six suites cover shared strategies (41 new cases), observer,
+  entry reasoning/coordination/native worker and continuous runtime. Installed CLI
+  and worker cases use isolated `-I` processes.
+- **1 passed in 26.25s** on that final wheel: the specific existing managed-replay
+  `EXIT_ALL-5-False` case that previously exceeded its native snapshot deadline.
+  Its five-second limit was unchanged. This overlaps the broader run below.
+- The earlier installed build ran 13 suites: **483 passed, 3 failed in 1204.50s
+  (0:20:04)**. It covered shared strategy, execution, Degen, entry reasoning/
+  coordination/judgment, position coordination, runtime, observer, operator,
+  managed replay, first-session replay and multi-session replay. Two failures
+  were test-harness expectations (isolated helper import and Swing status); the
+  third was the existing `FixtureProcessTimeout` just rechecked. These are not
+  reported as an all-passing run or added to the final count.
+- Final-wheel initial run: **240 passed, 2 failed in 101.94s**. The contract-binding
+  test hashed JSON strings instead of normalized typed values, hitting the earlier
+  evidence-hash guard; it now constructs the intended exact-binding mismatch.
+  An additional observer assertion still expected Swing `NOT_IMPLEMENTED` instead
+  of `NOT_ENROLLED`. Both test-only corrections are covered by the final 242 pass.
+- During development, partial-entry fixtures correctly blocked a protective close
+  while the BUY remained unresolved; the full-fill test now exercises actual
+  independent closing. A mistaken expected exit-reason name was corrected.
+  The new native worker harness initially lacked the fixture package root;
+  isolated reproduction confirmed `ModuleNotFoundError: tests`. Its corrected
+  individual run passed, then passed again in the final group. No deadline relaxed.
+- Scoped Ruff lint/format, compilation, pip check and whitespace checks pass.
+  The shared runtime example validates. All checked local documentation links
+  resolve. Ten changed Python modules and the template match installed bytes;
+  copied tests match source. The final application was installed separately while
+  the earlier replay tests ran; their package files were never replaced in use.
+- Legacy Degen frame, full-entry packet and setup/selection hashes matched the
+  preceding installed release exactly. No equity-suite or full-provider/host rerun;
+  retained earlier proof remains below.
+- Final wheel SHA-256: `b97dfec73265fa9a96f077568fafe8587778a5ac79df8a8c797987cd6c3d05c5`.
+  Earlier broader-run wheel: `3b1007c881e9bd99c5e422ffd991c45c293b7477c67b41536bc937701106205f`.
+
+This is **session-close PAPER fixture capability**, not complete M7. Overnight
+Swing, additional Swing families, joint-family replay/economics, Scope/SPXW and
+mixed stock/options ownership remain open. The first adaptation shares the current
+intraday management context; no overnight horizon is enabled. Actual normalized
+provider/model evidence, target-host lifecycle/alerts/off-host recovery, installed
+release reporting and full dashboard/visual acceptance remain open. No authentic
+provider/model call, broker write, host unit, dependency or deployment change.
+LIVE stays disabled; the deployed experiment remains frozen and main/PR draft retained.
+
 ## P4 reviewed local operator recovery: 2026-10-12 UTC
 
 A new opt-in, separately keyed options capability now lets an operator review one

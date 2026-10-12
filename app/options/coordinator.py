@@ -25,6 +25,7 @@ from app.options.selection import (
     admit_candidates,
     plan_contract_reads,
 )
+from app.options.swing import SwingInput, SwingPolicy
 
 
 class DegenFrame(OptionRecord):
@@ -32,6 +33,7 @@ class DegenFrame(OptionRecord):
     inventories: tuple[OptionInventory, ...] = Field(default=(), max_length=2)
     quotes: tuple[OptionQuote, ...] = Field(default=(), max_length=8)
     underlyings: tuple[UnderlyingQuote, ...] = Field(default=(), max_length=2)
+    swing: tuple[SwingInput, ...] = Field(default=(), max_length=2, exclude_if=lambda v: not v)
 
 
 class DegenCoordinator:
@@ -48,6 +50,7 @@ class DegenCoordinator:
         entry_policy=None,
         replay_model=None,
         position_policy=None,
+        swing_policy=None,
     ):
         if type(engine) is not OptionExecution or getattr(engine, "_degen_owner", None) is not None:
             raise ValueError("One active built-in options owner is required")
@@ -66,6 +69,15 @@ class DegenCoordinator:
             or (replay_model.script.arm in {"C", "D"}) != (entry_policy is not None)
         ):
             raise ValueError("Explicit isolated scripted model configuration required")
+        self.swing_policy = (
+            SwingPolicy.model_validate(swing_policy.model_dump(warnings=False))
+            if swing_policy is not None
+            else None
+        )
+        if self.swing_policy is not None and (
+            replay_model is not None or (judgment_limits is not None and entry_policy is None)
+        ):
+            raise ValueError("Shared families require native full-entry AI or model-off comparison")
         self.replay_model = replay_model
         self._replay_quotes, self._replay_underlyings = {}, {}
         if replay_model is None and (judgment_limits is None) != (key_file is None):
@@ -108,7 +120,9 @@ class DegenCoordinator:
             raise ValueError("Model requires absolute private key path and frozen cost policy")
         if (
             not set(self.policy.symbols) <= set(engine.limits.allowed_underlyings)
-            or self.selection.max_quote_contracts * len(self.policy.symbols) > 8
+            or (self.selection.max_quote_contracts + (1 if self.swing_policy else 0))
+            * len(self.policy.symbols)
+            > 8
         ):
             raise ValueError(
                 "Frozen symbols and global quote capacity must fit the execution owner"
@@ -153,6 +167,12 @@ class DegenCoordinator:
                 engine.journal.event(db, self.now(), "DEGEN_STRATEGY_ENROLLED", json.loads(frozen))
             elif create or row[0] != frozen:
                 raise ExecutionBlocked("FROZEN_DEGEN_STRATEGY_CANNOT_CHANGE_OR_REENROLL")
+            if self.swing_policy is not None:
+                db.execute(
+                    "CREATE TABLE IF NOT EXISTS execution_option_swing_seeds("
+                    "session TEXT NOT NULL,symbol TEXT NOT NULL,seed_hash TEXT NOT NULL,"
+                    "seed_json TEXT NOT NULL,PRIMARY KEY(session,symbol))"
+                )
             for pending in db.execute(
                 "SELECT cycle_key,result_json FROM execution_option_opportunities WHERE status='STARTED'"
             ).fetchall():
@@ -177,6 +197,8 @@ class DegenCoordinator:
             "setup": self.policy.model_dump(mode="json"),
             "selection": self.selection.model_dump(mode="json"),
         }
+        if self.swing_policy is not None:
+            config["swing"] = self.swing_policy.model_dump(mode="json")
         if self.judgment_limits is not None:
             config["model"] = {
                 "configuration": judgment.configuration(
@@ -246,9 +268,11 @@ class DegenCoordinator:
             ).fetchone()
         return OptionIntent.model_validate_json(row[0]).instrument if row else None
 
-    def quote_plan(self, histories, inventories):
+    def quote_plan(self, histories, inventories, swing=()):
         """Local planning performs no provider/model/order operation."""
         at = self.now()
+        if swing and self.swing_policy is None:
+            raise ValueError("Swing requires explicit new-population enrollment")
         with self.engine.journal.read() as db:
             ledger = self._bound(db)
             held = self._held_instrument(db, ledger)
@@ -310,6 +334,14 @@ class DegenCoordinator:
             )
             for scan in scans
         )
+        if self.swing_policy is not None:
+            from app.options.shared_strategy import swing_plans
+
+            additional_scans, additional_plans = swing_plans(self, swing, by_symbol, scans, at)
+            if self.swing_policy.family_priority[0] == "SWING":
+                scans, plans = additional_scans + scans, additional_plans + plans
+            else:
+                scans, plans = scans + additional_scans, plans + additional_plans
         return {
             "purpose": "CANDIDATE_SHORTLIST",
             "instruments": tuple(i for p in plans for i in p.instruments),
@@ -318,7 +350,16 @@ class DegenCoordinator:
         }
 
     def _finish(self, key, result):
-        result = json.loads(json.dumps({"cycle_key": key, **result}, sort_keys=True))
+        result = json.loads(
+            json.dumps(
+                {
+                    "cycle_key": key,
+                    **({"families": ["DEGEN", "SWING"]} if self.swing_policy else {}),
+                    **result,
+                },
+                sort_keys=True,
+            )
+        )
         with self.engine.journal.write() as db:
             self._bound(db)
             previous = db.execute(
@@ -521,13 +562,18 @@ class DegenCoordinator:
                     },
                 )
             self.engine.assess(None, None, now=at)
-            planned = self.quote_plan(frame.histories, frame.inventories)
+            if self.swing_policy is not None:
+                from app.options.shared_strategy import lock_seeds
+
+                lock_seeds(self, frame.swing)
+            planned = self.quote_plan(frame.histories, frame.inventories, frame.swing)
             if planned["purpose"] != "CANDIDATE_SHORTLIST":
                 return self._finish(key, {"status": "HOLD", "reason": planned["purpose"]})
             expected = {i.instrument_id: i for i in planned["instruments"]}
             quotes = {q.instrument.instrument_id: q for q in frame.quotes}
             underlyings = {q.symbol: q for q in frame.underlyings}
             evidence = {
+                **({"families": ["DEGEN", "SWING"]} if self.swing_policy else {}),
                 "scans": [s.model_dump(mode="json") for s in planned["scans"]],
                 "read_plans": [p.model_dump(mode="json") for p in planned["plans"]],
             }
@@ -550,11 +596,7 @@ class DegenCoordinator:
             with self.engine.journal.read() as db:
                 account = self.engine._account(db, self.now())
             candidates, rejections = [], {}
-            plans = {p.symbol: p for p in planned["plans"]}
-            for scan in planned["scans"]:
-                if scan.symbol not in plans:
-                    continue
-                plan = plans[scan.symbol]
+            for scan, plan in zip(planned["scans"], planned["plans"], strict=True):
                 matched = tuple(quotes[i.instrument_id] for i in plan.instruments)
                 session = (
                     self.engine._session(plan.instruments[0].contract, self.now())
@@ -658,6 +700,7 @@ class DegenCoordinator:
                 "status": "HOLD",
                 "reason": "DEGEN_CYCLE_FAILED",
                 "error_class": type(exc).__name__,
+                **({"blocker": str(exc)} if isinstance(exc, ExecutionBlocked) else {}),
             }
             if not isinstance(exc, Exception):
                 result["reason"] = "DEGEN_CYCLE_INTERRUPTED"

@@ -40,6 +40,7 @@ def _coordinator(engine, settings, create, clock):
         key_file=settings.key_file,
         entry_policy=settings.entry_policy,
         position_policy=settings.position_policy,
+        swing_policy=settings.swing_policy,
         clock=clock,
     )
 

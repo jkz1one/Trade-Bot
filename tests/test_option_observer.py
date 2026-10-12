@@ -157,7 +157,7 @@ def test_flat_report_is_stored_evidence_not_worker_or_authority_proof(tmp_path):
         assert data["execution_authority"] is data["network_calls"] is data["live_enabled"] is False
         assert data["release"] is None and data["economics"]["spy_return"] is None
         assert data["economics"]["all_costs_known"] is False
-        assert data["strategy"]["families"]["SWING"] == "NOT_IMPLEMENTED"
+        assert data["strategy"]["families"]["SWING"] == "NOT_ENROLLED"
 
 
 @pytest.mark.parametrize(
@@ -364,7 +364,9 @@ def test_history_pagination_keeps_current_position_and_costs_independent(tmp_pat
         for family in ("SWING", "SCOPE"):
             report = o.report(family=family)
             assert not report["opportunities"] and not report["page"]["has_older"]
-            assert report["strategy"]["families"][family] == "NOT_IMPLEMENTED"
+            assert report["strategy"]["families"][family] == (
+                "NOT_ENROLLED" if family == "SWING" else "NOT_IMPLEMENTED"
+            )
 
 
 @pytest.mark.parametrize(
@@ -525,7 +527,7 @@ def test_html_escapes_untrusted_thesis_and_explains_empty_family(tmp_path, monke
         html = client.get("/").text
         assert "<script>" not in html and "&lt;script&gt;" in html
         assert "SPY comparison" in html and "Unknown model usage" in html
-        assert "Swing is not implemented" in client.get("/?family=SWING").text
+        assert "Swing is not enrolled" in client.get("/?family=SWING").text
         assert "Scope is not implemented" in client.get("/?family=SCOPE").text
 
 

@@ -14,6 +14,7 @@ from app.options.lifecycle import OptionExecutionPolicy
 from app.options.models import Name, OptionLimits, OptionRecord
 from app.options.position_reasoning import PositionReasoningPolicy
 from app.options.selection import ContractSelectionPolicy
+from app.options.swing import SwingPolicy
 
 
 class RuntimePolicy(OptionRecord):
@@ -45,6 +46,7 @@ class RuntimePolicy(OptionRecord):
 class RuntimeSettings(OptionRecord):
     limits: OptionLimits
     execution: OptionExecutionPolicy
+    swing_policy: SwingPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
     setup: DegenPolicy
     selection: ContractSelectionPolicy
     runtime: RuntimePolicy
@@ -72,6 +74,8 @@ class RuntimeSettings(OptionRecord):
             self.position_policy is not None and self.entry_policy is None
         ):
             raise ValueError("Management requires an explicitly configured full-entry cohort")
+        if self.swing_policy is not None and model and self.entry_policy is None:
+            raise ValueError("Shared AI families require full entry reasoning")
         age = self.execution.process_timeout_seconds + self.runtime.tick_seconds
         if age >= min(
             self.runtime.heartbeat_max_age_seconds,
@@ -80,7 +84,9 @@ class RuntimeSettings(OptionRecord):
         ):
             raise ValueError("Supervisor process/tick budget must fit all freshness bounds")
         if not set(self.setup.symbols) <= set(self.limits.allowed_underlyings) or (
-            self.selection.max_quote_contracts * len(self.setup.symbols) > 8
+            (self.selection.max_quote_contracts + (1 if self.swing_policy else 0))
+            * len(self.setup.symbols)
+            > 8
         ):
             raise ValueError("Frozen strategy universe must fit the options owner")
         return self

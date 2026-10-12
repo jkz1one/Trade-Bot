@@ -120,3 +120,8 @@ JSON. The page identifies that capability separately from observer access. It ne
 reads the signing key, queues a command or resumes entry. Review and submission use
 the separate installed local CLI; actor labels and APPLIED receipts are stored
 evidence, not proof of current liveness or human review quality.
+
+The opt-in [shared family path](OPTIONS_SHARED_STRATEGIES.md) now displays joint
+cycles and filtered Degen/Swing candidates from the same stored account. Swing
+status is `SESSION_CLOSE_FIXTURE` only when enrolled, otherwise `NOT_ENROLLED`.
+Scope remains `NOT_IMPLEMENTED`. Filtering does not divide or hide common costs.

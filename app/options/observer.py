@@ -26,7 +26,7 @@ from app.options.lifecycle import (
     OptionVenueSnapshot,
 )
 from app.options.models import Name, OptionLimits
-from app.options.selection import DegenCandidate
+from app.options.selection import parse_candidate
 
 MAX_DATABASE_BYTES = 64 * 1024 * 1024
 MAX_RECORD_BYTES = 256 * 1024
@@ -213,7 +213,7 @@ class OptionObserver:
             ).fetchone()
             strategy = _json(row[0]) if row else None
         opportunities, page, counts, frames = self._opportunities(
-            db, tables, limit, before, family, policy
+            db, tables, limit, before, family, policy, strategy
         )
         from app.options.runtime_state import report as runtime_report
 
@@ -369,7 +369,9 @@ class OptionObserver:
                 "symbols": strategy["setup"].get("symbols", []) if strategy else [],
                 "families": {
                     "DEGEN": "ENROLLED" if strategy else "NOT_ENROLLED",
-                    "SWING": "NOT_IMPLEMENTED",
+                    "SWING": "SESSION_CLOSE_FIXTURE"
+                    if strategy and strategy.get("swing")
+                    else "NOT_ENROLLED",
                     "SCOPE": "NOT_IMPLEMENTED",
                 },
             },
@@ -459,7 +461,7 @@ class OptionObserver:
         }
 
     @staticmethod
-    def _opportunities(db, tables, limit, before, family, policy):
+    def _opportunities(db, tables, limit, before, family, policy, strategy):
         from app.options.attribution import decision_attribution
 
         empty = (
@@ -489,7 +491,7 @@ class OptionObserver:
                 "SELECT inputs_json FROM execution_option_opportunities ORDER BY rowid DESC LIMIT 100"
             )
         ]
-        if family in {"SWING", "SCOPE"}:
+        if family == "SCOPE":
             return empty[:2] + (counts, frames)
         rows = db.execute(
             "SELECT rowid,* FROM execution_option_opportunities WHERE (? IS NULL OR rowid<?) ORDER BY rowid DESC LIMIT ?",
@@ -502,7 +504,42 @@ class OptionObserver:
             raw_candidates = data.get("candidates", [])
             if not isinstance(raw_candidates, list) or len(raw_candidates) > 24:
                 raise ValueError("Stored candidate bound exceeded")
-            candidates = [DegenCandidate.model_validate(c) for c in raw_candidates]
+            candidates = [parse_candidate(c) for c in raw_candidates]
+            families = data.get(
+                "families", ["DEGEN", "SWING"] if strategy and strategy.get("swing") else ["DEGEN"]
+            )
+            if families not in (["DEGEN"], ["DEGEN", "SWING"]):
+                raise ValueError("Unknown stored family membership")
+            if family != "ALL" and family not in families:
+                continue
+            if family != "ALL":
+                candidates = [
+                    c
+                    for c in candidates
+                    if ("SWING" if c.family.startswith("SWING_") else "DEGEN") == family
+                ]
+            from app.options.degen import DegenScan
+            from app.options.swing import SwingScan
+
+            raw_scans = data.get("scans", [])
+            if (
+                not isinstance(raw_scans, list)
+                or len(raw_scans) > 4
+                or any(not isinstance(s, dict) for s in raw_scans)
+            ):
+                raise ValueError("Stored scan bound exceeded")
+            observations = []
+            for raw_scan in raw_scans:
+                scan_type = (
+                    SwingScan if raw_scan.get("version") == "swing-next-session-v1" else DegenScan
+                )
+                scan = scan_type.model_validate(raw_scan)
+                scan_family = "SWING" if isinstance(scan, SwingScan) else "DEGEN"
+                if family in {"ALL", scan_family}:
+                    observations.extend(
+                        {"symbol": scan.symbol, **o.model_dump(mode="json")}
+                        for o in scan.observations
+                    )
             raw_choice = data.get("model_result", {}).get("choice")
             choice = (
                 CandidateChoice.model_validate(raw_choice).model_dump(mode="json")
@@ -513,12 +550,12 @@ class OptionObserver:
             output.append(
                 {
                     "id": row["rowid"],
-                    "family": "DEGEN",
+                    "family": "/".join(families),
                     "cycle_key": row["cycle_key"],
                     "started_at": row["started_at"],
                     "storage_status": row["status"],
                     "status": data.get("status", "IN_PROGRESS"),
-                    "reason": data.get("reason"),
+                    "reason": data.get("blocker") or data.get("reason"),
                     "candidate_id": selected,
                     "client_id": data.get("client_id"),
                     "candidates": [
@@ -536,6 +573,7 @@ class OptionObserver:
                         }
                         for c in candidates
                     ],
+                    "setup_observations": observations,
                     "model_choice": choice,
                     "attribution": decision_attribution(
                         db, row["cycle_key"], data, policy
@@ -549,7 +587,7 @@ class OptionObserver:
                 "limit": limit,
                 "before": before,
                 "has_older": has_older,
-                "next_before": output[-1]["id"] if has_older else None,
+                "next_before": rows[limit - 1]["rowid"] if has_older else None,
                 "family": family,
             },
             counts,

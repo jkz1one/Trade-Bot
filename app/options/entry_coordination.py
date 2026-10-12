@@ -63,10 +63,17 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
             key, {**evidence, "status": "HOLD", "reason": "PRIVATE_MODEL_KEY_UNAVAILABLE"}
         )
     config = judgment.configuration(c.engine.policy.cost_policy, c.judgment_limits, c.entry_policy)
-    scan_by_symbol = {s.symbol: s for s in scans}
     opportunities = []
     for candidate in candidates:
-        scan = scan_by_symbol[candidate.symbol]
+        matches = [
+            s
+            for s in scans
+            if s.symbol == candidate.symbol
+            and any(o.family == candidate.family for o in s.observations)
+        ]
+        if len(matches) != 1:
+            raise ValueError("Exactly one family-specific scan required")
+        scan = matches[0]
         quote, underlying = (
             quotes[candidate.instrument.instrument_id],
             underlyings[candidate.symbol],

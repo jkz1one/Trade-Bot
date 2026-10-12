@@ -114,3 +114,11 @@ key rotation/reprovisioning, desktop/mobile visual acceptance and the full dashb
 The separate local operator recovery surface is fixture implemented.
 This local runner does not close those gates or prospective economic acceptance.
 LIVE stays disabled and the deployed experiment remains frozen.
+
+## Shared family enrollment
+
+A new population may opt into [shared Degen/Swing selection](OPTIONS_SHARED_STRATEGIES.md)
+with `RuntimeSettings.swing_policy` and one `SwingInput` per frozen symbol in
+`DegenFrame.swing`. It uses the same runtime, lease, ledger, protection cadence and
+optional signed operator inbox. This first Swing adaptation always retains
+session-close protection; it adds no overnight authority or second account.

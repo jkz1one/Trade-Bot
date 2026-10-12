@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.22. Adopted product direction and working delivery contract, 2026-10-12 UTC.
+Version 1.23. Adopted product direction and working delivery contract, 2026-10-12 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -23,6 +23,9 @@ protection, scheduled decisions, interruption-safe shutdown and stored runtime
 evidence for a new normalized-fixture options population.
 [Reviewed operator recovery](OPTIONS_OPERATOR_RECOVERY.md) now adds separately
 keyed local halt/resume/revocation requests with exact revision and evidence gates.
+[Shared Degen/Swing arbitration](OPTIONS_SHARED_STRATEGIES.md) now adds a locked
+next-session daily-breakout family to the same PAPER owner and full-entry AI packet.
+This first adaptation uses session-close protection; overnight Swing is not enabled.
 Authentic collection/coverage and prospective economic evidence remain open.
 Report capabilities and gates, not completion percentages.
 
@@ -163,6 +166,12 @@ SPY/QQQ Degen set: opening-range continuation, VWAP/trend pullback and explicitl
 confirmed failed-break reversal. Use completed 5-minute/15-minute structure for
 initial signal evidence; faster position supervision is a separate safety cadence.
 Freeze both cadences in the new cohort. Do not change the old 15-minute scheduler.
+
+The October 12 clarification reinforces one shared engine and AI selection boundary
+for Degen and Swing. The new opt-in shared PAPER slice now implements that boundary
+with one ledger/order reservation/model budget, preserving separate research accounts.
+Family-specific evidence and holding rules remain explicit. Scope and mixed
+stock/options ownership are still unimplemented.
 
 Swing retains completed higher-timeframe bars, exact contract locking, next actual
 exchange session, catalyst/earnings clearance, chase and invalidation geometry.
@@ -382,8 +391,10 @@ also has fixture/native proof, including durable usage, HOLD and original admiss
 ceilings. The [first M4 stored observer](OPTIONS_OBSERVER.md) has fixture/native proof
 for opportunities, exact positions, management, order/fill distinctions and unknown
 costs. M4 browser visual acceptance and full economic/cohort evaluation remain open.
-M3 authenticated normalized collection/model acceptance and M5–M8 are not delivered
-for options. Existing
+M3 authenticated normalized collection/model acceptance and M5–M8 are not complete
+for options. M7 now has shared Degen/Swing PAPER candidate arbitration and a first
+locked next-session daily-breakout adaptation with session-close protection.
+Overnight Swing, remaining families, Scope and mixed stock/options remain open. Existing
 runtime services still execute equities only; local M2 is not an options deployment.
 Some underlying stock-engine/host procedures already exist and are reused, but do
 not mark an options milestone complete from that prior work. Report concrete

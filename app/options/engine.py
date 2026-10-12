@@ -96,6 +96,7 @@ class OptionJournal(ExecutionJournal):
             "execution_option_opportunities",
             "execution_option_runtime",
             "execution_option_runtime_slots",
+            "execution_option_swing_seeds",
         }
     )
 
@@ -434,6 +435,9 @@ class OptionExecution:
                 ):
                     reason = "OPTION_MODEL_RECEIPT_REQUIRED"
             try:
+                from app.options.shared_strategy import review_shared_entry
+
+                review_shared_entry(self, db, source_key, proposal, quote, underlying, now)
                 account = (
                     self._account(db, now, closing=proposal.action == "CLOSE")
                     if proposal.action != "HOLD"
@@ -600,6 +604,9 @@ class OptionExecution:
                     raise ExecutionBlocked("OPTION_INSTRUMENT_MAPPING_CHANGED")
                 if (intent.entry_protection is None) != ("entry_request" not in approval):
                     raise ExecutionBlocked("OPTION_ENTRY_PROTECTION_MISSING")
+                from app.options.shared_strategy import review_shared_entry
+
+                review_shared_entry(self, db, intent.source_key, proposal, quote, underlying, now)
                 account = self._account(db, now, exclude=client_id, closing=intent.side == "SELL")
                 result = admit_option(
                     proposal,

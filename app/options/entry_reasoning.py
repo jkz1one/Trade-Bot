@@ -21,7 +21,8 @@ from app.options.models import (
     SessionWindow,
     UnderlyingQuote,
 )
-from app.options.selection import DegenCandidate
+from app.options.selection import DegenCandidate, SwingCandidate
+from app.options.swing import SwingScan
 
 Digest = Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
 MAX_PACKET_BYTES = 256 * 1024
@@ -36,8 +37,8 @@ class EntryReasoningPolicy(OptionRecord):
 
 
 class EntryOpportunity(OptionRecord):
-    candidate: DegenCandidate
-    scan: DegenScan
+    candidate: DegenCandidate | SwingCandidate
+    scan: DegenScan | SwingScan
     quote: OptionQuote
     underlying: UnderlyingQuote
     session: SessionWindow
@@ -86,7 +87,18 @@ class EntryPacket(OptionRecord):
                 if x.family == c.family and x.right == c.instrument.contract.right
             ]
             if (
-                s.issues
+                (isinstance(c, SwingCandidate) != isinstance(s, SwingScan))
+                or (
+                    isinstance(s, SwingScan)
+                    and (
+                        s.seed.instrument != c.instrument
+                        or s.seed.history.symbol != s.symbol
+                        or s.seed.target_session != o.session.opens_at.date()
+                        or s.higher_timeframe_through != s.seed.history.bars[-1].closes_at
+                        or s.seed.created_at >= o.session.opens_at
+                    )
+                )
+                or s.issues
                 or s.evaluated_at != self.as_of
                 or s.completed_through is None
                 or s.higher_timeframe_through is None

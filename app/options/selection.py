@@ -76,6 +76,15 @@ class DegenCandidate(OptionRecord):
     admission: OptionAdmission
 
 
+class SwingCandidate(DegenCandidate):
+    family: Literal["SWING_DAILY_BREAKOUT"]
+
+
+def parse_candidate(value):
+    cls = SwingCandidate if value.get("family") == "SWING_DAILY_BREAKOUT" else DegenCandidate
+    return cls.model_validate(value)
+
+
 def plan_contract_reads(scan, inventory, policy, limits, *, now):
     scan = DegenScan.model_validate(scan.model_dump(warnings=False))
     inventory = OptionInventory.model_validate(inventory.model_dump(warnings=False))
@@ -84,7 +93,7 @@ def plan_contract_reads(scan, inventory, policy, limits, *, now):
         return _plan(scan, inventory, policy, limits, now)
 
 
-def _plan(scan, inventory, policy, limits, now):
+def _plan(scan, inventory, policy, limits, now, *, expiration=None):
     rights = {s.right for s in scan.observations if s.status == "CONFIRMED"}
     issues = []
     if scan.issues or not rights:
@@ -93,7 +102,8 @@ def _plan(scan, inventory, policy, limits, now):
         issues.append("SCAN_TIME_OR_STRUCTURE_MISMATCH")
     if (
         inventory.symbol != scan.symbol
-        or inventory.expiration != now.astimezone(ZoneInfo("America/New_York")).date()
+        or inventory.expiration
+        != (expiration or now.astimezone(ZoneInfo("America/New_York")).date())
         or inventory.source != policy.metadata_source
         or not inventory.complete
         or inventory.entitlement != "REALTIME"
@@ -135,7 +145,11 @@ def _plan(scan, inventory, policy, limits, now):
             or c.right not in rights
             or now >= c.last_trading_at
         ):
-            reasons.append("INSTRUMENT_OR_ZERO_DTE_IDENTITY_INELIGIBLE")
+            reasons.append(
+                "INSTRUMENT_OR_LOCKED_EXPIRY_IDENTITY_INELIGIBLE"
+                if expiration is not None
+                else "INSTRUMENT_OR_ZERO_DTE_IDENTITY_INELIGIBLE"
+            )
         if (
             metadata.source != policy.metadata_source
             or not metadata.complete
@@ -188,8 +202,11 @@ def admit_candidates(scan, plan, quotes, underlying, account, limits, session, *
     """This result is evidence. M2 re-admits the chosen fixed intent before attempt."""
     from app.options.engine import fingerprint
     from app.options.models import OptionQuote, UnderlyingQuote
+    from app.options.swing import SwingScan
 
-    scan = DegenScan.model_validate(scan.model_dump(warnings=False))
+    scan_type = SwingScan if isinstance(scan, SwingScan) else DegenScan
+    scan = scan_type.model_validate(scan.model_dump(warnings=False))
+    candidate_type = SwingCandidate if isinstance(scan, SwingScan) else DegenCandidate
     plan = ContractReadPlan.model_validate(plan.model_dump(warnings=False))
     quotes = tuple(OptionQuote.model_validate(q.model_dump(warnings=False)) for q in quotes)
     underlying = UnderlyingQuote.model_validate(underlying.model_dump(warnings=False))
@@ -216,7 +233,11 @@ def admit_candidates(scan, plan, quotes, underlying, account, limits, session, *
                 action="OPEN_LONG",
                 contract=instrument.contract,
                 underlying_invalidation=setup.invalidation,
-                thesis=f"Degen {setup.family}: completed 5m setup and 15m confirmation",
+                thesis=(
+                    f"Degen {setup.family}: completed 5m setup and 15m confirmation"
+                    if candidate_type is DegenCandidate
+                    else "Swing daily breakout: locked next-session contract; session-close protection"
+                ),
             )
             result = admit_option(
                 proposal,
@@ -237,7 +258,7 @@ def admit_candidates(scan, plan, quotes, underlying, account, limits, session, *
             )
             if result.outcome == "APPROVED":
                 accepted.append(
-                    DegenCandidate(
+                    candidate_type(
                         candidate_id=candidate_id,
                         symbol=scan.symbol,
                         family=setup.family,
