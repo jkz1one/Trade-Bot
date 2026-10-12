@@ -127,6 +127,8 @@ Adversarial tests cover both CALL and PUT, changed geometry, foreign/stale outpu
 unknown references, invalid terms, HOLD, trigger sides, cost-reduced sizing,
 original ceilings/deadlines, fresh admission and tampered packet revalidation.
 Installed-package regression proof is recorded in [status](SLICE2_STATUS.md).
-Authentic market/model acceptance, position-management proposals, comparative
-economic ledgers and deployed runtime/UI remain open. These are fixture fills,
+[Position-management proposal/review and native worker](OPTIONS_POSITION_REASONING.md)
+now have fixture proof; durable action integration remains open. A/B/C replay and
+comparative accounting are implemented with scripted inputs. Authentic market/model
+acceptance, arm D comparison and deployed runtime/UI remain open. These are fixture fills,
 not broker fills or profitability evidence. See [the completion plan](AI_TRADER_RESEARCH_PLAN.md).

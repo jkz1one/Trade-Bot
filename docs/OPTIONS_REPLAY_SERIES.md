@@ -111,9 +111,9 @@ wall deadline remains 900 seconds.
 
 ## Next
 
-The next P3 implementation is position reasoning with deterministic review,
-mandatory-exit precedence and monotone protection, followed by stored
-proposal/approval/fill attribution. Authentic normalized market/model evidence,
+[Position proposal/review and a native worker](OPTIONS_POSITION_REASONING.md) now
+have fixture proof. Next P3 is durable management integration with atomic revision
+consumption, then arm D replay/export and stored proposal/approval/fill attribution. Authentic normalized market/model evidence,
 continuous options runtime, finished UI, prospective evidence and host/recovery
 acceptance remain separate gates. LIVE stays disabled and the deployed population
 stays frozen. See [source of truth](SOURCE_OF_TRUTH.md) and [measured proof](SLICE2_STATUS.md).

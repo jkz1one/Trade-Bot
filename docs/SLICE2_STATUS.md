@@ -1,5 +1,69 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P3 position proposal/review and bounded native worker: 2026-10-12 UTC
+
+`app.options.position_reasoning` now defines strict MAINTAIN/EXIT_ALL/TIGHTEN
+proposals and fresh deterministic review for one exact owned option position.
+The packet retains original entry thesis/protection, effective invalidation,
+current completed context, quotes/account, position revision, frozen policy/model
+binding and original decision lease. Neither proposals nor reviews have execution
+authority. [Source of truth v1.16](SOURCE_OF_TRUTH.md) and the
+[position-reasoning contract](OPTIONS_POSITION_REASONING.md) record the boundary.
+
+Wrong/revised ownership, unknown references, widened/crossed stops, stale/foreign
+market evidence, halted/unknown account and unresolved orders cannot yield an
+eligible discretionary change. EXIT_ALL requires fresh close admission for the
+entire authoritative owned quantity. A smaller displayed size rejects instead of
+silently scaling out. The existing stop/premium/time/expiry/target calculations
+now live in a shared pure protection function used by both the native supervisor
+and management review. Original latches/timestamps and stale-data behavior remain.
+Mandatory protection overrides MAINTAIN, EXIT_ALL and TIGHTEN alike.
+
+`position_judgment` and its installed native worker freeze prompt/schema, model,
+prices, token/process limits and management policy. Request binding requires the
+native packet's cost policy to match. The child counts the exact strict request
+before one generation, with no tools, retries, broker credentials or journal
+handles. Pipes/deadlines/parent watchdog and process-group cleanup remain bounded.
+Known observed usage survives rejected/late output; missing or foreign usage is
+uncertainty, not free cost. Error MAINTAIN cannot override independent exits.
+
+No coordinator or deployed service invokes this worker. This slice does not admit
+durable management attempts, settle charges, consume revisions or apply model
+stops/exits. Repeated pure review is not deduplication. New-cohort opt-in durable
+integration is next, followed by D replay/export and stored observer attribution.
+Existing A/B/C configurations, schemas, replay and the frozen deployment remain
+unchanged. No provider/model call, broker write or LIVE activation occurred.
+
+Verification:
+
+- **885 passed in 527.39s**, warnings as errors, using the noneditable installed
+  wheel outside source on Ubuntu Python 3.12.3/OpenSSL 3.0.13. All sixteen
+  options/Degen files: 157 new management contract/worker cases and the existing
+  728 execution, entry, replay, series, accounting, tape, admission, model,
+  observer and capture cases. The 157-case source development run is not counted
+  again as distinct proof.
+- Tests cover CALL/PUT MAINTAIN/EXIT_ALL/TIGHTEN; exact owned quantity and effective
+  stop boundaries; changed/closed ownership and revisions; all six mandatory/latch
+  triggers against each action; unknown/halted account and unresolved orders;
+  source identity, freshness, deadlines, strict schema and packet revalidation.
+- Real SDK serialization uses fake responses, with exact count/generation payloads,
+  no tools and retained rejected/late usage. Native child tests cover fixed SDK
+  origin and credential environment, timeout/overflow/bad output, lineage/cost
+  mismatch and repeated cancellation with process reaping. No authentic API call.
+- Existing native execution and A/B/C single/multi-session replay regressions pass
+  with the shared protection function. No management actions are dispatched.
+- Scoped Ruff lint/format, compilation, pip check, 95 local documentation links,
+  five installed/source module byte comparisons and whitespace passed. No
+  dependency, deployment script, unit or database schema changes. No full equity
+  suite, hosted CI, provider acceptance or deployment claimed.
+- Verified wheel SHA-256:
+  `765589b934c41c479f57a24c490e0ba8080f074243b6f3ffcf0348c93af8e8a7`.
+
+Authentic normalized market/model evidence, continuous options PAPER runtime,
+polished UI, prospective frozen collection and actual host/recovery acceptance
+remain open. This is local fixture/native-process proof, not deployment or
+profitability. Main remains untouched and PR #1 remains draft.
+
 ## P3 continuous multi-session PAPER replay and boundary export: 2026-10-12 UTC
 
 The native A/B/C replay now accepts an ordered predeclared series of sealed tapes

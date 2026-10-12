@@ -12,8 +12,7 @@ packages, including the user-requested dedicated dashboard design/visual finish.
 The [broader entry-plan path](docs/OPTIONS_ENTRY_REASONING.md) connects the bounded
 model worker to durable PAPER coordination, paid usage, fresh dispatch review and
 independent target/horizon exits. It is opt-in for a new frozen cohort; existing
-SELECT/HOLD cohorts are unchanged. Authentic provider acceptance, position
-reasoning and deployment remain open.
+SELECT/HOLD cohorts are unchanged. Authentic provider acceptance and deployment remain open.
 The [first paired performance ledger](docs/OPTIONS_EVALUATION.md) reconstructs
 independent A/B/C session accounting and compares supplied costs and SPY evidence.
 The [sealed common market tape](docs/OPTIONS_MARKET_TAPE.md) now binds cycles,
@@ -24,7 +23,9 @@ replay scheduler](docs/OPTIONS_REPLAY.md) runs independent virtual clocks, scrip
 model delays, later-quote fills and protective exits through those owners.
 [Multi-session replay/export](docs/OPTIONS_REPLAY_SERIES.md) now preserves the
 same accounts, explicit settlement and saved closing evidence across sessions.
-Position reasoning and authentic prospective evidence remain open.
+The [position-reasoning contract and native worker](docs/OPTIONS_POSITION_REASONING.md)
+now support reviewed MAINTAIN/EXIT_ALL/TIGHTEN proposals. Durable management
+integration, comparison arm D and authentic prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.
 The M2 local options PAPER lifecycle is implemented. Read

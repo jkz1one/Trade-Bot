@@ -1,16 +1,17 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.15. Adopted product direction and working delivery contract, 2026-10-12 UTC.
+Version 1.16. Adopted product direction and working delivery contract, 2026-10-12 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
-acceptance and position reasoning remain open. M8 adds the
+acceptance remains open. The P3 position proposal/review and native model worker
+have fixture proof; durable management integration remains open. M8 adds the
 user-requested dedicated dashboard design and visual acceptance.
 P3 paired accounting, sealed market tapes, setup/shortlist replay and automatic
 native first-session A/B/C journal export and independent virtual-clock replay
 with scripted model delays are fixture verified. Multi-session replay/export now
 preserves native accounts, explicit funds settlement and saved closing evidence.
-Authentic collection/coverage and position reasoning remain open.
+Authentic collection/coverage and durable position management remain open.
 Report capabilities and gates, not completion percentages.
 
 ## Goal and definition of completion
@@ -172,8 +173,8 @@ Do not import the entire SignalFlow OPRA/Redis service graph to add a few featur
 
 The delivered deterministic selector and bounded SELECT/HOLD model become comparison
 arms A/B. The entry reasoning implementation adds evidence-linked thesis, contract
-choice and geometry within frozen family limits (arm C). P3 will add discretionary
-MAINTAIN/EXIT_ALL/TIGHTEN proposals for the exact held position (arm D). This is a
+choice and geometry within frozen family limits (arm C). P3 now has [MAINTAIN/EXIT_ALL/TIGHTEN proposals and a bounded model worker](OPTIONS_POSITION_REASONING.md)
+for the exact held position. Durable action integration and comparison arm D are next. This is a
 larger strategic role while deterministic software retains sizing, admission,
 execution and mandatory exit authority. Full contracts, source rationale, event
 bounds and acceptance are in [the research plan](AI_TRADER_RESEARCH_PLAN.md).
@@ -201,8 +202,9 @@ proof; browser visual acceptance and matched cost/benchmark/cohort evaluation re
 full-plan entry now has local durable integration proof. P3 has a supplied-evidence
 accounting evaluator, sealed shared tape, native first-session journal export and
 scripted A/B/C replay scheduling with multi-session state/export and explicit
-settlement; next implement position reasoning and stored decision attribution
-while operator capture is pending.** Schema discovery has passed its narrow
+settlement. Position proposal/review and native worker have fixture proof; next
+connect durable management attempts/costs and once-per-revision action consumption,
+then arm D evaluation and stored attribution while operator capture is pending.** Schema discovery has passed its narrow
 gate. Actual read/model usage,
 latency, P3 comparative evaluation and P4 runtime acceptance remain open. Each milestone
 ends with reviewed code, meaningful tests, status proof, commit and branch push.

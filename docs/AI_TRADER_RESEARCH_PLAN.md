@@ -25,7 +25,8 @@ replace. The initial planning checkpoint changed no application behavior. The su
 have local installed-package proof with fake provider responses. A newly enrolled
 cohort can opt into full entry plans with independently enforced target/horizon;
 existing selector cohorts remain unchanged. Authentic model/feed acceptance and
-P3 position-management reasoning remain open.
+durable P3 position-management integration remain open. Its
+[proposal/review and native worker](OPTIONS_POSITION_REASONING.md) now have fixture proof.
 
 ## Research findings and limits
 
@@ -72,9 +73,10 @@ separate engines must never be connected to one bankroll as two traders.
 
 ## Proposed AI decision contract
 
-These describe the complete planned contract. The first offline entry types and
-review are now implemented in [OPTIONS_ENTRY_REASONING.md](OPTIONS_ENTRY_REASONING.md);
-native model, durable coordination and position management remain open.
+These describe the complete planned contract. Entry types, review, native model
+and durable coordination are implemented in [OPTIONS_ENTRY_REASONING.md](OPTIONS_ENTRY_REASONING.md).
+[Position proposal/review and native worker](OPTIONS_POSITION_REASONING.md) are
+implemented; durable management integration and arm D evaluation remain open.
 
 | Boundary | Model may propose | Software must decide |
 | --- | --- | --- |
@@ -224,7 +226,7 @@ The user subsequently added P8/M8 for a dedicated visually polished dashboard.
 | P0 | This research/design pass, engineering | Source pins, actual capability gap, authority contract, comparison protocol and ordered queue recorded. Done as documentation; subsequent P2 implementation evidence is recorded separately. |
 | P1 | Verified data packet, engineering + operator capture | Actual bounded responses mapped with no guessed metadata; installed normalizer rejects stale/future/interpolated/mismatched/partial inputs; held-contract priority and market-hours read coverage/latency receipts. Missing provider semantics become a named blocker. |
 | P2 | Broader entry reasoning, engineering | Versioned packet/proposal/admission, native bounded worker and durable full-plan execution now have local fixture proof, including target/horizon protection and preserved old cohorts. Authentic model completion/latency with P1 evidence remains required before accepted use. |
-| P3 | Comparative ledgers and position reasoning, engineering | Paired accounting, sealed common tape and setup/shortlist replay have fixture proof. Native first-session A/B/C export is fixture verified. First-session independent replay scheduling with scripted models is fixture verified. Multi-session state/export with explicit funds settlement is fixture verified. Next D with revision races, mandatory-exit precedence and monotone protection tests. Visible stored proposal/approval/fill attribution in observer. |
+| P3 | Comparative ledgers and position reasoning, engineering | Paired accounting, sealed common tape and setup/shortlist replay have fixture proof. Native first-session A/B/C export is fixture verified. First-session independent replay scheduling with scripted models is fixture verified. Multi-session state/export with explicit funds settlement is fixture verified. Position proposal/review and native worker have fixture proof, including revision/state changes, mandatory-exit precedence and monotone protection. Next durable management attempt/cost accounting and atomic revision consumption, then D replay/export and stored observer attribution. |
 | P4 | Integrated options PAPER runtime and UI, engineering + operator | One owner, continuous exact data, independent supervision, scheduled decisions, restart/unknown recovery, installed entry point and desktop/mobile observer. Exercise actual fixed host topology, boot/orphan behavior, independent alert receipt and off-host archive/source-loss drill under M5. Existing equity units alone do not close this. |
 | P5 | Prospective PAPER evidence, operator + engineering analysis | Freeze enrollment manifest, then collect planned/missed slots and complete quote/decision/cost/fill paths; issue operational and economic reports with PASS/FAIL/INCONCLUSIVE separately. No silent tuning or automatic promotion. |
 | P6 | Concrete LIVE adapter/canary review, engineering + user | M6 account/order semantics, explicit capital/loss limits, broker reconciliation/exits, reviewed release and separate real-write authorization. No implementation/call of broker writes under this plan. |
