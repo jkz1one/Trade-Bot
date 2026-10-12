@@ -1186,25 +1186,32 @@ class OptionExecution:
         if not isinstance(reason, str) or not reason.strip() or len(reason) > 300:
             raise ValueError("A bounded reviewed recovery reason is required")
         with self.journal.write() as db:
-            if self.journal.revision(db) != expected_revision:
-                raise ExecutionBlocked("OPTION_REVIEW_REVISION_CHANGED")
-            account = self._account(db, now)
-            if (
-                account.entry_blockers
-                or account.working_orders
-                or not account.budgets_known
-                or not timedelta(0)
-                <= now - account.captured_at
-                < timedelta(seconds=self.limits.account_max_age_seconds)
-            ):
-                raise ExecutionBlocked("OPTION_RECOVERY_EVIDENCE_REQUIRED")
-            db.execute("UPDATE execution_control SET halted=0,halt_reason=NULL WHERE id=1")
-            self.journal.event(
-                db,
-                now,
-                "OPTION_REVIEWED_RESUME",
-                {"reason": reason, "expected_revision": expected_revision},
-            )
+            self._resume(db, reason, expected_revision=expected_revision, now=now)
+
+    def _resume(self, db, reason, *, expected_revision, now):
+        """Same revision/recovery gate inside an authenticated command transaction."""
+        if self.journal.revision(db) != expected_revision:
+            raise ExecutionBlocked("OPTION_REVIEW_REVISION_CHANGED")
+        account = self._account(db, now)
+        if (
+            account.entry_blockers
+            or account.working_orders
+            or not account.budgets_known
+            or db.execute(
+                "SELECT 1 FROM execution_model_calls WHERE cost IS NULL LIMIT 1"
+            ).fetchone()
+            or not timedelta(0)
+            <= now - account.captured_at
+            < timedelta(seconds=self.limits.account_max_age_seconds)
+        ):
+            raise ExecutionBlocked("OPTION_RECOVERY_EVIDENCE_REQUIRED")
+        db.execute("UPDATE execution_control SET halted=0,halt_reason=NULL WHERE id=1")
+        self.journal.event(
+            db,
+            now,
+            "OPTION_REVIEWED_RESUME",
+            {"reason": reason, "expected_revision": expected_revision},
+        )
 
     @exact
     def begin_model_attempt(self, source_key, input_hash, *, now, position_request=None):

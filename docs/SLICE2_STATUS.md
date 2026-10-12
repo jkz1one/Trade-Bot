@@ -1,5 +1,76 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P4 reviewed local operator recovery: 2026-10-12 UTC
+
+A new opt-in, separately keyed options capability now lets an operator review one
+committed snapshot and submit signed HALT/RESUME/REVOKE_KEY requests to the active
+local PAPER owner. Submission only queues a private file; the runner applies one
+bounded request before each protection tick. The observer remains read-only and
+shows capability status plus bounded original command receipts without key access.
+
+Commands bind the options protocol, journal/population, credential generation,
+nonce, action, actor/reason, exact reviewed revision and a maximum five-minute
+lifetime. RESUME preserves the existing revision/account/runtime/supervision/order
+and cost gates inside the same fenced transaction, and rejects a pending decision
+or stop. An unsettled call row always blocks recovery, including a costs-off
+configuration. HALT/revocation reduce authority and can use a stale revision while
+still requiring valid authentication and time. No trading, risk-policy or LIVE
+command is accepted. Model packets never receive the operator capability or secret.
+
+Same-ID/same-body repeats return the original receipt; different bodies conflict.
+Journal application precedes fsynced receipt publication. Delivery errors retain
+the request for replay and halt entry; replay does not clear a later delivery halt.
+Key/directory/backlog failures fence entry while independent protection continues.
+Old populations omit the optional field and gain no transport or changed policy
+identity. [Source of truth v1.22](SOURCE_OF_TRUTH.md) and the
+[recovery contract](OPTIONS_OPERATOR_RECOVERY.md) define exact operator procedures.
+
+Fresh pre-edit GitHub head was `cadea741fd2192fb3052eb2ca0662be82ce8a695`,
+tree `098b545857ec48fcb12f7f28128647b6f35534e3`. Main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 was open/draft.
+
+Verification:
+
+- **140 passed in 90.50s (0:01:30)**, warnings as errors, on the noneditable final
+  release wheel outside source. Operator (49 new cases), runtime and observer
+  suites include installed isolated-mode CLI review/submission and read-only HTML.
+- **297 passed in 220.01s (0:03:40)** on the earlier installed application build,
+  covering seven files: operator, runtime, execution, observer, Degen strategy and
+  full-entry/position coordination. These overlap the final 140 cases and are not
+  summed. All Python modules matched the subsequent UI build; the final release
+  additionally guards malformed receipt shapes, covered by the final focused run.
+- Coverage includes signing/tampering/domain/binding/nonce/time limits, replay and
+  conflicts, exact revisions, unsafe account/cost/order/runtime/stop/pending-task
+  recovery, key revocation/loss, model-secret separation and packet exclusion,
+  bounded inbox/file handling, crash-before-receipt replay and independent
+  protection after malformed receipt evidence.
+- Scoped Ruff lint/format, compilation, pip check and whitespace checks passed.
+  All 179 local documentation links checked resolve. Nine changed app modules and
+  the template match installed bytes; copied tests match source. Both settings
+  examples validate. No broader options/equity suite rerun; prior proof is below.
+- Release wheel SHA-256: `baa0d93dd475b6a78b19979bad47d10edf2824fbcca4cbd6a8e0408af9bfe854`.
+
+Earlier final-UI build: **139 passed in 93.77s**, before the receipt-shape guard.
+These tests overlap the release proof. Malformed receipt metadata now produces an
+entry fence while independent supervision continues.
+
+Development:
+Development first exercised 40 operator cases. The recovery test exposed an
+unsettled-call row ignored by costs-off accounting; the shared resume gate now
+checks unsettled rows explicitly. Invalid symlink requests now produce a safe
+rejection receipt. Two test fixtures were corrected (OPEN_LONG and a closed file
+read). The focused 195-case run had **194 passes and one FixtureProcessTimeout**
+in an existing native management test; that isolated case then passed in 5.70s.
+Final installed regression is required below; these are not extra distinct passes.
+
+This closes the bounded local recovery surface, not complete P4 acceptance.
+Actual normalized provider/model use, installed release identity, target-host
+lifecycle/independent alerts/off-host recovery and desktop/mobile/full-dashboard
+acceptance remain open. Key rotation/reprovisioning and remote control transport
+are not implemented. P3 prospective/economic acceptance remains separate. No
+authentic provider/model call, broker write, deployment, host unit or dependency change.
+LIVE stays disabled; the deployed experiment is frozen and main/PR draft retained.
+
 ## P4 continuous local options PAPER runner: 2026-10-12 UTC
 
 A new opt-in normalized-fixture runtime now drives the existing native Degen owner

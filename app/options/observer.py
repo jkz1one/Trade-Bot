@@ -218,6 +218,9 @@ class OptionObserver:
         from app.options.runtime_state import report as runtime_report
 
         runtime = runtime_report(db, now)
+        from app.options.operator import summary as operator_summary
+
+        operator = operator_summary(db)
         if runtime["status"] != "NOT_ENROLLED":
             saved_frame = db.execute(
                 "SELECT frame_json FROM execution_option_runtime WHERE id=1"
@@ -311,6 +314,7 @@ class OptionObserver:
             if runtime.get("session")
             else "NOT_RECORDED",
             "runtime": runtime,
+            "operator": operator,
             "account": {
                 "health": account_health,
                 "captured_at": snapshot.captured_at.isoformat() if snapshot else None,

@@ -19,16 +19,27 @@ from app.options.selection import ContractSelectionPolicy
 class RuntimePolicy(OptionRecord):
     version: Literal["option-local-runtime-v1"] = "option-local-runtime-v1"
     feed_file: str = Field(min_length=1, max_length=4096)
+    operator_key_file: str | None = Field(
+        default=None, min_length=1, max_length=4096, exclude_if=lambda v: v is None
+    )
     tick_seconds: float = Field(ge=0.2, le=5, strict=True)
     heartbeat_max_age_seconds: int = Field(ge=2, le=30, strict=True)
     feed_max_age_seconds: int = Field(ge=1, le=30, strict=True)
 
-    @field_validator("feed_file")
+    @field_validator("feed_file", "operator_key_file")
     @classmethod
     def absolute(cls, value):
+        if value is None:
+            return value
         if not Path(value).is_absolute() or "\x00" in value:
             raise ValueError("Explicit absolute normalized fixture feed path required")
         return value
+
+    @model_validator(mode="after")
+    def separate(self):
+        if self.operator_key_file == self.feed_file:
+            raise ValueError("Operator key must be separate from the feed")
+        return self
 
 
 class RuntimeSettings(OptionRecord):
@@ -44,6 +55,8 @@ class RuntimeSettings(OptionRecord):
 
     @model_validator(mode="after")
     def bounded(self):
+        if self.key_file is not None and self.key_file == self.runtime.operator_key_file:
+            raise ValueError("Operator and model credentials must be separate")
         model = self.key_file is not None
         if model != (self.judgment_limits is not None) or model != (
             self.execution.cost_policy is not None

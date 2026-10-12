@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.21. Adopted product direction and working delivery contract, 2026-10-12 UTC.
+Version 1.22. Adopted product direction and working delivery contract, 2026-10-12 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -21,6 +21,8 @@ primary-arm block diagnostics, retaining incomplete sessions and all costs.
 The [continuous local PAPER runner](OPTIONS_LOCAL_RUNTIME.md) now adds independent
 protection, scheduled decisions, interruption-safe shutdown and stored runtime
 evidence for a new normalized-fixture options population.
+[Reviewed operator recovery](OPTIONS_OPERATOR_RECOVERY.md) now adds separately
+keyed local halt/resume/revocation requests with exact revision and evidence gates.
 Authentic collection/coverage and prospective economic evidence remain open.
 Report capabilities and gates, not completion percentages.
 
@@ -221,7 +223,9 @@ The eligible long-underlying baseline is implemented as a separate offline accou
 Optional whole-session primary-arm diagnostics are implemented. Remaining P3 gates
 include justified inferential coverage and frozen prospective evaluation evidence;
 P4 now has a continuous local normalized-fixture runner with independent protection,
-recorded slots/runtime state and stored observer integration. P1 actual provider
+recorded slots/runtime state and stored observer integration. A separately keyed
+local operator recovery inbox now preserves exact review revisions, receipt replay
+and unknown-cost/order/runtime gates. P1 actual provider
 capture and P4 authenticated/host/visual runtime acceptance are still open.** Schema discovery has passed its narrow
 gate. Actual read/model usage,
 latency, P3 comparative evaluation and P4 runtime acceptance remain open. Each milestone

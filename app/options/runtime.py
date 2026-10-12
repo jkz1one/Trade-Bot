@@ -66,6 +66,7 @@ class OptionRuntime:
         self.running = False
         self.stop = None
         self.last_at = None
+        self.operator = None
         with self.c.engine.journal.write() as db:
             self.c._bound(db)
             db.execute(
@@ -98,6 +99,10 @@ class OptionRuntime:
                     (self.c.now().isoformat(),),
                 )
         self.c.engine._option_runtime = self
+        if self.policy.operator_key_file is not None:
+            from app.options.operator_inbox import CommandInbox
+
+            self.operator = CommandInbox(self.c.engine, self.policy.operator_key_file)
 
     def _bound(self, db):
         self.c._bound(db)
@@ -133,6 +138,13 @@ class OptionRuntime:
         if self.last_at is not None and at < self.last_at:
             raise ValueError("Runtime clock moved backwards")
         self.last_at = at
+        operator_issue = self.operator.poll(now=at) if self.operator is not None else None
+        if operator_issue:
+            with self.c.engine.journal.write() as db:
+                self._bound(db)
+                control = self.c.engine._control(db)
+                if not control["halted"] or control["halt_reason"] != operator_issue:
+                    self.c.engine._halt(db, operator_issue, at)
         packet, issue = None, None
         try:
             packet = read_packet(self.policy.feed_file)
@@ -156,6 +168,7 @@ class OptionRuntime:
                     raise ValueError("Fixture feed identity, time or sequence mismatch")
         except (OSError, ValueError):
             packet, issue = None, "OPTION_RUNTIME_FEED_UNAVAILABLE"
+        issue = issue or operator_issue
         if issue:
             # Fence a pending model/entry before the next native snapshot can suspend.
             with self.c.engine.journal.write() as db:

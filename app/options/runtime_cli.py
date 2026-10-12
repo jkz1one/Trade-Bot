@@ -51,6 +51,14 @@ def initialize(directory, settings, *, clock=utc_now):
         raise ValueError("Explicit absolute new population directory required")
     if settings.key_file:
         model_key(Path(settings.key_file))
+    operator_key = None
+    if settings.runtime.operator_key_file:
+        from app.execution.control_api import _secret
+
+        operator_hex = _secret(settings.runtime.operator_key_file)
+        if settings.key_file and operator_hex == model_key(Path(settings.key_file)).lower():
+            raise ValueError("Operator and model secrets must be separate")
+        operator_key = bytes.fromhex(operator_hex)
     directory.mkdir(mode=0o700)
     _save(directory / "runtime.json", settings)
     venue = DurableOptionVenue(
@@ -71,6 +79,12 @@ def initialize(directory, settings, *, clock=utc_now):
             raise ValueError("Initial fixture reconciliation failed")
         engine.assess(None, None, now=at)
         coordinator = _coordinator(engine, settings, True, clock)
+        if operator_key is not None:
+            from app.options.operator import OptionsControl
+
+            (directory / "operator-inbox").mkdir(mode=0o700)
+            (directory / "operator-receipts").mkdir(mode=0o700)
+            OptionsControl.enroll(engine, operator_key, now=at)
         OptionRuntime(coordinator, settings.runtime, create=True)
     return {
         "status": "ENROLLED",

@@ -98,7 +98,9 @@ before releasing ownership. Pending slots become INTERRUPTED; unreturned model
 usage remains unknown. Crash recovery retains interruption evidence and halts.
 Restart or a later good packet never resumes the entry halt. Existing explicit
 revision-bound engine recovery is still required with fresh reconciled evidence.
-There is no new resume route or automatic repair.
+For a new explicitly enrolled operator population, the [signed local recovery CLI](OPTIONS_OPERATOR_RECOVERY.md)
+now submits halt/resume/revocation to the existing owner. It never silently refreshes
+reviewed revisions or repairs unknown evidence. Other populations have no new resume route.
 
 The [stored observer](OPTIONS_OBSERVER.md) reads runtime status/freshness/session
 and the latest accepted frame from the same committed snapshot. It does no feed
@@ -108,6 +110,7 @@ still unknown. Old populations retain NOT_RECORDED fields without creating table
 
 Remaining P4 acceptance: authenticated continuous exact data/model use, actual
 isolated-host lifecycle/alerts/off-host recovery, installed release identity,
-operator recovery surface, desktop/mobile visual acceptance and the full dashboard.
+key rotation/reprovisioning, desktop/mobile visual acceptance and the full dashboard.
+The separate local operator recovery surface is fixture implemented.
 This local runner does not close those gates or prospective economic acceptance.
 LIVE stays disabled and the deployed experiment remains frozen.

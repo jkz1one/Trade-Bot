@@ -111,3 +111,12 @@ opportunity and order. Full held-entry/revision linkage and applied stop prices
 remain available in JSON; the history table shows the concise sequence. No page
 read starts management or grants execution authority. Desktop/mobile visual
 acceptance remains a separate gate.
+
+## Operator recovery evidence
+
+The [optional signed local recovery capability](OPTIONS_OPERATOR_RECOVERY.md) adds
+read-only enrollment/revocation status and the last 20 original command receipts to
+JSON. The page identifies that capability separately from observer access. It never
+reads the signing key, queues a command or resumes entry. Review and submission use
+the separate installed local CLI; actor labels and APPLIED receipts are stored
+evidence, not proof of current liveness or human review quality.
