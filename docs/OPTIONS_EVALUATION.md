@@ -13,10 +13,12 @@ a venue, restore authority or prove profitability. All accepted evidence is labe
 
 - Experiment ID, declared enrollment time, source-evidence kind, allocation-policy
   identifier, per-session dollar hurdle and minimum session count.
-- Exactly A (deterministic), B (selector) and C (entry reasoning), with distinct
+- A (deterministic), B (selector), C (entry reasoning), and optionally D
+  (entry plus management), with distinct
   virtual population IDs, full limits/execution policies and strategy hashes.
   Capital, calendar, risk and fill assumptions must match after removing population/
-  account IDs and model-cost policy. B/C require explicit configured model costs;
+  account IDs and model-cost policy. B/C/D require explicit configured model costs;
+  C/D costs must match.
   A has none. These are independent simulated ledgers, not extra funded owners.
 - One to sixty complete, ordered XNYS sessions, including real DST/early-close
   boundaries, each with a recorder-tape hash. Declared enrollment must precede the
@@ -27,7 +29,7 @@ Each arm/session binds its exact definition and tape hashes and supplies startin
 closing ledgers, complete orders/observations, settlement receipts, model attempts,
 cycle outcomes/frame hashes, explicit data and host cost allocations, and closing
 completeness. Money rejects floats, booleans, nonfinite values and excessive scale.
-The bundle is capped at 16 MiB, 180 arm/session rows, 200 orders/receipts and 100
+The bundle is capped at 16 MiB, 240 arm/session rows, 200 orders/receipts and 100
 model attempts/cycles per row. Each session must have exactly the expected slots.
 
 Hashes establish correspondence only. The declared timestamp, strategy identity,
@@ -64,12 +66,13 @@ Between-session `FUNDS_SETTLED` receipts may appear before the next open, preser
 the prior closing ledger and global event sequence; they do not create cash profit.
 
 HOLD calls remain charged. Every declared model-called cycle must have its attempt;
-duplicate receipts are rejected. Missing/foreign usage or incomplete/late cost
-receipts remain unknown. Missing data/host allocation is not zero. Recorded errors
+duplicate receipts are rejected. Missing/foreign usage or incomplete cost
+receipts remain unknown. Known completions after close remain charged but make
+the session inconclusive. Missing data/host allocation is not zero. Recorded errors
 are counted; an UNKNOWN cycle or unresolved order makes the session inconclusive.
 Open boundary positions are unvalued rather than assigned a guessed liquidation.
 
-Complete pairs require all three independently verified ledgers, matching cycle
+Complete pairs require all enrolled independently verified ledgers, matching cycle
 frame maps and usable SPY boundary quotes. Every declared session appears in output.
 If any pair is incomplete, overall totals and mean paired differences are withheld;
 there is no complete-case profitability aggregate that drops inconvenient sessions.
@@ -80,7 +83,8 @@ The report includes:
 
 - Accounting verification, reasons, price P&L, fees, turnover, venue cash change,
   model/data/host costs, unknown-call counts, cycle outcomes and deadline misses.
-- Session net change and B/C dollar differences versus A after all supplied costs.
+- Session net change and B/C/D dollar differences versus A after all supplied costs,
+  separate entry/management charges, and descriptive D-minus-C net difference.
 - Total net change/return, worst session and **session-boundary** drawdown when the
   entire declared comparison is complete. No intraday drawdown is inferred.
 - SPY midpoint price returns and cash's zero price return. SPY boundary observations
@@ -109,9 +113,9 @@ The [shared tape and setup/shortlist replay](OPTIONS_MARKET_TAPE.md) are now
 implemented, alongside [native first-session journal export](OPTIONS_EVALUATION_EXPORT.md).
 The [independent first-session scheduler](OPTIONS_REPLAY.md) now drives native
 owners with scripted response delays and tape-driven fills; [multi-session replay/export](OPTIONS_REPLAY_SERIES.md)
-now preserves balances and explicit settlement. Next attribute decisions/fills/costs
-visibly in the stored observer. Add the eligible
-long-underlying baseline, exact-position management arm D, appropriate statistical
+now preserves balances and explicit settlement. [Arm D and stored attribution](OPTIONS_MANAGED_REPLAY.md)
+now expose decisions, approvals, fills and all entry/management costs. Add the eligible
+long-underlying baseline, appropriate statistical
 session-block analysis and prospective enrollment/coverage proof. These are not
 implemented by this accounting kernel. Actual model/data acceptance, runtime,
 complete UI and host deployment remain separate gates in

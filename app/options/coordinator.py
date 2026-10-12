@@ -63,7 +63,7 @@ class DegenCoordinator:
             or key_file is not None
             or judgment_limits is None
             or engine.policy.cost_policy is None
-            or (replay_model.script.arm == "C") != (entry_policy is not None)
+            or (replay_model.script.arm in {"C", "D"}) != (entry_policy is not None)
         ):
             raise ValueError("Explicit isolated scripted model configuration required")
         self.replay_model = replay_model
@@ -91,9 +91,14 @@ class DegenCoordinator:
             else None
         )
         if self.position_policy is not None and (
-            self.entry_policy is None or replay_model is not None
+            self.entry_policy is None
+            or (replay_model is not None and replay_model.script.arm != "D")
         ):
             raise ValueError("Management requires a separate native full-entry cohort")
+        if replay_model is not None and (replay_model.script.arm == "D") != (
+            self.position_policy is not None
+        ):
+            raise ValueError("Arm D requires explicit management policy")
         self._position_quotes, self._position_underlyings = (), ()
         if self.entry_policy is not None and self.judgment_limits is None:
             raise ValueError("Broader entry reasoning requires explicit model configuration")

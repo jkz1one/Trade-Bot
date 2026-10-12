@@ -7,6 +7,9 @@ each session from a saved closing journal, instead of treating the latest ledger
 as every day's closing balance. All market/model/settlement inputs remain explicit
 local fixtures. No authentic AI performance or profitability is established.
 
+The optional [arm D extension](OPTIONS_MANAGED_REPLAY.md) applies these same
+continuity rules to four independent accounts and includes management costs/attribution.
+
 ## State and settlement
 
 `await run_replay_series(settings, tapes, new_directory)` accepts the existing
@@ -113,8 +116,9 @@ wall deadline remains 900 seconds.
 
 [Position reasoning and durable management](OPTIONS_POSITION_REASONING.md) now
 have fixture proof, including atomic revision consumption and native PAPER exits.
-Next P3 is arm D replay/export and stored proposal/approval/fill attribution. The
-A/B/C exporter rejects managed cohorts rather than labeling them arm C.
+Arm D replay/export and stored proposal/approval/fill attribution are now
+implemented. The A/B/C exporter still rejects managed cohorts labeled as arm C;
+four-arm export requires explicit D enrollment.
 Authentic normalized market/model evidence,
 continuous options runtime, finished UI, prospective evidence and host/recovery
 acceptance remain separate gates. LIVE stays disabled and the deployed population

@@ -7,6 +7,10 @@ a model/provider, simulate a fill or open execution authority. The independently
 clocked [A/B/C replay runner](OPTIONS_REPLAY.md) uses this exporter; its
 [multi-session extension](OPTIONS_REPLAY_SERIES.md) adds ordered closing snapshots.
 
+The [arm D extension](OPTIONS_MANAGED_REPLAY.md) adds optional four-arm export,
+full managed-decision lineage and role-separated model cost evidence. Existing
+three-arm requests remain supported.
+
 ## Scope and API
 
 `export_arm(journal, definition, session, tape, data_cost=None, host_cost=None)`
@@ -98,7 +102,7 @@ AI experiment. The [multi-session extension](OPTIONS_REPLAY_SERIES.md) now handl
 opening state and explicit funds settlement; authentic prospective collection
 and historical-correction/revaluation remain separate work.
 
-Position reasoning, observer attribution, authentic data/model acceptance,
+Position reasoning and stored observer attribution are implemented. Authentic data/model acceptance,
 continuous options runtime/UI and host/recovery gates remain in the
 [source of truth](SOURCE_OF_TRUTH.md). The deployed experiment remains frozen;
 LIVE is disabled. Latest measured test proof is in [status](SLICE2_STATUS.md).

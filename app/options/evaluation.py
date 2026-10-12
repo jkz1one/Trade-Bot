@@ -42,7 +42,9 @@ def _replay(a, definition, session, sequence, used_ids, previous_close):
         used_ids.add(("source", i.source_key))
         if not session.opens_at <= order.decision_completed_at <= i.prepared_at < session.closes_at:
             raise ValueError("ORDER_OUTSIDE_SESSION_OR_BEFORE_DECISION")
-        if i.side == "BUY" and definition.policy.cost_policy is not None:
+        if (
+            i.side == "BUY" and definition.policy.cost_policy is not None
+        ) or i.position_protection is not None:
             call = next((c for c in a.calls if c.source_key == i.source_key), None)
             if (
                 call is None
@@ -118,34 +120,87 @@ def _replay(a, definition, session, sequence, used_ids, previous_close):
 
 def _costs(a, definition, session, used_ids):
     known, unknown = ZERO, 0
+    by_role = {r: {"known_cost": ZERO, "unknown_calls": 0} for r in ("ENTRY", "MANAGEMENT")}
     calls = {c.source_key: c for c in a.calls}
     if len(calls) != len(a.calls) or set(calls) != {c.key for c in a.cycles if c.model_called}:
         raise ValueError("MODEL_ATTEMPT_COVERAGE_MISMATCH")
+    for cycle in a.cycles:
+        attr = cycle.attribution
+        if attr is None:
+            if definition.arm == "D":
+                raise ValueError("MANAGED_ATTRIBUTION_MISSING")
+            continue
+        call = calls.get(cycle.key)
+        order = next((o for o in a.orders if o.intent.source_key == cycle.key), None)
+        if attr.source_key != cycle.key or attr.model_attempted != (call is not None):
+            raise ValueError("ATTRIBUTION_ATTEMPT_MISMATCH")
+        if call and ((attr.role == "MANAGEMENT") != (call.role == "MANAGEMENT")):
+            raise ValueError("ATTRIBUTION_COST_ROLE_MISMATCH")
+        if attr.role == "MANAGEMENT" and definition.arm != "D":
+            raise ValueError("UNENROLLED_MANAGEMENT_ATTRIBUTION")
+        if attr.client_id != (order.intent.client_id if order else None):
+            raise ValueError("ATTRIBUTION_ORDER_MISMATCH")
+        fills = order.observation.fills if order and order.observation else ()
+        if attr.fill_ids != tuple(f.fill_id for f in fills) or attr.filled_quantity != sum(
+            f.quantity for f in fills
+        ):
+            raise ValueError("ATTRIBUTION_FILL_MISMATCH")
+        if order and (
+            attr.approved_quantity != order.intent.quantity
+            or attr.attempted != (order.attempted_at is not None)
+        ):
+            raise ValueError("ATTRIBUTION_APPROVAL_MISMATCH")
+        if call and call.usage is not None and call.completed_at is not None:
+            rates = definition.policy.cost_policy
+            if (
+                rates is None
+                or attr.model_cost
+                != (
+                    call.usage.input_tokens * rates.input_per_million
+                    + call.usage.output_tokens * rates.output_per_million
+                )
+                / 1000000
+            ):
+                raise ValueError("ATTRIBUTION_COST_MISMATCH")
+        elif attr.model_cost is not None:
+            raise ValueError("ATTRIBUTION_UNKNOWN_COST_MISMATCH")
     for call in a.calls:
         if ("call", call.source_key) in used_ids:
             raise ValueError("DUPLICATE_MODEL_ATTEMPT")
         used_ids.add(("call", call.source_key))
         policy = definition.policy.cost_policy
-        if policy is None or not session.opens_at <= call.started_at < session.closes_at:
+        if (
+            (call.role == "MANAGEMENT" and definition.arm != "D")
+            or policy is None
+            or not session.opens_at <= call.started_at < session.closes_at
+        ):
             raise ValueError("MODEL_ATTEMPT_POLICY_OR_TIME_MISMATCH")
         if call.usage is None or call.completed_at is None:
             unknown += 1
+            by_role[call.role]["unknown_calls"] += 1
             continue
         usage = call.usage
-        if (
-            not call.started_at <= call.completed_at <= session.closes_at
-            or usage.model != policy.model
-        ):
+        if not call.started_at <= call.completed_at or usage.model != policy.model:
             unknown += 1
+            by_role[call.role]["unknown_calls"] += 1
             continue
         if ("response", usage.request_id) in used_ids:
             raise ValueError("DUPLICATE_MODEL_RECEIPT")
         used_ids.add(("response", usage.request_id))
-        known += (
+        charge = (
             usage.input_tokens * policy.input_per_million
             + usage.output_tokens * policy.output_per_million
         ) / 1000000
-    return known, unknown
+        known += charge
+        by_role[call.role]["known_cost"] += charge
+    return (
+        known,
+        unknown,
+        {
+            r: {"known_cost": str(v["known_cost"]), "unknown_calls": v["unknown_calls"]}
+            for r, v in by_role.items()
+        },
+    )
 
 
 def _benchmark(value, session, source):
@@ -190,10 +245,11 @@ def _evaluate(bundle, recorded=None):
     evidence = {(a.session_key, a.arm): a for a in bundle.evidence}
     benchmarks = {b.session_key: b for b in bundle.benchmarks}
     sessions = {s.key for s in m.sessions}
+    previous_arms = {a.arm for a in m.arms}
     if (
         len(evidence) != len(bundle.evidence)
         or len(benchmarks) != len(bundle.benchmarks)
-        or any(k[0] not in sessions for k in evidence)
+        or any(k[0] not in sessions or k[1] not in previous_arms for k in evidence)
         or not set(benchmarks) <= sessions
     ):
         raise ValueError("Duplicate or unenrolled session evidence")
@@ -217,6 +273,7 @@ def _evaluate(bundle, recorded=None):
             reasons, net, known, unknown, turnover = [], None, None, None, None
             verified = False
             counts = {}
+            cost_roles = None
             if a is None:
                 reasons.append("MISSING_ARM_SESSION")
                 previous[arm] = None
@@ -230,7 +287,7 @@ def _evaluate(bundle, recorded=None):
                         a, definition, s, sequences[arm], used_ids[arm], previous_close
                     )
                     verified = True
-                    known, unknown = _costs(a, definition, s, used_ids[arm])
+                    known, unknown, cost_roles = _costs(a, definition, s, used_ids[arm])
                     cycle_map = {c.key: c.frame_hash for c in a.cycles}
                     if len(cycle_map) != len(a.cycles) or set(cycle_map) != expected:
                         reasons.append("INCOMPLETE_SCHEDULER_COVERAGE")
@@ -243,6 +300,8 @@ def _evaluate(bundle, recorded=None):
                         reasons.append("UNRESOLVED_ORDER_OR_CLOSING_EVIDENCE")
                     if a.initial.position or a.closing.position:
                         reasons.append("OPEN_BOUNDARY_POSITION_UNVALUED")
+                    if any(c.completed_at and c.completed_at > s.closes_at for c in a.calls):
+                        reasons.append("MODEL_COMPLETION_AFTER_SESSION")
                     if unknown:
                         reasons.append("MODEL_COST_UNKNOWN")
                     if a.data_cost is None or a.host_cost is None:
@@ -269,12 +328,15 @@ def _evaluate(bundle, recorded=None):
                 "allocated_host_cost": str(a.host_cost) if a and a.host_cost is not None else None,
                 "known_model_cost": str(known) if known is not None else None,
                 "unknown_model_calls": unknown,
+                "model_cost_by_role": cost_roles,
                 "turnover": str(turnover) if turnover is not None else None,
                 "cycle_counts": counts,
             }
         paired = all(a["status"] == "COMPLETE" for a in arms.values())
         pair_reasons = list(recorded[s.key]) if recorded is not None else []
-        if len(frames) != 3 or any(frames.get(a) != frames.get("A") for a in ("B", "C")):
+        if len(frames) != len(m.arms) or any(
+            frames.get(a) != frames.get("A") for a in [d.arm for d in m.arms[1:]]
+        ):
             pair_reasons.append("UNMATCHED_MARKET_FRAME_COVERAGE")
         if spy is None:
             pair_reasons.append("SPY_BOUNDARY_EVIDENCE_MISSING_OR_INVALID")
@@ -289,11 +351,16 @@ def _evaluate(bundle, recorded=None):
                 "arms": arms,
                 "spy_price_return": str(spy) if spy is not None else None,
                 "cash_price_return": "0",
+                "management_net_difference_D_minus_C": str(
+                    Decimal(arms["D"]["net_change"]) - Decimal(arms["C"]["net_change"])
+                )
+                if complete and "D" in arms
+                else None,
                 "paired_net_difference": {
                     a: str(Decimal(arms[a]["net_change"]) - Decimal(arms["A"]["net_change"]))
                     if complete
                     else None
-                    for a in ("B", "C")
+                    for a in [d.arm for d in m.arms[1:]]
                 },
             }
         )
@@ -304,7 +371,7 @@ def _evaluate(bundle, recorded=None):
         for row in rows:
             spy_factor *= 1 + Decimal(row["spy_price_return"])
     totals = {}
-    for arm in ("A", "B", "C"):
+    for arm in [d.arm for d in m.arms]:
         changes = [Decimal(r["arms"][arm]["net_change"]) for r in rows] if complete else []
         equity = peak = m.arms[0].policy.capital
         drawdown = ZERO
@@ -352,7 +419,7 @@ def _evaluate(bundle, recorded=None):
             )
             if complete
             else None
-            for arm in ("B", "C")
+            for arm in [d.arm for d in m.arms[1:]]
         },
         "hurdle_per_session": str(m.hurdle_per_session),
         "limitations": [
@@ -363,6 +430,6 @@ def _evaluate(bundle, recorded=None):
             "SPY midpoint price return excludes dividends and benchmark execution costs",
             "SPY session compounding excludes overnight gaps; this is not buy-and-hold total return",
             "Session-boundary drawdown only; no intraday drawdown or statistical significance",
-            "Underlying-only baseline and discretionary management arm D are not implemented",
+            "Underlying-only baseline is not implemented; arm D requires explicit enrollment",
         ],
     }

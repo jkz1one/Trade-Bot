@@ -5,6 +5,7 @@ from decimal import Decimal
 from itertools import pairwise
 
 from app.execution.economics import UsageEvidence
+from app.options.attribution import decision_attribution, order_attribution
 from app.options.coordinator import DegenFrame
 from app.options.engine import clock, exact, fingerprint
 from app.options.evaluation import MAX_BUNDLE_BYTES, evaluate
@@ -131,10 +132,10 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
             or strategy["setup"] != h.setup.model_dump(mode="json")
             or strategy["selection"] != h.selection.model_dump(mode="json")
             or ("model" in strategy) != (definition.arm != "A")
-            or ("entry_model" in strategy) != (definition.arm == "C")
-            or "position_model" in strategy
+            or ("entry_model" in strategy) != (definition.arm in {"C", "D"})
+            or ("position_model" in strategy) != (definition.arm == "D")
         ):
-            raise ValueError("Native A/B/C strategy binding mismatch")
+            raise ValueError("Native A/B/C/D strategy binding mismatch")
         events = sorted(_rows(db, "execution_events", MAX_EVENTS), key=lambda e: e["sequence"])
         if any(e["sequence"] != n for n, e in enumerate(events, 1)):
             raise ValueError("Native event sequence incomplete")
@@ -187,9 +188,23 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
                 r[k] is not None for k in ("usage_json", "request_id", "decision_hash", "cost")
             ):
                 raise ValueError("Native model completion event missing")
+            source = db.execute(
+                "SELECT result_json FROM execution_option_opportunities WHERE cycle_key=?", (key,)
+            ).fetchone()
+            if source is None or source[0] is None:
+                raise ValueError("Native model call has no retained input cycle")
+            source_outcome = _json(source[0])
+            if definition.arm in {"C", "D"} and not any(
+                k in source_outcome for k in ("entry_request", "position_request")
+            ):
+                raise ValueError("Full stored model request required for role attribution")
+            role = "MANAGEMENT" if "position_request" in source_outcome else "ENTRY"
+            if role == "MANAGEMENT" and definition.arm != "D":
+                raise ValueError("Management call outside enrolled arm D")
             calls.append(
                 ReplayCall(
                     source_key=key,
+                    role=role,
                     started_at=_at(r["started_at"]),
                     completed_at=completed,
                     usage=usage,
@@ -214,7 +229,9 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
             ):
                 raise ValueError("Native attempt time mismatch")
             decision = intent.prepared_at
-            if intent.side == "BUY" and definition.arm != "A":
+            if (
+                intent.side == "BUY" and definition.arm != "A"
+            ) or intent.position_protection is not None:
                 call = next((c for c in calls if c.source_key == intent.source_key), None)
                 if call is None or call.completed_at is None:
                     raise ValueError("Native entry completion missing")
@@ -226,8 +243,11 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
                     if f.fill_id in observed_fills:
                         raise ValueError("Duplicate native fill")
                     observed_fills[f.fill_id] = (intent.client_id, f)
+            attribution = order_attribution(db, r)
             orders.append(
                 ReplayOrder(
+                    origin=attribution["origin"],
+                    entry_client_id=attribution["entry_client_id"],
                     intent=intent,
                     decision_completed_at=decision,
                     attempted_at=_at(r["attempted_at"]) if r["attempted_at"] else None,
@@ -250,6 +270,19 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
         cycle_rows = _rows(db, "execution_option_opportunities", 100 * len(windows))
         if {r["cycle_key"] for r in cycle_rows} != set(starts) or not set(finishes) <= set(starts):
             raise ValueError("Native scheduler event coverage mismatch")
+        management_sources = {
+            r["source_key"]
+            for r in _rows(db, "execution_option_decisions", min(1000, 200 * len(windows)))
+            if "position_request" in _json(r["inputs_json"])
+        }
+        consumed = _event_map(events, "OPTION_POSITION_PLAN_CONSUMED", "source_key")
+        if set(consumed) != management_sources or not management_sources <= {
+            r["cycle_key"] for r in cycle_rows
+        }:
+            raise ValueError("Native management consumption coverage mismatch")
+        revisions = [p["position_revision"] for _, p in consumed.values()]
+        if len(set(revisions)) != len(revisions):
+            raise ValueError("Native position revision consumed more than once")
         cycles = []
         call_keys = {c.source_key for c in calls}
         for r in cycle_rows:
@@ -264,7 +297,10 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
             ):
                 raise ValueError("Native cycle binding or first-session scope mismatch")
             outcome = _json(r["result_json"]) if r["result_json"] else {}
-            if any(k in outcome for k in ("model_result", "entry_result")) and key not in call_keys:
+            if (
+                any(k in outcome for k in ("model_result", "entry_result", "position_result"))
+                and key not in call_keys
+            ):
                 raise ValueError("Retained native model result has no charged or unknown attempt")
             if r["status"] == "COMPLETE":
                 if key not in finishes or finishes[key][1] != outcome:
@@ -272,7 +308,18 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
                 status = outcome.get("status")
                 status = (
                     status
-                    if status in {"HOLD", "REJECTED", "ERROR", "OPEN", "HELD", "SKIPPED"}
+                    if status
+                    in {
+                        "HOLD",
+                        "REJECTED",
+                        "ERROR",
+                        "OPEN",
+                        "HELD",
+                        "SKIPPED",
+                        "MAINTAIN",
+                        "TIGHTENED",
+                        "MANDATORY_EXIT",
+                    }
                     else "UNKNOWN"
                 )
             else:
@@ -290,6 +337,7 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
                     status=status,
                     model_called=key in call_keys,
                     deadline_missed=missed,
+                    attribution=decision_attribution(db, key, outcome, definition.policy),
                 )
             )
         if not call_keys <= {c.key for c in cycles}:
@@ -403,6 +451,18 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
             "source_kind": "READ_ONLY_NATIVE_FIXTURE_JOURNAL",
             "session_key": session.key,
             "configuration_hash": fingerprint(config),
+            "entry_model_hash": fingerprint(strategy["entry_model"])
+            if "entry_model" in strategy
+            else None,
+            "entry_script_hash": fingerprint(
+                [
+                    d
+                    for d in strategy["replay_model"]["decisions"]
+                    if d["cycle_key"].startswith("degen:")
+                ]
+            )
+            if "replay_model" in strategy and "entry_model" in strategy
+            else None,
             "event_hash": fingerprint([dict(e) for e in events]),
             "previous_export_hash": history[-1][2]["export_hash"] if history else None,
         }
@@ -416,7 +476,7 @@ def export_comparison(manifest, tape, sources):
     """
     manifest = EvaluationManifest.model_validate(manifest.model_dump(warnings=False))
     tape = RecordedTape.model_validate(tape.model_dump(warnings=False))
-    if len(manifest.sessions) != 1 or set(sources) != {"A", "B", "C"}:
+    if len(manifest.sessions) != 1 or set(sources) != {d.arm for d in manifest.arms}:
         raise ValueError("Exactly one first session and three independent sources required")
     return export_series(manifest, (tape,), {manifest.sessions[0].key: sources})
 
@@ -434,7 +494,7 @@ def export_series(manifest, tapes, sources):
     rows, proofs, benchmarks = [], [], []
     history = {d.arm: [] for d in manifest.arms}
     for session, tape in zip(manifest.sessions, tapes, strict=True):
-        if set(sources[session.key]) != {"A", "B", "C"}:
+        if set(sources[session.key]) != {d.arm for d in manifest.arms}:
             raise ValueError("Every boundary requires three independent sources")
         for definition in manifest.arms:
             source = sources[session.key][definition.arm]
@@ -450,6 +510,10 @@ def export_series(manifest, tapes, sources):
             rows.append(row)
             proofs.append(proof)
             history[definition.arm].append((session, row, proof))
+        if "D" in history:
+            c, d = history["C"][-1][2], history["D"][-1][2]
+            if any(c[k] != d[k] for k in ("entry_model_hash", "entry_script_hash")):
+                raise ValueError("C/D entry model and scripted entry policy must match")
         h = tape.header
         spy = [q for e in tape.events for q in e.frame.underlyings if q.symbol == "SPY"]
         starts = [q for q in spy if 0 <= (q.source_at - h.opens_at).total_seconds() <= 5]

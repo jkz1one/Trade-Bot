@@ -100,3 +100,12 @@ proof. Mixed stock/options ownership, authenticated normalized collection/model
 acceptance, full cost/benchmark/cohort evaluation, visual acceptance and actual
 isolated-host/off-host recovery gates remain open. No deployment, broker/model
 provider call or experiment change is part of this slice.
+
+## Entry and management attribution
+
+The [arm D extension](OPTIONS_MANAGED_REPLAY.md) adds read-only proposal, review,
+application, model-cost, order-attempt and actual-fill attribution to each stored
+opportunity and order. Full held-entry/revision linkage and applied stop prices
+remain available in JSON; the history table shows the concise sequence. No page
+read starts management or grants execution authority. Desktop/mobile visual
+acceptance remains a separate gate.

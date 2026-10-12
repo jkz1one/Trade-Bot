@@ -26,7 +26,7 @@ have local installed-package proof with fake provider responses. A newly enrolle
 cohort can opt into full entry plans with independently enforced target/horizon;
 existing selector cohorts remain unchanged. The [P3 management path](OPTIONS_POSITION_REASONING.md)
 now adds durable attempts/costs, atomic decision consumption and fresh stop/full-exit
-application in a separate opt-in cohort. Authentic model/feed acceptance and arm D
+application in a separate opt-in cohort. Authentic model/feed acceptance and prospective
 evaluation remain open.
 
 ## Research findings and limits
@@ -169,8 +169,9 @@ benchmark content and reruns the existing setup/contract-planning stage.
 A/B/C journals. The [first-session scheduler](OPTIONS_REPLAY.md) now runs those
 owners with independent clocks, scripted model delays and subsequent tape fills.
 [Multi-session replay/export](OPTIONS_REPLAY_SERIES.md) now preserves native
-accounts, explicit settlement and saved closing evidence. Authenticated collection,
-position-management arm D and prospective proof remain open.
+accounts, explicit settlement and saved closing evidence. Authenticated collection
+and prospective proof remain open. [Arm D replay/export and stored attribution](OPTIONS_MANAGED_REPLAY.md)
+now preserve four independent accounts, matched entry scripts and all model costs.
 
 | Arm | Difference under test |
 | --- | --- |
@@ -227,7 +228,7 @@ The user subsequently added P8/M8 for a dedicated visually polished dashboard.
 | P0 | This research/design pass, engineering | Source pins, actual capability gap, authority contract, comparison protocol and ordered queue recorded. Done as documentation; subsequent P2 implementation evidence is recorded separately. |
 | P1 | Verified data packet, engineering + operator capture | Actual bounded responses mapped with no guessed metadata; installed normalizer rejects stale/future/interpolated/mismatched/partial inputs; held-contract priority and market-hours read coverage/latency receipts. Missing provider semantics become a named blocker. |
 | P2 | Broader entry reasoning, engineering | Versioned packet/proposal/admission, native bounded worker and durable full-plan execution now have local fixture proof, including target/horizon protection and preserved old cohorts. Authentic model completion/latency with P1 evidence remains required before accepted use. |
-| P3 | Comparative ledgers and position reasoning, engineering | Paired accounting, sealed common tape and setup/shortlist replay have fixture proof. Native first-session A/B/C export is fixture verified. First-session independent replay scheduling with scripted models is fixture verified. Multi-session state/export with explicit funds settlement is fixture verified. Position proposal/review, native worker and opt-in durable management have fixture proof, including cost/uncertainty retention, atomic revision consumption, monotone stops, full PAPER exits and mandatory-exit precedence. Next D replay/export and stored observer attribution. |
+| P3 | Comparative ledgers and position reasoning, engineering | Paired accounting, sealed common tape and setup/shortlist replay have fixture proof. Native first-session A/B/C export is fixture verified. First-session independent replay scheduling with scripted models is fixture verified. Multi-session state/export with explicit funds settlement is fixture verified. Position proposal/review, native worker and opt-in durable management have fixture proof, including cost/uncertainty retention, atomic revision consumption, monotone stops, full PAPER exits and mandatory-exit precedence. Arm D replay/export and stored observer attribution are implemented with independent accounts, matched entry configuration and all entry/management charges. Remaining comparison work includes the eligible-underlying baseline and prospective/statistical evidence. |
 | P4 | Integrated options PAPER runtime and UI, engineering + operator | One owner, continuous exact data, independent supervision, scheduled decisions, restart/unknown recovery, installed entry point and desktop/mobile observer. Exercise actual fixed host topology, boot/orphan behavior, independent alert receipt and off-host archive/source-loss drill under M5. Existing equity units alone do not close this. |
 | P5 | Prospective PAPER evidence, operator + engineering analysis | Freeze enrollment manifest, then collect planned/missed slots and complete quote/decision/cost/fill paths; issue operational and economic reports with PASS/FAIL/INCONCLUSIVE separately. No silent tuning or automatic promotion. |
 | P6 | Concrete LIVE adapter/canary review, engineering + user | M6 account/order semantics, explicit capital/loss limits, broker reconciliation/exits, reviewed release and separate real-write authorization. No implementation/call of broker writes under this plan. |

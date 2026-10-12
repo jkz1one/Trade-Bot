@@ -1,5 +1,66 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P3 arm D replay/export and stored attribution: 2026-10-12 UTC
+
+Arm D now runs full entry reasoning plus bounded MAINTAIN/TIGHTEN/EXIT_ALL through
+its own native PAPER owner, virtual clock and durable account. The same single-
+and multi-session replay/export interfaces support explicit A/B/C/D enrollment;
+legacy A/B/C requests remain supported. C/D entry scripts and model configuration
+must match, while each account retains its own position, settlement, calls and
+fills. [Source of truth v1.18](SOURCE_OF_TRUTH.md) and the
+[managed replay/attribution contract](OPTIONS_MANAGED_REPLAY.md) define scope.
+
+Stored observer opportunities and exported cycles now distinguish the proposal,
+review, applied action, admitted model cost, prepared order, actual attempt and
+native fill receipts. Managed decisions retain exact entry/revision linkage and
+requested/applied geometry. Protective and discretionary exits have distinct
+origins. Full paid receipts, consumption/review/tightening events and fill-table
+coverage must agree; contradictory lineage is unavailable evidence. A prepared
+or accepted close never becomes a fill without a later eligible quote/receipt.
+
+Every admitted entry/selector and management call is counted once, including
+known HOLD, MAINTAIN, rejected and late advice. Role-separated charges reconcile
+to total model cost. A known charge completed after session close stays charged
+to its starting session while the comparison remains inconclusive. Missing usage
+and allocations remain unknown. D-versus-A and descriptive D-minus-C results use
+independent portfolios after venue/model/data/host costs; neither proves alpha.
+Independent mandatory exits continue during pending reasoning and override advice.
+
+Fresh pre-edit GitHub/PR head matched `077dfe56bbda89019642332e714903306eb682c4`,
+tree `fffc10d017fd9320c6befc66e816bc3b370b1a84`. Main matched
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 was open/draft.
+
+Verification:
+
+- **945 passed in 770.53s**, warnings as errors, on the noneditable installed wheel
+  outside source using Python 3.12.14/OpenSSL 3.5.8. All eighteen options/Degen
+  files: the prior 918 cases plus 27 new arm D/attribution cases. Native fixture
+  workers and installed CLIs ran against the installed package.
+- New cases cover a complete four-arm session, independent account/call/fill
+  lineage, MAINTAIN/TIGHTEN/full exits, late and unknown advice, mandatory races,
+  unfilled approvals, six stored-lineage corruptions, exact enrollment/matched
+  entry scripts, installed four-arm export, two-session cash/settlement/cost and
+  unknown-history continuity, four projection conflicts, and paid post-close usage.
+- The 91-case source replay/export/observer regression group passed in 196.08s;
+  it is development evidence, not an additional distinct acceptance count.
+  Development initially caught a missing-history test fixture and an incorrect
+  observer test invocation; both were corrected. An intermediate child run failed
+  during environment replacement, and initial copied-test collection lacked its
+  helper package. The clean installed run above supersedes those incomplete runs.
+- Scoped Ruff lint/format, compilation, pip check, local documentation links,
+  eleven installed/source app-file comparisons and all copied-test comparisons
+  passed. Whitespace checks passed. No dependencies, database schemas, deployment
+  scripts or service units changed; no full equity-suite rerun or hosted CI invoked.
+- Verified wheel SHA-256: `c4c3e76dac4881497c702aa29124fd09b5866d1fcd3310df3c7d17e34ab837c1`.
+
+This is local fixture/native-process proof. No authentic model/provider call,
+broker write, deployment, browser visual acceptance or profitability conclusion
+is claimed. Actual market normalization/model latency and usage, the eligible-
+underlying baseline/prospective evaluation, continuous options runtime/UI, actual
+host lifecycle/alerts/off-host recovery, Swing/Scope/mixed ownership and the
+finished dashboard remain open. LIVE stays disabled, main remains untouched,
+PR #1 remains draft, and the frozen deployed experiment is unchanged.
+
 ## P3 durable opt-in position management: 2026-10-12 UTC
 
 The existing position reasoning worker is now connected to a separate opt-in

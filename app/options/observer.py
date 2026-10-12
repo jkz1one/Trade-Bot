@@ -212,7 +212,9 @@ class OptionObserver:
                 "SELECT policy_json FROM execution_option_strategy WHERE id=1"
             ).fetchone()
             strategy = _json(row[0]) if row else None
-        opportunities, page, counts, frames = self._opportunities(db, tables, limit, before, family)
+        opportunities, page, counts, frames = self._opportunities(
+            db, tables, limit, before, family, policy
+        )
         position = self._position(db, ledger, frames, limits, now)
         blockers = list(issues)
         if c["halted"]:
@@ -371,6 +373,8 @@ class OptionObserver:
 
     @staticmethod
     def _orders(db):
+        from app.options.attribution import order_attribution
+
         result = []
         for row in db.execute("SELECT rowid,* FROM execution_orders ORDER BY rowid DESC LIMIT 100"):
             intent = OptionIntent.model_validate(_json(row["intent_json"]))
@@ -387,6 +391,7 @@ class OptionObserver:
                     "prepared_at": intent.prepared_at.isoformat(),
                     "attempted_at": row["attempted_at"],
                     "approval_expires_at": intent.approval_expires_at.isoformat(),
+                    "attribution": order_attribution(db, row),
                 }
             )
         return result
@@ -436,7 +441,9 @@ class OptionObserver:
         }
 
     @staticmethod
-    def _opportunities(db, tables, limit, before, family):
+    def _opportunities(db, tables, limit, before, family, policy):
+        from app.options.attribution import decision_attribution
+
         empty = (
             [],
             {
@@ -512,6 +519,9 @@ class OptionObserver:
                         for c in candidates
                     ],
                     "model_choice": choice,
+                    "attribution": decision_attribution(
+                        db, row["cycle_key"], data, policy
+                    ).model_dump(mode="json"),
                     "error_class": data.get("error_class") or data.get("model_error_class"),
                 }
             )

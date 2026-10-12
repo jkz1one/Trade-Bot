@@ -6,6 +6,7 @@ from typing import Literal
 from pydantic import Field, StrictBool, model_validator
 
 from app.execution.economics import UsageEvidence
+from app.options.attribution import DecisionAttribution
 from app.options.entry_reasoning import Digest
 from app.options.lifecycle import (
     OptionExecutionPolicy,
@@ -17,7 +18,7 @@ from app.options.lifecycle import (
 from app.options.models import Money, Name, OptionLimits, OptionRecord, UnderlyingQuote
 from app.robinhood.schedule import XNYSCalendar
 
-Arm = Literal["A", "B", "C"]
+Arm = Literal["A", "B", "C", "D"]
 
 
 class ArmDefinition(OptionRecord):
@@ -39,7 +40,7 @@ class EvaluationManifest(OptionRecord):
     experiment_id: Name
     declared_at: datetime
     evidence_kind: Literal["LOCAL_FIXTURE"] = "LOCAL_FIXTURE"
-    arms: tuple[ArmDefinition, ArmDefinition, ArmDefinition]
+    arms: tuple[ArmDefinition, ...] = Field(min_length=3, max_length=4)
     sessions: tuple[EvaluationSession, ...] = Field(min_length=1, max_length=60)
     allocation_policy: Name
     hurdle_per_session: Money = Field(ge=0)
@@ -47,10 +48,10 @@ class EvaluationManifest(OptionRecord):
 
     @model_validator(mode="after")
     def matched(self):
-        if [a.arm for a in self.arms] != ["A", "B", "C"] or len(
+        if [a.arm for a in self.arms] not in (["A", "B", "C"], ["A", "B", "C", "D"]) or len(
             {a.limits.population_id for a in self.arms}
-        ) != 3:
-            raise ValueError("Exactly three distinct simulated A/B/C populations required")
+        ) != len(self.arms):
+            raise ValueError("Distinct ordered simulated A/B/C or A/B/C/D populations required")
         first = self.arms[0]
         for a in self.arms:
             if a.limits.model_dump(
@@ -62,7 +63,12 @@ class EvaluationManifest(OptionRecord):
             ):
                 raise ValueError("Capital, risk, calendar and fill assumptions must match")
             if (a.arm == "A") != (a.policy.cost_policy is None):
-                raise ValueError("A is deterministic; B/C require frozen model costs")
+                raise ValueError("A is deterministic; B/C/D require frozen model costs")
+        if (
+            len(self.arms) == 4
+            and self.arms[2].policy.cost_policy != self.arms[3].policy.cost_policy
+        ):
+            raise ValueError("C/D require matching entry model cost policy")
         calendar = XNYSCalendar()
         previous = self.declared_at
         for s in self.sessions:
@@ -78,6 +84,10 @@ class EvaluationManifest(OptionRecord):
 
 
 class ReplayOrder(OptionRecord):
+    origin: Literal["UNATTRIBUTED", "DETERMINISTIC", "MODEL", "PROTECTIVE", "POSITION_MODEL"] = (
+        "UNATTRIBUTED"
+    )
+    entry_client_id: Name | None = None
     intent: OptionIntent
     decision_completed_at: datetime
     attempted_at: datetime | None
@@ -85,6 +95,7 @@ class ReplayOrder(OptionRecord):
 
 
 class ReplayCall(OptionRecord):
+    role: Literal["ENTRY", "MANAGEMENT"] = "ENTRY"
     source_key: Name
     started_at: datetime
     completed_at: datetime | None
@@ -92,9 +103,21 @@ class ReplayCall(OptionRecord):
 
 
 class ReplayCycle(OptionRecord):
+    attribution: DecisionAttribution | None = None
     key: Name
     frame_hash: Digest
-    status: Literal["HOLD", "REJECTED", "ERROR", "OPEN", "HELD", "SKIPPED", "UNKNOWN"]
+    status: Literal[
+        "HOLD",
+        "REJECTED",
+        "ERROR",
+        "OPEN",
+        "HELD",
+        "SKIPPED",
+        "UNKNOWN",
+        "MAINTAIN",
+        "TIGHTENED",
+        "MANDATORY_EXIT",
+    ]
     model_called: StrictBool
     deadline_missed: StrictBool = False
 
@@ -123,5 +146,5 @@ class BenchmarkSession(OptionRecord):
 
 class EvaluationBundle(OptionRecord):
     manifest: EvaluationManifest
-    evidence: tuple[ArmSession, ...] = Field(max_length=180)
+    evidence: tuple[ArmSession, ...] = Field(max_length=240)
     benchmarks: tuple[BenchmarkSession, ...] = Field(default=(), max_length=60)

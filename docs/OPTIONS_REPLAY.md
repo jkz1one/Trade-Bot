@@ -9,6 +9,9 @@ The [multi-session extension](OPTIONS_REPLAY_SERIES.md), delivered 2026-10-12,
 retains the same accounts and explicit settlement across ordered sessions. The
 one-session API below remains compatible.
 
+The [arm D extension](OPTIONS_MANAGED_REPLAY.md) adds optional management, four
+independent accounts and stored attribution. This original A/B/C interface remains supported.
+
 ## What runs
 
 - A uses the existing deterministic Degen candidate selection.
@@ -99,8 +102,9 @@ the economic conclusion remains INCONCLUSIVE. The source retains explicit
 ## Next bounded work
 
 The [multi-session extension](OPTIONS_REPLAY_SERIES.md) now carries balances,
-settlement and unknown history through saved native boundaries. Next implement
-position reasoning and stored decision/approval/fill attribution in P3. Authentic
+settlement and unknown history through saved native boundaries. The
+[arm D extension](OPTIONS_MANAGED_REPLAY.md) now adds position reasoning and
+stored decision/approval/fill attribution in P3. Authentic
 provider/model acceptance, continuous options runtime, the required finished UI,
 prospective collection and host/recovery acceptance remain separate gates.
 The deployed experiment stays frozen and LIVE disabled. Current measured proof is

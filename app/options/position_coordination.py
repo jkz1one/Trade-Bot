@@ -334,7 +334,11 @@ async def run_position_cycle(c, key, frame):
     except ExecutionBlocked as exc:
         return c._finish(key, {**evidence, "status": "HELD", "reason": str(exc)})
     try:
-        result = await judgment.run_position_process(request, secret)
+        result = (
+            await c.replay_model.run(request)
+            if c.replay_model is not None
+            else await judgment.run_position_process(request, secret)
+        )
         result = judgment.PositionResult.model_validate(result.model_dump(warnings=False))
         completed = c.now()
         evidence.update(

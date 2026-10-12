@@ -4,7 +4,8 @@ P3 durable management slice, 2026-10-12 UTC. The model can propose **MAINTAIN,
 EXIT_ALL or TIGHTEN** for one exact held option position. Deterministic review,
 a bounded native worker and opt-in durable coordination are implemented, including
 cost admission/settlement, atomic consumption and stop/full-exit application.
-No replay arm or deployed service invokes management yet. Existing A/B/C behavior
+[Arm D replay](OPTIONS_MANAGED_REPLAY.md) now invokes this path with explicit
+scripted responses. No deployed service invokes management. Existing A/B/C behavior
 and frozen populations remain unchanged.
 
 ## Trusted packet and strict output
@@ -104,7 +105,8 @@ permission to skip protection, resume an engine or retry a billable attempt.
 A new `DegenCoordinator` may explicitly freeze `position_policy` alongside its
 full-entry policy and model cost/process limits. Management cannot be added to an
 existing cohort, attached without full-entry reasoning, or enabled through the
-current A/B/C scripted replay adapter. No default or deployed configuration changes.
+A/B/C scripted replay adapter. New arm D cohorts explicitly freeze their own
+management policy and script. No default or deployed configuration changes.
 
 On a held-position five-minute slot, independent supervision runs first. Healthy
 exact ownership, a fully resolved entry, fresh held-contract/underlying quotes,
@@ -146,7 +148,8 @@ actual PAPER receipts. Applied stops and completed decisions survive owner reope
 No database schema changes or migrations are needed. Existing intent serialization
 is unchanged when management protection is absent. Current A/B/C export explicitly
 rejects a managed cohort, preventing discretionary management from masquerading as
-deterministic arm C. Arm D comparison and dedicated stored attribution are next.
+deterministic arm C. Arm D comparison and dedicated stored attribution are now implemented in the
+[managed replay/export extension](OPTIONS_MANAGED_REPLAY.md).
 
 ## Proof and next integration
 
@@ -160,8 +163,8 @@ partial entries, atomic rollback, cancellation, restart and dispatch tampering/r
 Actual installed-package results are recorded in [status](SLICE2_STATUS.md). No
 authentic model/provider call or profitability claim is made.
 
-Next: arm D replay/export and stored proposal/approval/fill attribution, preserving
-separate independent accounts and counting all entry and management costs.
+Arm D replay/export and stored proposal/approval/fill attribution now preserve
+separate independent accounts and count all entry and management costs.
 Actual market/model acceptance, continuous options runtime, visual dashboard,
 prospective evaluation and host/recovery gates remain in the
 [source of truth](SOURCE_OF_TRUTH.md). LIVE remains disabled.

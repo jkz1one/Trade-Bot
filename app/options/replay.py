@@ -22,6 +22,7 @@ from app.options.governor import _fresh, _tick_price
 from app.options.lifecycle import TERMINAL, OptionIntent, OptionReceipt
 from app.options.market_tape import validate_tape_series
 from app.options.models import Money, OptionRecord
+from app.options.position_reasoning import PositionReasoningPolicy
 from app.options.replay_model import ReplayModel, ReplayScript
 from app.options.venue import DurableOptionVenue
 
@@ -48,6 +49,8 @@ class ReplaySettings(OptionRecord):
     settlements: tuple[ScriptedSettlement, ...] = Field(default=(), max_length=180)
     narrow: ReplayScript
     broad: ReplayScript
+    managed: ReplayScript | None = None
+    position_policy: PositionReasoningPolicy | None = None
     judgment_limits: JudgmentLimits
     entry_policy: EntryReasoningPolicy
     data_cost_per_arm: Money | None = Field(default=None, ge=0)
@@ -306,6 +309,18 @@ async def run_replay_series(settings, tapes, directory):
         len(tapes) != len(manifest.sessions)
         or settings.narrow.arm != "B"
         or settings.broad.arm != "C"
+        or (len(manifest.arms) == 4) != (settings.managed is not None)
+        or (settings.managed is not None) != (settings.position_policy is not None)
+        or (settings.managed is not None and settings.managed.arm != "D")
+        or (
+            settings.managed is not None
+            and {
+                d.cycle_key: d
+                for d in settings.managed.decisions
+                if d.cycle_key.startswith("degen:")
+            }
+            != {d.cycle_key: d for d in settings.broad.decisions}
+        )
     ):
         raise ValueError("Exact bounded ordered session tapes and A/B/C scripts required")
     header = tapes[0].header
@@ -324,7 +339,8 @@ async def run_replay_series(settings, tapes, directory):
             raise ValueError("Matched frozen series and common market configuration required")
     receipts = settings.settlements
     if len({(r.arm, r.receipt.receipt_id) for r in receipts}) != len(receipts) or any(
-        not any(
+        r.arm not in {a.arm for a in manifest.arms}
+        or not any(
             previous.closes_at < r.receipt.occurred_at <= current.opens_at
             for previous, current in pairwise(manifest.sessions)
         )
@@ -373,7 +389,13 @@ async def run_replay_series(settings, tapes, directory):
             model = (
                 None
                 if arm == "A"
-                else ReplayModel(settings.narrow if arm == "B" else settings.broad)
+                else ReplayModel(
+                    settings.narrow
+                    if arm == "B"
+                    else settings.broad
+                    if arm == "C"
+                    else settings.managed
+                )
             )
             c = DegenCoordinator(
                 engine,
@@ -383,7 +405,8 @@ async def run_replay_series(settings, tapes, directory):
                 clock=lambda clock=clock: clock[0],
                 replay_model=model,
                 judgment_limits=settings.judgment_limits if model else None,
-                entry_policy=settings.entry_policy if arm == "C" else None,
+                entry_policy=settings.entry_policy if arm in {"C", "D"} else None,
+                position_policy=settings.position_policy if arm == "D" else None,
             )
             definitions.append(
                 definition.model_copy(

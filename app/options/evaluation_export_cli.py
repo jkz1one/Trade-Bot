@@ -33,13 +33,13 @@ class ExportSource(OptionRecord):
 class ExportRequest(OptionRecord):
     manifest: EvaluationManifest
     tape: str = Field(min_length=1, max_length=4096)
-    sources: tuple[ExportSource, ExportSource, ExportSource]
+    sources: tuple[ExportSource, ...] = Field(min_length=3, max_length=4)
 
 
 class ExportBoundary(OptionRecord):
     session_key: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
     tape: str = Field(min_length=1, max_length=4096)
-    sources: tuple[ExportSource, ExportSource, ExportSource]
+    sources: tuple[ExportSource, ...] = Field(min_length=3, max_length=4)
 
 
 class SeriesExportRequest(OptionRecord):
@@ -72,7 +72,9 @@ def main(argv=None):
                 raise ValueError("Export request changed")
         request = TypeAdapter(ExportRequest | SeriesExportRequest).validate_json(raw)
         if isinstance(request, ExportRequest):
-            if {s.arm for s in request.sources} != {"A", "B", "C"}:
+            if len(request.sources) != len(request.manifest.arms) or {
+                s.arm for s in request.sources
+            } != {d.arm for d in request.manifest.arms}:
                 raise ValueError("Unique A/B/C sources required")
             result = export_comparison(
                 request.manifest,
@@ -83,7 +85,11 @@ def main(argv=None):
             if tuple(b.session_key for b in request.boundaries) != tuple(
                 s.key for s in request.manifest.sessions
             ) or any(
-                {s.arm for s in b.sources} != {"A", "B", "C"} or not Path(b.tape).is_absolute()
+                (
+                    len(b.sources) != len(request.manifest.arms)
+                    or {s.arm for s in b.sources} != {d.arm for d in request.manifest.arms}
+                )
+                or not Path(b.tape).is_absolute()
                 for b in request.boundaries
             ):
                 raise ValueError("Exact ordered private native boundaries required")
