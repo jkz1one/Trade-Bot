@@ -371,3 +371,23 @@ def test_installed_export_cli_private_sanitized_output(captured, native_sources,
         assert result["status"] == "UNAVAILABLE"
     else:
         assert result["report"]["status"] == "COMPLETE_ARITHMETIC"
+
+
+def test_management_cohort_cannot_be_exported_as_deterministic_management_arm(captured):
+    manifest, tape, sources = captured
+    with sqlite3.connect(sources["C"]["journal"]) as db:
+        strategy = json.loads(
+            db.execute("SELECT policy_json FROM execution_option_strategy").fetchone()[0]
+        )
+        strategy["position_model"] = {"version": "fixture-managed-cohort"}
+        db.execute("UPDATE execution_option_strategy SET policy_json=?", (json.dumps(strategy),))
+    definition = manifest.arms[2].model_copy(update={"strategy_hash": strategy_hash(strategy)})
+    with pytest.raises(ValueError, match="strategy binding"):
+        export_arm(
+            sources["C"]["journal"],
+            definition,
+            manifest.sessions[0],
+            tape,
+            data_cost=".01",
+            host_cost=".02",
+        )

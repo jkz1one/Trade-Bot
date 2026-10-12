@@ -57,6 +57,13 @@ class EntryProtection(OptionRecord):
     exit_by: datetime
 
 
+class PositionExitProtection(OptionRecord):
+    packet_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    plan_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    entry_client_id: Name
+    position_revision: PositiveCount
+
+
 class OptionIntent(OptionRecord):
     client_id: Name
     source_key: Name
@@ -75,12 +82,20 @@ class OptionIntent(OptionRecord):
     time_in_force: Literal["DAY"] = "DAY"
     entry_protection: EntryProtection | None = Field(default=None, exclude_if=lambda v: v is None)
 
+    position_protection: PositionExitProtection | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+
     @model_validator(mode="after")
     def lifetime(self):
         if not self.prepared_at < self.approval_expires_at <= self.order_expires_at:
             raise ValueError("Distinct fresh approval and DAY-order deadlines required")
         if self.order_expires_at > self.instrument.contract.last_trading_at:
             raise ValueError("DAY order cannot outlive the exact contract trading instant")
+        if self.position_protection is not None and (
+            self.side != "SELL" or self.entry_protection is not None
+        ):
+            raise ValueError("Management protection binds only an owned full-exit intent")
         if self.entry_protection is not None and (
             self.side != "BUY"
             or not self.prepared_at < self.exit_at <= self.entry_protection.exit_by

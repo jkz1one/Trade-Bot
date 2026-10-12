@@ -1,11 +1,11 @@
-# Position reasoning: reviewed proposals and bounded model worker
+# Position reasoning: durable management with independent protection
 
-P3 management contract and native-worker slice, 2026-10-12 UTC. The model can
-propose **MAINTAIN, EXIT_ALL or TIGHTEN** for one exact held option position.
-Deterministic review and a bounded native worker are implemented. Durable management
-attempt admission, cost settlement, revision consumption and action application
-are the next slice. No coordinator, replay arm or deployed service invokes this
-worker yet. Existing A/B/C behavior and frozen populations remain unchanged.
+P3 durable management slice, 2026-10-12 UTC. The model can propose **MAINTAIN,
+EXIT_ALL or TIGHTEN** for one exact held option position. Deterministic review,
+a bounded native worker and opt-in durable coordination are implemented, including
+cost admission/settlement, atomic consumption and stop/full-exit application.
+No replay arm or deployed service invokes management yet. Existing A/B/C behavior
+and frozen populations remain unchanged.
 
 ## Trusted packet and strict output
 
@@ -69,8 +69,8 @@ additional exposure, and missing model costs do not become zero.
 Results are MAINTAIN, REJECTED, ELIGIBLE or MANDATORY_EXIT, always with
 `execution_authority=false`. No order, stop mutation, reservation, journal write,
 reconciliation, recovery or network call occurs in pure review. Repeating a review
-is intentionally not durable revision consumption. The next integration must
-commit that consumption and action evidence atomically and reject replay/races.
+is intentionally not durable revision consumption. The owner integration below
+commits consumption and action evidence atomically and rejects replay/races.
 
 ## Native model boundary
 
@@ -99,19 +99,69 @@ including unusable/foreign usage as evidence rather than settled cost. Missing
 usage or an undecodable/lost child remains unknown. Error MAINTAIN grants no
 permission to skip protection, resume an engine or retry a billable attempt.
 
+## Durable owner integration
+
+A new `DegenCoordinator` may explicitly freeze `position_policy` alongside its
+full-entry policy and model cost/process limits. Management cannot be added to an
+existing cohort, attached without full-entry reasoning, or enabled through the
+current A/B/C scripted replay adapter. No default or deployed configuration changes.
+
+On a held-position five-minute slot, independent supervision runs first. Healthy
+exact ownership, a fully resolved entry, fresh held-contract/underlying quotes,
+completed context, known costs and sufficient reserved call budget are required
+before a management child starts. The owner saves the full request before atomically
+admitting its model attempt. The admission validates the original journal revision,
+frozen configuration, position and original deadline; no generic occupied-position
+bypass is exposed. Budget rejection starts no child and invents no model attempt.
+
+`position_revision` is the captured journal sequence for that decision slot.
+Subsequent model-cost and heartbeat events may advance the global sequence without
+changing the position. Application requires the same full owned position state;
+mandatory protection still wins. A later completed slot may reassess a new captured
+revision. The original slot/cycle identity cannot be retried after interruption.
+
+Known usage is settled once even when advice is late, rejected or unusable. Missing,
+foreign or interrupted usage stays uncertain and halts further model admission.
+Independent protection runs again after the child, including error results. No
+paid MAINTAIN or model failure suppresses a stop, target, time or expiry exit.
+
+`apply_position_plan` checks the saved full request/result, matching settled cost
+and usage, original lease, fresh account/market truth and exact held state in the
+owner's write transaction. It records terminal consumption of the captured revision
+atomically with a tighter stop or prepared full-close intent. An identical callback
+returns its prior receipt. Changed callback content or reuse under another source
+cannot produce a second action. Injected write failures roll back both consumption
+and mutation; already settled model costs remain retained.
+
+A model full exit carries immutable packet/plan/entry/revision protection plus the
+full receipt. Native dispatch rechecks consumption, paid usage, original lease and
+fresh full-quantity close admission. Removing the receipt cannot reduce this intent
+to a generic close. Newly triggered mandatory protection is durably latched before
+a discretionary rejection, so a later price rebound cannot erase it. No model
+choice clears halts, unknown orders or mandatory latches. Existing protection and
+reviewed recovery decide what happens after a rejected or interrupted exit; there
+is no automatic resubmission or claim of a fill. Only native reconciliation records
+actual PAPER receipts. Applied stops and completed decisions survive owner reopen.
+
+No database schema changes or migrations are needed. Existing intent serialization
+is unchanged when management protection is absent. Current A/B/C export explicitly
+rejects a managed cohort, preventing discretionary management from masquerading as
+deterministic arm C. Arm D comparison and dedicated stored attribution are next.
+
 ## Proof and next integration
 
 Tests exercise CALL/PUT actions, effective versus original stops, revision/state
 changes, all mandatory triggers against each action, account/market blockers and
 strict SDK serialization with fake responses. Native process tests cover the
 worker entry point, credential-environment separation, overflow, timeout, malformed
-output and repeated cancellation. Actual installed-package results are recorded
-in [status](SLICE2_STATUS.md). No authentic model/provider call or profitability
-claim is made.
+output and repeated cancellation. Durable integration tests cover paid actions,
+unknown/late costs, budget rejection, duplicate callbacks, changed ownership,
+partial entries, atomic rollback, cancellation, restart and dispatch tampering/races.
+Actual installed-package results are recorded in [status](SLICE2_STATUS.md). No
+authentic model/provider call or profitability claim is made.
 
-Next: opt-in new-cohort durable management enrollment and bounded attempt/cost
-accounting; atomic once-per-revision action consumption with mandatory-exit
-precedence; arm D replay/export and stored proposal/approval/fill attribution.
+Next: arm D replay/export and stored proposal/approval/fill attribution, preserving
+separate independent accounts and counting all entry and management costs.
 Actual market/model acceptance, continuous options runtime, visual dashboard,
 prospective evaluation and host/recovery gates remain in the
 [source of truth](SOURCE_OF_TRUTH.md). LIVE remains disabled.

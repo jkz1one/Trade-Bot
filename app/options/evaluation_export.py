@@ -132,6 +132,7 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
             or strategy["selection"] != h.selection.model_dump(mode="json")
             or ("model" in strategy) != (definition.arm != "A")
             or ("entry_model" in strategy) != (definition.arm == "C")
+            or "position_model" in strategy
         ):
             raise ValueError("Native A/B/C strategy binding mismatch")
         events = sorted(_rows(db, "execution_events", MAX_EVENTS), key=lambda e: e["sequence"])

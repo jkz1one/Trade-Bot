@@ -23,9 +23,10 @@ replay scheduler](docs/OPTIONS_REPLAY.md) runs independent virtual clocks, scrip
 model delays, later-quote fills and protective exits through those owners.
 [Multi-session replay/export](docs/OPTIONS_REPLAY_SERIES.md) now preserves the
 same accounts, explicit settlement and saved closing evidence across sessions.
-The [position-reasoning contract and native worker](docs/OPTIONS_POSITION_REASONING.md)
-now support reviewed MAINTAIN/EXIT_ALL/TIGHTEN proposals. Durable management
-integration, comparison arm D and authentic prospective evidence remain open.
+The [position-management path](docs/OPTIONS_POSITION_REASONING.md) now connects
+MAINTAIN/EXIT_ALL/TIGHTEN proposals to durable model costs, atomic decision
+consumption, tighter stops and freshly reviewed full PAPER exits. It is opt-in for
+a separate frozen cohort. Comparison arm D and authentic prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.
 The M2 local options PAPER lifecycle is implemented. Read

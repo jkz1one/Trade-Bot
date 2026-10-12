@@ -111,9 +111,11 @@ wall deadline remains 900 seconds.
 
 ## Next
 
-[Position proposal/review and a native worker](OPTIONS_POSITION_REASONING.md) now
-have fixture proof. Next P3 is durable management integration with atomic revision
-consumption, then arm D replay/export and stored proposal/approval/fill attribution. Authentic normalized market/model evidence,
+[Position reasoning and durable management](OPTIONS_POSITION_REASONING.md) now
+have fixture proof, including atomic revision consumption and native PAPER exits.
+Next P3 is arm D replay/export and stored proposal/approval/fill attribution. The
+A/B/C exporter rejects managed cohorts rather than labeling them arm C.
+Authentic normalized market/model evidence,
 continuous options runtime, finished UI, prospective evidence and host/recovery
 acceptance remain separate gates. LIVE stays disabled and the deployed population
 stays frozen. See [source of truth](SOURCE_OF_TRUTH.md) and [measured proof](SLICE2_STATUS.md).

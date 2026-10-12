@@ -27,6 +27,7 @@ from app.options.lifecycle import (
     OptionIntent,
     OptionLedger,
     OptionVenueSnapshot,
+    PositionExitProtection,
 )
 from app.options.models import (
     OptionAccount,
@@ -601,6 +602,45 @@ class OptionExecution:
                     self._session(intent.instrument.contract, now),
                     now=now,
                 )
+                management = intent.position_protection is not None
+                if management != (approval.get("origin") == "POSITION_MODEL"):
+                    raise ExecutionBlocked("POSITION_PROTECTION_MISSING")
+                if management != ("position_request" in approval) or management != (
+                    "position_result" in approval
+                ):
+                    raise ExecutionBlocked("FULL_POSITION_RECEIPT_REQUIRED")
+                if management:
+                    from app.options.position_coordination import review_for_execution
+                    from app.options.position_judgment import PositionRequest, PositionResult
+
+                    review = review_for_execution(
+                        self,
+                        db,
+                        intent.source_key,
+                        PositionRequest.model_validate(approval["position_request"]),
+                        PositionResult.model_validate(approval["position_result"]),
+                        quote,
+                        underlying,
+                        now,
+                        exclude=client_id,
+                    )
+                    if (
+                        review.outcome != "ELIGIBLE"
+                        or review.proposal != proposal
+                        or review.plan.action != "EXIT_ALL"
+                    ):
+                        raise ExecutionBlocked(
+                            "POSITION_DISPATCH_REJECTED:" + ";".join(review.reasons)
+                        )
+                    expected = PositionExitProtection(
+                        packet_hash=review.packet_hash,
+                        plan_hash=fingerprint(review.plan),
+                        entry_client_id=review.plan.entry_client_id,
+                        position_revision=review.plan.position_revision,
+                    )
+                    if intent.position_protection != expected:
+                        raise ExecutionBlocked("POSITION_PROTECTION_CHANGED")
+                    result = review.admission
                 if intent.entry_protection is not None:
                     from app.options.entry_coordination import review_for_execution
                     from app.options.entry_judgment import EntryRequest, EntryResult
@@ -1159,7 +1199,7 @@ class OptionExecution:
             )
 
     @exact
-    def begin_model_attempt(self, source_key, input_hash, *, now):
+    def begin_model_attempt(self, source_key, input_hash, *, now, position_request=None):
         now = clock(now)
         policy = self.policy.cost_policy
         if (
@@ -1173,6 +1213,10 @@ class OptionExecution:
         ):
             raise ValueError("Explicit frozen model policy and input hash required")
         with self.journal.write() as db:
+            if position_request is not None:
+                from app.options.position_coordination import validate_admission
+
+                validate_admission(self, db, source_key, position_request, input_hash, now)
             account = self._account(db, now)
             costs = economics.summary(db, now)
             day = now.astimezone(ZoneInfo("America/New_York")).date().isoformat()
@@ -1181,13 +1225,17 @@ class OptionExecution:
                 account.entry_halted
                 or account.entry_blockers
                 or not account.budgets_known
-                or account.position is not None
+                or (account.position is not None and position_request is None)
                 or account.working_orders
                 or not timedelta(0)
                 <= now - account.captured_at
                 < timedelta(seconds=self.limits.account_max_age_seconds)
                 or window is None
-                or now >= window.closes_at - timedelta(minutes=self.policy.entry_cutoff_minutes)
+                or (
+                    position_request is None
+                    and now
+                    >= window.closes_at - timedelta(minutes=self.policy.entry_cutoff_minutes)
+                )
                 or policy.max_call_cost
                 > min(
                     account.daily_loss_available,
@@ -1228,6 +1276,12 @@ class OptionExecution:
         from app.options.entry_reasoning import EntryPlan
 
         plan = EntryPlan.model_validate(plan.model_dump(warnings=False))
+        return self._record_model_usage(source_key, usage, plan, now=now)
+
+    def record_position_usage(self, source_key, usage, plan, *, now):
+        from app.options.position_reasoning import PositionPlan
+
+        plan = PositionPlan.model_validate(plan.model_dump(warnings=False))
         return self._record_model_usage(source_key, usage, plan, now=now)
 
     @exact

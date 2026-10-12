@@ -1,5 +1,67 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P3 durable opt-in position management: 2026-10-12 UTC
+
+The existing position reasoning worker is now connected to a separate opt-in
+full-entry PAPER cohort. MAINTAIN records a reviewed decision; TIGHTEN atomically
+improves the effective stop; EXIT_ALL prepares a full-owned-quantity native close
+with immutable packet/plan/entry/revision protection. Native dispatch requires
+the full paid receipt and fresh deterministic admission. The model receives no
+broker tools or execution authority. [Source of truth v1.17](SOURCE_OF_TRUTH.md)
+and the [management contract](OPTIONS_POSITION_REASONING.md) define the boundary.
+
+The owner persists each bounded request before model-cost admission, requiring
+exact frozen configuration, current ownership, original decision revision/lease
+and available reserved call budget. Known usage survives unusable or late advice;
+missing, foreign or interrupted usage remains uncertain and blocks further calls.
+A captured revision can be consumed once, with its stop mutation or prepared
+intent in the same transaction. Duplicate callbacks return the retained result;
+a different source or changed plan cannot consume it again. A later slot may
+reassess a newly captured revision; ordinary cost/heartbeat events do not make
+unchanged ownership a different position.
+
+Independent protection runs before and after reasoning. Fresh dispatch review
+also persists any newly triggered mandatory latch, so rejecting a discretionary
+exit cannot erase a target/stop after a rebound. Atomic write-failure tests retain
+paid costs while rolling back both action and consumption. Cancellation keeps an
+unknown attempt without retry; reopen retains the applied stop and completed
+receipt. Interrupted or rejected exits retain existing uncertainty/recovery rules,
+not automatic resubmission. Native receipts alone establish a PAPER fill.
+
+Existing populations cannot adopt this policy on reopen. A/B/C replay is unchanged
+and its exporter rejects managed cohorts rather than silently calling them arm C.
+Arm D replay/export and dedicated proposal/approval/fill attribution are next.
+No provider/model call, broker write, dependency, deployment script/unit or database
+schema change occurred. The frozen deployed experiment is untouched.
+
+Verification:
+
+- **918 passed in 597.03s**, warnings as errors, using the noneditable installed
+  wheel outside source on Ubuntu Python 3.12.3/OpenSSL 3.0.13. All seventeen
+  options/Degen files: 32 new integration cases, one new exporter guard and the
+  existing 885 contract/worker, execution, entry, replay/series, accounting/tape,
+  admission, model, observer and capture cases. All copied test modules matched
+  source; native installed worker/CLI paths were exercised.
+- The 32 new owner-integration cases cover CALL/PUT actions, known/unknown/late
+  costs, reserved-budget rejection before a child starts, partial-entry blocking,
+  once-only consumption, changed ownership/halts/pending orders/quotes, mandatory
+  races, atomic rollback, cancellation, reopen and native dispatch receipt tampering.
+  A separate exporter case rejects a managed cohort labeled as arm C.
+- Source development run: 32 passed in 49.36s, warnings as errors. It is not
+  counted again as distinct proof. Native PAPER submit/fill paths run against the
+  local durable fixture venue; model responses are scripted.
+- Scoped Ruff lint/format, compilation, pip check, five installed/source module
+  byte comparisons, 157 local documentation links and whitespace passed.
+- Verified wheel SHA-256:
+  `effa7a3040ed70e2eee18eed54764f86443f8e8d9a068b23c245944e750a62b1`.
+
+This is local fixture/native-process proof. No full equity-suite rerun, hosted CI,
+authentic model/feed acceptance, target-host installation or profitability claimed.
+Actual normalized data/model usage and latency, continuous options runtime/UI,
+prospective frozen evaluation, lifecycle/alert/off-host recovery, Swing/Scope/mixed
+ownership and the polished dashboard remain open. LIVE is disabled. Main remains
+untouched and PR #1 remains draft.
+
 ## P3 position proposal/review and bounded native worker: 2026-10-12 UTC
 
 `app.options.position_reasoning` now defines strict MAINTAIN/EXIT_ALL/TIGHTEN

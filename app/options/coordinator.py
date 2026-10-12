@@ -47,6 +47,7 @@ class DegenCoordinator:
         key_file=None,
         entry_policy=None,
         replay_model=None,
+        position_policy=None,
     ):
         if type(engine) is not OptionExecution or getattr(engine, "_degen_owner", None) is not None:
             raise ValueError("One active built-in options owner is required")
@@ -82,6 +83,18 @@ class DegenCoordinator:
             if entry_policy is not None
             else None
         )
+        from app.options.position_reasoning import PositionReasoningPolicy
+
+        self.position_policy = (
+            PositionReasoningPolicy.model_validate(position_policy.model_dump(warnings=False))
+            if position_policy is not None
+            else None
+        )
+        if self.position_policy is not None and (
+            self.entry_policy is None or replay_model is not None
+        ):
+            raise ValueError("Management requires a separate native full-entry cohort")
+        self._position_quotes, self._position_underlyings = (), ()
         if self.entry_policy is not None and self.judgment_limits is None:
             raise ValueError("Broader entry reasoning requires explicit model configuration")
         if self.key_file is not None and (
@@ -173,6 +186,12 @@ class DegenCoordinator:
 
             config["entry_model"] = configuration(
                 self.engine.policy.cost_policy, self.judgment_limits, self.entry_policy
+            ).model_dump(mode="json")
+        if self.position_policy is not None:
+            from app.options.position_judgment import configuration
+
+            config["position_model"] = configuration(
+                self.engine.policy.cost_policy, self.judgment_limits, self.position_policy
             ).model_dump(mode="json")
         return json.dumps(config, sort_keys=True)
 
@@ -424,6 +443,9 @@ class DegenCoordinator:
             held = self._held_instrument(db, ledger)
         matched = [q for q in frame.quotes if q.instrument == held]
         underlying = [q for q in frame.underlyings if held and q.symbol == held.contract.underlying]
+        if self.position_policy is not None:
+            self._position_quotes = tuple(matched) if len(matched) == 1 else ()
+            self._position_underlyings = tuple(underlying) if len(underlying) == 1 else ()
         return await self.engine.protective_tick(
             matched[0] if len(matched) == 1 else None,
             underlying[0] if len(underlying) == 1 else None,
@@ -477,6 +499,10 @@ class DegenCoordinator:
             if ledger.position:
                 # Exact owned identity comes from the journal, never a current chain.
                 result = await self.supervise(frame.quotes, frame.underlyings)
+                if self.position_policy is not None and result.get("status") == "HEALTHY":
+                    from app.options.position_coordination import run_position_cycle
+
+                    return await run_position_cycle(self, key, frame)
                 return self._finish(
                     key, {"status": "HELD", "management": result, "entry_allowed": False}
                 )
