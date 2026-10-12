@@ -52,8 +52,8 @@ coverage, timestamps, entitlement and full bid size qualify. A newer invalid quo
 cannot revive an older valid mark. Conflicting equal-time quotes, stale/missing
 quotes or inadequate size leave the mark unavailable. The observer does not fetch
 a replacement quote or substitute midpoint, last or entry price. Supervision alone
-does not continuously save every observed quote; only existing persisted frames or
-decision inputs are available to this projection.
+does not continuously save every observed quote; persisted decision inputs and
+the enrolled local runtime's latest accepted frame are available to this projection.
 
 Unresolved orders, incomplete/stale accounts, reconciliation issues or unsupported
 exposure suppress equity estimates. Unknown model usage also suppresses the
@@ -62,8 +62,10 @@ visible, but exit/data/host costs and matched SPY/cash/model-off/on/underlying c
 evaluation are not implemented. Displayed estimates are explicitly before those
 costs, not a complete net return or profitability proof.
 
-Worker activity, exchange session and actual release are not recorded by this
-population and remain unknown. Restore authority is **not checked by the observer**.
+For explicitly enrolled [local runtime populations](OPTIONS_LOCAL_RUNTIME.md),
+runtime status/freshness, observed session and the latest accepted frame are read
+from the same committed snapshot. Other populations keep worker/session unknown.
+Actual release remains unknown. Restore authority is **not checked by the observer**.
 Local alert records do not establish independent options alert delivery. A fresh
 stored heartbeat does not prove a running worker, and the page grants no entry
 approval or recovery authority.

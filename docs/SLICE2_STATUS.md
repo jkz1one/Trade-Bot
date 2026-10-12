@@ -1,5 +1,68 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P4 continuous local options PAPER runner: 2026-10-12 UTC
+
+A new opt-in normalized-fixture runtime now drives the existing native Degen owner
+continuously, with five-minute decisions and faster independent reconciliation and
+protection. Optional selection/full-entry/management workers retain their existing
+deterministic reviews and all known/unknown model charges. The latest private
+packet is bound to the population, source time, sequence and original packet hash.
+No provider normalization, automatic fill or settlement credit is invented.
+
+Runtime enrollment freezes engine/strategy/venue identity, feed path and cadence.
+Slots retain COMPLETE/SKIPPED/INTERRUPTED evidence. A fresh RUNNING heartbeat is an
+additional new-entry gate; feed failure fences pending entry before the next native
+snapshot wait. A requested stop immediately blocks new entry. Shutdown then retains
+halts and unknown costs, cancels/drains decision work and releases the owner only
+after cleanup. Restart retains interruptions and cannot resume entry automatically.
+
+The stored observer now reads runtime freshness, observed exchange session and the
+latest accepted frame in one committed snapshot. Pages still perform zero feed,
+model, supervision or order work. Heartbeats do not prove process liveness; actual
+release identity remains unknown. [Source of truth v1.21](SOURCE_OF_TRUTH.md) and the
+[local runner contract](OPTIONS_LOCAL_RUNTIME.md) retain the exact scope and CLI.
+
+Fresh pre-edit head was `357fe5ace0209e841559024b97e66741c7f078a8`, tree
+`abdf1e0d62fea06517833f0ea786eeabe58842c2`. Main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 was open/draft.
+
+Verification:
+
+- **334 passed in 200.35s (0:03:20)**, warnings as errors, on the noneditable final
+  wheel outside source. Eight files cover runtime (38 new cases), Degen strategy,
+  option execution, full-entry coordination, position coordination, stored observer,
+  entry judgment and position judgment. Installed CLI tests use isolated `-I` mode.
+- Coverage includes native entry/fill/stop handling without an extra decision,
+  protection during a paid management wait, charge/unknown-attempt retention,
+  immediate feed-failure/stop-request entry fences, once-per-slot/missed-slot handling,
+  source identity/time/sequence bounds, private file bounds, exclusive create/restart,
+  interrupted shutdown, native supervision timeout, stale heartbeat entry gates,
+  immutable observer/HTML reads and absence of LIVE authority.
+- Scoped Ruff lint/format, compilation, pip check and whitespace checks passed.
+  All 176 local documentation links checked resolve. Six changed app modules and
+  the HTML template match installed bytes; all copied tests match source. The
+  deterministic fixture settings example validates.
+- Wheel SHA-256: `a8f250cd08afe9692e2c0302b8f19213e9cb910ba5f63bcae4934dabd2456bb3`.
+
+Development source runtime group: **35 passed in 41.60s**; earlier runtime/observer
+proof was **87 passed in 44.54s**. These overlap final proof. The first installed
+run ended after progress output without a final summary and is INCOMPLETE, not a
+passing result. The final wheel was installed after that process ended and all
+eight files were rerun. Initial work fixed the restart schema-allowlist omission;
+two test fixtures were corrected (Decimal serialization and fenced mutation).
+Review found and fenced the pending-entry feed-failure and requested-stop windows.
+The broader options/equity suites were not rerun for this slice; prior proof is
+retained below.
+
+This P4 runner slice has local fixture proof; full P4 provider/host/visual
+acceptance remains open. Authentic
+continuous exact data/model usage, installed release identity, reviewed recovery
+surface, target-host lifecycle/independent alerts/off-host recovery and desktop/mobile
+visual/full-dashboard acceptance remain open. P3 prospective enrollment/economics
+and the remaining strategy families are separate gates. No dependency, host unit,
+deployment, broker write or authentic provider/model call is part of this slice.
+LIVE stays disabled; the deployed experiment is frozen and main/PR draft are retained.
+
 ## P3 whole-session analysis diagnostics: 2026-10-12 UTC
 
 Optional manifest-frozen analysis now consumes the evaluator's verified paired

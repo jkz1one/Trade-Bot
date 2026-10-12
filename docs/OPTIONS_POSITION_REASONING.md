@@ -165,6 +165,7 @@ authentic model/provider call or profitability claim is made.
 
 Arm D replay/export and stored proposal/approval/fill attribution now preserve
 separate independent accounts and count all entry and management costs.
-Actual market/model acceptance, continuous options runtime, visual dashboard,
+The [local fixture runtime](OPTIONS_LOCAL_RUNTIME.md) now drives continuous independent
+protection and scheduled management. Actual market/model/runtime acceptance, visual dashboard,
 prospective evaluation and host/recovery gates remain in the
 [source of truth](SOURCE_OF_TRUTH.md). LIVE remains disabled.

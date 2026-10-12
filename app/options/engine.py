@@ -94,6 +94,8 @@ class OptionJournal(ExecutionJournal):
             "execution_option_receipts",
             "execution_option_strategy",
             "execution_option_opportunities",
+            "execution_option_runtime",
+            "execution_option_runtime_slots",
         }
     )
 
@@ -278,6 +280,12 @@ class OptionExecution:
                 )
                 reserved = max(reserved, max(ZERO, intent.approved_full_premium_loss - paid))
         blockers = []
+        from app.options.runtime_state import entry_reasons
+
+        blockers.extend(entry_reasons(db, now))
+        runtime = getattr(self, "_option_runtime", None)
+        if runtime is not None and runtime.stop is not None and runtime.stop.is_set():
+            blockers.append("OPTION_RUNTIME_STOP_REQUESTED")
         supervised = db.execute("SELECT * FROM execution_supervisor WHERE id=1").fetchone()
         if (
             supervised is None

@@ -215,6 +215,15 @@ class OptionObserver:
         opportunities, page, counts, frames = self._opportunities(
             db, tables, limit, before, family, policy
         )
+        from app.options.runtime_state import report as runtime_report
+
+        runtime = runtime_report(db, now)
+        if runtime["status"] != "NOT_ENROLLED":
+            saved_frame = db.execute(
+                "SELECT frame_json FROM execution_option_runtime WHERE id=1"
+            ).fetchone()[0]
+            if saved_frame:
+                frames.append(DegenFrame.model_validate(_json(saved_frame)))
         position = self._position(db, ledger, frames, limits, now)
         blockers = list(issues)
         if c["halted"]:
@@ -295,8 +304,13 @@ class OptionObserver:
             "revision": revision,
             "release": None,
             "restore_authority": "NOT_CHECKED_BY_OBSERVER",
-            "worker_status": "NOT_RECORDED",
-            "session_status": "NOT_RECORDED",
+            "worker_status": runtime["status"]
+            if runtime["status"] != "NOT_ENROLLED"
+            else "NOT_RECORDED",
+            "session_status": runtime.get("session", {}).get("status", "NOT_RECORDED")
+            if runtime.get("session")
+            else "NOT_RECORDED",
+            "runtime": runtime,
             "account": {
                 "health": account_health,
                 "captured_at": snapshot.captured_at.isoformat() if snapshot else None,
