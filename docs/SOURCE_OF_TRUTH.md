@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.27. Adopted product direction and working delivery contract, 2026-10-13 UTC.
+Version 1.28. Adopted product direction and working delivery contract, 2026-10-13 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -39,6 +39,10 @@ consistency and installer metadata do not grant release approval or prove livene
 [Scope evidence preflight](OPTIONS_SCOPE_PREFLIGHT.md) now checks all nine required
 evidence groups, SPX/SPY/QQQ completed coverage and exact 0DTE SPXW identity.
 It grants no setup, account or order authority; Scope execution remains open.
+[Scope completed structure](OPTIONS_SCOPE_STRUCTURE.md) now adds nine price-derived
+patterns, explicit SPY/QQQ directional confirmation and exact-strike reachability.
+These are diagnostics; context risk, durable play state and common-owner
+admission/management remain required before Scope execution.
 Authentic collection/coverage and prospective economic evidence remain open.
 Report capabilities and gates, not completion percentages.
 
@@ -185,7 +189,8 @@ for Degen and Swing. The new opt-in shared PAPER slice now implements that bound
 with one ledger/order reservation/model budget, preserving separate research accounts.
 Family-specific evidence and holding rules remain explicit. Scope execution and mixed
 stock/options ownership are still unimplemented; the separate Scope preflight
-only validates supplied coverage and exact contract identity.
+validates supplied coverage and exact contract identity. The separate structure
+scanner adds completed-pattern/confirmation diagnostics without execution authority.
 
 Swing retains completed higher-timeframe bars, exact contract locking, next actual
 exchange session, catalyst/earnings clearance, chase and invalidation geometry.

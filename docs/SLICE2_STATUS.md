@@ -1,5 +1,58 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 Scope completed structure and confirmation: 2026-10-13 UTC
+
+The pure `app.options.scope_structure` scanner now evaluates all nine pinned
+price-derived Scope modules in both CALL and PUT directions. It reruns exact
+preflight, binds technical/confirmation attestations to supplied histories,
+requires at least five completed SPX bars and complete volume-backed VWAP,
+computes SPY/QQQ directional confirmation, and checks the supplied SPXW strike
+against the second structural objective. Missing or mismatched evidence blocks;
+confirmation cannot create a missing SPX pattern or substitute another contract.
+
+Failed-break reversal remains blocked on its initial neutral close and requires
+a separate completed follow-through bar. Trap reversal retains that same local
+sequence. This is not a durable account play-state transition. Consumed objectives,
+invalid geometry, unavailable SPX volume and unrepresentable derived values block.
+No source score/probability, quantity, account, order or trading authority is added.
+Existing independent accounts and every entry/management cost path are unchanged.
+
+Pre-edit branch head was `1cf3affc72fd1033e5a5c6d1f7e6635399d10f8b`, tree
+`f67929eb134eb059a85aee223b6167fa5a7eef76`. Fresh GitHub reads confirmed main
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, with PR #1 open/draft.
+The nine structural modules and confirmation/reachability formulas were re-read
+from the already approved SignalFlow commit
+`f9eaf2c1b5d13dca287ee7138126883065b00395`.
+
+Verification:
+
+- **429 passed in 37.80s** from the final noneditable installed wheel, outside
+  source, isolated Python, warnings as errors. Five suites cover 56 new structure
+  cases, 107 preflight cases and existing option admission, Degen and shared-engine
+  regressions. No failed test was waived. Initial source checks passed 50 cases;
+  final source checks passed 56 after additional negative geometry/path cases.
+- Both directions of all nine patterns, exact SPY/QQQ confirmation/conflict
+  boundaries, exact/on-or-beyond strike reachability, neutral/fresh sequencing,
+  consumed objectives, flat/no-pattern structure, changed contract right,
+  nonpositive risk and numeric bounds are covered.
+- Payload mismatch, changed history, not-yet-known attestations, absent/partial
+  volume, too few completed bars and preflight failures produce explicit blockers.
+  Tests verify immutable input bytes, full policy identity, fixed Decimal context
+  and no file/socket/SQLite work during scanning.
+- Installed module, wheel and source bytes match, as does the copied test input.
+  Scoped lint/format, dependency and whitespace checks pass; 124 checked local
+  documentation links resolve.
+- Final wheel SHA-256:
+  `f226702bf6f86393ea873658493b876241308671e49127dc27b95ae946764006`.
+
+See [source of truth v1.28](SOURCE_OF_TRUTH.md) and the
+[Scope structure contract](OPTIONS_SCOPE_STRUCTURE.md). Six context-derived
+modules, context-risk semantics, durable play/loss/cooldown state, common-owner
+admission/management, Scope runtime/replay and authentic required data remain open.
+These diagnostics do not close Scope M7, provider, host, prospective economic or
+LIVE gates. No dependency, provider/model/broker call, host or deployment changed.
+Main is untouched, PR #1 draft, LIVE disabled and the deployed experiment frozen.
+
 ## P7 Scope exact-contract evidence preflight: 2026-10-13 UTC
 
 The pure `app.options.scope` preflight now validates the nine required Scope

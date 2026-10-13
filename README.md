@@ -50,6 +50,9 @@ separately generated full-cost report to its population and stored audit prefix,
 with net-equity/SPY/cash charts and explicit incomplete paths.
 [Scope evidence preflight](docs/OPTIONS_SCOPE_PREFLIGHT.md) now checks required
 coverage and exact SPXW identity without granting setup or trade authority.
+[Scope completed structure](docs/OPTIONS_SCOPE_STRUCTURE.md) adds nine price-derived
+patterns, SPY/QQQ confirmation and exact-strike reachability diagnostics; Scope
+trade admission and runtime enrollment remain open.
 Authentic provider, host and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.
