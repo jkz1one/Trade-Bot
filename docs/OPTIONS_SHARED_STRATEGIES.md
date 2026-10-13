@@ -116,6 +116,10 @@ remain separate P7 work. The first next-session family shares Degen's current
 intraday management context; it does not claim an implemented overnight Swing
 management model or replicated SignalFlow economics.
 
+The separate [Scope preflight](OPTIONS_SCOPE_PREFLIGHT.md) now checks required
+coverage and exact SPXW identity. It does not enroll Scope in this shared owner,
+change the existing candidate universe or implement Scope setup/management.
+
 The reference is the already pinned SignalFlow
 [`swing_entry_selection.py`](https://github.com/jkz1one/SignalFlow/blob/f9eaf2c1b5d13dca287ee7138126883065b00395/backend/platform/swing_entry_selection.py),
 blob `07530bd70832835389f683a6cac49aea5982d3a2`, re-read for this implementation.

@@ -1,5 +1,62 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 Scope exact-contract evidence preflight: 2026-10-13 UTC
+
+The pure `app.options.scope` preflight now validates the nine required Scope
+coverage attestations, completed SPX/SPY/QQQ histories and one exact same-day
+SPXW metadata/quote pair. Every missing, duplicate, unbound, incomplete, delayed,
+stale, future or inconsistent input retains a subject-specific blocker. Explicit
+index-session boundaries and the contract's last-trading time must permit the
+supplied protection cutoff. No SPY, AM-settled SPX or different-expiry fallback
+exists. Frozen source/age/lag/skew/spread settings have no provider-derived defaults.
+
+A complete result only means supplied coverage is complete for setup review.
+It does not evaluate evidence-payload semantics, confirmation agreement, setup
+geometry or risk. Payload hashes bind references; they do not authenticate the
+provider or load/validate external content. Results bind the whole input/policy
+and always carry false authority/LIVE flags. There is no account, model, order,
+I/O, new execution owner or change to Degen/Swing enrollment and costs.
+
+Pre-edit branch head was `581a83c0df75905dcc9910769ee24441ba5cbfbe`, tree
+`597aa3ff379fb8e543a325c66a7c748155921be4`. Fresh GitHub reads confirmed main
+`b5359aaf396e692d2142d7e02908f1544e045ee6` and PR #1 open/draft.
+The approved SignalFlow V2 playbook, policy and implementation were re-read at
+`f9eaf2c1b5d13dca287ee7138126883065b00395`; this is an implementation step,
+not a new strategy/source comparison.
+
+Verification:
+
+- **373 passed in 37.28s** on the final noneditable installed package, outside
+  source, warnings as errors. The four suites cover 107 new Scope cases, existing
+  options admission, Degen and shared Degen/Swing execution.
+- Initial installed invocation stopped at collection because isolated Python
+  excluded the copied test package's parent. The final command explicitly adds
+  only that external proof directory to pytest's path. No application/test logic
+  was changed to resolve the harness error. Earlier source-only proof passed
+  97 cases before ten additional metadata/history/session cases were added.
+- Rejections cover every missing/duplicate evidence group, missing/duplicate or
+  gapped/future/interpolated histories, metadata/quote capability and freshness,
+  wrong root/underlying/settlement/deliverable/expiry, changed provider mapping,
+  expired/premature last-trading cutoff, crossed/unsized/off-tick/wide markets,
+  synchronization, naive/future clocks and unsafe copied models. CALL/PUT and
+  supplied shortened-session fixtures pass without importing a Degen delta band.
+- Coverage results preserve input bytes, bind changed payload/policy hashes,
+  remain stable under a changed global Decimal precision and perform no file,
+  socket or SQLite connection work. Supplied session fixtures do not claim actual
+  calendar/provider acceptance.
+- Installed module, wheel and local source bytes match; the copied test input
+  matches. Scoped lint/format, dependency and whitespace checks pass; all 125
+  checked local links resolve.
+- Wheel SHA-256:
+  `5f225e81edafbfdcaab0b637d98ec59758445df6aad944a4a687e4ef4ea65fd8`.
+
+See [source of truth v1.27](SOURCE_OF_TRUTH.md) and the
+[Scope preflight contract](OPTIONS_SCOPE_PREFLIGHT.md). Authentic SPX/SPXW and
+other required data, semantic setup/confirmation evaluators, shared-owner
+integration, management, replay/export and all-cost prospective evidence remain
+open. No provider/model/broker call, dependency, host or deployment changed.
+Main stays untouched, PR #1 draft, LIVE disabled and the deployed experiment frozen.
+
 ## P4 historical full-cost dashboard comparison: 2026-10-13 UTC
 
 The stored options observer now accepts an explicitly materialized historical

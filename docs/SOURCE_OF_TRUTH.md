@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.26. Adopted product direction and working delivery contract, 2026-10-13 UTC.
+Version 1.27. Adopted product direction and working delivery contract, 2026-10-13 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -36,6 +36,9 @@ remains open; historical reports do not complete current marks or prove profitab
 [Installed-file identity](OPTIONS_LOCAL_RUNTIME.md#installed-release-identity) is
 now recorded per runtime generation and displayed from stored evidence. File
 consistency and installer metadata do not grant release approval or prove liveness.
+[Scope evidence preflight](OPTIONS_SCOPE_PREFLIGHT.md) now checks all nine required
+evidence groups, SPX/SPY/QQQ completed coverage and exact 0DTE SPXW identity.
+It grants no setup, account or order authority; Scope execution remains open.
 Authentic collection/coverage and prospective economic evidence remain open.
 Report capabilities and gates, not completion percentages.
 
@@ -180,8 +183,9 @@ Freeze both cadences in the new cohort. Do not change the old 15-minute schedule
 The October 12 clarification reinforces one shared engine and AI selection boundary
 for Degen and Swing. The new opt-in shared PAPER slice now implements that boundary
 with one ledger/order reservation/model budget, preserving separate research accounts.
-Family-specific evidence and holding rules remain explicit. Scope and mixed
-stock/options ownership are still unimplemented.
+Family-specific evidence and holding rules remain explicit. Scope execution and mixed
+stock/options ownership are still unimplemented; the separate Scope preflight
+only validates supplied coverage and exact contract identity.
 
 Swing retains completed higher-timeframe bars, exact contract locking, next actual
 exchange session, catalyst/earnings clearance, chase and invalidation geometry.

@@ -48,6 +48,8 @@ through independent A/B/C/D accounts with frozen tapes and all entry/management 
 [Historical dashboard comparison](docs/OPTIONS_COMPARISON_VIEW.md) now links a
 separately generated full-cost report to its population and stored audit prefix,
 with net-equity/SPY/cash charts and explicit incomplete paths.
+[Scope evidence preflight](docs/OPTIONS_SCOPE_PREFLIGHT.md) now checks required
+coverage and exact SPXW identity without granting setup or trade authority.
 Authentic provider, host and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.
