@@ -1,5 +1,63 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 Scope watch neutral reset and direction control: 2026-10-13 UTC
+
+New explicitly frozen watch cohorts can now enroll `ScopeDirectionResetPolicy`.
+The optional field is omitted for older policies, preserving their serialization
+and fail-closed direction behavior. Existing populations cannot enable it on
+reopen. This adapts the already pinned Scope requirement to invalidate, return to
+neutral and receive fresh reversal confirmation before an opposing called play.
+
+A separate `neutralize` transaction requires the latest invalidated unfilled play,
+no active watch, unchanged identity/history and fresh structure evidence completed
+after invalidation was processed. It stores a neutral software state and evidence;
+it does not infer a neutral price zone or overwrite the original classification,
+geometry, call count or account loss controls. Exact retries, stale revisions,
+transaction rollback and restart follow the same journal/restore protections.
+
+An opposing call then requires the current full context scan to detect a REVERSAL,
+at least the frozen ten-minute cooldown measured from the actual neutral record,
+and at least two complete SPX bars that began after that record. Bars already in
+progress do not count. The frozen policy may require a longer cooldown or more
+bars. Waiting, a new continuation or old bars cannot substitute for a reversal.
+Daily limits and current global owner readiness remain binding. Neutral cleanup
+can run while halted; a new call cannot bypass the halt.
+
+Pre-edit fresh GitHub head was `7b7a975c351995c5d7095e19a1de0956478579b4`, tree
+`39e26d5409cde2c2ec51ca97157bf26775d68fb7`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, and PR #1 is open/draft.
+
+Verification:
+
+- **629 passed in 93.90s** from the final noneditable installed wheel, outside
+  source, isolated Python and copied tests, warnings as errors. Nine suites cover
+  direction/watch, all earlier Scope diagnostics, options execution/admission,
+  Degen and shared Degen/Swing strategies. No failed test was waived.
+- The final source direction/watch group passed **75 tests in 6.41s** (24 new
+  direction cases plus the existing 51 watch cases). An earlier expanded run had
+  67 passes and one boundary-fixture failure: its evaluation time preceded its
+  own evidence receipt. The corrected fixture tests one second before cooldown
+  and the exact boundary using already-known evidence; no application gate was
+  weakened and the final installed group covers this correction.
+- Tests cover both directions, neutral persistence, no immediate/pre-reset flip,
+  reversal-class enforcement, exact cooldown boundaries, larger confirmation
+  requirements, locked history/identity, stale data/revision rejection, transaction
+  rollback, halted cleanup versus call rejection and unchanged old-cohort policy.
+- Installed module, wheel and source bytes match, as do the copied Scope tests.
+  Scoped lint/format, dependency, whitespace and local documentation links pass.
+- Wheel SHA-256:
+  `f0a1850d6242bd1dd3a600c06d733e917e2d6900d94bbf41631205caba6dec5f`.
+
+See [source of truth v1.31](SOURCE_OF_TRUTH.md) and the
+[watch and direction-reset contract](OPTIONS_SCOPE_WATCHES.md). This is unfilled
+research state, not order authority or filled-position management. Native full-cost
+loss/cooldown attribution and reviewed family reset, quality/arming hold/obstruction
+policy, common-owner Scope admission/management/runtime/replay, stored observer
+projection and authentic provider/calendar acceptance remain open. No entry or
+management cost is dropped or replaced with inferred watch P&L. Independent accounts
+remain separate. No market/model/broker call, dependency, host or deployment changed.
+Main untouched, PR #1 draft, LIVE disabled, deployed experiment frozen.
+
 ## P7 durable unfilled Scope watches: 2026-10-13 UTC
 
 `app.options.scope_watch.ScopeWatchBook` now records called research plays in the

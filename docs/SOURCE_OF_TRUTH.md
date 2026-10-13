@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.30. Adopted product direction and working delivery contract, 2026-10-13 UTC.
+Version 1.31. Adopted product direction and working delivery contract, 2026-10-13 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -45,7 +45,8 @@ patterns, explicit SPY/QQQ directional confirmation and exact-strike reachabilit
 variants and bound flow/news/event/expected-move risk checks. These remain
 diagnostics. [Durable unfilled watches](OPTIONS_SCOPE_WATCHES.md) now retain called-play
 counts, locked evidence and deterministic invalidation/expiry in the existing
-journal. Neutral/flip state, native full-cost loss/cooldown linkage, quality/obstruction
+journal. New frozen watch cohorts can now record a distinct neutral reset and
+require cooldown plus fresh post-reset reversal bars. Native full-cost loss/cooldown linkage, quality/obstruction
 policy and common-owner admission/management are required before Scope execution.
 Authentic collection/coverage and prospective economic evidence remain open.
 Report capabilities and gates, not completion percentages.

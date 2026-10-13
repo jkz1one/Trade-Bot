@@ -53,10 +53,42 @@ retain the exact session and all previously reviewed bars, and use a strictly
 later completed bar than every previous watch's reviewed endpoint. Correlated
 variants cannot repeatedly reuse an already reviewed bar as new opportunities.
 
-Opposite-direction calls within the session are explicitly blocked with
-`SCOPE_WATCH_DIRECTION_RESET_NOT_IMPLEMENTED`. This conservative boundary does
-**not** claim to implement the settled neutral/reset, fresh reversal confirmation
-or flip cooldown. Those remain part of the next durable play-state work.
+Without explicit `direction_reset` enrollment, opposite-direction calls retain
+`SCOPE_WATCH_DIRECTION_RESET_NOT_IMPLEMENTED`. Omitting this optional policy keeps
+the original serialized policy and behavior. Existing populations cannot enable
+it on reopen; it belongs to a new frozen research cohort.
+
+## Optional durable direction reset
+
+`ScopeDirectionResetPolicy` requires explicit `cooldown_seconds` (600–3600) and
+`confirmation_bars` (2–5). These preserve the pinned ten-minute/two-bar source
+baselines as minimums. The cooldown starts when neutral is actually recorded,
+not at a backdated price crossing. This is a conservative unfilled-watch adaptation;
+source quality/arming hold rules and filled-position loss controls remain separate.
+
+After `INVALIDATED_UNFILLED`, `neutralize(key, play_key, frame,
+expected_revision=..., now=...)` records a separate software state with no retained
+directional permission. Neutral does not claim a particular price zone. It requires
+no active watch, the latest play in that session, unchanged instrument/session and
+history, fresh structure coverage, and a completed bar later than the time the
+invalidation was processed. A bar already complete at invalidation cannot perform
+this step. Expired, objective-consumed or still-active watches cannot be neutralized.
+
+The neutral frame, structure scan and actual recorded time persist in the original
+record. Its invalidation classification, original geometry and called-play count
+remain intact. An exact retry returns its original receipt; a second neutral
+transition is rejected. Cleanup can record neutral while halted, but cannot clear
+the halt or grant permission for another call.
+
+An opposing call then requires the full current context review and a selected
+`REVERSAL` parent/class, elapsed cooldown, and the configured number of completed
+SPX bars **whose start is at or after the recorded neutral time**. A bar already
+underway at reset does not count. Current completed structure and SPY/QQQ
+confirmation still determine whether the reversal is detected; merely waiting or
+supplying more bars does not create one. Context variants retain the same reversal
+parent requirement. The exact cooldown boundary is allowed. Daily call limits,
+all prior history prefixes, fresh owner readiness and global controls still apply.
+No order or filled-position direction flip is enabled by this research state.
 
 ## Advancing a watch
 
@@ -107,7 +139,7 @@ expires a watch or mutates journal/authority files.
 
 ## Still required for Scope execution
 
-Durable neutral/flip confirmation, actual position linkage, full-cost native
+Filled-position direction handling, actual position linkage, full-cost native
 outcome attribution, consecutive-loss/cooldown and reviewed family-reset controls,
 quality/obstruction policy, shared-owner admission/management, runtime enrollment,
 stored dashboard integration and full-cost replay remain open. Loss controls must

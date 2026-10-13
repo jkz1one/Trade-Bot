@@ -1,7 +1,7 @@
 """Durable unfilled Scope watches. No proposal, fill, P&L or order authority."""
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Literal
 
 from pydantic import Field
@@ -19,10 +19,19 @@ from app.options.scope_context import (
 from app.options.scope_structure import ScopePattern, scan_scope_structure
 
 
+class ScopeDirectionResetPolicy(OptionRecord):
+    version: Literal["scope-watch-direction-reset-v1"] = "scope-watch-direction-reset-v1"
+    cooldown_seconds: int = Field(strict=True, ge=600, le=3600)
+    confirmation_bars: int = Field(strict=True, ge=2, le=5)
+
+
 class ScopeWatchPolicy(OptionRecord):
     version: Literal["scope-unfilled-watch-v1"] = "scope-unfilled-watch-v1"
     context: ScopeContextPolicy
     max_called_plays_per_session: int = Field(strict=True, ge=1, le=2)
+    direction_reset: ScopeDirectionResetPolicy | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
 
 class ScopeWatchChoice(OptionRecord):
@@ -219,8 +228,9 @@ class ScopeWatchBook:
                 if frame.session != before.session:
                     raise ExecutionBlocked("SCOPE_WATCH_LOCKED_SESSION_CHANGED")
                 self._history_prefix(before, frame)
-            if any(p["choice"]["right"] != choice.right for p in previous):
-                raise ExecutionBlocked("SCOPE_WATCH_DIRECTION_RESET_NOT_IMPLEMENTED")
+            for p in previous:
+                if p["choice"]["right"] != choice.right:
+                    self._review_flip(p, selected[0], frame, now)
             if any(
                 scan.structure.completed_through.isoformat() <= p["reviewed_through"]
                 for p in previous
@@ -244,6 +254,96 @@ class ScopeWatchBook:
             db.execute(
                 "INSERT INTO execution_option_scope_watches VALUES(?,?,1,?)",
                 (key, session, json.dumps(record, sort_keys=True)),
+            )
+            return self._finish(db, action, digest, record, now)
+
+    def _review_flip(self, previous, selected, frame, now):
+        policy = self.policy.direction_reset
+        if policy is None:
+            raise ExecutionBlocked("SCOPE_WATCH_DIRECTION_RESET_NOT_IMPLEMENTED")
+        neutral = previous.get("neutral_reset")
+        if neutral is None:
+            raise ExecutionBlocked("SCOPE_WATCH_NEUTRAL_RESET_REQUIRED")
+        at = datetime.fromisoformat(neutral["recorded_at"])
+        if now < at + timedelta(seconds=policy.cooldown_seconds):
+            raise ExecutionBlocked("SCOPE_WATCH_DIRECTION_COOLDOWN")
+        if selected.strategy_class != "REVERSAL":
+            raise ExecutionBlocked("SCOPE_WATCH_FRESH_REVERSAL_REQUIRED")
+        bars = next(h.bars for h in frame.histories if h.symbol == "SPX")
+        if len([b for b in bars if b.begins_at >= at]) < policy.confirmation_bars:
+            raise ExecutionBlocked("SCOPE_WATCH_POST_RESET_BARS_REQUIRED")
+
+    def neutralize(self, key, play_key, frame, *, expected_revision, now):
+        """Record a distinct neutral state after an observed unfilled invalidation.
+
+        Neutral is a software direction state, not an inferred neutral price zone.
+        It neither refunds a call nor changes the original terminal classification.
+        """
+        now = clock(now)
+        action = _Action(key=key, expected_revision=expected_revision)
+        play_key = _Action(key=play_key, expected_revision=0).key
+        frame = ScopePreflightInput.model_validate(frame.model_dump(warnings=False))
+        request = {
+            "kind": "NEUTRALIZE",
+            "action": action,
+            "play_key": play_key,
+            "frame": frame,
+            "now": now,
+        }
+        with self.engine.journal.write() as db:
+            digest, prior = self._begin(db, action, request, now)
+            if prior is not None:
+                return prior
+            if self.policy.direction_reset is None:
+                raise ExecutionBlocked("SCOPE_WATCH_DIRECTION_RESET_NOT_IMPLEMENTED")
+            if db.execute(
+                "SELECT 1 FROM execution_option_scope_watches WHERE active_lock=1"
+            ).fetchone():
+                raise ExecutionBlocked("SCOPE_WATCH_ALREADY_ACTIVE")
+            row = db.execute(
+                "SELECT record_json FROM execution_option_scope_watches WHERE play_key=?",
+                (play_key,),
+            ).fetchone()
+            if row is None:
+                raise ExecutionBlocked("SCOPE_WATCH_INVALIDATED_PLAY_REQUIRED")
+            record = json.loads(row[0])
+            if (
+                record["status"] != "INVALIDATED_UNFILLED"
+                or record.get("neutral_reset") is not None
+            ):
+                raise ExecutionBlocked("SCOPE_WATCH_INVALIDATED_PLAY_REQUIRED")
+            if any(
+                json.loads(r[0])["called_at"] > record["called_at"]
+                for r in db.execute(
+                    "SELECT record_json FROM execution_option_scope_watches WHERE session_date=?",
+                    (record["session_date"],),
+                )
+            ):
+                raise ExecutionBlocked("SCOPE_WATCH_LATEST_PLAY_REQUIRED")
+            old = ScopePreflightInput.model_validate(record["reviewed_frame"])
+            if (
+                frame.session != old.session
+                or frame.metadata is None
+                or frame.metadata.instrument != old.metadata.instrument
+            ):
+                raise ExecutionBlocked("SCOPE_WATCH_LOCKED_IDENTITY_CHANGED")
+            scan = scan_scope_structure(frame, self.policy.context.structure, now=now)
+            if scan.issues:
+                raise ExecutionBlocked("SCOPE_WATCH_REVIEW_COVERAGE_BLOCKED")
+            self._history_prefix(old, frame)
+            # A bar already complete when invalidation was processed cannot be a reset.
+            if scan.completed_through <= datetime.fromisoformat(record["terminal_at"]):
+                raise ExecutionBlocked("SCOPE_WATCH_FRESH_COMPLETED_BAR_REQUIRED")
+            record["neutral_reset"] = {
+                "recorded_at": now.isoformat(),
+                "frame": frame.model_dump(mode="json"),
+                "scan": scan.model_dump(mode="json"),
+            }
+            record["reviewed_frame"] = frame.model_dump(mode="json")
+            record["reviewed_through"] = scan.completed_through.isoformat()
+            db.execute(
+                "UPDATE execution_option_scope_watches SET record_json=? WHERE play_key=?",
+                (json.dumps(record, sort_keys=True), play_key),
             )
             return self._finish(db, action, digest, record, now)
 
