@@ -10,6 +10,8 @@ to authenticated collection or continuous options PAPER operation.
 
 `app.options.market_tape.TapeHeader` freezes one complete XNYS session, experiment
 ID, declared enrollment time, limits, Degen setup and contract selection policy.
+An optional `swing` policy explicitly enrolls the
+[shared Degen/Swing universe](OPTIONS_SHARED_REPLAY.md); absence preserves old hashes.
 `TapeRecorder(path, header)` creates a new mode-0600 file in an existing owned
 mode-0700 directory. It never replaces a file, changes an existing directory's
 permissions, reopens a prior capture or resumes an interrupted recording.

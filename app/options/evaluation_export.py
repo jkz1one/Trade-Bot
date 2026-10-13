@@ -131,6 +131,7 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
             strategy_hash(strategy) != definition.strategy_hash
             or strategy["setup"] != h.setup.model_dump(mode="json")
             or strategy["selection"] != h.selection.model_dump(mode="json")
+            or strategy.get("swing") != (h.swing.model_dump(mode="json") if h.swing else None)
             or ("model" in strategy) != (definition.arm != "A")
             or ("entry_model" in strategy) != (definition.arm in {"C", "D"})
             or ("position_model" in strategy) != (definition.arm == "D")
@@ -539,4 +540,11 @@ def export_series(manifest, tapes, sources, *, underlying_settlements=()):
     )
     if len(bundle.model_dump_json().encode()) > MAX_BUNDLE_BYTES:
         raise ValueError("Native export capacity exceeded")
-    return {"bundle": bundle, "source_proof": proofs, "report": evaluate(bundle, tapes=tapes)}
+    result = {"bundle": bundle, "source_proof": proofs, "report": evaluate(bundle, tapes=tapes)}
+    if tapes and tapes[0].header.swing is not None:
+        result["strategy_universe"] = {
+            "families": ["DEGEN", "SWING"],
+            "swing_policy_hash": fingerprint(tapes[0].header.swing),
+            "holding_policy": tapes[0].header.swing.holding_policy,
+        }
+    return result

@@ -344,6 +344,7 @@ async def run_replay_series(settings, tapes, directory):
             != h.limits.model_dump(exclude={"population_id", "account_id"})
             or h.setup != header.setup
             or h.selection != header.selection
+            or h.swing != header.swing
         ):
             raise ValueError("Matched frozen series and common market configuration required")
     receipts = settings.settlements
@@ -416,6 +417,7 @@ async def run_replay_series(settings, tapes, directory):
                 judgment_limits=settings.judgment_limits if model else None,
                 entry_policy=settings.entry_policy if arm in {"C", "D"} else None,
                 position_policy=settings.position_policy if arm == "D" else None,
+                swing_policy=header.swing,
             )
             definitions.append(
                 definition.model_copy(

@@ -43,6 +43,8 @@ is now recorded at each runtime start and shown from stored evidence in the obse
 a newly enrolled PAPER population use one AI, cash ledger and execution owner.
 The first Swing family uses locked next-session daily structure with current
 catalyst/chase checks and session-close protection; overnight Swing remains open.
+[Shared-family replay/export](docs/OPTIONS_SHARED_REPLAY.md) now runs that universe
+through independent A/B/C/D accounts with frozen tapes and all entry/management costs.
 Authentic provider, host and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.

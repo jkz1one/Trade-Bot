@@ -82,8 +82,9 @@ family filtering never performs market/model/order work or removes common costs.
 
 Only a new population may enable or change `swing_policy`. Existing frozen Degen
 settings and frames omit the optional fields, preserving their serialized hashes.
-Existing A/B/C/D replay cohorts are unchanged; joint-family replay enrollment is
-not implemented and is explicitly rejected rather than silently changing a cohort.
+Existing A/B/C/D replay cohorts are unchanged. New optional
+[joint-family replay enrollment](OPTIONS_SHARED_REPLAY.md) freezes Swing policy in
+the common tape and compares independent accounts without changing old cohorts.
 
 [options-local-runtime-shared.json](../examples/options-local-runtime-shared.json)
 is a model-off configuration example with explicit fixture values. Replace paths,

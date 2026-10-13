@@ -15,6 +15,7 @@ from app.options.engine import clock, fingerprint
 from app.options.entry_reasoning import Digest
 from app.options.models import Name, OptionLimits, OptionRecord
 from app.options.selection import ContractSelectionPolicy, plan_contract_reads
+from app.options.swing import SwingPolicy, plan_swing_reads, scan_swing, seed_issues
 from app.robinhood.schedule import XNYSCalendar
 
 MAX_TAPE_BYTES = 32 * 1024 * 1024
@@ -33,6 +34,7 @@ class TapeHeader(OptionRecord):
     limits: OptionLimits
     setup: DegenPolicy
     selection: ContractSelectionPolicy
+    swing: SwingPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
 
     @model_validator(mode="after")
     def coherent(self):
@@ -43,7 +45,9 @@ class TapeHeader(OptionRecord):
             != (window.session_date, window.opens_at, window.closes_at)
             or self.declared_at >= self.opens_at
             or not set(self.setup.symbols) <= set(self.limits.allowed_underlyings)
-            or self.selection.max_quote_contracts * len(self.setup.symbols) > 8
+            or (self.selection.max_quote_contracts + (1 if self.swing else 0))
+            * len(self.setup.symbols)
+            > 8
         ):
             raise ValueError("Frozen complete session and bounded universe required")
         return self
@@ -73,8 +77,32 @@ def _validate_event(header, event):
         raise ValueError("Observation outside recorded session")
     if event.kind == "CYCLE" and at >= header.closes_at:
         raise ValueError("Cycle outside regular session")
-    if event.kind == "MARKET" and (frame.histories or frame.inventories):
+    if event.kind == "MARKET" and (frame.histories or frame.inventories or frame.swing):
         raise ValueError("Market updates contain quotes only")
+    if frame.swing and header.swing is None:
+        raise ValueError("Swing evidence requires frozen shared-family enrollment")
+    if len({s.seed.history.symbol for s in frame.swing}) != len(frame.swing):
+        raise ValueError("Duplicate Swing seed identity")
+    for item in frame.swing:
+        seed, history = item.seed, item.seed.history
+        if (
+            history.symbol not in header.setup.symbols
+            or seed.instrument.contract.underlying != history.symbol
+            or item.metadata.instrument != seed.instrument
+            or item.catalyst.symbol != history.symbol
+            or seed.created_at > at
+            or not history.received_at <= seed.created_at
+        ):
+            raise ValueError("Foreign or unavailable Swing identity")
+        for evidence, source in (
+            (history, header.swing.history_source),
+            (item.metadata, header.selection.metadata_source),
+            (item.catalyst, header.swing.catalyst_source),
+        ):
+            if evidence.source != source or not evidence.source_at <= evidence.received_at <= at:
+                raise ValueError("Foreign or unavailable Swing evidence")
+        if any(b.closes_at > min(history.source_at, history.received_at) for b in history.bars):
+            raise ValueError("Only completed recorded daily bars are replayable")
     groups = (
         (frame.histories, lambda x: x.symbol, header.setup.history_source),
         (frame.inventories, lambda x: x.symbol, header.selection.metadata_source),
@@ -331,6 +359,15 @@ def replay_shortlist(tape, cycle_key, *, as_of):
                 scan, inventories[symbol], h.selection, h.limits, now=event.recorded_at
             )
         )
+    if h.swing is not None:
+        added_scans, added_plans, blockers = _replay_swing(tape, event, histories, scans)
+        missing.extend(blockers)
+        if h.swing.family_priority[0] == "SWING":
+            scans, plans = added_scans + scans, added_plans + plans
+        else:
+            scans, plans = scans + added_scans, plans + added_plans
+        if blockers:
+            plans = []
     return {
         "cycle_key": cycle_key,
         "frame_hash": fingerprint(event.frame),
@@ -341,6 +378,50 @@ def replay_shortlist(tape, cycle_key, *, as_of):
         "execution_authority": False,
         "live_enabled": False,
     }
+
+
+def _replay_swing(tape, event, histories, scans):
+    """Rebuild first-valid locks only from the visible cycle prefix, without an owner."""
+    h, calendar = tape.header, XNYSCalendar()
+    locks = {}
+    for previous in tape.events:
+        if previous.sequence > event.sequence:
+            break
+        for item in previous.frame.swing:
+            seed = item.seed
+            if not seed_issues(seed, h.swing, calendar, h.setup.symbols):
+                locks.setdefault((seed.target_session, seed.history.symbol), fingerprint(seed))
+    items = {s.seed.history.symbol: s for s in event.frame.swing}
+    added_scans, added_plans, missing = [], [], []
+    for intraday in scans:
+        item = items.get(intraday.symbol)
+        if item is None:
+            missing.append(intraday.symbol + ":EXACT_SWING_SEED_COVERAGE_REQUIRED")
+            continue
+        seed = item.seed
+        locked = locks.get((seed.target_session, seed.history.symbol))
+        if locked is not None and locked != fingerprint(seed):
+            missing.append(intraday.symbol + ":SWING_SEED_LOCK_CONFLICT")
+            continue
+        scan = scan_swing(
+            item,
+            h.swing,
+            intraday,
+            histories[intraday.symbol],
+            calendar,
+            h.setup.symbols,
+            now=event.recorded_at,
+            receive_lag=h.limits.max_receive_lag_seconds,
+        )
+        added_scans.append(scan)
+        added_plans.append(
+            plan_swing_reads(scan, item, h.selection, h.limits, now=event.recorded_at)
+        )
+    # The joint native cycle also blocks Degen planning on missing/conflicting locks.
+    # Retain scans as diagnostics, but never present a usable partial-family plan.
+    if missing:
+        return added_scans, [], missing
+    return added_scans, added_plans, missing
 
 
 def validate_tape_series(values):

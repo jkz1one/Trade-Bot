@@ -14,13 +14,13 @@ from app.execution.judgment import JudgmentDiagnostics
 from app.execution.judgment_worker import _decision_text, _watch
 from app.options.engine import fingerprint
 from app.options.judgment import (
-    INSTRUCTIONS,
     MAX_REQUEST_BYTES,
     MAX_RESPONSE_BYTES,
-    PROMPT_VERSION,
     CandidateChoice,
     CandidateRequest,
+    SharedCandidatePacket,
     hold,
+    prompt,
     request_content,
     result_for,
 )
@@ -58,12 +58,13 @@ def perform(request, client):
         )
 
     try:
+        version, instructions = prompt(isinstance(request.packet, SharedCandidatePacket))
         expected = {
             "policy": "option-candidate-responses-v1",
             "model": request.model,
             "limits": request.limits.model_dump(mode="json"),
-            "prompt_version": PROMPT_VERSION,
-            "prompt_hash": fingerprint(INSTRUCTIONS),
+            "prompt_version": version,
+            "prompt_hash": fingerprint(instructions),
             "schema_hash": fingerprint(AgentOutputSchema(CandidateChoice).json_schema()),
         }
         if any(request.configuration.get(k) != v for k, v in expected.items()):

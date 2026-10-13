@@ -1,5 +1,71 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 shared-family native replay/export: 2026-10-13 UTC
+
+New optional `TapeHeader.swing` enrollment now drives the existing independent
+A/B/C or A/B/C/D owners through the common Degen/Swing candidate universe. The
+tape freezes the Swing policy alongside Degen setup/selection, enforces exact
+daily/seed/catalyst/metadata identities and recording clocks, and includes both
+families in the quote bound. The read-only shortlist uses only its available
+prefix, retains first-valid supplied seed locks and reports missing/conflicting
+coverage. Native accounts retain their own actual locks and account gates.
+
+B's new scripted comparison uses an explicit shared SELECT/HOLD packet/prompt;
+C/D retain full-entry reasoning, with D's identical entry script plus management.
+Normal shared runtime eligibility still requires full-entry AI or model-off.
+Old Degen packets, headers and configuration hashes are unchanged. Each owner
+retains cash, settled funds, fees, entry/management costs, halts and audit history
+across sessions. Export binds the native Swing policy to the tape and labels the
+joint session-close universe without inventing standalone family returns.
+
+Pre-edit GitHub head was `018471bf1acb69c28de4614b0e7471424ac0e11b`, tree
+`edd736fc8ce0c01ef5d4cad61b4ce75d93a2e812`. Main was
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 was open/draft.
+
+Verification:
+
+- Final noneditable installed build, outside source and warnings as errors:
+  **229 passed, 1 failed in 589.90s (0:09:49)** across shared replay, market tape,
+  narrow judgment/native worker, shared strategies and entry reasoning.
+  The failure was a test expecting four distinct provider account labels. Legacy
+  fixtures deliberately reuse a label across independent populations. The corrected
+  test checks unique population ledgers and native order IDs. Its full two-session
+  cost/continuity/isolation assertions then passed on the retained completed
+  final-wheel native run; the six-minute replay was not repeated for this assertion
+  correction. This is not reported as an all-passing 230-case pytest run.
+- The final native run completed two full XNYS sessions for all four accounts,
+  156 cycle slots per account, Swing entries/exits in both sessions, and D entry
+  plus management receipts/filled-exit attribution. Every model role, venue fee,
+  data and host allocation is retained. Both sessions report COMPLETE_ARITHMETIC;
+  the economic conclusion remains INCONCLUSIVE. No virtual funds reset or inferred
+  settlement was introduced. Separate unknown-cost replay leaves B halted while
+  A/C/D continue independently.
+- Installed isolated export CLI exited 0 from detached boundary copies. Its bundle,
+  report and shared-universe metadata exactly match the final native replay output.
+- Before the final packet validator/metadata addition, compatibility ran
+  **210 passed, 1 failed in 106.72s**. The existing process-kill case missed its
+  ten-second startup deadline during concurrent replay. Its final-wheel recheck
+  passed **1 case in 17.98s**, unchanged deadline, and the final group above also
+  passed it. Results overlap and are not summed.
+- Initial new replay run: **15 passed, 2 failed in 372.18s**. Early full-session
+  fixture slots omitted required Swing evidence, correctly halting all accounts
+  before entry. The corrected fixture supplies point-in-time seed/metadata/catalyst
+  inputs at each cycle; the final run above contains actual trades.
+- Pure tape/shortlist checks passed 14 cases, including future/foreign/duplicate
+  evidence, incomplete daily bars, quote capacity and immutable prefix locks.
+  Scoped Ruff lint/format, dependency and whitespace checks pass. All six changed
+  application files match the final installed wheel. Legacy header/frame/selector
+  configuration serialization matches the preceding installed code exactly.
+- Final wheel SHA-256: `fdfc1cf9c2b7375d7c15b532a06ce4e271affe03e6d9ef474f27fb56f6284bab`.
+  Initial build: `a6b02f78eb1bd8bea92ef80e6909cb0558fd3532d65654fd8d429462fa62dd39`.
+
+See [source of truth v1.25](SOURCE_OF_TRUTH.md) and the
+[shared replay contract](OPTIONS_SHARED_REPLAY.md). Overnight Swing, additional
+families, Scope/SPXW, mixed ownership, authentic provider/model evidence,
+prospective economics, host acceptance and dashboard visual acceptance remain open.
+No provider/model call, broker write, dependency, host or deployment change.
+LIVE remains disabled, main untouched and the deployed experiment frozen.
+
 ## P4 installed-file release identity: 2026-10-12 UTC
 
 Each new local options runtime generation now stores its own bounded installed-file

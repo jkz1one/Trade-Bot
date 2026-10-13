@@ -75,7 +75,7 @@ class DegenCoordinator:
             else None
         )
         if self.swing_policy is not None and (
-            replay_model is not None or (judgment_limits is not None and entry_policy is None)
+            replay_model is None and judgment_limits is not None and entry_policy is None
         ):
             raise ValueError("Shared families require native full-entry AI or model-off comparison")
         self.replay_model = replay_model
@@ -202,7 +202,9 @@ class DegenCoordinator:
         if self.judgment_limits is not None:
             config["model"] = {
                 "configuration": judgment.configuration(
-                    self.engine.policy.cost_policy, self.judgment_limits
+                    self.engine.policy.cost_policy,
+                    self.judgment_limits,
+                    shared=self.swing_policy is not None and self.entry_policy is None,
                 ),
                 "key_file": str(self.key_file),
             }
@@ -393,7 +395,10 @@ class DegenCoordinator:
         except (OSError, ValueError):
             evidence["reason"] = "PRIVATE_MODEL_KEY_UNAVAILABLE"
             return None, None, at
-        packet = judgment.CandidatePacket(
+        packet_type = (
+            judgment.SharedCandidatePacket if self.swing_policy else judgment.CandidatePacket
+        )
+        packet = packet_type(
             cycle_key=key,
             as_of=at,
             candidates=tuple(candidates),
@@ -415,7 +420,9 @@ class DegenCoordinator:
             packet=packet,
             limits=self.judgment_limits,
             configuration=judgment.configuration(
-                self.engine.policy.cost_policy, self.judgment_limits
+                self.engine.policy.cost_policy,
+                self.judgment_limits,
+                shared=self.swing_policy is not None,
             ),
             parent_pid=os.getpid(),
             deadline_monotonic=time.monotonic() + remaining,

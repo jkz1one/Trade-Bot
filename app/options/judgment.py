@@ -17,7 +17,8 @@ from app.execution.process import _cleanup
 from app.options.degen import DegenScan
 from app.options.engine import fingerprint
 from app.options.models import Name, OptionAccount, OptionLimits, OptionRecord
-from app.options.selection import DegenCandidate
+from app.options.selection import DegenCandidate, SwingCandidate
+from app.options.swing import SwingScan
 
 MAX_REQUEST_BYTES = 256 * 1024
 MAX_RESPONSE_BYTES = 128 * 1024
@@ -30,6 +31,8 @@ quantity, price, budget or approval deadline. Software owns all risk and executi
 You have no tools or broker authority. Profitability is a hypothesis, not a promise.
 Return only the supplied structured output, with a concise evidence-based thesis.
 """
+SHARED_PROMPT_VERSION = "shared-candidate-choice-v1"
+SHARED_INSTRUCTIONS = INSTRUCTIONS.replace("Degen PAPER", "Degen or Swing PAPER")
 
 
 class CandidateChoice(OptionRecord):
@@ -73,7 +76,37 @@ class CandidatePacket(OptionRecord):
         return self
 
 
-def configuration(costs, limits):
+class SharedCandidatePacket(CandidatePacket):
+    """Explicit new comparison cohort; the historical Degen packet is unchanged."""
+
+    universe: Literal["DEGEN_SWING"] = "DEGEN_SWING"
+    candidates: tuple[DegenCandidate | SwingCandidate, ...] = Field(min_length=1, max_length=24)
+    scans: tuple[DegenScan | SwingScan, ...] = Field(min_length=1, max_length=4)
+
+    @model_validator(mode="after")
+    def family_evidence(self):
+        keys = {(isinstance(s, SwingScan), s.symbol) for s in self.scans}
+        if len(keys) != len(self.scans):
+            raise ValueError("Unique shared family scans required")
+        for candidate in self.candidates:
+            swing = isinstance(candidate, SwingCandidate)
+            matches = [
+                s
+                for s in self.scans
+                if (isinstance(s, SwingScan), s.symbol) == (swing, candidate.symbol)
+            ]
+            if len(matches) != 1 or (swing and matches[0].seed.instrument != candidate.instrument):
+                raise ValueError("Exact shared candidate family evidence required")
+        return self
+
+
+def prompt(shared=False):
+    return (
+        (SHARED_PROMPT_VERSION, SHARED_INSTRUCTIONS) if shared else (PROMPT_VERSION, INSTRUCTIONS)
+    )
+
+
+def configuration(costs, limits, *, shared=False):
     with localcontext(Context(prec=192)):
         maximum = (
             limits.max_input_tokens * costs.input_per_million
@@ -81,13 +114,14 @@ def configuration(costs, limits):
         ) / 1000000
     if maximum > costs.max_call_cost:
         raise ValueError("Token ceilings exceed frozen model cost reservation")
+    version, instructions = prompt(shared)
     return {
         "policy": "option-candidate-responses-v1",
         "model": costs.model,
         "limits": limits.model_dump(mode="json"),
         "cost_policy_hash": fingerprint(costs),
-        "prompt_version": PROMPT_VERSION,
-        "prompt_hash": fingerprint(INSTRUCTIONS),
+        "prompt_version": version,
+        "prompt_hash": fingerprint(instructions),
         "schema_hash": fingerprint(AgentOutputSchema(CandidateChoice).json_schema()),
     }
 
@@ -95,7 +129,7 @@ def configuration(costs, limits):
 class CandidateRequest(OptionRecord):
     request_id: str = Field(pattern=r"^[a-f0-9]{32}$")
     model: Name
-    packet: CandidatePacket
+    packet: CandidatePacket | SharedCandidatePacket
     limits: JudgmentLimits
     configuration: dict
     parent_pid: int = Field(gt=0, strict=True)
@@ -137,7 +171,7 @@ def result_for(request, *, choice=None, usage=None, count=None, error=None, diag
 def request_content(request):
     return {
         "model": request.model,
-        "instructions": INSTRUCTIONS,
+        "instructions": prompt(isinstance(request.packet, SharedCandidatePacket))[1],
         "input": "CANDIDATE_PACKET_JSON\n" + request.packet.model_dump_json(),
         "tools": [],
         "tool_choice": "none",

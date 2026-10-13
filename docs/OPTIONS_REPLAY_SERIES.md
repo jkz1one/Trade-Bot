@@ -9,6 +9,8 @@ local fixtures. No authentic AI performance or profitability is established.
 
 The optional [arm D extension](OPTIONS_MANAGED_REPLAY.md) applies these same
 continuity rules to four independent accounts and includes management costs/attribution.
+Optional [shared Degen/Swing tapes](OPTIONS_SHARED_REPLAY.md) now apply those same
+rules to the joint session-close strategy universe, frozen identically across sessions.
 
 ## State and settlement
 
