@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.28. Adopted product direction and working delivery contract, 2026-10-13 UTC.
+Version 1.29. Adopted product direction and working delivery contract, 2026-10-13 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -41,8 +41,10 @@ evidence groups, SPX/SPY/QQQ completed coverage and exact 0DTE SPXW identity.
 It grants no setup, account or order authority; Scope execution remains open.
 [Scope completed structure](OPTIONS_SCOPE_STRUCTURE.md) now adds nine price-derived
 patterns, explicit SPY/QQQ directional confirmation and exact-strike reachability.
-These are diagnostics; context risk, durable play state and common-owner
-admission/management remain required before Scope execution.
+[Scope context review](OPTIONS_SCOPE_CONTEXT.md) now adds the six level-anchored
+variants and bound flow/news/event/expected-move risk checks. These remain
+diagnostics; durable play state, quality/obstruction policy and common-owner
+admission/management are required before Scope execution.
 Authentic collection/coverage and prospective economic evidence remain open.
 Report capabilities and gates, not completion percentages.
 

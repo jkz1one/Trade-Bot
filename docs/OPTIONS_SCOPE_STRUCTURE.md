@@ -102,10 +102,11 @@ not current executable entry prices, quantity limits or approval ceilings.
 
 ## Remaining integration
 
-Six context-derived modules remain: prior-level break/retest, prior-level rejection,
-dealer-level acceptance/rejection, implied-move boundary rejection and exhaustion
-confluence reversal. Their semantic context must be implemented alongside options
-analytics, flow, dealer, news/event risk and obstruction/quality checks.
+The separate [context review](OPTIONS_SCOPE_CONTEXT.md) now implements the six
+level-anchored variants: prior-level break/retest and rejection, dealer-level
+acceptance/rejection, implied-move boundary rejection and exhaustion confluence.
+It binds typed context payloads and checks flow/news/event/expected-move risk.
+Authentic provider semantics and obstruction/quality policy remain open.
 
 Durable called-play limits, loss/cooldown/neutral state, shared-owner arbitration,
 current-price admission, management, runtime enrollment, stored observer views,

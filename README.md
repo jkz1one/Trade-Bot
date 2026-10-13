@@ -53,6 +53,8 @@ coverage and exact SPXW identity without granting setup or trade authority.
 [Scope completed structure](docs/OPTIONS_SCOPE_STRUCTURE.md) adds nine price-derived
 patterns, SPY/QQQ confirmation and exact-strike reachability diagnostics; Scope
 trade admission and runtime enrollment remain open.
+[Scope context review](docs/OPTIONS_SCOPE_CONTEXT.md) adds the six level-anchored
+variants and bound flow/news/event/expected-move risk checks without execution authority.
 Authentic provider, host and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.

@@ -1,5 +1,58 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 Scope context variants and risk review: 2026-10-13 UTC
+
+The pure `app.options.scope_context` review now adds the six pinned level-anchored
+variants to completed Scope structure: prior-level continuation/rejection,
+dealer-level acceptance/rejection, implied-move boundary rejection and exhaustion
+confluence reversal. Each retains its exact parent geometry and matched level.
+Context cannot create an absent pattern, rescue a blocked contract/confirmation,
+or remove the failed-break neutral/reset requirement.
+
+Typed dealer, expected-move, SPX/SPXW flow, broad-market news and US macro-event
+payloads bind to their current coverage attestations with exact hash/source/clock/
+quality agreement. Explicit prior-session range and reviewed date must agree and
+be known before the current open. Unknown/expired/missing/mismatched inputs block.
+Opposing flow/news, high-impact event windows and excessive expected-move
+consumption block both original detections and every derived variant. Elevated
+risk stays an explicit quality-review note. No score, probability, quantity,
+account, model, order or execution authority is added.
+
+Pre-edit branch head was `3cec6b9042e39e19a7b00f30a46198d103b41a83`, tree
+`eddeb9508a9e86cff43eecfd33b47b220356fa12`. This continues the same pinned
+SignalFlow context/risk implementation at
+`f9eaf2c1b5d13dca287ee7138126883065b00395`, without another strategy research pass.
+
+Verification:
+
+- **490 passed in 37.08s** from the final noneditable installed wheel, outside
+  source, isolated Python, warnings as errors. Six suites cover 61 new context
+  cases, 56 structure cases, 107 preflight cases and existing option admission,
+  Degen and shared-engine regressions. No failed test was waived.
+- Source checks passed 56 initial and 61 final cases. Both directions of all six
+  context variants preserve parent geometry/level. Tests cover every missing
+  payload, wrong source/clock/entitlement/completeness, unbound modified content,
+  unknown/expired state, exact expiry/kind, prior-session chronology, directional
+  risk, exact expected-move and proximity boundaries, deterministic node ties,
+  no-pattern/pending-reset/contract rejection preservation and far/unmatched levels.
+- Full input/policy hashes, unchanged input bytes, fixed Decimal context and no
+  file/socket/SQLite work are verified. Prior-session dates and provider values
+  remain supplied fixture evidence, not authentic calendar/feed acceptance.
+- Installed module, wheel and source bytes match, as does the copied test input.
+  Scoped lint/format, dependency and whitespace checks pass; all 132 checked local
+  documentation links resolve.
+- Wheel SHA-256:
+  `bb0de2a5bad78b92991fda3326246c605d10538afb4000ae9cc2ff2c5879af20`.
+
+See [source of truth v1.29](SOURCE_OF_TRUTH.md) and the
+[Scope context contract](OPTIONS_SCOPE_CONTEXT.md). Durable play counting,
+neutral/loss/cooldown state, quality/obstruction policy, common-owner admission and
+management, Scope runtime/replay and authentic provider/calendar evidence remain
+open. Anchored variants are correlated views of a parent pattern, not independent
+trades or another bankroll. Independent research accounts and all entry/management
+cost paths remain preserved. No provider/model/broker call, dependency, host or
+deployment changed. Main untouched, PR #1 draft, LIVE disabled, experiment frozen.
+
 ## P7 Scope completed structure and confirmation: 2026-10-13 UTC
 
 The pure `app.options.scope_structure` scanner now evaluates all nine pinned

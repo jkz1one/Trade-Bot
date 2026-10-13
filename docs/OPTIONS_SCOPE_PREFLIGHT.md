@@ -84,8 +84,9 @@ no default thresholds have been selected from unobserved provider behavior.
 The separate [completed-structure scanner](OPTIONS_SCOPE_STRUCTURE.md) now adds
 nine price-derived patterns, SPY/QQQ directional confirmation, exact-strike
 reachability and local failed-break/trap bar sequencing. It remains diagnostic.
-Context-derived modules, durable neutral/play/loss/cooldown state, management and
-shared-owner admission remain open. This gate does not import source scores as probabilities or authorize
+The [context review](OPTIONS_SCOPE_CONTEXT.md) adds six anchored variants and
+bound context-risk checks. Durable neutral/play/loss/cooldown state, quality policy,
+management and shared-owner admission remain open. This gate does not import source scores as probabilities or authorize
 source premium tiers, position sizes or manual loss resets.
 
 Authentic SPX/SPXW data and entitlement, exact normalization, event/news/dealer/flow
