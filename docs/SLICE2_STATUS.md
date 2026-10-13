@@ -1,5 +1,75 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 Scope quality and known-level path review: 2026-10-13 UTC
+
+`app.options.scope_quality` now recomputes complete context and reports the pinned
+research score for all detected alternatives. Nine original base scores and six
+parent-derived variant adjustments remain explicit. Seven named components retain
+confirmation, flow, news, event risk, actual first-target reward, expected-move
+consumption and required dealer context. Score thresholds are explicit and frozen;
+classifications are not win probabilities or evidence of profitability.
+
+Blocked/watching context stays unscored. Exact Decimal geometry determines the
+minimum first-target reward check before display rounding. A consumed first
+objective blocks. Supplied dealer nodes, prior-session high/low and ATM boundaries
+are retained along the direction from the current completed close to the second
+objective. A known level before/at the first objective fails this conservative
+review. No intervening supplied level does not prove a clear path:
+`complete_path_proven` remains false, including at the convexity score threshold.
+
+The point schedule follows pinned SignalFlow
+`f9eaf2c1b5d13dca287ee7138126883065b00395`. Known-level/consumed-first-objective
+rejection is an explicitly documented conservative adaptation. The pinned source
+mentions an unobstructed path but does not implement complete directional
+obstruction coverage; this slice does not claim to supply that missing evidence.
+
+New frozen watch cohorts may explicitly include the exact matching quality policy.
+Calls recompute the selected pattern/parent/right review, reject atomically without
+consuming a call, and lock the full original quality scan on success. Omitted
+quality fields preserve old policy serialization and behavior. No old cohort is
+migrated, and the shared Degen/Swing execution path remains unchanged.
+
+Pre-edit fresh GitHub head was `b4d983e0e286f1507b222e7e2bc147547de444de`, tree
+`e85b5325a244ba4ade83970b0bed07c12e8f79bd`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 is open/draft.
+
+Verification:
+
+- **715 passed in 89.53s** on the final repeated noneditable installed-wheel run,
+  outside source, isolated Python, copied tests and warnings as errors. Ten suites
+  cover quality, direction/watch, context/structure/preflight, native options
+  execution/admission, Degen and shared Degen/Swing strategy paths.
+- The first installed group had **714 passed, 1 failed in 98.30s**: the existing
+  shared native model-worker roundtrip exceeded its five-second request deadline.
+  The unchanged isolated test passed in 7.10s total, then the unchanged full group
+  passed as above. Neither application/test code nor the deadline was relaxed.
+  This retains the timing failure as evidence; authentic host latency acceptance
+  remains open. Overlapping runs are not added together.
+- The final source quality/watch/direction group passed **161 tests in 7.50s**,
+  including 86 new quality cases. An initial quality-only run had 75 passes and one
+  fixture failure: it assumed the first objective was already consumed. The final
+  fixtures explicitly place completed price before, at and beyond that objective
+  in both directions. No application gate was weakened or failed test waived.
+- Coverage includes all nine patterns and six parent-preserving variants in both
+  directions, component arithmetic and saturation, exact threshold/half-move/2R
+  boundaries, upstream blockers/missing evidence, directional known-level endpoints,
+  prior/ATM levels, consumed objectives, exact versus displayed reward, stable
+  Decimal context, hashes, immutable inputs and absence of file/socket/SQLite work.
+  Optional watch-policy matching, locked scan storage and atomic rejection pass.
+- Installed/wheel/source modules and copied Scope tests match. Scoped lint/format,
+  dependency, whitespace and local documentation-link checks pass.
+- Wheel SHA-256:
+  `53c0dda130bdf696981a5eb12c752db15ad8c664776a0ab020a8833ddd82b97f`.
+
+See [source of truth v1.32](SOURCE_OF_TRUTH.md) and the
+[quality/path contract](OPTIONS_SCOPE_QUALITY.md). Complete obstruction coverage,
+arming hold, contract profile/admission, native filled-position linkage with every
+entry/management cost, loss/cooldown and reviewed family reset, Scope shared
+execution/runtime/replay, observer integration and authentic provider/calendar
+acceptance remain open. All research accounts and full-cost accounting stay
+independent and unchanged. No market/model/broker call, dependency, host or
+deployment changed. Main untouched, PR #1 draft, LIVE disabled, experiment frozen.
+
 ## P7 Scope watch neutral reset and direction control: 2026-10-13 UTC
 
 New explicitly frozen watch cohorts can now enroll `ScopeDirectionResetPolicy`.

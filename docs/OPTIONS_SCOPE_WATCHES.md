@@ -39,8 +39,11 @@ both files and hostile filesystem access remain outside that mechanism.
 `call(key, choice, frame, context, expected_revision=..., now=...)` recomputes the
 complete [context review](OPTIONS_SCOPE_CONTEXT.md) at the supplied aware clock.
 The exact pattern, parent and CALL/PUT alternative must be uniquely `DETECTED`,
-with no global context issues. This is sufficient to record a research watch;
-quality/obstruction review and execution admission are still required to trade.
+with no global context issues. This is sufficient for cohorts without quality enrollment.
+[Optional quality review](OPTIONS_SCOPE_QUALITY.md) now gates new explicitly frozen
+watch cohorts and locks its complete original scan. It must share the exact context
+policy; older cohorts remain unchanged. Complete obstruction coverage, arming hold
+and execution admission are still required to trade.
 
 The record locks the full original frame, typed context, scan, geometry, exact
 instrument, session and called time. A context variant retains its parent. The
@@ -141,7 +144,7 @@ expires a watch or mutates journal/authority files.
 
 Filled-position direction handling, actual position linkage, full-cost native
 outcome attribution, consecutive-loss/cooldown and reviewed family-reset controls,
-quality/obstruction policy, shared-owner admission/management, runtime enrollment,
+complete obstruction/arming policy, shared-owner admission/management, runtime enrollment,
 stored dashboard integration and full-cost replay remain open. Loss controls must
 use verified native fills plus **all entry and management charges**; watch states
 cannot substitute for that evidence. Existing independent A/B/C/D accounting is

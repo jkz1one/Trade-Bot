@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timedelta
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from app.execution.engine import ExecutionBlocked
 from app.options.engine import OptionExecution, clock, fingerprint
@@ -16,6 +16,7 @@ from app.options.scope_context import (
     ScopeContextPolicy,
     scan_scope_context,
 )
+from app.options.scope_quality import ScopeQualityPolicy, scan_scope_quality
 from app.options.scope_structure import ScopePattern, scan_scope_structure
 
 
@@ -32,6 +33,13 @@ class ScopeWatchPolicy(OptionRecord):
     direction_reset: ScopeDirectionResetPolicy | None = Field(
         default=None, exclude_if=lambda value: value is None
     )
+    quality: ScopeQualityPolicy | None = Field(default=None, exclude_if=lambda value: value is None)
+
+    @model_validator(mode="after")
+    def matching_quality_context(self):
+        if self.quality is not None and self.quality.context != self.context:
+            raise ValueError("Scope watch and quality context policies must match")
+        return self
 
 
 class ScopeWatchChoice(OptionRecord):
@@ -213,6 +221,12 @@ class ScopeWatchBook:
                 or selected[0].geometry is None
             ):
                 raise ExecutionBlocked("SCOPE_WATCH_CONTEXT_NOT_DETECTED")
+            quality_scan = None
+            if self.policy.quality is not None:
+                quality_scan = scan_scope_quality(frame, context, self.policy.quality, now=now)
+                reviewed = [o for o in quality_scan.observations if o.observation == selected[0]]
+                if quality_scan.issues or len(reviewed) != 1 or not reviewed[0].passed:
+                    raise ExecutionBlocked("SCOPE_WATCH_QUALITY_BLOCKED")
             session = frame.session.session_date.isoformat()
             previous = [
                 json.loads(r[0])
@@ -251,6 +265,8 @@ class ScopeWatchBook:
                 "terminal_at": None,
                 "terminal_bar_ends_at": None,
             }
+            if quality_scan is not None:
+                record["locked_quality_scan"] = quality_scan.model_dump(mode="json")
             db.execute(
                 "INSERT INTO execution_option_scope_watches VALUES(?,?,1,?)",
                 (key, session, json.dumps(record, sort_keys=True)),
