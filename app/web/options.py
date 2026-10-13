@@ -2,6 +2,7 @@
 
 import os
 import stat
+from decimal import Decimal
 from pathlib import Path
 from secrets import compare_digest
 from typing import Annotated, Literal
@@ -16,6 +17,7 @@ from app.options.observer import OptionObserver
 
 basic = HTTPBasic(auto_error=False)
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+templates.env.filters["dollars"] = lambda value: format(Decimal(value), ",.2f")
 
 
 def password(path):
@@ -37,11 +39,13 @@ def password(path):
         os.close(fd)
 
 
-def create_options_app(journal, population_id, password_file, *, clock=utc_now):
+def create_options_app(
+    journal, population_id, password_file, *, clock=utc_now, comparison_file=None
+):
     if not Path(password_file).is_absolute():
         raise ValueError("Absolute private observer password path required")
     password(password_file)
-    observer = OptionObserver(journal, population_id, clock=clock)
+    observer = OptionObserver(journal, population_id, clock=clock, comparison_file=comparison_file)
     app = FastAPI(title="Options PAPER observer", docs_url=None, redoc_url=None, openapi_url=None)
 
     @app.middleware("http")
@@ -95,10 +99,19 @@ def create_options_app(journal, population_id, password_file, *, clock=utc_now):
         refresh: bool = False,
     ):
         data = observer.report(limit=limit, before=before, family=family)
+        from app.options.comparison_view import chart_data
+
         return templates.TemplateResponse(
             request,
             "options.html",
-            {"data": data, "auto_refresh": refresh and before is None, "family": family},
+            {
+                "data": data,
+                "auto_refresh": refresh and before is None,
+                "family": family,
+                "comparison_chart": chart_data(
+                    data.get("comparison", {"status": "NOT_CONFIGURED"})
+                ),
+            },
             status_code=503 if data["status"] == "UNAVAILABLE" else 200,
         )
 

@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.25. Adopted product direction and working delivery contract, 2026-10-13 UTC.
+Version 1.26. Adopted product direction and working delivery contract, 2026-10-13 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -29,6 +29,10 @@ This first adaptation uses session-close protection; overnight Swing is not enab
 [Shared-family replay/export](OPTIONS_SHARED_REPLAY.md) now runs frozen Degen/Swing
 tapes through independent A/B/C/D accounts across sessions, preserving every
 entry/management charge and the existing proposal/review/fill attribution.
+[Historical comparison views](OPTIONS_COMPARISON_VIEW.md) now bind explicit
+full-cost research reports to a population's audit prefix, with stored-only
+net-equity/SPY/cash display and visible incomplete paths. Browser visual acceptance
+remains open; historical reports do not complete current marks or prove profitability.
 [Installed-file identity](OPTIONS_LOCAL_RUNTIME.md#installed-release-identity) is
 now recorded per runtime generation and displayed from stored evidence. File
 consistency and installer metadata do not grant release approval or prove liveness.

@@ -88,12 +88,15 @@ def _contract(contract):
 
 
 class OptionObserver:
-    def __init__(self, journal, population_id, *, clock=utc_now):
+    def __init__(self, journal, population_id, *, clock=utc_now, comparison_file=None):
         self.path = Path(journal)
         if not self.path.is_absolute():
             raise ValueError("Explicit absolute journal path required")
         self.population_id = TypeAdapter(Name).validate_python(population_id)
         self.clock = clock
+        if comparison_file is not None and not Path(comparison_file).is_absolute():
+            raise ValueError("Explicit absolute comparison path required")
+        self.comparison_file = comparison_file
 
     @contextmanager
     def read(self):
@@ -221,6 +224,9 @@ class OptionObserver:
         from app.options.operator import summary as operator_summary
 
         operator = operator_summary(db)
+        from app.options.comparison_view import stored_comparison
+
+        comparison = stored_comparison(self.comparison_file, db, self.population_id, now)
         if runtime["status"] != "NOT_ENROLLED":
             saved_frame = db.execute(
                 "SELECT frame_json FROM execution_option_runtime WHERE id=1"
@@ -361,6 +367,7 @@ class OptionObserver:
                 "spy_return": None,
                 "comparison_status": "MATCHED_COHORT_BENCHMARK_NOT_IMPLEMENTED",
             },
+            "comparison": comparison,
             "strategy": {
                 "status": "ENROLLED" if strategy else "NOT_ENROLLED",
                 "setup_version": strategy["setup"].get("version") if strategy else None,

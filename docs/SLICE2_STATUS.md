@@ -1,5 +1,64 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P4 historical full-cost dashboard comparison: 2026-10-13 UTC
+
+The stored options observer now accepts an explicitly materialized historical
+comparison for its existing population. A separate create-only installed CLI
+checks the native export bundle, manifest/evidence hashes, arm accounting, SPY
+endpoints and final source proof, then emits a bounded private view. Observer
+reads bind its population/account/configuration/strategy and exact historical
+event prefix; later appends are compatible, replaced history is not. A comparison
+failure stays separate from independently readable current account evidence.
+
+The panel shows dated net equity, independent model-off A, SPY's session-price
+benchmark and cash. Entry/management model charges, unknown calls, venue fees,
+data and host allocations remain visible in the session table. Cumulative curves
+stop at the first incomplete paired session and never rebase across a gap. Current
+marks remain separate and still exclude exit/data/host costs. Page reads perform
+no evaluation, data/model work, execution ownership or source writes. The SVG
+chart has text alternatives, patterned lines and exact tabular values; a skip
+link and visible scroll-region focus support the responsive surface.
+
+Pre-edit branch head was `89b0e4159a6c626695bbbc1fc84fb12583461634`, tree
+`4f3e09bccefaa1032f8a452f3599afc2c31be200`. Main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 remained open/draft.
+
+Verification:
+
+- **202 passed in 96.57s (0:01:36)** on the final noneditable installed package,
+  outside source, warnings as errors. Five suites cover comparison view (32 new
+  cases), observer, release identity, operator recovery and shared strategies.
+  Materialization CLI runs isolated `-I` and verifies create-only output/rejection.
+- Initial installed run: **200 passed, 2 failed in 100.58s**. A test constructed a
+  Decimal field with an unvalidated string before serialization; another retained
+  the removed placeholder's exact label. Both test-only corrections are included
+  in the final 202 pass. Earlier source-only checks passed 30 cases with the
+  installed CLI deselected, before the additional chart-gap case.
+- Separate final-wheel integration materialized the completed two-session native
+  arm D replay, then read it through authenticated HTML/API. The view reports
+  historical net equity `953.53940`, preserving both entry and management charges.
+  Journal and comparison bytes remain identical after reads; POST is rejected.
+  This reuses actual completed replay evidence, not synthetic publication-unit
+  proof alone. The replay's economic conclusion stays INCONCLUSIVE.
+- Tests reject modified net/fee/model/SPY arithmetic, proof/hash/strategy mismatch,
+  future boundaries, foreign populations/accounts/configurations, changed audit
+  prefixes, unsafe paths/files and invalid seals. Unknown costs never become zero;
+  incomplete paths do not reconnect. Long text is escaped. Reads cannot call the
+  evaluator. Missing/invalid comparisons do not replace current metrics.
+- Six application/template files and both edited test inputs match the final
+  installed proof. Scoped lint/format, dependency and whitespace checks pass;
+  100 checked local documentation links resolve.
+- Final wheel SHA-256:
+  `2fdf2382f0cde5fc1de3b432ac12391b466904a6c0d8502604403e747e83f01a`.
+
+See [source of truth v1.26](SOURCE_OF_TRUTH.md) and the
+[historical comparison contract](OPTIONS_COMPARISON_VIEW.md). The official
+Chromium download again produced an unusable archive; no browser screenshots,
+desktop/mobile visual acceptance or complete M8 claim is made. Authentic inputs,
+prospective economics, host acceptance, overnight Swing, Scope and mixed ownership
+remain open. No dependency, host, deployment, provider/model call or broker write
+changed. LIVE stays disabled, main untouched and the deployed experiment frozen.
+
 ## P7 shared-family native replay/export: 2026-10-13 UTC
 
 New optional `TapeHeader.swing` enrollment now drives the existing independent

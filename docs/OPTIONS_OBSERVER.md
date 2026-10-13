@@ -34,7 +34,8 @@ The API and page accept `limit=1..100`, an optional positive `before` row ID and
 `family=ALL|DEGEN|SWING|SCOPE`. History is newest first. Older-page selection does
 not change the current-position projection. Latest HTML can opt into `refresh=true`
 for a 30-second refresh; historical pages never auto-refresh. Refresh only reads.
-Swing and Scope remain explicitly unimplemented, with no invented opportunity rows.
+Swing shows its explicit shared session-close enrollment; Scope remains
+unimplemented, with no invented opportunity rows.
 
 ## Evidence and uncertainty
 
@@ -58,9 +59,12 @@ the enrolled local runtime's latest accepted frame are available to this project
 Unresolved orders, incomplete/stale accounts, reconciliation issues or unsupported
 exposure suppress equity estimates. Unknown model usage also suppresses the
 after-model-cost estimate. Recorded fees and known configured-rate model costs are
-visible, but exit/data/host costs and matched SPY/cash/model-off/on/underlying cohort
-evaluation are not implemented. Displayed estimates are explicitly before those
-costs, not a complete net return or profitability proof.
+visible. Current marks exclude exit/data/host costs. An optional
+[historical comparison view](OPTIONS_COMPARISON_VIEW.md) now links an explicitly
+generated full-cost research report through `--comparison-file`. Its session
+boundaries, net equity, model-off A, SPY and cash display are separate from current
+marks. Incomplete historical paths retain their uncertainty, and never convert a
+current estimate into a complete net return or profitability proof.
 
 For explicitly enrolled [local runtime populations](OPTIONS_LOCAL_RUNTIME.md),
 runtime status/freshness, observed session and the latest accepted frame are read
