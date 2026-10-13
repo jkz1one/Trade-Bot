@@ -42,8 +42,9 @@ The exact pattern, parent and CALL/PUT alternative must be uniquely `DETECTED`,
 with no global context issues. This is sufficient for cohorts without quality enrollment.
 [Optional quality review](OPTIONS_SCOPE_QUALITY.md) now gates new explicitly frozen
 watch cohorts and locks its complete original scan. It must share the exact context
-policy; older cohorts remain unchanged. Complete obstruction coverage, arming hold
-and execution admission are still required to trade.
+policy; older cohorts remain unchanged. [Optional sampled arming](OPTIONS_SCOPE_ARMING.md)
+now persists fresh-evidence holds for explicitly enrolled cohorts. Complete obstruction
+coverage and execution admission are still required to trade.
 
 The record locks the full original frame, typed context, scan, geometry, exact
 instrument, session and called time. A context variant retains its parent. The
@@ -131,8 +132,9 @@ full request, including time, evidence and revision. An identical retry returns
 its **original historical receipt**, even after subsequent state transitions;
 `snapshot()` supplies current stored state. Changed reuse conflicts. New actions
 reject stale revisions and clocks earlier than the book's last successful action.
-State, call count, receipt and audit event commit atomically. Failed actions
-consume no call or event. Concurrent writers cannot both claim the same revision.
+State, call count, receipt and audit event commit atomically. Rejected requests
+consume no call or event. Arming observations with valid request envelopes persist
+evidence failures as reset events; they never consume another called play. Concurrent writers cannot both claim the same revision.
 
 The unique active row, full records, action receipts and frozen policy survive
 owner restart. A later explicitly supplied session starts its own count while
@@ -144,7 +146,7 @@ expires a watch or mutates journal/authority files.
 
 Filled-position direction handling, actual position linkage, full-cost native
 outcome attribution, consecutive-loss/cooldown and reviewed family-reset controls,
-complete obstruction/arming policy, shared-owner admission/management, runtime enrollment,
+complete obstruction coverage, shared-owner admission/management, runtime enrollment,
 stored dashboard integration and full-cost replay remain open. Loss controls must
 use verified native fills plus **all entry and management charges**; watch states
 cannot substitute for that evidence. Existing independent A/B/C/D accounting is

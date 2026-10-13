@@ -115,3 +115,7 @@ replay, complete obstruction coverage, authentic data and economic acceptance re
 open. See [watch contract](OPTIONS_SCOPE_WATCHES.md), [source of truth](SOURCE_OF_TRUTH.md)
 and [status](SLICE2_STATUS.md). Main remains untouched, PR #1 draft, LIVE disabled
 and the deployed experiment frozen.
+
+[Optional sampled arming](OPTIONS_SCOPE_ARMING.md) now holds this review across
+fresh observations for a new frozen watch cohort. It retains false authority and
+does not supply complete obstruction coverage.

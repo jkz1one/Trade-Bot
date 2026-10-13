@@ -2,6 +2,7 @@
 
 import json
 from datetime import datetime, timedelta
+from decimal import Decimal
 from typing import Literal
 
 from pydantic import Field, model_validator
@@ -26,6 +27,12 @@ class ScopeDirectionResetPolicy(OptionRecord):
     confirmation_bars: int = Field(strict=True, ge=2, le=5)
 
 
+class ScopeArmingPolicy(OptionRecord):
+    version: Literal["scope-sampled-arming-v1"] = "scope-sampled-arming-v1"
+    confirmation_hold_seconds: int = Field(strict=True, ge=60, le=600)
+    max_sample_gap_seconds: int = Field(strict=True, ge=1, le=10)
+
+
 class ScopeWatchPolicy(OptionRecord):
     version: Literal["scope-unfilled-watch-v1"] = "scope-unfilled-watch-v1"
     context: ScopeContextPolicy
@@ -35,10 +42,14 @@ class ScopeWatchPolicy(OptionRecord):
     )
     quality: ScopeQualityPolicy | None = Field(default=None, exclude_if=lambda value: value is None)
 
+    arming: ScopeArmingPolicy | None = Field(default=None, exclude_if=lambda value: value is None)
+
     @model_validator(mode="after")
     def matching_quality_context(self):
         if self.quality is not None and self.quality.context != self.context:
             raise ValueError("Scope watch and quality context policies must match")
+        if self.arming is not None and self.quality is None:
+            raise ValueError("Scope arming requires frozen quality review")
         return self
 
 
@@ -407,33 +418,12 @@ class ScopeWatchBook:
                 if scan.issues:
                     raise ExecutionBlocked("SCOPE_WATCH_REVIEW_COVERAGE_BLOCKED")
                 old = ScopePreflightInput.model_validate(record["reviewed_frame"])
-                previous = {h.symbol: h for h in old.histories}
                 self._history_prefix(old, frame)
                 if scan.completed_through.isoformat() <= record["reviewed_through"]:
                     raise ExecutionBlocked("SCOPE_WATCH_FRESH_COMPLETED_BAR_REQUIRED")
-                from app.options.scope_structure import ScopeGeometry
-
-                geometry = ScopeGeometry.model_validate(record["geometry"])
-                bars = next(h.bars for h in frame.histories if h.symbol == "SPX")
-                for bar in bars[len(previous["SPX"].bars) :]:
-                    invalid = (
-                        bar.low <= geometry.invalidation
-                        if geometry.right == "CALL"
-                        else bar.high >= geometry.invalidation
-                    )
-                    consumed = (
-                        bar.high >= geometry.target_two
-                        if geometry.right == "CALL"
-                        else bar.low <= geometry.target_two
-                    )
-                    if invalid or consumed:
-                        record["status"] = (
-                            "INVALIDATED_UNFILLED" if invalid else "OBJECTIVE_CONSUMED_UNFILLED"
-                        )
-                        record["terminal_bar_ends_at"] = bar.ends_at.isoformat()
-                        break
-                record["reviewed_frame"] = frame.model_dump(mode="json")
-                record["reviewed_through"] = scan.completed_through.isoformat()
+                self._review_price_bars(record, old, frame, scan.completed_through, now)
+            if self.policy.arming is not None:
+                record["arming"] = self._arming_reset(record, now, "WATCH_ADVANCED")
             active = record["status"] == "WATCHING"
             if not active:
                 record["terminal_at"] = now.isoformat()
@@ -442,6 +432,217 @@ class ScopeWatchBook:
                 (1 if active else None, json.dumps(record, sort_keys=True), play_key),
             )
             return self._finish(db, action, digest, record, now)
+
+    @staticmethod
+    def _review_price_bars(record, old, frame, completed_through, now):
+        previous = {h.symbol: h for h in old.histories}
+        from app.options.scope_structure import ScopeGeometry
+
+        geometry = ScopeGeometry.model_validate(record["geometry"])
+        bars = next(h.bars for h in frame.histories if h.symbol == "SPX")
+        for bar in bars[len(previous["SPX"].bars) :]:
+            invalid = (
+                bar.low <= geometry.invalidation
+                if geometry.right == "CALL"
+                else bar.high >= geometry.invalidation
+            )
+            consumed = (
+                bar.high >= geometry.target_two
+                if geometry.right == "CALL"
+                else bar.low <= geometry.target_two
+            )
+            if invalid or consumed:
+                record["status"] = (
+                    "INVALIDATED_UNFILLED" if invalid else "OBJECTIVE_CONSUMED_UNFILLED"
+                )
+                record["terminal_bar_ends_at"] = bar.ends_at.isoformat()
+                break
+        record["reviewed_frame"] = frame.model_dump(mode="json")
+        record["reviewed_through"] = completed_through.isoformat()
+        if record["status"] != "WATCHING":
+            record["terminal_at"] = now.isoformat()
+
+    @staticmethod
+    def _arming_reset(record, now, reason):
+        return {
+            "status": "RESET",
+            "evaluated_at": now.isoformat(),
+            "started_at": None,
+            "sample_count": 0,
+            "valid_until": None,
+            "source_clocks": record.get("arming", {}).get("source_clocks", {}),
+            "reasons": [reason],
+            "authority": False,
+            "live_enabled": False,
+        }
+
+    def observe_arming(self, key, play_key, *, expected_revision, now, frame=None, context=None):
+        """Persist a sampled research hold, never an executable entry permission.
+
+        Missing, stale or failing evidence commits a reset. Newly completed bars
+        cross the original price guards before any hold can continue.
+        """
+        now = clock(now)
+        action = _Action(key=key, expected_revision=expected_revision)
+        play_key = _Action(key=play_key, expected_revision=0).key
+        if frame is not None:
+            frame = ScopePreflightInput.model_validate(frame.model_dump(warnings=False))
+        if context is not None:
+            context = ScopeContextInput.model_validate(context.model_dump(warnings=False))
+        request = {
+            "kind": "OBSERVE_ARMING",
+            "action": action,
+            "play_key": play_key,
+            "frame": frame,
+            "context": context,
+            "now": now,
+        }
+        with self.engine.journal.write() as db:
+            digest, prior = self._begin(db, action, request, now)
+            if prior is not None:
+                return prior
+            if self.policy.arming is None:
+                raise ExecutionBlocked("SCOPE_WATCH_ARMING_NOT_ENROLLED")
+            row = db.execute(
+                "SELECT * FROM execution_option_scope_watches WHERE play_key=?", (play_key,)
+            ).fetchone()
+            if row is None or row["active_lock"] != 1:
+                raise ExecutionBlocked("SCOPE_WATCH_NOT_ACTIVE")
+            record = json.loads(row["record_json"])
+            result = self._arming_reset(record, now, "FRESH_EVIDENCE_REQUIRED")
+            # Keep full failed inputs too; action receipts/events provide the audit history.
+            result["frame"] = frame.model_dump(mode="json") if frame is not None else None
+            result["context"] = context.model_dump(mode="json") if context is not None else None
+            try:
+                self._ready(db, now)
+                self._review_arming(record, result, frame, context, now)
+            except ExecutionBlocked as exc:
+                result["reasons"] = [str(exc)]
+            record["arming"] = result
+            db.execute(
+                "UPDATE execution_option_scope_watches SET active_lock=?, record_json=? WHERE play_key=?",
+                (
+                    1 if record["status"] == "WATCHING" else None,
+                    json.dumps(record, sort_keys=True),
+                    play_key,
+                ),
+            )
+            return self._finish(db, action, digest, record, now)
+
+    def _review_arming(self, record, result, frame, context, now):
+        old = ScopePreflightInput.model_validate(record["reviewed_frame"])
+        if now >= old.session.entry_cutoff_at:
+            raise ExecutionBlocked("SCOPE_WATCH_ENTRY_CUTOFF")
+        if frame is None or context is None:
+            raise ExecutionBlocked("SCOPE_WATCH_FRESH_EVIDENCE_REQUIRED")
+        if (
+            frame.session != old.session
+            or frame.metadata is None
+            or frame.metadata.instrument != old.metadata.instrument
+        ):
+            raise ExecutionBlocked("SCOPE_WATCH_LOCKED_IDENTITY_CHANGED")
+        scan = scan_scope_quality(frame, context, self.policy.quality, now=now)
+        result["quality_scan"] = scan.model_dump(mode="json")
+        if scan.issues:
+            raise ExecutionBlocked("SCOPE_WATCH_QUALITY_BLOCKED")
+        self._history_prefix(old, frame)
+        self._review_price_bars(record, old, frame, scan.context.structure.completed_through, now)
+        if record["status"] != "WATCHING":
+            raise ExecutionBlocked("SCOPE_WATCH_PRICE_TERMINATED")
+        selected = [
+            o
+            for o in scan.observations
+            if all(getattr(o.observation, k) == v for k, v in record["choice"].items())
+        ]
+        if len(selected) != 1 or not selected[0].passed:
+            raise ExecutionBlocked("SCOPE_WATCH_QUALITY_BLOCKED")
+        locked_choice = next(
+            o
+            for o in record["locked_scan"]["observations"]
+            if all(o[k] == v for k, v in record["choice"].items())
+        )
+        if selected[0].observation.matched_level != (
+            None
+            if locked_choice["matched_level"] is None
+            else Decimal(locked_choice["matched_level"])
+        ):
+            raise ExecutionBlocked("SCOPE_WATCH_LOCKED_ANCHOR_CHANGED")
+        locked_context = ScopeContextInput.model_validate(record["locked_context"])
+        if (
+            context.previous_session != locked_context.previous_session
+            or context.prior != locked_context.prior
+        ):
+            raise ExecutionBlocked("SCOPE_WATCH_PRIOR_HISTORY_CHANGED")
+        if selected[0].observation.geometry.model_dump(mode="json") != record["geometry"]:
+            raise ExecutionBlocked("SCOPE_WATCH_LOCKED_GEOMETRY_CHANGED")
+        # Every current stream must advance its source clock. Receipt-only refresh
+        # and repeated completed bars cannot stand in for new provider observations.
+        items = {"group:" + e.kind: e for e in frame.evidence}
+        items.update({"history:" + h.symbol: h for h in frame.histories})
+        items.update({"metadata": frame.metadata, "quote": frame.quote})
+        items.update(
+            {
+                "context:" + k: getattr(context, k)
+                for k in ("dealer", "moves", "flow", "news", "events")
+            }
+        )
+        clocks = {k: item.source_at.isoformat() for k, item in items.items()}
+        before = record.get("arming", {})
+        watermark = before.get("source_clocks", {})
+        if any(
+            k in watermark and datetime.fromisoformat(v) <= datetime.fromisoformat(watermark[k])
+            for k, v in clocks.items()
+        ):
+            raise ExecutionBlocked("SCOPE_WATCH_NEW_SOURCE_OBSERVATIONS_REQUIRED")
+        gap = timedelta(seconds=self.policy.arming.max_sample_gap_seconds)
+        preflight = self.policy.context.structure.preflight
+        ages = {"group:" + source.kind: source.max_age_seconds for source in preflight.sources}
+        ages.update(
+            {"history:" + h.symbol: preflight.max_history_age_seconds for h in frame.histories}
+        )
+        ages.update(
+            {
+                "metadata": preflight.max_contract_age_seconds,
+                "quote": preflight.max_contract_age_seconds,
+            }
+        )
+        # Limit sampling to genuinely current observations even if a source's
+        # normal coverage policy permits much older data.
+        if any(now - item.source_at > gap for item in items.values()):
+            raise ExecutionBlocked("SCOPE_WATCH_ARMING_SAMPLE_TOO_OLD")
+        started = now
+        count = 1
+        if (
+            before.get("status") in ("HOLDING", "ARMED")
+            and now > datetime.fromisoformat(before["evaluated_at"])
+            and now <= datetime.fromisoformat(before["valid_until"])
+        ):
+            started = datetime.fromisoformat(before["started_at"])
+            count = before["sample_count"] + 1
+        valid_until = min(
+            now + gap,
+            old.session.entry_cutoff_at,
+            *(item.source_at + gap for item in items.values()),
+            *(items[k].source_at + timedelta(seconds=age) for k, age in ages.items()),
+            context.flow.valid_through,
+            context.news.valid_through,
+            context.events.valid_through,
+        )
+        if valid_until <= now:
+            raise ExecutionBlocked("SCOPE_WATCH_ARMING_SAMPLE_TOO_OLD")
+        result.update(
+            {
+                "status": "ARMED"
+                if now - started >= timedelta(seconds=self.policy.arming.confirmation_hold_seconds)
+                else "HOLDING",
+                "evaluated_at": now.isoformat(),
+                "started_at": started.isoformat(),
+                "sample_count": count,
+                "valid_until": valid_until.isoformat(),
+                "source_clocks": clocks,
+                "reasons": [],
+            }
+        )
 
     @staticmethod
     def _history_prefix(old, frame):

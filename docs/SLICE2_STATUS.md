@@ -1,5 +1,62 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 Scope sampled arming hold: 2026-10-13 UTC
+
+New frozen watch cohorts can explicitly require a 60–600 second research hold
+with fresh samples no more than 1–10 seconds apart. Enrollment requires the exact
+quality policy. Every current evidence/history/metadata/quote/context source clock
+must advance; receipt-only refreshes cannot accumulate a hold. The first passing
+sample starts the timer. Source ages, context validity and entry cutoff bound each
+sample's validity; gaps restart the interval. Exact configured duration is allowed.
+
+Every observation rechecks owner readiness and complete quality against the
+original instrument/session, selected pattern/parent/right, geometry, anchor and
+prior evidence. Newly completed bars pass the same chronological price guards as
+explicit advancement. Crossings terminate the unfilled watch atomically. Missing,
+stale, blocked or changed evidence records a durable reset; recovery starts over.
+Source watermarks, full inputs, quality results, timing, reasons and original
+historical action receipts remain under the existing lease/revision/restore fence.
+
+`ARMED` is a dated sampled research result, never trade authority. The top-level
+watch remains `WATCHING` until termination/expiry; reads do not refresh its state.
+Sampling does not prove an uninterrupted intrabar path or complete obstruction
+coverage. No order, model charge, P&L or account balance is invented. Independent
+accounts and all native entry/management costs remain unchanged. Old cohorts omit
+the new optional field and cannot add it on reopen.
+
+Pre-edit fresh GitHub head was `b6fc49a29b2aaa94265581b397db1095e4255e17`, tree
+`5e3da8f1e144780185207ef658b0f3906d3c337d`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 is open/draft.
+
+Validation:
+
+- Final noneditable installed wheel: **745 passed in 97.83s**, outside source,
+  isolated Python, copied tests and warnings as errors. Eleven suites include
+  30 new arming cases, all earlier Scope diagnostics/watch/direction/quality,
+  options execution/admission, Degen and shared Degen/Swing regressions.
+- Earlier source group passed 182 tests in 11.18s before the nine added arming
+  restart/source-stream/price-crossing/atomicity cases. Initial arming run passed
+  21 in 9.71s. Counts overlap; the installed total is the final proof.
+- New tests cover CALL/PUT hold boundaries, sampling gaps, stale/missing/blocked
+  evidence, exact retries/conflicting keys/revisions, source-clock progression,
+  restart, locked history, new-bar invalidation, expiry, frozen enrollment and
+  transaction rollback. No test failure or deadline relaxation in this slice.
+- Installed/wheel/source module and copied Scope-test bytes match. Scoped
+  lint/format, dependency consistency and whitespace checks pass.
+- Wheel SHA-256: `25bb62e5f640826a4a9a92a8cacbce66fa774c53312c78365dca15f55afebd80`.
+  Local proof: `scope-arming-installed-tests.log`, `scope-arming-env`,
+  `scope-arming-proof` and `scope-arming-dist` beside the checkout.
+
+[Arming contract](OPTIONS_SCOPE_ARMING.md) records the source's default sixty-second
+hold and the conservative sampling adaptation. Complete obstruction coverage,
+contract-profile admission, native filled-position/full-cost loss/cooldown/reset,
+Scope common-owner execution/runtime/replay and observer integration remain open.
+Authentic provider/model/calendar, host, visual and prospective acceptance gates
+remain separate. Main untouched, PR draft, LIVE disabled, deployed experiment
+frozen. No provider/model/broker call, dependency, host unit or deployment changed.
+
+---
+
 ## P7 Scope quality and known-level path review: 2026-10-13 UTC
 
 `app.options.scope_quality` now recomputes complete context and reports the pinned

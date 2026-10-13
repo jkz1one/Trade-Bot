@@ -80,6 +80,8 @@ It is read-only local fixture proof; browser visual acceptance and matched econo
 evaluation remain open.
 The [second operator report](docs/SHADOW2_EVIDENCE.md) records the October 8 frozen
 synthetic results separately from new-engine acceptance.
+[Scope sampled arming](docs/OPTIONS_SCOPE_ARMING.md) now persists bounded fresh-evidence
+holds against the original locked setup, with durable resets and no execution authority.
 
 The user clarified the goal on 2026-10-09: **stocks and options, with eventual
 governed LIVE trading**, adapting SignalFlow's Degen/0DTE, Swing, Scope Wizard and UI.
