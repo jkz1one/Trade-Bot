@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.34. Adopted product direction and working delivery contract, 2026-10-13 UTC.
+Version 1.35. Adopted product direction and working delivery contract, 2026-10-13 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -52,7 +52,10 @@ optional frozen watch integration. [Scope sampled arming](OPTIONS_SCOPE_ARMING.m
 now adds durable fresh-observation holds and resets against locked evidence.
 [Scope contract profiles](OPTIONS_SCOPE_CONTRACTS.md) now add exact-contract price,
 spread, observed-delta and liquidity gates with optional frozen watch integration.
-Complete obstruction coverage, native full-cost loss/cooldown linkage and common-owner admission/management remain required
+[Scope owned admission review](OPTIONS_SCOPE_OWNED_ADMISSION.md) now stores
+common-governor sizing from fresh armed evidence and the authoritative owned account.
+Complete obstruction coverage, native full-cost loss/cooldown linkage and
+dispatch/management remain required
 before Scope execution.
 Authentic collection/coverage and prospective economic evidence remain open.
 Report capabilities and gates, not completion percentages.

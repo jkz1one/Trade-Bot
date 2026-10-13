@@ -158,3 +158,7 @@ Authentic normalized provider data, reviewed SPXW calendars, host acceptance and
 prospective economics remain separate gates. See [status](SLICE2_STATUS.md) and
 [source of truth](SOURCE_OF_TRUTH.md). Main stays untouched, PR #1 draft, LIVE
 disabled and the deployed experiment frozen.
+
+[Optional owned admission review](OPTIONS_SCOPE_OWNED_ADMISSION.md) now refreshes
+armed evidence and records common-governor sizing from the same account. It adds
+no order, reservation, native execution linkage or trade authority.

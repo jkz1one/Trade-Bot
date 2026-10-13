@@ -64,6 +64,8 @@ schedule and conservative known-level path checks, with optional frozen watch
 integration. A high score does not prove a clear path or grant execution authority.
 [Scope contract profiles](docs/OPTIONS_SCOPE_CONTRACTS.md) now gate exact supplied
 contracts and enrolled watches, while convexity stays blocked without complete path evidence.
+[Scope owned admission review](docs/OPTIONS_SCOPE_OWNED_ADMISSION.md) now records
+common-governor sizing against the original setup and owned account, without dispatch.
 Authentic provider, host and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.

@@ -9,8 +9,10 @@ from pydantic import Field, model_validator
 
 from app.execution.engine import ExecutionBlocked
 from app.options.engine import OptionExecution, clock, fingerprint
-from app.options.models import Name, OptionRecord
+from app.options.governor import admit_option
+from app.options.models import Name, OptionProposal, OptionRecord, SessionWindow, UnderlyingQuote
 from app.options.scope import ScopePreflightInput
+from app.options.scope_admission import ScopeAdmissionPolicy
 from app.options.scope_context import (
     ContextPattern,
     ScopeContextInput,
@@ -49,6 +51,10 @@ class ScopeWatchPolicy(OptionRecord):
         default=None, exclude_if=lambda value: value is None
     )
 
+    admission: ScopeAdmissionPolicy | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+
     @model_validator(mode="after")
     def matching_quality_context(self):
         if self.quality is not None and self.quality.context != self.context:
@@ -57,6 +63,8 @@ class ScopeWatchPolicy(OptionRecord):
             raise ValueError("Scope arming requires frozen quality review")
         if self.contract is not None and self.contract.quality != self.quality:
             raise ValueError("Scope contract and watch quality policies must match")
+        if self.admission is not None and (self.arming is None or self.contract is None):
+            raise ValueError("Scope admission requires frozen arming and contract policies")
         return self
 
 
@@ -540,6 +548,151 @@ class ScopeWatchBook:
             except ExecutionBlocked as exc:
                 result["reasons"] = [str(exc)]
             record["arming"] = result
+            db.execute(
+                "UPDATE execution_option_scope_watches SET active_lock=?, record_json=? WHERE play_key=?",
+                (
+                    1 if record["status"] == "WATCHING" else None,
+                    json.dumps(record, sort_keys=True),
+                    play_key,
+                ),
+            )
+            return self._finish(db, action, digest, record, now)
+
+    def review_admission(
+        self, key, play_key, *, expected_revision, now, frame=None, context=None, underlying=None
+    ):
+        """Atomically refresh the hold and store common-governor sizing, without dispatch.
+
+        Account evidence comes only from this journal's owner. The caller cannot
+        supply balances, a replacement stop, quantity or a generic equity calendar.
+        """
+        now = clock(now)
+        action = _Action(key=key, expected_revision=expected_revision)
+        play_key = _Action(key=play_key, expected_revision=0).key
+        if frame is not None:
+            frame = ScopePreflightInput.model_validate(frame.model_dump(warnings=False))
+        if context is not None:
+            context = ScopeContextInput.model_validate(context.model_dump(warnings=False))
+        if underlying is not None:
+            underlying = UnderlyingQuote.model_validate(underlying.model_dump(warnings=False))
+        request = {
+            "kind": "REVIEW_ADMISSION",
+            "action": action,
+            "play_key": play_key,
+            "frame": frame,
+            "context": context,
+            "underlying": underlying,
+            "now": now,
+        }
+        with self.engine.journal.write() as db:
+            digest, prior = self._begin(db, action, request, now)
+            if prior is not None:
+                return prior
+            if self.policy.admission is None:
+                raise ExecutionBlocked("SCOPE_WATCH_ADMISSION_NOT_ENROLLED")
+            row = db.execute(
+                "SELECT * FROM execution_option_scope_watches WHERE play_key=?", (play_key,)
+            ).fetchone()
+            if row is None or row["active_lock"] != 1:
+                raise ExecutionBlocked("SCOPE_WATCH_NOT_ACTIVE")
+            record = json.loads(row["record_json"])
+            sample = self._arming_reset(record, now, "FRESH_EVIDENCE_REQUIRED")
+            sample["frame"] = frame.model_dump(mode="json") if frame is not None else None
+            sample["context"] = context.model_dump(mode="json") if context is not None else None
+            review = {
+                "evaluated_at": now.isoformat(),
+                "account": None,
+                "limits": self.engine.limits.model_dump(mode="json"),
+                "effective_limits": self.engine._effective_limits().model_dump(mode="json"),
+                "owner_session": None,
+                "index_session": record["locked_frame"]["session"],
+                "underlying": underlying.model_dump(mode="json")
+                if underlying is not None
+                else None,
+                "proposal": None,
+                "session": None,
+                "admission": None,
+                "eligible": False,
+                "reasons": [],
+                "authority": False,
+                "live_enabled": False,
+            }
+            try:
+                account = self.engine._account(db, now)
+                review["account"] = account.model_dump(mode="json")
+                self._ready(db, now)
+                self._review_arming(record, sample, frame, context, now)
+                if sample["status"] != "ARMED":
+                    review["reasons"] = ["SCOPE_WATCH_ARMING_HOLD_REQUIRED"]
+                else:
+                    geometry = record["geometry"]
+                    if underlying is not None and (
+                        underlying.ask >= Decimal(geometry["target_one"])
+                        if record["choice"]["right"] == "CALL"
+                        else underlying.bid <= Decimal(geometry["target_one"])
+                    ):
+                        raise ExecutionBlocked("SCOPE_CURRENT_FIRST_OBJECTIVE_CONSUMED")
+                    locked = ScopePreflightInput.model_validate(record["locked_frame"])
+                    proposal = OptionProposal(
+                        action="OPEN_LONG",
+                        contract=locked.metadata.instrument.contract,
+                        underlying_invalidation=geometry["invalidation"],
+                        max_entry_debit=self.policy.admission.max_entry_debit,
+                        thesis="Scope locked " + record["choice"]["pattern"],
+                    )
+                    owner_session = self.engine._session(proposal.contract, now)
+                    if owner_session is None:
+                        raise ExecutionBlocked("SCOPE_OWNER_SESSION_UNAVAILABLE")
+                    review["owner_session"] = owner_session.model_dump(mode="json")
+                    opens = max(owner_session.opens_at, locked.session.entry_starts_at)
+                    cutoff = min(owner_session.entry_cutoff_at, locked.session.entry_cutoff_at)
+                    closes = min(owner_session.closes_at, locked.session.protect_at)
+                    if not opens < cutoff <= closes:
+                        raise ExecutionBlocked("SCOPE_SESSION_INTERSECTION_EMPTY")
+                    session = SessionWindow(
+                        source=owner_session.source,
+                        underlying="SPX",
+                        opens_at=opens,
+                        entry_cutoff_at=cutoff,
+                        closes_at=closes,
+                    )
+                    admission = admit_option(
+                        proposal,
+                        frame.quote,
+                        underlying,
+                        account,
+                        self.engine._effective_limits(),
+                        session,
+                        now=now,
+                    )
+                    if admission.valid_until is not None:
+                        admission = admission.model_copy(
+                            update={
+                                "valid_until": min(
+                                    admission.valid_until,
+                                    datetime.fromisoformat(sample["valid_until"]),
+                                )
+                            }
+                        )
+                    review.update(
+                        {
+                            "proposal": proposal.model_dump(mode="json"),
+                            "session": session.model_dump(mode="json"),
+                            "admission": admission.model_dump(mode="json"),
+                            "eligible": admission.outcome == "APPROVED",
+                            "reasons": list(admission.reasons),
+                        }
+                    )
+                    if admission.outcome != "APPROVED":
+                        sample.update(
+                            self._arming_reset(record, now, "SCOPE_ACCOUNT_ADMISSION_REJECTED")
+                        )
+            except ExecutionBlocked as exc:
+                # Failed fresh evidence cannot leave an armed sample behind.
+                sample.update(self._arming_reset(record, now, str(exc)))
+                review["reasons"] = [str(exc)]
+            record["arming"] = sample
+            record["admission_review"] = review
             db.execute(
                 "UPDATE execution_option_scope_watches SET active_lock=?, record_json=? WHERE play_key=?",
                 (

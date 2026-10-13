@@ -1,5 +1,63 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 Scope owned account admission review: 2026-10-13 UTC
+
+New frozen watch cohorts may now explicitly enroll an account-aware sizing review.
+The action refreshes arming evidence, requires the complete hold and current
+contract gates, then uses the existing common governor with the original exact
+contract/invalidation. The current underlying quote must remain before target one.
+Callers cannot supply account balances, quantity, a replacement stop or a calendar.
+
+Account state comes from the same owned journal inside the transaction. Original
+and effective limits, authoritative account, proposal, both calendar inputs,
+restricted session and full governor result are retained. Slippage and entry fees
+are included; effective limits reserve one exit-order fee per contract, matching
+native partial-exit protection. All existing loss/cash/exposure/size gates remain
+binding. The Scope debit cap only tightens the owner envelope. No parallel cash or
+cost calculator, model call, order, reservation or native decision is created.
+
+The owner session and explicit Scope index window are intersected conservatively,
+never substituted. The offline result expires no later than its arming sample.
+Incomplete holds cannot size. Failed current evidence or rejected admission resets
+the hold; action/hold/price termination/review commit atomically. Historical retries
+and stored-only reads do not refresh a result. Native activity remains blocked in
+this research watch version, preserving independent accounts and all existing
+entry/management cost accounting. An eligible review grants no dispatch authority.
+
+Pre-edit fresh GitHub head was `c1c73d55b4ab56a7e60ce0892a7f76dbbd41c0ef`, tree
+`8e84c2aee047a541e7a4fd2489b2bfba35b83f7c`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 is open/draft.
+
+Validation:
+
+- Source owned-admission/contract/arming/quality/watch/direction group: **249 passed
+  in 29.78s**, including 22 new cases. Initial owned-admission suite passed 16
+  before six extra fee-boundary, restart/account-isolation and atomicity cases.
+- Final noneditable installed package: **803 passed in 116.15s**, thirteen suites,
+  outside source, isolated Python, copied tests and warnings as errors. Includes
+  all Scope suites plus native execution/admission, Degen and shared strategies.
+  The previous slice's runtime-init timeout case passes in this group. No failed
+  test or deadline relaxation in this slice; prior timing failures remain recorded.
+- Tests verify exact fee-inclusive debit/full-loss boundaries, CALL/PUT, current
+  target/stop crossing, fresh underlying source/time, quote size, unfinished holds,
+  historical retries, native-activity guard, global owner blocks, frozen opt-in,
+  owner restart, independent accounts and atomic rollback.
+- Source/wheel/installed modules and copied Scope tests match; scoped lint/format,
+  dependency consistency, whitespace and 253 local documentation-link checks pass.
+- Wheel SHA-256: `5b7e870f859766b6c624d9ba280bc8530879c4ee0e59c2d8fc638fd95f16e2d1`.
+  Local proof: `scope-owned-source*.log`, `scope-owned-installed-tests.log`,
+  `scope-owned-env`, `scope-owned-proof` and `scope-owned-dist` beside the checkout.
+
+[Owned admission contract](OPTIONS_SCOPE_OWNED_ADMISSION.md) records the offline
+boundary. Native position/order linkage, full-cost filled-outcome loss/cooldown/reset,
+complete obstruction coverage, Scope common-owner dispatch/management/runtime/replay
+and observer integration remain open. Authentic provider/model/calendar, host,
+visual and prospective acceptance remain separate. Main untouched, PR draft,
+LIVE disabled, deployed experiment frozen. No market/model/broker call, dependency,
+host unit or deployment changed.
+
+---
+
 ## P7 Scope exact-contract profile gates: 2026-10-13 UTC
 
 The supplied-contract review now recomputes quality and classifies responsive,

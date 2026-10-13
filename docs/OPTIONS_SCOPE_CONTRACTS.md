@@ -66,8 +66,9 @@ in force. Explicit price-only advancement cannot grant contract eligibility.
 ## Still required
 
 This completes supplied-contract profile gates, not native Scope admission.
-Account-aware quantity and debit approval, fees/slippage, full entry/management
-costs, native filled-position/loss/cooldown linkage, full obstruction coverage,
+[Owned account admission review](OPTIONS_SCOPE_OWNED_ADMISSION.md) now stores
+common-governor sizing, fees/slippage and debit checks for fresh armed evidence.
+Native dispatch, full entry/management cost and filled-position/loss/cooldown linkage, full obstruction coverage,
 common-owner Scope execution/runtime/replay and stored observer integration remain
 open. The source's premium-based quantity tiers and floating-point rank score are
 not copied into a competing account calculator. The existing deterministic owner

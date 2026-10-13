@@ -75,3 +75,7 @@ LIVE disabled and the deployed experiment frozen.
 [Optional contract-profile enrollment](OPTIONS_SCOPE_CONTRACTS.md) now rechecks
 current price, spread, delta and liquidity at every arming sample. A failed check
 records the scan and resets the hold without granting native admission.
+
+[Owned admission review](OPTIONS_SCOPE_OWNED_ADMISSION.md) can now refresh this
+hold atomically with common-governor sizing. An unfinished hold cannot size; a
+rejected current account/quote review resets it. Dispatch remains disabled.
