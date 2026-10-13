@@ -63,7 +63,7 @@ not silently refresh, expire or authorize it. Consumers must not treat a histori
 Sampling establishes passing observations at bounded intervals, not an unbroken
 intrabar price path. Completed-bar checks cannot prove that no crossing happened
 inside an unfinished bar. Complete obstruction coverage, intrabar/live acceptance,
-contract-profile admission, native position/full-cost loss attribution, cooldowns,
+native account-aware admission, position/full-cost loss attribution, cooldowns,
 Scope execution/runtime/replay and observer integration remain separate work.
 The existing native-activity guard remains in force, so this watch cannot claim a
 traded position was unfilled. No cost or loss is inferred from watch classifications.
@@ -71,3 +71,7 @@ traded position was unfilled. No cost or loss is inferred from watch classificat
 See [watch lifecycle](OPTIONS_SCOPE_WATCHES.md), [quality review](OPTIONS_SCOPE_QUALITY.md)
 and [current proof/status](SLICE2_STATUS.md). Main stays untouched, PR #1 draft,
 LIVE disabled and the deployed experiment frozen.
+
+[Optional contract-profile enrollment](OPTIONS_SCOPE_CONTRACTS.md) now rechecks
+current price, spread, delta and liquidity at every arming sample. A failed check
+records the scan and resets the hold without granting native admission.

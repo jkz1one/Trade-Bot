@@ -87,7 +87,8 @@ implementation does not supply a complete obstruction classifier.
 
 `complete_path_proven` is always false. Absence of a supplied intervening level
 cannot establish that the full price path is unobstructed. Complete directional
-obstruction coverage and convexity contract eligibility remain open.
+obstruction coverage remains open; the [contract review](OPTIONS_SCOPE_CONTRACTS.md)
+now explicitly blocks convexity without it.
 
 `passed` requires detected context, sufficient exact first-target reward, the arm
 score threshold, an unconsumed first objective and no supplied level before it.
@@ -106,11 +107,12 @@ the frame, context, geometry and other original evidence.
 
 Absent `quality`, the field is omitted and old policy serialization and watch
 behavior remain unchanged. Existing cohorts cannot add or retune it on reopen.
-This does not add an armed state or implement the separate confirmation-hold rule.
+The separate [sampled arming hold](OPTIONS_SCOPE_ARMING.md) is an optional frozen
+watch capability.
 Direction-reset, daily calls, owner readiness and all global gates remain binding.
 
 Filled-position linkage, every entry/management cost, loss/cooldown and reviewed
-family reset, contract profile/size admission, arming hold, shared execution/runtime/
+family reset, native sizing/admission, shared execution/runtime/
 replay, complete obstruction coverage, authentic data and economic acceptance remain
 open. See [watch contract](OPTIONS_SCOPE_WATCHES.md), [source of truth](SOURCE_OF_TRUTH.md)
 and [status](SLICE2_STATUS.md). Main remains untouched, PR #1 draft, LIVE disabled

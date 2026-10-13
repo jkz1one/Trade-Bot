@@ -45,6 +45,8 @@ watch cohorts and locks its complete original scan. It must share the exact cont
 policy; older cohorts remain unchanged. [Optional sampled arming](OPTIONS_SCOPE_ARMING.md)
 now persists fresh-evidence holds for explicitly enrolled cohorts. Complete obstruction
 coverage and execution admission are still required to trade.
+[Optional contract profiles](OPTIONS_SCOPE_CONTRACTS.md) now add current exact-contract
+checks to calls and arming samples for newly enrolled cohorts.
 
 The record locks the full original frame, typed context, scan, geometry, exact
 instrument, session and called time. A context variant retains its parent. The

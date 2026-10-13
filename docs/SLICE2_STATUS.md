@@ -1,5 +1,68 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 Scope exact-contract profile gates: 2026-10-13 UTC
+
+The supplied-contract review now recomputes quality and classifies responsive,
+balanced and convexity alternatives from current exact SPXW evidence. Explicit
+frozen price/spread/liquidity bounds, observed nonzero signed delta, upstream
+identity/tick/freshness and target reachability gates remain binding. Missing
+volume/open interest stays unknown. Higher observed delta is not capped by Degen's
+unrelated band. Profiles retain pattern/parent/right and explicit rejection reasons.
+
+Convexity can be classified but cannot pass while complete path evidence remains
+unproven. No failed convexity branch falls back to a different profile. Scores,
+reference deltas and premium prices do not become quantities, debit approvals or
+execution authority. Native sizing must still include all fees/slippage and entry/
+management costs through the shared owner, not a new Scope account calculator.
+
+New frozen watch cohorts may enroll the exact matching contract/quality policy.
+Calls lock the full review; rejected calls consume no play/event. Arming samples
+recheck current eligibility and persist failed reviews as resets. Original
+instrument/geometry, source progression, global owner limits, action receipts and
+restore fencing remain intact. Old cohorts omit the field and cannot add it on
+reopen. Independent accounts and existing shared Degen/Swing execution are unchanged.
+
+Pre-edit fresh GitHub head was `ae3f81e341475b32855dfa817e40878d1df5bb2b`, tree
+`e049cb1527de7c93722f5e5eb47293fffa593cc5`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 is open/draft.
+
+Validation:
+
+- Final source contract/arming/quality/watch/direction group: **227 passed in
+  10.90s**, including 36 contract cases.
+- Initial source group: 198 passed, 25 failed. New fixtures used off-tick quotes,
+  so existing preflight rejected them before profile checks. Corrected fixtures
+  use valid ticks and compare exact spread-policy boundaries. Follow-up: 31
+  passed, one failed because the zero-delta test expected a profile-level reason;
+  zero delta correctly fails earlier preflight. That assertion now verifies the
+  upstream failure. No application gate was weakened or failing case removed.
+- Final noneditable installed group: **780 passed, one failed in 142.62s**,
+  outside source, isolated Python, copied tests and warnings as errors. Twelve
+  suites cover 36 new contract cases, all earlier Scope capabilities and native
+  execution/admission, Degen and shared-strategy regressions. The failure was the
+  existing `test_installed_runtime_init_roundtrip_joint_settings` subprocess's
+  20-second initialization deadline. No deadline or application gate was relaxed.
+  The unchanged isolated retry completed: **1 passed in 11.23s**. The initial failure
+  remains recorded; authentic host startup/latency acceptance stays open. This
+  does not claim an all-green 781-test invocation.
+- Installed/wheel/source module bytes and copied Scope tests match; scoped
+  lint/format, dependency consistency, whitespace and 248 local documentation-link
+  checks pass.
+- Wheel SHA-256: `87352fc33ef789cffd53b2cd0e49a87716a7e92580a11162a77cbeb23f20f636`.
+  Local logs/artifacts: `scope-contract-source*.log`,
+  `scope-contract-installed-tests.log`, `scope-contract-env`,
+  `scope-contract-proof` and `scope-contract-dist` beside the checkout.
+
+[Contract-profile semantics](OPTIONS_SCOPE_CONTRACTS.md) distinguish the pinned
+source classification from stricter observed-data requirements. Native account-aware
+admission, filled-position/full-cost loss/cooldown/reset, complete obstruction
+coverage, Scope common-owner execution/runtime/replay and observer integration
+remain open. Authentic provider/model/calendar, host, visual and prospective
+acceptance remain separate. Main untouched, PR draft, LIVE disabled and experiment
+frozen. No provider/model/broker call, dependency, host or deployment changed.
+
+---
+
 ## P7 Scope sampled arming hold: 2026-10-13 UTC
 
 New frozen watch cohorts can explicitly require a 60–600 second research hold

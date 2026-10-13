@@ -17,6 +17,7 @@ from app.options.scope_context import (
     ScopeContextPolicy,
     scan_scope_context,
 )
+from app.options.scope_contract import ScopeContractPolicy, scan_scope_contract
 from app.options.scope_quality import ScopeQualityPolicy, scan_scope_quality
 from app.options.scope_structure import ScopePattern, scan_scope_structure
 
@@ -44,12 +45,18 @@ class ScopeWatchPolicy(OptionRecord):
 
     arming: ScopeArmingPolicy | None = Field(default=None, exclude_if=lambda value: value is None)
 
+    contract: ScopeContractPolicy | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+
     @model_validator(mode="after")
     def matching_quality_context(self):
         if self.quality is not None and self.quality.context != self.context:
             raise ValueError("Scope watch and quality context policies must match")
         if self.arming is not None and self.quality is None:
             raise ValueError("Scope arming requires frozen quality review")
+        if self.contract is not None and self.contract.quality != self.quality:
+            raise ValueError("Scope contract and watch quality policies must match")
         return self
 
 
@@ -238,6 +245,11 @@ class ScopeWatchBook:
                 reviewed = [o for o in quality_scan.observations if o.observation == selected[0]]
                 if quality_scan.issues or len(reviewed) != 1 or not reviewed[0].passed:
                     raise ExecutionBlocked("SCOPE_WATCH_QUALITY_BLOCKED")
+            contract_scan = None
+            if self.policy.contract is not None:
+                contract_scan = scan_scope_contract(frame, context, self.policy.contract, now=now)
+                if not self._contract_passed(contract_scan, choice.model_dump()):
+                    raise ExecutionBlocked("SCOPE_WATCH_CONTRACT_BLOCKED")
             session = frame.session.session_date.isoformat()
             previous = [
                 json.loads(r[0])
@@ -276,6 +288,8 @@ class ScopeWatchBook:
                 "terminal_at": None,
                 "terminal_bar_ends_at": None,
             }
+            if contract_scan is not None:
+                record["locked_contract_scan"] = contract_scan.model_dump(mode="json")
             if quality_scan is not None:
                 record["locked_quality_scan"] = quality_scan.model_dump(mode="json")
             db.execute(
@@ -283,6 +297,13 @@ class ScopeWatchBook:
                 (key, session, json.dumps(record, sort_keys=True)),
             )
             return self._finish(db, action, digest, record, now)
+
+    @staticmethod
+    def _contract_passed(scan, choice):
+        selected = [
+            o for o in scan.observations if all(getattr(o, k) == v for k, v in choice.items())
+        ]
+        return not scan.issues and len(selected) == 1 and selected[0].passed
 
     def _review_flip(self, previous, selected, frame, now):
         policy = self.policy.direction_reset
@@ -575,6 +596,11 @@ class ScopeWatchBook:
             raise ExecutionBlocked("SCOPE_WATCH_PRIOR_HISTORY_CHANGED")
         if selected[0].observation.geometry.model_dump(mode="json") != record["geometry"]:
             raise ExecutionBlocked("SCOPE_WATCH_LOCKED_GEOMETRY_CHANGED")
+        if self.policy.contract is not None:
+            contract_scan = scan_scope_contract(frame, context, self.policy.contract, now=now)
+            result["contract_scan"] = contract_scan.model_dump(mode="json")
+            if not self._contract_passed(contract_scan, record["choice"]):
+                raise ExecutionBlocked("SCOPE_WATCH_CONTRACT_BLOCKED")
         # Every current stream must advance its source clock. Receipt-only refresh
         # and repeated completed bars cannot stand in for new provider observations.
         items = {"group:" + e.kind: e for e in frame.evidence}
