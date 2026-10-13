@@ -97,6 +97,9 @@ class OptionJournal(ExecutionJournal):
             "execution_option_runtime",
             "execution_option_runtime_slots",
             "execution_option_swing_seeds",
+            "execution_option_scope_watch_policy",
+            "execution_option_scope_watches",
+            "execution_option_scope_watch_actions",
         }
     )
 

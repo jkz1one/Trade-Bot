@@ -1,0 +1,121 @@
+# Durable unfilled Scope watches
+
+`app.options.scope_watch.ScopeWatchBook` persists the first called-play layer in
+an existing `OptionExecution` journal. This is an explicitly enrolled **research
+watch workflow**, with false trade/LIVE authority. It does not add Scope to the
+runtime, AI packet, admission, management or replay paths.
+
+`ScopeWatchPolicy` freezes the complete context/structure/preflight policy and an
+explicit daily call ceiling of one or two. The source ceiling is two called plays,
+including watched plays that never fill. See the pinned
+[Scope V2 playbook](https://github.com/jkz1one/SignalFlow/blob/f9eaf2c1b5d13dca287ee7138126883065b00395/docs/SCOPE_WIZARD_SPXW_PLAYBOOK_V2.md).
+Research configuration does not approve LIVE limits.
+
+## Enrollment and ownership
+
+The book requires the built-in lifetime-owned PAPER engine, SPX in its allowed
+universe, and matching provider/option-quote source. Enrollment requires a healthy,
+fresh, reconciled, funded and supervised empty account without an entry halt,
+unsupported exposure, unknown budgets or exhausted global loss allowance.
+
+It is available only before native orders, model calls, option decisions,
+opportunities or runtime records exist. Subsequent watch mutations reject such
+history too: this version cannot safely link a watch to a native entry or claim
+that a traded position remained unfilled. Reopening for inspection does not erase
+history. Existing Degen/Swing populations are not enrolled or migrated.
+
+The Scope calendar stays the explicit reviewed index-calendar input. Matching the
+owner's provider does not authenticate this calendar or silently substitute the
+owner's XNYS calendar for SPXW acceptance.
+
+Three `execution_option_scope_watch_*` tables live in the same journal, under the
+existing lifetime lease, SQLite transaction and paired restore fence. There is no
+second worker, cash ledger, account or cost calculator. A journal-only rollback
+is rejected while the current authority file survives; simultaneous rollback of
+both files and hostile filesystem access remain outside that mechanism.
+
+## Calls and locked evidence
+
+`call(key, choice, frame, context, expected_revision=..., now=...)` recomputes the
+complete [context review](OPTIONS_SCOPE_CONTEXT.md) at the supplied aware clock.
+The exact pattern, parent and CALL/PUT alternative must be uniquely `DETECTED`,
+with no global context issues. This is sufficient to record a research watch;
+quality/obstruction review and execution admission are still required to trade.
+
+The record locks the full original frame, typed context, scan, geometry, exact
+instrument, session and called time. A context variant retains its parent. The
+state is `WATCHING`; no size, order price, fill, P&L or win/loss is inferred.
+
+Only one watch may be active. Every successful call consumes that session's count,
+even when later invalidated or expired without a fill. There is no delete/reset or
+manual cancellation API that refunds calls. A new call in the same session must
+retain the exact session and all previously reviewed bars, and use a strictly
+later completed bar than every previous watch's reviewed endpoint. Correlated
+variants cannot repeatedly reuse an already reviewed bar as new opportunities.
+
+Opposite-direction calls within the session are explicitly blocked with
+`SCOPE_WATCH_DIRECTION_RESET_NOT_IMPLEMENTED`. This conservative boundary does
+**not** claim to implement the settled neutral/reset, fresh reversal confirmation
+or flip cooldown. Those remain part of the next durable play-state work.
+
+## Advancing a watch
+
+`advance(key, play_key, expected_revision=..., now=..., frame=...)` accepts no
+caller-supplied status, P&L, outcome or replacement geometry.
+
+Before the original exclusive entry cutoff, it requires a fresh complete frame,
+recomputed structure coverage and technical/confirmation payload bindings, the
+same exact instrument/session, unchanged SPX/SPY/QQQ history prefixes and at least
+one new completed bar. It reviews **every** new SPX bar in chronological order
+against the original geometry:
+
+| Observation | Persisted state |
+| --- | --- |
+| CALL low at/below original invalidation, or PUT high at/above it | `INVALIDATED_UNFILLED` |
+| CALL high at/above original second objective, or PUT low at/below it | `OBJECTIVE_CONSUMED_UNFILLED` |
+| Neither | `WATCHING` |
+| Clock at/after the original entry cutoff | `EXPIRED_UNFILLED` |
+
+The first crossing's bar end and the time the evidence was processed are stored
+separately. If invalidation and objective occur in the same bar, invalidation wins;
+OHLC evidence cannot establish their intrabar ordering. A later rebound cannot
+hide an earlier crossing. These are watch classifications, never simulated fills
+or profitable/loss-making outcomes. The review does not reevaluate current
+flow/news to grant an entry; it only consumes bound completed price evidence.
+
+Cutoff expiry needs no fresh feed and remains possible during an account halt.
+It takes precedence over a supplied frame, records no inferred crossing bar, and
+makes no claim about the missing market path. Missing/stale data before cutoff
+leaves the watch active. Native execution history blocks advancement rather than
+falsely marking a potentially traded watch unfilled.
+
+## Durable actions and reads
+
+Every action carries the exact journal revision. Successful action keys bind the
+full request, including time, evidence and revision. An identical retry returns
+its **original historical receipt**, even after subsequent state transitions;
+`snapshot()` supplies current stored state. Changed reuse conflicts. New actions
+reject stale revisions and clocks earlier than the book's last successful action.
+State, call count, receipt and audit event commit atomically. Failed actions
+consume no call or event. Concurrent writers cannot both claim the same revision.
+
+The unique active row, full records, action receipts and frozen policy survive
+owner restart. A later explicitly supplied session starts its own count while
+retaining old records; an old active watch must first be expired explicitly.
+`snapshot()` reads stored state only. It never polls a provider, advances time,
+expires a watch or mutates journal/authority files.
+
+## Still required for Scope execution
+
+Durable neutral/flip confirmation, actual position linkage, full-cost native
+outcome attribution, consecutive-loss/cooldown and reviewed family-reset controls,
+quality/obstruction policy, shared-owner admission/management, runtime enrollment,
+stored dashboard integration and full-cost replay remain open. Loss controls must
+use verified native fills plus **all entry and management charges**; watch states
+cannot substitute for that evidence. Existing independent A/B/C/D accounting is
+unchanged, and unknown costs remain unknown.
+
+Authentic normalized provider data, reviewed SPXW calendars, host acceptance and
+prospective economics remain separate gates. See [status](SLICE2_STATUS.md) and
+[source of truth](SOURCE_OF_TRUTH.md). Main stays untouched, PR #1 draft, LIVE
+disabled and the deployed experiment frozen.

@@ -102,9 +102,10 @@ issues and per-observation blockers. A nested earlier `DETECTED` observation doe
 not override a failed context review. Whole frame/context and policy hashes bind
 the result; reads perform no I/O.
 
-Durable called-play counting (including watched/unfilled plays), neutral/flip and
-loss/cooldown state, quality/obstruction policy, shared-owner admission and
-management, explicit Scope runtime enrollment, stored observer projection and
+[Durable unfilled watches](OPTIONS_SCOPE_WATCHES.md) now preserve called-play
+counting, locked evidence and invalidation/expiry in the existing journal.
+Neutral/flip and full-cost native loss/cooldown state, quality/obstruction policy,
+shared-owner admission and management, explicit Scope runtime enrollment, stored observer projection and
 full-cost replay remain open. Authentic data normalization and provider/calendar
 acceptance are still required. Scope cannot trade through these diagnostics.
 

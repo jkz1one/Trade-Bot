@@ -1,5 +1,68 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 durable unfilled Scope watches: 2026-10-13 UTC
+
+`app.options.scope_watch.ScopeWatchBook` now records called research plays in the
+existing owned options journal. The frozen policy explicitly caps calls at one or
+two per reviewed session, including unfilled invalidations and expirations. A
+single active watch locks the full original frame, context scan, selected pattern
+and parent, exact instrument, session and geometry. Later calls cannot reuse old
+completed endpoints or rewrite prior SPX/SPY/QQQ history.
+
+Fresh completed-bar review processes every new bar against the original geometry,
+retaining the first invalidation/objective crossing and separate observation time.
+Same-bar ambiguity chooses invalidation. The original entry cutoff expires an
+unfilled watch without fresh data, including during an account halt. None of these
+states supplies a fill, win, loss, P&L or execution authority.
+
+Exact request receipts, revision checks, transactional call counting and the unique
+active row survive restart and concurrent attempts. All three tables participate
+in the existing paired restore fence. Stored snapshots perform no market work or
+mutation. Separate accounts retain separate counts and unchanged cash/cost ledgers.
+
+This version requires a new untraded, healthy owner with matching SPX/provider/quote
+identity. Native model/order/decision/opportunity/runtime history blocks enrollment
+and subsequent mutations: execution linkage must be implemented before a watch can
+safely represent a traded position. Opposite-direction calls are explicitly blocked
+until the settled durable neutral/flip path exists. There is no reset that refunds
+called plays, nor a caller-supplied outcome or loss bypass.
+
+Pre-edit GitHub head was `a5cfc8d037e9a6a0fc30c752f20ca703c2dc8c19`, tree
+`08a19845a59cbb8695653fbe6d5c857ae5108fd0`. The original requested head
+`077dfe56bbda89019642332e714903306eb682c4` remains an ancestor. Fresh GitHub reads
+confirmed main `b5359aaf396e692d2142d7e02908f1544e045ee6` and PR #1 open/draft.
+
+Verification:
+
+- **605 passed in 93.33s** on the final noneditable installed wheel, using isolated
+  Python and copied tests, warnings as errors. Eight suites cover the 51 new watch
+  cases, existing Scope context/structure/preflight, options execution/admission,
+  Degen and shared Degen/Swing strategy paths. No failed test was waived.
+- Source checks progressed through 41 and 48 passing cases. An expanded run had
+  49 passes and two test-fixture failures (a changed date expectation and unchanged
+  positive delta on a PUT fixture). Both were corrected; the final source run
+  passed all 51 cases in 5.17s, and the installed group covers those corrections.
+- Watch cases cover both directions, original evidence/geometry locks, first versus
+  later crossing, same-bar ambiguity, unfilled daily counting, exact retries,
+  restart, concurrent actions, independent accounts, explicit next-session counting,
+  stale/context/identity/history/revision rejection, halt-time cutoff expiry,
+  atomic rollback, journal-only restore rejection and closed-owner protection.
+- Installed module, wheel and source bytes match for the new book and journal
+  change; copied Scope tests match source. Scoped lint/format, dependency and
+  whitespace checks pass. Documentation links were checked locally.
+- Wheel SHA-256:
+  `18e050fb3cded31e6f7b37c5baceaf2c63e4b8cf6ce9e8261b65d28eeaab17b2`.
+
+See [source of truth v1.30](SOURCE_OF_TRUTH.md) and the
+[durable watch contract](OPTIONS_SCOPE_WATCHES.md). Durable neutral/flip state,
+verified native full-cost loss/cooldown attribution and reviewed family reset,
+quality/obstruction policy, common-owner admission/management, Scope runtime/replay
+and observer projection remain open. Authentic provider/calendar, host and
+prospective economic gates remain open. Existing independent A/B/C/D accounts and
+all entry/management costs are preserved. No provider/model/broker call, dependency,
+host or deployment changed. Main untouched, PR #1 draft, LIVE disabled, experiment
+frozen.
+
 ## P7 Scope context variants and risk review: 2026-10-13 UTC
 
 The pure `app.options.scope_context` review now adds the six pinned level-anchored

@@ -55,6 +55,9 @@ patterns, SPY/QQQ confirmation and exact-strike reachability diagnostics; Scope
 trade admission and runtime enrollment remain open.
 [Scope context review](docs/OPTIONS_SCOPE_CONTEXT.md) adds the six level-anchored
 variants and bound flow/news/event/expected-move risk checks without execution authority.
+[Durable Scope watches](docs/OPTIONS_SCOPE_WATCHES.md) now preserve unfilled call
+counts, locked evidence and deterministic invalidation/expiry in the existing
+journal. Scope execution and full-cost loss/cooldown linkage remain open.
 Authentic provider, host and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.

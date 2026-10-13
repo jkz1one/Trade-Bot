@@ -1,0 +1,353 @@
+"""Durable unfilled Scope watches. No proposal, fill, P&L or order authority."""
+
+import json
+from datetime import datetime
+from typing import Literal
+
+from pydantic import Field
+
+from app.execution.engine import ExecutionBlocked
+from app.options.engine import OptionExecution, clock, fingerprint
+from app.options.models import Name, OptionRecord
+from app.options.scope import ScopePreflightInput
+from app.options.scope_context import (
+    ContextPattern,
+    ScopeContextInput,
+    ScopeContextPolicy,
+    scan_scope_context,
+)
+from app.options.scope_structure import ScopePattern, scan_scope_structure
+
+
+class ScopeWatchPolicy(OptionRecord):
+    version: Literal["scope-unfilled-watch-v1"] = "scope-unfilled-watch-v1"
+    context: ScopeContextPolicy
+    max_called_plays_per_session: int = Field(strict=True, ge=1, le=2)
+
+
+class ScopeWatchChoice(OptionRecord):
+    pattern: ScopePattern | ContextPattern
+    parent_pattern: ScopePattern
+    right: Literal["CALL", "PUT"]
+
+
+class _Action(OptionRecord):
+    key: Name
+    expected_revision: int = Field(strict=True, ge=0)
+
+
+class ScopeWatchBook:
+    """Opt-in research state inside one lifetime-owned, restore-fenced journal.
+
+    This version refuses any native order/model/decision history. Linking watches
+    to execution and settling full-cost outcomes requires a later frozen version.
+    """
+
+    def __init__(self, engine, policy, *, now, create=False):
+        if type(engine) is not OptionExecution:
+            raise ValueError("Built-in owned OptionExecution required")
+        self.engine = engine
+        self.policy = ScopeWatchPolicy.model_validate(policy.model_dump(warnings=False))
+        preflight = self.policy.context.structure.preflight
+        if (
+            "SPX" not in engine.limits.allowed_underlyings
+            or preflight.provider != engine.limits.provider
+            or preflight.quote_source != engine.limits.option_source
+        ):
+            raise ExecutionBlocked("SCOPE_WATCH_OWNER_IDENTITY_MISMATCH")
+        self._config = self.policy.model_dump_json()
+        now = clock(now)
+        with engine.journal.write() as db:
+            engine._control(db)
+            db.execute(
+                "CREATE TABLE IF NOT EXISTS execution_option_scope_watch_policy "
+                "(id INTEGER PRIMARY KEY CHECK(id=1), config_json TEXT NOT NULL, "
+                "last_action_at TEXT NOT NULL)"
+            )
+            db.execute(
+                "CREATE TABLE IF NOT EXISTS execution_option_scope_watches "
+                "(play_key TEXT PRIMARY KEY, session_date TEXT NOT NULL, "
+                "active_lock INTEGER UNIQUE CHECK(active_lock=1), record_json TEXT NOT NULL)"
+            )
+            db.execute(
+                "CREATE TABLE IF NOT EXISTS execution_option_scope_watch_actions "
+                "(action_key TEXT PRIMARY KEY, request_hash TEXT NOT NULL, result_json TEXT NOT NULL)"
+            )
+            row = db.execute("SELECT * FROM execution_option_scope_watch_policy").fetchone()
+            if row is None:
+                if not create:
+                    raise ExecutionBlocked("SCOPE_WATCH_NOT_ENROLLED")
+                self._untraded(db)
+                self._ready(db, now)
+                db.execute(
+                    "INSERT INTO execution_option_scope_watch_policy VALUES(1,?,?)",
+                    (self._config, now.isoformat()),
+                )
+                engine.journal.event(db, now, "SCOPE_WATCH_ENROLLED", json.loads(self._config))
+            elif create or row["config_json"] != self._config:
+                raise ExecutionBlocked("FROZEN_SCOPE_WATCH_POLICY_MISMATCH")
+
+    def _untraded(self, db):
+        for table in (
+            "execution_orders",
+            "execution_model_calls",
+            "execution_option_decisions",
+            "execution_option_opportunities",
+            "execution_option_runtime",
+        ):
+            if (
+                db.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)
+                ).fetchone()
+                and db.execute(f"SELECT 1 FROM {table} LIMIT 1").fetchone()
+            ):
+                raise ExecutionBlocked("SCOPE_WATCH_EXECUTION_LINK_NOT_IMPLEMENTED")
+
+    def _ready(self, db, now):
+        account = self.engine._account(db, now)
+        if (
+            not account.complete
+            or not account.reconciled
+            or account.entry_halted
+            or account.entry_blockers
+            or account.position is not None
+            or account.working_orders
+            or account.unsupported_exposure
+            or not account.budgets_known
+            or account.daily_loss_available <= 0
+            or account.total_loss_available <= 0
+            or account.settled_cash <= 0
+            or not 0
+            <= (now - account.captured_at).total_seconds()
+            < self.engine.limits.account_max_age_seconds
+        ):
+            raise ExecutionBlocked("SCOPE_WATCH_OWNER_NOT_READY")
+
+    def _begin(self, db, action, request, now):
+        self.engine._control(db)
+        config = db.execute("SELECT * FROM execution_option_scope_watch_policy").fetchone()
+        if (
+            config is None
+            or config["config_json"] != self._config
+            or self.policy.model_dump_json() != self._config
+        ):
+            raise ExecutionBlocked("FROZEN_SCOPE_WATCH_POLICY_MISMATCH")
+        digest = fingerprint(request)
+        prior = db.execute(
+            "SELECT * FROM execution_option_scope_watch_actions WHERE action_key=?", (action.key,)
+        ).fetchone()
+        if prior:
+            if prior["request_hash"] != digest:
+                raise ExecutionBlocked("SCOPE_WATCH_ACTION_CONFLICT")
+            return digest, json.loads(prior["result_json"])
+        if action.expected_revision != self.engine.journal.revision(db):
+            raise ExecutionBlocked("SCOPE_WATCH_REVISION_CHANGED")
+        if now < datetime.fromisoformat(config["last_action_at"]):
+            raise ExecutionBlocked("SCOPE_WATCH_CLOCK_REWOUND")
+        self._untraded(db)
+        return digest, None
+
+    def _finish(self, db, action, digest, record, now):
+        self.engine.journal.event(
+            db, now, "SCOPE_WATCH_ACTION", {"action_key": action.key, "record": record}
+        )
+        result = {
+            "revision": self.engine.journal.revision(db),
+            "record": record,
+            "authority": False,
+            "live_enabled": False,
+        }
+        db.execute(
+            "INSERT INTO execution_option_scope_watch_actions VALUES(?,?,?)",
+            (action.key, digest, json.dumps(result, sort_keys=True)),
+        )
+        db.execute(
+            "UPDATE execution_option_scope_watch_policy SET last_action_at=? WHERE id=1",
+            (now.isoformat(),),
+        )
+        return result
+
+    def call(self, key, choice, frame, context, *, expected_revision, now):
+        """Lock one detected alternative as WATCHING; even never-filled calls count."""
+        now = clock(now)
+        action = _Action(key=key, expected_revision=expected_revision)
+        choice = ScopeWatchChoice.model_validate(choice.model_dump(warnings=False))
+        frame = ScopePreflightInput.model_validate(frame.model_dump(warnings=False))
+        context = ScopeContextInput.model_validate(context.model_dump(warnings=False))
+        request = {
+            "kind": "CALL",
+            "action": action,
+            "choice": choice,
+            "frame": frame,
+            "context": context,
+            "now": now,
+        }
+        with self.engine.journal.write() as db:
+            digest, prior = self._begin(db, action, request, now)
+            if prior is not None:
+                return prior
+            self._ready(db, now)
+            if db.execute(
+                "SELECT 1 FROM execution_option_scope_watches WHERE active_lock=1"
+            ).fetchone():
+                raise ExecutionBlocked("SCOPE_WATCH_ALREADY_ACTIVE")
+            scan = scan_scope_context(frame, context, self.policy.context, now=now)
+            selected = [
+                o
+                for o in scan.observations
+                if all(getattr(o, k) == v for k, v in choice.model_dump().items())
+            ]
+            if (
+                scan.issues
+                or len(selected) != 1
+                or selected[0].status != "DETECTED"
+                or selected[0].geometry is None
+            ):
+                raise ExecutionBlocked("SCOPE_WATCH_CONTEXT_NOT_DETECTED")
+            session = frame.session.session_date.isoformat()
+            previous = [
+                json.loads(r[0])
+                for r in db.execute(
+                    "SELECT record_json FROM execution_option_scope_watches WHERE session_date=?",
+                    (session,),
+                )
+            ]
+            if len(previous) >= self.policy.max_called_plays_per_session:
+                raise ExecutionBlocked("SCOPE_WATCH_DAILY_CALL_LIMIT")
+            for p in previous:
+                before = ScopePreflightInput.model_validate(p["reviewed_frame"])
+                if frame.session != before.session:
+                    raise ExecutionBlocked("SCOPE_WATCH_LOCKED_SESSION_CHANGED")
+                self._history_prefix(before, frame)
+            if any(p["choice"]["right"] != choice.right for p in previous):
+                raise ExecutionBlocked("SCOPE_WATCH_DIRECTION_RESET_NOT_IMPLEMENTED")
+            if any(
+                scan.structure.completed_through.isoformat() <= p["reviewed_through"]
+                for p in previous
+            ):
+                raise ExecutionBlocked("SCOPE_WATCH_FRESH_COMPLETED_BAR_REQUIRED")
+            record = {
+                "play_key": key,
+                "session_date": session,
+                "called_at": now.isoformat(),
+                "choice": choice.model_dump(mode="json"),
+                "status": "WATCHING",
+                "locked_frame": frame.model_dump(mode="json"),
+                "locked_context": context.model_dump(mode="json"),
+                "locked_scan": scan.model_dump(mode="json"),
+                "geometry": selected[0].geometry.model_dump(mode="json"),
+                "reviewed_frame": frame.model_dump(mode="json"),
+                "reviewed_through": scan.structure.completed_through.isoformat(),
+                "terminal_at": None,
+                "terminal_bar_ends_at": None,
+            }
+            db.execute(
+                "INSERT INTO execution_option_scope_watches VALUES(?,?,1,?)",
+                (key, session, json.dumps(record, sort_keys=True)),
+            )
+            return self._finish(db, action, digest, record, now)
+
+    def advance(self, key, play_key, *, expected_revision, now, frame=None):
+        """Expire at the locked cutoff or review all newly completed bars in order.
+
+        No caller-supplied status, outcome, P&L, fill or replacement geometry.
+        Expiry needs no fresh market data and remains available during a halt.
+        """
+        now = clock(now)
+        action = _Action(key=key, expected_revision=expected_revision)
+        play_key = _Action(key=play_key, expected_revision=0).key
+        if frame is not None:
+            frame = ScopePreflightInput.model_validate(frame.model_dump(warnings=False))
+        request = {
+            "kind": "ADVANCE",
+            "action": action,
+            "play_key": play_key,
+            "frame": frame,
+            "now": now,
+        }
+        with self.engine.journal.write() as db:
+            digest, prior = self._begin(db, action, request, now)
+            if prior is not None:
+                return prior
+            row = db.execute(
+                "SELECT * FROM execution_option_scope_watches WHERE play_key=?", (play_key,)
+            ).fetchone()
+            if row is None or row["active_lock"] != 1:
+                raise ExecutionBlocked("SCOPE_WATCH_NOT_ACTIVE")
+            record = json.loads(row["record_json"])
+            locked = ScopePreflightInput.model_validate(record["locked_frame"])
+            if now >= locked.session.entry_cutoff_at:
+                record["status"] = "EXPIRED_UNFILLED"
+            else:
+                if frame is None:
+                    raise ExecutionBlocked("SCOPE_WATCH_FRESH_FRAME_REQUIRED")
+                if (
+                    frame.session != locked.session
+                    or frame.metadata is None
+                    or frame.metadata.instrument != locked.metadata.instrument
+                ):
+                    raise ExecutionBlocked("SCOPE_WATCH_LOCKED_IDENTITY_CHANGED")
+                scan = scan_scope_structure(frame, self.policy.context.structure, now=now)
+                if scan.issues:
+                    raise ExecutionBlocked("SCOPE_WATCH_REVIEW_COVERAGE_BLOCKED")
+                old = ScopePreflightInput.model_validate(record["reviewed_frame"])
+                previous = {h.symbol: h for h in old.histories}
+                self._history_prefix(old, frame)
+                if scan.completed_through.isoformat() <= record["reviewed_through"]:
+                    raise ExecutionBlocked("SCOPE_WATCH_FRESH_COMPLETED_BAR_REQUIRED")
+                from app.options.scope_structure import ScopeGeometry
+
+                geometry = ScopeGeometry.model_validate(record["geometry"])
+                bars = next(h.bars for h in frame.histories if h.symbol == "SPX")
+                for bar in bars[len(previous["SPX"].bars) :]:
+                    invalid = (
+                        bar.low <= geometry.invalidation
+                        if geometry.right == "CALL"
+                        else bar.high >= geometry.invalidation
+                    )
+                    consumed = (
+                        bar.high >= geometry.target_two
+                        if geometry.right == "CALL"
+                        else bar.low <= geometry.target_two
+                    )
+                    if invalid or consumed:
+                        record["status"] = (
+                            "INVALIDATED_UNFILLED" if invalid else "OBJECTIVE_CONSUMED_UNFILLED"
+                        )
+                        record["terminal_bar_ends_at"] = bar.ends_at.isoformat()
+                        break
+                record["reviewed_frame"] = frame.model_dump(mode="json")
+                record["reviewed_through"] = scan.completed_through.isoformat()
+            active = record["status"] == "WATCHING"
+            if not active:
+                record["terminal_at"] = now.isoformat()
+            db.execute(
+                "UPDATE execution_option_scope_watches SET active_lock=?, record_json=? WHERE play_key=?",
+                (1 if active else None, json.dumps(record, sort_keys=True), play_key),
+            )
+            return self._finish(db, action, digest, record, now)
+
+    @staticmethod
+    def _history_prefix(old, frame):
+        previous = {h.symbol: h for h in old.histories}
+        for history in frame.histories:
+            before = previous[history.symbol].bars
+            if history.bars[: len(before)] != before:
+                raise ExecutionBlocked("SCOPE_WATCH_HISTORY_REWRITTEN")
+
+    def snapshot(self):
+        """Stored-only projection; it never expires or evaluates a watch on read."""
+        with self.engine.journal.read() as db:
+            self.engine._control(db)
+            return {
+                "revision": self.engine.journal.revision(db),
+                "policy": json.loads(self._config),
+                "watches": [
+                    json.loads(r[0])
+                    for r in db.execute(
+                        "SELECT record_json FROM execution_option_scope_watches ORDER BY session_date,play_key"
+                    )
+                ],
+                "authority": False,
+                "live_enabled": False,
+            }
