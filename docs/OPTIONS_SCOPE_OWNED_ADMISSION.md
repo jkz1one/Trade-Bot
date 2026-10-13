@@ -80,3 +80,28 @@ without complete path evidence.
 See [contract profiles](OPTIONS_SCOPE_CONTRACTS.md), [arming](OPTIONS_SCOPE_ARMING.md),
 [watch lifecycle](OPTIONS_SCOPE_WATCHES.md) and [status](SLICE2_STATUS.md).
 Main untouched, PR #1 draft, LIVE disabled and deployed experiment frozen.
+
+## Native execution boundary
+
+The common engine now enforces this research-only boundary at both `prepare()`
+and dispatch. If the Scope watch-policy table exists, `OPEN_LONG` is rejected with
+`SCOPE_NATIVE_EXECUTION_NOT_ENROLLED`. An eligible stored sizing result, an admission
+ceiling, a different source key, or absence of a currently active watch cannot
+bypass it. An incomplete/empty enrollment table also fails closed. The guard does
+not parse a caller-supplied policy or offer a configuration switch to enable orders.
+
+Preparation retains the normal rejected native decision/audit receipt and creates
+no order or reservation. As with any native decision, that history then prevents
+further research-watch mutations under the existing native-activity restriction.
+Use the watch APIs for research; a rejected native entry is not a watch action.
+Historical preparation retries retain their receipts, but dispatch rechecks the
+boundary before any attempt/worker. A blocked prepared buy becomes `REJECTED`,
+releases its active order lock and records the dispatch reason without an attempt.
+
+HOLD and owned CLOSE actions remain available through their existing rules,
+including protective exits in a legacy/inconsistent journal. Already-attempted
+orders retain the engine's existing observation/reconciliation workflow. This
+change does not cancel broker orders or infer missing fills. Accounts without a
+Scope enrollment table retain existing Degen/Swing behavior. Native Scope linkage
+and its filled-position/full-cost loss controls must be implemented before this
+boundary can be replaced by a governed entry path.

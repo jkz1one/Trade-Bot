@@ -162,3 +162,7 @@ disabled and the deployed experiment frozen.
 [Optional owned admission review](OPTIONS_SCOPE_OWNED_ADMISSION.md) now refreshes
 armed evidence and records common-governor sizing from the same account. It adds
 no order, reservation, native execution linkage or trade authority.
+
+The [native execution boundary](OPTIONS_SCOPE_OWNED_ADMISSION.md#native-execution-boundary)
+now rejects generic native OPEN_LONG preparation and dispatch while a Scope research
+book is enrolled. HOLD and owned/protective exits retain their existing rules.

@@ -1,5 +1,63 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 Scope native entry boundary repair: 2026-10-13 UTC
+
+Reviewing the next native integration exposed an execution-boundary gap: Scope
+watch APIs correctly withheld authority, but the generic engine entry API did not
+check research enrollment. The common engine now rejects `OPEN_LONG` at both
+preparation and dispatch whenever the Scope watch-policy table exists. Stored
+eligible sizing, a caller-supplied admission ceiling, another source key or no
+active watch cannot bypass `SCOPE_NATIVE_EXECUTION_NOT_ENROLLED`.
+
+The check fails closed for an incomplete enrollment table. Preparation keeps its
+normal rejected native decision/audit receipt and creates no order/reservation.
+Dispatch rejects a prepared buy before an attempt or worker, clears the active
+order lock and records the reason. Historical preparation retries do not authorize
+current dispatch. HOLD and owned/protective exits retain their normal rules,
+including recovery from legacy/inconsistent state. Existing attempted-order
+reconciliation is unchanged. Accounts without Scope enrollment retain their
+existing Degen/Swing behavior, independent ledgers and full cost accounting.
+
+This repairs the promised research-only boundary; it does not implement Scope
+orders, native filled-position/loss/cooldown linkage or complete path coverage.
+A rejected generic entry is still a native decision and therefore blocks subsequent
+research-watch mutations under the existing native-history restriction. Callers
+must use watch APIs for research rather than retry generic entry as a bypass.
+
+Pre-edit fresh GitHub head was `e11cbe1adfc3cae1497f13cf9d9038492d1a92c7`, tree
+`5384288ec9c6603a85082ea0d23cb8fa189ed479`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 is open/draft.
+
+Validation:
+
+- Focused source group: **81 passed in 19.43s**, including eight new boundary
+  cases plus owned admission and watch lifecycle. Tests cover direct/prepared
+  entries, eligible-sizing reuse with/without a ceiling, incomplete enrollment,
+  restart, worker non-invocation and retained HOLD/owned-close behavior.
+- Initial new suite: six passed, two failed because the new assertions expected
+  `ABANDONED`; the engine's established dispatch rejection status is `REJECTED`.
+  Tests now verify that status, no attempt, released lock and the stored reason.
+  No application gate or existing lifecycle status was changed to satisfy tests.
+- Final noneditable installed package: **811 passed in 102.83s**, fourteen suites,
+  outside source, isolated Python, copied tests and warnings as errors. Scope,
+  native execution/admission, Degen and shared-strategy regressions all pass.
+- Source/wheel/installed module bytes and copied Scope tests match; scoped
+  lint/format, dependencies, whitespace and 245 local documentation-link checks pass.
+- Wheel SHA-256: `4eabaa260c366c01046af75a9c66ebc834543ca30a2538b45e3cef5ee383f928`.
+  Local logs/artifacts: `scope-boundary-source*.log`,
+  `scope-boundary-installed-tests.log`, `scope-boundary-env`,
+  `scope-boundary-proof` and `scope-boundary-dist` beside the checkout.
+
+[Native boundary semantics](OPTIONS_SCOPE_OWNED_ADMISSION.md#native-execution-boundary)
+record the recovery behavior. Native Scope order/position linkage and full-cost
+loss/cooldown/reset, complete obstruction coverage, dispatch/management/runtime/
+replay and observer integration remain open. Authentic provider/model/calendar,
+host, visual and prospective acceptance remain separate. Main untouched, PR draft,
+LIVE disabled and experiment frozen. No provider/model/broker call, dependency,
+host unit or deployment changed.
+
+---
+
 ## P7 Scope owned account admission review: 2026-10-13 UTC
 
 New frozen watch cohorts may now explicitly enroll an account-aware sizing review.
