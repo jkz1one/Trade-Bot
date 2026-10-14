@@ -25,8 +25,21 @@ all-in economic result**: data and host costs are not allocated here. Full-cost
 session comparisons remain the research/economic authority. Accounts are never
 combined and callers cannot supply P&L or replacement prices.
 
-Manual CLOSE orders currently have no exact entry link. A same-contract unlinked
-exit prepared after the selected entry makes its result incomplete. Contract-level
+New native CLOSE intents now store `closing_entry_client_id`, derived from the
+owner's held position in the preparation transaction and repeated in the approval.
+This covers ordinary, protective and model-managed closes. Dispatch checks both
+copies against the still-held entry before recording an attempt. A changed or
+missing half-link rejects dispatch with `OPTION_CLOSING_ENTRY_CHANGED`; it does
+not retarget the close to a newer position in the same contract. Stored attribution
+checks this link against the native buy, instrument, chronology and any existing
+protective/model link. Attributed close-model charges retain the same entry ID.
+
+Owner and isolated fixture worker must use the same installed release; an older
+worker cannot decode a new close intent. This change does not deploy either.
+The optional field is omitted when absent, preserving historical intent encoding.
+Legacy protective/model links remain supported. Historical ordinary CLOSE orders
+without an exact link are not backfilled. A same-contract unlinked exit prepared
+after the selected entry still makes its result incomplete. Contract-level
 settlement receipts also lack a unique entry ID and cannot prove position closure.
 This conservatively includes later same-contract activity rather than guessing an
 allocation. Orphan/mismatched fills and damaged proposal/approval/cost evidence

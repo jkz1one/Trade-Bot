@@ -201,6 +201,7 @@ def apply_position_plan(c, key, request, result, quote, underlying, *, now):
                     source_key=key,
                     instrument=quote.instrument,
                     side="SELL",
+                    closing_entry_client_id=p.entry_client_id,
                     quantity=admission.quantity,
                     limit_price=admission.limit_price,
                     approved_entry_debit=0,
@@ -221,6 +222,7 @@ def apply_position_plan(c, key, request, result, quote, underlying, *, now):
                 approval = {
                     **inputs,
                     "origin": "POSITION_MODEL",
+                    "closing_entry_client_id": p.entry_client_id,
                     "proposal": review.proposal.model_dump(mode="json"),
                     "quote": quote.model_dump(mode="json"),
                     "underlying": underlying.model_dump(mode="json"),

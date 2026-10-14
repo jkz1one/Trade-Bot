@@ -81,6 +81,7 @@ class OptionIntent(OptionRecord):
     thesis: str = Field(min_length=1, max_length=500)
     time_in_force: Literal["DAY"] = "DAY"
     entry_protection: EntryProtection | None = Field(default=None, exclude_if=lambda v: v is None)
+    closing_entry_client_id: Name | None = Field(default=None, exclude_if=lambda v: v is None)
 
     position_protection: PositionExitProtection | None = Field(
         default=None, exclude_if=lambda v: v is None
@@ -92,6 +93,15 @@ class OptionIntent(OptionRecord):
             raise ValueError("Distinct fresh approval and DAY-order deadlines required")
         if self.order_expires_at > self.instrument.contract.last_trading_at:
             raise ValueError("DAY order cannot outlive the exact contract trading instant")
+        if self.closing_entry_client_id is not None and (
+            self.side != "SELL"
+            or self.closing_entry_client_id == self.client_id
+            or (
+                self.position_protection is not None
+                and self.closing_entry_client_id != self.position_protection.entry_client_id
+            )
+        ):
+            raise ValueError("Closing entry link requires the exact distinct buy")
         if self.position_protection is not None and (
             self.side != "SELL" or self.entry_protection is not None
         ):

@@ -2,6 +2,7 @@
 # ruff: noqa: F811
 
 import asyncio
+import json
 import shutil
 import sqlite3
 from decimal import Decimal
@@ -86,8 +87,8 @@ def test_open_and_partial_entries_have_no_realized_outcome(tmp_path, quantity):
         assert result["gross_realized"] is None
 
 
-@pytest.mark.parametrize("protective", [True, False])
-def test_linked_protective_exit_and_unlinked_manual_close(tmp_path, protective):
+@pytest.mark.parametrize("protective,legacy", [(True, False), (False, False), (False, True)])
+def test_linked_protective_exit_and_unlinked_manual_close(tmp_path, protective, legacy):
     with owned(tmp_path) as (engine, venue, data):
         entry = enter(engine, venue, data)
         if protective:
@@ -107,8 +108,21 @@ def test_linked_protective_exit_and_unlinked_manual_close(tmp_path, protective):
         sell = intent_for(engine, result["client_id"])
         venue.fill(sell, sell.quantity, data["quote"], NOW, fill_id="closed-fill")
         engine.reconcile(venue.snapshot(NOW), now=NOW)
+        if legacy:
+            with engine.journal.write() as db:
+                row = db.execute(
+                    "SELECT intent_json,approval_json FROM execution_orders WHERE client_id=?",
+                    (sell.client_id,),
+                ).fetchone()
+                intent, approval = map(json.loads, row)
+                intent.pop("closing_entry_client_id")
+                approval.pop("closing_entry_client_id")
+                db.execute(
+                    "UPDATE execution_orders SET intent_json=?,approval_json=? WHERE client_id=?",
+                    (json.dumps(intent), json.dumps(approval), sell.client_id),
+                )
         result = read_owned(engine, entry)
-        if protective:
+        if not legacy:
             assert result["status"] == "COMPLETE", result
             assert result["outcome"] == "LOSS"
             assert Decimal(result["gross_realized"]) == -16

@@ -78,8 +78,18 @@ def order_attribution(db, row):
     if approval["admission"]["quantity"] != intent.quantity:
         raise ValueError("Stored approval quantity mismatch")
     entry_id = intent.position_protection.entry_client_id if intent.position_protection else None
+    explicit = intent.closing_entry_client_id
+    if explicit is not None or "closing_entry_client_id" in approval:
+        if explicit is None or approval.get("closing_entry_client_id") != explicit:
+            raise ValueError("Stored closing entry approval mismatch")
+        if entry_id is not None and entry_id != explicit:
+            raise ValueError("Stored closing entry protection mismatch")
+        entry_id = explicit
     if approval["origin"] == "PROTECTIVE" and intent.source_key.startswith("protective:"):
-        entry_id = intent.source_key.split(":")[1]
+        protective_entry = intent.source_key.split(":")[1]
+        if entry_id is not None and entry_id != protective_entry:
+            raise ValueError("Stored protective closing entry mismatch")
+        entry_id = protective_entry
     if entry_id is not None:
         entry = db.execute(
             "SELECT intent_json FROM execution_orders WHERE client_id=?", (entry_id,)
@@ -87,7 +97,12 @@ def order_attribution(db, row):
         if entry is None:
             raise ValueError("Stored exit entry reference missing")
         entry_intent = OptionIntent.model_validate(_json(entry[0]))
-        if entry_intent.side != "BUY" or entry_intent.instrument != intent.instrument:
+        if (
+            entry_intent.side != "BUY"
+            or entry_intent.instrument != intent.instrument
+            or intent.side != "SELL"
+            or intent.prepared_at < entry_intent.prepared_at
+        ):
             raise ValueError("Stored exit entry identity mismatch")
     return {
         "origin": approval["origin"],
@@ -292,7 +307,9 @@ def decision_attribution(db, key, outcome, policy):
         review_reasons=tuple(review.get("reasons", ())) if review else (),
         proposal_action=plan.get("action") if plan else None,
         thesis=plan.get("thesis") if plan else None,
-        entry_client_id=packet.position.entry_client_id if prefix == "position" else None,
+        entry_client_id=packet.position.entry_client_id
+        if prefix == "position"
+        else order.get("entry_client_id"),
         position_revision=packet.position_revision if prefix == "position" else None,
         review_outcome=review.get("outcome")
         if review

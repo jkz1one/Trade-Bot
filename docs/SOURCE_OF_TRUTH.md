@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.37. Adopted product direction and working delivery contract, 2026-10-14 UTC.
+Version 1.38. Adopted product direction and working delivery contract, 2026-10-14 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -58,7 +58,9 @@ The common engine now blocks generic OPEN_LONG preparation and dispatch for thes
 research cohorts while preserving HOLD and owned/protective exits.
 [Stored native position outcomes](OPTIONS_POSITION_OUTCOME.md) now reconstruct
 verified fills, fees and linked entry/management charges; incomplete links or costs
-withhold the net outcome. Data/host costs remain in the session economic report.
+withhold the net outcome. New native closes now bind the exact owned entry in
+intent and approval; dispatch rechecks that identity before any attempt. Legacy
+unlinked closes are not backfilled. Data/host costs remain in the session economic report.
 Complete obstruction coverage, native full-cost loss/cooldown linkage and
 dispatch/management remain required
 before Scope execution.

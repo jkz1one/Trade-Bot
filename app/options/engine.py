@@ -553,6 +553,9 @@ class OptionExecution:
                         original_underlying_invalidation=stop,
                         thesis=proposal.thesis,
                         entry_protection=protection,
+                        closing_entry_client_id=ledger.position.entry_client_id
+                        if proposal.action == "CLOSE"
+                        else None,
                     )
                     approval = {
                         **inputs,
@@ -560,6 +563,8 @@ class OptionExecution:
                         "account": account.model_dump(mode="json"),
                         "effective_limits": self._effective_limits().model_dump(mode="json"),
                     }
+                    if intent.closing_entry_client_id is not None:
+                        approval["closing_entry_client_id"] = intent.closing_entry_client_id
                     db.execute(
                         "INSERT INTO execution_orders VALUES(?,?,?,?,?,'PREPARED',1,NULL,NULL,NULL)",
                         (
@@ -603,6 +608,19 @@ class OptionExecution:
             proposal = OptionProposal.model_validate(approval["proposal"])
             reason = None
             try:
+                if (
+                    intent.closing_entry_client_id is not None
+                    or "closing_entry_client_id" in approval
+                ):
+                    held = OptionLedger.model_validate_json(
+                        self._control(db)["ledger_json"]
+                    ).position
+                    if (
+                        held is None
+                        or intent.closing_entry_client_id != held.entry_client_id
+                        or approval.get("closing_entry_client_id") != intent.closing_entry_client_id
+                    ):
+                        raise ExecutionBlocked("OPTION_CLOSING_ENTRY_CHANGED")
                 if now >= intent.approval_expires_at or now < intent.prepared_at:
                     raise ExecutionBlocked("OPTION_APPROVAL_EXPIRED")
                 if quote.instrument != intent.instrument:

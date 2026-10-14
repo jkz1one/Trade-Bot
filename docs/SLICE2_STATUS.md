@@ -1,5 +1,55 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 native closing-entry linkage: 2026-10-14 UTC
+
+Ordinary CLOSE orders previously had no exact entry identity, leaving their
+position outcome incomplete and fresh dispatch dependent on contract-level
+ownership. New native close intents and approvals now retain the held entry ID
+from the owning journal transaction. Protective and model-managed closes carry
+the same explicit link. Dispatch rejects a mismatched/missing half-link or a
+changed held entry before recording an attempt, starting a worker or submitting.
+Stored attribution verifies the buy identity, instrument, chronology and agreement
+with existing protective/model links. Close-model cost attribution retains that
+entry identity too; independent accounts and all entry/management costs remain.
+
+The field is optional and absent fields remain omitted from historical intent
+encoding. Existing protective/model links still work. Historical unlinked ordinary
+closes are not backfilled and remain incomplete for exact-position outcomes.
+No Scope execution is enabled. Watch/order association, full-cost loss/cooldown/
+reset controls, complete path coverage and runtime integration remain open.
+
+Fresh GitHub baseline: `562380e752c65b5d35a22fafa495fd0fd67dce18`, tree
+`cec0905dcb00712275be3c5a225b6efe96e1a871`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Final noneditable installed package: **187 passed in 304.43s**, six suites,
+  outside source with isolated Python, copied tests and warnings as errors. This
+  includes nine new closing-link cases, the expanded 21-case outcome suite with
+  independent A/B/C/D replay, and native execution, management, observer and Scope
+  entry-boundary regressions. No failed installed test was waived.
+- Initial source-only invocation used the previous installed worker/schema and
+  produced four close-worker failures (14 passed). Rebuilt the noneditable package
+  so owner and isolated child use the same schema; no execution gate was relaxed.
+- New cases cover owner-derived identity, historical retry, approval/intent/held
+  entry conflicts, absent half-links, no worker attempt, BUY rejection and stored
+  attribution conflicts. Outcome coverage distinguishes new linked closes from
+  legacy unlinked history and retains both-side fees.
+- Source/wheel/installed module bytes and copied changed tests match; dependencies,
+  scoped lint/format, whitespace and 415 local documentation links pass.
+- Wheel SHA-256: `93ce590aa9e2926a6be0a1db35d0f83c43e9703b6f7c67b832846a1fdefcaf1c`.
+  Logs/artifacts beside checkout: `closing-link-source.log`,
+  `closing-link-installed-tests.log`, `closing-link-env`, `closing-link-proof`
+  and `closing-link-dist`.
+
+See [stored outcome contract](OPTIONS_POSITION_OUTCOME.md). Main untouched,
+PR draft, LIVE disabled and deployed experiment frozen. No provider/model/broker
+call, dependency, host unit or deployment changed. Authentic provider/model/calendar/
+host, browser and prospective economics acceptance remain separate.
+
+---
+
 ## P7 stored native position outcomes: 2026-10-14 UTC
 
 The stored observer now exposes `position_outcome(entry_client_id)` for one exact
