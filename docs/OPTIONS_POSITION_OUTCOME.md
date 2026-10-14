@@ -9,8 +9,9 @@ Conflicting evidence raises an error; incomplete evidence returns `INCOMPLETE`.
 The projection reuses native proposal/approval/observed-fill attribution. Protective
 and model-managed exits must identify the original buy. Observed fills supply
 quantities, premiums and actual execution fees; quantities cannot exceed the buy
-or precede its fills. Closure requires terminal linked orders and equal positive
-entry/exit quantities. Open, partial and unfilled positions have no realized outcome.
+or precede its fills. Closure requires terminal linked orders and a positive entry
+quantity equal to the sum of sold and authoritatively settled contracts. Open,
+partial and unfilled positions have no realized outcome.
 
 Every stored entry or management call attributable to this position is retained,
 including management calls that did not create an order. Configured token charges
@@ -39,11 +40,38 @@ worker cannot decode a new close intent. This change does not deploy either.
 The optional field is omitted when absent, preserving historical intent encoding.
 Legacy protective/model links remain supported. Historical ordinary CLOSE orders
 without an exact link are not backfilled. A same-contract unlinked exit prepared
-after the selected entry still makes its result incomplete. Contract-level
-settlement receipts also lack a unique entry ID and cannot prove position closure.
-This conservatively includes later same-contract activity rather than guessing an
-allocation. Orphan/mismatched fills and damaged proposal/approval/cost evidence
-are rejected. Reads preserve stored history and grant no execution authority.
+after the selected entry still makes its result incomplete. Orphan/mismatched fills
+and damaged proposal/approval/cost evidence are rejected. Reads preserve stored
+history and grant no execution authority.
+
+## Native settlement attribution
+
+The outcome projection now replays the complete ordered native fill and receipt
+stream from frozen original capital. Each cash-settlement or worthless-expiry
+receipt is assigned to the exact position held immediately before the receipt.
+Contract equality alone is insufficient: event sequences must be contiguous,
+clocks ordered, receipts and fills covered by the stored complete owned snapshot,
+and replayed cash, settled cash, realized P&L, fees, daily P&L and remaining lots
+must agree with the journal. Foreign account/venue identity or unsupported
+underlying exposure blocks the projection. A missing or conflicting stream raises
+an error instead of manufacturing a settlement outcome.
+
+The same native accounting rules enforce settlement time, full remaining quantity,
+contract terms, authoritative value and exact cash proceeds. FUNDS_SETTLED changes
+cash availability only and does not count as a close. PHYSICAL_EXERCISE does not
+produce a supported cash outcome. Model charges stay separate from the cash ledger
+and every attributed entry/management charge is still deducted by the outcome;
+unknown usage still suppresses net results even after a verified settlement.
+
+`settlements` retains the original receipts with derived entry IDs;
+`settlement_quantity` and `settlement_cash` are distinct from sold quantity,
+exit premium and fill IDs. Partial sales followed by settlement count each contract
+once. A later settlement of a second entry in the same contract is not assigned to
+the first. `closed_at` uses the last actual closing fill or settlement time.
+`unlinked_settlement_receipt_ids` remains an empty compatibility field on valid
+results; unprovable receipt history now fails validation. These are local fixture
+accounting terms, with no additional settlement fee encoded. Authentic broker fee
+coverage and data/host allocations remain separate acceptance requirements.
 
 This is the native evidence primitive for subsequent Scope loss-state work.
 It does not link watches to orders, consume loss streaks, start cooldowns, reset

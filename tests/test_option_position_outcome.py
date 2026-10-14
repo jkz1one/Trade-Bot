@@ -209,7 +209,7 @@ def test_unfilled_entry_has_no_realized_outcome(tmp_path):
         assert outcome["net_after_known_execution_and_model_costs"] is None
 
 
-def test_contract_settlement_cannot_supply_unique_entry_link(tmp_path):
+def test_unreconciled_contract_receipt_cannot_supply_entry_link(tmp_path):
     from app.options.lifecycle import OptionReceipt
 
     with owned(tmp_path) as (engine, venue, data):
@@ -228,7 +228,5 @@ def test_contract_settlement_cannot_supply_unique_entry_link(tmp_path):
                 "INSERT INTO execution_option_receipts VALUES(?,?)",
                 (receipt.receipt_id, receipt.model_dump_json()),
             )
-        outcome = read_owned(engine, entry)
-        assert outcome["unlinked_settlement_receipt_ids"] == ["settlement"]
-        assert "SETTLEMENT_ENTRY_LINK_UNPROVEN" in outcome["reasons"]
-        assert outcome["net_after_known_execution_and_model_costs"] is None
+        with pytest.raises(ValueError, match="snapshot coverage"):
+            read_owned(engine, entry)

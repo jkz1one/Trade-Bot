@@ -1,5 +1,60 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 native settlement outcome attribution: 2026-10-14 UTC
+
+Cash settlement and worthless expiry now close a stored position outcome through
+complete native accounting replay. Receipts are assigned to the exact entry held
+at their ordered event, not to every trade sharing the contract. Snapshot identity,
+receipt/fill coverage, contiguous sequence, time order, native settlement terms,
+ledger cash/settled cash/realized P&L/fees/daily P&L and remaining owned lots must
+all agree. Conflicts fail closed. FUNDS_SETTLED is not an exit, physical exercise
+remains unsupported, and no settlement is fabricated as a trade fill.
+
+Partial sales plus settlement count remaining contracts once. A later settlement
+of a second same-contract entry cannot contaminate the first outcome. Every
+recorded entry and management charge remains attributable, including MAINTAIN;
+unknown usage still withholds the net result. Data/host allocation and authentic
+broker settlement-fee coverage remain open. The fixture's exact cash-settlement
+terms encode no extra settlement fee. No new receipt authority or input is added.
+
+This closes an expiry-loss attribution gap needed for subsequent Scope loss state.
+It does not start cooldowns, clear loss limits or enroll Scope trading. The native
+Scope entry guard and independent research accounts remain unchanged.
+
+Fresh GitHub baseline: `19c94e09c37120fcc91dcfe0cbc28fd154826848`, tree
+`6cebc9db1c6eb3a4d5a82e39b2d5ac178089642c`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Initial new source suite: **13 passed in 5.35s**. Expanded source suite:
+  **15 passed in 6.71s**, including same-contract reentry and paid management at
+  expiry. Four further cases cover snapshot identity/completeness/fill coverage
+  and unknown entry cost after settlement.
+- Final noneditable installed package: **206 passed in 202.41s**, seven suites,
+  outside source with isolated Python, copied tests and warnings as errors. Includes
+  all 19 new settlement cases, independent A/B/C/D outcome replay, close linkage,
+  native execution/management, observer and Scope entry-boundary regressions.
+  No failed test or timeout was waived in this installed run.
+- The prior transient environment's Python executable was absent at first test
+  invocation. A fresh isolated environment was built using existing dependencies;
+  no dependency or application gate was changed to recover it.
+- Source/wheel/installed module bytes and copied changed tests match. Scoped
+  lint/format, dependencies, whitespace and 416 local documentation links pass.
+- Wheel SHA-256: `00372bb382a5e25871a01e40232ee6cf495c3b5f866324db64f6ae3242b81a2d`.
+  Logs/artifacts beside checkout: `settlement-outcome-source*.log`,
+  `settlement-outcome-installed-tests.log`, `settlement-outcome-env`,
+  `settlement-outcome-dist` and `settlement-outcome-proof`.
+
+[Stored outcomes](OPTIONS_POSITION_OUTCOME.md) records replay and output semantics.
+Scope watch/order linkage, loss/cooldown/reset controls, complete path coverage and
+Scope execution/runtime remain open. Authentic provider/model/calendar/host,
+visual and prospective economics remain separate. Main untouched, PR draft,
+LIVE disabled and deployed experiment frozen. No provider/model/broker call,
+host unit or deployment changed.
+
+---
+
 ## P7 native closing-entry linkage: 2026-10-14 UTC
 
 Ordinary CLOSE orders previously had no exact entry identity, leaving their

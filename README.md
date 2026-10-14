@@ -71,6 +71,8 @@ research books cannot bypass it through the generic PAPER entry API.
 [Stored native position outcomes](docs/OPTIONS_POSITION_OUTCOME.md) now reconstruct
 linked fills, execution fees and entry/management charges without granting authority.
 New native closes bind the exact held entry through preparation, dispatch and stored attribution.
+Cash settlement and worthless expiry now use complete native accounting replay to
+attribute receipts to the correct entry, retaining all recorded fees and model charges.
 Authentic provider, host and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.
