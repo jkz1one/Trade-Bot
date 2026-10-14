@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.41. Adopted product direction and working delivery contract, 2026-10-14 UTC.
+Version 1.42. Adopted product direction and working delivery contract, 2026-10-14 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -68,6 +68,9 @@ outcomes once, enforces a recognition-time cooldown and preserves threshold lock
 across restart/global resume. A separately signed reviewed reset now requires the
 exact revision, expired cooldown, verified outcomes and fresh flat account evidence;
 it preserves economic history, global limits and any global halt.
+Paid entry-model admission now enforces this loss guard before recording a call;
+expected pauses complete the coordinator slot as HOLD without a new global halt.
+Validated owned-position management retains its separate admission and all costs.
 This common foundation does not enable Scope or
 provide family-scoped reset. Data/host costs remain in the session economic report.
 Complete obstruction coverage, native full-cost loss/cooldown linkage and

@@ -14,7 +14,7 @@ from app.execution.judgment import JudgmentLimits
 from app.execution.runtime import model_key
 from app.options import judgment
 from app.options.degen import DegenHistory, DegenPolicy, scan_degen
-from app.options.engine import OptionExecution, clock, fingerprint
+from app.options.engine import EntryModelBlocked, OptionExecution, clock, fingerprint
 from app.options.governor import _fresh
 from app.options.lifecycle import OptionIntent, OptionLedger
 from app.options.models import OptionProposal, OptionQuote, OptionRecord, UnderlyingQuote
@@ -701,6 +701,11 @@ class DegenCoordinator:
                     "candidate_id": selected.candidate_id,
                     **evidence,
                 },
+            )
+        except EntryModelBlocked as exc:
+            return self._finish(
+                key,
+                {"status": "HOLD", "reason": "ENTRY_MODEL_RISK_PAUSE", "blocker": str(exc)},
             )
         except BaseException as exc:
             result = {

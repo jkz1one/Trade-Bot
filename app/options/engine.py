@@ -48,6 +48,10 @@ ZERO = Decimal(0)
 OWNER = object()
 
 
+class EntryModelBlocked(ExecutionBlocked):
+    """An expected entry-risk pause, with no admitted model call or global halt."""
+
+
 def clock(now):
     if now.tzinfo is None or now.utcoffset() is None:
         raise ValueError("Options execution clock must be timezone-aware")
@@ -1285,60 +1289,85 @@ class OptionExecution:
             or any(c not in "0123456789abcdef" for c in input_hash)
         ):
             raise ValueError("Explicit frozen model policy and input hash required")
+        blocked = None
         with self.journal.write() as db:
-            if position_request is not None:
-                from app.options.position_coordination import validate_admission
+            if position_request is None and self.policy.loss_control is not None:
+                from app.options.loss_control import refresh
 
-                validate_admission(self, db, source_key, position_request, input_hash, now)
-            account = self._account(db, now)
-            costs = economics.summary(db, now)
-            day = now.astimezone(ZoneInfo("America/New_York")).date().isoformat()
-            window = self.calendar.current_window(now)
-            if (
-                account.entry_halted
-                or account.entry_blockers
-                or not account.budgets_known
-                or (account.position is not None and position_request is None)
-                or account.working_orders
-                or not timedelta(0)
-                <= now - account.captured_at
-                < timedelta(seconds=self.limits.account_max_age_seconds)
-                or window is None
-                or (
-                    position_request is None
-                    and now
-                    >= window.closes_at - timedelta(minutes=self.policy.entry_cutoff_minutes)
-                )
-                or policy.max_call_cost
-                > min(
-                    account.daily_loss_available,
-                    account.total_loss_available,
-                    account.settled_cash - account.reserved_cash,
-                )
-                or Decimal(costs["known_cost"]) + policy.max_call_cost > policy.total_budget
-                or Decimal(costs["daily_cost"].get(day, "0")) + policy.max_call_cost
-                > policy.daily_budget
-            ):
-                raise ExecutionBlocked("OPTION_MODEL_ADMISSION_BLOCKED")
-            if (
-                db.execute(
-                    "SELECT 1 FROM execution_model_calls WHERE source_key=?", (source_key,)
-                ).fetchone()
-                or db.execute(
-                    "SELECT 1 FROM execution_option_decisions WHERE source_key=?", (source_key,)
-                ).fetchone()
-            ):
-                raise ExecutionBlocked("OPTION_MODEL_SOURCE_ALREADY_ATTEMPTED")
+                state = refresh(self, db, now)
+                if state["reasons"]:
+                    blocked = ";".join(state["reasons"])
+                    self.journal.event(
+                        db,
+                        now,
+                        "OPTION_ENTRY_MODEL_RISK_PAUSED",
+                        {
+                            "source_key": source_key,
+                            "input_hash": input_hash,
+                            "reasons": state["reasons"],
+                        },
+                    )
+            if blocked is None:
+                self._admit_model_attempt(db, source_key, input_hash, now, position_request)
+        # Raise after committing recognition/cooldown and the pause receipt. A
+        # blocked attempt creates no unknown-cost row and cannot call a worker.
+        if blocked is not None:
+            raise EntryModelBlocked(blocked)
+
+    def _admit_model_attempt(self, db, source_key, input_hash, now, position_request):
+        policy = self.policy.cost_policy
+        if position_request is not None:
+            from app.options.position_coordination import validate_admission
+
+            validate_admission(self, db, source_key, position_request, input_hash, now)
+        account = self._account(db, now)
+        costs = economics.summary(db, now)
+        day = now.astimezone(ZoneInfo("America/New_York")).date().isoformat()
+        window = self.calendar.current_window(now)
+        if (
+            account.entry_halted
+            or account.entry_blockers
+            or not account.budgets_known
+            or (account.position is not None and position_request is None)
+            or account.working_orders
+            or not timedelta(0)
+            <= now - account.captured_at
+            < timedelta(seconds=self.limits.account_max_age_seconds)
+            or window is None
+            or (
+                position_request is None
+                and now >= window.closes_at - timedelta(minutes=self.policy.entry_cutoff_minutes)
+            )
+            or policy.max_call_cost
+            > min(
+                account.daily_loss_available,
+                account.total_loss_available,
+                account.settled_cash - account.reserved_cash,
+            )
+            or Decimal(costs["known_cost"]) + policy.max_call_cost > policy.total_budget
+            or Decimal(costs["daily_cost"].get(day, "0")) + policy.max_call_cost
+            > policy.daily_budget
+        ):
+            raise ExecutionBlocked("OPTION_MODEL_ADMISSION_BLOCKED")
+        if (
             db.execute(
-                "INSERT INTO execution_model_calls VALUES(?,?,?,NULL,NULL,NULL,NULL)",
-                (source_key, input_hash, now.isoformat()),
-            )
-            self.journal.event(
-                db,
-                now,
-                "OPTION_MODEL_ATTEMPT_ADMITTED",
-                {"source_key": source_key, "input_hash": input_hash},
-            )
+                "SELECT 1 FROM execution_model_calls WHERE source_key=?", (source_key,)
+            ).fetchone()
+            or db.execute(
+                "SELECT 1 FROM execution_option_decisions WHERE source_key=?", (source_key,)
+            ).fetchone()
+        ):
+            raise ExecutionBlocked("OPTION_MODEL_SOURCE_ALREADY_ATTEMPTED")
+        db.execute(
+            "INSERT INTO execution_model_calls VALUES(?,?,?,NULL,NULL,NULL,NULL)",
+            (source_key, input_hash, now.isoformat()),
+        )
+        self.journal.event(
+            db,
+            now,
+            "OPTION_MODEL_ATTEMPT_ADMITTED",
+            {"source_key": source_key, "input_hash": input_hash},
+        )
 
     @exact
     def record_model_usage(self, source_key, usage, proposal, *, now):

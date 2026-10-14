@@ -87,9 +87,28 @@ CLOSE, management and protective exits retain their existing gates.
 The journal report's `loss_control` field is stored evidence, with its last checked
 time and reasons; reading it does not refresh risk or authorize a trade. Refreshing
 risk never changes cash, P&L, settlement, fee/model records or global limits. The
-guard is a final entry boundary, not a model-call scheduler: proposal calls can
-still incur costs, which remain accounted for. Runtime/model preflight integration
-remains separate work.
+guard now also runs at `begin_model_attempt` for entry reasoning and candidate
+selection, before a model-attempt/unknown-cost row is written. Newly recognized
+outcomes, cooldown state and a source/input-bound `OPTION_ENTRY_MODEL_RISK_PAUSED`
+event commit together before `EntryModelBlocked` is returned. An expected loss
+pause starts no worker and adds no model charge. Corrupt or changed history still
+fails closed through the normal failure path.
+
+The coordinator completes an expected pause as `HOLD` with
+`ENTRY_MODEL_RISK_PAUSE` and the specific blocker. It does not add a global halt
+that would prevent normal cooldown expiry from allowing a future cycle. Historical
+cycle retries return the saved result without another model attempt or risk event.
+Account reconciliation, data selection and packet construction may still occur;
+this is the final pre-call cost gate, not a promise of zero data/host costs.
+
+Owned-position model requests use their existing strict request, position,
+revision, cost and account gates. They skip the entry-only loss pause so a pending
+entry outcome cannot disable MAINTAIN or EXIT_ALL reasoning. Every admitted
+management charge remains recorded. Passing a nonempty arbitrary position request
+does not bypass its existing validation. Ordinary HOLD, CLOSE and independent
+protective exits retain their normal rules. In-flight calls are not canceled or
+refunded; the existing preparation/dispatch checks remain authoritative afterward.
+Unenrolled cohorts preserve their existing model-admission behavior.
 
 The [Scope research entry guard](OPTIONS_SCOPE_OWNED_ADMISSION.md#native-execution-boundary)
 remains in force. Watch/order association, family-scoped consumption/reset,

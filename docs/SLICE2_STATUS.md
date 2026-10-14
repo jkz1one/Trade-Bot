@@ -1,5 +1,57 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 native loss guard before paid entry reasoning: 2026-10-14 UTC
+
+Closed a common cost-control integration gap: an explicitly enrolled loss-guard
+population could previously pay for entry reasoning before preparation rejected
+the resulting trade. Entry `begin_model_attempt` now refreshes native loss state
+before recording an attempt or starting a model worker. Recognition-time cooldown,
+consumed outcomes and source/input-bound pause audit commit atomically. Expected
+loss/cooldown/incomplete-outcome pauses create no unknown-cost row or model charge.
+
+The coordinator completes these expected pauses as HOLD with the specific blocker,
+without adding a global halt that would prevent cooldown expiry from allowing a
+future cycle. Historical cycle retry returns its stored result without another
+model attempt or risk event. Corrupt/changed evidence still follows the existing
+failure path. Both candidate selection and full-entry reasoning use the common gate.
+
+Owned-position requests retain their existing strict binding, revision, account and
+cost admission, so pending entry outcomes do not disable MAINTAIN or EXIT_ALL.
+All admitted entry/management charges remain recorded. Existing model-admission
+checks were moved unchanged into a helper; unenrolled cohorts retain their behavior.
+This does not cancel or refund in-flight calls, skip data/host work, change independent
+accounts, or replace the final preparation/dispatch gates. Scope watch/order linkage,
+family-specific loss handling and complete path proof remain open; Scope remains
+research-only.
+
+Fresh GitHub baseline: `4f9f5547fbfaa178fb0296e7604c7e2ebbba66ce`, tree
+`04b863c43e99811cb28946702ad6d58f3866741b`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Final focused source suite: **8 passed in 7.80s**. The coordinator fixture first
+  attempted a manual entry rejected by its full-plan policy, then incorrectly
+  required byte-identical historical replay despite the existing fenced write
+  transaction. It now exercises an actual paid fixture entry/close and verifies
+  unchanged event revision, model count, economic state and risk state on replay.
+  No application gate was relaxed.
+- Non-editable installed wheel, nine related suites with warnings treated as
+  errors: **253 passed in 162.68s**. Coverage includes the new cost gate, native
+  loss/reset, execution, full-entry and position coordination, signed recovery,
+  runtime and the independent Scope execution boundary.
+- Source/wheel/installed application bytes and copied new tests match; the extracted
+  admission helper's AST exactly matches the former transaction body. Scoped
+  lint/format, dependency consistency, whitespace and 423 local documentation links pass.
+- Wheel SHA-256: `d2f50be62a370e203426168a242f9d38b8b60bf0e0aaddadb892184e189b6854`.
+  Artifacts/logs beside checkout: `loss-model-env`, `loss-model-dist`,
+  `loss-model-proof`, `loss-model-source*.log`, `loss-model-installed-tests.log`.
+
+Main untouched, PR draft, LIVE disabled and deployed experiment frozen. No authentic
+provider/model/broker call, dependency, host unit or deployment changed.
+
+---
+
 ## P7 reviewed native loss-lock reset: 2026-10-14 UTC
 
 The existing signed local operator protocol now accepts `RESET_LOSS_LOCK` for
