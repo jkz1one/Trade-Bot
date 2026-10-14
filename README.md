@@ -73,6 +73,8 @@ linked fills, execution fees and entry/management charges without granting autho
 New native closes bind the exact held entry through preparation, dispatch and stored attribution.
 Cash settlement and worthless expiry now use complete native accounting replay to
 attribute receipts to the correct entry, retaining all recorded fees and model charges.
+An opt-in [native loss guard](docs/OPTIONS_NATIVE_LOSS_CONTROL.md) now enforces
+outcome-based cooldown and persistent loss lock at entry preparation and dispatch.
 Authentic provider, host and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.

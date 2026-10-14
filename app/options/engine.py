@@ -90,6 +90,8 @@ class OptionJournal(ExecutionJournal):
     ledger_type = OptionLedger
     extra_tables = frozenset(
         {
+            "execution_option_loss_control",
+            "execution_option_loss_outcomes",
             "execution_option_decisions",
             "execution_option_receipts",
             "execution_option_strategy",
@@ -102,6 +104,12 @@ class OptionJournal(ExecutionJournal):
             "execution_option_scope_watch_actions",
         }
     )
+
+    @staticmethod
+    def _loss_state(db):
+        from app.options.loss_control import stored_state
+
+        return stored_state(db)
 
     def report(self, *, now=None):
         with self.read() as db:
@@ -118,6 +126,7 @@ class OptionJournal(ExecutionJournal):
                 "issues": json.loads(c["issues_json"]),
                 "restore_fence": restore.status(db, restore.authority_path(self.path)),
                 "economics": economics.summary(db, now),
+                "loss_control": self._loss_state(db),
                 "alerts": self._alerts(db, 0, 100),
                 "orders": [
                     dict(r)
@@ -190,6 +199,10 @@ class OptionExecution:
             db.execute(
                 "CREATE TABLE IF NOT EXISTS execution_option_receipts(receipt_id TEXT PRIMARY KEY,payload TEXT NOT NULL)"
             )
+            if self.policy.loss_control is not None:
+                from app.options.loss_control import enroll
+
+                enroll(self, db, now, create=create)
             if self.policy.cost_policy is not None:
                 db.execute(
                     "INSERT OR IGNORE INTO execution_cost_policy VALUES(1,?)",
@@ -205,6 +218,13 @@ class OptionExecution:
                 self.journal.event(db, now, "INTERRUPTED_ATTEMPT", {}, row[0])
         if create:
             self.journal.enable_restore_fence(now=now)
+
+    def refresh_loss_control(self, *, now):
+        from app.options.loss_control import refresh
+
+        with self.journal.write() as db:
+            self._control(db)
+            return refresh(self, db, clock(now))
 
     def _control(self, db):
         if self._closed:
@@ -442,6 +462,9 @@ class OptionExecution:
                 from app.options.shared_strategy import review_shared_entry
 
                 reject_unlinked_scope_entry(db, proposal)
+                from app.options.loss_control import guard_entry
+
+                guard_entry(self, db, proposal, now)
                 review_shared_entry(self, db, source_key, proposal, quote, underlying, now)
                 account = (
                     self._account(db, now, closing=proposal.action == "CLOSE")
@@ -631,6 +654,9 @@ class OptionExecution:
                 from app.options.shared_strategy import review_shared_entry
 
                 reject_unlinked_scope_entry(db, proposal)
+                from app.options.loss_control import guard_entry
+
+                guard_entry(self, db, proposal, now, exclude=client_id)
                 review_shared_entry(self, db, intent.source_key, proposal, quote, underlying, now)
                 account = self._account(db, now, exclude=client_id, closing=intent.side == "SELL")
                 result = admit_option(

@@ -1,5 +1,62 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 common native loss cooldown and persistent lock: 2026-10-14 UTC
+
+New explicitly frozen PAPER populations can enroll a common account-wide loss
+control. It consumes verified native outcomes exactly once with execution fees
+and all attributable entry/management charges, starts cooldown from actual loss
+recognition, and persists threshold lock across restart and global resume. Entry
+preparation and dispatch enforce the state before any order attempt. HOLD and
+owned/protective exits remain available through their normal rules.
+
+The policy retains the pinned Scope bounds as conservative research settings:
+at most two consecutive losses, at least 30 minutes of cooldown. This is shared
+owner infrastructure, not a Scope family enrollment or completed Scope integration.
+Existing cohorts are not migrated. The operational net basis includes recorded
+execution/model charges; data/host allocations remain in session economics.
+Incomplete/unknown costs or outcome history block, not reset. Terminal unfilled
+attempts do not erase losses; their costs remain in global account budgets.
+
+Outcome/state/audit records are atomic and restore-fenced. Previous outcomes are
+revalidated, clocks cannot rewind, and bounded history cannot be truncated to
+clear losses. A WIN/FLAT breaks an unlocked streak without shortening cooldown;
+a locked cohort has no reset endpoint in this slice. No cash, P&L, global limit,
+fee, model charge or Scope research gate is cleared by this control.
+
+Fresh GitHub baseline: `57dbb9ac1d0075e2e154d9dd313bd1253b78c439`, tree
+`b13e2bb9632ef683c14f663b1def4385f63ef85b`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Final expanded source suite: **16 passed in 10.51s**. Initial suite had eight
+  passes and one timestamp-string assertion failure (`Z` versus `+00:00`); the
+  assertion now compares aware datetime values. No application gate was relaxed.
+- Non-editable installed wheel, eight related suites with warnings treated as
+  errors: **222 passed in 217.39s**. This covers loss control, settlement and
+  position outcomes, closing links, execution, coordination, observer reads and
+  the independent Scope entry boundary.
+- New cases cover recognition-time/exact-boundary cooldown, automatic gate
+  consumption, restart/global-resume persistence, win and unfilled semantics,
+  dispatch-before-worker enforcement, unknown usage, paid management/fees turning
+  a premium gain into a net loss, expiry loss, frozen policies and atomic rollback.
+- Source/wheel/installed module bytes and copied changed tests match. Scoped
+  lint/format, dependency consistency, whitespace and 421 local documentation links
+  pass. Wheel SHA-256: `488129067d101a23ccd68d171ad7b4eac14279226a3d29d666e5b864db2bb516`.
+  Logs/artifacts beside checkout: `native-loss-source*.log`,
+  `native-loss-installed-tests.log`, `native-loss-env`, `native-loss-dist`
+  and `native-loss-proof`.
+
+[Native guard contract](OPTIONS_NATIVE_LOSS_CONTROL.md) records the account-wide
+scope, immutable enrollment, capacity and missing reset/scheduler integration.
+Scope watch/order and family loss linkage, reviewed reset, complete path coverage,
+Scope runtime/replay and dashboard integration remain open. Authentic provider/
+model/calendar/host, visual and prospective economics remain separate. Main
+untouched, PR draft, LIVE disabled and deployed experiment frozen. No authentic
+provider/model/broker call, dependency, host unit or deployment changed.
+
+---
+
 ## P7 native settlement outcome attribution: 2026-10-14 UTC
 
 Cash settlement and worthless expiry now close a stored position outcome through

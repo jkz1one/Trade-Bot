@@ -25,6 +25,12 @@ TERMINAL = {"FILLED", "CANCELED", "REJECTED", "EXPIRED"}
 CALENDAR_SOURCE = "XNYS_REGULAR_INTERSECTION_V1"
 
 
+class NativeLossPolicy(OptionRecord):
+    version: Literal["native-position-loss-v1"] = "native-position-loss-v1"
+    max_consecutive_losses: int = Field(strict=True, ge=1, le=2)
+    cooldown_seconds: int = Field(strict=True, ge=1800, le=86400)
+
+
 class OptionExecutionPolicy(OptionRecord):
     version: Literal["option-paper-lifecycle-v1"] = "option-paper-lifecycle-v1"
     capital: Money = Field(gt=0)
@@ -38,6 +44,7 @@ class OptionExecutionPolicy(OptionRecord):
     supervisor_max_age_seconds: PositiveCount
     process_timeout_seconds: float = Field(gt=0, le=30, allow_inf_nan=False)
     cost_policy: CostPolicy | None = None
+    loss_control: NativeLossPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
 
     @model_validator(mode="after")
     def bounded(self):

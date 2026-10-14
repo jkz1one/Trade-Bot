@@ -27,9 +27,11 @@ MANAGE_AT = AT + timedelta(minutes=5)
 
 
 @contextmanager
-def owned_manager(path, right="CALL", *, costs=None):
+def owned_manager(path, right="CALL", *, costs=None, loss_policy=None):
     _, limits, policy = configuration(
-        right, cost_policy=costs or CostPolicy(total_budget="1", daily_budget=".1")
+        right,
+        cost_policy=costs or CostPolicy(total_budget="1", daily_budget=".1"),
+        loss_control=loss_policy,
     )
     venue = DurableOptionVenue(path / "venue.db", limits=limits, capital=policy.capital)
     key = path / "model.key"
