@@ -1,5 +1,52 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 approved Scope price-based quantity ceilings: 2026-10-14 UTC
+
+Fresh Scope owned-admission reviews now enforce the approved V2 executable-ask
+quantity tiers: at most four contracts through $1.25, three through $1.65, two
+through $2.50 and one through $5.00, with the $0.20 floor. Exact Decimal comparison
+preserves inclusive boundaries without display rounding. This closes a missing
+playbook constraint before native order linkage; it does not authorize Scope orders.
+
+The pinned SignalFlow playbook at `f9eaf2c1b5d13dca287ee7138126883065b00395` was
+freshly read and its settled tiers retained. The smaller of the tier cap and the
+owner's `max_contracts` is passed into the existing governor. No separate quantity
+formula bypasses slippage, tick rounding, all entry/exit fees, ask size, settled
+cash or daily/total/full-premium limits. Fees may reduce a tier's maximum quantity,
+including to zero; they are never dropped to fit the $500 debit cap.
+
+Stored evidence adds current ask, tier version and maximum quantity beside original
+and effective limits. Each fresh review recalculates the tier. Historical action
+receipts remain historical and do not overwrite current sizing. Earlier receipts
+are not rewritten or promoted to authority. Frozen enrollment is unchanged;
+independent owners retain their own stricter risk limits. Full path proof, Scope
+watch/order linkage, family loss attribution/reset, management/runtime/replay and
+authentic provider/calendar/host acceptance remain open.
+
+Fresh GitHub baseline: `b800d9d73e5a86ee538f889e8d74607d7979ff05`, tree
+`2542c480a550b05013eb2cf64acc36809f854517`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Focused source suites: **59 passed in 20.96s**, including 37 new tests for exact
+  boundaries, invalid values, CALL/PUT sizing, costs, stricter owner limits and
+  fresh repricing versus historical retries. Initial run: 56 passed and two
+  test-string mismatches (`.20` versus canonical Decimal `0.20`); the expected
+  evidence now uses Decimal serialization. No application gate was relaxed.
+- Non-editable installed wheel, all Scope suites plus common option admission
+  with warnings treated as errors: **702 passed in 28.42s**.
+- Source/wheel/installed changed modules and copied new tests match. Scoped
+  lint/format, dependency consistency, whitespace and 423 local documentation links pass.
+- Wheel SHA-256: `84abf9259d4829de04eb5aae7b9ecf110531e86145375f795cc7f7ad4710a264`.
+  Artifacts/logs beside checkout: `scope-tier-env`, `scope-tier-dist`,
+  `scope-tier-proof`, `scope-tier-source*.log`, `scope-tier-installed-tests.log`.
+
+Main untouched, PR draft, LIVE disabled and deployed experiment frozen. No authentic
+provider/model/broker call, dependency, host unit or deployment changed.
+
+---
+
 ## P7 native loss guard before paid entry reasoning: 2026-10-14 UTC
 
 Closed a common cost-control integration gap: an explicitly enrolled loss-guard

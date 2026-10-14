@@ -79,6 +79,8 @@ A separately signed, revision-bound reset now clears an eligible expired lock
 while retaining loss history, costs, global limits and any separate global halt.
 Entry-model admission now checks that guard before starting a paid call; expected
 loss pauses become HOLD without creating a global halt. Owned management remains separate.
+Scope's stored sizing review now applies the approved ask-price quantity tiers
+through the common governor, retaining stricter account limits and all fees.
 Authentic provider, host and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.

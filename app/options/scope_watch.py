@@ -12,7 +12,7 @@ from app.options.engine import OptionExecution, clock, fingerprint
 from app.options.governor import admit_option
 from app.options.models import Name, OptionProposal, OptionRecord, SessionWindow, UnderlyingQuote
 from app.options.scope import ScopePreflightInput
-from app.options.scope_admission import ScopeAdmissionPolicy
+from app.options.scope_admission import ScopeAdmissionPolicy, scope_quantity_cap
 from app.options.scope_context import (
     ContextPattern,
     ScopeContextInput,
@@ -604,6 +604,7 @@ class ScopeWatchBook:
                 "account": None,
                 "limits": self.engine.limits.model_dump(mode="json"),
                 "effective_limits": self.engine._effective_limits().model_dump(mode="json"),
+                "quantity_tier": None,
                 "owner_session": None,
                 "index_session": record["locked_frame"]["session"],
                 "underlying": underlying.model_dump(mode="json")
@@ -656,12 +657,23 @@ class ScopeWatchBook:
                         entry_cutoff_at=cutoff,
                         closes_at=closes,
                     )
+                    tier_cap = scope_quantity_cap(frame.quote.ask)
+                    effective = self.engine._effective_limits()
+                    effective = effective.model_copy(
+                        update={"max_contracts": min(effective.max_contracts, tier_cap)}
+                    )
+                    review["effective_limits"] = effective.model_dump(mode="json")
+                    review["quantity_tier"] = {
+                        "version": "scope-price-quantity-v1",
+                        "ask": str(frame.quote.ask),
+                        "maximum_quantity": tier_cap,
+                    }
                     admission = admit_option(
                         proposal,
                         frame.quote,
                         underlying,
                         account,
-                        self.engine._effective_limits(),
+                        effective,
                         session,
                         now=now,
                     )

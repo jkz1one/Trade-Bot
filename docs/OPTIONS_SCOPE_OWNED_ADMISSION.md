@@ -50,6 +50,40 @@ accounting remains authoritative: all recorded entry/management costs reduce
 available budgets and unknown costs cannot become zero. This slice does not
 relax the watch's native-activity restriction to authorize paid model/trade history.
 
+### Approved price-based quantity ceilings
+
+Fresh armed reviews now enforce the approved V2 executable-ask tiers before calling
+the common governor:
+
+| Current ask | Maximum contracts |
+| --- | ---: |
+| $0.20 through $1.25 | 4 |
+| Above $1.25 through $1.65 | 3 |
+| Above $1.65 through $2.50 | 2 |
+| Above $2.50 through $5.00 | 1 |
+
+The effective `max_contracts` is the smaller of this cap and the owner's existing
+limit. Tier selection compares exact Decimal prices; display rounding cannot move
+an ask into a larger tier. Prices outside the approved range cannot be sized.
+Current contract/quote freshness, spread and all earlier quality/arming checks
+must pass before a tier is recorded. The stored `quantity_tier` contains its
+version, actual ask and maximum quantity, alongside original and effective limits.
+
+These are ceilings, not promised quantities. The governor still applies slippage,
+tick rounding, entry fees, every reserved exit-order fee, executable ask size,
+settled cash and daily/total/full-premium risk. For example, an ask at $1.25 cannot
+buy four contracts under the $500 debit ceiling once adverse rounding and fees
+are included; an ask at $5.00 may leave no affordable contract at all. No fee is
+discarded to fit a tier. The tier is based on the current executable ask; the
+actual order limit and full cost are separately calculated by the governor.
+
+Fresh price evidence recalculates the tier on every review. Historical action
+retries retain their original result and never replace current sizing. Earlier
+stored research receipts are not rewritten or promoted to executable authority;
+they predate this enforcement and require a fresh review. This tightens the
+existing approved Scope sizing rules without enrolling any native orders or
+changing the population's frozen configuration.
+
 The owner still uses its existing regular-session calendar. Scope's explicit
 reviewed index session is retained separately. The sizing window is their
 intersection: the later entry start, earlier entry cutoff and earlier close/
