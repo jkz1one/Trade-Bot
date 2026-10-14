@@ -1,5 +1,62 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 stored native position outcomes: 2026-10-14 UTC
+
+The stored observer now exposes `position_outcome(entry_client_id)` for one exact
+native buy. It reconstructs linked protective/managed exit fills, premiums, actual
+fees and every attributable entry/management model charge from the same snapshot.
+Account identity and token prices come from frozen journal configuration. Missing
+costs, unallocated account calls, unlinked manual exits or contract-only settlement
+receipts prevent a complete net outcome; conflicting lineage and orphan fills fail
+closed. Open/partial/unfilled positions do not acquire realized outcomes.
+
+This provides native evidence for subsequent Scope loss-state integration. It does
+not allocate data/host costs, label its result all-in profit, link Scope watches to
+orders, start cooldowns or reset limits. Full-cost session comparisons and existing
+account-level budgets remain authoritative. The Scope preparation/dispatch guard
+is unchanged. No provider/model/broker call, dependency, host unit or deployment
+changed; all replay inputs are normalized fixtures and scripted model receipts.
+
+Fresh GitHub baseline: `b08da50a211dc8cad7bb4cd95cbc594c1cfd49fd`, tree
+`a4509fdbd70f78d022373a6b72a802756d095f1d`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Initial source suite: **13 passed in 185.07s**, including independent A/B/C/D
+  native replay costs, read-only bytes, exact account identity, damaged fill/cost/
+  approval/consumption evidence, open/partial entries and manual/protective exits.
+- Focused lifecycle check: **4 passed in 9.97s**. Three additional cases cover
+  known/unknown unallocated account calls and unknown entry usage.
+- Additional installed lifecycle proof: **4 passed in 9.71s**, covering charged
+  MAINTAIN/TIGHTEN without exits, missing admitted receipts, unfilled entries and
+  contract-only settlement linkage.
+- Noneditable installed package: **172 passed, 1 fixture-process timeout in
+  332.75s** across five suites, outside source with isolated Python, copied tests
+  and warnings as errors. The existing management `missing` case timed out before
+  its mocked model call; the unchanged exact-case retry **passed in 8.84s**.
+  No deadline or application gate was relaxed. The separate four-case installed
+  group above also passes; no single all-green 177-case invocation is claimed.
+- Source/wheel/installed module bytes and copied outcome tests match. Scoped
+  lint/format, dependency consistency, whitespace and 414 local documentation
+  links pass.
+- Initial installed collection used the copied tests directory as its import root;
+  a cross-test package import failed. The corrected invocation uses the copied
+  proof root and runs outside the source checkout; no application change was needed.
+- Wheel SHA-256: `52b05eebd6b8f42c0336f05d023e8adba1e4fd4caa30ff93a7947913bf1cb829`.
+  Logs/artifacts beside checkout: `position-outcome-source.log`,
+  `position-outcome-native.log`, `position-outcome-installed-tests.log`,
+  `position-outcome-env`, `position-outcome-dist`, `position-outcome-proof`.
+
+[Outcome contract](OPTIONS_POSITION_OUTCOME.md) records exact closure and incomplete
+semantics. Native Scope watch/order linkage, full-cost loss/cooldown/reset state,
+complete obstruction coverage, Scope dispatch/management/runtime/replay and
+observer integration remain open. Authentic provider/model/calendar/host, visual
+and prospective acceptance remain separate. Main untouched, PR draft, LIVE disabled
+and deployed experiment frozen.
+
+---
+
 ## P7 Scope native entry boundary repair: 2026-10-13 UTC
 
 Reviewing the next native integration exposed an execution-boundary gap: Scope

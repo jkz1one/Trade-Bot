@@ -68,6 +68,8 @@ contracts and enrolled watches, while convexity stays blocked without complete p
 common-governor sizing against the original setup and owned account, without dispatch.
 The engine enforces this boundary at entry preparation and dispatch; enrolled Scope
 research books cannot bypass it through the generic PAPER entry API.
+[Stored native position outcomes](docs/OPTIONS_POSITION_OUTCOME.md) now reconstruct
+linked fills, execution fees and entry/management charges without granting authority.
 Authentic provider, host and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.

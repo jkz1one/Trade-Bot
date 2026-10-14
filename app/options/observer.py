@@ -119,6 +119,17 @@ class OptionObserver:
         finally:
             db.close()
 
+    def position_outcome(self, entry_client_id):
+        """Stored exact-entry evidence; conflicts raise rather than manufacture a result."""
+        from app.options.position_outcome import native_position_outcome
+
+        entry_client_id = TypeAdapter(Name).validate_python(entry_client_id)
+        with self.read() as db:
+            result = native_position_outcome(db, entry_client_id, self.population_id)
+        if len(json.dumps(result).encode()) > MAX_REPORT_BYTES:
+            raise ValueError("Position outcome response capacity exceeded")
+        return result
+
     def report(self, *, limit=25, before=None, family="ALL"):
         if (
             type(limit) is not int
