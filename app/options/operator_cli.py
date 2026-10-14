@@ -43,6 +43,7 @@ def review(journal, population_id, key_file, *, now):
                     "model",
                     "position",
                     "active_orders",
+                    "loss_control",
                 )
             },
             "execution_authority": False,
@@ -109,7 +110,9 @@ def main(argv=None):
     send.add_argument("--journal", required=True)
     send.add_argument("--review-file", required=True)
     send.add_argument("--key-file", required=True)
-    send.add_argument("--action", choices=["HALT", "RESUME", "REVOKE_KEY"], required=True)
+    send.add_argument(
+        "--action", choices=["HALT", "RESUME", "REVOKE_KEY", "RESET_LOSS_LOCK"], required=True
+    )
     send.add_argument("--actor", required=True)
     send.add_argument("--reason", required=True)
     send.add_argument("--ttl", type=int, default=60)

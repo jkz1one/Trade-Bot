@@ -1,5 +1,56 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 reviewed native loss-lock reset: 2026-10-14 UTC
+
+The existing signed local operator protocol now accepts `RESET_LOSS_LOCK` for
+explicitly enrolled native PAPER loss-control populations. The saved review and
+stored observer include loss state without refreshing risk. Only the current
+owner applies a signed command, with exact reviewed revision, binding, lifetime
+and authenticated replay checks. An active model/runtime task blocks recovery.
+
+Reset requires a persisted lock, elapsed cooldown, fresh matching flat account and
+supervision, no working order, known costs and positive remaining daily/total loss
+budgets. Native outcomes are revalidated; incomplete/changed evidence cannot clear
+the lock. Newly consumed outcomes require another explicit review. Reset clears
+only the account-wide lock/streak and retains consumed history, cooldown timestamp,
+all entry/management costs, ledger/P&L, frozen limits and any separate global halt.
+State, prior/new-state audit and command receipt are atomic. Same-command replay
+does not reset again or erase later risk. A later loss starts a new streak.
+
+This is common account recovery, not Scope family-scoped reset. Scope watch/order
+linkage, family loss attribution/reset, complete path proof and Scope runtime/replay
+remain open. The model has no operator capability. No order is authorized by the
+reset, and no existing cohort is migrated.
+
+Fresh GitHub baseline: `38dacee2952be0d4ce986ae8aacb7676035f49c0`, tree
+`06007098e47b34de076669435521575956b3c0bd`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Initial new source suite: 10 passed, three test-fixture failures (nonexistent
+  public halt helper and a backward fixture snapshot). Fixtures now use signed HALT
+  and monotonic snapshots; no application gate was relaxed. Corrected suite:
+  **13 passed in 8.20s**, then expanded with three additional evidence/isolation cases.
+- Non-editable installed wheel, six related suites with warnings treated as
+  errors: **180 passed in 81.84s**, including all 16 new reset cases, native loss
+  control, signed operator recovery, observer, runtime and Scope execution boundary.
+- The initial installed attempt stopped at collection because pip reused the
+  shared dependency directory's older same-version application. Installing the
+  wheel explicitly into the isolated environment fixed the test harness; the
+  five changed application modules now match source, wheel and installed bytes,
+  and the copied reset tests match source. No dependency version changed.
+- Scoped lint/format, dependency consistency, whitespace and 423 local
+  documentation links pass.
+- Wheel SHA-256: `c03e9ee352144197d6be773d2ec45cfa6bd3d8eb48f166e4a77c26b2d3ba131d`.
+  Artifacts/logs beside checkout: `loss-reset-env`, `loss-reset-dist`,
+  `loss-reset-proof`, `loss-reset-source.log`, `loss-reset-installed-tests.log`.
+
+Main untouched, PR draft, LIVE disabled and deployed experiment frozen. No authentic
+provider/model/broker call, dependency, host unit or deployment changed.
+
+---
+
 ## P7 common native loss cooldown and persistent lock: 2026-10-14 UTC
 
 New explicitly frozen PAPER populations can enroll a common account-wide loss

@@ -232,6 +232,7 @@ class OptionObserver:
         from app.options.runtime_state import report as runtime_report
 
         runtime = runtime_report(db, now)
+        from app.options.loss_control import stored_state as loss_state
         from app.options.operator import summary as operator_summary
 
         operator = operator_summary(db)
@@ -332,6 +333,7 @@ class OptionObserver:
             else "NOT_RECORDED",
             "runtime": runtime,
             "operator": operator,
+            "loss_control": loss_state(db),
             "account": {
                 "health": account_health,
                 "captured_at": snapshot.captured_at.isoformat() if snapshot else None,

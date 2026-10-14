@@ -75,6 +75,8 @@ Cash settlement and worthless expiry now use complete native accounting replay t
 attribute receipts to the correct entry, retaining all recorded fees and model charges.
 An opt-in [native loss guard](docs/OPTIONS_NATIVE_LOSS_CONTROL.md) now enforces
 outcome-based cooldown and persistent loss lock at entry preparation and dispatch.
+A separately signed, revision-bound reset now clears an eligible expired lock
+while retaining loss history, costs, global limits and any separate global halt.
 Authentic provider, host and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.

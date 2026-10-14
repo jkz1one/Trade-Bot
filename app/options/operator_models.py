@@ -15,7 +15,7 @@ class OptionsCommand(OptionRecord):
     command_id: str = Field(pattern=r"^[a-f0-9]{32}$")
     credential_generation: int = Field(ge=1, strict=True)
     actor: str = Field(min_length=1, max_length=80)
-    action: Literal["HALT", "RESUME", "REVOKE_KEY"]
+    action: Literal["HALT", "RESUME", "REVOKE_KEY", "RESET_LOSS_LOCK"]
     reason: str = Field(min_length=1, max_length=300)
     expected_revision: int = Field(ge=0, le=2**63 - 1, strict=True)
     issued_at: datetime

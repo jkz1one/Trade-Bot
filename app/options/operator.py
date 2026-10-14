@@ -93,15 +93,23 @@ class OptionsControl:
                 if now < command.issued_at
                 else ("COMMAND_EXPIRED" if now >= command.expires_at else None)
             )
-            if reason is None and command.action == "RESUME":
+            if reason is None and command.action in {"RESUME", "RESET_LOSS_LOCK"}:
                 runtime = getattr(self.engine, "_option_runtime", None)
                 if runtime is not None and runtime.task is not None and not runtime.task.done():
                     reason = "OPTION_RUNTIME_CYCLE_IN_PROGRESS"
                 else:
                     try:
-                        self.engine._resume(
-                            db, command.reason, expected_revision=command.expected_revision, now=now
-                        )
+                        if command.action == "RESET_LOSS_LOCK":
+                            from app.options.loss_control import reset_reviewed
+
+                            reset_reviewed(self.engine, db, command, now)
+                        else:
+                            self.engine._resume(
+                                db,
+                                command.reason,
+                                expected_revision=command.expected_revision,
+                                now=now,
+                            )
                     except ExecutionBlocked as exc:
                         reason = str(exc)
             elif reason is None:

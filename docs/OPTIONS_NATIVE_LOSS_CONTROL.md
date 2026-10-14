@@ -35,9 +35,9 @@ A verified LOSS increments the streak and starts or extends cooldown from the
 Before lockout, a verified WIN or FLAT breaks the consecutive-loss streak, but
 cannot shorten a still-running cooldown. Once the threshold is reached the lock
 is persistent: elapsed time, restart, date change, later outcomes and the existing
-global `resume` command do not clear it. There is deliberately no reset command in
-this slice. Reviewed scoped reset is still required before a locked cohort can
-trade again; deleting state or changing its frozen policy is not a recovery path.
+global `resume` command do not clear it. Only the separately signed reviewed
+`RESET_LOSS_LOCK` operator command can clear an eligible account-wide lock;
+deleting state or changing its frozen policy is not a recovery path.
 
 Previously consumed outcomes are revalidated. Changed or missing economic evidence,
 rewound clocks, future closing evidence and capacity overflow fail closed. No new
@@ -46,6 +46,37 @@ events commit together or roll back together. History is bounded to 200 buy inte
 and 2,000 native orders; overflow blocks entries rather than discarding old losses.
 
 ## Enforcement and inspection
+
+### Reviewed account-wide reset
+
+The existing [local operator capability](OPTIONS_OPERATOR_RECOVERY.md) now accepts
+`RESET_LOSS_LOCK`. The read-only review artifact includes stored loss state at the
+exact event revision. Submit signs that saved revision; the owner rejects stale
+reviews rather than silently substituting fresh evidence. Signature, journal,
+population, generation, command ID and expiry checks are unchanged. A model has
+no signing key or reset tool.
+
+Reset requires an already locked, explicitly enrolled account, expired cooldown,
+fresh matching account/supervision, no open position or working order, known model
+costs, positive remaining daily/total loss budgets, and no active model/runtime task
+or runtime blocker. The owner revalidates every consumed outcome and rejects
+incomplete or changed history. Newly consumed outcomes require another review;
+their risk state can persist even when the reset request is rejected. Refreshing
+evidence cannot shorten a new loss's recognition-time cooldown.
+
+An applied reset sets the consecutive-loss streak to zero and clears only the
+account-wide loss lock. It retains the expired cooldown timestamp, consumed outcome
+records and hashes, all entry/management charges, ledger balances, daily P&L,
+global limits, and any global halt. Future losses count normally; prior losses are
+not counted twice. It does not clear Scope's separate research or direction gates.
+The audit binds command ID, actor/reason, exact reviewed revision, population,
+event time, and prior/new state. State, audit and command receipt commit atomically;
+an authenticated replay returns the original result without another reset.
+
+This is common account recovery, not the future Scope family-scoped reset. It
+does not approve an order, resume a globally halted runner, or enable LIVE.
+
+### Entry gates and stored reads
 
 `OPEN_LONG` preparation and dispatch both refresh and enforce this guard. Dispatch
 excludes only its own still-unattempted prepared buy from pending-outcome detection.

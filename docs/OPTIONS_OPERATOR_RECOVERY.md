@@ -1,7 +1,7 @@
 # Reviewed local options recovery
 
 P4 operator surface, 2026-10-12. A separately enrolled operator capability can
-submit signed HALT, RESUME or REVOKE_KEY requests to the active local PAPER runner.
+submit signed HALT, RESUME, REVOKE_KEY or RESET_LOSS_LOCK requests to the active local PAPER runner.
 The existing owner alone applies them. The observer remains read-only and has no
 command route, signing key or automatic recovery action. This is local fixture
 control, with no broker transport, risk-policy changes or LIVE activation.
@@ -48,7 +48,7 @@ python -I -m app.options.operator_cli submit \
 
 Review authenticates the enrolled capability and verifies restore authority in a
 read-only committed snapshot. It reports the exact revision, account/position,
-supervision, runtime, cost uncertainty and entry halt evidence. It performs no feed,
+supervision, runtime, cost uncertainty, stored loss-control state and entry halt evidence. It performs no feed,
 venue, model or order operation. The review artifact grants no authority itself.
 Actor is an audited label for the shared signing capability, not proof of an
 individually authenticated person or of subjective review quality.
@@ -68,6 +68,15 @@ If the runner is stopped, a queued request has no effect and may expire before
 consumption. There is no HTTP listener or observer POST route in this slice.
 
 ## Recovery gates and durable outcomes
+
+For an explicitly enrolled [native loss-control population](OPTIONS_NATIVE_LOSS_CONTROL.md),
+use the same review/submit workflow with `--action RESET_LOSS_LOCK` and an explicit
+review reason. This separately signed action requires the exact reviewed revision,
+an existing threshold lock, expired cooldown, revalidated complete outcomes,
+fresh flat account/supervision, no working order or active runtime task, known costs,
+and remaining daily/total loss budgets. It clears only the loss lock/streak, retaining
+consumed history, all costs, global limits and any global halt. RESUME cannot replace
+this action; RESET_LOSS_LOCK cannot replace RESUME. Scope family reset remains open.
 
 RESUME checks the exact reviewed event revision and uses the same engine recovery
 gate inside one authenticated fenced transaction. It requires fresh RUNNING

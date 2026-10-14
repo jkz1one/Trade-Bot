@@ -206,3 +206,60 @@ def guard_entry(engine, db, proposal, now, *, exclude=None):
     state = refresh(engine, db, now, exclude=exclude)
     if state["reasons"]:
         raise ExecutionBlocked(";".join(state["reasons"]))
+
+
+def reset_reviewed(engine, db, command, now):
+    """Called only inside the authenticated operator's fenced transaction."""
+    engine._control(db)
+    if engine.journal.revision(db) != command.expected_revision:
+        raise ExecutionBlocked("OPTION_REVIEW_REVISION_CHANGED")
+    if engine.policy.loss_control is None:
+        raise ExecutionBlocked("NATIVE_LOSS_NOT_ENROLLED")
+    previous = stored_state(db)
+    if previous is None or not previous["locked"]:
+        raise ExecutionBlocked("NATIVE_LOSS_RESET_REQUIRES_LOCK")
+    account = engine._account(db, now)
+    if (
+        account.entry_blockers
+        or account.working_orders
+        or account.position is not None
+        or not account.complete
+        or account.unsupported_exposure
+        or account.daily_loss_available <= 0
+        or account.total_loss_available <= 0
+        or not account.budgets_known
+        or db.execute("SELECT 1 FROM execution_model_calls WHERE cost IS NULL LIMIT 1").fetchone()
+        or not timedelta(0)
+        <= now - account.captured_at
+        < timedelta(seconds=engine.limits.account_max_age_seconds)
+    ):
+        raise ExecutionBlocked("OPTION_RECOVERY_EVIDENCE_REQUIRED")
+    current = refresh(engine, db, now)
+    if current["consumed_entries"] != previous["consumed_entries"]:
+        raise ExecutionBlocked("NATIVE_LOSS_NEW_OUTCOME_REQUIRES_REVIEW")
+    if set(current["reasons"]) != {"NATIVE_LOSS_LOCKED"}:
+        raise ExecutionBlocked(";".join(current["reasons"]) or "NATIVE_LOSS_RESET_REQUIRES_LOCK")
+    if current["cooldown_until"] is None or now < clock(
+        datetime.fromisoformat(current["cooldown_until"])
+    ):
+        raise ExecutionBlocked("NATIVE_LOSS_COOLDOWN")
+    state = LossState.model_validate({k: current[k] for k in LossState.model_fields})
+    state = state.model_copy(update={"locked": False, "consecutive_losses": 0, "reasons": ()})
+    db.execute(
+        "UPDATE execution_option_loss_control SET state_json=? WHERE id=1",
+        (state.model_dump_json(),),
+    )
+    engine.journal.event(
+        db,
+        now,
+        "NATIVE_LOSS_REVIEWED_RESET",
+        {
+            "command_id": command.command_id,
+            "actor": command.actor,
+            "reason": command.reason,
+            "expected_revision": command.expected_revision,
+            "population_id": engine.limits.population_id,
+            "prior_state": current,
+            "state": state.model_dump(mode="json"),
+        },
+    )
