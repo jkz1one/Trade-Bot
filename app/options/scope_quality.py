@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from decimal import ROUND_FLOOR, Context, Decimal, localcontext
+from fractions import Fraction
 from typing import Literal
 
 from pydantic import Field, ValidationError, model_validator
@@ -47,6 +48,9 @@ class ScopeQualityPolicy(OptionRecord):
     arm_score: int = Field(strict=True, ge=94, le=100)
     convexity_score: int = Field(strict=True, ge=97, le=100)
     minimum_first_target_r: Money = Field(ge=Decimal("1.5"), le=5)
+    structural_path: Literal["completed-spx-levels-v1"] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @model_validator(mode="after")
     def ordered_scores(self):
@@ -61,9 +65,21 @@ class ScopeQualityComponent(OptionRecord):
 
 
 class ScopePathLevel(OptionRecord):
-    kind: Literal["DEALER_NODE", "PRIOR_HIGH", "PRIOR_LOW", "ATM_UPPER", "ATM_LOWER"]
+    kind: Literal[
+        "DEALER_NODE",
+        "PRIOR_HIGH",
+        "PRIOR_LOW",
+        "ATM_UPPER",
+        "ATM_LOWER",
+        "OPENING_HIGH",
+        "OPENING_LOW",
+        "SESSION_VWAP",
+        "PIVOT_HIGH",
+        "PIVOT_LOW",
+    ]
     level: Money = Field(gt=0)
     at_or_before_first_target: bool
+    confirmed_at: datetime | None = Field(default=None, exclude_if=lambda value: value is None)
 
 
 class ScopeQualityObservation(OptionRecord):
@@ -75,7 +91,7 @@ class ScopeQualityObservation(OptionRecord):
         "UNSCORED", "BELOW_OBSERVE", "OBSERVE", "WATCH", "ARM_THRESHOLD", "CONVEXITY_THRESHOLD"
     ] = "UNSCORED"
     first_target_r: Money | None = Field(default=None, ge=0)
-    potential_obstructions: tuple[ScopePathLevel, ...] = Field(default=(), max_length=16)
+    potential_obstructions: tuple[ScopePathLevel, ...] = Field(default=(), max_length=208)
     # The known node/range set is not a complete resistance/support map.
     complete_path_proven: Literal[False] = False
     passed: bool = False
@@ -192,6 +208,17 @@ def _review(o, frame, context, policy, scan):
         for kind, value in sorted(levels, key=lambda pair: ((pair[1] - spot) * sign, pair[0]))
         if (value - spot) * sign >= 0 and (value - g.target_two) * sign <= 0
     )
+    if policy.structural_path is not None:
+        path = tuple(
+            sorted(
+                (*path, *_structural_path(frame, g, sign)),
+                key=lambda p: (
+                    (p.level - spot) * sign,
+                    p.kind,
+                    p.confirmed_at or scan.evaluated_at,
+                ),
+            )
+        )
     if any(p.at_or_before_first_target for p in path):
         reasons.append("KNOWN_LEVEL_BEFORE_FIRST_OBJECTIVE")
     return ScopeQualityObservation(
@@ -204,4 +231,44 @@ def _review(o, frame, context, policy, scan):
         potential_obstructions=path,
         passed=not reasons,
         reasons=tuple(reasons),
+    )
+
+
+def _structural_path(frame, geometry, sign):
+    """Only called after complete, hash-bound context/structure coverage passes.
+
+    Exact rational comparisons keep displayed VWAP rounding out of every gate.
+    A pivot needs both neighbors and is known only when the right bar completes.
+    """
+    bars = next(h.bars for h in frame.histories if h.symbol == "SPX")
+    spot = Fraction(bars[-1].close)
+    levels = [
+        ("OPENING_HIGH", Fraction(max(b.high for b in bars[:3])), bars[2].ends_at),
+        ("OPENING_LOW", Fraction(min(b.low for b in bars[:3])), bars[2].ends_at),
+        (
+            "SESSION_VWAP",
+            sum(
+                (Fraction(b.high) + Fraction(b.low) + Fraction(b.close)) * Fraction(b.volume)
+                for b in bars
+            )
+            / (3 * sum(Fraction(b.volume) for b in bars)),
+            bars[-1].ends_at,
+        ),
+    ]
+    for left, center, right in zip(bars, bars[1:], bars[2:]):
+        if center.high > max(left.high, right.high):
+            levels.append(("PIVOT_HIGH", Fraction(center.high), right.ends_at))
+        if center.low < min(left.low, right.low):
+            levels.append(("PIVOT_LOW", Fraction(center.low), right.ends_at))
+    return tuple(
+        ScopePathLevel(
+            kind=kind,
+            level=_metric(Decimal(value.numerator) / Decimal(value.denominator), ROUND_FLOOR),
+            at_or_before_first_target=(value - Fraction(geometry.target_one)) * sign <= 0,
+            confirmed_at=confirmed,
+        )
+        for kind, value, confirmed in sorted(
+            levels, key=lambda p: ((p[1] - spot) * sign, p[0], p[2])
+        )
+        if (value - spot) * sign >= 0 and (value - Fraction(geometry.target_two)) * sign <= 0
     )

@@ -90,6 +90,51 @@ cannot establish that the full price path is unobstructed. Complete directional
 obstruction coverage remains open; the [contract review](OPTIONS_SCOPE_CONTRACTS.md)
 now explicitly blocks convexity without it.
 
+### Optional completed SPX structural levels
+
+A new frozen quality policy can set
+`structural_path="completed-spx-levels-v1"`. Omission retains the original policy
+serialization and checks; an existing watch cohort cannot adopt or change this
+field on reopen. The same nested quality policy must be used by watch, contract
+and arming/admission integration.
+
+After existing complete-session, source/time, payload-hash and positive-volume
+checks pass, this review adds levels derived from the supplied completed SPX bars:
+
+- Opening-range high and low from the first three five-minute bars, known at the
+  third bar's close.
+- Strict three-bar pivot highs/lows. A center must exceed both neighboring highs
+  or be below both neighboring lows. Its confirmation time is the right-hand bar's
+  close, not the center's. Equal-height/low plateaus and the final unconfirmed bar
+  are not labeled pivots.
+- Session VWAP from volume-weighted typical prices across every completed bar,
+  known at the latest completed close.
+
+Every included structural level retains `confirmed_at`. Levels are checked in the
+setup direction from the current completed close through the second objective,
+with inclusive endpoints. A level at/before the first objective fails the existing
+`KNOWN_LEVEL_BEFORE_FIRST_OBJECTIVE` gate. Later levels remain visible. Distinct
+kinds and repeated pivots retain their evidence, even at the same price. Levels are
+conservative potential obstructions; a pivot is not claimed to be proven directional
+resistance/support or automatically removed because price previously crossed it.
+
+VWAP uses exact rational arithmetic for path inclusion and first-objective checks.
+Its displayed level rounds down to twelve decimal places and cannot change a gate.
+The combined display is ordered by displayed price, kind and confirmation time.
+Up to 96 input bars, 12 dealer nodes and the other existing context levels fit the
+208-record output bound without truncation. Numeric output failures remain blocked.
+
+The score and its components do not change. The structural result is recomputed
+inside existing quality/contract/watch/arming reviews; a blocked new watch consumes
+no called play. Stored scans retain the input and policy hashes. No caller-supplied
+clear-path flag or precomputed pivot list is trusted.
+
+This strengthens the known-level review, but **does not complete full path proof**.
+Overnight structure, other horizons, plateau/supply-demand zones and authentic
+coverage remain unproven. `complete_path_proven` remains false and convexity/native
+Scope execution remain blocked. Absence of these finite known levels is not proof
+that price can move unobstructed to the objective.
+
 `passed` requires detected context, sufficient exact first-target reward, the arm
 score threshold, an unconsumed first objective and no supplied level before it.
 It means only these research checks passed. No order, model call, account mutation,

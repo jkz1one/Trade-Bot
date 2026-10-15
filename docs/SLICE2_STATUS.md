@@ -1,5 +1,45 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 completed SPX structural path checks: 2026-10-15 UTC
+
+New frozen Scope quality policies can opt into `completed-spx-levels-v1`.
+The review derives opening-range high/low, strictly confirmed three-bar pivots
+and exact volume-weighted typical price from validated completed SPX history.
+Each level records when it became knowable. Both directions retain inclusive
+path endpoints, repeated evidence and levels through the second objective;
+a level through the first objective blocks quality and cannot consume a watch call.
+Exact rational VWAP comparisons precede display rounding. Scores are unchanged.
+
+Omitted policy fields preserve historical serialization and hashes. Existing watch
+cohorts cannot adopt the new policy on reopen. Complete path proof remains false:
+other horizons, overnight levels, plateau/zone interpretation and authentic coverage
+remain open. Convexity and native Scope execution remain blocked. Independent
+account ownership and all entry/management cost accounting are unchanged.
+
+Fresh GitHub baseline: `4ec5b6d8246b6c25d625fe10ccb0acd845616768`, tree
+`8950b91ad1e6542232c00ef221247994d8780347`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Focused new source suite: **26 passed in 2.03s**. Covers CALL/PUT boundaries,
+  pivot confirmation, missing/forming/changed/zero-volume history, exact VWAP,
+  ambient precision, frozen policies, stored evidence and atomic watch rejection.
+  Initial failures exposed test fixtures using the wrong stored field and default
+  watch pattern; corrected fixtures without relaxing application gates.
+- Non-editable installed wheel, all Scope suites plus common option admission,
+  warnings treated as errors: **728 passed in 31.62s**.
+- Source/wheel/installed module and copied new tests match. Scoped lint/format,
+  dependency consistency and whitespace checks pass.
+- Wheel SHA-256: `5e8c85e1fb14d8b29e7bf390b1de5b4e29ee9ef475fb1400191785b606b19f59`.
+  Artifacts/logs beside checkout: `scope-path-env`, `scope-path-dist`,
+  `scope-path-proof`, `scope-path-source*.log`, `scope-path-installed-tests.log`.
+
+Main untouched, PR draft, LIVE disabled and deployed experiment frozen. No authentic
+provider/model/broker call, dependency, host unit or deployment changed.
+
+---
+
 ## P7 approved Scope price-based quantity ceilings: 2026-10-14 UTC
 
 Fresh Scope owned-admission reviews now enforce the approved V2 executable-ask
