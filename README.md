@@ -93,6 +93,9 @@ Enrolled replay/export now retains cumulative loss state, consumed-entry evidenc
 and unpaid entry pauses across independent A/B/C/D session boundaries.
 Native Degen/Swing entries now freeze selected-family identity through dispatch,
 closing attribution and entry/management costs; historical orders remain unchanged.
+[Native whole-contract partial closes](docs/OPTIONS_PARTIAL_CLOSE.md) now provide
+a frozen opt-in scale/runner execution primitive with exact entry attribution,
+full costs and independent protective-exit precedence. Scope linkage remains open.
 Authentic provider, host and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.

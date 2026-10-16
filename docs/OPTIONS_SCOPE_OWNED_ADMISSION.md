@@ -177,3 +177,7 @@ change does not cancel broker orders or infer missing fills. Accounts without a
 Scope enrollment table retain existing Degen/Swing behavior. Native Scope linkage
 and its filled-position/full-cost loss controls must be implemented before this
 boundary can be replaced by a governed entry path.
+
+The shared [native partial-close primitive](OPTIONS_PARTIAL_CLOSE.md) now supports
+explicit whole-contract scales for separately enrolled PAPER owners. It does not
+remove this watch cohort’s native-entry guard or supply Scope target allocation.

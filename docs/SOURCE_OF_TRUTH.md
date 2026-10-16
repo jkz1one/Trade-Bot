@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.49. Adopted product direction and working delivery contract, 2026-10-16 UTC.
+Version 1.50. Adopted product direction and working delivery contract, 2026-10-16 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -94,6 +94,11 @@ Enrolled replay owners now refresh risk before saving each closing snapshot.
 Native export retains audit-bound loss state, consumed-entry economics/lineage,
 entry pauses and reset receipts across independent A/B/C/D session boundaries.
 Portable reports bind policy and history while labeling this as stored evidence.
+[Native whole-contract partial closes](OPTIONS_PARTIAL_CLOSE.md) now let a new
+frozen PAPER cohort retain an owned runner through the same governor and journal.
+Exact requested/approved/fill quantities, all fees and linked model costs persist;
+mandatory protection preempts unattempted scales and preserves attempted orders.
+Automatic Scope target allocation and watch execution remain open.
 Complete obstruction coverage, native full-cost loss/cooldown linkage and
 dispatch/management remain required
 before Scope execution.

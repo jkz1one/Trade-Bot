@@ -167,6 +167,8 @@ def admit_option(
         position = account.position
         if not isinstance(position, OptionHolding) or position.contract != contract:
             reasons.append("NO_EXACT_OWNED_OPTION")
+        elif proposal.close_quantity is not None and proposal.close_quantity > position.quantity:
+            reasons.append("CLOSE_QUANTITY_EXCEEDS_OWNERSHIP")
         if quote.bid_size == 0:
             reasons.append("NO_EXECUTABLE_BID_SIZE")
         if reasons:
@@ -178,7 +180,9 @@ def admit_option(
             price = _tick_price(
                 quote.bid * (ONE - limits.slippage_bps / 10_000), contract, ROUND_FLOOR
             )
-            quantity = min(position.quantity, quote.bid_size)
+            quantity = min(
+                position.quantity, proposal.close_quantity or position.quantity, quote.bid_size
+            )
             fees = limits.exit_fee_per_order + quantity * limits.exit_fee_per_contract
             proceeds = quantity * price * contract.multiplier - fees
             if price <= 0 or proceeds < -(account.settled_cash - account.reserved_cash):

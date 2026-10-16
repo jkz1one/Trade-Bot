@@ -1,5 +1,70 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 native scale/runner execution primitive: 2026-10-16 UTC
+
+The common engine now supports explicitly bounded whole-contract closes for a
+new frozen PAPER cohort enrolled with `partial_closes="whole-contract-v1"`.
+`OptionProposal.close_quantity` is CLOSE-only and a strict positive integer.
+The common governor caps it by exact ownership and executable bid size, rejecting
+requests above ownership. The original requested ceiling and actual approved order
+quantity persist separately; dispatch cannot enlarge the fixed order or accept
+changed proposal/approval terms. Existing cohorts and omitted-field serialization
+remain unchanged. Only deterministic local orchestration may use this API.
+
+Fresh protection checks at preparation and dispatch prevent a planned scale from
+retaining contracts after a required full exit. Stops, premium catastrophe,
+entry targets and deadlines retain the common latched protection. The independent
+protective tick can supersede only a never-attempted prepared scale for that same
+entry, recording its local rejection before a full protective close. Attempted,
+working and unknown orders keep their reservation and reconciliation requirements;
+no venue cancellation, replay or inferred fill is introduced.
+
+Scale and runner fills use the same FIFO accounting, exact entry attribution and
+per-order/per-contract fees. Remaining ownership retains original/tightened stops
+and target/horizon protection. Partial sales do not complete a position outcome or
+consume a completed loss. Entry and management charges survive all exits, including
+advice without an order; missing management usage withholds the final net outcome.
+This supplies a necessary shared execution primitive for Scope, not automatic
+Scope target allocation or watch-to-order enrollment.
+
+Fresh GitHub baseline: `da1b726ae3b9836b6ee81c1fdf3b69cf85de7462`, tree
+`85ac72d6b62bc2659ee091719fb222c1e2a170ee`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Source partial-close/admission/closing-link suites: **231 passed in 21.70s**.
+  A final stored-proposal corruption case was added afterward and passes in the
+  installed run below. Initial fixture expectations were corrected for the actual
+  MAINTAIN status and immutable-configuration exception. An initial mixed-source
+  smoke run used the previous installed worker and rejected the new intent schema;
+  the subsequent matching wheel/native worker passes the real lifecycle tests.
+- Installed partial-close, admission, execution, close/entry lineage, entry and
+  position coordination, family/account loss and Scope boundary/admission suites:
+  **443 passed in 158.28s (0:02:38)**, with warnings treated as errors.
+- New cases cover both directions and 1/2/3-contract scales, final runners, actual
+  fees, remaining exit reserves, settled cash, exact caps, strict counts, frozen
+  reopen, source retries, restart, protection at prepare/dispatch, local supersession,
+  attempted-order precedence, changed attribution and atomic rollback. The actual
+  fixture AI coordinator retains entry plus management charges through both exits;
+  missing usage stays unknown and prevents loss consumption.
+- Five changed modules match source/wheel/installed files; copied changed tests
+  match source. Scoped lint/format, dependency consistency, whitespace and 262 local
+  documentation links pass.
+- Wheel SHA-256: `707497126364702eb711b678f9292ec02b7af1c613cc68041d8280ac0d481ed3`.
+  Artifacts/logs beside checkout: `partial-close-env`, `partial-close-dist`,
+  `partial-close-proof`, `partial-close-source-final.log`,
+  `partial-close-installed-tests.log`.
+
+[API and boundaries](OPTIONS_PARTIAL_CLOSE.md). Scope full-path coverage, frozen
+watch/order/family-loss linkage, profile/quantity-specific target allocation,
+management/runtime/replay, authentic provider/calendar/host acceptance and the
+UI desktop/mobile pass remain open. Native Scope entry remains blocked. Main
+untouched, PR draft, LIVE disabled and deployed experiment frozen. No authentic
+provider/model/broker call, dependency, host unit or deployment changed.
+
+---
+
 ## P7 Scope current-price admission geometry: 2026-10-16 UTC
 
 Reproduced a concrete Scope admission defect in both directions: the original

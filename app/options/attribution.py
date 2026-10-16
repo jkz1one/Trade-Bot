@@ -8,7 +8,7 @@ from pydantic import Field
 from app.options.engine import exact, fingerprint
 from app.options.entry_reasoning import Digest
 from app.options.lifecycle import EntryLineage, OptionFill, OptionIntent, OptionObservation
-from app.options.models import Money, Name, OptionRecord
+from app.options.models import Money, Name, OptionProposal, OptionRecord, PositiveCount
 
 
 class DecisionAttribution(OptionRecord):
@@ -36,6 +36,9 @@ class DecisionAttribution(OptionRecord):
     cost_status: Literal["NOT_CALLED", "UNKNOWN", "CONFIGURED_ESTIMATE"]
     client_id: Name | None = None
     approved_quantity: int | None = Field(default=None, ge=1)
+    requested_close_quantity: PositiveCount | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     order_status: str | None = Field(default=None, max_length=32)
     attempted: bool = False
     fill_ids: tuple[Name, ...] = Field(default=(), max_length=1000)
@@ -81,6 +84,11 @@ def order_attribution(db, row):
         raise ValueError("Stored managed order origin mismatch")
     if approval["admission"]["quantity"] != intent.quantity:
         raise ValueError("Stored approval quantity mismatch")
+    proposal = OptionProposal.model_validate(approval["proposal"])
+    if intent.requested_close_quantity != proposal.close_quantity or (
+        intent.requested_close_quantity is not None and approval["origin"] != "DETERMINISTIC"
+    ):
+        raise ValueError("Stored requested close quantity mismatch")
     entry_id = intent.position_protection.entry_client_id if intent.position_protection else None
     explicit = intent.closing_entry_client_id
     if explicit is not None or "closing_entry_client_id" in approval:
@@ -112,6 +120,11 @@ def order_attribution(db, row):
         lineage = entry_lineage(db, entry_id)
     return {
         **({"entry_lineage": lineage.model_dump(mode="json")} if lineage is not None else {}),
+        **(
+            {"requested_close_quantity": intent.requested_close_quantity}
+            if intent.requested_close_quantity is not None
+            else {}
+        ),
         "origin": approval["origin"],
         "source_key": intent.source_key,
         "client_id": intent.client_id,
@@ -267,6 +280,12 @@ def decision_attribution(db, key, outcome, policy):
         intent = OptionIntent.model_validate(_json(order_rows[0]["intent_json"]))
         if applied.get("client_id") != intent.client_id:
             raise ValueError("Stored order has no matching approval decision")
+        if intent.requested_close_quantity is not None and (
+            inputs.get("proposal") != approval["proposal"]
+            or plan is None
+            or plan.get("close_quantity") != intent.requested_close_quantity
+        ):
+            raise ValueError("Stored close proposal quantity mismatch")
         if prefix and (
             approval.get(prefix + "_request") != outcome[prefix + "_request"]
             or approval.get(prefix + "_result") != outcome.get(prefix + "_result")
@@ -314,6 +333,7 @@ def decision_attribution(db, key, outcome, policy):
         if review and applied.get("status") == "TIGHTENED"
         else None,
         requested_target=plan.get("underlying_target") if plan else None,
+        requested_close_quantity=plan.get("close_quantity") if plan else None,
         horizon_seconds=plan.get("horizon_seconds") if plan else None,
         change_since_entry=plan.get("change_since_entry") if plan else None,
         uncertainty=plan.get("uncertainty") if plan else None,
@@ -338,6 +358,13 @@ def decision_attribution(db, key, outcome, policy):
         **{
             k: v
             for k, v in order.items()
-            if k not in {"origin", "source_key", "execution_authority", "entry_client_id"}
+            if k
+            not in {
+                "origin",
+                "source_key",
+                "execution_authority",
+                "entry_client_id",
+                "requested_close_quantity",
+            }
         },
     )

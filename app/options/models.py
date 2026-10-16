@@ -151,6 +151,7 @@ class OptionProposal(OptionRecord):
     contract: OptionContract | None = None
     underlying_invalidation: Money | None = Field(default=None, gt=0)
     max_entry_debit: Money | None = Field(default=None, gt=0)
+    close_quantity: PositiveCount | None = Field(default=None, exclude_if=lambda v: v is None)
     thesis: str = Field(min_length=1, max_length=500)
 
     @field_validator("thesis")
@@ -166,6 +167,8 @@ class OptionProposal(OptionRecord):
             raise ValueError("An exact option contract is required")
         if self.action == "OPEN_LONG" and self.underlying_invalidation is None:
             raise ValueError("Opening requires original underlying invalidation")
+        if self.close_quantity is not None and self.action != "CLOSE":
+            raise ValueError("A requested close quantity applies only to CLOSE")
         return self
 
 

@@ -78,6 +78,11 @@ UNKNOWN and the reservation. Children are reaped before normal ownership release
 Startup converts interrupted SUBMITTING to UNKNOWN. No retry or live broker write
 is hidden behind this state.
 
+[Optional bounded whole-contract closes](OPTIONS_PARTIAL_CLOSE.md) now let a new
+frozen cohort request an exact maximum sale quantity, preserve remaining ownership
+and costs, and let mandatory protection supersede only unattempted scale orders.
+This is not automatic Scope target allocation or authority to cancel venue orders.
+
 ## Management and expiry boundaries
 
 Call invalidation uses underlying bid; put invalidation uses underlying ask.

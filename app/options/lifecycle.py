@@ -60,6 +60,9 @@ class OptionExecutionPolicy(OptionRecord):
     process_timeout_seconds: float = Field(gt=0, le=30, allow_inf_nan=False)
     cost_policy: CostPolicy | None = None
     loss_control: NativeLossPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
+    partial_closes: Literal["whole-contract-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
 
     @model_validator(mode="after")
     def bounded(self):
@@ -115,6 +118,9 @@ class OptionIntent(OptionRecord):
     time_in_force: Literal["DAY"] = "DAY"
     entry_protection: EntryProtection | None = Field(default=None, exclude_if=lambda v: v is None)
     closing_entry_client_id: Name | None = Field(default=None, exclude_if=lambda v: v is None)
+    requested_close_quantity: PositiveCount | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     entry_lineage: EntryLineage | None = Field(default=None, exclude_if=lambda v: v is None)
 
     position_protection: PositionExitProtection | None = Field(
@@ -127,6 +133,12 @@ class OptionIntent(OptionRecord):
             raise ValueError("Distinct fresh approval and DAY-order deadlines required")
         if self.order_expires_at > self.instrument.contract.last_trading_at:
             raise ValueError("DAY order cannot outlive the exact contract trading instant")
+        if self.requested_close_quantity is not None and (
+            self.side != "SELL"
+            or self.closing_entry_client_id is None
+            or self.quantity > self.requested_close_quantity
+        ):
+            raise ValueError("Requested close ceiling binds an exact owned sell quantity")
         if self.entry_lineage is not None and (
             self.side != "BUY" or self.entry_lineage.opportunity_key != self.source_key
         ):

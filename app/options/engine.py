@@ -502,6 +502,8 @@ class OptionExecution:
                         session,
                         now=now,
                     )
+                if result.outcome == "APPROVED" and proposal.close_quantity is not None:
+                    self._review_partial_close(db, proposal, quote, underlying, now, origin)
             except (ValueError, ExecutionBlocked) as exc:
                 reason = str(exc)
                 result = None
@@ -589,6 +591,7 @@ class OptionExecution:
                         closing_entry_client_id=ledger.position.entry_client_id
                         if proposal.action == "CLOSE"
                         else None,
+                        requested_close_quantity=proposal.close_quantity,
                     )
                     approval = {
                         **inputs,
@@ -646,6 +649,11 @@ class OptionExecution:
                 from app.options.entry_lineage import verified_lineage
 
                 verified_lineage(db, intent, approval)
+                if intent.requested_close_quantity != proposal.close_quantity or (
+                    intent.requested_close_quantity is not None
+                    and approval["admission"]["quantity"] != intent.quantity
+                ):
+                    raise ExecutionBlocked("OPTION_CLOSE_QUANTITY_CHANGED")
                 if (
                     intent.closing_entry_client_id is not None
                     or "closing_entry_client_id" in approval
@@ -691,6 +699,10 @@ class OptionExecution:
                     self._session(intent.instrument.contract, now),
                     now=now,
                 )
+                if result.outcome == "APPROVED" and proposal.close_quantity is not None:
+                    self._review_partial_close(
+                        db, proposal, quote, underlying, now, approval.get("origin")
+                    )
                 management = intent.position_protection is not None
                 if management != (approval.get("origin") == "POSITION_MODEL"):
                     raise ExecutionBlocked("POSITION_PROTECTION_MISSING")
@@ -1133,6 +1145,37 @@ class OptionExecution:
 
         validate_fill(self.limits, intent, fill, index, used)
 
+    def _review_partial_close(self, db, proposal, quote, underlying, now, origin):
+        """An explicit scale-out cannot postpone a freshly observed mandatory full exit."""
+        if self.policy.partial_closes is None:
+            raise ExecutionBlocked("OPTION_PARTIAL_CLOSE_NOT_ENROLLED")
+        if origin != "DETERMINISTIC":
+            raise ExecutionBlocked("OPTION_PARTIAL_CLOSE_DETERMINISTIC_ONLY")
+        ledger = OptionLedger.model_validate_json(self._control(db)["ledger_json"])
+        position = ledger.position
+        # Common admission has already verified exact ownership and the requested cap.
+        if proposal.close_quantity == position.quantity:
+            return
+        assessed = assess_position(position, quote, underlying, self.limits, self.policy, now=now)
+        if assessed != position:
+            db.execute(
+                "UPDATE execution_control SET ledger_json=? WHERE id=1",
+                (ledger.model_copy(update={"position": assessed}).model_dump_json(),),
+            )
+            self.journal.event(
+                db,
+                now,
+                "OPTION_PARTIAL_CLOSE_PROTECTION_REVIEW",
+                {
+                    "entry_client_id": position.entry_client_id,
+                    "position": assessed.model_dump(mode="json"),
+                },
+            )
+        if assessed.exit_reason is not None:
+            raise ExecutionBlocked("OPTION_PARTIAL_CLOSE_FULL_EXIT_REQUIRED")
+        if assessed.supervision_issue is not None:
+            raise ExecutionBlocked("OPTION_PARTIAL_CLOSE_FRESH_PROTECTION_REQUIRED")
+
     @exact
     def assess(self, quote, underlying, *, now):
         now = clock(now)
@@ -1193,10 +1236,33 @@ class OptionExecution:
         assessed = self.assess(quote, underlying, now=now)
         if assessed["status"] != "EXIT_REQUIRED":
             return assessed
-        with self.journal.read() as db:
-            if db.execute("SELECT 1 FROM execution_orders WHERE active_lock=1").fetchone():
-                return {"status": "EXIT_BLOCKED", "reason": "OPTION_ORDER_ALREADY_IN_FLIGHT"}
+        with self.journal.write() as db:
             p = OptionLedger.model_validate_json(self._control(db)["ledger_json"]).position
+            active = db.execute("SELECT * FROM execution_orders WHERE active_lock=1").fetchone()
+            if active:
+                pending = OptionIntent.model_validate_json(active["intent_json"])
+                if (
+                    active["status"] == "PREPARED"
+                    and active["attempted_at"] is None
+                    and pending.closing_entry_client_id == p.entry_client_id
+                    and pending.requested_close_quantity is not None
+                    and pending.requested_close_quantity < p.quantity
+                ):
+                    # This intent never left the journal. No broker cancellation or
+                    # replay of an attempted/unknown order is permitted here.
+                    db.execute(
+                        "UPDATE execution_orders SET status='REJECTED',active_lock=NULL WHERE client_id=?",
+                        (pending.client_id,),
+                    )
+                    self.journal.event(
+                        db,
+                        clock(now),
+                        "OPTION_PARTIAL_CLOSE_SUPERSEDED",
+                        {"reason": p.exit_reason, "entry_client_id": p.entry_client_id},
+                        client_id=pending.client_id,
+                    )
+                else:
+                    return {"status": "EXIT_BLOCKED", "reason": "OPTION_ORDER_ALREADY_IN_FLIGHT"}
             entry = OptionIntent.model_validate_json(
                 db.execute(
                     "SELECT intent_json FROM execution_orders WHERE client_id=?",
@@ -1204,7 +1270,7 @@ class OptionExecution:
                 ).fetchone()[0]
             )
             failed_exit = db.execute(
-                "SELECT 1 FROM execution_orders WHERE json_extract(intent_json,'$.side')='SELL' AND status IN ('REJECTED','CANCELED','EXPIRED') AND json_extract(intent_json,'$.prepared_at') >= ?",
+                "SELECT 1 FROM execution_orders WHERE json_extract(intent_json,'$.side')='SELL' AND status IN ('REJECTED','CANCELED','EXPIRED') AND json_extract(intent_json,'$.prepared_at') >= ? AND (attempted_at IS NOT NULL OR json_extract(intent_json,'$.requested_close_quantity') IS NULL)",
                 (entry.prepared_at.isoformat(),),
             ).fetchone()
             exited = sum(
