@@ -66,6 +66,9 @@ class OptionExecutionPolicy(OptionRecord):
     target_exits: Literal["frozen-targets-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
+    entry_premium_protection: Literal["tighten-only-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
 
     @model_validator(mode="after")
     def bounded(self):
@@ -85,6 +88,11 @@ class EntryProtection(OptionRecord):
     plan_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
     underlying_target: Money = Field(gt=0)
     exit_by: datetime
+
+
+class EntryPremiumProtection(OptionRecord):
+    version: Literal["tighten-only-v1"] = "tighten-only-v1"
+    maximum_loss_fraction: Money = Field(gt=0, lt=1)
 
 
 class TargetExitStep(OptionRecord):
@@ -158,6 +166,9 @@ class OptionIntent(OptionRecord):
     target_exit_schedule: TargetExitSchedule | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
+    entry_premium_protection: EntryPremiumProtection | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     target_exit_stage: int | None = Field(
         default=None, strict=True, ge=1, le=3, exclude_if=lambda v: v is None
     )
@@ -169,6 +180,8 @@ class OptionIntent(OptionRecord):
 
     @model_validator(mode="after")
     def lifetime(self):
+        if self.entry_premium_protection is not None and self.side != "BUY":
+            raise ValueError("Entry premium protection binds only the original buy")
         if self.target_exit_schedule is not None:
             if (
                 self.side != "BUY"
@@ -273,6 +286,9 @@ class OptionPosition(OptionHolding):
     exit_at: datetime
     tightened_underlying_invalidation: Money = Field(gt=0)
     entry_protection: EntryProtection | None = Field(default=None, exclude_if=lambda v: v is None)
+    entry_premium_protection: EntryPremiumProtection | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     target_exit_schedule: TargetExitSchedule | None = Field(
         default=None, exclude_if=lambda v: v is None
     )

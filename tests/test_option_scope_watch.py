@@ -50,8 +50,10 @@ def ready(engine, venue, now):
 
 
 @contextmanager
-def owned(tmp_path, *, enroll=True, **changes):
+def owned(tmp_path, *, enroll=True, execution_policy_changes=None, **changes):
     _, limits, execution_policy = configuration()
+    if execution_policy_changes:
+        execution_policy = execution_policy.model_copy(update=execution_policy_changes)
     limits = limits.model_copy(
         update={
             "allowed_underlyings": ("SPX",),

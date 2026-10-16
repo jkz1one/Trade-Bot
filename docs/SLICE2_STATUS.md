@@ -1,5 +1,80 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 Scope allocation previews and entry premium protection: 2026-10-16 UTC
+
+Fresh source review recovered Scope's actual shared sizing rule: the pinned
+orchestrator explicitly selects balanced scaling, independently of contract profile.
+A new frozen optional `ScopeManagementPolicy` now derives plans from successful
+owned admission, current eligible contract observations and original locked geometry.
+One contract exits at T2; two allocate one to T1 and one runner; three allocate one
+to each objective and one runner. The source four-contract allocation additionally
+requires T3, which current approved Scope geometry does not define. Its preview
+retains the distinct T3 and runner quantities, returns
+`SCOPE_THIRD_TARGET_UNSPECIFIED`, and emits no native schedule.
+
+The source emits `scope_t1`/`scope_t2` candidates, but its generic target selector
+accepts neither method and can replace them with fixed-R targets. That fallback is
+not adopted. No invented objective, silent reallocation or reduction from four to
+three is introduced. Account admission eligibility remains distinct from management
+plan readiness, and every plan retains `native_execution_ready=false`.
+
+Source premium-stop estimates (.35 Responsive/.45 Balanced/.60 Convexity) are
+recorded separately from explicitly enrolled premium limits. Proposed protection
+uses the tighter profile/owner fraction. Convexity remains blocked by its existing
+full-path gate. A new native `entry_premium_protection="tighten-only-v1"` enrollment
+allows trusted deterministic buys to freeze a tighter premium catastrophe fraction.
+Preparation and dispatch reject widened or mismatched terms. Fills, scales, remaining
+FIFO basis, restart and close attribution retain the exact original entry protection.
+Fresh executable bid triggers the existing mandatory latch; stale/missing bids,
+working/unknown orders, underlying stops and time/expiry precedence remain unchanged.
+Full-premium admission/reserves and all execution/model charges are not discounted.
+
+Management previews are stored in the existing atomic admission receipt. The observer
+checks policy, geometry, quantity, admission identity/times and owner risk limit,
+retaining stale labels without fresh evaluation. Missing/inconsistent enrolled plans
+become unavailable. Old cohorts omit the optional fields and cannot migrate on reopen.
+Scope's generic native entry guard still rejects the generated schedule/protection.
+
+Fresh GitHub baseline: `f0ad9f08fd9ec8865b3b042c1578b2ddd04d46d2`, tree
+`59e6f561a4004b84702ac7181f06eac4e5f06652`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+Reference: SignalFlow `f9eaf2c1b5d13dca287ee7138126883065b00395`,
+`play_orchestration.py`, `play_sizing.py`, `scope_wizard.py` and the pinned V2 playbook.
+
+Validation:
+
+- Source entry-premium, Scope management, owned-admission and observer suites:
+  **104 passed in 35.94s**. Initial fixture failures reflected JSON-versus-typed
+  timestamp hashing, supplied ask-size limits and price-driven profile classification;
+  corrected fixtures now exercise the intended cases through the actual gates.
+  An additional missing-plan observer case was added for the installed run.
+- Installed entry-premium, all Scope, target/partial-close, native execution,
+  closing/entry lineage, entry/position coordination, outcome and observer suites:
+  **940 passed in 320.59s**, with warnings treated as errors, outside the checkout
+  against the non-editable installed wheel.
+- New cases cover both directions/profiles, one-through-four-contract allocations,
+  exact executable premium boundaries, actual FIFO basis, stricter owner/profile
+  caps, full-premium reserves, target/protection races, runner restart, all fees,
+  independent owners, frozen enrollment, stale inputs, changed stored terms,
+  retry/rollback and explicit Scope entry rejection. Partial-close regressions retain
+  known/unknown entry and management charges in complete/incomplete outcomes.
+- Nine modules match source/wheel/installed files; three changed tests match copied
+  proof files. Scoped lint/format, dependency consistency, whitespace and local
+  documentation links pass.
+- Wheel SHA-256: `66194355bdfa4e0aef9cacd6c55d7f6efef5dca491873af5549d0316dd99fda4`.
+  Artifacts/logs beside checkout: `scope-management-env`, `scope-management-dist`,
+  `scope-management-proof`, `scope-management-source.log`,
+  `scope-management-installed-tests.log`.
+
+[API, source discrepancy and boundaries](OPTIONS_SCOPE_MANAGEMENT.md). Scope still
+requires reviewed four-contract allocation, watch/entry linkage, complete obstruction
+coverage, Scope family loss/reset, full management/runtime/replay acceptance. Authentic
+provider/calendar/host, prospective economics and UI acceptance remain separate.
+Main untouched, PR draft, LIVE disabled and deployed experiment frozen. No authentic
+provider/model/broker call, dependency, host unit or deployment changed.
+
+---
+
 ## P7 frozen native target exits: 2026-10-16 UTC
 
 New PAPER cohorts can enroll `target_exits="frozen-targets-v1"` alongside the

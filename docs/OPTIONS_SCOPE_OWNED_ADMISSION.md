@@ -186,3 +186,9 @@ remove this watch cohort’s native-entry guard or supply Scope target allocatio
 entry-bound scales from fresh observations and verified fills. They retain runners
 and independent protection but do not select Scope profile allocations, provide
 profile-specific premium protection or bypass this research-only entry boundary.
+
+An optional [Scope management policy](OPTIONS_SCOPE_MANAGEMENT.md) now stores
+a separate plan after eligible owned admission. It uses that actual quantity, the
+locked objectives and the current eligible contract profile. Account eligibility
+and management-plan readiness remain distinct; a four-contract plan reports its
+missing third objective without changing admission or granting execution authority.

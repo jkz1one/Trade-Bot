@@ -31,6 +31,7 @@ from app.options.scope_context import (
     scan_scope_context,
 )
 from app.options.scope_contract import ScopeContractPolicy, scan_scope_contract
+from app.options.scope_management import ScopeManagementPolicy, review_scope_management
 from app.options.scope_quality import ScopeQualityPolicy, scan_scope_quality
 from app.options.scope_structure import ScopePattern, scan_scope_structure
 
@@ -65,9 +66,14 @@ class ScopeWatchPolicy(OptionRecord):
     admission: ScopeAdmissionPolicy | None = Field(
         default=None, exclude_if=lambda value: value is None
     )
+    management: ScopeManagementPolicy | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @model_validator(mode="after")
     def matching_quality_context(self):
+        if self.management is not None and self.admission is None:
+            raise ValueError("Scope management requires frozen owned admission")
         if self.quality is not None and self.quality.context != self.context:
             raise ValueError("Scope watch and quality context policies must match")
         if self.arming is not None and self.quality is None:
@@ -724,6 +730,15 @@ class ScopeWatchBook:
                             "reasons": list(admission.reasons),
                         }
                     )
+                    if self.policy.management is not None and admission.outcome == "APPROVED":
+                        review["management"] = review_scope_management(
+                            admission,
+                            geometry,
+                            record["choice"],
+                            sample["contract_scan"],
+                            self.policy.management,
+                            self.engine.policy.premium_catastrophe_fraction,
+                        ).model_dump(mode="json")
                     if admission.outcome != "APPROVED":
                         sample.update(
                             self._arming_reset(record, now, "SCOPE_ACCOUNT_ADMISSION_REJECTED")

@@ -4,6 +4,16 @@ from datetime import timedelta
 from decimal import Context, localcontext
 
 from app.options.governor import _fresh
+from app.options.lifecycle import EntryPremiumProtection
+
+
+def verify_premium_binding(intent, approval):
+    raw = approval.get("entry_premium_protection")
+    protection = EntryPremiumProtection.model_validate(raw) if raw is not None else None
+    if intent.entry_premium_protection != protection:
+        raise ValueError("OPTION_ENTRY_PREMIUM_PROTECTION_CHANGED")
+    if protection is not None and approval.get("origin") != "DETERMINISTIC":
+        raise ValueError("OPTION_ENTRY_PREMIUM_DETERMINISTIC_ONLY")
 
 
 def assess_position(p, quote, underlying, limits, policy, *, now):
@@ -57,8 +67,11 @@ def _assess(p, quote, underlying, limits, policy, now):
         or (p.contract.right == "PUT" and underlying.ask >= p.tightened_underlying_invalidation)
     ):
         reason = reason or "UNDERLYING_INVALIDATION"
+    premium_fraction = policy.premium_catastrophe_fraction
+    if p.entry_premium_protection is not None:
+        premium_fraction = min(premium_fraction, p.entry_premium_protection.maximum_loss_fraction)
     if quote_ok and quote.bid * p.quantity * p.contract.multiplier <= p.basis * (
-        1 - policy.premium_catastrophe_fraction
+        1 - premium_fraction
     ):
         reason = reason or "PREMIUM_CATASTROPHE"
     if (

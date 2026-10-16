@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.51. Adopted product direction and working delivery contract, 2026-10-16 UTC.
+Version 1.52. Adopted product direction and working delivery contract, 2026-10-16 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -102,7 +102,12 @@ mandatory protection preempts unattempted scales and preserves attempted orders.
 allocations, durable target progress and automatic whole-contract sales through
 the same protection, governor and fill accounting. Restarts retain pending orders;
 attempted failures require review. Partial entries are not silently reallocated.
-Scope profile/allocation selection and watch execution remain open.
+[Scope management plans](OPTIONS_SCOPE_MANAGEMENT.md) now preserve the source
+balanced allocations for one through three owned contracts and explicit profile
+premium limits beneath the owner ceiling. A new-cohort native entry premium
+protector retains those tighter terms through fills, scales, restart and attribution.
+Four-contract Scope allocation remains blocked because locked geometry lacks T3;
+the generic source fixed-R fallback is not adopted. Scope watch execution remains open.
 Complete obstruction coverage, native full-cost loss/cooldown linkage and
 dispatch/management remain required
 before Scope execution.

@@ -173,7 +173,7 @@ class OptionObserver:
         policy = OptionExecutionPolicy.model_validate(config["policy"])
         if limits.population_id != self.population_id:
             raise ValueError("Frozen population identity mismatch")
-        scope = stored_scope(db, tables, limits, now, _json)
+        scope = stored_scope(db, tables, limits, now, _json, owner_policy=policy)
         ledger = OptionLedger.model_validate(_json(c["ledger_json"]))
         snapshot = (
             OptionVenueSnapshot.model_validate(_json(c["snapshot_json"]))

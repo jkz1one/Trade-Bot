@@ -9,6 +9,7 @@ from app.options.engine import exact, fingerprint
 from app.options.entry_reasoning import Digest
 from app.options.lifecycle import (
     EntryLineage,
+    EntryPremiumProtection,
     OptionFill,
     OptionIntent,
     OptionObservation,
@@ -46,6 +47,9 @@ class DecisionAttribution(OptionRecord):
         default=None, exclude_if=lambda v: v is None
     )
     target_exit_schedule: TargetExitSchedule | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    entry_premium_protection: EntryPremiumProtection | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
     target_exit_stage: int | None = Field(
@@ -100,6 +104,10 @@ def order_attribution(db, row):
     from app.options.target_exits import verify_binding
 
     verify_binding(intent, approval)
+    from app.options.protection import verify_premium_binding
+
+    verify_premium_binding(intent, approval)
+    premium_protection = intent.entry_premium_protection
     if intent.requested_close_quantity != proposal.close_quantity or (
         intent.requested_close_quantity is not None and approval["origin"] != "DETERMINISTIC"
     ):
@@ -119,11 +127,13 @@ def order_attribution(db, row):
         entry_id = protective_entry
     if entry_id is not None:
         entry = db.execute(
-            "SELECT intent_json FROM execution_orders WHERE client_id=?", (entry_id,)
+            "SELECT intent_json,approval_json FROM execution_orders WHERE client_id=?", (entry_id,)
         ).fetchone()
         if entry is None:
             raise ValueError("Stored exit entry reference missing")
         entry_intent = OptionIntent.model_validate(_json(entry[0]))
+        verify_premium_binding(entry_intent, _json(entry[1]))
+        premium_protection = entry_intent.entry_premium_protection
         if (
             entry_intent.side != "BUY"
             or entry_intent.instrument != intent.instrument
@@ -134,6 +144,11 @@ def order_attribution(db, row):
     if entry_id is not None:
         lineage = entry_lineage(db, entry_id)
     return {
+        **(
+            {"entry_premium_protection": premium_protection.model_dump(mode="json")}
+            if premium_protection is not None
+            else {}
+        ),
         **(
             {"target_exit_schedule": intent.target_exit_schedule.model_dump(mode="json")}
             if intent.target_exit_schedule is not None
@@ -311,7 +326,7 @@ def decision_attribution(db, key, outcome, policy):
             or plan.get("close_quantity") != intent.requested_close_quantity
         ):
             raise ValueError("Stored close proposal quantity mismatch")
-        for field in ("target_exit_schedule", "target_exit_stage"):
+        for field in ("target_exit_schedule", "target_exit_stage", "entry_premium_protection"):
             if inputs.get(field) != approval.get(field):
                 raise ValueError("Stored target proposal binding mismatch")
         if prefix and (

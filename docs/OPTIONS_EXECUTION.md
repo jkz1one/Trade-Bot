@@ -51,6 +51,11 @@ tick latches fresh directional target observations and closes only remaining due
 whole contracts through the same governor, attribution and fill ledger. Mandatory
 protection retains precedence. Scope strategy admission remains blocked.
 
+New owners may also enroll [entry premium protection](OPTIONS_SCOPE_MANAGEMENT.md).
+A deterministic buy can freeze a catastrophe fraction no larger than the owner
+limit. Dispatch rechecks it; fills and remaining runners retain it. The executable
+bid trigger never discounts full-premium admission, fees or model costs.
+
 ## Fills, reconciliation and uncertainty
 
 Entry consumes eligible ask plus adverse tick-rounded slippage; close uses bid

@@ -8,6 +8,7 @@ from app.options.engine import clock, fingerprint
 from app.options.models import Name, OptionAdmission
 from app.options.scope import ScopePreflightInput
 from app.options.scope_admission import ScopeEntryPathReview
+from app.options.scope_management import ScopeManagementReview
 from app.options.scope_structure import ScopeGeometry
 from app.options.scope_watch import ScopeWatchChoice, ScopeWatchPolicy
 
@@ -49,7 +50,7 @@ def _timing(evaluated, until, now):
     )
 
 
-def _watch(row, policy, now, read_json):
+def _watch(row, policy, now, read_json, owner_policy):
     record = read_json(row["record_json"])
     key = TypeAdapter(Name).validate_python(record["play_key"])
     frame = ScopePreflightInput.model_validate(record["locked_frame"])
@@ -149,10 +150,32 @@ def _watch(row, policy, now, read_json):
             ):
                 raise ValueError("Conflicting stored Scope current-entry path")
             result["admission"]["entry_path"] = path.model_dump(mode="json") if path else None
+        if policy.management is not None and r["eligible"] != ("management" in r):
+            raise ValueError("Stored Scope management coverage mismatch")
+        if "management" in r:
+            management = ScopeManagementReview.model_validate(r["management"])
+            if (
+                management.policy != policy.management
+                or management.geometry != geometry
+                or management.admission_hash != fingerprint(admission)
+                or not r["eligible"]
+                or management.admitted_quantity != admission.quantity
+                or management.contract_id != admission.contract_id
+                or management.evaluated_at != admission.approved_at
+                or management.valid_until != admission.valid_until
+                or management.owner_maximum_loss_fraction
+                != owner_policy.premium_catastrophe_fraction
+                or any(
+                    getattr(management.contract_observation, k) != v
+                    for k, v in record["choice"].items()
+                )
+            ):
+                raise ValueError("Conflicting stored Scope management plan")
+            result["admission"]["management"] = management.model_dump(mode="json")
     return result
 
 
-def stored_scope(db, tables, limits, now, read_json):
+def stored_scope(db, tables, limits, now, read_json, *, owner_policy):
     """Latest 25 records plus the active record, independent of opportunity paging."""
     base = {"authority": False, "live_enabled": False, "execution": "NOT_ENROLLED"}
     if not TABLES & tables:
@@ -175,7 +198,7 @@ def stored_scope(db, tables, limits, now, read_json):
     rows = db.execute(
         "SELECT * FROM execution_option_scope_watches ORDER BY session_date DESC,rowid DESC LIMIT 25"
     ).fetchall()
-    watches = [_watch(row, policy, now, read_json) for row in rows]
+    watches = [_watch(row, policy, now, read_json, owner_policy) for row in rows]
     active = db.execute(
         "SELECT * FROM execution_option_scope_watches WHERE active_lock IS NOT NULL LIMIT 2"
     ).fetchall()
@@ -190,5 +213,5 @@ def stored_scope(db, tables, limits, now, read_json):
         "history_limit": 25,
         "history_truncated": count > len(watches),
         "watches": watches,
-        "active_watch": _watch(active[0], policy, now, read_json) if active else None,
+        "active_watch": _watch(active[0], policy, now, read_json, owner_policy) if active else None,
     }

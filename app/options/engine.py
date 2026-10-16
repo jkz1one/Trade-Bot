@@ -22,6 +22,7 @@ from app.options.governor import admit_option
 from app.options.lifecycle import (
     CALENDAR_SOURCE,
     TERMINAL,
+    EntryPremiumProtection,
     EntryProtection,
     OptionExecutionPolicy,
     OptionIntent,
@@ -41,7 +42,7 @@ from app.options.models import (
     UnderlyingQuote,
 )
 from app.options.process import run_option_process
-from app.options.protection import assess_position
+from app.options.protection import assess_position, verify_premium_binding
 from app.options.venue import DurableOptionVenue, private_path
 from app.robinhood.schedule import XNYSCalendar
 
@@ -380,6 +381,7 @@ class OptionExecution:
         entry_result=None,
         target_exit_schedule=None,
         target_exit_stage=None,
+        entry_premium_protection=None,
     ):
         now = clock(now)
         proposal = OptionProposal.model_validate(proposal.model_dump(warnings=False))
@@ -418,6 +420,12 @@ class OptionExecution:
             )
             inputs["target_exit_schedule"] = target_exit_schedule.model_dump(mode="json")
             bound_inputs["target_exit_schedule"] = target_exit_schedule
+        if entry_premium_protection is not None:
+            entry_premium_protection = EntryPremiumProtection.model_validate(
+                entry_premium_protection.model_dump(warnings=False)
+            )
+            inputs["entry_premium_protection"] = entry_premium_protection.model_dump(mode="json")
+            bound_inputs["entry_premium_protection"] = entry_premium_protection
         if target_exit_stage is not None:
             inputs["target_exit_stage"] = bound_inputs["target_exit_stage"] = target_exit_stage
         if entry_request is not None:
@@ -534,6 +542,19 @@ class OptionExecution:
                     from app.options.target_exits import review_close
 
                     review_close(self, db, proposal, target_exit_stage, origin)
+                if entry_premium_protection is not None:
+                    if (
+                        self.policy.entry_premium_protection is None
+                        or origin != "DETERMINISTIC"
+                        or proposal.action != "OPEN_LONG"
+                        or entry_request is not None
+                    ):
+                        raise ExecutionBlocked("OPTION_ENTRY_PREMIUM_NOT_ENROLLED")
+                    if (
+                        entry_premium_protection.maximum_loss_fraction
+                        > self.policy.premium_catastrophe_fraction
+                    ):
+                        raise ExecutionBlocked("OPTION_ENTRY_PREMIUM_CANNOT_WIDEN")
             except (ValueError, ExecutionBlocked) as exc:
                 reason = str(exc)
                 result = None
@@ -624,6 +645,7 @@ class OptionExecution:
                         requested_close_quantity=proposal.close_quantity,
                         target_exit_schedule=target_exit_schedule,
                         target_exit_stage=target_exit_stage,
+                        entry_premium_protection=entry_premium_protection,
                     )
                     approval = {
                         **inputs,
@@ -683,6 +705,13 @@ class OptionExecution:
 
                 verified_lineage(db, intent, approval)
                 verify_binding(intent, approval)
+                verify_premium_binding(intent, approval)
+                if intent.entry_premium_protection is not None and (
+                    self.policy.entry_premium_protection is None
+                    or intent.entry_premium_protection.maximum_loss_fraction
+                    > self.policy.premium_catastrophe_fraction
+                ):
+                    raise ExecutionBlocked("OPTION_ENTRY_PREMIUM_CANNOT_WIDEN")
                 if intent.target_exit_schedule is not None:
                     if self.policy.target_exits is None:
                         raise ExecutionBlocked("OPTION_TARGET_NOT_ENROLLED")
@@ -1164,6 +1193,7 @@ class OptionExecution:
             or state.position.exit_at != snap.position.exit_at
             or state.position.entry_client_id != snap.position.entry_client_id
             or state.position.entry_protection != snap.position.entry_protection
+            or state.position.entry_premium_protection != snap.position.entry_premium_protection
             or state.position.target_exit_schedule != snap.position.target_exit_schedule
         ):
             raise ValueError("OPTION_POSITION_TERMS_MISMATCH")

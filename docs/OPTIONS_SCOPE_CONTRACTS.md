@@ -70,8 +70,8 @@ This completes supplied-contract profile gates, not native Scope admission.
 common-governor sizing, fees/slippage and debit checks for fresh armed evidence.
 Native dispatch, full entry/management cost and filled-position/loss/cooldown linkage, full obstruction coverage,
 common-owner Scope execution/runtime/replay and stored observer integration remain
-open. The source's premium-based quantity tiers and floating-point rank score are
-not copied into a competing account calculator. The existing deterministic owner
+open. The source's premium-based quantity ceilings now narrow the common governor;
+its floating-point rank score is not a competing account calculator. The existing deterministic owner
 must approve all costs and quantities; unknown costs cannot become zero.
 
 Independent A/B/C/D ledgers and shared Degen/Swing execution are unchanged. Authentic
@@ -79,3 +79,9 @@ provider/calendar/model, host, visual and prospective acceptance remain separate
 See [watch lifecycle](OPTIONS_SCOPE_WATCHES.md), [arming](OPTIONS_SCOPE_ARMING.md),
 [quality](OPTIONS_SCOPE_QUALITY.md) and [status](SLICE2_STATUS.md). Main untouched,
 PR #1 draft, LIVE disabled and deployed experiment frozen.
+
+[Scope management previews](OPTIONS_SCOPE_MANAGEMENT.md) now use the selected
+contract profile for explicitly enrolled premium limits and the independently
+selected balanced sizing profile for allocations. The native entry premium
+primitive only tightens owner protection. Four-contract Scope plans retain an
+unresolved third objective; no plan bypasses convexity or native execution gates.

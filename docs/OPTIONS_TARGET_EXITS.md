@@ -76,7 +76,9 @@ deadlines and latched exit reasons retain precedence. Protection can supersede o
 a never-attempted prepared scale. An attempted scale must reconcile before protection
 addresses actual remaining ownership. Target progress never widens a stop, extends a
 deadline or changes the premium catastrophe fraction. This version does not add
-automatic breakeven stops, premium trails or profile-specific catastrophe settings.
+automatic breakeven stops or premium trails. Separately enrolled
+[entry premium protection](OPTIONS_SCOPE_MANAGEMENT.md) can now freeze a tighter
+premium limit before a deterministic entry.
 
 Only a completely filled entry can run its automatic allocation. A working partial
 entry retains the existing single-order reservation; a terminal partial entry returns
@@ -99,9 +101,11 @@ rollback, mandatory-exit precedence, unknown/failed attempts, partial-entry revi
 and independent accounts. Native partial-close regression retains known and missing
 entry/management charges through completed and incomplete outcomes.
 
-Scope entry remains blocked. Its source-derived profile/allocation factory,
-profile-specific premium protection, complete obstruction coverage, frozen watch
-linkage, Scope family loss/reset and runtime/replay acceptance remain open. This
+Scope entry remains blocked. The [Scope management factory](OPTIONS_SCOPE_MANAGEMENT.md)
+now produces one-through-three-contract schedules from owned admission and explicit
+premium protection capped by the owner. Four-contract plans retain an unresolved T3
+and cannot produce a schedule. Complete obstruction coverage, frozen watch linkage,
+Scope family loss/reset and full management/runtime/replay acceptance remain open. This
 shared deterministic capability grants no Scope, authentic provider, host or LIVE
 acceptance. Main stays untouched, PR #1 draft, LIVE disabled and deployed experiment
 frozen. See [partial closes](OPTIONS_PARTIAL_CLOSE.md),

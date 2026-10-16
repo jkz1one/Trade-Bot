@@ -98,7 +98,10 @@ a frozen opt-in scale/runner execution primitive with exact entry attribution,
 full costs and independent protective-exit precedence.
 [Frozen target schedules](docs/OPTIONS_TARGET_EXITS.md) now drive automatic native
 scales from latched underlying targets and verified fills, retaining protected runners.
-Scope profile allocation and watch linkage remain open.
+[Scope management plans](docs/OPTIONS_SCOPE_MANAGEMENT.md) now derive balanced
+whole-contract allocations from owned sizing and bind explicit profile premium
+limits beneath the owner cap. Four-contract Scope plans remain blocked by their
+missing third objective; native watch linkage remains open.
 Authentic provider, host and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.
