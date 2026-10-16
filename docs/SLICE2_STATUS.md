@@ -1,5 +1,58 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 Scope current-price admission geometry: 2026-10-16 UTC
+
+Reproduced a concrete Scope admission defect in both directions: the original
+1.5R setup could still receive `eligible=true` at a quote only one cent before
+its first objective. The current-price check only rejected a consumed objective;
+quality R and known levels still used the original reference/completed close.
+
+Fresh owned admission now requires remaining first-target reward to meet the
+frozen minimum R against the locked stop, using CALL ask or PUT bid after the
+common governor validates current evidence/account constraints. Exact Decimal
+products decide the gate; rounded display ratios do not. The same known-level
+classifier reruns from that current reference through the original second target,
+including opt-in structural levels. A retreat can expose levels previously behind
+the completed close. Failure records a zero-quantity rejection and resets arming.
+
+Stored `entry_path` retains original geometry, current reference, threshold,
+displayed R, levels and reasons; the observer reads it without recomputation.
+Historical receipts remain historical, retry/restart behavior is preserved, and
+fresh reviews tighten the existing rule without changing frozen policy values.
+The common governor still owns sizing, all fees/slippage and account limits.
+Underlying structural R is not estimated option return or all-in economics.
+No watch call, order, reservation or paid model request is added by this review.
+
+Fresh GitHub baseline: `177b5ee0b097033a5a7560f337926d3630455fd9`, tree
+`b855d5168a80c54c7bea0415071ace66dc3a7653`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Baseline reproduction accepted CALL 101.49 against stop 100/first target 101.50
+  and PUT 98.51 against stop 100/first target 98.50. Both now reject.
+- Source current-path/owned-admission/structural-path suites: **65 passed in 21.33s**.
+- Installed complete Scope and native execution suites: **645 passed in 77.13s**,
+  warnings treated as errors. New cases cover both directions, exact R boundaries,
+  adverse spread side, current-price prior/structural obstructions, fixed geometry,
+  common-governor fee totals, stale/wrong-source handling, observer visibility,
+  retry/restart, independent owners and ambient arithmetic precision.
+- Four changed modules match source/wheel/installed files; copied changed tests
+  match source. Scoped lint/format, dependency consistency, whitespace and local
+  documentation links pass.
+- Wheel SHA-256: `99e662d41685b7718a67e5c3b9c9a93574845763392cc51cfd513e8cb086d42a`.
+  Artifacts/logs beside checkout: `scope-entry-env`, `scope-entry-dist`,
+  `scope-entry-proof`, `scope-entry-source.log`, `scope-entry-installed-tests.log`.
+
+Complete obstruction coverage and native Scope watch/order/family-loss linkage,
+management/runtime/replay, authentic provider/calendar/host acceptance and the
+UI desktop/mobile visual pass remain open. `complete_path_proven` stays false;
+convexity and native Scope execution remain blocked. Main untouched, PR draft,
+LIVE disabled and deployed experiment frozen. No authentic provider/model/broker
+call, dependency, host unit or deployment changed.
+
+---
+
 ## P7 native loss evidence in session replay/export: 2026-10-16 UTC
 
 Enrolled A/B/C/D owners now refresh loss controls after final session reconciliation

@@ -64,8 +64,10 @@ material confirmation conflicts or context risk.
 First-target R uses the actual stored reference, invalidation and first objective.
 The gate compares exact Decimal products before rounding the displayed ratio down
 to twelve decimal places. No epsilon converts insufficient reward into a pass.
-Geometry rounding can conservatively reject a marginal case; admission must later
-review executable prices, all fees and slippage separately.
+Geometry rounding can conservatively reject a marginal case. The
+[owned admission review](OPTIONS_SCOPE_OWNED_ADMISSION.md#current-price-geometry-and-known-path)
+now rechecks remaining R and these known levels from the current directional quote,
+while its common governor separately retains all fees and slippage.
 
 The current completed SPX close must still be before the first objective. An old
 reference-to-target ratio cannot rescue an objective already reached. This is a

@@ -1,16 +1,64 @@
 """Frozen Scope debit envelope; native sizing remains in the common governor."""
 
-from decimal import Decimal
+from decimal import ROUND_FLOOR, Context, Decimal, localcontext
 from typing import Literal
 
 from pydantic import Field
 
-from app.options.models import Money, OptionRecord
+from app.options.degen import _metric
+from app.options.models import Money, Name, OptionRecord
+from app.options.scope_quality import ScopePathLevel, _known_path
+from app.options.scope_structure import ScopeGeometry
 
 
 class ScopeAdmissionPolicy(OptionRecord):
     version: Literal["scope-owned-admission-review-v1"] = "scope-owned-admission-review-v1"
     max_entry_debit: Money = Field(gt=0, le=500)
+
+
+class ScopeEntryPathReview(OptionRecord):
+    version: Literal["scope-current-entry-path-v1"] = "scope-current-entry-path-v1"
+    geometry: ScopeGeometry
+    reference: Money = Field(gt=0)
+    minimum_first_target_r: Money = Field(ge=Decimal("1.5"), le=5)
+    first_target_r: Money = Field(ge=0)
+    potential_obstructions: tuple[ScopePathLevel, ...] = Field(max_length=208)
+    complete_path_proven: Literal[False] = False
+    passed: bool
+    reasons: tuple[Name, ...]
+    authority: Literal[False] = False
+    live_enabled: Literal[False] = False
+
+
+def _review_entry_path(frame, context, geometry, policy, underlying, *, now):
+    """Only after fresh armed coverage and common-governor quote/stop validation.
+
+    The conservative directional quote side is a geometry reference, not an SPX
+    fill or an option-return estimate. No caller-provided path verdict is accepted.
+    """
+    g = ScopeGeometry.model_validate(geometry)
+    sign = 1 if g.right == "CALL" else -1
+    spot = underlying.ask if sign == 1 else underlying.bid
+    with localcontext(Context(prec=192)):
+        risk = (spot - g.invalidation) * sign
+        reward = (g.target_one - spot) * sign
+        if risk <= 0 or reward <= 0:
+            raise ValueError("Current Scope reference must be between locked stop and target")
+        path = _known_path(frame, context, g, policy, spot, now)
+        reasons = []
+        if reward < policy.minimum_first_target_r * risk:
+            reasons.append("SCOPE_CURRENT_FIRST_TARGET_R_TOO_LOW")
+        if any(p.at_or_before_first_target for p in path):
+            reasons.append("SCOPE_CURRENT_KNOWN_LEVEL_BEFORE_FIRST_OBJECTIVE")
+        return ScopeEntryPathReview(
+            geometry=g,
+            reference=spot,
+            minimum_first_target_r=policy.minimum_first_target_r,
+            first_target_r=_metric(reward / risk, ROUND_FLOOR),
+            potential_obstructions=path,
+            passed=not reasons,
+            reasons=tuple(reasons),
+        )
 
 
 def scope_quantity_cap(ask):

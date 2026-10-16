@@ -192,6 +192,25 @@ def _review(o, frame, context, policy, scan):
         reasons.append("QUALITY_BELOW_ARM_THRESHOLD")
     if (g.target_one - spot) * sign <= 0:
         reasons.append("FIRST_OBJECTIVE_ALREADY_CONSUMED")
+    path = _known_path(frame, context, g, policy, spot, scan.evaluated_at)
+    if any(p.at_or_before_first_target for p in path):
+        reasons.append("KNOWN_LEVEL_BEFORE_FIRST_OBJECTIVE")
+    return ScopeQualityObservation(
+        observation=o,
+        base_score=base,
+        components=tuple(components),
+        score=score,
+        grade=grade,
+        first_target_r=_metric(reward / risk, ROUND_FLOOR),
+        potential_obstructions=path,
+        passed=not reasons,
+        reasons=tuple(reasons),
+    )
+
+
+def _known_path(frame, context, g, policy, spot, now):
+    """Shared level set after bound coverage passes, from an explicit price origin."""
+    sign = 1 if g.right == "CALL" else -1
     levels = [("DEALER_NODE", n) for n in context.dealer.nodes]
     levels.extend(
         (
@@ -211,37 +230,25 @@ def _review(o, frame, context, policy, scan):
     if policy.structural_path is not None:
         path = tuple(
             sorted(
-                (*path, *_structural_path(frame, g, sign)),
+                (*path, *_structural_path(frame, g, sign, spot=spot)),
                 key=lambda p: (
                     (p.level - spot) * sign,
                     p.kind,
-                    p.confirmed_at or scan.evaluated_at,
+                    p.confirmed_at or now,
                 ),
             )
         )
-    if any(p.at_or_before_first_target for p in path):
-        reasons.append("KNOWN_LEVEL_BEFORE_FIRST_OBJECTIVE")
-    return ScopeQualityObservation(
-        observation=o,
-        base_score=base,
-        components=tuple(components),
-        score=score,
-        grade=grade,
-        first_target_r=_metric(reward / risk, ROUND_FLOOR),
-        potential_obstructions=path,
-        passed=not reasons,
-        reasons=tuple(reasons),
-    )
+    return path
 
 
-def _structural_path(frame, geometry, sign):
+def _structural_path(frame, geometry, sign, *, spot=None):
     """Only called after complete, hash-bound context/structure coverage passes.
 
     Exact rational comparisons keep displayed VWAP rounding out of every gate.
     A pivot needs both neighbors and is known only when the right bar completes.
     """
     bars = next(h.bars for h in frame.histories if h.symbol == "SPX")
-    spot = Fraction(bars[-1].close)
+    spot = Fraction(bars[-1].close if spot is None else spot)
     levels = [
         ("OPENING_HIGH", Fraction(max(b.high for b in bars[:3])), bars[2].ends_at),
         ("OPENING_LOW", Fraction(min(b.low for b in bars[:3])), bars[2].ends_at),

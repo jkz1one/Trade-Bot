@@ -66,6 +66,8 @@ integration. A high score does not prove a clear path or grant execution authori
 contracts and enrolled watches, while convexity stays blocked without complete path evidence.
 [Scope owned admission review](docs/OPTIONS_SCOPE_OWNED_ADMISSION.md) now records
 common-governor sizing against the original setup and owned account, without dispatch.
+Fresh reviews also enforce remaining reward/risk and known-level obstructions from
+the current directional quote while retaining the original stop and targets.
 The engine enforces this boundary at entry preparation and dispatch; enrolled Scope
 research books cannot bypass it through the generic PAPER entry API.
 [Stored native position outcomes](docs/OPTIONS_POSITION_OUTCOME.md) now reconstruct

@@ -31,6 +31,40 @@ at/below it resets the hold. The common governor checks source, freshness,
 synchronization and invalidation against current executable underlying evidence.
 Missing, wrong or stale evidence cannot use the old completed close as a substitute.
 
+## Current-price geometry and known path
+
+Fresh admission reviews now recheck the locked first objective against the current
+CALL ask or PUT bid after the common governor validates quote identity, freshness,
+synchronization, stop and account constraints. The original stop and both targets
+remain fixed. Directional remaining reward must be at least the frozen quality
+policy's minimum first-target R times the distance from that quote to the stop.
+The gate compares exact Decimal products at fixed precision; the displayed R is
+rounded down and never decides eligibility. This is underlying structural R, not
+an estimate of option return or a substitute for fee-inclusive premium risk.
+
+This fixes a reproduced CALL/PUT defect: a play with a 1.5R original reference was
+still marked eligible with only one cent left before its first objective. Merely
+remaining before the target is insufficient. A spread cannot hide the adverse
+quote side behind its midpoint.
+
+The same known-level classifier used by quality review is also rerun from this
+current reference through the original second objective. A price retreat can put
+previously excluded dealer, prior-session or expected-move levels back on that
+path. Enrolled structural policies also recheck opening-range levels, confirmed
+pivots and exact VWAP from the current reference. Inclusive levels at/before the
+first objective reject entry; levels after it remain visible. This does not add
+new level types or claim full obstruction coverage.
+
+The stored `entry_path` includes the locked geometry, current reference, required
+and displayed R, potential obstructions and reasons. Insufficient current R or an
+intervening known level produces a rejected admission with zero quantity and no
+validity window, resets the hold and grants no order authority. Unrepresentable
+numeric output also rejects. A governor rejection does not receive a path verdict.
+The stored observer exposes this evidence without recomputing it. Historical
+receipts without this field remain historical and are not rewritten or promoted;
+identical action retries retain their original result. Fresh reviews enforce the
+existing minimum-R/path rules without changing frozen policy values.
+
 ## Common sizing and calendar restrictions
 
 The proposal uses the original exact contract and invalidation, the explicit

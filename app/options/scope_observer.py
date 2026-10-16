@@ -7,6 +7,7 @@ from pydantic import TypeAdapter
 from app.options.engine import clock, fingerprint
 from app.options.models import Name, OptionAdmission
 from app.options.scope import ScopePreflightInput
+from app.options.scope_admission import ScopeEntryPathReview
 from app.options.scope_structure import ScopeGeometry
 from app.options.scope_watch import ScopeWatchChoice, ScopeWatchPolicy
 
@@ -139,6 +140,15 @@ def _watch(row, policy, now, read_json):
             "reasons": _reasons(r["reasons"]),
             "result": admission.model_dump(mode="json") if admission else None,
         }
+        if "entry_path" in r:
+            path = ScopeEntryPathReview.model_validate(r["entry_path"]) if r["entry_path"] else None
+            if path and (
+                path.geometry != geometry
+                or path.passed != (not path.reasons)
+                or (r["eligible"] and not path.passed)
+            ):
+                raise ValueError("Conflicting stored Scope current-entry path")
+            result["admission"]["entry_path"] = path.model_dump(mode="json") if path else None
     return result
 
 

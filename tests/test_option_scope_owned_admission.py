@@ -37,8 +37,8 @@ def policy(debit="500"):
     )
 
 
-def start(engine, venue, right="CALL", debit="500"):
-    book = ScopeWatchBook(engine, policy(debit), now=AT, create=True)
+def start(engine, venue, right="CALL", debit="500", *, watch_policy=None):
+    book = ScopeWatchBook(engine, watch_policy or policy(debit), now=AT, create=True)
     f, c = data(right)
     book.call(
         "first",

@@ -5,14 +5,25 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, ValidationError, model_validator
 
 from app.execution.engine import ExecutionBlocked
 from app.options.engine import OptionExecution, clock, fingerprint
 from app.options.governor import admit_option
-from app.options.models import Name, OptionProposal, OptionRecord, SessionWindow, UnderlyingQuote
+from app.options.models import (
+    Name,
+    OptionAdmission,
+    OptionProposal,
+    OptionRecord,
+    SessionWindow,
+    UnderlyingQuote,
+)
 from app.options.scope import ScopePreflightInput
-from app.options.scope_admission import ScopeAdmissionPolicy, scope_quantity_cap
+from app.options.scope_admission import (
+    ScopeAdmissionPolicy,
+    _review_entry_path,
+    scope_quantity_cap,
+)
 from app.options.scope_context import (
     ContextPattern,
     ScopeContextInput,
@@ -613,6 +624,7 @@ class ScopeWatchBook:
                 "proposal": None,
                 "session": None,
                 "admission": None,
+                "entry_path": None,
                 "eligible": False,
                 "reasons": [],
                 "authority": False,
@@ -677,6 +689,23 @@ class ScopeWatchBook:
                         session,
                         now=now,
                     )
+                    if admission.outcome == "APPROVED":
+                        try:
+                            path = _review_entry_path(
+                                frame, context, geometry, self.policy.quality, underlying, now=now
+                            )
+                            review["entry_path"] = path.model_dump(mode="json")
+                            path_reasons = path.reasons
+                        except (ArithmeticError, ValidationError):
+                            path_reasons = ("SCOPE_CURRENT_PATH_NUMERIC_RANGE",)
+                        if path_reasons:
+                            admission = OptionAdmission(
+                                outcome="REJECTED",
+                                action=proposal.action,
+                                contract_id=proposal.contract.contract_id,
+                                approved_at=now,
+                                reasons=path_reasons,
+                            )
                     if admission.valid_until is not None:
                         admission = admission.model_copy(
                             update={
