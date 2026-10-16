@@ -677,7 +677,23 @@ class OptionObserver:
             u for f in frames for u in f.underlyings if u.symbol == p.contract.underlying
         ]
         underlying = max(underlyings, key=lambda u: u.received_at) if underlyings else None
+        from app.options.premium_trail import floor_value
+
+        trail_floor = floor_value(p.premium_trail, p.contract.multiplier)
         return {
+            **(
+                {
+                    "premium_trail": {
+                        **p.premium_trail.model_dump(mode="json"),
+                        "floor_original_quantity_premium": str(trail_floor)
+                        if trail_floor is not None
+                        else None,
+                        "note": "Stored executable-bid peak; original-quantity premium equivalent, before fees and model costs",
+                    }
+                }
+                if p.premium_trail is not None
+                else {}
+            ),
             "contract": _contract(p.contract),
             "quantity": p.quantity,
             "cost_basis": str(p.basis),

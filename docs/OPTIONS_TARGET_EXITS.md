@@ -76,7 +76,8 @@ deadlines and latched exit reasons retain precedence. Protection can supersede o
 a never-attempted prepared scale. An attempted scale must reconcile before protection
 addresses actual remaining ownership. Target progress never widens a stop, extends a
 deadline or changes the premium catastrophe fraction. Optional frozen target stops
-are described below; premium trails remain unimplemented. Separately enrolled
+are described below; separately enrolled [premium trails](OPTIONS_PREMIUM_TRAIL.md)
+now retain executable bid peaks against completed entry basis. Separately enrolled
 [entry premium protection](OPTIONS_SCOPE_MANAGEMENT.md) can now freeze a tighter
 premium limit before a deterministic entry.
 
@@ -147,7 +148,8 @@ provides the target-dependent tightening precedent. This primitive deliberately
 requires explicit prices; it does not equate a native executable stage with a Scope
 T1/T2 label or use a research reference price as an actual entry. Scope previews
 still omit these stop fields pending native watch/entry binding. Its missing third
-objective, full management acceptance and premium trails remain open.
+objective and full management acceptance remain open. Shared native premium trailing
+is now separately available through an explicitly frozen owner policy.
 
 ## Acceptance boundary
 

@@ -391,7 +391,9 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
                 "exit_required_at",
                 "supervision_issue",
             }
-            position = lambda p: p.model_dump(exclude=excluded) if p else None
+            from app.options.premium_trail import accounting_position
+
+            position = lambda p: accounting_position(p, excluded)
             if position(snapshot.position) != position(closing.position):
                 raise ValueError("Native closing ownership mismatch")
 

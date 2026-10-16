@@ -1,5 +1,74 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 executable premium trailing protection: 2026-10-16 UTC
+
+New PAPER owners can explicitly enroll `premium_trail="executable-premium-v1"`.
+Entry approval, intent and stored decision inputs bind this frozen protection for
+both deterministic and model-proposed buys. Dispatch rechecks enrollment and terms.
+Only complete actual entry fills establish the original premium basis; incomplete
+entries cannot seed peaks. The original quantity/basis remains fixed after partial
+sales, independently of remaining FIFO lots and realized proceeds.
+
+Fresh executable bid peaks drive the pinned source premium floors: 20% gain activates
+97% of original premium; 35% activates 110%; 50% activates the greater of 125% and
+entry premium plus 55% of peak gain. Exact original-quantity premium equivalents
+avoid average-price division and threshold rounding. Missing, stale, crossed or
+unbound bids cannot raise peaks or trigger floors. Existing mandatory protection
+takes precedence; a fresh floor touch latches `PREMIUM_TRAIL`. Rebound cannot erase
+it. Peaks/latches survive scales, reconciliation and restart; attempted orders keep
+reservations. Native admission, full-premium risk, every fee and all entry/management
+costs remain unchanged. No premium floor claims net profit or a guaranteed fill.
+
+Stored attribution carries enrollment through exact close links. The observer shows
+original basis/quantity, saved peak and a clearly labeled before-costs floor without
+fresh evaluation. Native export and portable accounting ignore the changing peak
+for economic comparisons while retaining policy, quantity and original basis.
+Independent owners retain independent state and costs. Scope entry remains blocked.
+
+Reference: SignalFlow `play_management.py` at
+`f9eaf2c1b5d13dca287ee7138126883065b00395`. Its midpoint/last fallback is not adopted.
+Source whole-trade floors, health/Greek rules and Scope-specific management enrollment
+remain separate; this shared primitive does not supply missing Scope entry/path proof.
+
+Fresh GitHub baseline: `2a6b5dbab87fe2aa84a24162e2e7a88cd151a5f4`, tree
+`f1708a7d732c9de6cd260d4c70b8dd80caf2f232`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Focused installed lifecycle suite: **28 passed in 11.26s**. An initial weighted
+  entry fixture expected a 1.00 fill from a 1.00 ask despite native slippage/tick
+  rounding; corrected the supplied ask to .99. Production fill rules were unchanged.
+- Additional explicitly enrolled independent A/B/C/D native replay/export:
+  **1 passed in 18.77s**, including Arm D entry and management cost attribution.
+- Installed trail/target/partial-close/execution, entry/position coordination,
+  observer and evaluation/export regression: **399 passed in 251.06s**, warnings
+  treated as errors, outside the checkout against the non-editable installed wheel.
+  Final review then added explicit portable entry/arm trail-policy binding.
+- Final installed trail/evaluator run: **76 passed**, with one test incorrectly
+  expecting the evaluator to throw instead of returning an inconclusive arm
+  (**37.87s**). Corrected that report-contract assertion; its enrolled A/B/C/D
+  replay and missing-policy case then **passed in 16.51s** without production changes.
+  The final wheel differs from the broad regression only by the evaluator's
+  two-line entry/arm enrollment guard; the other eight changed modules are identical.
+- Nine source/wheel/installed modules and the final copied test file match.
+  Scoped lint/format, dependency consistency, whitespace and 279 local doc links pass.
+- Final wheel SHA-256: `6a8ed6d57461b75e7a905e6fdb0040c809ec0a788f6266bc9baa0708c8ddd5de`.
+  Prior regression wheel: `511ffebd85c4896ecbe22f204ef157df38e58b989b56649cc1da35b44c3b83d2`.
+  Artifacts/logs beside checkout: `premium-trail-env`, `premium-trail-dist`,
+  `premium-trail-final-dist`, `premium-trail-proof`, `premium-trail-focused.log`,
+  `premium-trail-replay.log`, `premium-trail-installed-tests.log`,
+  `premium-trail-final-tests.log`, `premium-trail-binding-retry.log`.
+
+[API, exact thresholds and boundaries](OPTIONS_PREMIUM_TRAIL.md). Scope still needs
+its missing four-contract objective, native watch/entry binding, complete path proof,
+family loss/reset and full management/runtime/replay acceptance. Authentic provider/host,
+prospective economics and dedicated UI acceptance remain open. Main untouched, PR draft,
+LIVE disabled and deployment frozen. No authentic provider/model/broker call,
+dependency, host unit or deployment changed.
+
+---
+
 ## P7 native target-triggered stop tightening: 2026-10-16 UTC
 
 The next management gap was an effective stop that stayed unchanged after a target

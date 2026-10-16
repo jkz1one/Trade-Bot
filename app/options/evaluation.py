@@ -16,16 +16,19 @@ ZERO = Decimal(0)
 
 
 def _economic(ledger):
+    from app.options.premium_trail import accounting_position
+
     # Management annotations do not alter accounting; exact ownership/protection does.
     data = ledger.model_dump()
     if ledger.position:
-        data["position"] = ledger.position.model_dump(
-            exclude={
+        data["position"] = accounting_position(
+            ledger.position,
+            {
                 "tightened_underlying_invalidation",
                 "exit_reason",
                 "exit_required_at",
                 "supervision_issue",
-            }
+            },
         )
     return data
 
@@ -35,6 +38,8 @@ def _replay(a, definition, session, sequence, used_ids, previous_close):
     previous_order_end = session.opens_at
     for order in sorted(a.orders, key=lambda x: x.attempted_at or x.intent.prepared_at):
         i, o = order.intent, order.observation
+        if i.side == "BUY" and i.premium_trail != definition.policy.premium_trail:
+            raise ValueError("PREMIUM_TRAIL_POLICY_MISMATCH")
         identity = ("client", i.client_id)
         if identity in used_ids:
             raise ValueError("DUPLICATE_ORDER")

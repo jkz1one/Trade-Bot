@@ -69,6 +69,9 @@ class OptionExecutionPolicy(OptionRecord):
     target_stops: Literal["frozen-target-stops-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
+    premium_trail: Literal["executable-premium-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     entry_premium_protection: Literal["tighten-only-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -98,6 +101,19 @@ class EntryProtection(OptionRecord):
 class EntryPremiumProtection(OptionRecord):
     version: Literal["tighten-only-v1"] = "tighten-only-v1"
     maximum_loss_fraction: Money = Field(gt=0, lt=1)
+
+
+class PremiumTrailState(OptionRecord):
+    version: Literal["executable-premium-v1"] = "executable-premium-v1"
+    entry_quantity: PositiveCount
+    entry_basis: Money | None = Field(default=None, gt=0)
+    peak_bid: Money | None = Field(default=None, gt=0)
+
+    @model_validator(mode="after")
+    def completed_basis(self):
+        if self.entry_basis is None and self.peak_bid is not None:
+            raise ValueError("Premium trail requires completed entry basis")
+        return self
 
 
 class TargetExitStep(OptionRecord):
@@ -172,6 +188,9 @@ class OptionIntent(OptionRecord):
     source_key: Name
     instrument: OptionInstrument
     side: Literal["BUY", "SELL"]
+    premium_trail: Literal["executable-premium-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     quantity: PositiveCount
     limit_price: Money = Field(gt=0)
     approved_entry_debit: Money = Field(ge=0)
@@ -205,6 +224,8 @@ class OptionIntent(OptionRecord):
 
     @model_validator(mode="after")
     def lifetime(self):
+        if self.premium_trail is not None and self.side != "BUY":
+            raise ValueError("Premium trail enrollment binds only the original buy")
         if self.entry_premium_protection is not None and self.side != "BUY":
             raise ValueError("Entry premium protection binds only the original buy")
         if self.target_exit_schedule is not None:
@@ -310,6 +331,7 @@ class OptionLot(OptionRecord):
 
 class OptionPosition(OptionHolding):
     entry_client_id: Name
+    premium_trail: PremiumTrailState | None = Field(default=None, exclude_if=lambda v: v is None)
     lots: tuple[OptionLot, ...] = Field(min_length=1, max_length=1000)
     exit_at: datetime
     tightened_underlying_invalidation: Money = Field(gt=0)
@@ -328,6 +350,7 @@ class OptionPosition(OptionHolding):
             "TIME_EXIT",
             "EXPIRY_GUARD",
             "UNDERLYING_TARGET",
+            "PREMIUM_TRAIL",
         ]
         | None
     ) = None
@@ -336,6 +359,8 @@ class OptionPosition(OptionHolding):
 
     @model_validator(mode="after")
     def owned(self):
+        if self.premium_trail is not None and self.quantity > self.premium_trail.entry_quantity:
+            raise ValueError("Premium trail must retain original entry quantity")
         if self.target_exit_schedule is not None:
             self.target_exit_schedule.check_direction(
                 self.contract.right, self.original_underlying_invalidation

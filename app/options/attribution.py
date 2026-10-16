@@ -19,6 +19,9 @@ from app.options.models import Money, Name, OptionProposal, OptionRecord, Positi
 
 
 class DecisionAttribution(OptionRecord):
+    premium_trail: Literal["executable-premium-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     entry_lineage: EntryLineage | None = Field(default=None, exclude_if=lambda v: v is None)
     execution_authority: Literal[False] = False
     role: Literal["DETERMINISTIC", "SELECTION", "ENTRY", "MANAGEMENT"]
@@ -107,6 +110,10 @@ def order_attribution(db, row):
     from app.options.protection import verify_premium_binding
 
     verify_premium_binding(intent, approval)
+    from app.options.premium_trail import verify_binding as verify_trail
+
+    verify_trail(intent, approval)
+    trail_policy = intent.premium_trail
     premium_protection = intent.entry_premium_protection
     if intent.requested_close_quantity != proposal.close_quantity or (
         intent.requested_close_quantity is not None and approval["origin"] != "DETERMINISTIC"
@@ -133,6 +140,8 @@ def order_attribution(db, row):
             raise ValueError("Stored exit entry reference missing")
         entry_intent = OptionIntent.model_validate(_json(entry[0]))
         verify_premium_binding(entry_intent, _json(entry[1]))
+        verify_trail(entry_intent, _json(entry[1]))
+        trail_policy = entry_intent.premium_trail
         premium_protection = entry_intent.entry_premium_protection
         if (
             entry_intent.side != "BUY"
@@ -144,6 +153,7 @@ def order_attribution(db, row):
     if entry_id is not None:
         lineage = entry_lineage(db, entry_id)
     return {
+        **({"premium_trail": trail_policy} if trail_policy is not None else {}),
         **(
             {"entry_premium_protection": premium_protection.model_dump(mode="json")}
             if premium_protection is not None
@@ -326,7 +336,12 @@ def decision_attribution(db, key, outcome, policy):
             or plan.get("close_quantity") != intent.requested_close_quantity
         ):
             raise ValueError("Stored close proposal quantity mismatch")
-        for field in ("target_exit_schedule", "target_exit_stage", "entry_premium_protection"):
+        for field in (
+            "target_exit_schedule",
+            "target_exit_stage",
+            "entry_premium_protection",
+            "premium_trail",
+        ):
             if inputs.get(field) != approval.get(field):
                 raise ValueError("Stored target proposal binding mismatch")
         if prefix and (

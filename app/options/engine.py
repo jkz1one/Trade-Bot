@@ -414,6 +414,9 @@ class OptionExecution:
             "underlying": underlying,
             "origin": origin,
         }
+        trail_policy = self.policy.premium_trail if proposal.action == "OPEN_LONG" else None
+        if trail_policy is not None:
+            inputs["premium_trail"] = bound_inputs["premium_trail"] = trail_policy
         if target_exit_schedule is not None:
             target_exit_schedule = TargetExitSchedule.model_validate(
                 target_exit_schedule.model_dump(warnings=False)
@@ -651,6 +654,7 @@ class OptionExecution:
                         target_exit_schedule=target_exit_schedule,
                         target_exit_stage=target_exit_stage,
                         entry_premium_protection=entry_premium_protection,
+                        premium_trail=trail_policy,
                     )
                     approval = {
                         **inputs,
@@ -711,6 +715,11 @@ class OptionExecution:
                 verified_lineage(db, intent, approval)
                 verify_binding(intent, approval)
                 verify_premium_binding(intent, approval)
+                from app.options.premium_trail import verify_binding as verify_trail
+
+                verify_trail(intent, approval)
+                if intent.side == "BUY" and intent.premium_trail != self.policy.premium_trail:
+                    raise ExecutionBlocked("OPTION_PREMIUM_TRAIL_NOT_ENROLLED")
                 if intent.entry_premium_protection is not None and (
                     self.policy.entry_premium_protection is None
                     or intent.entry_premium_protection.maximum_loss_fraction
@@ -1190,6 +1199,8 @@ class OptionExecution:
             or (state.position is None) != (snap.position is None)
         ):
             raise ValueError("OPTION_CASH_OR_POSITION_MISMATCH")
+        from app.options.premium_trail import terms as trail_terms
+
         if state.position and (
             state.position.contract != snap.position.contract
             or state.position.quantity != snap.position.quantity
@@ -1202,6 +1213,7 @@ class OptionExecution:
             or state.position.entry_protection != snap.position.entry_protection
             or state.position.entry_premium_protection != snap.position.entry_premium_protection
             or state.position.target_exit_schedule != snap.position.target_exit_schedule
+            or trail_terms(state.position) != trail_terms(snap.position)
         ):
             raise ValueError("OPTION_POSITION_TERMS_MISMATCH")
         prior = OptionLedger.model_validate_json(c["ledger_json"])
@@ -1210,18 +1222,27 @@ class OptionExecution:
             and prior.position
             and state.position.entry_client_id == prior.position.entry_client_id
         ):
+            trail = state.position.premium_trail
+            prior_trail = prior.position.premium_trail
+            if prior_trail is not None and prior_trail.entry_basis is not None:
+                if trail_terms(prior.position) != trail_terms(state.position):
+                    raise ValueError("OPTION_PREMIUM_TRAIL_BASIS_CHANGED")
+                trail = prior_trail
             state = state.model_copy(
                 update={
                     "position": state.position.model_copy(
                         update={
-                            k: getattr(prior.position, k)
-                            for k in (
-                                "tightened_underlying_invalidation",
-                                "exit_reason",
-                                "exit_required_at",
-                                "supervision_issue",
-                                "target_exit_stage",
-                            )
+                            "premium_trail": trail,
+                            **{
+                                k: getattr(prior.position, k)
+                                for k in (
+                                    "tightened_underlying_invalidation",
+                                    "exit_reason",
+                                    "exit_required_at",
+                                    "supervision_issue",
+                                    "target_exit_stage",
+                                )
+                            },
                         }
                     )
                 }
@@ -1302,6 +1323,11 @@ class OptionExecution:
                 "issue": issue,
                 "entry_client_id": p.entry_client_id if p else None,
                 "snapshot_id": snap.snapshot_id,
+                **(
+                    {"premium_trail": p.premium_trail.model_dump(mode="json")}
+                    if p and p.premium_trail is not None
+                    else {}
+                ),
                 **(
                     {"target_exit_stage": p.target_exit_stage}
                     if p and p.target_exit_schedule is not None

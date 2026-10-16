@@ -117,6 +117,13 @@ def _assess(p, quote, underlying, limits, policy, now):
         # its frozen stop when supervision recovers, then check the rebound now.
         if underlying.bid <= stop if p.contract.right == "CALL" else underlying.ask >= stop:
             reason = "UNDERLYING_INVALIDATION"
+    trail = p.premium_trail
+    if policy.premium_trail is not None and quote_ok and reason is None:
+        from app.options.premium_trail import assess
+
+        trail, crossed = assess(p, quote.bid)
+        if crossed:
+            reason = "PREMIUM_TRAIL"
     p = p.model_copy(
         update={
             "exit_reason": reason,
@@ -124,6 +131,7 @@ def _assess(p, quote, underlying, limits, policy, now):
             "supervision_issue": issue,
             "target_exit_stage": stage,
             "tightened_underlying_invalidation": stop,
+            "premium_trail": trail,
         }
     )
     return p

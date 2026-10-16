@@ -115,7 +115,9 @@ complete obstruction coverage, Scope family loss/reset, full management behavior
 and runtime/replay acceptance. The shared native target engine now supports
 [explicit frozen stop adjustments](OPTIONS_TARGET_EXITS.md#optional-frozen-target-stops),
 but Scope previews omit those fields until actual entry binding defines their prices.
-Premium trails remain open. Authentic provider/calendar/host, prospective economic and UI acceptance
+The shared [premium trail](OPTIONS_PREMIUM_TRAIL.md) now has a separate frozen-owner
+enrollment; full Scope management and its strategy-specific enrollment remain open.
+Authentic provider/calendar/host, prospective economic and UI acceptance
 remain separate. Main untouched, PR #1 draft, LIVE disabled and deployment frozen.
 
 See [target execution](OPTIONS_TARGET_EXITS.md), [owned admission](OPTIONS_SCOPE_OWNED_ADMISSION.md),

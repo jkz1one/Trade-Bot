@@ -3,7 +3,7 @@
 from decimal import Context, Decimal, localcontext
 from zoneinfo import ZoneInfo
 
-from app.options.lifecycle import OptionLedger, OptionLot, OptionPosition
+from app.options.lifecycle import OptionLedger, OptionLot, OptionPosition, PremiumTrailState
 
 ZERO = Decimal(0)
 
@@ -53,6 +53,17 @@ def apply_fill(ledger, intent, fill):
                     entry_protection=intent.entry_protection,
                     entry_premium_protection=intent.entry_premium_protection,
                     target_exit_schedule=intent.target_exit_schedule,
+                    premium_trail=PremiumTrailState(entry_quantity=intent.quantity)
+                    if intent.premium_trail is not None
+                    else None,
+                )
+            if position.premium_trail is not None and position.quantity == intent.quantity:
+                position = position.model_copy(
+                    update={
+                        "premium_trail": position.premium_trail.model_copy(
+                            update={"entry_basis": position.basis}
+                        )
+                    }
                 )
             cash = ledger.cash - premium - fill.fee
             settled = ledger.settled_cash - premium - fill.fee
