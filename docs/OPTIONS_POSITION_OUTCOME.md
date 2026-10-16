@@ -25,6 +25,10 @@ and their net, with a LOSS/WIN/FLAT classification. This is expressly **not an
 all-in economic result**: data and host costs are not allocated here. Full-cost
 session comparisons remain the research/economic authority. Accounts are never
 combined and callers cannot supply P&L or replacement prices.
+The separate [whole-trade floor preview](OPTIONS_TRADE_FLOOR.md) reuses this evidence
+for currently owned positions, retaining original premium, actual scale proceeds,
+all attributable charges and conservative remaining exit fees. It does not turn
+an incomplete position outcome into a realized net result or enable protection.
 
 New native CLOSE intents now store `closing_entry_client_id`, derived from the
 owner's held position in the preparation transaction and repeated in the approval.

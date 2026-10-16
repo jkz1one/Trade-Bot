@@ -85,6 +85,9 @@ watch/entry binding, missing four-contract objective, complete path proof, famil
 loss/reset and full management/runtime/replay acceptance. Source whole-trade floors
 based on realized sales, management health/Greek rules and any strategy-specific
 trail enrollment require their own acceptance; none is implied by this policy.
+The [native whole-trade floor preview](OPTIONS_TRADE_FLOOR.md) now supplies verified
+sale/fee/model-cost arithmetic for the first of those gates, without automatic
+enrollment or enforcement.
 Authentic provider/host, prospective economics and the dedicated UI pass remain open.
 Main untouched, PR #1 draft, LIVE disabled and deployed experiment frozen.
 

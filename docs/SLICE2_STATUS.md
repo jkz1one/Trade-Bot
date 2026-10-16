@@ -1,5 +1,71 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 native whole-trade floor previews: 2026-10-16 UTC
+
+The next whole-trade management prerequisite is verified remaining-proceeds
+arithmetic after scale-outs. Pinned SignalFlow `play_management.py` at
+`f9eaf2c1b5d13dca287ee7138126883065b00395` supplies reference 0/10/25% floors but
+omits execution fees and model charges from its whole-trade formula. The new
+`native-target-floor-preview-v1` calculation uses complete original entry fills,
+actual linked sale proceeds, every paid execution fee and attributable entry or
+management charge. It reserves remaining exit fees conservatively as one charged
+filled order per remaining contract. Upward contract-tick rounding produces a
+minimum actual fill-price threshold, including the $3 tick-tier boundary.
+
+`OptionObserver.trade_floor(entry_client_id)` exposes this explicit read-only
+preview from one bounded native snapshot. It retains full position evidence and
+hashes, revision, separate account-snapshot/event times, current remaining quantity
+and stored target progress. Unknown/unallocated costs, partial entries and unresolved
+orders suppress floors. Closed entries have no runner floor. A target touch never
+creates sale proceeds; scales never replace original premium with remaining basis.
+Stored target progress can select a reference scenario only when the frozen schedule
+matches the original intent. All results retain false execution/LIVE authority.
+
+This supplies accounting plumbing, not automatic enforcement or policy enrollment.
+No quote is fetched or sampled, exit latched, order submitted or existing observer
+page changed. Data/host charges remain in session economics, explicitly excluded
+from this position preview; future paid advice can raise required proceeds.
+READY means available stored arithmetic, never a completed outcome or guaranteed
+breakeven. [API and exact boundaries](OPTIONS_TRADE_FLOOR.md).
+
+Fresh GitHub baseline: `37ca15f7d003a04ee9ca5eefd683fc91ab313169`, tree
+`b5ed294495df3bc5fb8d115c6bdd50ec98c7c899`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Source preview cases: **22 passed in 19.29s** before extending the model-cost
+  cases to include an actual partial sale.
+- Final focused installed preview suite: **22 passed in 20.21s**, including native
+  entry plus non-order management charges after a scale, unknown/unallocated costs,
+  CALL/PUT stages, exact fees, original weighted basis, tick tiers, incomplete orders,
+  altered schedules, independent owners and detached read-only copies.
+- Initial broader installed invocation stopped at collection because a shared test
+  helper imports the `tests` package. The corrected isolated runner adds only the
+  copied proof directory to its import path, not the checkout. No application or
+  wheel change was needed; the collection log is retained.
+- Installed floor preview, native position outcome, partial-close, target-exit,
+  position-coordination and observer regression: **199 passed in 236.41s**, warnings
+  treated as errors, outside the checkout against the non-editable installed wheel.
+  Includes all 22 new cases and independent A/B/C/D native outcome/cost attribution.
+- Two source/wheel/installed modules and copied regression bytes match. Scoped
+  lint/format, dependency consistency, whitespace and 237 local documentation links
+  pass.
+- Wheel SHA-256: `982c74e7ec26f4927593b7a585455e326c6597f89d34260e5101b2452895fab1`.
+  Artifacts/logs beside checkout: `trade-floor-env`, `trade-floor-dist`,
+  `trade-floor-proof`, `trade-floor-source-tests.log`, `trade-floor-focused.log`,
+  `trade-floor-installed-tests.log`, `trade-floor-collection.log` and
+  `trade-floor-build.log`.
+
+Automatic whole-trade floors still require frozen enrollment, fresh bid review,
+persistent monotone protection and native dispatch/restart acceptance. Remaining
+Scope entry/path/management integration, authentic provider/host evidence and the
+dedicated UI pass remain open. Main untouched, PR draft, LIVE disabled and deployed
+experiment frozen. No authentic provider/model/broker call, dependency, host unit
+or deployment changed.
+
+---
+
 ## P3/P7 target-managed open-boundary export: 2026-10-16 UTC
 
 Reproduced a concrete native export blocker against the prior installed wheel:

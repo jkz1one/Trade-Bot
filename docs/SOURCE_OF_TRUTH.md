@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.55. Adopted product direction and working delivery contract, 2026-10-16 UTC.
+Version 1.56. Adopted product direction and working delivery contract, 2026-10-16 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -113,6 +113,11 @@ inconclusive with no net return or invented closing valuation.
 entry's actual premium basis and fresh bid peak across partial exits and restart,
 with native mandatory exits and stored-only attribution/observer evidence. All
 entry/management costs remain charged; premium floors are not net-profit claims.
+[Native whole-trade floor previews](OPTIONS_TRADE_FLOOR.md) now derive remaining
+sale requirements from complete original entry fills, actual partial-sale proceeds,
+all recorded execution and attributable model charges, and conservative future exit
+fees. Unknown costs and unresolved orders withhold floors. This stored read API
+does not enroll or enforce automatic exits; data/host costs remain in session reports.
 [Scope management plans](OPTIONS_SCOPE_MANAGEMENT.md) now preserve the source
 balanced allocations for one through three owned contracts and explicit profile
 premium limits beneath the owner ceiling. A new-cohort native entry premium

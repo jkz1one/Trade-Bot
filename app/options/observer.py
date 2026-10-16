@@ -131,6 +131,17 @@ class OptionObserver:
             raise ValueError("Position outcome response capacity exceeded")
         return result
 
+    def trade_floor(self, entry_client_id):
+        """Read native whole-trade floor previews without evaluating or enabling exits."""
+        from app.options.trade_floor import native_trade_floor
+
+        entry_client_id = TypeAdapter(Name).validate_python(entry_client_id)
+        with self.read() as db:
+            result = native_trade_floor(db, entry_client_id, self.population_id)
+        if len(json.dumps(result).encode()) > MAX_REPORT_BYTES:
+            raise ValueError("Trade floor response capacity exceeded")
+        return result
+
     def report(self, *, limit=25, before=None, family="ALL"):
         if (
             type(limit) is not int
