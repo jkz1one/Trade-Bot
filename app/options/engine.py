@@ -531,12 +531,17 @@ class OptionExecution:
                         or entry_request is not None
                     ):
                         raise ExecutionBlocked("OPTION_TARGET_ENTRY_NOT_ENROLLED")
+                    if target_exit_schedule.has_stops and self.policy.target_stops is None:
+                        raise ExecutionBlocked("OPTION_TARGET_STOPS_NOT_ENROLLED")
                     if result.outcome == "APPROVED":
                         if target_exit_schedule.entry_quantity != result.quantity:
                             raise ExecutionBlocked("OPTION_TARGET_ENTRY_QUANTITY_CHANGED")
                         target_exit_schedule.check_direction(
                             proposal.contract.right,
                             underlying.ask if proposal.contract.right == "CALL" else underlying.bid,
+                        )
+                        target_exit_schedule.check_stops(
+                            proposal.contract.right, proposal.underlying_invalidation
                         )
                 if target_exit_stage is not None:
                     from app.options.target_exits import review_close
@@ -715,6 +720,8 @@ class OptionExecution:
                 if intent.target_exit_schedule is not None:
                     if self.policy.target_exits is None:
                         raise ExecutionBlocked("OPTION_TARGET_NOT_ENROLLED")
+                    if intent.target_exit_schedule.has_stops and self.policy.target_stops is None:
+                        raise ExecutionBlocked("OPTION_TARGET_STOPS_NOT_ENROLLED")
                     if underlying is None:
                         raise ExecutionBlocked("OPTION_TARGET_UNDERLYING_REQUIRED")
                     intent.target_exit_schedule.check_direction(
@@ -1298,6 +1305,11 @@ class OptionExecution:
                 **(
                     {"target_exit_stage": p.target_exit_stage}
                     if p and p.target_exit_schedule is not None
+                    else {}
+                ),
+                **(
+                    {"target_stop_price": str(p.tightened_underlying_invalidation)}
+                    if p and p.target_exit_schedule is not None and p.target_exit_schedule.has_stops
                     else {}
                 ),
             }

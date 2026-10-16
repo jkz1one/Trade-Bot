@@ -66,6 +66,9 @@ class OptionExecutionPolicy(OptionRecord):
     target_exits: Literal["frozen-targets-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
+    target_stops: Literal["frozen-target-stops-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     entry_premium_protection: Literal["tighten-only-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -74,6 +77,8 @@ class OptionExecutionPolicy(OptionRecord):
     def bounded(self):
         if self.target_exits is not None and self.partial_closes is None:
             raise ValueError("Target exits require whole-contract partial closes")
+        if self.target_stops is not None and self.target_exits is None:
+            raise ValueError("Target stops require frozen target exits")
         if self.total_loss_limit > self.capital or self.daily_loss_limit > self.total_loss_limit:
             raise ValueError("Explicit loss limits must fit the original PAPER capital")
         if self.exit_cutoff_minutes >= self.entry_cutoff_minutes:
@@ -98,6 +103,7 @@ class EntryPremiumProtection(OptionRecord):
 class TargetExitStep(OptionRecord):
     underlying_price: Money = Field(gt=0)
     quantity: PositiveCount
+    tighten_underlying_to: Money | None = Field(default=None, gt=0, exclude_if=lambda v: v is None)
 
 
 class TargetExitSchedule(OptionRecord):
@@ -122,6 +128,25 @@ class TargetExitSchedule(OptionRecord):
             ):
                 raise ValueError("Targets must advance strictly in the held direction")
             reference = step.underlying_price
+
+    def check_stops(self, right, original):
+        for step in self.steps:
+            stop = step.tighten_underlying_to
+            if stop is None:
+                continue
+            if not (
+                original < stop < step.underlying_price
+                if right == "CALL"
+                else original > stop > step.underlying_price
+            ):
+                raise ValueError(
+                    "Target stops must tighten strictly and remain behind their target"
+                )
+            original = stop
+
+    @property
+    def has_stops(self):
+        return any(s.tighten_underlying_to is not None for s in self.steps)
 
 
 class PositionExitProtection(OptionRecord):
@@ -190,6 +215,9 @@ class OptionIntent(OptionRecord):
             ):
                 raise ValueError("Target schedule binds its exact deterministic entry")
             self.target_exit_schedule.check_direction(
+                self.instrument.contract.right, self.original_underlying_invalidation
+            )
+            self.target_exit_schedule.check_stops(
                 self.instrument.contract.right, self.original_underlying_invalidation
             )
         if self.target_exit_stage is not None and (
@@ -310,6 +338,9 @@ class OptionPosition(OptionHolding):
     def owned(self):
         if self.target_exit_schedule is not None:
             self.target_exit_schedule.check_direction(
+                self.contract.right, self.original_underlying_invalidation
+            )
+            self.target_exit_schedule.check_stops(
                 self.contract.right, self.original_underlying_invalidation
             )
             if (

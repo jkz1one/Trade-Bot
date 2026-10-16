@@ -98,6 +98,8 @@ a frozen opt-in scale/runner execution primitive with exact entry attribution,
 full costs and independent protective-exit precedence.
 [Frozen target schedules](docs/OPTIONS_TARGET_EXITS.md) now drive automatic native
 scales from latched underlying targets and verified fills, retaining protected runners.
+Optional frozen target stops tighten protection after a touch and retain the tighter
+stop through rebounds, partial exits and restart, with all costs unchanged.
 [Scope management plans](docs/OPTIONS_SCOPE_MANAGEMENT.md) now derive balanced
 whole-contract allocations from owned sizing and bind explicit profile premium
 limits beneath the owner cap. Four-contract Scope plans remain blocked by their

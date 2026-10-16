@@ -1,5 +1,61 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 native target-triggered stop tightening: 2026-10-16 UTC
+
+The next management gap was an effective stop that stayed unchanged after a target
+touch unless another caller explicitly tightened it. New PAPER cohorts can now
+enroll `target_stops="frozen-target-stops-v1"` alongside native target exits.
+Each optional `TargetExitStep.tighten_underlying_to` freezes a particular stop
+adjustment before entry. Prices must strictly tighten from original invalidation
+and preceding specified stops, remaining behind their own directional target.
+Preparation and dispatch enforce enrollment and immutable schedule binding.
+
+Fresh supervision applies reached stop levels without weakening a stricter existing
+stop. Gaps use every reached step. If underlying target progress latched during an
+unavailable option quote, fresh recovery applies the stop and checks the current
+rebound in the same assessment. A boundary touch latches ordinary underlying
+invalidation. Mandatory exits keep precedence; attempted orders stay reserved.
+Partial entries retain protection without resized allocations. Stage, effective
+stop and exit latch persist atomically across partial fills, reconciliation and
+restart. Stored schedules and supervision expose their terms without evaluating
+on read. All premiums, fees, entry/management charges and independent balances remain
+unchanged; an underlying entry-price stop is not option breakeven.
+
+Source precedent: pinned SignalFlow `play_management.target_stop_price()` at
+`f9eaf2c1b5d13dca287ee7138126883065b00395`. Prices remain explicit; no native stage
+is silently relabeled Scope T1/T2 and no research reference substitutes for actual
+entry. Scope management previews continue to omit these fields. The missing
+four-contract objective, native watch/entry binding, full path proof, family loss/reset,
+premium trails and full Scope management/runtime/replay acceptance remain open.
+
+Fresh GitHub baseline: `591a15efb47548d354a71e78b559e2618b6d1279`, tree
+`21c923e03c249314830ad6dcc96aacc6410b1b7a`. Main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Initial installed target-stop suite: **24 passed in 12.17s**. Five further cases
+  cover exact boundaries, optional steps, dispatch enrollment and mandatory-exit
+  priority in the broader run.
+- Installed target-stop, target-exit, premium-protection, partial-close, execution,
+  position-coordination/outcome, observer and Scope-management/entry-boundary suites:
+  **341 passed in 265.76s**, warnings treated as errors, outside the checkout against
+  the non-editable installed wheel. Includes all 29 new cases and independent A/B/C/D
+  native replay with full entry/management cost attribution.
+- Three source/wheel/installed modules and the copied target-stop test file match.
+  Scoped lint/format, dependency consistency, whitespace and 269 local documentation
+  links pass.
+- Wheel SHA-256: `f58cb9c179ada4248f2fc506198a86e3443db2e92172796b027aeb7ea8dc93eb`.
+  Artifacts/logs beside checkout: `target-stops-env`, `target-stops-dist`,
+  `target-stops-proof`, `target-stops-focused.log`, `target-stops-installed-tests.log`.
+
+[API and boundaries](OPTIONS_TARGET_EXITS.md#optional-frozen-target-stops).
+Authentic provider/host, prospective economics and dedicated UI acceptance remain
+separate. Main untouched, PR draft, LIVE disabled and deployed experiment frozen.
+No authentic provider/model/broker call, dependency, host unit or deployment changed.
+
+---
+
 ## P7 Scope allocation previews and entry premium protection: 2026-10-16 UTC
 
 Fresh source review recovered Scope's actual shared sizing rule: the pinned

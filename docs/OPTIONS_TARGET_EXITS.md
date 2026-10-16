@@ -75,8 +75,8 @@ Original/tightened invalidation, catastrophic premium protection, session/expiry
 deadlines and latched exit reasons retain precedence. Protection can supersede only
 a never-attempted prepared scale. An attempted scale must reconcile before protection
 addresses actual remaining ownership. Target progress never widens a stop, extends a
-deadline or changes the premium catastrophe fraction. This version does not add
-automatic breakeven stops or premium trails. Separately enrolled
+deadline or changes the premium catastrophe fraction. Optional frozen target stops
+are described below; premium trails remain unimplemented. Separately enrolled
 [entry premium protection](OPTIONS_SCOPE_MANAGEMENT.md) can now freeze a tighter
 premium limit before a deterministic entry.
 
@@ -92,6 +92,62 @@ option fills can produce a loss even after both targets. Every entry/management
 charge remains attributed to the original entry; unknown charges withhold complete
 economics. Independent accounts retain separate progress, cash, reservations and
 loss state. Sale proceeds require the existing explicit settlement evidence.
+
+## Optional frozen target stops
+
+New PAPER cohorts can additionally enroll
+`OptionExecutionPolicy.target_stops="frozen-target-stops-v1"`. This requires frozen
+target exits and their whole-contract close policy. An explicitly supplied
+`TargetExitStep.tighten_underlying_to` freezes a stop adjustment at that particular
+target. Omitted values retain the current stop; old serialized schedules and cohorts
+are unchanged and cannot adopt this enrollment on reopen.
+
+For example, a four-contract CALL plan with original invalidation below 600 can
+exit two at 602 and tighten to 600, then exit one at 604 and tighten to 602:
+
+```python
+schedule = TargetExitSchedule(
+    entry_quantity=4,
+    steps=(
+        TargetExitStep(underlying_price="602", quantity=2, tighten_underlying_to="600"),
+        TargetExitStep(underlying_price="604", quantity=1, tighten_underlying_to="602"),
+    ),
+)
+```
+
+This is an explicit deterministic plan. Preparation requires exact common-governor
+quantity, unconsumed directional targets and stop prices that strictly tighten from
+the original invalidation and each preceding specified stop. Each stop must remain
+strictly behind its own target. PUT comparisons reverse. Dispatch rechecks frozen
+terms and enrollment. Neither callers nor the model can revise a schedule after entry.
+
+Fresh underlying observations latch targets as before. Stop application requires
+both valid underlying and executable option quotes. A gap applies all reached
+steps, retaining the tighter of their stops and any existing manual/model tightening.
+If a target latched while the option quote was unavailable, fresh recovery applies
+its stop and checks the current underlying in the same assessment. A rebound onto
+or through that stop immediately latches `UNDERLYING_INVALIDATION`.
+
+Stage, effective stop and any mandatory exit latch persist atomically with supervision
+evidence. Reconciliation and restart retain them through partial fills, scales and
+runners. A terminal partial entry still cannot run resized target allocations, but
+its actual held contracts retain the frozen protective stop rules. Only verified
+fills retire size. Attempted/unknown orders retain their reservations; protection
+can supersede only never-attempted prepared scales. Existing mandatory exit reasons
+and deadline/premium protection keep precedence.
+
+The stored entry schedule exposes the stop terms, and supervision records the
+effective `target_stop_price`. Reads do not advance targets or stops. Touching an
+underlying entry price is not option breakeven: spreads, actual premiums, all fees
+and every entry/management charge remain in native outcomes. No cost is discounted.
+
+The pinned SignalFlow
+[`play_management.target_stop_price()`](https://github.com/jkz1one/SignalFlow/blob/f9eaf2c1b5d13dca287ee7138126883065b00395/backend/platform/play_management.py)
+provides the target-dependent tightening precedent. This primitive deliberately
+requires explicit prices; it does not equate a native executable stage with a Scope
+T1/T2 label or use a research reference price as an actual entry. Scope previews
+still omit these stop fields pending native watch/entry binding. Its missing third
+objective, full management acceptance and premium trails remain open.
 
 ## Acceptance boundary
 

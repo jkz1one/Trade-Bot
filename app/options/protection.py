@@ -98,12 +98,32 @@ def _assess(p, quote, underlying, limits, policy, now):
                 else underlying.ask <= step.underlying_price
             ):
                 stage = max(stage, index)
+    stop = p.tightened_underlying_invalidation
+    if (
+        policy.target_stops is not None
+        and p.target_exit_schedule is not None
+        and underlying_ok
+        and quote_ok
+        and reason is None
+    ):
+        for step in p.target_exit_schedule.steps[:stage]:
+            if step.tighten_underlying_to is not None:
+                stop = (
+                    max(stop, step.tighten_underlying_to)
+                    if p.contract.right == "CALL"
+                    else min(stop, step.tighten_underlying_to)
+                )
+        # A target can have latched while the option quote was unavailable. Apply
+        # its frozen stop when supervision recovers, then check the rebound now.
+        if underlying.bid <= stop if p.contract.right == "CALL" else underlying.ask >= stop:
+            reason = "UNDERLYING_INVALIDATION"
     p = p.model_copy(
         update={
             "exit_reason": reason,
             "exit_required_at": p.exit_required_at or (now if reason else None),
             "supervision_issue": issue,
             "target_exit_stage": stage,
+            "tightened_underlying_invalidation": stop,
         }
     )
     return p
