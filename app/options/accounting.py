@@ -51,6 +51,7 @@ def apply_fill(ledger, intent, fill):
                     lots=lots,
                     exit_at=intent.exit_at,
                     entry_protection=intent.entry_protection,
+                    target_exit_schedule=intent.target_exit_schedule,
                 )
             cash = ledger.cash - premium - fill.fee
             settled = ledger.settled_cash - premium - fill.fee

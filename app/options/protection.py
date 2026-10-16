@@ -76,11 +76,21 @@ def _assess(p, quote, underlying, limits, policy, now):
         issue = "OPTION_UNPRICED_OR_STALE"
     elif not underlying_ok:
         issue = "UNDERLYING_UNAVAILABLE_OR_STALE"
+    stage = p.target_exit_stage
+    if underlying_ok and p.target_exit_schedule is not None and reason is None:
+        for index, step in enumerate(p.target_exit_schedule.steps, 1):
+            if (
+                underlying.bid >= step.underlying_price
+                if p.contract.right == "CALL"
+                else underlying.ask <= step.underlying_price
+            ):
+                stage = max(stage, index)
     p = p.model_copy(
         update={
             "exit_reason": reason,
             "exit_required_at": p.exit_required_at or (now if reason else None),
             "supervision_issue": issue,
+            "target_exit_stage": stage,
         }
     )
     return p

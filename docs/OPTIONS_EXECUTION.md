@@ -45,6 +45,12 @@ remain separate from venue cash, and are not proof of provider billing. Unknown
 costs block new entry. Flat healthy model admission also requires fresh account
 truth and an actual eligible regular session.
 
+New cohorts may additionally enroll [frozen target exits](OPTIONS_TARGET_EXITS.md).
+Trusted deterministic entry schedules persist with the original buy; the independent
+tick latches fresh directional target observations and closes only remaining due
+whole contracts through the same governor, attribution and fill ledger. Mandatory
+protection retains precedence. Scope strategy admission remains blocked.
+
 ## Fills, reconciliation and uncertainty
 
 Entry consumes eligible ask plus adverse tick-rounded slippage; close uses bid

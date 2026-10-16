@@ -95,7 +95,10 @@ Native Degen/Swing entries now freeze selected-family identity through dispatch,
 closing attribution and entry/management costs; historical orders remain unchanged.
 [Native whole-contract partial closes](docs/OPTIONS_PARTIAL_CLOSE.md) now provide
 a frozen opt-in scale/runner execution primitive with exact entry attribution,
-full costs and independent protective-exit precedence. Scope linkage remains open.
+full costs and independent protective-exit precedence.
+[Frozen target schedules](docs/OPTIONS_TARGET_EXITS.md) now drive automatic native
+scales from latched underlying targets and verified fills, retaining protected runners.
+Scope profile allocation and watch linkage remain open.
 Authentic provider, host and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.

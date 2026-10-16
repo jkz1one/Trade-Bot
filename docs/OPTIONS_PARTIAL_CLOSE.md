@@ -4,8 +4,10 @@ A new frozen PAPER population may set
 `OptionExecutionPolicy.partial_closes="whole-contract-v1"`. Its trusted local
 orchestrator can then call `prepare()` with a CLOSE proposal carrying an explicit
 positive integer `close_quantity`. This supplies the native order primitive needed
-for Scope's eventual first-target scale and runner workflow. It does not enroll
-Scope watches in execution or implement automatic target allocation.
+for Scope's eventual first-target scale and runner workflow. Separately enrolled
+[frozen target schedules](OPTIONS_TARGET_EXITS.md) now orchestrate automatic sales
+from explicit entry allocations and verified fills. Scope profile/allocation selection
+and watch execution remain open.
 
 ## Quantity and ownership
 

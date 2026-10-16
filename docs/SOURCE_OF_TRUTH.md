@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.50. Adopted product direction and working delivery contract, 2026-10-16 UTC.
+Version 1.51. Adopted product direction and working delivery contract, 2026-10-16 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -98,7 +98,11 @@ Portable reports bind policy and history while labeling this as stored evidence.
 frozen PAPER cohort retain an owned runner through the same governor and journal.
 Exact requested/approved/fill quantities, all fees and linked model costs persist;
 mandatory protection preempts unattempted scales and preserves attempted orders.
-Automatic Scope target allocation and watch execution remain open.
+[Frozen native target schedules](OPTIONS_TARGET_EXITS.md) now add entry-bound
+allocations, durable target progress and automatic whole-contract sales through
+the same protection, governor and fill accounting. Restarts retain pending orders;
+attempted failures require review. Partial entries are not silently reallocated.
+Scope profile/allocation selection and watch execution remain open.
 Complete obstruction coverage, native full-cost loss/cooldown linkage and
 dispatch/management remain required
 before Scope execution.

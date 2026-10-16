@@ -28,6 +28,7 @@ from app.options.lifecycle import (
     OptionLedger,
     OptionVenueSnapshot,
     PositionExitProtection,
+    TargetExitSchedule,
 )
 from app.options.models import (
     OptionAccount,
@@ -377,6 +378,8 @@ class OptionExecution:
         ceiling=None,
         entry_request=None,
         entry_result=None,
+        target_exit_schedule=None,
+        target_exit_stage=None,
     ):
         now = clock(now)
         proposal = OptionProposal.model_validate(proposal.model_dump(warnings=False))
@@ -409,6 +412,14 @@ class OptionExecution:
             "underlying": underlying,
             "origin": origin,
         }
+        if target_exit_schedule is not None:
+            target_exit_schedule = TargetExitSchedule.model_validate(
+                target_exit_schedule.model_dump(warnings=False)
+            )
+            inputs["target_exit_schedule"] = target_exit_schedule.model_dump(mode="json")
+            bound_inputs["target_exit_schedule"] = target_exit_schedule
+        if target_exit_stage is not None:
+            inputs["target_exit_stage"] = bound_inputs["target_exit_stage"] = target_exit_stage
         if entry_request is not None:
             from app.options.entry_judgment import EntryRequest, EntryResult
 
@@ -504,6 +515,25 @@ class OptionExecution:
                     )
                 if result.outcome == "APPROVED" and proposal.close_quantity is not None:
                     self._review_partial_close(db, proposal, quote, underlying, now, origin)
+                if target_exit_schedule is not None:
+                    if (
+                        self.policy.target_exits is None
+                        or origin != "DETERMINISTIC"
+                        or proposal.action != "OPEN_LONG"
+                        or entry_request is not None
+                    ):
+                        raise ExecutionBlocked("OPTION_TARGET_ENTRY_NOT_ENROLLED")
+                    if result.outcome == "APPROVED":
+                        if target_exit_schedule.entry_quantity != result.quantity:
+                            raise ExecutionBlocked("OPTION_TARGET_ENTRY_QUANTITY_CHANGED")
+                        target_exit_schedule.check_direction(
+                            proposal.contract.right,
+                            underlying.ask if proposal.contract.right == "CALL" else underlying.bid,
+                        )
+                if target_exit_stage is not None:
+                    from app.options.target_exits import review_close
+
+                    review_close(self, db, proposal, target_exit_stage, origin)
             except (ValueError, ExecutionBlocked) as exc:
                 reason = str(exc)
                 result = None
@@ -592,6 +622,8 @@ class OptionExecution:
                         if proposal.action == "CLOSE"
                         else None,
                         requested_close_quantity=proposal.close_quantity,
+                        target_exit_schedule=target_exit_schedule,
+                        target_exit_stage=target_exit_stage,
                     )
                     approval = {
                         **inputs,
@@ -647,8 +679,25 @@ class OptionExecution:
             reason = None
             try:
                 from app.options.entry_lineage import verified_lineage
+                from app.options.target_exits import review_close, verify_binding
 
                 verified_lineage(db, intent, approval)
+                verify_binding(intent, approval)
+                if intent.target_exit_schedule is not None:
+                    if self.policy.target_exits is None:
+                        raise ExecutionBlocked("OPTION_TARGET_NOT_ENROLLED")
+                    if underlying is None:
+                        raise ExecutionBlocked("OPTION_TARGET_UNDERLYING_REQUIRED")
+                    intent.target_exit_schedule.check_direction(
+                        intent.instrument.contract.right,
+                        underlying.ask
+                        if intent.instrument.contract.right == "CALL"
+                        else underlying.bid,
+                    )
+                if intent.target_exit_stage is not None:
+                    review_close(
+                        self, db, proposal, intent.target_exit_stage, approval.get("origin")
+                    )
                 if intent.requested_close_quantity != proposal.close_quantity or (
                     intent.requested_close_quantity is not None
                     and approval["admission"]["quantity"] != intent.quantity
@@ -1115,6 +1164,7 @@ class OptionExecution:
             or state.position.exit_at != snap.position.exit_at
             or state.position.entry_client_id != snap.position.entry_client_id
             or state.position.entry_protection != snap.position.entry_protection
+            or state.position.target_exit_schedule != snap.position.target_exit_schedule
         ):
             raise ValueError("OPTION_POSITION_TERMS_MISMATCH")
         prior = OptionLedger.model_validate_json(c["ledger_json"])
@@ -1133,6 +1183,7 @@ class OptionExecution:
                                 "exit_reason",
                                 "exit_required_at",
                                 "supervision_issue",
+                                "target_exit_stage",
                             )
                         }
                     )
@@ -1214,6 +1265,11 @@ class OptionExecution:
                 "issue": issue,
                 "entry_client_id": p.entry_client_id if p else None,
                 "snapshot_id": snap.snapshot_id,
+                **(
+                    {"target_exit_stage": p.target_exit_stage}
+                    if p and p.target_exit_schedule is not None
+                    else {}
+                ),
             }
             db.execute(
                 "INSERT INTO execution_supervisor VALUES(1,?,'HEALTHY',NULL,1,?,?,NULL,NULL) ON CONFLICT(id) DO UPDATE SET status=excluded.status,heartbeat_at=excluded.heartbeat_at,result_json=excluded.result_json",
@@ -1234,6 +1290,10 @@ class OptionExecution:
         if not result["reconciled"]:
             return result
         assessed = self.assess(quote, underlying, now=now)
+        if assessed["status"] == "HEALTHY" and self.policy.target_exits is not None:
+            from app.options.target_exits import tick
+
+            return await tick(self, quote, underlying, now=now, assessed=assessed)
         if assessed["status"] != "EXIT_REQUIRED":
             return assessed
         with self.journal.write() as db:

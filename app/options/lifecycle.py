@@ -63,9 +63,14 @@ class OptionExecutionPolicy(OptionRecord):
     partial_closes: Literal["whole-contract-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
+    target_exits: Literal["frozen-targets-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
 
     @model_validator(mode="after")
     def bounded(self):
+        if self.target_exits is not None and self.partial_closes is None:
+            raise ValueError("Target exits require whole-contract partial closes")
         if self.total_loss_limit > self.capital or self.daily_loss_limit > self.total_loss_limit:
             raise ValueError("Explicit loss limits must fit the original PAPER capital")
         if self.exit_cutoff_minutes >= self.entry_cutoff_minutes:
@@ -80,6 +85,35 @@ class EntryProtection(OptionRecord):
     plan_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
     underlying_target: Money = Field(gt=0)
     exit_by: datetime
+
+
+class TargetExitStep(OptionRecord):
+    underlying_price: Money = Field(gt=0)
+    quantity: PositiveCount
+
+
+class TargetExitSchedule(OptionRecord):
+    """Trusted software's explicit allocations, frozen before any entry attempt."""
+
+    version: Literal["frozen-targets-v1"] = "frozen-targets-v1"
+    entry_quantity: PositiveCount
+    steps: tuple[TargetExitStep, ...] = Field(min_length=1, max_length=3)
+
+    @model_validator(mode="after")
+    def bounded(self):
+        if sum(s.quantity for s in self.steps) > self.entry_quantity:
+            raise ValueError("Target allocations cannot exceed the entry quantity")
+        return self
+
+    def check_direction(self, right, reference):
+        for step in self.steps:
+            if not (
+                step.underlying_price > reference
+                if right == "CALL"
+                else step.underlying_price < reference
+            ):
+                raise ValueError("Targets must advance strictly in the held direction")
+            reference = step.underlying_price
 
 
 class PositionExitProtection(OptionRecord):
@@ -121,6 +155,12 @@ class OptionIntent(OptionRecord):
     requested_close_quantity: PositiveCount | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
+    target_exit_schedule: TargetExitSchedule | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    target_exit_stage: int | None = Field(
+        default=None, strict=True, ge=1, le=3, exclude_if=lambda v: v is None
+    )
     entry_lineage: EntryLineage | None = Field(default=None, exclude_if=lambda v: v is None)
 
     position_protection: PositionExitProtection | None = Field(
@@ -129,6 +169,20 @@ class OptionIntent(OptionRecord):
 
     @model_validator(mode="after")
     def lifetime(self):
+        if self.target_exit_schedule is not None:
+            if (
+                self.side != "BUY"
+                or self.entry_protection is not None
+                or self.quantity != self.target_exit_schedule.entry_quantity
+            ):
+                raise ValueError("Target schedule binds its exact deterministic entry")
+            self.target_exit_schedule.check_direction(
+                self.instrument.contract.right, self.original_underlying_invalidation
+            )
+        if self.target_exit_stage is not None and (
+            self.side != "SELL" or self.requested_close_quantity is None
+        ):
+            raise ValueError("Target stage requires an explicitly bounded close")
         if not self.prepared_at < self.approval_expires_at <= self.order_expires_at:
             raise ValueError("Distinct fresh approval and DAY-order deadlines required")
         if self.order_expires_at > self.instrument.contract.last_trading_at:
@@ -219,6 +273,10 @@ class OptionPosition(OptionHolding):
     exit_at: datetime
     tightened_underlying_invalidation: Money = Field(gt=0)
     entry_protection: EntryProtection | None = Field(default=None, exclude_if=lambda v: v is None)
+    target_exit_schedule: TargetExitSchedule | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    target_exit_stage: int = Field(default=0, strict=True, ge=0, le=3, exclude_if=lambda v: v == 0)
     exit_reason: (
         Literal[
             "UNDERLYING_INVALIDATION",
@@ -234,6 +292,18 @@ class OptionPosition(OptionHolding):
 
     @model_validator(mode="after")
     def owned(self):
+        if self.target_exit_schedule is not None:
+            self.target_exit_schedule.check_direction(
+                self.contract.right, self.original_underlying_invalidation
+            )
+            if (
+                self.entry_protection is not None
+                or self.quantity > self.target_exit_schedule.entry_quantity
+                or self.target_exit_stage > len(self.target_exit_schedule.steps)
+            ):
+                raise ValueError("Position must retain its bounded original target schedule")
+        elif self.target_exit_stage:
+            raise ValueError("Target progress requires a frozen schedule")
         if self.entry_protection is not None and self.exit_at > self.entry_protection.exit_by:
             raise ValueError("Owned position cannot extend the original plan horizon")
         if self.quantity != sum(lot.quantity for lot in self.lots):

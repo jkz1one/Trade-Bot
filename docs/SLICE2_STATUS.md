@@ -1,5 +1,71 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 frozen native target exits: 2026-10-16 UTC
+
+New PAPER cohorts can enroll `target_exits="frozen-targets-v1"` alongside the
+whole-contract close policy. Trusted deterministic software freezes one-to-three
+ordered target prices and exact whole-contract allocations before entry. The
+schedule must match the common governor's approved quantity; it cannot enlarge
+admission or be attached to the existing AI single-target entry-plan path.
+Dispatch rejects changed schedules or already-consumed first objectives.
+
+Independent supervision latches fresh directional target observations. The normal
+protective tick then requests cumulative scheduled quantities minus verified sales
+linked to the exact entry. A gap across targets aggregates due quantities; bid size
+caps each actual order, and only verified fills retire an allocation. Unallocated
+contracts remain protected runners. Restart preserves both target progress and
+prepared order identity. Mandatory stops, catastrophe and deadlines retain priority;
+attempted/unknown orders retain reservations and attempted failures require review.
+A terminal partial entry is not silently resized into a different allocation.
+
+Native accounting preserves every order fee, FIFO basis, unsettled proceeds and
+entry/management charge. Stored attribution exposes entry schedules and exit stages
+separately from requested, approved and filled quantities. Target touches make no
+claim about premium profitability. Independent owners retain separate progress and
+cash. Scope entry remains blocked, including for cohorts with this shared primitive.
+
+Reference check: SignalFlow at `f9eaf2c1b5d13dca287ee7138126883065b00395`, pinned
+Scope V2 playbook, `play_sizing.py`, `play_management.py`, `premium_scaling.py` and
+Scope modules. Scope contract profiles and shared sizing profiles are distinct;
+this slice does not invent a mapping or adopt Degen's separate premium ladder.
+Scope profile/allocation selection and profile-specific premium protection remain
+open alongside watch linkage, complete path proof, family loss/reset and runtime/replay.
+
+Fresh GitHub baseline: `9f5534eedbd5e129c1b8f51ddd586ed650d90fba`, tree
+`1679a7a160c494fbd7f8d6eb651a889eb46b66b8`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Source target-exit/partial-close suites: **70 passed in 45.53s**. A three-target
+  gap case was subsequently added for the installed run. The initial run exposed
+  a fixture incorrectly reusing consumed quote size; supplying distinct fresh sized
+  quotes fixed that fixture without weakening fill validation.
+- Installed target/partial exits, native execution, close/entry lineage, entry and
+  position coordination, family/account loss, Scope boundary/admission, position
+  outcomes and managed A/B/C/D replay suites: **339 passed in 554.92s (0:09:14)**,
+  with warnings treated as errors.
+- Cases cover both directions, one-to-four-contract full exits, scales/runners,
+  two/three-target gaps, executable-size limits, all execution fees, attribution,
+  independent accounts, restart/rebound, rollback, stop races, unknown/failed orders,
+  partial-entry review, frozen enrollment, changed terms and consumed objectives.
+  Existing partial-close regression covers every entry/management charge, unknown
+  management usage and completed-loss recognition.
+- Six modules match source/wheel/installed files; copied target tests match source.
+  Scoped lint/format, dependency consistency, whitespace and local documentation
+  link validation pass.
+- Wheel SHA-256: `c79b298aee8f910d84808e198acfb069750dbe8a7a0eeed9e40871cf2af55202`.
+  Artifacts/logs beside checkout: `target-exits-env`, `target-exits-dist`,
+  `target-exits-proof`, `target-exits-source.log`, `target-exits-installed-tests.log`.
+
+[API, exact semantics and remaining gates](OPTIONS_TARGET_EXITS.md). Authentic
+provider/calendar/host and prospective economics, overnight Swing/mixed instruments,
+and the dedicated desktop/mobile UI pass remain open. Main untouched, PR draft,
+LIVE disabled and deployed experiment frozen. No authentic provider/model/broker
+call, dependency, host unit or deployment changed.
+
+---
+
 ## P7 native scale/runner execution primitive: 2026-10-16 UTC
 
 The common engine now supports explicitly bounded whole-contract closes for a

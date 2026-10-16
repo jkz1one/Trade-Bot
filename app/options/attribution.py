@@ -7,7 +7,13 @@ from pydantic import Field
 
 from app.options.engine import exact, fingerprint
 from app.options.entry_reasoning import Digest
-from app.options.lifecycle import EntryLineage, OptionFill, OptionIntent, OptionObservation
+from app.options.lifecycle import (
+    EntryLineage,
+    OptionFill,
+    OptionIntent,
+    OptionObservation,
+    TargetExitSchedule,
+)
 from app.options.models import Money, Name, OptionProposal, OptionRecord, PositiveCount
 
 
@@ -38,6 +44,12 @@ class DecisionAttribution(OptionRecord):
     approved_quantity: int | None = Field(default=None, ge=1)
     requested_close_quantity: PositiveCount | None = Field(
         default=None, exclude_if=lambda v: v is None
+    )
+    target_exit_schedule: TargetExitSchedule | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    target_exit_stage: int | None = Field(
+        default=None, strict=True, ge=1, le=3, exclude_if=lambda v: v is None
     )
     order_status: str | None = Field(default=None, max_length=32)
     attempted: bool = False
@@ -85,6 +97,9 @@ def order_attribution(db, row):
     if approval["admission"]["quantity"] != intent.quantity:
         raise ValueError("Stored approval quantity mismatch")
     proposal = OptionProposal.model_validate(approval["proposal"])
+    from app.options.target_exits import verify_binding
+
+    verify_binding(intent, approval)
     if intent.requested_close_quantity != proposal.close_quantity or (
         intent.requested_close_quantity is not None and approval["origin"] != "DETERMINISTIC"
     ):
@@ -119,6 +134,16 @@ def order_attribution(db, row):
     if entry_id is not None:
         lineage = entry_lineage(db, entry_id)
     return {
+        **(
+            {"target_exit_schedule": intent.target_exit_schedule.model_dump(mode="json")}
+            if intent.target_exit_schedule is not None
+            else {}
+        ),
+        **(
+            {"target_exit_stage": intent.target_exit_stage}
+            if intent.target_exit_stage is not None
+            else {}
+        ),
         **({"entry_lineage": lineage.model_dump(mode="json")} if lineage is not None else {}),
         **(
             {"requested_close_quantity": intent.requested_close_quantity}
@@ -286,6 +311,9 @@ def decision_attribution(db, key, outcome, policy):
             or plan.get("close_quantity") != intent.requested_close_quantity
         ):
             raise ValueError("Stored close proposal quantity mismatch")
+        for field in ("target_exit_schedule", "target_exit_stage"):
+            if inputs.get(field) != approval.get(field):
+                raise ValueError("Stored target proposal binding mismatch")
         if prefix and (
             approval.get(prefix + "_request") != outcome[prefix + "_request"]
             or approval.get(prefix + "_result") != outcome.get(prefix + "_result")

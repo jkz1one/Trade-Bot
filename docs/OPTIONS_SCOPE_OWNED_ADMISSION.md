@@ -181,3 +181,8 @@ boundary can be replaced by a governed entry path.
 The shared [native partial-close primitive](OPTIONS_PARTIAL_CLOSE.md) now supports
 explicit whole-contract scales for separately enrolled PAPER owners. It does not
 remove this watch cohort’s native-entry guard or supply Scope target allocation.
+
+[Frozen native target schedules](OPTIONS_TARGET_EXITS.md) now automate explicit
+entry-bound scales from fresh observations and verified fills. They retain runners
+and independent protection but do not select Scope profile allocations, provide
+profile-specific premium protection or bypass this research-only entry boundary.
