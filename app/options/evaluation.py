@@ -1,6 +1,7 @@
 """Pure cash-conserving paired session replay. Never opens an owner or calls a provider."""
 
 from collections import Counter
+from datetime import timedelta
 from decimal import Context, Decimal, localcontext
 
 from app.options.accounting import apply_fill, apply_receipt
@@ -261,6 +262,7 @@ def _evaluate(bundle, recorded=None, tapes=None):
     used_ids = {arm: set() for arm in previous}
     rows = []
     previous_close = None
+    previous_loss = dict.fromkeys(previous)
     for s in m.sessions:
         expected = {
             "degen:" + str(t // 300)
@@ -284,6 +286,15 @@ def _evaluate(bundle, recorded=None, tapes=None):
                         raise ValueError("DEFINITION_OR_TAPE_MISMATCH")
                     if previous[arm] is None or _economic(a.initial) != _economic(previous[arm]):
                         raise ValueError("CAPITAL_OR_SESSION_CONTINUITY_MISMATCH")
+                    from app.options.loss_evidence import validate_loss_boundary
+
+                    validate_loss_boundary(
+                        a.loss_control,
+                        definition.policy.loss_control,
+                        s.closes_at + timedelta(seconds=5),
+                        previous_loss[arm],
+                    )
+                    previous_loss[arm] = a.loss_control
                     sequences[arm], active, turnover = _replay(
                         a, definition, s, sequences[arm], used_ids[arm], previous_close
                     )
@@ -316,6 +327,11 @@ def _evaluate(bundle, recorded=None, tapes=None):
                     )
                     previous[arm] = None
             arms[arm] = {
+                **(
+                    {"stored_loss_control": a.loss_control.model_dump(mode="json")}
+                    if a and a.loss_control is not None
+                    else {}
+                ),
                 "status": "COMPLETE" if not reasons else "INCONCLUSIVE",
                 "reasons": reasons,
                 "net_change": str(net) if net is not None else None,

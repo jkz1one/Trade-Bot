@@ -134,3 +134,20 @@ continuous cash/share report from the same tapes and A-approved opportunities.
 Optional `underlying_settlements` carry only that account's own explicit receipts;
 options-arm settlement and model charges remain separate. Missing share sizes
 never become assumed fills. See the contract for enrollment and cost fields.
+
+## Optional loss-control continuity
+
+When the manifest's matching execution policies enroll native loss controls,
+each independent owner refreshes those controls after the session's final native
+reconciliation and before saving its boundary. This consumes newly complete losses
+at the actual replay recognition time, including a final close with no later entry
+cycle. Pending outcomes and unknown costs remain pending. A late task still retains
+its real clock; it cannot backdate a review to the session close.
+
+The next session inherits account-wide and family streaks, cooldowns and sticky
+locks along with cash, fills, costs and audit history. Replay does not issue an
+operator reset or clear a lock overnight. A paused entry call creates no paid
+attempt; already admitted calls and D's management charges remain in economics.
+Boundary export now carries [audit-bound native risk evidence](OPTIONS_EVALUATION_EXPORT.md#native-loss-control-evidence).
+Previously unenrolled policies retain their prior behavior and omitted fields.
+This is LOCAL_FIXTURE proof, not provider, host, strategy-profitability or LIVE acceptance.

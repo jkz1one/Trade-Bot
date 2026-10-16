@@ -87,6 +87,8 @@ The stored observer now displays Scope research watches, arming and sizing, with
 explicit expired-evidence labels and no order authority.
 Optional new-cohort Degen/Swing loss controls now add independent family streaks,
 cooldowns and signed targeted resets while retaining account-wide guards and costs.
+Enrolled replay/export now retains cumulative loss state, consumed-entry evidence
+and unpaid entry pauses across independent A/B/C/D session boundaries.
 Native Degen/Swing entries now freeze selected-family identity through dispatch,
 closing attribution and entry/management costs; historical orders remain unchanged.
 Authentic provider, host and prospective evidence remain open.

@@ -87,3 +87,15 @@ enrollment/economics, target-host acceptance and dashboard visual acceptance rem
 separate gates. LIVE stays disabled, main and the deployed experiment stay untouched,
 and PR #1 remains draft. Exact installed verification is recorded in
 [SLICE2_STATUS.md](SLICE2_STATUS.md).
+
+## Optional family loss evidence
+
+The same native loss policy must be frozen across all comparison arms. Optional
+Degen/Swing family rules remain additive to each account's global loss guard.
+Closing snapshots now retain cumulative loss state, exact consumed-entry lineage,
+recognition times, entry pauses and reviewed-reset summaries. A lock in one arm
+cannot reset or lock another account. Session transitions do not clear locks or
+refund calls. The two-session fixture covers A/B/C/D preservation, including D's
+entry and management charges and later unpaid entry pauses.
+See [native risk export](OPTIONS_EVALUATION_EXPORT.md#native-loss-control-evidence)
+for validation, capacity and provenance limits.

@@ -458,6 +458,8 @@ async def run_replay_series(settings, tapes, directory):
                 c._replay_quotes, c._replay_underlyings = {}, {}
                 async with asyncio.timeout(900):
                     scheduling[h.session_key][arm] = await _ArmReplay(c, venue, tape, clock).run()
+                if c.engine.policy.loss_control is not None:
+                    c.engine.refresh_loss_control(now=clock[0])
                 boundary = home / "sessions" / (h.session_key + ".db")
                 _capture_boundary(c.engine.journal, boundary)
                 sources[h.session_key][arm] = {

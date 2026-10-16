@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.47. Adopted product direction and working delivery contract, 2026-10-16 UTC.
+Version 1.48. Adopted product direction and working delivery contract, 2026-10-16 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -87,6 +87,10 @@ family resets preserve account-wide and other-family guards, history and all cos
 Paid entry advice pauses when every stored candidate family is paused; mixed
 packets still face independent preparation/dispatch checks. This does not enable
 Scope or its family-scoped reset. Data/host costs remain in the session economic report.
+Enrolled replay owners now refresh risk before saving each closing snapshot.
+Native export retains audit-bound loss state, consumed-entry economics/lineage,
+entry pauses and reset receipts across independent A/B/C/D session boundaries.
+Portable reports bind policy and history while labeling this as stored evidence.
 Complete obstruction coverage, native full-cost loss/cooldown linkage and
 dispatch/management remain required
 before Scope execution.

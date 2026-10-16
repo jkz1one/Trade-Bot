@@ -15,6 +15,7 @@ from app.options.lifecycle import (
     OptionObservation,
     OptionReceipt,
 )
+from app.options.loss_evidence import LossControlEvidence
 from app.options.models import Money, Name, OptionLimits, OptionRecord, UnderlyingQuote
 from app.robinhood.schedule import XNYSCalendar
 
@@ -187,6 +188,7 @@ class ReplayCycle(OptionRecord):
 
 
 class ArmSession(OptionRecord):
+    loss_control: LossControlEvidence | None = Field(default=None, exclude_if=lambda v: v is None)
     arm: Arm
     session_key: Name
     definition_hash: Digest

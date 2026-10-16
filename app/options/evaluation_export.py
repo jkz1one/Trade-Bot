@@ -424,7 +424,45 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
             or any(not lower <= r.occurred_at <= session.closes_at for r in current_receipts)
         ):
             raise ValueError("Prior native rows missing from retained boundaries")
+        from app.options.loss_evidence import export_loss_control, validate_loss_boundary
+
+        loss = export_loss_control(
+            db,
+            definition.policy.loss_control,
+            definition.limits.population_id,
+            events,
+            boundary=session.closes_at + timedelta(seconds=5),
+        )
+        if loss is not None:
+            pauses = {}
+            for pause in loss.entry_pauses:
+                pauses.setdefault(pause.source_key, []).append(pause)
+            if not set(pauses) <= set(starts):
+                raise ValueError("Native risk pause cycle missing")
+            for cycle in cycle_rows:
+                if cycle["status"] != "COMPLETE":
+                    continue
+                outcome = _json(cycle["result_json"])
+                retained = pauses.get(cycle["cycle_key"], [])
+                if outcome.get("reason") == "ENTRY_MODEL_RISK_PAUSE":
+                    if (
+                        len(retained) != 1
+                        or outcome.get("status") != "HOLD"
+                        or outcome.get("blocker") != ";".join(retained[0].reasons)
+                        or retained[0].revision >= finishes[cycle["cycle_key"]][0]["sequence"]
+                        or cycle["cycle_key"] in call_keys
+                    ):
+                        raise ValueError("Native risk pause completion mismatch")
+                elif retained:
+                    raise ValueError("Native risk pause completion missing")
+        validate_loss_boundary(
+            loss,
+            definition.policy.loss_control,
+            session.closes_at + timedelta(seconds=5),
+            history[-1][1].loss_control if history else None,
+        )
         row = ArmSession(
+            loss_control=loss,
             arm=definition.arm,
             session_key=session.key,
             definition_hash=fingerprint(definition),

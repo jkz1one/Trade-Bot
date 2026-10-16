@@ -115,3 +115,41 @@ continuous cash/share report from the same tapes and A-approved opportunities.
 Optional `underlying_settlements` carry only that account's own explicit receipts;
 options-arm settlement and model charges remain separate. Missing share sizes
 never become assumed fills. See the contract for enrollment and cost fields.
+
+## Native loss-control evidence
+
+An enrolled arm now exports an optional `ArmSession.loss_control` record. It contains
+its frozen policy hash, last stored account/family risk state, cumulative consumed
+entry identities and economic hashes, family lineage when enrolled, recognition
+times, entry-model pause reasons
+and applied reset summaries. Accounts remain independent. Non-enrolled historical
+rows omit this field, preserving their existing serialized shape and hashes.
+
+The read-only exporter checks enrollment against the manifest, the latest risk
+state against its audit event, and each consumed outcome against current verified
+native fills, settlement, execution fees and attributable entry/management costs.
+Missing/changed outcomes or unknown costs cannot support an already consumed loss.
+Family counts must agree with exact entry lineage. Reset summaries require matching
+applied operator audit and stored receipts. Pause summaries retain their original
+input hash and event revision; completed coordinator pauses must match the HOLD
+receipt and have no charged call. No missing evidence becomes a zero charge.
+
+Each saved boundary retains cumulative risk evidence. Later exports must preserve
+the earlier consumed outcomes, pauses and resets without rewriting or removing a
+prefix. The portable evaluator binds enrollment, policy, family shape, timing and
+continuity, and exposes `stored_loss_control` alongside each arm's session economics.
+Missing enrolled evidence makes that arm inconclusive. A correctly recorded lock
+is a valid research outcome; it does not by itself make cash accounting incomplete.
+
+This is **stored evidence**, with an explicit last-review time. Export does not
+refresh a stale risk state, sign or apply a reset, admit an entry, or attach execution
+authority. Portable structure checks are not a replay of every risk decision or
+independent verification of an operator signature. As with the rest of native
+export, an audit/database pair is not an external witness against coordinated
+rewriting. The economic conclusion remains INCONCLUSIVE.
+
+The existing 200 consumed-entry and 10,000 audit-event native limits still apply.
+The cumulative evidence additionally bounds entry pauses to 6,000 and reset
+summaries to 1,000; the entire comparison remains bounded to 16 MiB. Exceeding a
+bound fails export without truncating history. Data/host costs remain separately
+allocated session costs; the operational loss basis is not relabeled as all-in ROI.

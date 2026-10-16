@@ -144,35 +144,7 @@ def refresh(engine, db, now, *, exclude=None):
             raise ExecutionBlocked("NATIVE_LOSS_FUTURE_OUTCOME")
         # A later attempt or unrelated cost may add diagnostic context; bind the
         # economic outcome and its exact attributed calls/fills/settlements only.
-        record = {
-            key: outcome[key]
-            for key in (
-                "entry_client_id",
-                "population_id",
-                "closed_at",
-                "outcome",
-                "entry_quantity",
-                "exit_quantity",
-                "settlement_quantity",
-                "entry_premium",
-                "exit_premium",
-                "settlement_cash",
-                "execution_fees",
-                "known_model_cost",
-                "net_after_known_execution_and_model_costs",
-                "model_calls",
-                "fill_ids",
-                "settlements",
-            )
-        }
-        if policy.families:
-            from app.options.lifecycle import EntryLineage
-
-            if "entry_lineage" not in outcome:
-                raise ExecutionBlocked("NATIVE_FAMILY_LINEAGE_REQUIRED")
-            record["entry_lineage"] = EntryLineage.model_validate(
-                outcome["entry_lineage"]
-            ).model_dump(mode="json")
+        record = outcome_record(outcome, policy)
         digest = fingerprint(record)
         prior = saved.get(intent.client_id)
         if prior and (
@@ -405,3 +377,37 @@ def reset_reviewed(engine, db, command, now):
             "state": state.model_dump(mode="json"),
         },
     )
+
+
+def outcome_record(outcome, policy):
+    """Canonical economic record shared by owned consumption and read-only export."""
+    record = {
+        key: outcome[key]
+        for key in (
+            "entry_client_id",
+            "population_id",
+            "closed_at",
+            "outcome",
+            "entry_quantity",
+            "exit_quantity",
+            "settlement_quantity",
+            "entry_premium",
+            "exit_premium",
+            "settlement_cash",
+            "execution_fees",
+            "known_model_cost",
+            "net_after_known_execution_and_model_costs",
+            "model_calls",
+            "fill_ids",
+            "settlements",
+        )
+    }
+    if policy.families:
+        from app.options.lifecycle import EntryLineage
+
+        if "entry_lineage" not in outcome:
+            raise ExecutionBlocked("NATIVE_FAMILY_LINEAGE_REQUIRED")
+        record["entry_lineage"] = EntryLineage.model_validate(outcome["entry_lineage"]).model_dump(
+            mode="json"
+        )
+    return record

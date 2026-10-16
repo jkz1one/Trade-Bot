@@ -1,5 +1,65 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 native loss evidence in session replay/export: 2026-10-16 UTC
+
+Enrolled A/B/C/D owners now refresh loss controls after final session reconciliation
+and before saving each independent boundary. A final completed trade is recognized
+even without another entry cycle. Streaks, recognition-time cooldowns and sticky
+account/family locks persist into the next session; no automatic reset is issued.
+Pending outcomes and unknown costs remain pending. Cash, settlements and every
+entry/management charge retain their existing independent accounting.
+
+`ArmSession.loss_control` now records the frozen policy hash, last stored risk
+state, cumulative consumed-entry economic hashes and exact family lineage,
+recognition times, entry-model pauses and applied reset summaries. Native export
+recomputes consumed economics from current verified fills/settlements/costs and
+checks state, consumption and reset audit/receipt consistency. Completed model
+pauses must match their HOLD receipt without a charged call. Read-only export does
+not refresh risk or attach owner authority. Historical unenrolled rows omit the field.
+
+The portable evaluator checks enrollment, policy/family shape, time bounds and
+cumulative history continuity, and shows `stored_loss_control` beside full session
+economics. A valid lock remains a valid accounting outcome; missing enrolled risk
+evidence makes the arm inconclusive. These are stored-evidence checks, not independent
+signature verification, replay of every historical risk decision or an external
+witness against coordinated database/audit rewriting. Data/host costs stay separate;
+this operational loss basis is not all-in return or profitability acceptance.
+
+Fresh GitHub baseline: `ab1dc3c5c24f4561575b151bc95e66061079a117`, tree
+`44568f6449e45443e1a48cf3fcf7b349fbfcbbc4`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Source loss/family/evaluator regressions: **87 passed in 33.64s**.
+- New source evidence and two-session shared A/B/C/D replay cases:
+  **14 passed in 265.32s**. The replay checks overnight lock persistence,
+  independent entries/cash, retained D entry/management charges, unpaid later
+  pauses, exact saved state and portable history rejection. Direct native cases
+  cover stale/missing/changed risk evidence, family counts, reset receipts and
+  read-only behavior. Two additional saved-boundary cases check pause-completion
+  linkage and rejection when a consumed management charge becomes unknown.
+  All three saved-boundary checks (including exact final recognition time) pass
+  against the completed installed replay without rerunning the simulation.
+- Installed loss/evidence/evaluator/export/multi-session/managed/comparison suites:
+  **204 passed in 834.17s**, with warnings treated as errors. The two added
+  corruption cases and final-recognition assertion also pass against that run
+  through the saved-boundary checks above; the final copied test file matches source.
+- Source/wheel/installed changed modules match. Scoped lint/format, dependency
+  consistency, whitespace and 429 local documentation links pass.
+- Wheel SHA-256: `88c2f32662f6ef43c06d3168669edea26e30baf61d73e54431549378e312f1d9`.
+  Artifacts/logs beside checkout: `loss-export-env`, `loss-export-dist`,
+  `loss-export-proof`, `loss-export-source.log`, `loss-export-new-source.log`,
+  `loss-export-installed-tests.log`, `loss-export-saved-boundary-tests.log`.
+
+Scope full-path proof and native watch/order/family-loss linkage, Scope management/
+runtime/replay, authentic provider/calendar/host acceptance and the dedicated
+UI desktop/mobile visual pass remain open. Main untouched, PR draft, LIVE disabled
+and deployed experiment frozen. No authentic provider/model/broker call, dependency,
+host unit or deployment changed.
+
+---
+
 ## P7 independent Degen/Swing loss controls: 2026-10-16 UTC
 
 New native PAPER cohorts can optionally freeze separate Degen/Swing loss thresholds

@@ -156,3 +156,13 @@ families, all economics and any global halt. Omitting the target resets only the
 account-wide lock, leaving family locks intact. The target is signature-bound and
 recorded in the atomic audit/receipt; replay cannot apply it twice. A target on
 HALT, RESUME or REVOKE_KEY is invalid. No reset grants trading or LIVE authority.
+
+## Session replay and export
+
+Enrolled replay owners now refresh risk after final session reconciliation and
+before saving their independent boundary snapshots. Complete final trades are
+consumed even when no later entry cycle occurs; unknown outcomes remain pending.
+The [read-only exporter](OPTIONS_EVALUATION_EXPORT.md#native-loss-control-evidence)
+retains cumulative state, exact consumed economics/lineage hashes, pause events
+and reset receipts. Export itself never refreshes or resets risk. Later sessions
+must preserve prior risk evidence, and portable reports label it as stored state.
