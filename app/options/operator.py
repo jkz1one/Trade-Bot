@@ -119,6 +119,7 @@ class OptionsControl:
                         "UPDATE execution_operator SET revoked=1,generation=generation+1 WHERE id=1"
                     )
             result = {
+                **({"loss_family": command.loss_family} if command.loss_family is not None else {}),
                 "status": "REJECTED" if reason else "APPLIED",
                 "command_id": command.command_id,
                 "action": command.action,

@@ -16,6 +16,9 @@ class OptionsCommand(OptionRecord):
     credential_generation: int = Field(ge=1, strict=True)
     actor: str = Field(min_length=1, max_length=80)
     action: Literal["HALT", "RESUME", "REVOKE_KEY", "RESET_LOSS_LOCK"]
+    loss_family: Literal["DEGEN", "SWING"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     reason: str = Field(min_length=1, max_length=300)
     expected_revision: int = Field(ge=0, le=2**63 - 1, strict=True)
     issued_at: datetime
@@ -30,6 +33,8 @@ class OptionsCommand(OptionRecord):
 
     @model_validator(mode="after")
     def lifetime(self):
+        if self.loss_family is not None and self.action != "RESET_LOSS_LOCK":
+            raise ValueError("A family target is valid only for a loss reset")
         if not 0 < (self.expires_at - self.issued_at).total_seconds() <= 300:
             raise ValueError("Positive command lifetime of at most five minutes required")
         return self

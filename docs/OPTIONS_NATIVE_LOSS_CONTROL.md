@@ -8,8 +8,9 @@ settings, not approved LIVE limits.
 
 This is an **account-wide common-engine guard**, a foundation for Scope integration.
 It applies to every native entry in its explicitly enrolled population, including
-shared Degen/Swing entries. It does not label trades as Scope or replace future
-family-specific controls. Independent populations retain separate state. Existing
+shared Degen/Swing entries. It does not label trades as Scope. Optional Degen/Swing
+family controls below add stricter independent checks. Independent populations
+retain separate state. Existing
 cohorts omit the field and retain their original serialized configuration; policy
 cannot be added, removed or changed on reopen. No existing cohort is enrolled.
 
@@ -111,6 +112,47 @@ refunded; the existing preparation/dispatch checks remain authoritative afterwar
 Unenrolled cohorts preserve their existing model-admission behavior.
 
 The [Scope research entry guard](OPTIONS_SCOPE_OWNED_ADMISSION.md#native-execution-boundary)
-remains in force. Watch/order association, family-scoped consumption/reset,
+remains in force. Scope watch/order association and Scope family-scoped consumption/reset,
 complete path coverage, Scope dispatch/runtime/replay and dashboard controls remain
 open. LIVE stays disabled and the deployed experiment stays frozen.
+
+## Optional Degen/Swing family controls
+
+New cohorts can additionally freeze `NativeLossPolicy.families` with up to two
+unique `FamilyLossPolicy` entries: `DEGEN` and `SWING`. Each has a loss threshold
+of one or two and a cooldown of 1,800–86,400 seconds. Omitted families preserve
+legacy serialization. Adding or changing family enrollment requires a new cohort;
+Scope is not a supported family here and its research-only entry guard remains.
+
+The account-wide guard still applies to every entry. Each enrolled family also
+has its own consumed-entry count, consecutive-loss count, recognition-time cooldown
+and sticky lock. A Swing WIN/FLAT cannot clear Degen's streak or lock. Complete
+outcomes carry the verified selected-entry lineage in their stored/hash-bound
+records, with all attributable entry/management model charges and execution fees.
+Unknown costs still block consumption. Accounts never share state. Data/host costs
+remain in session economics, outside this operational outcome basis.
+
+All new entries in a family-enrolled cohort require stored selected-candidate
+lineage, including entries from a family without an additional rule. Preparation
+and dispatch refresh the global guard and then enforce the selected family's
+pause. Direct unlabeled entries cannot bypass family review. HOLD, owned CLOSE,
+validated paid management and independent protection retain their normal gates.
+
+Before paid entry reasoning, the owner requires a valid stored candidate set and
+pauses when every candidate family is locked or cooling down. A mixed packet with
+an unpaused family may proceed unchanged. The model can still choose a paused
+family: preparation rejects that choice and the call's cost remains recorded.
+This is not candidate filtering or a promise that every paid call yields a trade.
+No model worker or unknown-cost row is started for a family pause.
+
+A signed `RESET_LOSS_LOCK` may now specify `loss_family=DEGEN` or `SWING` (CLI:
+`--loss-family DEGEN`). It uses the same exact-revision, signature, fresh flat
+account, known-cost, positive budget and idle-runtime checks as account recovery.
+The selected family must already be locked and its cooldown must have elapsed.
+The owner revalidates all consumed outcomes; new outcomes require another review.
+A family reset clears only that family's streak and lock, retaining its consumed
+history and expired cooldown timestamp, the account-wide lock/cooldown, other
+families, all economics and any global halt. Omitting the target resets only the
+account-wide lock, leaving family locks intact. The target is signature-bound and
+recorded in the atomic audit/receipt; replay cannot apply it twice. A target on
+HALT, RESUME or REVOKE_KEY is invalid. No reset grants trading or LIVE authority.

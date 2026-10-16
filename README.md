@@ -85,6 +85,8 @@ Opt-in Scope path review now adds completed SPX opening-range levels, confirmed
 pivots and exact session VWAP; full unobstructed-path proof remains open.
 The stored observer now displays Scope research watches, arming and sizing, with
 explicit expired-evidence labels and no order authority.
+Optional new-cohort Degen/Swing loss controls now add independent family streaks,
+cooldowns and signed targeted resets while retaining account-wide guards and costs.
 Native Degen/Swing entries now freeze selected-family identity through dispatch,
 closing attribution and entry/management costs; historical orders remain unchanged.
 Authentic provider, host and prospective evidence remain open.

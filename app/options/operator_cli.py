@@ -52,7 +52,7 @@ def review(journal, population_id, key_file, *, now):
         }
 
 
-def submit(journal, review_file, key_file, action, actor, reason, *, now, ttl=60):
+def submit(journal, review_file, key_file, action, actor, reason, *, now, ttl=60, loss_family=None):
     journal = Path(journal)
     if not journal.is_absolute():
         raise ValueError("Absolute journal required")
@@ -77,6 +77,7 @@ def submit(journal, review_file, key_file, action, actor, reason, *, now, ttl=60
         command_id=uuid4().hex,
         actor=actor,
         action=action,
+        loss_family=loss_family,
         reason=reason,
         expected_revision=saved["revision"],
         issued_at=now,
@@ -113,6 +114,7 @@ def main(argv=None):
     send.add_argument(
         "--action", choices=["HALT", "RESUME", "REVOKE_KEY", "RESET_LOSS_LOCK"], required=True
     )
+    send.add_argument("--loss-family", choices=["DEGEN", "SWING"])
     send.add_argument("--actor", required=True)
     send.add_argument("--reason", required=True)
     send.add_argument("--ttl", type=int, default=60)
@@ -135,6 +137,7 @@ def main(argv=None):
                 args.reason,
                 now=at,
                 ttl=args.ttl,
+                loss_family=args.loss_family,
             )
     except (OSError, ValueError, KeyError, TypeError, sqlite3.Error):
         print(

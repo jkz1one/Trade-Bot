@@ -76,7 +76,13 @@ an existing threshold lock, expired cooldown, revalidated complete outcomes,
 fresh flat account/supervision, no working order or active runtime task, known costs,
 and remaining daily/total loss budgets. It clears only the loss lock/streak, retaining
 consumed history, all costs, global limits and any global halt. RESUME cannot replace
-this action; RESET_LOSS_LOCK cannot replace RESUME. Scope family reset remains open.
+this action; RESET_LOSS_LOCK cannot replace RESUME.
+For a newly enrolled Degen/Swing family policy, add `--loss-family DEGEN` or
+`--loss-family SWING` to reset only that family after its cooldown. The target is
+signed and retained in the receipt. Account-wide limits/lock, other family locks,
+all economic history and any global halt remain intact. Omitting the target
+resets only the account-wide lock and leaves family locks intact. Scope family
+reset remains open.
 
 RESUME checks the exact reviewed event revision and uses the same engine recovery
 gate inside one authenticated fenced transaction. It requires fresh RUNNING

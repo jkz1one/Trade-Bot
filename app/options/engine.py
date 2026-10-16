@@ -469,7 +469,7 @@ class OptionExecution:
                 reject_unlinked_scope_entry(db, proposal)
                 from app.options.loss_control import guard_entry
 
-                guard_entry(self, db, proposal, now)
+                guard_entry(self, db, proposal, now, source_key=source_key, quote=quote)
                 review_shared_entry(self, db, source_key, proposal, quote, underlying, now)
                 if proposal.action == "OPEN_LONG" and quote is not None:
                     from app.options.entry_lineage import selected_lineage
@@ -671,7 +671,15 @@ class OptionExecution:
                 reject_unlinked_scope_entry(db, proposal)
                 from app.options.loss_control import guard_entry
 
-                guard_entry(self, db, proposal, now, exclude=client_id)
+                guard_entry(
+                    self,
+                    db,
+                    proposal,
+                    now,
+                    exclude=client_id,
+                    source_key=intent.source_key,
+                    quote=quote,
+                )
                 review_shared_entry(self, db, intent.source_key, proposal, quote, underlying, now)
                 account = self._account(db, now, exclude=client_id, closing=intent.side == "SELL")
                 result = admit_option(
@@ -1303,11 +1311,14 @@ class OptionExecution:
         blocked = None
         with self.journal.write() as db:
             if position_request is None and self.policy.loss_control is not None:
-                from app.options.loss_control import refresh
+                from app.options.loss_control import model_family_reasons, refresh
 
                 state = refresh(self, db, now)
-                if state["reasons"]:
-                    blocked = ";".join(state["reasons"])
+                reasons = list(state["reasons"]) or model_family_reasons(
+                    self, db, source_key, state
+                )
+                if reasons:
+                    blocked = ";".join(reasons)
                     self.journal.event(
                         db,
                         now,
@@ -1315,7 +1326,7 @@ class OptionExecution:
                         {
                             "source_key": source_key,
                             "input_hash": input_hash,
-                            "reasons": state["reasons"],
+                            "reasons": reasons,
                         },
                     )
             if blocked is None:

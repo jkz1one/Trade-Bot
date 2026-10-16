@@ -1,5 +1,62 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 independent Degen/Swing loss controls: 2026-10-16 UTC
+
+New native PAPER cohorts can optionally freeze separate Degen/Swing loss thresholds
+and recognition-time cooldowns in addition to the account-wide guard. Complete
+outcomes retain exact selected-entry lineage and every attributable entry/management
+charge and execution fee. A win in one family cannot clear another family's streak;
+locks persist across cooldown expiry and restart. Accounts retain independent state.
+Unknown usage still blocks outcome consumption; data/host costs remain session-level.
+
+Preparation and dispatch enforce both account-wide and selected-family pauses.
+Family-enrolled cohorts reject unlabeled entries. Paid entry admission pauses before
+creating a call when all stored candidate families are paused, or valid candidates
+are absent. Mixed packets may proceed unchanged, but a paused selected family still
+fails preparation and its call cost remains recorded. Validated owned management,
+ordinary closes and independent protection retain their existing gates and charges.
+
+The signed local `RESET_LOSS_LOCK` envelope/CLI now accepts an optional DEGEN/SWING
+target. Exact revision, fresh flat account, known costs, remaining budgets, idle
+runtime, verified history and expired target cooldown are required. Only the target
+streak/lock clears; account-wide/other-family locks and all economic history survive.
+Omitting the target preserves the existing account-wide reset and leaves family
+locks intact. Signature binding, audit/receipt atomicity and read-only replay remain.
+Existing frozen cohorts retain omitted-field serialization and cannot be migrated.
+Scope family enrollment/reset and executable watch/order linkage remain open.
+
+Fresh GitHub baseline: `82c6df2e6b3973174ad0712dae0f667628b0f6bd`, tree
+`f7452420055f72c66c8045f777e54988fb9a988d`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- 23 new source cases pass: independent streaks, cross-family wins, global/family
+  reset isolation, separate accounts, signed CLI/inbox delivery, tampering,
+  stale/cooldown rejection, replay, atomic rollback, dispatch recheck, model pauses,
+  mixed packets, malformed candidates, frozen reopen and full-cost management.
+  Seeded candidate fixtures test native risk/lineage, not new Swing setup acceptance;
+  the management cases also exercise the real coordinator with a fixture model.
+- One initial fixture exhausted settled cash after repeated large entries; reducing
+  its proposed debit preserved settlement rules and isolated the intended check.
+- Installed family/loss/operator/lineage/management/observer/Scope-boundary suites:
+  **229 passed in 127.69s**, with warnings treated as errors. An initial isolated
+  collection used the tests directory instead of its parent on the import path;
+  the corrected run loads the copied fixtures and matching installed package.
+- Source/wheel/installed changed modules and copied new tests match. Scoped
+  lint/format, dependency consistency, whitespace and 426 local documentation links pass.
+- Wheel SHA-256: `951f9d4fef7f97a42ddc69f9033ff752e810758c5ab69ca9aef0bf5d6b999227`.
+  Artifacts/logs beside checkout: `family-loss-env`, `family-loss-dist`,
+  `family-loss-proof`, `family-loss-new-source2.log`, `family-loss-installed-tests2.log`.
+
+Full Scope path proof, native watch/order linkage, Scope family loss/reset,
+management and runtime/replay remain open, alongside authentic provider/calendar/
+host acceptance and the dedicated dashboard/desktop/mobile visual pass. Main
+untouched, PR draft, LIVE disabled and deployed experiment frozen. No authentic
+provider/model/broker call, dependency, host unit or deployment changed.
+
+---
+
 ## P7 native strategy entry lineage: 2026-10-16 UTC
 
 New native buys from stored selected opportunities now freeze the strategy family,

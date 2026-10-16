@@ -25,10 +25,25 @@ TERMINAL = {"FILLED", "CANCELED", "REJECTED", "EXPIRED"}
 CALENDAR_SOURCE = "XNYS_REGULAR_INTERSECTION_V1"
 
 
+class FamilyLossPolicy(OptionRecord):
+    family: Literal["DEGEN", "SWING"]
+    max_consecutive_losses: int = Field(strict=True, ge=1, le=2)
+    cooldown_seconds: int = Field(strict=True, ge=1800, le=86400)
+
+
 class NativeLossPolicy(OptionRecord):
     version: Literal["native-position-loss-v1"] = "native-position-loss-v1"
     max_consecutive_losses: int = Field(strict=True, ge=1, le=2)
     cooldown_seconds: int = Field(strict=True, ge=1800, le=86400)
+    families: tuple[FamilyLossPolicy, ...] = Field(
+        default=(), max_length=2, exclude_if=lambda v: not v
+    )
+
+    @model_validator(mode="after")
+    def distinct_families(self):
+        if len({p.family for p in self.families}) != len(self.families):
+            raise ValueError("Distinct frozen family loss policies required")
+        return self
 
 
 class OptionExecutionPolicy(OptionRecord):
