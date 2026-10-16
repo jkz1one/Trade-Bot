@@ -1,5 +1,50 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 stored Scope research observer: 2026-10-16 UTC
+
+The options observer now exposes enrolled Scope research watches instead of labeling
+Scope unimplemented. The authenticated API and HTML show stored call state, exact
+contract/geometry, arming samples and fee-inclusive admission results. Research
+records remain separate from native opportunities, positions, orders and fills.
+Independent account ownership and existing entry/management cost reporting remain
+unchanged; no review becomes an executable approval.
+
+The latest 25 watches have explicit total/truncation metadata. The active record is
+retrieved separately, independent of opportunity filters and pagination. Recorded
+status/eligibility stay historical while separate time labels identify future
+records, passage of the entry cutoff and expired arming/admission validity. Reads
+never expire/reset watches, refresh evidence, run scanners or open an execution
+owner. Malformed/boundedness failures and conflicting selected identities fail
+closed. This projection is not a full action-history audit or fresh path review.
+
+Fresh GitHub baseline: `e86eafe342c4d9cb8cbaefd3a1cd1ab5f9d18674`, tree
+`4bfb4c1077616cfb3327e55d930cff7cbbb5a04a`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Source Scope-observer and existing observer suites: **73 passed in 10.17s**,
+  including 20 new cases for enrollment, CALL/PUT sizing, expired/future records,
+  history bounds, immutable reads, malformed evidence and authenticated HTML/API.
+  Initial run exposed string timestamps being passed to the datetime-only engine
+  clock. The projection now explicitly decodes and validates stored timestamps;
+  numeric, missing and timezone-naive timestamps return unavailable.
+- Non-editable installed wheel, all Scope suites plus common admission and existing
+  observer suites, warnings treated as errors: **801 passed in 40.12s**.
+- Source/wheel/installed modules and HTML template match; changed copied tests match.
+  Scoped lint/format, dependency consistency, whitespace and 425 local documentation
+  links pass. Desktop/mobile browser visual acceptance remains open.
+- Wheel SHA-256: `0d090d51cfbf303c55617752e0901c47b2b5c87639930e880b6b68fbf7c7537b`.
+  Artifacts/logs beside checkout: `scope-observer-env`, `scope-observer-dist`,
+  `scope-observer-proof`, `scope-observer-source*.log`, `scope-observer-installed-tests.log`.
+
+Full path proof, native Scope watch/order and family-loss linkage, family reset,
+management/runtime/replay and authentic provider/calendar/host acceptance remain
+open. Main untouched, PR draft, LIVE disabled and deployed experiment frozen.
+No authentic provider/model/broker call, dependency, host unit or deployment changed.
+
+---
+
 ## P7 completed SPX structural path checks: 2026-10-15 UTC
 
 New frozen Scope quality policies can opt into `completed-spx-levels-v1`.

@@ -83,6 +83,8 @@ Scope's stored sizing review now applies the approved ask-price quantity tiers
 through the common governor, retaining stricter account limits and all fees.
 Opt-in Scope path review now adds completed SPX opening-range levels, confirmed
 pivots and exact session VWAP; full unobstructed-path proof remains open.
+The stored observer now displays Scope research watches, arming and sizing, with
+explicit expired-evidence labels and no order authority.
 Authentic provider, host and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.

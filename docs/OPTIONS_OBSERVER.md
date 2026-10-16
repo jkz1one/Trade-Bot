@@ -34,8 +34,41 @@ The API and page accept `limit=1..100`, an optional positive `before` row ID and
 `family=ALL|DEGEN|SWING|SCOPE`. History is newest first. Older-page selection does
 not change the current-position projection. Latest HTML can opt into `refresh=true`
 for a 30-second refresh; historical pages never auto-refresh. Refresh only reads.
-Swing shows its explicit shared session-close enrollment; Scope remains
-unimplemented, with no invented opportunity rows.
+Swing shows its explicit shared session-close enrollment. Scope now shows stored
+research enrollment and watches in a separate section, with no invented opportunity,
+order or fill rows.
+
+## Scope research visibility
+
+The report's `scope` section reads the same owned population and SQLite snapshot.
+Absent enrollment is `NOT_ENROLLED`; a valid watch enrollment is `RESEARCH_ONLY`.
+Incomplete tables, missing policy, owner mismatches, malformed or oversized JSON,
+invalid timestamps and conflicting selected watch identities/statuses make the
+report unavailable. Policy, frame, choice, geometry and admission data use their
+existing validators. This is a bounded stored projection, not a replay or audit of
+every historical action, and it grants no execution or restore authority.
+
+The latest 25 stored watches appear newest first by session and insertion order.
+The total count and truncation flag are explicit. The active record is fetched
+separately so it cannot disappear beyond that history limit. Opportunity-family
+filters and older-opportunity pages do not change this current research snapshot.
+The HTML shows the research section whenever Scope is enrolled, including when no
+calls exist. The authenticated API retains exact geometry and full stored admission
+results, including debit, full-premium loss and reserved exit fees. Existing account,
+entry/management costs, orders and fills remain separate and unchanged.
+
+`recorded_status` and `recorded_eligible` describe saved evidence only. A watch is
+not expired or reset by reading it. Separate labels show future timestamps, passage
+of the entry cutoff and expiry of recorded arming/admission validity. Equality with
+the validity deadline is expired. `WITHIN_RECORDED_WINDOW` describes only time bounds,
+not fresh data, account eligibility or permission to act. An unfinished hold has no
+invented sizing result. Earlier eligibility remains historical after a later arming
+reset; neither is executable authority. No scanner, owner, venue, model or network
+operation is started by this projection. Native Scope execution remains blocked.
+
+The same authenticated GET-only API/page and private bounded database restrictions
+apply. No new controls, background collector or host service are introduced.
+Desktop/mobile browser visual acceptance remains open.
 
 ## Evidence and uncertainty
 

@@ -107,9 +107,13 @@ state comes from `snapshot()`. Reads never refresh or approve old evidence.
 A rejected or successful review does not consume another called play or change
 cash, cost records, fills or account reservations. Independent accounts remain
 independent. Native order/position linkage, full-cost loss/cooldown/reset controls,
-complete obstruction coverage, Scope runtime/replay/observer and authentic
+complete obstruction coverage, Scope runtime/replay and authentic
 provider/model/calendar/host acceptance remain open. Convexity remains blocked
 without complete path evidence.
+
+The [stored observer](OPTIONS_OBSERVER.md#scope-research-visibility) now displays
+research watch, arming and sizing evidence, retaining all stored admission costs
+and separate expired-validity labels. It does not refresh or approve that evidence.
 
 See [contract profiles](OPTIONS_SCOPE_CONTRACTS.md), [arming](OPTIONS_SCOPE_ARMING.md),
 [watch lifecycle](OPTIONS_SCOPE_WATCHES.md) and [status](SLICE2_STATUS.md).

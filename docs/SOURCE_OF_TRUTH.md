@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.44. Adopted product direction and working delivery contract, 2026-10-15 UTC.
+Version 1.45. Adopted product direction and working delivery contract, 2026-10-16 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -58,6 +58,9 @@ spread, observed-delta and liquidity gates with optional frozen watch integratio
 common-governor sizing from fresh armed evidence and the authoritative owned account.
 Fresh reviews now enforce the approved executable-ask quantity tiers (4/3/2/1)
 through that governor, preserving stricter owner limits and every entry/exit fee.
+The [stored observer](OPTIONS_OBSERVER.md#scope-research-visibility) now shows
+Scope research watches, arming and fee-inclusive sizing with separate stale-time
+labels; reads never refresh evidence or grant execution authority.
 The common engine now blocks generic OPEN_LONG preparation and dispatch for these
 research cohorts while preserving HOLD and owned/protective exits.
 [Stored native position outcomes](OPTIONS_POSITION_OUTCOME.md) now reconstruct

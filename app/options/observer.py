@@ -26,6 +26,7 @@ from app.options.lifecycle import (
     OptionVenueSnapshot,
 )
 from app.options.models import Name, OptionLimits
+from app.options.scope_observer import stored_scope
 from app.options.selection import parse_candidate
 
 MAX_DATABASE_BYTES = 64 * 1024 * 1024
@@ -172,6 +173,7 @@ class OptionObserver:
         policy = OptionExecutionPolicy.model_validate(config["policy"])
         if limits.population_id != self.population_id:
             raise ValueError("Frozen population identity mismatch")
+        scope = stored_scope(db, tables, limits, now, _json)
         ledger = OptionLedger.model_validate(_json(c["ledger_json"]))
         snapshot = (
             OptionVenueSnapshot.model_validate(_json(c["snapshot_json"]))
@@ -334,6 +336,7 @@ class OptionObserver:
             "runtime": runtime,
             "operator": operator,
             "loss_control": loss_state(db),
+            "scope": scope,
             "account": {
                 "health": account_health,
                 "captured_at": snapshot.captured_at.isoformat() if snapshot else None,
@@ -392,7 +395,7 @@ class OptionObserver:
                     "SWING": "SESSION_CLOSE_FIXTURE"
                     if strategy and strategy.get("swing")
                     else "NOT_ENROLLED",
-                    "SCOPE": "NOT_IMPLEMENTED",
+                    "SCOPE": scope["status"],
                 },
             },
             "position": position,
