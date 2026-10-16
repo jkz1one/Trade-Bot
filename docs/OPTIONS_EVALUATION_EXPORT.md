@@ -60,6 +60,12 @@ The export checks:
   Complete closing evidence requires a complete snapshot at close through five
   seconds afterward, without unresolved reconciliation issues or foreign exposure.
   Snapshot/order/receipt coverage discrepancies keep closing evidence incomplete.
+  Target progress, tightened stops, exit latches and dynamic premium peaks are
+  management annotations, excluded from fill-derived ownership comparisons while
+  retained in the export. Frozen schedules, original protection, entry basis and
+  remaining lots are still checked. An open target-managed position exports as
+  inconclusive evidence with actual fees and costs; no closing valuation or net
+  return is invented. A working partial scale also retains its unresolved order.
 
 The source receipt contains its arm, audit revision, strategy hash and export
 content hash. It does not contain filesystem paths, credentials or execution

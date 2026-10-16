@@ -390,6 +390,7 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
                 "exit_reason",
                 "exit_required_at",
                 "supervision_issue",
+                "target_exit_stage",
             }
             from app.options.premium_trail import accounting_position
 

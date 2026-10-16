@@ -100,6 +100,8 @@ full costs and independent protective-exit precedence.
 scales from latched underlying targets and verified fills, retaining protected runners.
 Optional frozen target stops tighten protection after a touch and retain the tighter
 stop through rebounds, partial exits and restart, with all costs unchanged.
+Native export and portable replay retain open target-managed holdings and costs as
+inconclusive evidence, distinguishing saved target progress from actual fill accounting.
 [Executable premium trails](docs/OPTIONS_PREMIUM_TRAIL.md) now add frozen-owner
 bid-based protection using original completed entry cost, retained through scales
 and restart without discounting fees or model charges.

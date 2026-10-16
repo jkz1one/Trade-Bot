@@ -28,6 +28,7 @@ def _economic(ledger):
                 "exit_reason",
                 "exit_required_at",
                 "supervision_issue",
+                "target_exit_stage",
             },
         )
     return data

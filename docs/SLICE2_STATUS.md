@@ -1,5 +1,56 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P3/P7 target-managed open-boundary export: 2026-10-16 UTC
+
+Reproduced a concrete native export blocker against the prior installed wheel:
+a valid target touch saved `target_exit_stage=1` in the owner's ledger while the
+fill-derived venue position retained stage zero. Export raised
+`Native closing ownership mismatch` even though cash and holdings matched.
+The same annotation also prevented portable fill replay from matching its close.
+
+Native export and portable replay now exclude only target progress from their
+existing management-annotation comparisons. The full saved position still exports,
+including stage, tightened stop and premium peak. Frozen schedule terms, original
+protection, completed entry premium basis and remaining FIFO lots remain exact.
+Touched positions, partially filled scales and retained runners now retain their
+cash, execution fees and allocated costs as inconclusive evidence. Open holdings
+receive `OPEN_BOUNDARY_POSITION_UNVALUED`; working orders, missing cycles and unknown
+costs remain explicit. No mark, net return, close or settlement is invented.
+No execution, admission, account ownership or deployed policy changed.
+
+Fresh GitHub baseline: `d8da42606e6796fd06ad05cc52caa7d83bf00e9d`, tree
+`06dbc087114879e6d6a6ca18a3dec19cc0a0ff16`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Prior installed wheel: target-touch export regression **failed as expected**
+  with `Native closing ownership mismatch` (**2.74s**).
+- Fixed installed wheel: **11 passed in 9.30s**, covering CALL/PUT touches,
+  partial scale fills, retained runners, stop/peak retention, exact fees, read-only
+  export, unknown allocations and rejection of changed original terms.
+- Installed native/portable evaluation/export, Arm D managed replay, multi-session
+  continuity/settlement, target exits/stops and premium-trail regression: **220 passed
+  in 629.33s**, warnings treated as errors, outside the checkout against the
+  non-editable installed wheel. Includes all 11 new cases and independent A/B/C/D
+  entry/management cost attribution.
+- Both changed source/wheel/installed modules and the copied regression match.
+  Scoped lint/format, dependency consistency, whitespace and 245 local documentation
+  links pass.
+- Wheel SHA-256: `06ac113b06997d1f7861c34583104c91a29bbed9660d3bf968afcddd9d36c109`.
+  Artifacts/logs beside checkout: `target-export-env`, `target-export-dist`,
+  `target-export-proof`, `target-export-before.log`, `target-export-focused.log`,
+  `target-export-installed-tests.log` and `target-export-build.log`.
+
+This is fixture verification of incomplete-boundary handling. The targeted fixtures
+use native deterministic orders and intentionally sparse scheduler evidence; they
+cannot establish a complete paired session or prospective economics. Authentic
+provider/host evidence, remaining Scope integration and dedicated UI acceptance
+remain open. Main untouched, PR draft, LIVE disabled and deployed experiment frozen.
+No authentic provider/model/broker call, dependency, host unit or deployment changed.
+
+---
+
 ## P7 executable premium trailing protection: 2026-10-16 UTC
 
 New PAPER owners can explicitly enroll `premium_trail="executable-premium-v1"`.

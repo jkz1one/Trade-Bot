@@ -94,6 +94,16 @@ charge remains attributed to the original entry; unknown charges withhold comple
 economics. Independent accounts retain separate progress, cash, reservations and
 loss state. Sale proceeds require the existing explicit settlement evidence.
 
+Native session export and portable economic replay preserve the saved
+`target_exit_stage` but exclude it from fill-derived ownership comparisons. A target
+touch is management evidence; venue fills do not reconstruct it. Frozen schedule
+terms, remaining lots, original protection and completed entry premium basis still
+must match exactly. This allows touched positions, partially filled scale orders
+and retained runners to export with their actual cash and execution fees.
+`OPEN_BOUNDARY_POSITION_UNVALUED` still withholds a net return; unresolved orders,
+missing scheduler coverage and unknown model/data/host costs remain explicit.
+Export does not close, value or manage the remaining position.
+
 ## Optional frozen target stops
 
 New PAPER cohorts can additionally enroll
