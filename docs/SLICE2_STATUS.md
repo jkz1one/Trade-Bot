@@ -1,5 +1,57 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 native strategy entry lineage: 2026-10-16 UTC
+
+New native buys from stored selected opportunities now freeze the strategy family,
+setup, opportunity key, selected candidate ID and full candidate hash in both intent
+and approval. The owner derives this identity inside preparation. Dispatch verifies
+both copies and the original selected candidate before any attempt; changed,
+missing, duplicate or conflicting evidence rejects the order and releases its lock.
+Labels cannot be supplied through the proposal or inferred from a contract/thesis.
+
+Exact ordinary/protective/model close attribution inherits the buy's identity.
+Position outcomes and paid management advice, including MAINTAIN/TIGHTEN without
+an order, carry the same verified link and retain all entry/management charges and
+execution fees. Unknown/unallocated costs continue to suppress net outcomes;
+data/host costs remain session-level evidence. Independent accounts remain separate.
+
+Historical unlabeled intents and attribution omit the optional field and are not
+backfilled. Direct native orders with no stored selected opportunity remain
+unlabeled. Scope cannot be claimed through the Degen/Swing lineage contract, and its
+existing research-only preparation/dispatch guard remains enforced. This completes
+a prerequisite for exact family loss attribution; it does not enable family loss
+reset, Scope orders, new strategy enrollment or a deployment.
+
+Fresh GitHub baseline: `aa3d6564ec1572cc7e7020ed401310b90fff40fa`, tree
+`48ada20f9936dbb7453814604860efba5bbc7c80`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- 24 new cases cover Degen/Swing, CALL/PUT, deterministic/model selection, exact
+  closes, management charges, dispatch tampering, stored-history tampering and
+  historical omission. A source run initially used the prior installed isolated
+  worker, which could not decode the new intent; owner/worker now use the same
+  built release. A new hash test also compared different Python/JSON representations;
+  its corrected assertion checks identical prior fields and unchanged JSON encoding.
+- Installed replay/execution/attribution/management/loss/observer suites:
+  **352 passed in 792.94s**, with warnings treated as errors.
+- Installed Scope execution-boundary suite: **8 passed in 3.58s**.
+- Source/wheel/installed changed modules and copied new tests match. Scoped
+  lint/format, dependency consistency, whitespace and 426 local documentation links pass.
+- Wheel SHA-256: `ec4a5a244b792acfc8973a0068c4c4fc350670834239d3b0729b341416705be2`.
+  Artifacts/logs beside checkout: `entry-lineage-env`, `entry-lineage-dist`,
+  `entry-lineage-proof`, `entry-lineage-source*.log`, `entry-lineage-installed-tests.log`,
+  `entry-lineage-scope-boundary.log`.
+
+Full Scope path proof, native watch/order linkage, family loss/reset, management and
+runtime/replay remain open, alongside authentic provider/calendar/host acceptance
+and the dedicated dashboard/desktop/mobile visual pass. Main untouched, PR draft,
+LIVE disabled and deployed experiment frozen. No authentic provider/model/broker
+call, dependency, host unit or deployment changed.
+
+---
+
 ## P7 stored Scope research observer: 2026-10-16 UTC
 
 The options observer now exposes enrolled Scope research watches instead of labeling

@@ -85,6 +85,8 @@ Opt-in Scope path review now adds completed SPX opening-range levels, confirmed
 pivots and exact session VWAP; full unobstructed-path proof remains open.
 The stored observer now displays Scope research watches, arming and sizing, with
 explicit expired-evidence labels and no order authority.
+Native Degen/Swing entries now freeze selected-family identity through dispatch,
+closing attribution and entry/management costs; historical orders remain unchanged.
 Authentic provider, host and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.

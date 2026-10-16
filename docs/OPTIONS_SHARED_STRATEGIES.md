@@ -12,6 +12,13 @@ The user reinforced this shared-engine direction on October 12. It follows the
 existing one-trader contract in [the source of truth](SOURCE_OF_TRUTH.md), rather
 than creating a second autonomous Swing trader.
 
+New native entries now freeze their selected strategy/setup and candidate hash in
+intent and approval. Dispatch and stored attribution verify that identity; exact
+closes and management charges inherit it from the buy. See
+[frozen strategy entry identity](OPTIONS_POSITION_OUTCOME.md#frozen-strategy-entry-identity).
+Historical unlabeled orders remain unlabeled, and family loss/reset enforcement
+remains separate unfinished work.
+
 ## Delivered family and evidence
 
 `app.options.swing` defines `swing-next-session-v1`, an explicitly smaller

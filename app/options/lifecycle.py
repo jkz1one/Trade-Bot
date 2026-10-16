@@ -71,6 +71,17 @@ class PositionExitProtection(OptionRecord):
     position_revision: PositiveCount
 
 
+class EntryLineage(OptionRecord):
+    """Frozen selected-opportunity identity; never a caller-selected strategy label."""
+
+    version: Literal["native-entry-lineage-v1"] = "native-entry-lineage-v1"
+    family: Literal["DEGEN", "SWING"]
+    setup: Name
+    opportunity_key: Name
+    candidate_id: Name
+    candidate_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+
 class OptionIntent(OptionRecord):
     client_id: Name
     source_key: Name
@@ -89,6 +100,7 @@ class OptionIntent(OptionRecord):
     time_in_force: Literal["DAY"] = "DAY"
     entry_protection: EntryProtection | None = Field(default=None, exclude_if=lambda v: v is None)
     closing_entry_client_id: Name | None = Field(default=None, exclude_if=lambda v: v is None)
+    entry_lineage: EntryLineage | None = Field(default=None, exclude_if=lambda v: v is None)
 
     position_protection: PositionExitProtection | None = Field(
         default=None, exclude_if=lambda v: v is None
@@ -100,6 +112,10 @@ class OptionIntent(OptionRecord):
             raise ValueError("Distinct fresh approval and DAY-order deadlines required")
         if self.order_expires_at > self.instrument.contract.last_trading_at:
             raise ValueError("DAY order cannot outlive the exact contract trading instant")
+        if self.entry_lineage is not None and (
+            self.side != "BUY" or self.entry_lineage.opportunity_key != self.source_key
+        ):
+            raise ValueError("Entry lineage binds only its originating buy opportunity")
         if self.closing_entry_client_id is not None and (
             self.side != "SELL"
             or self.closing_entry_client_id == self.client_id

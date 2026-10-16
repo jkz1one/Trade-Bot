@@ -433,6 +433,7 @@ class OptionExecution:
                 return json.loads(old["result_json"])
             reason = None
             entry_review = None
+            lineage = None
             strategy_table = db.execute(
                 "SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_option_strategy'"
             ).fetchone()
@@ -470,6 +471,10 @@ class OptionExecution:
 
                 guard_entry(self, db, proposal, now)
                 review_shared_entry(self, db, source_key, proposal, quote, underlying, now)
+                if proposal.action == "OPEN_LONG" and quote is not None:
+                    from app.options.entry_lineage import selected_lineage
+
+                    lineage = selected_lineage(db, source_key, quote.instrument)
                 account = (
                     self._account(db, now, closing=proposal.action == "CLOSE")
                     if proposal.action != "HOLD"
@@ -580,6 +585,7 @@ class OptionExecution:
                         original_underlying_invalidation=stop,
                         thesis=proposal.thesis,
                         entry_protection=protection,
+                        entry_lineage=lineage,
                         closing_entry_client_id=ledger.position.entry_client_id
                         if proposal.action == "CLOSE"
                         else None,
@@ -590,6 +596,8 @@ class OptionExecution:
                         "account": account.model_dump(mode="json"),
                         "effective_limits": self._effective_limits().model_dump(mode="json"),
                     }
+                    if lineage is not None:
+                        approval["entry_lineage"] = lineage.model_dump(mode="json")
                     if intent.closing_entry_client_id is not None:
                         approval["closing_entry_client_id"] = intent.closing_entry_client_id
                     db.execute(
@@ -635,6 +643,9 @@ class OptionExecution:
             proposal = OptionProposal.model_validate(approval["proposal"])
             reason = None
             try:
+                from app.options.entry_lineage import verified_lineage
+
+                verified_lineage(db, intent, approval)
                 if (
                     intent.closing_entry_client_id is not None
                     or "closing_entry_client_id" in approval

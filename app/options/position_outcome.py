@@ -247,7 +247,11 @@ def native_position_outcome(db, entry_client_id, population_id):
     known_cost = sum((c.model_cost for c in calls if c.model_cost is not None), Decimal(0))
     gross = exit_cash + settlement_cash - entry_cash if closed else None
     net = gross - fees - known_cost if closed and not reasons else None
+    from app.options.entry_lineage import entry_lineage
+
+    lineage = entry_lineage(db, entry_client_id)
     return {
+        **({"entry_lineage": lineage.model_dump(mode="json")} if lineage is not None else {}),
         "population_id": limits.population_id,
         "entry_client_id": entry_client_id,
         "source_key": entry.source_key,

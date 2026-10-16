@@ -44,6 +44,37 @@ after the selected entry still makes its result incomplete. Orphan/mismatched fi
 and damaged proposal/approval/cost evidence are rejected. Reads preserve stored
 history and grant no execution authority.
 
+## Frozen strategy entry identity
+
+New native buys prepared from a stored selected opportunity now carry
+`entry_lineage`: the Degen/Swing family, exact setup, opportunity key, candidate ID
+and hash of the complete admitted candidate. The engine derives it inside its
+preparation transaction; callers cannot choose a family label. The identical record
+is retained in intent and approval. Exact instrument and admitted-contract identity
+must match. Missing/duplicate selected candidates or conflicting selection evidence
+cannot produce a lineage-bound order. Direct engine orders without a stored
+opportunity remain unlabeled rather than inheriting a family from a symbol or thesis.
+
+Before the first dispatch attempt, both copies and the stored selected candidate
+are rechecked. Changed selection, candidate evidence, instrument or approval rejects
+the prepared order and releases its active lock without a venue call. This adds no
+new submission or replacement path. Owner and isolated worker must use the same
+installed release to understand the new optional intent field.
+
+Stored order attribution and position outcomes validate the same binding. Ordinary,
+protective and model-managed exits inherit family identity through their exact
+buy-entry link. MAINTAIN/TIGHTEN advice without an order also inherits its owned
+entry's label. Every entry/management charge and execution fee remains accounted
+for by the existing outcome and independent-session export. Unknown/unallocated
+costs continue to withhold net results. Labels do not allocate unrelated HOLD costs
+or data/host charges to a position.
+
+Absent optional fields preserve old intent/attribution serialization; historical
+unlabeled orders are not backfilled from current opportunity records. A missing or
+mismatched half-link fails closed. Scope cannot be declared through this contract;
+its research-only native execution gate remains enforced. This is a prerequisite
+for verified family loss attribution, not family-scoped loss/reset enforcement.
+
 ## Native settlement attribution
 
 The outcome projection now replays the complete ordered native fill and receipt

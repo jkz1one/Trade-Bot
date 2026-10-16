@@ -7,11 +7,12 @@ from pydantic import Field
 
 from app.options.engine import exact, fingerprint
 from app.options.entry_reasoning import Digest
-from app.options.lifecycle import OptionFill, OptionIntent, OptionObservation
+from app.options.lifecycle import EntryLineage, OptionFill, OptionIntent, OptionObservation
 from app.options.models import Money, Name, OptionRecord
 
 
 class DecisionAttribution(OptionRecord):
+    entry_lineage: EntryLineage | None = Field(default=None, exclude_if=lambda v: v is None)
     execution_authority: Literal[False] = False
     role: Literal["DETERMINISTIC", "SELECTION", "ENTRY", "MANAGEMENT"]
     source_key: Name
@@ -47,6 +48,9 @@ def order_attribution(db, row):
 
     intent = OptionIntent.model_validate(_json(row["intent_json"]))
     approval = _json(row["approval_json"])
+    from app.options.entry_lineage import entry_lineage, verified_lineage
+
+    lineage = verified_lineage(db, intent, approval)
     obs = (
         OptionObservation.model_validate(_json(row["observation_json"]))
         if row["observation_json"]
@@ -104,7 +108,10 @@ def order_attribution(db, row):
             or intent.prepared_at < entry_intent.prepared_at
         ):
             raise ValueError("Stored exit entry identity mismatch")
+    if entry_id is not None:
+        lineage = entry_lineage(db, entry_id)
     return {
+        **({"entry_lineage": lineage.model_dump(mode="json")} if lineage is not None else {}),
         "origin": approval["origin"],
         "source_key": intent.source_key,
         "client_id": intent.client_id,
@@ -276,6 +283,12 @@ def decision_attribution(db, key, outcome, policy):
             or applied["status"] != "PREPARED"
         ):
             raise ValueError("Stored managed exit lineage mismatch")
+    if prefix == "position" and "entry_lineage" not in order:
+        from app.options.entry_lineage import entry_lineage
+
+        lineage = entry_lineage(db, packet.position.entry_client_id)
+        if lineage is not None:
+            order["entry_lineage"] = lineage.model_dump(mode="json")
     cost = Decimal(call["cost"]) if call and call["cost"] is not None else None
     if cost is not None:
         usage = _json(call["usage_json"])
