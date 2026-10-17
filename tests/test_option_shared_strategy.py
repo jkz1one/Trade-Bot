@@ -151,7 +151,7 @@ def shared_frame(right="CALL", item=None):
 
 
 @contextmanager
-def owner(path, right="CALL", *, ai=False, priority=("SWING", "DEGEN")):
+def owner(path, right="CALL", *, ai=False, priority=("SWING", "DEGEN"), lifecycle=None):
     _, limits, execution = configuration(
         right, **({"cost_policy": CostPolicy(total_budget="1", daily_budget=".1")} if ai else {})
     )
@@ -179,7 +179,7 @@ def owner(path, right="CALL", *, ai=False, priority=("SWING", "DEGEN")):
             selection,
             clock=lambda: times[0],
             create=True,
-            swing_policy=swing_policy(family_priority=priority),
+            swing_policy=swing_policy(family_priority=priority, unfilled_lifecycle=lifecycle),
             **kwargs,
         )
         yield c, venue, times

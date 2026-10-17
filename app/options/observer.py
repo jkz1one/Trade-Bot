@@ -571,7 +571,15 @@ class OptionObserver:
                 scan_family = "SWING" if isinstance(scan, SwingScan) else "DEGEN"
                 if family in {"ALL", scan_family}:
                     observations.extend(
-                        {"symbol": scan.symbol, **o.model_dump(mode="json")}
+                        {
+                            "symbol": scan.symbol,
+                            **o.model_dump(mode="json"),
+                            **(
+                                {"terminal": scan.terminal.model_dump(mode="json")}
+                                if isinstance(scan, SwingScan) and scan.terminal is not None
+                                else {}
+                            ),
+                        }
                         for o in scan.observations
                     )
             raw_choice = data.get("model_result", {}).get("choice")

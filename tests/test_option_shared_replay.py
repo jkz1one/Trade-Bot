@@ -23,13 +23,15 @@ from app.options.replay import ReplaySettings, run_replay, run_replay_series
 from app.options.replay_model import ReplayScript
 
 
-def shared_tape(root, *, full=False, later=False):
+def shared_tape(root, *, full=False, later=False, lifecycle=None):
     original = managed_tape(root, full=full)
     if later:
         original = later_tape(original, root)
     shift = SHIFT if later else timedelta()
     item = swing_input(target=(AT + shift).date())
-    header = original.header.model_copy(update={"swing": swing_policy()})
+    header = original.header.model_copy(
+        update={"swing": swing_policy(unfilled_lifecycle=lifecycle)}
+    )
     with TapeRecorder(root / "shared.tape", header) as recorder:
         for e in original.events:
             f = e.frame

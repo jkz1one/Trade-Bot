@@ -390,14 +390,41 @@ def replay_shortlist(tape, cycle_key, *, as_of):
 def _replay_swing(tape, event, histories, scans):
     """Rebuild first-valid locks only from the visible cycle prefix, without an owner."""
     h, calendar = tape.header, XNYSCalendar()
-    locks = {}
+    locks, terminals = {}, {}
     for previous in tape.events:
         if previous.sequence > event.sequence:
             break
         for item in previous.frame.swing:
             seed = item.seed
-            if not seed_issues(seed, h.swing, calendar, h.setup.symbols):
+            if (
+                h.swing.unfilled_lifecycle is None or seed.created_at <= previous.recorded_at
+            ) and not seed_issues(seed, h.swing, calendar, h.setup.symbols):
                 locks.setdefault((seed.target_session, seed.history.symbol), fingerprint(seed))
+                if h.swing.unfilled_lifecycle is not None and previous.kind == "CYCLE":
+                    histories_at = {x.symbol: x for x in previous.frame.histories}
+                    history = histories_at.get(seed.history.symbol)
+                    if history is not None and locks[
+                        (seed.target_session, seed.history.symbol)
+                    ] == fingerprint(seed):
+                        intraday = scan_degen(
+                            history,
+                            h.setup,
+                            calendar.current_window(previous.recorded_at),
+                            now=previous.recorded_at,
+                        )
+                        sampled = scan_swing(
+                            item,
+                            h.swing,
+                            intraday,
+                            history,
+                            calendar,
+                            h.setup.symbols,
+                            now=previous.recorded_at,
+                            receive_lag=h.limits.max_receive_lag_seconds,
+                        )
+                        terminal = sampled.terminal
+                        if terminal is not None:
+                            terminals.setdefault(fingerprint(seed), terminal)
     items = {s.seed.history.symbol: s for s in event.frame.swing}
     added_scans, added_plans, missing = [], [], []
     for intraday in scans:
@@ -420,6 +447,10 @@ def _replay_swing(tape, event, histories, scans):
             now=event.recorded_at,
             receive_lag=h.limits.max_receive_lag_seconds,
         )
+        if h.swing.unfilled_lifecycle is not None:
+            from app.options.swing_lifecycle import apply_terminal
+
+            scan = apply_terminal(scan, terminals.get(fingerprint(seed)))
         added_scans.append(scan)
         added_plans.append(
             plan_swing_reads(scan, item, h.selection, h.limits, now=event.recorded_at)

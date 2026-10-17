@@ -17,7 +17,7 @@ intent and approval. Dispatch and stored attribution verify that identity; exact
 closes and management charges inherit it from the buy. See
 [frozen strategy entry identity](OPTIONS_POSITION_OUTCOME.md#frozen-strategy-entry-identity).
 Historical unlabeled orders remain unlabeled, and family loss/reset enforcement
-remains separate unfinished work.
+is delivered through the separately enrolled [native loss guard](OPTIONS_NATIVE_LOSS_CONTROL.md).
 
 ## Delivered family and evidence
 
@@ -86,6 +86,60 @@ The stored observer exposes joint cycles and filtered Swing/Degen candidates;
 family filtering never performs market/model/order work or removes common costs.
 
 ## Enrollment and installed use
+
+### Terminal completed-bar invalidation
+
+New populations may explicitly set
+`SwingPolicy.unfilled_lifecycle="completed-invalidation-v1"`. This closes a
+reproduced pre-entry lifecycle gap: the earlier scanner could confirm a recovered
+breakout even when a completed target-session bar had already crossed the original
+daily invalidation. The pinned [next-session promotion contract](https://github.com/jkz1one/SignalFlow/blob/f9eaf2c1b5d13dca287ee7138126883065b00395/docs/swing-next-session-promotion.md)
+makes invalidation terminal. This adaptation uses the existing validated completed
+five-minute evidence, without another provider or execution worker.
+
+For a CALL, a completed bar's low at or below the original buffered daily stop
+retires the seed; for a PUT, its high at or above that stop does so. The first
+qualifying bar wins. The original rounded stop, seed/history hashes, bar completion
+time and observation time are retained. Stale, foreign, gapped, interpolated or
+uncompleted evidence cannot establish an invalidation. Missing catalyst clearance
+still blocks entry, but does not erase an otherwise observed structural failure.
+
+Read planning projects this evidence without writing. An unheld native cycle
+retains it in `execution_option_swing_terminals` and a `SWING_SEED_TERMINAL` event,
+inside the same fenced journal, before quote-coverage review or any paid entry
+call. Both preparation and dispatch reject a terminal selected Swing seed. A
+previously paid call stays charged when this guard rejects its proposal. Retained
+invalidation survives restart, price recovery and later revised history; it is
+never replaced by a later expiry. Another family or independent population does
+not inherit that seed's block. A fresh actual-session seed has its own identity;
+the existing same-session contract/history lock remains mandatory.
+
+When an unheld cycle revisits a valid supplied seed at or after its target XNYS
+close, seed locking records `EXPIRED` if no earlier terminal evidence exists.
+This uses the actual exchange close, including half days. It does not create a
+background expiry service or process absent seeds; calendar admission already
+blocks entries outside that target session. Held or unresolved orders continue
+through the existing ownership/protection path.
+
+Stored opportunity observations expose the terminal reason, trigger/observation
+times and original stop in the authenticated observer. The retained cycle input
+contains the corresponding history. These are historical observations, not live
+signals or provider attestations. Shortlist replay rebuilds invalidations from
+only the visible cycle prefix, preventing revised later histories from reviving a
+seed. That account-free market diagnostic does not reconstruct ownership; native
+A/B/C/D replay retains each actual owner's journal and every entry/management cost.
+
+This policy does **not** add quote-tick invalidation latching, an unfilled T1
+consumption rule (the current seed has no frozen T1), new setup families or
+overnight holding. Current quote/chase checks and mandatory filled-position exits
+remain independent. These remaining Swing requirements must not be inferred from
+this narrower completed-bar lifecycle proof.
+
+The option is omitted from legacy serialization when absent; existing population
+and tape hashes remain unchanged. Enabling or changing it requires a new frozen
+population. It is not automatically enabled in examples or the deployed experiment.
+
+### Population creation
 
 Only a new population may enable or change `swing_policy`. Existing frozen Degen
 settings and frames omit the optional fields, preserving their serialized hashes.

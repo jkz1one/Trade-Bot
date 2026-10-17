@@ -25,6 +25,9 @@ class SwingPolicy(OptionRecord):
     catalyst_max_age_seconds: int = Field(gt=0, le=60, strict=True)
     family_priority: tuple[Literal["DEGEN", "SWING"], Literal["DEGEN", "SWING"]]
     holding_policy: Literal["SESSION_CLOSE"] = "SESSION_CLOSE"
+    unfilled_lifecycle: Literal["completed-invalidation-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
 
     @model_validator(mode="after")
     def coherent(self):
@@ -78,6 +81,26 @@ class SwingObservation(OptionRecord):
     reference: Money | None = Field(default=None, gt=0)
 
 
+class SwingTerminal(OptionRecord):
+    seed_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    status: Literal["INVALIDATED", "EXPIRED"]
+    observed_at: datetime
+    triggered_at: datetime
+    invalidation: Money | None = Field(default=None, gt=0)
+    history_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def coherent(self):
+        invalidated = self.status == "INVALIDATED"
+        if (
+            self.triggered_at > self.observed_at
+            or invalidated != (self.invalidation is not None)
+            or invalidated != (self.history_hash is not None)
+        ):
+            raise ValueError("Dated terminal evidence with exact invalidation history required")
+        return self
+
+
 class SwingScan(OptionRecord):
     version: Literal["swing-next-session-v1"] = "swing-next-session-v1"
     symbol: Symbol
@@ -90,6 +113,7 @@ class SwingScan(OptionRecord):
     holding_policy: Literal["SESSION_CLOSE"] = "SESSION_CLOSE"
     observations: tuple[SwingObservation, ...] = Field(min_length=1, max_length=1)
     issues: tuple[Name, ...] = ()
+    terminal: SwingTerminal | None = Field(default=None, exclude_if=lambda v: v is None)
 
 
 def seed_issues(seed, policy, calendar, symbols):
@@ -198,7 +222,7 @@ def scan_swing(item, policy, intraday, history, calendar, symbols, *, now, recei
             or abs(intraday.last_close / reference - 1) > policy.maximum_chase_fraction
         ):
             reasons.append("SWING_CHASE_LIMIT")
-        return SwingScan(
+        scan = SwingScan(
             symbol=seed.history.symbol,
             evaluated_at=now,
             completed_through=intraday.completed_through,
@@ -217,6 +241,14 @@ def scan_swing(item, policy, intraday, history, calendar, symbols, *, now, recei
             ),
             issues=tuple(issues),
         )
+        if policy.unfilled_lifecycle is not None:
+            from app.options.swing_lifecycle import apply_terminal, completed_invalidation
+
+            return apply_terminal(
+                scan,
+                completed_invalidation(scan, history, intraday, policy, calendar, symbols),
+            )
+        return scan
 
 
 def plan_swing_reads(scan, item, selection, limits, *, now):

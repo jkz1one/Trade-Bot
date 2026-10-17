@@ -173,6 +173,11 @@ class DegenCoordinator:
                     "session TEXT NOT NULL,symbol TEXT NOT NULL,seed_hash TEXT NOT NULL,"
                     "seed_json TEXT NOT NULL,PRIMARY KEY(session,symbol))"
                 )
+                if self.swing_policy.unfilled_lifecycle is not None:
+                    db.execute(
+                        "CREATE TABLE IF NOT EXISTS execution_option_swing_terminals("
+                        "seed_hash TEXT PRIMARY KEY,terminal_json TEXT NOT NULL)"
+                    )
             for pending in db.execute(
                 "SELECT cycle_key,result_json FROM execution_option_opportunities WHERE status='STARTED'"
             ).fetchall():
@@ -574,6 +579,10 @@ class DegenCoordinator:
 
                 lock_seeds(self, frame.swing)
             planned = self.quote_plan(frame.histories, frame.inventories, frame.swing)
+            if self.swing_policy and self.swing_policy.unfilled_lifecycle is not None:
+                from app.options.swing_lifecycle import retain_scans
+
+                retain_scans(self, planned["scans"])
             if planned["purpose"] != "CANDIDATE_SHORTLIST":
                 return self._finish(key, {"status": "HOLD", "reason": planned["purpose"]})
             expected = {i.instrument_id: i for i in planned["instruments"]}

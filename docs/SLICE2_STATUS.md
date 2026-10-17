@@ -1,6 +1,74 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
 
+## P7 terminal Swing completed-bar invalidation: 2026-10-17 UTC
+
+Reproduced a concrete lifecycle gap: a completed CALL bar crossed the original
+buffered daily stop, but the prior scanner later returned CONFIRMED after price
+recovered into a breakout. New frozen populations may now enroll
+`SwingPolicy.unfilled_lifecycle="completed-invalidation-v1"` to retire that exact
+seed permanently. CALL/PUT exact touches count; only validated completed
+target-session history establishes a breach. [Contract and limits](OPTIONS_SHARED_STRATEGIES.md#terminal-completed-bar-invalidation).
+
+The native cycle retains the first stop/history/seed/time evidence before quote
+coverage review and paid entry work. The same journal/restore fence carries the
+terminal state across restart and revised history. Both entry preparation and
+dispatch enforce it; paid proposals rejected by the guard retain their charges.
+An eligible Degen candidate, a fresh session seed and an independent account retain
+their own eligibility. Revisited seeds expire at the actual target XNYS close,
+including early closes, without replacing earlier invalidation.
+
+The authenticated observer exposes saved reason, original stop and observation/
+trigger times without side effects. Shortlist replay reconstructs only the visible
+input prefix; native A/B/C/D replay retains separate actual journals and every
+entry/management cost. Legacy policy/scan serialization omits absent opt-in fields.
+No existing population is migrated or silently enrolled.
+
+Fresh GitHub baseline: `7f20a0e32bd139fa5ecb9c7131466806612ddcd1`, tree
+`0ccfd2061d280e4e5b3b88d3a86c3643b35f47b8`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Final focused source: **24 passed, one full native replay case deselected in
+  8.07s**, warnings treated as errors. That full replay case runs in the final
+  installed proof below.
+- Final new installed lifecycle suite outside checkout: **25 passed in 165.15s**,
+  warnings treated as errors. Includes native A/B/C/D full-session replay with
+  independent order identities, both entry/management charges, fees and data/host
+  allocations; complete arithmetic remains economically INCONCLUSIVE.
+- Final existing installed regression outside checkout: **214 passed in 420.54s**,
+  warnings treated as errors. Includes shared strategy and multi-session replay,
+  Degen, market tapes, authenticated observer and dashboard rendering. Together
+  the two installed suites passed **239 tests**. All seven selected test files
+  match the copied installed-proof inputs.
+- All 172 Python modules and seven HTML templates match source/wheel/installation;
+  scoped lint/format, dependency and whitespace checks pass. Local documentation
+  targets resolve.
+- Wheel SHA-256: `09eebf6442120149f2951cca38bf31c3103a39f97cc62372560bdb83d1ad63fa`.
+  Artifacts/logs beside checkout: `swing-lifecycle-env`, `swing-lifecycle-dist`,
+  `swing-lifecycle-proof`, `swing-lifecycle-build.log`,
+  `swing-lifecycle-focused-final.log`, `swing-lifecycle-installed-focused.log`
+  and `swing-lifecycle-installed-regression.log`.
+- Initial new tests needed existing helper/route corrections and assertions using
+  equivalent UTC timestamps and the exported usage schema. The full source replay
+  produced COMPLETE_ARITHMETIC before its incorrect raw-cost-field assertion.
+  Earlier failing outputs remain `swing-lifecycle-source.log`,
+  `swing-lifecycle-source-second.log`, `swing-lifecycle-source-third.log` and
+  `swing-lifecycle-source-final.log`; the prior focused 20-case pass is retained
+  in `swing-lifecycle-source-fourth.log`. No production guard was relaxed.
+
+This is completed-bar pre-entry retirement, not quote-tick latching, unfilled T1
+consumption (the current seed has no frozen T1), overnight Swing or full M7
+acceptance. Scope source/path/native-entry/family-loss/T3/runtime gates,
+mixed-instrument ownership, authentic provider/host acceptance, prospective
+performance and actual dashboard visual acceptance remain open. Main untouched,
+PR draft, LIVE disabled and deployed experiment frozen. No authentic provider,
+model or broker call, dependency/host change or deployment.
+
+---
+
+
 ## M8 dashboard decision/protection presentation: 2026-10-17 UTC
 
 The first dedicated dashboard pass now leads with compact cash/current-estimate,

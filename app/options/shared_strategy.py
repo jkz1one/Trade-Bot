@@ -33,6 +33,10 @@ def swing_plans(c, supplied, histories, scans, at):
                 "SELECT seed_hash FROM execution_option_swing_seeds WHERE session=? AND symbol=?",
                 (item.seed.target_session.isoformat(), intraday.symbol),
             ).fetchone()
+            if c.swing_policy.unfilled_lifecycle is not None:
+                from app.options.swing_lifecycle import apply_terminal, load_terminal
+
+                scan = apply_terminal(scan, load_terminal(db, item.seed))
         if row and row[0] != fingerprint(item.seed):
             raise ExecutionBlocked("SWING_SEED_LOCK_CONFLICT")
         added_scans.append(scan)
@@ -69,6 +73,10 @@ def lock_seeds(c, items):
                     "SWING_SEED_LOCKED",
                     {"session": identity[0], "symbol": identity[1], "seed_hash": digest},
                 )
+            if c.swing_policy.unfilled_lifecycle is not None:
+                from app.options.swing_lifecycle import retire_expired
+
+                retire_expired(c, db, seed)
 
 
 def review_shared_entry(engine, db, key, proposal, quote, underlying, now):
@@ -119,6 +127,11 @@ def review_shared_entry(engine, db, key, proposal, quote, underlying, now):
         raise ExecutionBlocked("SWING_SCAN_REQUIRED")
     scan = scans[0]
     seed = scan.seed
+    if policy.unfilled_lifecycle is not None:
+        from app.options.swing_lifecycle import load_terminal
+
+        if scan.terminal is not None or load_terminal(db, seed) is not None:
+            raise ExecutionBlocked("SWING_SEED_TERMINAL")
     row = db.execute(
         "SELECT seed_hash FROM execution_option_swing_seeds WHERE session=? AND symbol=?",
         (seed.target_session.isoformat(), seed.history.symbol),
