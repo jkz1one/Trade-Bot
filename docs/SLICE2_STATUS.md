@@ -1,6 +1,67 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
 
+## P7 native Scope research lifecycle replay: 2026-10-17 UTC
+
+`app.options.scope_replay` now runs a frozen ordered CALL / OBSERVE_ARMING /
+REVIEW_ADMISSION / ADVANCE / NEUTRALIZE fixture sequence through a create-only
+native PAPER owner and the existing watch book. It reconciles and supervises its
+independent empty account at each virtual clock, obtains the actual journal
+revision and invokes the native research method. No caller account, quantity,
+revision, receipt, outcome or execution authority is accepted.
+[Request, artifacts, command and precise limits](OPTIONS_SCOPE_REPLAY.md).
+
+The private run retains frozen inputs/hash, per-step full native receipts or
+explicit action rejections, receipt hashes, native journals and final stored
+observer/account/model evidence. Interrupted runs retain available artifacts and
+cannot be resumed or overwritten. A completed research run means all supplied
+steps were processed, not that each action passed. Arming resets, rejected admission
+and the missing four-contract T3 retain their original meanings and blockers.
+
+No orders, fills, paid model calls or native trade decisions may exist at export.
+Native fee-inclusive admission and recorded account/model evidence are retained;
+data/host cost and net return stay null, with `economic_conclusion=NOT_EVALUATED`.
+Independent run directories remain independent accounts. This does not enroll Scope
+in trading A/B/C/D replay, remove its entry guard or establish economic performance.
+The existing trading replay still retains every entry and management charge.
+
+Fresh GitHub baseline: `6c7fce05b10528ceaf9aa1286f280c85629188a3`, tree
+`fbf9b5a63fdcd36e70cd063e6538a39a14ac382d`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Focused source: **20 passed, one installed-only case deselected in 11.13s**,
+  warnings treated as errors. Covers CALL/PUT, arming, fee-inclusive admission,
+  invalidation/neutral reset, cutoff expiry, rejected calls, missing-data resets,
+  identical-run reproduction, independent owners, future/ambiguous/extra inputs,
+  private/create-only paths, interrupted runs and retained T3 management blocker.
+- Installed command outside checkout: **one passed in 6.49s**, using isolated mode.
+- Full installed Scope regression plus enrolled A/B/C/D full-cost replay:
+  **699 passed in 121.46s**, warnings treated as errors, outside checkout. Includes
+  all 18 Scope files and the new native CLI case.
+- All 170 Python modules and four HTML templates match source/wheel/installation;
+  all 18 copied Scope test files match. Scoped lint/format, dependency and whitespace
+  checks pass; 61 unique local documentation targets exist.
+- Wheel SHA-256: `c4a63ac3a95e611d07187d6caa7e4fb2db5feb188c51dc099ef6d5f31553a714`.
+  Artifacts/logs beside checkout: `scope-replay-env`, `scope-replay-dist`,
+  `scope-replay-proof`, `scope-replay-build.log`, `scope-replay-source-complete.log`,
+  `scope-replay-cli-tests.log` and `scope-replay-installed-tests.log`.
+- Initial focused run caught a fixture using the wrong underlying quote-source
+  name, correctly blocking both CALL/PUT admissions. The fixture now uses the
+  owner's configured source. No native guard was weakened. Earlier outputs remain
+  `scope-replay-source.log` and `scope-replay-source-final.log`.
+
+Research lifecycle replay/export is delivered. Scope still requires complete path
+coverage, native watch/order linkage, filled family-loss/reset controls,
+four-contract T3 resolution and trading runtime/replay acceptance. Dedicated UI
+visual acceptance, authentic provider/calendar/host evidence, remaining Swing and
+mixed-instrument support and prospective economics remain separate gates.
+Main untouched, PR draft, LIVE disabled and deployment frozen. No authentic
+provider/model/broker call, dependency or host/deployment change.
+
+---
+
 ## P7 Scope stored decision evidence and action binding: 2026-10-17 UTC
 
 The stored observer now exposes selected original and latest sampled Scope quality,

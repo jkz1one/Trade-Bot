@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.62. Adopted product direction and working delivery contract, 2026-10-17 UTC.
+Version 1.63. Adopted product direction and working delivery contract, 2026-10-17 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -70,6 +70,10 @@ labels; reads never refresh evidence or grant execution authority.
 It now exposes selected original/latest quality, profile and obstruction evidence,
 with input/policy hashes and latest-action/receipt binding. Missing or altered
 bindings make the report unavailable; saved passes never replace missing latest reviews.
+[Scope research lifecycle replay](OPTIONS_SCOPE_REPLAY.md) now runs frozen ordered
+watch/arming/admission/advance/reset fixtures through a create-only native owner,
+retaining action receipts, explicit rejects and independent state. It supplies no
+orders, model calls or Scope economic result; trading runtime/replay remains open.
 The common engine now blocks generic OPEN_LONG preparation and dispatch for these
 research cohorts while preserving HOLD and owned/protective exits.
 [Stored native position outcomes](OPTIONS_POSITION_OUTCOME.md) now reconstruct

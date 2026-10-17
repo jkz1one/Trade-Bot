@@ -148,6 +148,11 @@ projects selected original/latest quality and contract evidence after checking e
 visible watch against its latest action and receipt. Its missing/stale labels and
 collapsed decision details grant no fresh eligibility or execution authority.
 
+The [research lifecycle replay](OPTIONS_SCOPE_REPLAY.md) now exercises these native
+watch methods from frozen ordered fixtures in a new isolated owner, with saved
+receipts and explicit rejection/interruption evidence. It does not create fills or
+enable Scope trading runtime enrollment.
+
 ## Still required for Scope execution
 
 Filled-position direction handling, actual position linkage, full-cost native
