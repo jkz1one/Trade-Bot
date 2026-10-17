@@ -1,6 +1,64 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
 
+## P7 portable Scope replay reproduction verification: 2026-10-17 UTC
+
+`app.options.scope_replay_verify` now verifies exported research JSON against an
+independently retained original request hash. It captures the normalized inputs,
+exact numbered actions and final report, then reproduces the request through the
+native research runner in new private temporary PAPER state. All receipts, rejected
+reasons, revisions, hashes, artifact indexes and final observer/account evidence
+must match canonical JSON, including exact authority types. Editing a receipt and
+its own hash no longer suffices. [Command and limits](OPTIONS_SCOPE_REPLAY.md#portable-reproduction-verification).
+
+The verifier never opens source journals or restore authority and does not modify
+original file contents. Portable copies need only the private JSON layout; results
+explicitly say `source_journals_verified=false`. It rejects interrupted/missing/extra
+artifacts, duplicate keys, nonfinite literals, unsafe final symlinks, public modes,
+nonregular files and per-file/aggregate size overflow. Temporary state is removed on
+success and handled failure. Verification describes the captured snapshot under the
+installed implementation, not provider authenticity, release approval or later edits.
+
+Rejected actions, arming resets and missing four-contract T3 remain research results,
+not trade approval. Scope remains blocked from native entry. Research data/host costs
+and net return remain null; economic conclusion remains NOT_EVALUATED. Independent
+A/B/C/D trading accounts and all entry/management charges are unchanged.
+
+Fresh GitHub baseline: `142a75574770b667971f92931c0193bb02be09bb`, tree
+`33fc76ad04aa50ecde1e9037afe2bd6925618909`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Initial focused source run: **36 passed, one installed-only case deselected in
+  18.03s**, warnings treated as errors. The later missing-T3 acceptance case is
+  included in the final installed run.
+- Final installed regression outside checkout: **737 passed in 140.01s**, warnings
+  treated as errors. Includes all 19 Scope files, all 38 new verifier cases, installed
+  isolated replay/verifier CLIs and enrolled A/B/C/D full entry/management-cost replay.
+- New cases cover CALL/PUT reproduction, fee/receipt/revision/reason/report edits,
+  coordinated receipt-hash edits, substituted requests, exact authority types,
+  missing/extra/interrupted artifacts, private modes, symlinks, nonregular files,
+  JSON ambiguity, bounds, original-file preservation, JSON-only portability,
+  rejected actions/resets, retained missing-T3 blocker and temporary failure cleanup.
+- All 171 Python modules and four HTML templates match source/wheel/installation;
+  all 19 copied Scope test files match. Scoped lint/format, dependency and whitespace
+  checks pass; local documentation targets resolve.
+- Wheel SHA-256: `84654e32b5002a8285e30e69dd8d02864fb04c0b72d3e94ff7b472697385a7d3`.
+  Artifacts/logs beside checkout: `scope-verify-env`, `scope-verify-dist`,
+  `scope-verify-proof`, `scope-verify-build.log`, `scope-verify-source.log` and
+  `scope-verify-installed-tests.log`.
+
+Portable research reproduction is delivered. Scope complete path coverage,
+watch/order linkage, filled family-loss/reset controls, four-contract T3 resolution
+and trading runtime/replay acceptance remain open. Dedicated UI visual acceptance,
+authentic provider/calendar/host evidence, remaining Swing and mixed-instrument
+support and prospective economics remain separate gates. Main untouched, PR draft,
+LIVE disabled and deployed experiment frozen. No authentic provider/model/broker
+call, dependency or host/deployment change.
+
+---
+
 ## P7 native Scope research lifecycle replay: 2026-10-17 UTC
 
 `app.options.scope_replay` now runs a frozen ordered CALL / OBSERVE_ARMING /

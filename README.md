@@ -92,6 +92,8 @@ Collapsed decision details now expose saved quality, contract profiles and path
 blockers, with original/latest reviews and recorded action/receipt consistency.
 [Scope research replay](docs/OPTIONS_SCOPE_REPLAY.md) now drives frozen watch, arming,
 admission and reset fixtures through a new isolated owner and exports native receipts.
+A separate verifier now reproduces exported JSON in temporary independent state,
+checking every receipt and final report against an independently retained request hash.
 It does not submit trades or report Scope performance.
 Optional new-cohort Degen/Swing loss controls now add independent family streaks,
 cooldowns and signed targeted resets while retaining account-wide guards and costs.

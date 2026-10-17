@@ -77,10 +77,10 @@ losses, zero-cost trading returns or missing model calls recast as successful ad
 The separate A/B/C/D trading replay still includes every entry and management charge.
 
 Hashes bind supplied files and receipts, not provider authenticity or an independent
-attestation. This runner does not implement portable re-verification of an edited
-export. Incomplete runs retain their available journals/receipts; absence of a valid
-final report, or an interruption marker, is not a complete replay. A process kill
-may leave no interruption marker. Start a separate new directory to reproduce it.
+attestation. The portable verifier below now checks the exported JSON by native
+reproduction. Incomplete runs retain their available journals/receipts; absence of
+a valid final report, or an interruption marker, is not a complete replay. A process
+kill may leave no interruption marker. Start a separate new directory to reproduce it.
 
 ## Local invocation
 
@@ -99,6 +99,57 @@ actions were normally rejected. Unavailable/malformed requests or failed runs
 return 2. This is a fixture command, not a collector, service startup or deployment
 instruction. The executable CALL/PUT fixture examples and native CLI acceptance
 are in `tests/test_option_scope_replay.py`; no authentic-data defaults are implied.
+
+## Portable reproduction verification
+
+`app.options.scope_replay_verify.verify_scope_replay(directory, expected_request_hash)`
+reads only `inputs.json`, `report.json` and the exact numbered `actions/*.json` set.
+It captures these files, validates the normalized request against an independently
+retained hash, then reruns the native research sequence in a new private temporary
+account. Every complete receipt, rejected-action reason, revision, step hash, artifact
+index and final report field must match canonical JSON from that reproduction.
+Edited receipts cannot pass merely by updating their own hashes. JSON types remain
+significant: false authority cannot be replaced by numeric zero.
+
+Keep the original `request_hash` from successful replay output separately from the
+export. Supply that retained value; reading a replacement hash from an untrusted
+export does not establish that the request is the one originally approved for research.
+
+```bash
+python -I -m app.options.scope_replay_verify \
+  --export /absolute/path/scope-research-run \
+  --request-hash ORIGINAL_64_CHARACTER_LOWERCASE_HEX_HASH
+```
+
+The original run and `actions` directories must be owned by the current user with
+mode 0700; JSON files must be owned regular mode-0600 files. The verifier does not
+follow the final run-directory symlink, the actions-directory symlink or file
+symlinks. It rejects missing/extra actions, duplicate JSON keys, nonfinite literals,
+interruption markers (including dangling symlinks), and files changing during read.
+Input envelopes are bounded to 16 MiB plus 256 bytes, each action to 2 MiB, the report
+to 8 MiB and total JSON to 128 MiB. Oversized exports are unavailable, never partially
+verified. The existing request limit of 200 steps remains in effect.
+
+Success exits 0 and prints `VERIFIED_RESEARCH_REPLAY`, captured export/report hashes,
+verified/recorded/rejected counts and false execution/LIVE authority. Normally rejected
+actions, arming resets and the unresolved four-contract T3 can reproduce successfully;
+verification never turns those results into approval. Malformed, incomplete or
+non-reproducing evidence exits 2 with a sanitized unavailable status. Temporary
+journals are removed on normal success and handled failure. A process kill can leave
+temporary files; it cannot create a successful verification result.
+
+Verification reads no original SQLite journal or restore authority and never changes
+original file contents. A portable copy needs only the JSON files, retaining their
+relative layout and private permissions. `source_journals_verified=false` explicitly
+excludes source database validation. The result describes the captured JSON snapshot,
+not subsequent file changes, independent attestation or authentic market coverage.
+Reproduction uses the installed implementation; changed rules may make old exports
+unavailable. Use the matching tested release when reproducing historical evidence.
+
+No provider/model/broker calls, order preparation or dispatch occur. Research remains
+`LOCAL_FIXTURE` and `economic_conclusion=NOT_EVALUATED`, with null data/host costs and
+net return. Existing independent A/B/C/D trading accounting and every entry/management
+charge are unchanged. Verification is a research evidence gate, not trading enrollment.
 
 Scope still requires complete obstruction coverage, native watch/order linkage,
 filled family-loss/reset controls, four-contract T3 resolution and trading runtime/
