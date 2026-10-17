@@ -96,9 +96,11 @@ existing semantics. The test fixtures are not authentic provider/model acceptanc
 This closes the missing normalized Greek evidence and diagnostic-calculation part
 of health management. [Durable progress diagnostics](OPTIONS_PROGRESS_HEALTH.md)
 now retain original underlying risk geometry, progress/stall/peak history and
-premium divergence/giveback. Full source health still needs remaining liquidity/session
-context and composition, plus frozen enrollment and native execution/restart/replay acceptance for
-any health-driven stop or exit. No partial Greek score enables those actions.
+premium divergence/giveback. [Observed daytrade health](OPTIONS_HEALTH_MANAGEMENT.md)
+now provides explicit frozen PAPER enrollment and native action/restart/replay
+fixtures, combining complete Greek/progress inputs with native spread/session
+evidence. No partial Greek score enables those actions. Authentic input acceptance
+and prospective performance remain open.
 Scope watch/entry linkage, full path proof, the missing four-contract T3, family
 loss/reset, provider/host evidence, prospective economics and the dedicated UI pass
 remain open. Main untouched, PR #1 draft, LIVE disabled and deployment frozen.

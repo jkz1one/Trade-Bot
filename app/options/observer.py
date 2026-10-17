@@ -718,7 +718,21 @@ class OptionObserver:
         from app.options.progress_health import stored
 
         progress = stored(db, p.entry_client_id, limits, now)
+        from app.options.health_management import stored as stored_health
+
+        health = stored_health(db, p.entry_client_id)
         return {
+            **(
+                {
+                    "health_management": {
+                        **health,
+                        "stored_only": True,
+                        "observations_fresh": bool(progress and progress["observations_fresh"]),
+                    }
+                }
+                if health is not None
+                else {}
+            ),
             **({"progress_health": progress} if progress is not None else {}),
             **({"greek_pressure": greek_review} if greek_review is not None else {}),
             **(

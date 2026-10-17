@@ -1,5 +1,74 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 frozen observed daytrade health actions: 2026-10-17 UTC
+
+New PAPER cohorts can explicitly enroll `observed-daytrade-health-v1`. Original
+buy inputs, approval and intent bind the frozen owner policy; dispatch and portable
+accounting reject mismatched enrollment. Existing owners cannot silently adopt it.
+The policy composes observed Greek/progress diagnostics with native spread and
+session evidence. Complete inputs can tighten pre-target stops to source caution
+or defensive risk levels, or latch mandatory exits for crossed caps and covered
+stalled-trade decay. Existing stricter stops and mandatory reasons keep priority.
+[Policy, thresholds and precise source adaptation](OPTIONS_HEALTH_MANAGEMENT.md).
+
+Incomplete/estimated/stale/conflicting/gapped evidence withholds new health actions
+and blocks discretionary scales while independent full protection remains active.
+Swing and longer-dated contracts are explicitly outside this policy. No unverified
+free-form regime label or stale-price fallback gains authority. Source premium
+diagnostics remain before costs; native fees, every entry/management charge and
+session data/host allocations remain intact in four independent replay accounts.
+
+Health state and protection commit atomically with audit evidence. Restart/rebound
+cannot clear an exit or loosen a stop. Attempted scales keep reservations; only
+never-attempted scales may be superseded. A paid stale model response cannot undo
+new health tightening and retains its charge. Stored observer reads verify audit
+binding and label freshness without reassessment. Closing attribution inherits the
+original entry enrollment; open exports remain economically inconclusive.
+
+Fresh GitHub baseline: `045234fb7ee72eed50cfcd24139ac08dd123f96d`, tree
+`e7a267fb6b0e00bf39847b021c85575d32df83b6`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Focused development caught test-fixture errors: a scale fill attempted to regress
+  snapshot time, replay enrollment used the wrong settings field, same-source-time
+  conflicting Greek evidence correctly withheld an action, and portable definitions
+  needed consistent arm policies and matching definition hashes to reach the policy
+  mismatch check. The model race correctly returns REJECTED for its stale paid plan.
+  Fixtures/assertions were corrected without weakening evidence gates.
+- Final installed health suite: **24 passed in 51.71s**, warnings treated as errors,
+  outside the checkout against the non-editable wheel. Includes CALL/PUT stops,
+  decay exits, restart/fills, incomplete inputs, late-session/spread rules, longer
+  dated exclusion, scale reservations, target gating, atomic rollback, stored
+  observer, paid-model race, native open export and enrolled A/B/C/D costs.
+- Broader installed health/progress, execution, Greek, observer, partial/target
+  exits/stops, floors/trails, position-management and economic/export regression:
+  **603 passed, 2 failed in 431.12s**. That process had already loaded the earlier
+  model-race and portable-definition test assertions described above. Both corrected
+  cases pass in the final 24-case installed suite. Production/wheel bytes are
+  unchanged between these runs; all 605 distinct selected cases are covered by
+  passing final evidence, without another unrelated full regression run.
+- Seven source/wheel/installed modules and all 15 final copied test files match.
+  Scoped lint/format, dependency, whitespace and 265 local documentation links pass.
+- Wheel SHA-256: `2d475a4ad84b39b961f5ba1d2903cab4e575559b0fa6d254469cf11e9ec7ce2c`.
+  Artifacts/logs beside checkout: `health-management-env`, `health-management-dist`,
+  `health-management-proof`, `health-management-build.log`,
+  `health-management-initial-tests.log`, `health-management-focused.log`,
+  `health-management-final-cases.log`, `health-management-installed-tests.log` and
+  `health-management-final-focused.log`. An obsolete focused process overlapped the
+  final log destination; its combined original is retained as
+  `health-management-overlapped-focus.log`. The final focused process exited 0;
+  its distinct 24-pass result is retained separately from the obsolete failures.
+
+Authentic health/provider/model evidence and prospective policy economics remain
+unverified. Scope entry/path/family-loss/runtime integration, remaining Swing and
+mixed-instrument support, host acceptance and the dedicated UI pass remain open.
+Main untouched, PR draft, LIVE disabled and deployment frozen. No authentic
+provider/model/broker call, dependency or host/deployment change.
+
+---
+
 ## P7 durable observed progress and stall coverage: 2026-10-17 UTC
 
 Native supervision now records `observed-progress-v1` for each owned entry in an

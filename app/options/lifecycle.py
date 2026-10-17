@@ -59,6 +59,9 @@ class OptionExecutionPolicy(OptionRecord):
     supervisor_max_age_seconds: PositiveCount
     process_timeout_seconds: float = Field(gt=0, le=30, allow_inf_nan=False)
     cost_policy: CostPolicy | None = None
+    health_management: Literal["observed-daytrade-health-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     loss_control: NativeLossPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
     partial_closes: Literal["whole-contract-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
@@ -209,6 +212,9 @@ class OptionIntent(OptionRecord):
     source_key: Name
     instrument: OptionInstrument
     side: Literal["BUY", "SELL"]
+    health_management: Literal["observed-daytrade-health-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     trade_floor: Literal["native-target-floor-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -248,6 +254,8 @@ class OptionIntent(OptionRecord):
 
     @model_validator(mode="after")
     def lifetime(self):
+        if self.health_management is not None and self.side != "BUY":
+            raise ValueError("Health management enrollment binds only the original buy")
         if self.trade_floor is not None and self.side != "BUY":
             raise ValueError("Whole-trade floor enrollment binds only the original buy")
         if self.premium_trail is not None and self.side != "BUY":
@@ -379,6 +387,7 @@ class OptionPosition(OptionHolding):
             "UNDERLYING_TARGET",
             "PREMIUM_TRAIL",
             "WHOLE_TRADE_FLOOR",
+            "HEALTH_MANAGEMENT",
         ]
         | None
     ) = None

@@ -119,6 +119,7 @@ def review_for_execution(engine, db, key, request, result, quote, underlying, no
             protected.exit_reason
             or protected.supervision_issue
             or protected.trade_floor is not None
+            or engine.policy.health_management is not None
         ):
             ledger = ledger.model_copy(update={"position": protected})
             db.execute(

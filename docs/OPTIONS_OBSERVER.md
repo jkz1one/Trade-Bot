@@ -190,4 +190,15 @@ match its entry's latest audit event. `stored_only=true` and `observations_fresh
 separate historical evaluation from current freshness. Premium metrics are before
 costs, not net returns. Reads do not alter protection, consume calls or refresh
 observations; historical journals without the table remain readable. Dedicated UI
-visual treatment and health-driven action acceptance remain open.
+visual treatment remains open. The separate [observed daytrade health policy](OPTIONS_HEALTH_MANAGEMENT.md)
+now has native PAPER action fixtures; a progress record alone never enables it.
+
+## Stored enrolled health actions
+
+`position.health_management` displays the enrolled owner's saved health assessment,
+component signals, unknown inputs, effective stop, exit reason and semantic decision
+time. The row must match its latest audit event. `stored_only` and observation
+freshness distinguish historical readiness from current evidence. Reads never
+apply the policy or refresh inputs. Enrollment and original entry attribution remain
+separate from an observed diagnostic signal. Native fixture actions do not establish
+authentic provider/host acceptance or complete the dedicated UI pass.

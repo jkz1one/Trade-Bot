@@ -100,10 +100,12 @@ to decide economic completeness. Native open holdings remain inconclusive.
 
 ## Remaining acceptance
 
-Full health management still needs remaining liquidity/session context, composition
-with [observed Greek pressure](OPTIONS_GREEK_HEALTH.md), frozen action policy and
-native automatic stop/exit/restart/replay acceptance. Existing mandatory protection
-continues independently. Scope entry/path/family-loss/runtime integration,
+[Observed daytrade health](OPTIONS_HEALTH_MANAGEMENT.md) now composes this evidence
+with Greek pressure and native spread/session context in an explicit frozen PAPER
+policy, with native tightening/exit/restart/replay fixtures. These progress records
+remain diagnostic on their own. Existing mandatory protection continues independently.
+Authentic health inputs and prospective policy performance remain open, as do
+Scope entry/path/family-loss/runtime integration,
 authentic provider/host evidence, prospective economics and dedicated UI acceptance
 remain open. Main untouched; PR #1 draft; LIVE disabled; deployment frozen.
 

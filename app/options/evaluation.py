@@ -39,6 +39,8 @@ def _replay(a, definition, session, sequence, used_ids, previous_close):
     previous_order_end = session.opens_at
     for order in sorted(a.orders, key=lambda x: x.attempted_at or x.intent.prepared_at):
         i, o = order.intent, order.observation
+        if i.side == "BUY" and i.health_management != definition.policy.health_management:
+            raise ValueError("HEALTH_MANAGEMENT_POLICY_MISMATCH")
         if i.side == "BUY" and i.premium_trail != definition.policy.premium_trail:
             raise ValueError("PREMIUM_TRAIL_POLICY_MISMATCH")
         if i.side == "BUY" and i.trade_floor != definition.policy.trade_floor:

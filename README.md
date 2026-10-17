@@ -117,6 +117,10 @@ authority is enabled.
 underlying risk geometry, actual entry premium, peaks and stall coverage through
 partial exits and restart. Stored divergence/giveback signals retain explicit
 missing-data states and do not authorize health-driven orders.
+[Observed daytrade health](docs/OPTIONS_HEALTH_MANAGEMENT.md) now adds an explicitly
+frozen PAPER policy for pre-target stop tightening and mandatory health exits.
+It requires complete observed inputs, preserves stricter protection and attempted
+order reservations, and retains every entry/management cost in independent accounts.
 [Scope management plans](docs/OPTIONS_SCOPE_MANAGEMENT.md) now derive balanced
 whole-contract allocations from owned sizing and bind explicit profile premium
 limits beneath the owner cap. Four-contract Scope plans remain blocked by their

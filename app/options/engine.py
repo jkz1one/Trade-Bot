@@ -101,6 +101,7 @@ class OptionJournal(ExecutionJournal):
             "execution_option_decisions",
             "execution_option_receipts",
             "execution_option_progress",
+            "execution_option_health",
             "execution_option_strategy",
             "execution_option_opportunities",
             "execution_option_runtime",
@@ -208,6 +209,9 @@ class OptionExecution:
             )
             db.execute(
                 "CREATE TABLE IF NOT EXISTS execution_option_progress(entry_client_id TEXT PRIMARY KEY,payload TEXT NOT NULL)"
+            )
+            db.execute(
+                "CREATE TABLE IF NOT EXISTS execution_option_health(entry_client_id TEXT PRIMARY KEY,payload TEXT NOT NULL)"
             )
             if self.policy.loss_control is not None:
                 from app.options.loss_control import enroll
@@ -418,6 +422,9 @@ class OptionExecution:
             "underlying": underlying,
             "origin": origin,
         }
+        health_policy = self.policy.health_management if proposal.action == "OPEN_LONG" else None
+        if health_policy is not None:
+            inputs["health_management"] = bound_inputs["health_management"] = health_policy
         floor_policy = self.policy.trade_floor if proposal.action == "OPEN_LONG" else None
         if floor_policy is not None:
             inputs["trade_floor"] = bound_inputs["trade_floor"] = floor_policy
@@ -663,6 +670,7 @@ class OptionExecution:
                         entry_premium_protection=entry_premium_protection,
                         premium_trail=trail_policy,
                         trade_floor=floor_policy,
+                        health_management=health_policy,
                     )
                     approval = {
                         **inputs,
@@ -723,9 +731,16 @@ class OptionExecution:
                 verified_lineage(db, intent, approval)
                 verify_binding(intent, approval)
                 verify_premium_binding(intent, approval)
+                from app.options.health_management import verify_binding as verify_health
                 from app.options.premium_trail import verify_binding as verify_trail
                 from app.options.trade_floor import verify_binding as verify_floor
 
+                verify_health(intent, approval)
+                if (
+                    intent.side == "BUY"
+                    and intent.health_management != self.policy.health_management
+                ):
+                    raise ExecutionBlocked("OPTION_HEALTH_POLICY_NOT_ENROLLED")
                 verify_floor(intent, approval)
                 if intent.side == "BUY" and intent.trade_floor != self.policy.trade_floor:
                     raise ExecutionBlocked("OPTION_TRADE_FLOOR_NOT_ENROLLED")
@@ -1286,7 +1301,11 @@ class OptionExecution:
             p = assess_position(p, quote, underlying, self.limits, self.policy, now=now)
         from app.options.progress_health import record
 
-        record(self, db, p, quote, underlying, now)
+        progress = record(self, db, p, quote, underlying, now)
+        if self.policy.health_management is not None:
+            from app.options.health_management import assess
+
+            p = assess(self, db, p, quote, underlying, progress, now)
         return p
 
     def _review_partial_close(self, db, proposal, quote, underlying, now, origin):
@@ -1323,6 +1342,10 @@ class OptionExecution:
 
         if blocked(assessed):
             raise ExecutionBlocked("OPTION_TRADE_FLOOR_EVIDENCE_REQUIRED")
+        from app.options.health_management import blocked as health_blocked
+
+        if health_blocked(self, db, assessed):
+            raise ExecutionBlocked("OPTION_HEALTH_EVIDENCE_REQUIRED")
 
     @exact
     def assess(self, quote, underlying, *, now):
@@ -1383,6 +1406,10 @@ class OptionExecution:
                     else {}
                 ),
             }
+            if p and self.policy.health_management is not None:
+                from app.options.health_management import stored
+
+                payload["health_management"] = stored(db, p.entry_client_id)
             db.execute(
                 "INSERT INTO execution_supervisor VALUES(1,?,'HEALTHY',NULL,1,?,?,NULL,NULL) ON CONFLICT(id) DO UPDATE SET status=excluded.status,heartbeat_at=excluded.heartbeat_at,result_json=excluded.result_json",
                 (
@@ -1403,6 +1430,8 @@ class OptionExecution:
             return result
         assessed = self.assess(quote, underlying, now=now)
         if assessed["status"] == "HEALTHY" and self.policy.target_exits is not None:
+            if assessed.get("health_management", {}).get("status") == "INCOMPLETE":
+                return {**assessed, "status": "HEALTH_MANAGEMENT_BLOCKED"}
             if set(assessed.get("trade_floor", {}).get("reasons", ())) - {
                 "UNRESOLVED_POSITION_ORDER"
             }:

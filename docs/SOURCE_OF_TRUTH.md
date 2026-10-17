@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.59. Adopted product direction and working delivery contract, 2026-10-17 UTC.
+Version 1.60. Adopted product direction and working delivery contract, 2026-10-17 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -138,8 +138,15 @@ target progress and last-progress times. Partial sales and restart preserve them
 missing, conflicting or gapped observations cannot invent stall coverage. Exact
 stall/divergence/giveback diagnostics are audited with supervision and exposed by
 stored-only observer reads. Every execution and entry/management cost remains in
-native accounting; premium diagnostics do not claim net returns. Remaining health
-context/composition, frozen actions and native execution acceptance stay open.
+native accounting; premium diagnostics do not claim net returns.
+[Observed daytrade health](OPTIONS_HEALTH_MANAGEMENT.md) now composes those inputs
+with native spread/session evidence in an explicit frozen PAPER policy. Complete
+inputs can tighten pre-target stops or latch governed health exits; incomplete data
+withholds new actions while preserving independent protection. Rechecks, restart,
+attempted-order reservations, native attribution/export and independent A/B/C/D
+cost accounting remain bound. Swing and longer-dated contracts are excluded;
+unverified free-form regime labels and stale-price action rules are not adopted.
+Authentic health evidence and prospective policy performance remain unverified.
 [Scope management plans](OPTIONS_SCOPE_MANAGEMENT.md) now preserve the source
 balanced allocations for one through three owned contracts and explicit profile
 premium limits beneath the owner ceiling. A new-cohort native entry premium

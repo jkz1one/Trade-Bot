@@ -19,6 +19,9 @@ from app.options.models import Money, Name, OptionProposal, OptionRecord, Positi
 
 
 class DecisionAttribution(OptionRecord):
+    health_management: Literal["observed-daytrade-health-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     trade_floor: Literal["native-target-floor-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -119,6 +122,10 @@ def order_attribution(db, row):
     from app.options.trade_floor import verify_binding as verify_floor
 
     verify_floor(intent, approval)
+    from app.options.health_management import verify_binding as verify_health
+
+    verify_health(intent, approval)
+    health_policy = intent.health_management
     floor_policy = intent.trade_floor
     trail_policy = intent.premium_trail
     premium_protection = intent.entry_premium_protection
@@ -149,6 +156,8 @@ def order_attribution(db, row):
         verify_premium_binding(entry_intent, _json(entry[1]))
         verify_trail(entry_intent, _json(entry[1]))
         verify_floor(entry_intent, _json(entry[1]))
+        verify_health(entry_intent, _json(entry[1]))
+        health_policy = entry_intent.health_management
         floor_policy = entry_intent.trade_floor
         trail_policy = entry_intent.premium_trail
         premium_protection = entry_intent.entry_premium_protection
@@ -162,6 +171,7 @@ def order_attribution(db, row):
     if entry_id is not None:
         lineage = entry_lineage(db, entry_id)
     return {
+        **({"health_management": health_policy} if health_policy is not None else {}),
         **({"trade_floor": floor_policy} if floor_policy is not None else {}),
         **({"premium_trail": trail_policy} if trail_policy is not None else {}),
         **(
@@ -352,6 +362,7 @@ def decision_attribution(db, key, outcome, policy):
             "entry_premium_protection",
             "premium_trail",
             "trade_floor",
+            "health_management",
         ):
             if inputs.get(field) != approval.get(field):
                 raise ValueError("Stored target proposal binding mismatch")
