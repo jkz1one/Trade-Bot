@@ -192,3 +192,9 @@ a separate plan after eligible owned admission. It uses that actual quantity, th
 locked objectives and the current eligible contract profile. Account eligibility
 and management-plan readiness remain distinct; a four-contract plan reports its
 missing third objective without changing admission or granting execution authority.
+
+The optional frozen [`completed-spx-plateaus-v2` quality policy](OPTIONS_SCOPE_QUALITY.md#optional-confirmed-equal-highequal-low-plateaus)
+also includes confirmed equal-high/low runs in the same current-price path. Stored
+admission/observer evidence retains exact levels, formation times, touch counts
+and confirmation times. This extends known-level coverage without changing costs,
+sizing, locked geometry or the native entry guard; complete path proof remains open.

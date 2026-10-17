@@ -132,10 +132,51 @@ no called play. Stored scans retain the input and policy hashes. No caller-suppl
 clear-path flag or precomputed pivot list is trusted.
 
 This strengthens the known-level review, but **does not complete full path proof**.
-Overnight structure, other horizons, plateau/supply-demand zones and authentic
-coverage remain unproven. `complete_path_proven` remains false and convexity/native
+Overnight structure, other horizons, broader supply/demand zones and authentic
+coverage remain unproven. The optional plateau extension below supplies only
+confirmed equal-extreme levels. `complete_path_proven` remains false and convexity/native
 Scope execution remain blocked. Absence of these finite known levels is not proof
 that price can move unobstructed to the objective.
+
+### Optional confirmed equal-high/equal-low plateaus
+
+New cohorts may instead freeze `structural_path="completed-spx-plateaus-v2"`.
+This includes every v1 structural check and adds maximal runs of at least two
+consecutive completed SPX bars with **exactly equal highs or exactly equal lows**.
+Both adjacent bars must have strictly lower highs for a plateau high, or strictly
+higher lows for a plateau low. No tolerance merges nearby prices. A run at the
+start of the supplied session lacks its left neighbor; an unfinished run at the
+end lacks its right confirmation. Neither is accepted.
+
+This is a conservative extension of the existing known-level obstruction check,
+not a newly sourced SignalFlow score or a complete supply/demand classifier.
+The original pinned implementation supplies no complete obstruction classifier.
+No setup score, target, sizing tier or account threshold changes.
+
+Each `PLATEAU_HIGH` / `PLATEAU_LOW` retains the exact level, touch count, first
+formation-bar start, last formation-bar end and right confirmation-bar end. Typed
+records require the corresponding contiguous five-minute formation duration and
+one following confirmation interval. A run produces one level; separate runs and
+other evidence kinds retain separate records even at equal prices. The same
+208-record bound covers strict pivots plus plateaus without truncation.
+
+The existing directional, inclusive current-reference-to-T2 path applies. A
+plateau at/before T1 rejects quality or current-price admission; one after T1
+remains visible. Current-price review uses CALL ask / PUT bid and original locked
+geometry. Newly confirmed obstructions reset sampled arming; rejected calls do not
+consume a watch or charge a model. Complete source, clock, history and payload
+checks run before deriving levels. Confirmation never uses a forming or future bar.
+
+The nested policy freezes with the watch and contract policy. Existing omitted/v1
+policies retain their serialization and behavior, and cannot adopt v2 on reopen.
+Stored scans, admission paths and observer output preserve plateau provenance
+through restart; observer reads do not recompute it. Common-governor fees, account
+limits, independent ledgers and all entry/management charges remain unchanged.
+
+`complete_path_proven` remains false. This extension does not establish overnight,
+other-horizon or broad zone coverage, enable convexity, resolve the missing T3, or
+remove the native Scope entry guard. Native watch/order linkage, filled family-loss
+controls and Scope runtime/replay acceptance remain required.
 
 `passed` requires detected context, sufficient exact first-target reward, the arm
 score threshold, an unconsumed first objective and no supplied level before it.

@@ -1,5 +1,60 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+
+## P7 Scope confirmed plateau path evidence: 2026-10-17 UTC
+
+New research cohorts can freeze `completed-spx-plateaus-v2`, extending the existing
+completed SPX level review with maximal exact equal-high/equal-low runs. Strict
+outside neighbors and a completed right confirmation bar are required. Formation
+start/end, confirmation time and touch count persist alongside the exact level.
+No tolerance, future bar, session-edge neighbor or complete-path claim is inferred.
+[Contract and remaining coverage limits](OPTIONS_SCOPE_QUALITY.md#optional-confirmed-equal-highequal-low-plateaus).
+
+The same levels now participate in quality, sampled arming and current CALL-ask /
+PUT-bid admission against locked geometry. Obstructions through T1 reject; those
+between T1 and T2 remain visible. Newly confirmed obstructions reset arming, and
+blocked calls consume no watch or model charge. Stored observer output and restart
+preserve provenance. Existing omitted/v1 policies retain behavior and serialization;
+frozen watch cohorts cannot change enrollment on reopen. No score, objective,
+quantity tier, account limit or cost policy changed.
+
+Fresh GitHub baseline: `b0c5b66b967bea4537eba3a2bd205011ae68cad9`, tree
+`5b5946b2513f3216a36e45fc564149180521b94b`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Focused source suite: **40 passed in 4.44s**, warnings treated as errors.
+  Covers both directions, exact path endpoints, 2/3/94-touch formations, missing
+  neighbors, unequal prices, no look-ahead, legacy behavior, invalid histories,
+  atomic watch rejection, arming resets, fee-inclusive admission, stored reads,
+  restart and frozen-policy mismatch.
+- Installed wheel, outside the checkout: **657 passed in 93.39s**, warnings treated
+  as errors. Includes all 16 Scope test files and enrolled A/B/C/D replay retaining
+  every entry/management charge in independent accounts.
+- All 169 application source/wheel/installed modules match; all 16 copied Scope
+  test files match. Scoped lint/format, dependency and whitespace checks pass;
+  60 unique local documentation targets exist.
+- Wheel SHA-256: `d2eca442a6420dd8dde488d59255e5fc6867de0a5f02d17156fc53c4848bd666`.
+  Artifacts/logs beside checkout: `scope-plateaus-env`, `scope-plateaus-dist`,
+  `scope-plateaus-proof`, `scope-plateaus-build.log`,
+  `scope-plateaus-source-tests.log` and `scope-plateaus-installed-tests.log`.
+- Earlier focused runs caught fixture omissions: contract metadata lacked observed
+  delta/liquidity, and a flat-close extension no longer detected the selected trend
+  pattern. Corrected fixtures exercise the intended gates; no production guard
+  was weakened. Those logs remain `scope-plateaus-focused.log` and
+  `scope-plateaus-focused-final.log`.
+
+This closes the equal-extreme plateau component of known-level coverage, not the
+full obstruction gate. Overnight/other-horizon/broader-zone coverage, native Scope
+watch/order linkage, filled family-loss/reset controls, missing four-contract T3
+and runtime/replay enrollment remain open. Convexity and native Scope entry remain
+blocked. Authentic provider/model/host and prospective economics, remaining Swing
+and mixed-instrument support, and the dedicated UI pass are separate gates.
+Main untouched, PR draft, LIVE disabled and deployment frozen. No authentic
+provider/model/broker call, dependency or host/deployment change.
+
+---
 ## P7 frozen observed daytrade health actions: 2026-10-17 UTC
 
 New PAPER cohorts can explicitly enroll `observed-daytrade-health-v1`. Original

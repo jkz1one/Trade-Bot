@@ -84,7 +84,8 @@ loss pauses become HOLD without creating a global halt. Owned management remains
 Scope's stored sizing review now applies the approved ask-price quantity tiers
 through the common governor, retaining stricter account limits and all fees.
 Opt-in Scope path review now adds completed SPX opening-range levels, confirmed
-pivots and exact session VWAP; full unobstructed-path proof remains open.
+pivots and exact session VWAP. A separate frozen extension adds confirmed equal-high/low
+plateaus to quality, arming and current-price admission; full path proof remains open.
 The stored observer now displays Scope research watches, arming and sizing, with
 explicit expired-evidence labels and no order authority.
 Optional new-cohort Degen/Swing loss controls now add independent family streaks,

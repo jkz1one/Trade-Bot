@@ -1,6 +1,6 @@
 """Deterministic Scope research quality and known-level path review. No trade authority."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import ROUND_FLOOR, Context, Decimal, localcontext
 from fractions import Fraction
 from typing import Literal
@@ -48,7 +48,7 @@ class ScopeQualityPolicy(OptionRecord):
     arm_score: int = Field(strict=True, ge=94, le=100)
     convexity_score: int = Field(strict=True, ge=97, le=100)
     minimum_first_target_r: Money = Field(ge=Decimal("1.5"), le=5)
-    structural_path: Literal["completed-spx-levels-v1"] | None = Field(
+    structural_path: Literal["completed-spx-levels-v1", "completed-spx-plateaus-v2"] | None = Field(
         default=None, exclude_if=lambda value: value is None
     )
 
@@ -76,10 +76,41 @@ class ScopePathLevel(OptionRecord):
         "SESSION_VWAP",
         "PIVOT_HIGH",
         "PIVOT_LOW",
+        "PLATEAU_HIGH",
+        "PLATEAU_LOW",
     ]
     level: Money = Field(gt=0)
     at_or_before_first_target: bool
     confirmed_at: datetime | None = Field(default=None, exclude_if=lambda value: value is None)
+    formation_started_at: datetime | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+    formation_ended_at: datetime | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+    touches: int | None = Field(
+        default=None, strict=True, ge=2, le=94, exclude_if=lambda v: v is None
+    )
+
+    @model_validator(mode="after")
+    def plateau_evidence(self):
+        if self.kind.startswith("PLATEAU"):
+            if (
+                self.touches is None
+                or self.formation_started_at is None
+                or self.formation_ended_at is None
+                or self.confirmed_at is None
+                or self.formation_ended_at - self.formation_started_at
+                != timedelta(minutes=5 * self.touches)
+                or self.confirmed_at - self.formation_ended_at != timedelta(minutes=5)
+            ):
+                raise ValueError("Confirmed plateau formation evidence required")
+        elif any(
+            v is not None
+            for v in (self.formation_started_at, self.formation_ended_at, self.touches)
+        ):
+            raise ValueError("Plateau formation evidence belongs only to plateau levels")
+        return self
 
 
 class ScopeQualityObservation(OptionRecord):
@@ -230,7 +261,15 @@ def _known_path(frame, context, g, policy, spot, now):
     if policy.structural_path is not None:
         path = tuple(
             sorted(
-                (*path, *_structural_path(frame, g, sign, spot=spot)),
+                (
+                    *path,
+                    *_structural_path(frame, g, sign, spot=spot),
+                    *(
+                        _plateau_path(frame, g, sign, spot=spot)
+                        if policy.structural_path == "completed-spx-plateaus-v2"
+                        else ()
+                    ),
+                ),
                 key=lambda p: (
                     (p.level - spot) * sign,
                     p.kind,
@@ -279,3 +318,42 @@ def _structural_path(frame, geometry, sign, *, spot=None):
         )
         if (value - spot) * sign >= 0 and (value - Fraction(geometry.target_two)) * sign <= 0
     )
+
+
+def _plateau_path(frame, geometry, sign, *, spot):
+    """Maximal equal-extreme runs, confirmed only by a strictly lower/higher right bar.
+
+    Called only after complete, bound SPX history passes. No tolerance merges nearby
+    prices, no session-edge run has a missing neighbor, and no future bar is inferred.
+    """
+    bars = next(h.bars for h in frame.histories if h.symbol == "SPX")
+    levels = []
+    for attr, kind, extreme in (("high", "PLATEAU_HIGH", 1), ("low", "PLATEAU_LOW", -1)):
+        start = 0
+        while start < len(bars):
+            value = getattr(bars[start], attr)
+            end = start + 1
+            while end < len(bars) and getattr(bars[end], attr) == value:
+                end += 1
+            if (
+                end - start >= 2
+                and start > 0
+                and end < len(bars)
+                and (value - getattr(bars[start - 1], attr)) * extreme > 0
+                and (value - getattr(bars[end], attr)) * extreme > 0
+                and (value - spot) * sign >= 0
+                and (value - geometry.target_two) * sign <= 0
+            ):
+                levels.append(
+                    ScopePathLevel(
+                        kind=kind,
+                        level=value,
+                        at_or_before_first_target=(value - geometry.target_one) * sign <= 0,
+                        confirmed_at=bars[end].ends_at,
+                        formation_started_at=bars[start].begins_at,
+                        formation_ended_at=bars[end - 1].ends_at,
+                        touches=end - start,
+                    )
+                )
+            start = end
+    return tuple(levels)

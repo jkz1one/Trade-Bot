@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.60. Adopted product direction and working delivery contract, 2026-10-17 UTC.
+Version 1.61. Adopted product direction and working delivery contract, 2026-10-17 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -50,8 +50,11 @@ require cooldown plus fresh post-reset reversal bars. [Scope quality review](OPT
 now adds auditable source scoring and conservative known-level path checks, with
 optional frozen watch integration. Opt-in completed SPX structural path checks
 add opening-range levels, confirmed pivots and exact VWAP without claiming
-complete path proof. [Scope sampled arming](OPTIONS_SCOPE_ARMING.md) now adds
-durable fresh-observation holds and resets against locked evidence.
+complete path proof. A separate frozen `completed-spx-plateaus-v2` extension now
+adds confirmed exact equal-high/low runs to quality, arming and current-price
+admission, retaining formation and confirmation times through stored observation
+and restart. Existing v1 cohorts remain unchanged.
+[Scope sampled arming](OPTIONS_SCOPE_ARMING.md) now adds durable fresh-observation holds and resets against locked evidence.
 [Scope contract profiles](OPTIONS_SCOPE_CONTRACTS.md) now add exact-contract price,
 spread, observed-delta and liquidity gates with optional frozen watch integration.
 [Scope owned admission review](OPTIONS_SCOPE_OWNED_ADMISSION.md) now stores
