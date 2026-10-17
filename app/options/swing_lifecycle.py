@@ -1,8 +1,8 @@
 """Sticky pre-entry Swing retirement in the existing fenced owner journal."""
 
 from app.execution.engine import ExecutionBlocked
-from app.options.engine import fingerprint
-from app.options.swing import SwingTerminal, seed_issues
+from app.options.engine import exact, fingerprint
+from app.options.swing import SwingSeed, SwingTerminal, seed_issues
 
 
 def completed_invalidation(scan, history, intraday, policy, calendar, symbols):
@@ -71,6 +71,10 @@ def load_terminal(db, seed):
 
 
 def retain_terminal(c, db, seed, terminal):
+    return retain_owned_terminal(c.engine, db, seed, terminal, c.now())
+
+
+def retain_owned_terminal(engine, db, seed, terminal, now):
     """First terminal evidence wins, including when later history is revised."""
     if terminal is None or load_terminal(db, seed) is not None:
         return
@@ -85,9 +89,9 @@ def retain_terminal(c, db, seed, terminal):
         "INSERT INTO execution_option_swing_terminals VALUES(?,?)",
         (digest, terminal.model_dump_json()),
     )
-    c.engine.journal.event(
+    engine.journal.event(
         db,
-        c.now(),
+        now,
         "SWING_SEED_TERMINAL",
         {
             "session": seed.target_session.isoformat(),
@@ -121,3 +125,87 @@ def retain_scans(c, scans):
         for scan in scans:
             if scan.version == "swing-next-session-v1" and scan.terminal is not None:
                 retain_terminal(c, db, scan.seed, scan.terminal)
+
+
+@exact
+def quote_invalidation(seed, policy, limits, calendar, quote, now):
+    """Use only an observed, fresh, uncrossed quote for the locked target session."""
+    from decimal import ROUND_CEILING, ROUND_FLOOR
+
+    from app.options.degen import _metric
+    from app.options.governor import _fresh
+
+    if policy.unfilled_lifecycle != "observed-invalidation-v2" or quote is None:
+        return None
+    window = calendar.current_window(now)
+    if (
+        seed.created_at > now
+        or seed_issues(seed, policy, calendar, limits.allowed_underlyings)
+        or window is None
+        or window.session_date != seed.target_session.isoformat()
+        or not window.opens_at <= quote.source_at <= now < window.closes_at
+        or quote.symbol != seed.history.symbol
+        or quote.source != limits.underlying_source
+        or not quote.complete
+        or quote.entitlement != "REALTIME"
+        or not limits.minimum_underlying_price <= quote.bid <= quote.ask
+        or not _fresh(
+            quote.source_at,
+            quote.received_at,
+            now,
+            limits.quote_max_age_seconds,
+            limits.max_receive_lag_seconds,
+        )
+    ):
+        return None
+    call = seed.instrument.contract.right == "CALL"
+    bar = seed.history.bars[-1]
+    stop = _metric(
+        bar.low * (1 - policy.stop_buffer_fraction)
+        if call
+        else bar.high * (1 + policy.stop_buffer_fraction),
+        ROUND_CEILING if call else ROUND_FLOOR,
+    )
+    if quote.bid > stop if call else quote.ask < stop:
+        return None
+    return SwingTerminal(
+        seed_hash=fingerprint(seed),
+        status="INVALIDATED",
+        observed_at=now,
+        triggered_at=quote.source_at,
+        invalidation=stop,
+        quote=quote,
+    )
+
+
+def observe_quotes(c, underlyings):
+    if c.swing_policy is None or c.swing_policy.unfilled_lifecycle != "observed-invalidation-v2":
+        return
+    at = c.now()
+    window = c.engine.calendar.current_window(at)
+    if window is None:
+        return
+    with c.engine.journal.write() as db:
+        ledger = c._bound(db)
+        if (
+            ledger.position is not None
+            or db.execute(
+                "SELECT 1 FROM execution_orders WHERE active_lock IS NOT NULL AND (status!='PREPARED' OR attempted_at IS NOT NULL) LIMIT 1"
+            ).fetchone()
+        ):
+            return
+        for row in db.execute(
+            "SELECT seed_json FROM execution_option_swing_seeds WHERE session=?",
+            (window.session_date,),
+        ).fetchall():
+            seed = SwingSeed.model_validate_json(row[0])
+            quotes = [q for q in underlyings if q.symbol == seed.history.symbol]
+            if len(quotes) == 1:
+                retain_terminal(
+                    c,
+                    db,
+                    seed,
+                    quote_invalidation(
+                        seed, c.swing_policy, c.engine.limits, c.engine.calendar, quotes[0], at
+                    ),
+                )

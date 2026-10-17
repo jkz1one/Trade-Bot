@@ -322,7 +322,10 @@ def test_shortlist_reconstructs_only_visible_terminal_prefix(tmp_path, breach_fi
         assert datetime.fromisoformat(b["terminal"]["observed_at"]) == later_at
 
 
-def test_enrolled_native_abcd_replay_retains_independent_accounts_and_every_cost(tmp_path):
+@pytest.mark.parametrize("lifecycle", [POLICY, "observed-invalidation-v2"])
+def test_enrolled_native_abcd_replay_retains_independent_accounts_and_every_cost(
+    tmp_path, lifecycle
+):
     import sqlite3
 
     from test_option_managed_replay import managed_settings
@@ -330,7 +333,7 @@ def test_enrolled_native_abcd_replay_retains_independent_accounts_and_every_cost
 
     from app.options.replay import run_replay
 
-    tape = shared_tape(tmp_path, full=True, lifecycle=POLICY)
+    tape = shared_tape(tmp_path, full=True, lifecycle=lifecycle)
     result = asyncio.run(run_replay(managed_settings(tape), tape, tmp_path / "run"))
     assert result["report"]["status"] == "COMPLETE_ARITHMETIC"
     assert result["report"]["economic_conclusion"] == "INCONCLUSIVE"
@@ -354,15 +357,27 @@ def test_enrolled_native_abcd_replay_retains_independent_accounts_and_every_cost
             row["initial"]["cash"]
         ) - D(costs[arm]["known_model_cost"]) - D(".03")
         with sqlite3.connect(tmp_path / "run" / arm / "journal.db") as db:
-            assert (
-                db.execute("SELECT count(*) FROM execution_option_swing_terminals").fetchone()[0]
-                == 0
-            )
+            assert db.execute("SELECT count(*) FROM execution_option_swing_terminals").fetchone()[
+                0
+            ] == (1 if lifecycle == "observed-invalidation-v2" else 0)
+            if lifecycle == "observed-invalidation-v2":
+                terminal = json.loads(
+                    db.execute(
+                        "SELECT terminal_json FROM execution_option_swing_terminals"
+                    ).fetchone()[0]
+                )
+                last_fill = max(
+                    datetime.fromisoformat(fill["occurred_at"])
+                    for order in row["orders"]
+                    for fill in order["observation"]["fills"]
+                )
+                assert datetime.fromisoformat(terminal["triggered_at"]) >= last_fill
+                assert terminal["quote"] is not None
             assert (
                 json.loads(
                     db.execute("SELECT policy_json FROM execution_option_strategy").fetchone()[0]
                 )["swing"]["unfilled_lifecycle"]
-                == POLICY
+                == lifecycle
             )
     assert D(costs["D"]["known_model_cost"]) == 2 * D(costs["C"]["known_model_cost"])
     assert (

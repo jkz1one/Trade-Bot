@@ -390,16 +390,35 @@ def replay_shortlist(tape, cycle_key, *, as_of):
 def _replay_swing(tape, event, histories, scans):
     """Rebuild first-valid locks only from the visible cycle prefix, without an owner."""
     h, calendar = tape.header, XNYSCalendar()
-    locks, terminals = {}, {}
+    locks, terminals, locked_seeds = {}, {}, {}
+
+    def observe_quote(seed, previous):
+        if h.swing.unfilled_lifecycle != "observed-invalidation-v2":
+            return
+        from app.options.swing_lifecycle import quote_invalidation
+
+        quotes = [q for q in previous.frame.underlyings if q.symbol == seed.history.symbol]
+        if len(quotes) == 1:
+            terminal = quote_invalidation(
+                seed, h.swing, h.limits, calendar, quotes[0], previous.recorded_at
+            )
+            if terminal is not None:
+                terminals.setdefault(fingerprint(seed), terminal)
+
     for previous in tape.events:
         if previous.sequence > event.sequence:
             break
+        for seed in locked_seeds.values():
+            observe_quote(seed, previous)
         for item in previous.frame.swing:
             seed = item.seed
             if (
                 h.swing.unfilled_lifecycle is None or seed.created_at <= previous.recorded_at
             ) and not seed_issues(seed, h.swing, calendar, h.setup.symbols):
                 locks.setdefault((seed.target_session, seed.history.symbol), fingerprint(seed))
+                if locks[(seed.target_session, seed.history.symbol)] == fingerprint(seed):
+                    locked_seeds.setdefault(fingerprint(seed), seed)
+                    observe_quote(seed, previous)
                 if h.swing.unfilled_lifecycle is not None and previous.kind == "CYCLE":
                     histories_at = {x.symbol: x for x in previous.frame.histories}
                     history = histories_at.get(seed.history.symbol)

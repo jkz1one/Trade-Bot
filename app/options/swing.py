@@ -9,7 +9,15 @@ from pydantic import Field, model_validator
 
 from app.options.degen import DegenBar, DegenScan, _metric
 from app.options.governor import _fresh
-from app.options.models import Evidence, Money, Name, OptionInstrument, OptionRecord, Symbol
+from app.options.models import (
+    Evidence,
+    Money,
+    Name,
+    OptionInstrument,
+    OptionRecord,
+    Symbol,
+    UnderlyingQuote,
+)
 from app.options.selection import ContractMetadata, ContractReadPlan, OptionInventory, _plan
 
 
@@ -25,8 +33,8 @@ class SwingPolicy(OptionRecord):
     catalyst_max_age_seconds: int = Field(gt=0, le=60, strict=True)
     family_priority: tuple[Literal["DEGEN", "SWING"], Literal["DEGEN", "SWING"]]
     holding_policy: Literal["SESSION_CLOSE"] = "SESSION_CLOSE"
-    unfilled_lifecycle: Literal["completed-invalidation-v1"] | None = Field(
-        default=None, exclude_if=lambda v: v is None
+    unfilled_lifecycle: Literal["completed-invalidation-v1", "observed-invalidation-v2"] | None = (
+        Field(default=None, exclude_if=lambda v: v is None)
     )
 
     @model_validator(mode="after")
@@ -88,6 +96,7 @@ class SwingTerminal(OptionRecord):
     triggered_at: datetime
     invalidation: Money | None = Field(default=None, gt=0)
     history_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    quote: UnderlyingQuote | None = Field(default=None, exclude_if=lambda v: v is None)
 
     @model_validator(mode="after")
     def coherent(self):
@@ -95,9 +104,10 @@ class SwingTerminal(OptionRecord):
         if (
             self.triggered_at > self.observed_at
             or invalidated != (self.invalidation is not None)
-            or invalidated != (self.history_hash is not None)
+            or int(self.history_hash is not None) + int(self.quote is not None) != int(invalidated)
+            or (self.quote is not None and self.triggered_at != self.quote.source_at)
         ):
-            raise ValueError("Dated terminal evidence with exact invalidation history required")
+            raise ValueError("Dated terminal evidence with exact invalidation evidence required")
         return self
 
 

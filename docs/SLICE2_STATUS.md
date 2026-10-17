@@ -1,6 +1,77 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
 
+## P7 observed Swing quote invalidation: 2026-10-17 UTC
+
+New populations may now enroll
+`SwingPolicy.unfilled_lifecycle="observed-invalidation-v2"`. It retains valid
+underlying-quote breaches between completed-bar decisions, including a recovery
+before the next entry cycle. The existing v1 completed-bar behavior remains frozen.
+[Policy, native paths and limits](OPTIONS_SHARED_STRATEGIES.md#observed-quote-invalidation).
+
+The quote must match the configured source, exact seed symbol and target exchange
+session, with REALTIME complete evidence, ordered fresh source/receipt clocks,
+uncrossed prices and the existing price floor. Exact CALL bid / PUT ask touches
+of the original buffered daily stop count. The terminal retains the full observed
+quote and source/observation times; no completed history is invented.
+
+The existing supervisor and native entry cycle persist this evidence. Preparation
+and dispatch also retain a fresh breach atomically with rejection. Paid rejected
+proposals stay charged. Unattempted prepared intents can lose eligibility; attempted
+or uncertain orders and known positions retain their existing protection path.
+After a verified close, a later breach can retire the same seed for future entry.
+No cancellation, resubmission, synthetic fill or implicit flat-state recovery was
+added. The native replay applies this boundary separately to each account, while
+shortlist replay remains an account-free visible-prefix diagnostic.
+
+Stored terminal/event records retain between-cycle evidence immediately; subsequent
+opportunity scans and observer history carry that terminal. Historical opportunity
+rows retain their original cycle observations. Dashboard reads do not sample data
+or advance lifecycle. Independent A/B/C/D accounts and every entry/management cost,
+fee and data/host allocation remain bound to native accounting.
+
+Fresh GitHub baseline: `6e84eb28e29e42a69693c38c764ab4054ae7c6c2`, tree
+`897e68f5986413730355265d5ca055e5494736e2`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Focused source lifecycle/quote suites: **50 passed, two full replay cases
+  deselected in 16.15s**, warnings treated as errors. Separate native quote-race
+  replay: **one passed in 7.04s**. Covers CALL/PUT, exact touches, frozen v1,
+  recovery/restart, invalid/ambiguous quotes, paid entry races, attempted/filled
+  protection, continuous runtime/observer and no future tape leakage.
+- Initial installed regression outside checkout: **243 passed, one failed, one
+  deselected in 252.70s**, warnings treated as errors. The sole failure was the
+  reused full-session test expecting no terminal after a completed trade. V2
+  correctly retires that seed on a later quote while the account is flat. The
+  revised assertion checks retirement at/after the verified fill history and
+  retained observed quote. No application guard changed for this correction.
+- Corrected installed full-session replay: **one passed in 145.49s**, warnings
+  treated as errors. Together with the initial regression, **244 distinct installed
+  cases are verified**; the previously verified v1 full-session case was excluded.
+  All seven selected test files match the copied installed-proof inputs. The v2
+  replay retains independent A/B/C/D accounts, entry and management charges, fees
+  and data/host allocations; complete arithmetic remains economically INCONCLUSIVE.
+- All 172 Python modules and seven HTML templates match source/wheel/installation.
+  Scoped lint/format, dependency and whitespace checks pass; documentation links
+  resolve. Wheel SHA-256:
+  `f439630c20ceab9e3d3d4234568e1f096a6c5720d5ae18da702cd6d3040d405a`.
+- Artifacts/logs beside checkout: `swing-quotes-env`, `swing-quotes-dist`,
+  `swing-quotes-proof`, `swing-quotes-build.log`, `swing-quotes-source.log`,
+  `swing-quotes-race-source.log`, `swing-quotes-installed.log` and
+  `swing-quotes-installed-replay-final.log`.
+
+Observed-quote retirement is fixture verified. Unfilled T1 consumption, broader
+Swing families/overnight ownership, Scope execution gates, mixed stock/options,
+authentic provider/host acceptance, prospective economics and actual dashboard
+visual acceptance remain open. Main untouched, PR draft, LIVE disabled and deployed
+experiment frozen. No authentic provider/model/broker call, dependency/host change
+or deployment.
+
+---
+
+
 ## P7 terminal Swing completed-bar invalidation: 2026-10-17 UTC
 
 Reproduced a concrete lifecycle gap: a completed CALL bar crossed the original

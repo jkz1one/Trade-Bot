@@ -192,6 +192,9 @@ class _ArmReplay:
             await self.c.supervise((q,) if q is not None else (), (u,) if u is not None else ())
 
         else:
+            from app.options.swing_lifecycle import observe_quotes
+
+            observe_quotes(self.c, event.frame.underlyings if event is not None else ())
             self.c.engine.assess(None, None, now=at)
 
     async def settle_task(self):

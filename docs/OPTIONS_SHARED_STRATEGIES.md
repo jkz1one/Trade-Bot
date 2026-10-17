@@ -139,6 +139,56 @@ The option is omitted from legacy serialization when absent; existing population
 and tape hashes remain unchanged. Enabling or changing it requires a new frozen
 population. It is not automatically enabled in examples or the deployed experiment.
 
+### Observed quote invalidation
+
+A separate new-population policy,
+`SwingPolicy.unfilled_lifecycle="observed-invalidation-v2"`, includes the completed-bar
+behavior and closes the between-bar quote gap. An observed price breach can no
+longer disappear when price recovers before the next completed-bar entry cycle.
+The original v1 policy keeps its original behavior and serialized records.
+
+The quote must be complete, REALTIME, from the owner's frozen underlying source,
+for the exact seed symbol and target XNYS session. Source/receipt clocks must pass
+the existing quote-age and receive-lag limits; future, stale, crossed, below-floor,
+foreign and duplicate-symbol evidence cannot establish retirement. CALLs use bid
+at or below the original buffered daily stop; PUTs use ask at or above it. Exact
+touches count. The retained terminal contains the full typed quote, original stop,
+seed hash, source trigger time and observation time. It has no fabricated completed
+bar/history hash. First retained terminal evidence still wins.
+
+The existing fast coordinator supervision path observes supplied underlying quotes
+before its asynchronous protection work. Native entry cycles also observe their
+frame after locking seeds and before candidate/model work. A stored position or an
+already-attempted/uncertain active order keeps its existing ownership/protection
+path; its seed is not retired by this unfilled observer. An unattempted PREPARED
+intent can lose seed eligibility, so its later dispatch is rejected. This introduces
+no cancellation, resubmission, synthetic fill or assertion that an unresolved order
+is flat. Filled-position mandatory exits remain independent.
+
+Preparation and dispatch also inspect their fresh underlying quote against the
+original daily stop. A newly observed breach is committed with the terminal evidence
+and rejection inside the existing native transaction. A completed paid model call
+stays charged even when this last review rejects its proposal. No new model call,
+provider request or execution worker is introduced.
+
+Native replay delivers newly recorded MARKET quotes to the same unfilled observer;
+it does not manufacture observations from timer wakes or cached quotes. Account-free
+shortlist replay reconstructs quote retirement only from its visible input prefix,
+including MARKET events between cycles. That diagnostic has no ownership ledger
+and cannot decide whether a native account was already held or attempted. Native
+replay retains those independent account differences and all actual recorded costs.
+
+Between-cycle quote evidence is retained immediately in the native terminal/event
+journal. Subsequent stored opportunity scans and observer history include the full
+terminal; historical opportunity rows remain observations from their own cycle.
+Reading the dashboard does not sample quotes or advance lifecycle state. Authentic
+provider data and actual browser visual acceptance remain separate gates.
+
+This closes observed-quote invalidation for the existing session-close Swing
+adaptation. Unfilled T1 consumption, new setup families, overnight lifecycle and
+full Swing acceptance remain open. Missing observations never imply an unbroken
+live price path or a proven trading edge.
+
 ### Population creation
 
 Only a new population may enable or change `swing_policy`. Existing frozen Degen

@@ -145,6 +145,13 @@ def review_shared_entry(engine, db, key, proposal, quote, underlying, now):
     ):
         raise ExecutionBlocked("SWING_SEED_LOCK_REQUIRED")
     catalyst = scan.catalyst
+    if policy.unfilled_lifecycle == "observed-invalidation-v2":
+        from app.options.swing_lifecycle import quote_invalidation, retain_owned_terminal
+
+        terminal = quote_invalidation(seed, policy, engine.limits, engine.calendar, underlying, now)
+        if terminal is not None:
+            retain_owned_terminal(engine, db, seed, terminal, now)
+            raise ExecutionBlocked("SWING_SEED_TERMINAL")
     if (
         not _fresh(
             catalyst.source_at,

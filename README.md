@@ -45,6 +45,8 @@ The first Swing family uses locked next-session daily structure with current
 catalyst/chase checks and session-close protection; overnight Swing remains open.
 New frozen cohorts can retain completed-bar Swing invalidation across recovery,
 revised histories and restart, with native entry guards and stored observer evidence.
+A separate frozen quote policy now retains fresh stop breaches between completed bars,
+through existing supervision, native entry review and independent replay.
 [Shared-family replay/export](docs/OPTIONS_SHARED_REPLAY.md) now runs that universe
 through independent A/B/C/D accounts with frozen tapes and all entry/management costs.
 [Historical dashboard comparison](docs/OPTIONS_COMPARISON_VIEW.md) now links a

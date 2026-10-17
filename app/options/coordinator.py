@@ -496,6 +496,9 @@ class DegenCoordinator:
     async def supervise(self, quotes=(), underlyings=()):
         """Fast owned-position management, independent of the five-minute entry claim."""
         frame = DegenFrame(quotes=quotes, underlyings=underlyings)
+        from app.options.swing_lifecycle import observe_quotes
+
+        observe_quotes(self, frame.underlyings)
         with self.engine.journal.read() as db:
             ledger = self._bound(db)
             held = self._held_instrument(db, ledger)
@@ -578,6 +581,9 @@ class DegenCoordinator:
                 from app.options.shared_strategy import lock_seeds
 
                 lock_seeds(self, frame.swing)
+                from app.options.swing_lifecycle import observe_quotes
+
+                observe_quotes(self, frame.underlyings)
             planned = self.quote_plan(frame.histories, frame.inventories, frame.swing)
             if self.swing_policy and self.swing_policy.unfilled_lifecycle is not None:
                 from app.options.swing_lifecycle import retain_scans
