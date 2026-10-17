@@ -1,0 +1,40 @@
+{% macro decision_history(items) -%}
+<div class="decision-list" aria-label="Stored decision history">
+{% for item in items %}
+{% set a = item.attribution %}
+<article class="decision" aria-labelledby="decision-{{ item.id }}">
+  <div class="head">
+    <h3 id="decision-{{ item.id }}">{{ item.family }} <span class="muted">/</span> {{ a.role|title if a else 'Recorded cycle' }}</h3>
+    <span class="tag {{ 'warn' if item.status in ['HOLD', 'IN_PROGRESS'] else '' }}">{{ item.status }}</span>
+  </div>
+  <p class="decision-meta">Cycle {{ item.id }} · {{ item.started_at }} · {{ item.storage_status }}</p>
+  <p class="decision-reason">{{ item.reason or 'No completion reason recorded' }}</p>
+  {% if a and a.thesis %}<p class="thesis">{{ a.thesis }}</p>
+  {% elif item.model_choice %}<p class="thesis">{{ item.model_choice.thesis }}</p>{% endif %}
+  {% if a and a.uncertainty %}<p class="warn">Uncertainty: {{ a.uncertainty }}</p>{% endif %}
+  {% if a and a.change_since_entry %}<p class="muted">Since entry: {{ a.change_since_entry }}</p>{% endif %}
+  <ol class="decision-stages" aria-label="Proposal, review, order and fill evidence">
+    <li><span class="stage-label">01 · Proposal</span><strong>{{ a.proposal_action or 'Not recorded' if a else item.model_choice.action if item.model_choice else 'Not recorded' }}</strong><small>{{ a.role|title if a else 'No attributed proposal' }}</small></li>
+    <li><span class="stage-label">02 · Review</span><strong>{{ a.review_outcome or 'Not recorded' if a else 'Not recorded' }}</strong><small>{{ a.application_status or 'No application recorded' if a else 'No application recorded' }}</small></li>
+    <li><span class="stage-label">03 · Order</span><strong>{{ a.order_status or 'Not recorded' if a and a.client_id else 'No linked order' }}</strong><small>{{ 'Attempt recorded' if a and a.attempted else 'No attempt recorded' }}</small></li>
+    <li><span class="stage-label">04 · Fills</span><strong>{% if a and a.client_id %}{{ a.filled_quantity }} / {{ a.approved_quantity if a.approved_quantity is not none else '?' }}{% else %}No linked fills{% endif %}</strong><small>Verified recorded quantity</small></li>
+  </ol>
+  <div class="decision-cost"><span>Model cost</span><strong>{% if a %}{{ '$' ~ a.model_cost if a.model_cost is not none else a.cost_status }}{% else %}Not attributed{% endif %}</strong>{% if a %}<small>{{ a.cost_status }}</small>{% endif %}</div>
+  {% if a and a.review_reasons %}<p class="warn">Review: {{ a.review_reasons|join(' · ') }}</p>{% endif %}
+  {% if item.error_class %}<p class="bad">{{ item.error_class }}</p>{% endif %}
+  <details class="evidence-detail"><summary>Candidate and decision details</summary>
+    {% if a and a.requested_invalidation is not none %}<p>Requested stop {{ a.requested_invalidation }} · Applied {{ a.applied_invalidation if a.applied_invalidation is not none else 'Not recorded' }}</p>{% endif %}
+    {% if a and a.client_id %}<p class="mono">Order {{ a.client_id }}</p>{% endif %}
+    {% if a and a.fill_ids %}<p class="mono">Fills {{ a.fill_ids|join(' · ') }}</p>{% endif %}
+    {% for c in item.candidates %}<div class="candidate">
+      <strong>{{ c.contract.underlying }} {{ c.contract.right }} {{ c.contract.strike }}</strong>
+      <small>{{ c.contract.expiration }} · {{ c.setup }} · {{ 'Selected' if item.candidate_id == c.candidate_id else 'Admitted candidate' }}</small>
+      <p>{{ c.quantity_ceiling }} contracts @ ${{ c.limit_ceiling }} · Full-premium cap ${{ c.full_premium_ceiling }}</p>
+      <small>Approval until {{ c.approved_until }}</small>
+    </div>{% else %}<p class="muted">No admitted candidate</p>{% endfor %}
+    {% for o in item.setup_observations %}<p>{{ o.symbol }} {{ o.family }} {{ o.right }}: {{ o.status }}{% if o.reasons %}<small>{{ o.reasons|join(' · ') }}</small>{% endif %}</p>{% endfor %}
+  </details>
+</article>
+{% endfor %}
+</div>
+{%- endmacro %}

@@ -6,6 +6,10 @@ venue/model, checks restore authority, initializes or repairs evidence, or trigg
 collection, supervision, recovery or orders. The stock runtime and frozen deployed
 SHADOW observer remain separate. LIVE stays disabled.
 
+The [dedicated dashboard pass](OPTIONS_DASHBOARD.md) now presents compact account
+evidence, separate proposal/review/order/fill history and saved health/floor details.
+It includes an offline rendering drill; browser visual acceptance remains open.
+
 ## Local interface
 
 Use the installed package and an existing explicit options journal/population.

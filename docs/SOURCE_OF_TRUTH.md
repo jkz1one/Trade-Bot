@@ -1,12 +1,16 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.64. Adopted product direction and working delivery contract, 2026-10-17 UTC.
+Version 1.65. Adopted product direction and working delivery contract, 2026-10-17 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
 acceptance remains open. P3 position reasoning now has durable opt-in management
 integration with atomic consumption, tighter stops and full PAPER exits. M8 adds the
 user-requested dedicated dashboard design and visual acceptance.
+The first [dashboard presentation pass](OPTIONS_DASHBOARD.md) now exposes compact
+account evidence, attributed decision stages and stored protection diagnostics.
+Eight offline display states and native read-only regressions are available; actual
+desktop/mobile rendering, keyboard and user visual acceptance remain open.
 P3 paired accounting, sealed market tapes, setup/shortlist replay and automatic
 native first-session A/B/C journal export and independent virtual-clock replay
 with scripted model delays are fixture verified. Multi-session replay/export now

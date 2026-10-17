@@ -48,6 +48,9 @@ through independent A/B/C/D accounts with frozen tapes and all entry/management 
 [Historical dashboard comparison](docs/OPTIONS_COMPARISON_VIEW.md) now links a
 separately generated full-cost report to its population and stored audit prefix,
 with net-equity/SPY/cash charts and explicit incomplete paths.
+The [dashboard decision/protection pass](docs/OPTIONS_DASHBOARD.md) now adds compact
+account evidence, separate proposal/review/order/fill cards and saved health/floors.
+An eight-state local rendering drill is available; browser visual acceptance remains open.
 [Scope evidence preflight](docs/OPTIONS_SCOPE_PREFLIGHT.md) now checks required
 coverage and exact SPXW identity without granting setup or trade authority.
 [Scope completed structure](docs/OPTIONS_SCOPE_STRUCTURE.md) adds nine price-derived

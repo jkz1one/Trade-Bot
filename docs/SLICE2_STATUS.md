@@ -1,6 +1,73 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
 
+## M8 dashboard decision/protection presentation: 2026-10-17 UTC
+
+The first dedicated dashboard pass now leads with compact cash/current-estimate,
+known-cost and operating evidence; population/release details expand separately.
+Decision history replaces the wide opportunity table with readable proposal,
+review/application, order-attempt and fill stages. It retains exact model charges,
+unknown/not-called states, AI uncertainty, management changes and candidate/identity
+details. A stop application without an order never becomes a fictional fill.
+[Surface, rendering drill and remaining acceptance](OPTIONS_DASHBOARD.md).
+
+Owned management now displays saved health condition/action with observation time
+and freshness, retained premium/trade floors and expandable progress/Greek evidence.
+Missing components remain unknown; stale saved conditions remain labeled as history.
+Historical comparison and current incomplete estimates retain their distinct cost
+boundaries. HOLD, unavailable evidence, unknown orders/costs and research-only Scope
+remain explicit. All controls are native links/disclosures; no JavaScript or trading
+control was added. Authentication, CSP, API schemas, native accounting, independent
+accounts and every entry/management charge are unchanged.
+
+The new offline drill creates eight synthetic display states and wrappers for
+1360px/390px viewports. Entry/management/fill, stale and HOLD baselines use native
+fixture owners with scripted responses; comparison and modified edge states are
+presentation examples only. It attaches to no deployed or authentic population.
+
+Fresh GitHub baseline: `28f24332c377963802a09509d9748a8bebf678d7`, tree
+`5a7465b8bd7ce9c4461e0ddb26eedde108b00be6`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Existing observer/comparison/Scope evidence source regression: **105 passed,
+  one installed-only case deselected in 26.68s**. Focused new presentation cases:
+  **11 passed in 5.06s**, warnings treated as errors.
+- Final installed regression outside checkout: **188 passed in 373.48s**, warnings
+  treated as errors. Includes observer authentication/immutability, comparison,
+  Scope observer/evidence, native health and full managed replay/export suites;
+  all entry/management costs and independent A/B/C/D accounts remain covered.
+- Installed offline drill generated all eight states and both 1360px/390px wrappers.
+  This proves rendering output generation, not browser rendering or screenshots.
+- All 171 Python modules and seven HTML templates match source/wheel/installation;
+  all eight selected test/helper inputs match. All 30 checked text-palette/background
+  combinations exceed 4.5:1, with minimum calculated contrast **6.18:1**. Scoped
+  lint/format, dependencies, whitespace and 58 unique local documentation targets pass.
+- Wheel SHA-256: `b99a814df98141541b49073ba9d9fea23335f4b8f3f561b848e8fe15b1222681`.
+  Artifacts/logs beside checkout: `dashboard-env`, `dashboard-dist`, `dashboard-proof`,
+  `dashboard-installed-preview`, `dashboard-build.log`, `dashboard-initial-tests.log`,
+  `dashboard-focused-final.log`, `dashboard-installed-final.log` and
+  `dashboard-render-final.log`.
+- Initial installed test collection and drill failed because the isolated test
+  harness omitted the copied root needed by existing `tests.*` imports. The harness
+  and documented drill now include both the copied root and test directory. No
+  application code or guard changed for this correction. Original error outputs
+  remain `dashboard-installed-tests.log` and `dashboard-render.log`.
+
+The cloud browser rejected the local fixture preview URL under its HTTP/HTTPS-only
+URL policy. No workaround or alternate browser surface was attempted. No screenshot,
+actual desktop/mobile rendering, clipping, keyboard traversal or user visual
+acceptance is claimed. The deterministic palette check does not replace rendered
+contrast review. M8 remains open pending those checks and user review.
+
+Scope source/path/native-entry/family-loss/T3/runtime gates, authentic provider/host
+acceptance, prospective economics, remaining Swing and mixed-instrument support
+remain separate. Main untouched, PR draft, LIVE disabled and deployed experiment
+frozen. No provider/model/broker call, dependency or host/deployment change.
+
+---
+
 ## P7 portable Scope replay reproduction verification: 2026-10-17 UTC
 
 `app.options.scope_replay_verify` now verifies exported research JSON against an
