@@ -19,6 +19,9 @@ from app.options.models import Money, Name, OptionProposal, OptionRecord, Positi
 
 
 class DecisionAttribution(OptionRecord):
+    trade_floor: Literal["native-target-floor-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     premium_trail: Literal["executable-premium-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -113,6 +116,10 @@ def order_attribution(db, row):
     from app.options.premium_trail import verify_binding as verify_trail
 
     verify_trail(intent, approval)
+    from app.options.trade_floor import verify_binding as verify_floor
+
+    verify_floor(intent, approval)
+    floor_policy = intent.trade_floor
     trail_policy = intent.premium_trail
     premium_protection = intent.entry_premium_protection
     if intent.requested_close_quantity != proposal.close_quantity or (
@@ -141,6 +148,8 @@ def order_attribution(db, row):
         entry_intent = OptionIntent.model_validate(_json(entry[0]))
         verify_premium_binding(entry_intent, _json(entry[1]))
         verify_trail(entry_intent, _json(entry[1]))
+        verify_floor(entry_intent, _json(entry[1]))
+        floor_policy = entry_intent.trade_floor
         trail_policy = entry_intent.premium_trail
         premium_protection = entry_intent.entry_premium_protection
         if (
@@ -153,6 +162,7 @@ def order_attribution(db, row):
     if entry_id is not None:
         lineage = entry_lineage(db, entry_id)
     return {
+        **({"trade_floor": floor_policy} if floor_policy is not None else {}),
         **({"premium_trail": trail_policy} if trail_policy is not None else {}),
         **(
             {"entry_premium_protection": premium_protection.model_dump(mode="json")}
@@ -341,6 +351,7 @@ def decision_attribution(db, key, outcome, policy):
             "target_exit_stage",
             "entry_premium_protection",
             "premium_trail",
+            "trade_floor",
         ):
             if inputs.get(field) != approval.get(field):
                 raise ValueError("Stored target proposal binding mismatch")

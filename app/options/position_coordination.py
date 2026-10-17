@@ -11,7 +11,6 @@ from app.options.engine import clock, exact, fingerprint
 from app.options.lifecycle import OptionIntent, OptionPosition, PositionExitProtection
 from app.options.models import OptionQuote, UnderlyingQuote
 from app.options.position_reasoning import PositionPacket, review_position_plan
-from app.options.protection import assess_position
 
 
 def _bound_request(engine, db, key, request):
@@ -115,10 +114,12 @@ def review_for_execution(engine, db, key, request, result, quote, underlying, no
     # These callers hold the owner's write transaction. Fresh protection must
     # survive a discretionary rejection or a later rebound, including dispatch races.
     if ledger.position is not None:
-        protected = assess_position(
-            ledger.position, quote, underlying, engine.limits, engine.policy, now=now
-        )
-        if protected != ledger.position and (protected.exit_reason or protected.supervision_issue):
+        protected = engine._assess_owned(db, ledger, quote, underlying, now)
+        if protected != ledger.position and (
+            protected.exit_reason
+            or protected.supervision_issue
+            or protected.trade_floor is not None
+        ):
             ledger = ledger.model_copy(update={"position": protected})
             db.execute(
                 "UPDATE execution_control SET ledger_json=? WHERE id=1", (ledger.model_dump_json(),)
@@ -133,6 +134,7 @@ def review_for_execution(engine, db, key, request, result, quote, underlying, no
                     "source_key": key,
                     "exit_reason": protected.exit_reason,
                     "issue": protected.supervision_issue,
+                    "position": protected.model_dump(mode="json"),
                 },
             )
     # The captured journal revision is immutable in the admitted request. Model cost

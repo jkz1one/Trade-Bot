@@ -69,6 +69,9 @@ class OptionExecutionPolicy(OptionRecord):
     target_stops: Literal["frozen-target-stops-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
+    trade_floor: Literal["native-target-floor-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     premium_trail: Literal["executable-premium-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -80,6 +83,8 @@ class OptionExecutionPolicy(OptionRecord):
     def bounded(self):
         if self.target_exits is not None and self.partial_closes is None:
             raise ValueError("Target exits require whole-contract partial closes")
+        if self.trade_floor is not None and self.target_exits is None:
+            raise ValueError("Whole-trade floors require frozen target exits")
         if self.target_stops is not None and self.target_exits is None:
             raise ValueError("Target stops require frozen target exits")
         if self.total_loss_limit > self.capital or self.daily_loss_limit > self.total_loss_limit:
@@ -101,6 +106,22 @@ class EntryProtection(OptionRecord):
 class EntryPremiumProtection(OptionRecord):
     version: Literal["tighten-only-v1"] = "tighten-only-v1"
     maximum_loss_fraction: Money = Field(gt=0, lt=1)
+
+
+class TradeFloorState(OptionRecord):
+    version: Literal["native-target-floor-v1"] = "native-target-floor-v1"
+    minimum_exit_fill_price: Money | None = Field(default=None, ge=0)
+    reference_stage: int = Field(default=0, strict=True, ge=0, le=3)
+    evidence_hash: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+    reasons: tuple[Name, ...] = Field(default=(), max_length=100)
+
+    @model_validator(mode="after")
+    def bound_floor(self):
+        if (self.minimum_exit_fill_price is None) != (self.reference_stage == 0) or (
+            (self.minimum_exit_fill_price is None) != (self.evidence_hash is None)
+        ):
+            raise ValueError("Whole-trade floor requires its stored stage and evidence hash")
+        return self
 
 
 class PremiumTrailState(OptionRecord):
@@ -188,6 +209,9 @@ class OptionIntent(OptionRecord):
     source_key: Name
     instrument: OptionInstrument
     side: Literal["BUY", "SELL"]
+    trade_floor: Literal["native-target-floor-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     premium_trail: Literal["executable-premium-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -224,6 +248,8 @@ class OptionIntent(OptionRecord):
 
     @model_validator(mode="after")
     def lifetime(self):
+        if self.trade_floor is not None and self.side != "BUY":
+            raise ValueError("Whole-trade floor enrollment binds only the original buy")
         if self.premium_trail is not None and self.side != "BUY":
             raise ValueError("Premium trail enrollment binds only the original buy")
         if self.entry_premium_protection is not None and self.side != "BUY":
@@ -331,6 +357,7 @@ class OptionLot(OptionRecord):
 
 class OptionPosition(OptionHolding):
     entry_client_id: Name
+    trade_floor: TradeFloorState | None = Field(default=None, exclude_if=lambda v: v is None)
     premium_trail: PremiumTrailState | None = Field(default=None, exclude_if=lambda v: v is None)
     lots: tuple[OptionLot, ...] = Field(min_length=1, max_length=1000)
     exit_at: datetime
@@ -351,6 +378,7 @@ class OptionPosition(OptionHolding):
             "EXPIRY_GUARD",
             "UNDERLYING_TARGET",
             "PREMIUM_TRAIL",
+            "WHOLE_TRADE_FLOOR",
         ]
         | None
     ) = None
@@ -359,6 +387,11 @@ class OptionPosition(OptionHolding):
 
     @model_validator(mode="after")
     def owned(self):
+        if (
+            self.trade_floor is not None
+            and self.trade_floor.reference_stage > self.target_exit_stage
+        ):
+            raise ValueError("Whole-trade floor cannot precede its frozen target stage")
         if self.premium_trail is not None and self.quantity > self.premium_trail.entry_quantity:
             raise ValueError("Premium trail must retain original entry quantity")
         if self.target_exit_schedule is not None:

@@ -1,9 +1,9 @@
 """Shared pure mandatory position protection; no model or execution authority."""
 
 from datetime import timedelta
-from decimal import Context, localcontext
+from decimal import ROUND_FLOOR, Context, localcontext
 
-from app.options.governor import _fresh
+from app.options.governor import _fresh, _tick_price
 from app.options.lifecycle import EntryPremiumProtection
 
 
@@ -124,6 +124,13 @@ def _assess(p, quote, underlying, limits, policy, now):
         trail, crossed = assess(p, quote.bid)
         if crossed:
             reason = "PREMIUM_TRAIL"
+    if p.trade_floor is not None and quote_ok and reason is None:
+        floor = p.trade_floor.minimum_exit_fill_price
+        executable = _tick_price(
+            quote.bid * (1 - limits.slippage_bps / 10_000), p.contract, ROUND_FLOOR
+        )
+        if floor is not None and floor > 0 and executable <= floor:
+            reason = "WHOLE_TRADE_FLOOR"
     p = p.model_copy(
         update={
             "exit_reason": reason,

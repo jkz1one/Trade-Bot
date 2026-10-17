@@ -82,12 +82,11 @@ stored-only observation and independent A/B/C/D replay with entry/management cos
 
 This is the shared premium trail primitive. Scope remains blocked pending its
 watch/entry binding, missing four-contract objective, complete path proof, family
-loss/reset and full management/runtime/replay acceptance. Source whole-trade floors
-based on realized sales, management health/Greek rules and any strategy-specific
-trail enrollment require their own acceptance; none is implied by this policy.
-The [native whole-trade floor preview](OPTIONS_TRADE_FLOOR.md) now supplies verified
-sale/fee/model-cost arithmetic for the first of those gates, without automatic
-enrollment or enforcement.
+loss/reset and full management/runtime/replay acceptance. Management health/Greek
+rules and strategy-specific enrollment require their own acceptance.
+[Native whole-trade floors](OPTIONS_TRADE_FLOOR.md) now provide separate opt-in
+cost-aware protection after frozen targets. Their read-only preview remains
+available without enrollment; this premium-trail policy does not enable them.
 Authentic provider/host, prospective economics and the dedicated UI pass remain open.
 Main untouched, PR #1 draft, LIVE disabled and deployed experiment frozen.
 

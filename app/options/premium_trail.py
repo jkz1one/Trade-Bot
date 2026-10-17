@@ -19,6 +19,8 @@ def accounting_position(position, excluded):
     data = position.model_dump(exclude=excluded)
     if position.premium_trail is not None:
         data["premium_trail"].pop("peak_bid")
+    if position.trade_floor is not None:
+        data["trade_floor"] = {"version": position.trade_floor.version}
     return data
 
 

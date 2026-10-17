@@ -694,6 +694,16 @@ class OptionObserver:
         return {
             **(
                 {
+                    "trade_floor": {
+                        **p.trade_floor.model_dump(mode="json"),
+                        "note": "Stored minimum fill-price floor; before data/host costs, no current quote or fill guarantee",
+                    }
+                }
+                if p.trade_floor
+                else {}
+            ),
+            **(
+                {
                     "premium_trail": {
                         **p.premium_trail.model_dump(mode="json"),
                         "floor_original_quantity_premium": str(trail_floor)

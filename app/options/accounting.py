@@ -3,7 +3,13 @@
 from decimal import Context, Decimal, localcontext
 from zoneinfo import ZoneInfo
 
-from app.options.lifecycle import OptionLedger, OptionLot, OptionPosition, PremiumTrailState
+from app.options.lifecycle import (
+    OptionLedger,
+    OptionLot,
+    OptionPosition,
+    PremiumTrailState,
+    TradeFloorState,
+)
 
 ZERO = Decimal(0)
 
@@ -53,6 +59,7 @@ def apply_fill(ledger, intent, fill):
                     entry_protection=intent.entry_protection,
                     entry_premium_protection=intent.entry_premium_protection,
                     target_exit_schedule=intent.target_exit_schedule,
+                    trade_floor=TradeFloorState() if intent.trade_floor is not None else None,
                     premium_trail=PremiumTrailState(entry_quantity=intent.quantity)
                     if intent.premium_trail is not None
                     else None,

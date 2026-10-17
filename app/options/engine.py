@@ -414,6 +414,9 @@ class OptionExecution:
             "underlying": underlying,
             "origin": origin,
         }
+        floor_policy = self.policy.trade_floor if proposal.action == "OPEN_LONG" else None
+        if floor_policy is not None:
+            inputs["trade_floor"] = bound_inputs["trade_floor"] = floor_policy
         trail_policy = self.policy.premium_trail if proposal.action == "OPEN_LONG" else None
         if trail_policy is not None:
             inputs["premium_trail"] = bound_inputs["premium_trail"] = trail_policy
@@ -655,6 +658,7 @@ class OptionExecution:
                         target_exit_stage=target_exit_stage,
                         entry_premium_protection=entry_premium_protection,
                         premium_trail=trail_policy,
+                        trade_floor=floor_policy,
                     )
                     approval = {
                         **inputs,
@@ -716,7 +720,11 @@ class OptionExecution:
                 verify_binding(intent, approval)
                 verify_premium_binding(intent, approval)
                 from app.options.premium_trail import verify_binding as verify_trail
+                from app.options.trade_floor import verify_binding as verify_floor
 
+                verify_floor(intent, approval)
+                if intent.side == "BUY" and intent.trade_floor != self.policy.trade_floor:
+                    raise ExecutionBlocked("OPTION_TRADE_FLOOR_NOT_ENROLLED")
                 verify_trail(intent, approval)
                 if intent.side == "BUY" and intent.premium_trail != self.policy.premium_trail:
                     raise ExecutionBlocked("OPTION_PREMIUM_TRAIL_NOT_ENROLLED")
@@ -1200,6 +1208,7 @@ class OptionExecution:
         ):
             raise ValueError("OPTION_CASH_OR_POSITION_MISMATCH")
         from app.options.premium_trail import terms as trail_terms
+        from app.options.trade_floor import terms as floor_terms
 
         if state.position and (
             state.position.contract != snap.position.contract
@@ -1213,6 +1222,7 @@ class OptionExecution:
             or state.position.entry_protection != snap.position.entry_protection
             or state.position.entry_premium_protection != snap.position.entry_premium_protection
             or state.position.target_exit_schedule != snap.position.target_exit_schedule
+            or floor_terms(state.position) != floor_terms(snap.position)
             or trail_terms(state.position) != trail_terms(snap.position)
         ):
             raise ValueError("OPTION_POSITION_TERMS_MISMATCH")
@@ -1222,6 +1232,8 @@ class OptionExecution:
             and prior.position
             and state.position.entry_client_id == prior.position.entry_client_id
         ):
+            if floor_terms(prior.position) != floor_terms(state.position):
+                raise ValueError("OPTION_TRADE_FLOOR_ENROLLMENT_CHANGED")
             trail = state.position.premium_trail
             prior_trail = prior.position.premium_trail
             if prior_trail is not None and prior_trail.entry_basis is not None:
@@ -1241,6 +1253,7 @@ class OptionExecution:
                                     "exit_required_at",
                                     "supervision_issue",
                                     "target_exit_stage",
+                                    "trade_floor",
                                 )
                             },
                         }
@@ -1254,6 +1267,21 @@ class OptionExecution:
 
         validate_fill(self.limits, intent, fill, index, used)
 
+    def _assess_owned(self, db, ledger, quote, underlying, now):
+        """Refresh enrolled cash protection inside the caller's audited write transaction."""
+        p = assess_position(ledger.position, quote, underlying, self.limits, self.policy, now=now)
+        if p.trade_floor is not None and p.target_exit_stage:
+            from app.options.trade_floor import refresh
+
+            # The verified native reader must see the newly latched target stage.
+            db.execute(
+                "UPDATE execution_control SET ledger_json=? WHERE id=1",
+                (ledger.model_copy(update={"position": p}).model_dump_json(),),
+            )
+            p = refresh(db, p, self.limits.population_id)
+            p = assess_position(p, quote, underlying, self.limits, self.policy, now=now)
+        return p
+
     def _review_partial_close(self, db, proposal, quote, underlying, now, origin):
         """An explicit scale-out cannot postpone a freshly observed mandatory full exit."""
         if self.policy.partial_closes is None:
@@ -1265,7 +1293,7 @@ class OptionExecution:
         # Common admission has already verified exact ownership and the requested cap.
         if proposal.close_quantity == position.quantity:
             return
-        assessed = assess_position(position, quote, underlying, self.limits, self.policy, now=now)
+        assessed = self._assess_owned(db, ledger, quote, underlying, now)
         if assessed != position:
             db.execute(
                 "UPDATE execution_control SET ledger_json=? WHERE id=1",
@@ -1284,6 +1312,10 @@ class OptionExecution:
             raise ExecutionBlocked("OPTION_PARTIAL_CLOSE_FULL_EXIT_REQUIRED")
         if assessed.supervision_issue is not None:
             raise ExecutionBlocked("OPTION_PARTIAL_CLOSE_FRESH_PROTECTION_REQUIRED")
+        from app.options.trade_floor import blocked
+
+        if blocked(assessed):
+            raise ExecutionBlocked("OPTION_TRADE_FLOOR_EVIDENCE_REQUIRED")
 
     @exact
     def assess(self, quote, underlying, *, now):
@@ -1309,7 +1341,7 @@ class OptionExecution:
             reason = p.exit_reason if p else None
             issue = None
             if p:
-                p = assess_position(p, quote, underlying, self.limits, self.policy, now=now)
+                p = self._assess_owned(db, ledger, quote, underlying, now)
                 reason, issue = p.exit_reason, p.supervision_issue
                 ledger = ledger.model_copy(update={"position": p})
                 db.execute(
@@ -1323,6 +1355,11 @@ class OptionExecution:
                 "issue": issue,
                 "entry_client_id": p.entry_client_id if p else None,
                 "snapshot_id": snap.snapshot_id,
+                **(
+                    {"trade_floor": p.trade_floor.model_dump(mode="json")}
+                    if p and p.trade_floor
+                    else {}
+                ),
                 **(
                     {"premium_trail": p.premium_trail.model_dump(mode="json")}
                     if p and p.premium_trail is not None
@@ -1359,6 +1396,10 @@ class OptionExecution:
             return result
         assessed = self.assess(quote, underlying, now=now)
         if assessed["status"] == "HEALTHY" and self.policy.target_exits is not None:
+            if set(assessed.get("trade_floor", {}).get("reasons", ())) - {
+                "UNRESOLVED_POSITION_ORDER"
+            }:
+                return {**assessed, "status": "TRADE_FLOOR_BLOCKED"}
             from app.options.target_exits import tick
 
             return await tick(self, quote, underlying, now=now, assessed=assessed)

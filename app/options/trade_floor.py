@@ -1,4 +1,4 @@
-"""Stored whole-trade floor previews from native cash flows; no execution authority."""
+"""Native whole-trade arithmetic and enrolled owner protection from verified cash flows."""
 
 import json
 from decimal import ROUND_CEILING, Decimal
@@ -99,3 +99,42 @@ def native_trade_floor(db, entry_client_id, population_id):
         "note": "Stored arithmetic only; fill-price thresholds before data/host costs, "
         "not current bids, realized returns or guarantees. Future model charges raise required proceeds.",
     }
+
+
+def verify_binding(intent, approval):
+    if intent.trade_floor != approval.get("trade_floor"):
+        raise ValueError("OPTION_TRADE_FLOOR_CHANGED")
+
+
+def terms(position):
+    return position.trade_floor.version if position and position.trade_floor is not None else None
+
+
+def blocked(position):
+    return bool(
+        position.trade_floor is not None
+        and set(position.trade_floor.reasons) - {"UNRESOLVED_POSITION_ORDER"}
+    )
+
+
+@exact
+def refresh(db, position, population_id):
+    """Caller owns an audited write transaction containing this exact position.
+
+    Incomplete evidence never erases an accepted floor or invents missing costs.
+    A working order retains its reservation; only terminal fills permit a new floor.
+    """
+    state = position.trade_floor
+    preview = native_trade_floor(db, position.entry_client_id, population_id)
+    candidate = preview["reached_target_floor"]
+    changes = {"reasons": tuple(preview["reasons"])}
+    if candidate is not None:
+        changes.update(
+            minimum_exit_fill_price=max(
+                state.minimum_exit_fill_price or Decimal(0),
+                Decimal(candidate["minimum_exit_fill_price"]),
+            ),
+            reference_stage=max(state.reference_stage, candidate["reference_stage"]),
+            evidence_hash=preview["evidence_hash"],
+        )
+    return position.model_copy(update={"trade_floor": state.model_copy(update=changes)})

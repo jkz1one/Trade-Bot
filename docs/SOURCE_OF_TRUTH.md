@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.56. Adopted product direction and working delivery contract, 2026-10-16 UTC.
+Version 1.57. Adopted product direction and working delivery contract, 2026-10-17 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -116,8 +116,15 @@ entry/management costs remain charged; premium floors are not net-profit claims.
 [Native whole-trade floor previews](OPTIONS_TRADE_FLOOR.md) now derive remaining
 sale requirements from complete original entry fills, actual partial-sale proceeds,
 all recorded execution and attributable model charges, and conservative future exit
-fees. Unknown costs and unresolved orders withhold floors. This stored read API
-does not enroll or enforce automatic exits; data/host costs remain in session reports.
+fees. The read API retains false authority. New frozen owners can explicitly enroll
+`native-target-floor-v1` to enforce 0/10/25% reference floors after native target
+touches, using fresh bids adjusted for conservative slippage and tick rounding.
+Accepted fill-price floors never decrease after sales, restart or later uncertainty.
+Unknown costs withhold new arithmetic and block scale-outs while retaining prior
+floors and independent mandatory exits. Attempted orders retain their reservations.
+Original enrollment, stored state, native export and independent A/B/C/D cost
+attribution remain bound; data/host costs stay in session reports. This enables
+no new target geometry, Scope entry or full-entry AI target schedule.
 [Scope management plans](OPTIONS_SCOPE_MANAGEMENT.md) now preserve the source
 balanced allocations for one through three owned contracts and explicit profile
 premium limits beneath the owner ceiling. A new-cohort native entry premium

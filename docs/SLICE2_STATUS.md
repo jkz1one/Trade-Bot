@@ -1,5 +1,66 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 automatic native whole-trade floors: 2026-10-17 UTC
+
+New frozen PAPER owners can enroll `trade_floor="native-target-floor-v1"` alongside
+whole-contract partial closes and frozen target exits. Original buy inputs, intent,
+approval and dispatch bind enrollment; accounting and reconciliation preserve it.
+The engine activates the pinned 0/10/25% reference scenarios after native target
+progress, using complete original entry premium, actual linked sales, every execution
+fee and attributable entry/management charge, plus conservative remaining exit fees.
+It never invents a target schedule for a full-entry AI position or Scope watch.
+
+Accepted minimum fill-price protection is monotone across scales and restart.
+Fresh executable bids pass through native conservative slippage and downward tick
+rounding; crossing the saved positive floor latches `WHOLE_TRADE_FLOOR`. The first
+exit time survives rebound. Existing mandatory reasons keep priority. Missing costs
+or incomplete entries withhold new arithmetic and block scales after a target,
+retaining earlier protection and independent full exits. Working orders keep their
+reservations; only never-attempted scales may be superseded. Native partial-close
+and settled management execution reviews refresh protection in audited transactions.
+
+The observer displays saved state without refresh. Native export retains complete
+floor annotations, while fill/cash comparison checks original enrollment and ignores
+dynamic state. Open positions remain inconclusive; data/host costs stay in session
+economics. The existing explicit preview API retains false authority and can show a
+lower candidate than the owner's accepted monotone floor. [Policy and limitations](OPTIONS_TRADE_FLOOR.md).
+
+Fresh GitHub baseline: `f58583ba6784b4115978d52a9b0cc7474fdc0d61`, tree
+`12f07e69900437b2b336ffb124c5687d6307df1d`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Initial focused source cases: **24 passed in 14.34s**.
+- Installed floor, preview, premium trail, target exits/stops/export, partial-close,
+  position-coordination, native outcome and observer regression: **296 passed in
+  307.47s**, warnings treated as errors, outside the checkout against the
+  non-editable wheel. Includes independent A/B/C/D entry/management costs.
+- Final focused installed suite: **31 passed in 34.36s** outside the checkout,
+  including three additional native paid-selection/unknown/unallocated cost cases.
+  Those three also passed separately in 4.26s. The complete suite covers both
+  option directions, exact thresholds, monotone sales/restart, audit rollback,
+  stale bids, pending and partially filled orders, enrollment/dispatch binding,
+  stored observation, native open export and four independent replay accounts.
+- Ten changed source/wheel/installed modules and all ten copied regression files
+  match. Scoped lint/format, dependency consistency, whitespace and 236 local
+  documentation links pass.
+- Wheel SHA-256: `914f55a148f2c7d948e5fa5ae9cc9ed51a2eec00a56d1075c86e97e0d3057ba5`.
+  Artifacts/logs beside checkout: `auto-floor-env`, `auto-floor-dist`,
+  `auto-floor-proof`, `auto-floor-build.log`, `auto-floor-focused.log`,
+  `auto-floor-installed-tests.log`, `auto-floor-cost-tests.log` and
+  `auto-floor-final-focused.log`.
+
+Remaining work includes source health/Greek management, Scope watch/entry and full
+management/runtime/replay integration, its missing four-contract third objective,
+authentic provider/host evidence, prospective economics and the dedicated UI pass.
+The full-entry AI path still has no frozen native target schedule; enrollment is
+inactive there and does not change its existing protection. Main untouched, PR draft,
+LIVE disabled and deployed experiment frozen. No authentic provider/model/broker
+call, dependency, host unit or deployment changed.
+
+---
+
 ## P7 native whole-trade floor previews: 2026-10-16 UTC
 
 The next whole-trade management prerequisite is verified remaining-proceeds

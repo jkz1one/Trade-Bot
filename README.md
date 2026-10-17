@@ -105,9 +105,10 @@ inconclusive evidence, distinguishing saved target progress from actual fill acc
 [Executable premium trails](docs/OPTIONS_PREMIUM_TRAIL.md) now add frozen-owner
 bid-based protection using original completed entry cost, retained through scales
 and restart without discounting fees or model charges.
-[Native whole-trade floor previews](docs/OPTIONS_TRADE_FLOOR.md) now calculate
-remaining proceeds from verified partial sales, original premium, execution fees
-and entry/management charges, without enabling automatic floor exits.
+[Native whole-trade floors](docs/OPTIONS_TRADE_FLOOR.md) now add opt-in automatic
+protection after frozen targets, using verified partial sales, original premium,
+every execution fee and attributable entry/management charge. Saved floors never
+loosen across scales or restart; unknown costs preserve protection and block scales.
 [Scope management plans](docs/OPTIONS_SCOPE_MANAGEMENT.md) now derive balanced
 whole-contract allocations from owned sizing and bind explicit profile premium
 limits beneath the owner cap. Four-contract Scope plans remain blocked by their

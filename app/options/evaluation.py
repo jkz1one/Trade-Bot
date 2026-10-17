@@ -41,6 +41,8 @@ def _replay(a, definition, session, sequence, used_ids, previous_close):
         i, o = order.intent, order.observation
         if i.side == "BUY" and i.premium_trail != definition.policy.premium_trail:
             raise ValueError("PREMIUM_TRAIL_POLICY_MISMATCH")
+        if i.side == "BUY" and i.trade_floor != definition.policy.trade_floor:
+            raise ValueError("TRADE_FLOOR_POLICY_MISMATCH")
         identity = ("client", i.client_id)
         if identity in used_ids:
             raise ValueError("DUPLICATE_ORDER")
