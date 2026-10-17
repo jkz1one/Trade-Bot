@@ -109,6 +109,10 @@ and restart without discounting fees or model charges.
 protection after frozen targets, using verified partial sales, original premium,
 every execution fee and attributable entry/management charge. Saved floors never
 loosen across scales or restart; unknown costs preserve protection and block scales.
+[Observed Greek pressure](docs/OPTIONS_GREEK_HEALTH.md) now retains exact timestamped
+Greek evidence through quotes, fills and replay, with stored theta/IV/delta diagnostics.
+Missing, stale or estimated observations remain incomplete; no health-driven order
+authority is enabled.
 [Scope management plans](docs/OPTIONS_SCOPE_MANAGEMENT.md) now derive balanced
 whole-contract allocations from owned sizing and bind explicit profile premium
 limits beneath the owner cap. Four-contract Scope plans remain blocked by their

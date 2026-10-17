@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.57. Adopted product direction and working delivery contract, 2026-10-17 UTC.
+Version 1.58. Adopted product direction and working delivery contract, 2026-10-17 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -125,6 +125,14 @@ floors and independent mandatory exits. Attempted orders retain their reservatio
 Original enrollment, stored state, native export and independent A/B/C/D cost
 attribution remain bound; data/host costs stay in session reports. This enables
 no new target geometry, Scope entry or full-entry AI target schedule.
+[Observed Greek pressure](OPTIONS_GREEK_HEALTH.md) now supplies explicit units,
+provenance and source/receipt times for quote-bound delta, theta and IV evidence.
+The stored observer compares valid observations against the original entry quote;
+missing, stale, estimated or conflicting data never becomes a healthy/zero input.
+Sealed tapes prevent future Greek observations, and native A/B/C/D replay retains
+all entry/management charges. These are diagnostic source components, not the full
+health score, stop policy or exit authority. Durable progress/stall and underlying
+risk geometry, remaining health rules and native action acceptance stay open.
 [Scope management plans](OPTIONS_SCOPE_MANAGEMENT.md) now preserve the source
 balanced allocations for one through three owned contracts and explicit profile
 premium limits beneath the owner ceiling. A new-cohort native entry premium

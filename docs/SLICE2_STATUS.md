@@ -1,5 +1,62 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 observed Greek evidence and pressure review: 2026-10-17 UTC
+
+The next missing health-management input was explicit theta/IV evidence: native
+option quotes carried only bid/ask/size, while selection metadata retained delta
+alone. Optional `OptionGreekObservation` now preserves exact instrument, source and
+receipt times, completeness, entitlement, OBSERVED/ESTIMATED/UNAVAILABLE provenance,
+and explicit per-share/day theta and decimal-fraction IV units. Omitted observations
+retain legacy serialization. No provider adapter or Greek estimator is introduced.
+
+The fixed `observed-greek-pressure-v1` review implements the Greek components of
+pinned SignalFlow v1 `assess_management`: theta reference pressure at 6% per reference
+hour using the fixed 6.5 divisor, IV warnings/severity at 15/25% contraction, and absolute
+delta warnings/severity at 20/35% deterioration. Exact comparisons precede display
+rounding. Original entry observations are checked at their preparation time; current
+observations must be fresh, observed, synchronized, correctly signed and bound to
+the same instrument. Missing components remain null while independent valid
+components remain visible. READY never means healthy; no full source score is claimed.
+
+The stored observer exposes the review when Greek evidence exists, binding the
+original approval/preparation quote and withholding conflicting current observations.
+Reads remain bounded and immutable. Sealed tapes reject future/foreign Greek evidence;
+native fills and four independent replay accounts retain it and all model charges.
+[Evidence contract, exact thresholds and limitations](OPTIONS_GREEK_HEALTH.md).
+
+Fresh GitHub baseline: `30c4d71665aa623a3dcab1009ab26b080b84cb69`, tree
+`5d2516a9adb543578ce7a8b3ea666a985b64286e`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- The initial boundary-test input exceeded the existing 12-decimal evidence bound;
+  the validator correctly rejected it. Test values were corrected within the bound,
+  preserving distinctions below display precision; application bounds were not widened.
+- Focused source suite: **49 passed in 18.03s** before adding three observer/freshness
+  cases.
+- Final installed Greek, admission, sealed-tape, observer, native execution,
+  entry/position reasoning and position-coordination regression: **595 passed in
+  128.05s**, including all **52 new cases**, with warnings treated as errors outside
+  the checkout against the non-editable wheel. The new four-arm replay case retains
+  observed Greeks through fills and all native entry/management charges.
+- Four source/wheel/installed modules and all eight copied regression files match.
+  Scoped lint/format, dependency consistency, whitespace and 244 local documentation
+  links pass.
+- Wheel SHA-256: `26f6a71e854576642ff43f213053a9240455340f027c9a59b6dce9e9607712ca`.
+  Artifacts/logs beside checkout: `greek-health-env`, `greek-health-dist`,
+  `greek-health-proof`, `greek-health-build.log`, `greek-health-focused.log`,
+  `greek-health-initial-input-failure.log` and `greek-health-installed-tests.log`.
+
+Full health management still needs durable original underlying risk geometry,
+progress/stall/peak state, remaining non-Greek conditions and frozen action/restart
+acceptance. Scope entry/path/family-loss/runtime integration, authentic provider/host
+evidence, prospective economics and the dedicated UI pass remain open. Main untouched,
+PR draft, LIVE disabled and deployment frozen. No authentic provider/model/broker
+call, dependency or host/deployment change.
+
+---
+
 ## P7 automatic native whole-trade floors: 2026-10-17 UTC
 
 New frozen PAPER owners can enroll `trade_floor="native-target-floor-v1"` alongside

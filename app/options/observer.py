@@ -634,9 +634,11 @@ class OptionObserver:
         if p is None:
             return None
         row = db.execute(
-            "SELECT intent_json FROM execution_orders WHERE client_id=?", (p.entry_client_id,)
+            "SELECT intent_json,approval_json FROM execution_orders WHERE client_id=?",
+            (p.entry_client_id,),
         ).fetchone()
         entry = OptionIntent.model_validate(_json(row[0]))
+        entry_approval = _json(row[1])
         if entry.instrument.contract != p.contract:
             raise ValueError("Owned position/entry identity mismatch")
 
@@ -690,8 +692,31 @@ class OptionObserver:
         underlying = max(underlyings, key=lambda u: u.received_at) if underlyings else None
         from app.options.premium_trail import floor_value
 
+        greek_review = None
+        raw_entry_quote = entry_approval.get("quote")
+        if (q and q.greeks is not None) or (raw_entry_quote and raw_entry_quote.get("greeks")):
+            from app.options.greek_health import review_greek_pressure
+
+            original = db.execute(
+                "SELECT inputs_json FROM execution_option_decisions WHERE source_key=?",
+                (entry.source_key,),
+            ).fetchone()
+            if original is None or _json(original[0]).get("quote") != raw_entry_quote:
+                raise ValueError("Greek baseline lost original entry quote binding")
+            greek_review = review_greek_pressure(
+                OptionQuote.model_validate(raw_entry_quote) if raw_entry_quote else None,
+                None if conflict else q,
+                limits,
+                entry_at=entry.prepared_at,
+                now=now,
+            )
+            if conflict:
+                greek_review["reasons"] = sorted(
+                    {*greek_review["reasons"], "CURRENT_QUOTE_CONFLICT"}
+                )
         trail_floor = floor_value(p.premium_trail, p.contract.multiplier)
         return {
+            **({"greek_pressure": greek_review} if greek_review is not None else {}),
             **(
                 {
                     "trade_floor": {

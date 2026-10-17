@@ -122,6 +122,13 @@ def _validate_event(header, event):
                 raise ValueError("Foreign market source or universe")
             if not item.source_at <= item.received_at <= at:
                 raise ValueError("Market evidence unavailable at recording time")
+    for quote in frame.quotes:
+        g = quote.greeks
+        if g is not None and (
+            g.source != header.limits.option_source
+            or not g.source_at <= g.received_at <= quote.received_at
+        ):
+            raise ValueError("Greek evidence foreign or unavailable at quote receipt")
     for h in frame.histories:
         if any(b.ends_at > min(h.source_at, h.received_at) for b in h.bars):
             raise ValueError("Only completed recorded bars are replayable")

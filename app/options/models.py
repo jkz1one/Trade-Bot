@@ -113,12 +113,31 @@ class Evidence(OptionRecord):
     complete: StrictBool
 
 
+class OptionGreekObservation(Evidence):
+    """Explicit normalized units and provenance; absence is never a zero estimate."""
+
+    instrument: OptionInstrument
+    provenance: Literal["OBSERVED", "ESTIMATED", "UNAVAILABLE"]
+    theta_unit: Literal["USD_PER_SHARE_PER_DAY"]
+    volatility_unit: Literal["DECIMAL_FRACTION"]
+    delta: Money | None = Field(default=None, ge=-1, le=1)
+    theta: Money | None = None
+    implied_volatility: Money | None = Field(default=None, ge=0)
+
+
 class OptionQuote(Evidence):
     instrument: OptionInstrument
     bid: Money | None = Field(default=None, ge=0)
     ask: Money | None = Field(default=None, gt=0)
     bid_size: Count
     ask_size: Count
+    greeks: OptionGreekObservation | None = Field(default=None, exclude_if=lambda v: v is None)
+
+    @model_validator(mode="after")
+    def greek_identity(self):
+        if self.greeks is not None and self.greeks.instrument != self.instrument:
+            raise ValueError("Greek observation must bind the exact quoted instrument")
+        return self
 
 
 class UnderlyingQuote(Evidence):

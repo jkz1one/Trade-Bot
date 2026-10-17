@@ -165,3 +165,16 @@ The opt-in [shared family path](OPTIONS_SHARED_STRATEGIES.md) now displays joint
 cycles and filtered Degen/Swing candidates from the same stored account. Swing
 status is `SESSION_CLOSE_FIXTURE` only when enrolled, otherwise `NOT_ENROLLED`.
 Scope remains `NOT_IMPLEMENTED`. Filtering does not divide or hide common costs.
+
+
+## Observed Greek pressure
+
+When either the original entry quote or the latest stored quote carries Greek
+observations, `position.greek_pressure` exposes [source-backed theta, IV and delta
+diagnostics](OPTIONS_GREEK_HEALTH.md). It retains evidence hashes, provenance,
+timestamps, null unknown signals and explicit reasons. The baseline must match the
+original entry approval and preparation inputs; it is never reconstructed from a
+later quote. Current quote conflicts and stale/estimated observations remain
+incomplete. READY denotes available Greek inputs, not a healthy trade or order
+permission. Reads use existing bounded stored evidence without mutation or network
+calls. This API addition does not complete the dedicated dashboard visual pass.
