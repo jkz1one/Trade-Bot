@@ -1,5 +1,67 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## P7 durable observed progress and stall coverage: 2026-10-17 UTC
+
+Native supervision now records `observed-progress-v1` for each owned entry in an
+audited transaction. Original preparation/approval underlying quotes supply fixed
+CALL-ask/PUT-bid references and original risk distance; completed actual entry fills
+supply premium basis and original quantity. Partial entries remain incomplete.
+Partial sales, stop changes, reconciliation and restart cannot rebase these terms.
+
+Fresh synchronized exact-contract bids and directional underlying prices retain
+peaks, last-progress time and highest native target stage. Exact source-backed
+stall, premium divergence and premium/underlying giveback diagnostics are available
+without enabling health-driven actions. Missing, stale, regressing or conflicting
+observations preserve state and suppress current signals. Stalls require a valid
+20-minute sampled coverage window; gaps cannot become evidence of no progress.
+Tracking never backfills an unobserved pre-installation or partial-entry interval.
+[Evidence contract and thresholds](OPTIONS_PROGRESS_HEALTH.md).
+
+Stored observer reads bind the saved row to its latest audit event and label current
+freshness separately from historical evaluation. Legacy detached journals without
+the table remain readable. Native A/B/C/D journals retain separate progress and all
+entry/management charges. Premium diagnostics exclude costs and are not net returns;
+verified economic exports, unknown-cost semantics and whole-trade floors remain
+independent. Portable progress-history export is not added in this slice.
+
+Fresh GitHub baseline: `d33d4f75349ccace1062c39edc097126f0b0b215`, tree
+`ea2a098bd33b2f839aeac99a60e1c2d82a9bdca9`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Initial focused tests found the missing restart table registration and a repeated
+  observation event caused by equivalent Decimal values with different text scales;
+  both were corrected. A test helper's low-precision price construction was moved
+  outside the low-precision application check. Focused source suite then passed
+  **21 tests in 13.18s**, before adding target, audit-binding and A/B/C/D cases.
+- The first installed regression invocation used a nonexistent test filename and
+  collected no tests. The path was corrected without application changes; the
+  retained log is `progress-health-collection.log`.
+- Final installed progress, execution, Greek, observer, partial-close, target,
+  floor/trail, position-management and native-export regression: **533 passed in
+  377.46s**, including all **25 new cases**, with warnings treated as errors outside
+  the checkout against the non-editable installed wheel. Includes native A/B/C/D
+  progress with every entry/management charge, target touches without sales,
+  restart, partial fills/scales, exact thresholds, quote conflicts, duplicate
+  observations, audit rollback and detached/legacy observer reads.
+- Three source/wheel/installed modules and all 13 copied regression files match.
+  Scoped lint/format, dependency consistency, whitespace and 254 local documentation
+  links pass.
+- Wheel SHA-256: `16fdf478da5f5d5a4e45df670ad9343c24bf6da7eeafecad8e4f5b6559ea09ea`.
+  Artifacts/logs beside checkout: `progress-health-env`, `progress-health-dist`,
+  `progress-health-proof`, `progress-health-build.log`, `progress-health-focused.log`,
+  `progress-health-collection.log` and `progress-health-installed-tests.log`.
+
+Full health management still needs remaining liquidity/session context, composition
+with Greek/progress evidence, frozen actions and native stop/exit/restart/replay
+acceptance. Scope entry/path/family-loss/runtime integration, authentic provider/host
+evidence, prospective economics and the dedicated UI pass remain open. Main untouched,
+PR draft, LIVE disabled and deployment frozen. No authentic provider/model/broker
+call, dependency or host/deployment change.
+
+---
+
 ## P7 observed Greek evidence and pressure review: 2026-10-17 UTC
 
 The next missing health-management input was explicit theta/IV evidence: native

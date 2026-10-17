@@ -178,3 +178,16 @@ later quote. Current quote conflicts and stale/estimated observations remain
 incomplete. READY denotes available Greek inputs, not a healthy trade or order
 permission. Reads use existing bounded stored evidence without mutation or network
 calls. This API addition does not complete the dedicated dashboard visual pass.
+
+## Stored progress diagnostics
+
+`position.progress_health` exposes [durable observed progress](OPTIONS_PROGRESS_HEALTH.md)
+when native supervision has recorded it. Original geometry, completed entry premium,
+peaks, target stage and last-progress times survive partial sales and restart.
+Current stall/divergence/giveback diagnostics retain explicit missing-data reasons;
+insufficient observation coverage cannot establish a stall. The saved result must
+match its entry's latest audit event. `stored_only=true` and `observations_fresh`
+separate historical evaluation from current freshness. Premium metrics are before
+costs, not net returns. Reads do not alter protection, consume calls or refresh
+observations; historical journals without the table remain readable. Dedicated UI
+visual treatment and health-driven action acceptance remain open.

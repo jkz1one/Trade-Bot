@@ -100,6 +100,7 @@ class OptionJournal(ExecutionJournal):
             "execution_option_loss_outcomes",
             "execution_option_decisions",
             "execution_option_receipts",
+            "execution_option_progress",
             "execution_option_strategy",
             "execution_option_opportunities",
             "execution_option_runtime",
@@ -204,6 +205,9 @@ class OptionExecution:
             )
             db.execute(
                 "CREATE TABLE IF NOT EXISTS execution_option_receipts(receipt_id TEXT PRIMARY KEY,payload TEXT NOT NULL)"
+            )
+            db.execute(
+                "CREATE TABLE IF NOT EXISTS execution_option_progress(entry_client_id TEXT PRIMARY KEY,payload TEXT NOT NULL)"
             )
             if self.policy.loss_control is not None:
                 from app.options.loss_control import enroll
@@ -1280,6 +1284,9 @@ class OptionExecution:
             )
             p = refresh(db, p, self.limits.population_id)
             p = assess_position(p, quote, underlying, self.limits, self.policy, now=now)
+        from app.options.progress_health import record
+
+        record(self, db, p, quote, underlying, now)
         return p
 
     def _review_partial_close(self, db, proposal, quote, underlying, now, origin):

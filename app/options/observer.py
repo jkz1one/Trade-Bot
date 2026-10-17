@@ -715,7 +715,11 @@ class OptionObserver:
                     {*greek_review["reasons"], "CURRENT_QUOTE_CONFLICT"}
                 )
         trail_floor = floor_value(p.premium_trail, p.contract.multiplier)
+        from app.options.progress_health import stored
+
+        progress = stored(db, p.entry_client_id, limits, now)
         return {
+            **({"progress_health": progress} if progress is not None else {}),
             **({"greek_pressure": greek_review} if greek_review is not None else {}),
             **(
                 {

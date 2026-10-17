@@ -113,6 +113,10 @@ loosen across scales or restart; unknown costs preserve protection and block sca
 Greek evidence through quotes, fills and replay, with stored theta/IV/delta diagnostics.
 Missing, stale or estimated observations remain incomplete; no health-driven order
 authority is enabled.
+[Durable progress diagnostics](docs/OPTIONS_PROGRESS_HEALTH.md) now preserve original
+underlying risk geometry, actual entry premium, peaks and stall coverage through
+partial exits and restart. Stored divergence/giveback signals retain explicit
+missing-data states and do not authorize health-driven orders.
 [Scope management plans](docs/OPTIONS_SCOPE_MANAGEMENT.md) now derive balanced
 whole-contract allocations from owned sizing and bind explicit profile premium
 limits beneath the owner cap. Four-contract Scope plans remain blocked by their

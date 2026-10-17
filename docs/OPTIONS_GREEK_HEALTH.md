@@ -94,9 +94,10 @@ existing semantics. The test fixtures are not authentic provider/model acceptanc
 ## Remaining management gate
 
 This closes the missing normalized Greek evidence and diagnostic-calculation part
-of health management. Full source health still needs durable original underlying
-risk geometry, progress/stall/peak history, premium divergence/giveback and session
-context, plus frozen enrollment and native execution/restart/replay acceptance for
+of health management. [Durable progress diagnostics](OPTIONS_PROGRESS_HEALTH.md)
+now retain original underlying risk geometry, progress/stall/peak history and
+premium divergence/giveback. Full source health still needs remaining liquidity/session
+context and composition, plus frozen enrollment and native execution/restart/replay acceptance for
 any health-driven stop or exit. No partial Greek score enables those actions.
 Scope watch/entry linkage, full path proof, the missing four-contract T3, family
 loss/reset, provider/host evidence, prospective economics and the dedicated UI pass
