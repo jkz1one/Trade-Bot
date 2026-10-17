@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -11,7 +12,7 @@ from app.metrics.performance import capital_multiple, net_strategy_pnl, simple_r
 from app.risk.policy import policy_for_equity
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/web/templates")
+templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
 
 def dashboard_context(request: Request):
