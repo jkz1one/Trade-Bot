@@ -8,7 +8,10 @@ from app.options.engine import clock, fingerprint
 from app.options.models import Name, OptionAdmission
 from app.options.scope import ScopePreflightInput
 from app.options.scope_admission import ScopeEntryPathReview
+from app.options.scope_context import ScopeContextInput
+from app.options.scope_contract import ScopeContractScan
 from app.options.scope_management import ScopeManagementReview
+from app.options.scope_quality import ScopeQualityScan
 from app.options.scope_structure import ScopeGeometry
 from app.options.scope_watch import ScopeWatchChoice, ScopeWatchPolicy
 
@@ -50,7 +53,138 @@ def _timing(evaluated, until, now):
     )
 
 
-def _watch(row, policy, now, read_json, owner_policy):
+def _watch_binding(db, record, read_json):
+    event = db.execute(
+        "SELECT sequence,occurred_at,payload FROM execution_events "
+        "WHERE kind='SCOPE_WATCH_ACTION' AND json_extract(payload,'$.record.play_key')=? "
+        "ORDER BY sequence DESC LIMIT 1",
+        (record["play_key"],),
+    ).fetchone()
+    if event is None:
+        raise ValueError("Stored Scope watch has no recorded action")
+    payload = read_json(event["payload"])
+    action_key = TypeAdapter(Name).validate_python(payload["action_key"])
+    receipt = db.execute(
+        "SELECT request_hash,result_json FROM execution_option_scope_watch_actions WHERE action_key=?",
+        (action_key,),
+    ).fetchone()
+    expected = {
+        "revision": event["sequence"],
+        "record": record,
+        "authority": False,
+        "live_enabled": False,
+    }
+    if (
+        fingerprint(payload["record"]) != fingerprint(record)
+        or receipt is None
+        or len(receipt["request_hash"]) != 64
+        or any(c not in "0123456789abcdef" for c in receipt["request_hash"])
+        or fingerprint(read_json(receipt["result_json"])) != fingerprint(expected)
+    ):
+        raise ValueError("Stored Scope watch/action/receipt mismatch")
+    return {
+        "sequence": event["sequence"],
+        "action_key": action_key,
+        "recorded_at": _stamp(event["occurred_at"]).isoformat(),
+    }
+
+
+def _decision_evidence(record, policy, choice, now):
+    """Project selected stored observations only. Never call a strategy evaluator."""
+
+    def review(frame, context, quality, contract, evaluated_at, until):
+        result = {"quality": None, "contract": None}
+        if quality is None and contract is None:
+            return result
+        if quality is None or policy.quality is None or frame is None or context is None:
+            raise ValueError("Incomplete stored Scope review inputs")
+        frame = ScopePreflightInput.model_validate(frame)
+        context = ScopeContextInput.model_validate(context)
+        q = ScopeQualityScan.model_validate(quality)
+        digest = fingerprint({"frame": frame, "context": context})
+        stamp = _stamp(evaluated_at)
+        if (
+            q.input_hash != digest
+            or q.policy_hash != fingerprint(policy.quality)
+            or q.evaluated_at != stamp
+            or q.context.evaluated_at != stamp
+            or q.context.input_hash != digest
+            or q.context.policy_hash != fingerprint(policy.context)
+        ):
+            raise ValueError("Stored Scope quality lost its input/policy binding")
+        selected = [
+            o
+            for o in q.observations
+            if all(getattr(o.observation, k) == v for k, v in choice.model_dump().items())
+        ]
+        if len(selected) > 1 or (not q.issues and len(selected) != 1):
+            raise ValueError("Ambiguous stored Scope quality selection")
+        result["quality"] = {
+            "evaluated_at": stamp.isoformat(),
+            "time_status": _timing(stamp, until, now),
+            "input_hash": digest,
+            "policy_hash": q.policy_hash,
+            "issues": list(q.issues),
+            "selected": selected[0].model_dump(mode="json") if selected else None,
+        }
+        if contract is not None:
+            c = ScopeContractScan.model_validate(contract)
+            if (
+                policy.contract is None
+                or c.quality != q
+                or c.input_hash != digest
+                or c.policy_hash != fingerprint(policy.contract)
+                or c.evaluated_at != stamp
+            ):
+                raise ValueError("Stored Scope contract lost its quality/policy binding")
+            selected = [
+                o
+                for o in c.observations
+                if all(getattr(o, k) == v for k, v in choice.model_dump().items())
+            ]
+            if len(selected) > 1 or (not c.issues and len(selected) != 1):
+                raise ValueError("Ambiguous stored Scope contract selection")
+            result["contract"] = {
+                "evaluated_at": stamp.isoformat(),
+                "time_status": _timing(stamp, until, now),
+                "issues": list(c.issues),
+                "selected": selected[0].model_dump(mode="json") if selected else None,
+            }
+        return result
+
+    if (policy.quality is not None) != ("locked_quality_scan" in record) or (
+        (policy.contract is not None) != ("locked_contract_scan" in record)
+    ):
+        raise ValueError("Missing original Scope review")
+    called = review(
+        record["locked_frame"],
+        record["locked_context"],
+        record.get("locked_quality_scan"),
+        record.get("locked_contract_scan"),
+        record["called_at"],
+        None,
+    )
+    latest = None
+    if "arming" in record:
+        a = record["arming"]
+        latest = review(
+            a.get("frame"),
+            a.get("context"),
+            a.get("quality_scan"),
+            a.get("contract_scan"),
+            a["evaluated_at"],
+            a["valid_until"],
+        )
+    return {
+        "called": called,
+        "latest_sample": latest,
+        "stored_only": True,
+        "authority": False,
+        "live_enabled": False,
+    }
+
+
+def _watch(db, row, policy, now, read_json, owner_policy):
     record = read_json(row["record_json"])
     key = TypeAdapter(Name).validate_python(record["play_key"])
     frame = ScopePreflightInput.model_validate(record["locked_frame"])
@@ -70,12 +204,15 @@ def _watch(row, policy, now, read_json, owner_policy):
         or frame.metadata.instrument.contract.underlying != "SPX"
     ):
         raise ValueError("Conflicting stored Scope identity/state")
+    audit = _watch_binding(db, record, read_json)
     called = _stamp(record["called_at"])
     reviewed = _stamp(record["reviewed_through"])
     terminal = _stamp(record["terminal_at"]) if record["terminal_at"] else None
     if (terminal is None) != (status == "WATCHING"):
         raise ValueError("Conflicting terminal Scope evidence")
     result = {
+        "audit": audit,
+        "decision_evidence": _decision_evidence(record, policy, choice, now),
         "play_key": key,
         "session_date": record["session_date"],
         "called_at": called.isoformat(),
@@ -194,11 +331,24 @@ def stored_scope(db, tables, limits, now, read_json, *, owner_policy):
     ):
         raise ValueError("Scope owner identity mismatch")
     last_action = _stamp(rows[0]["last_action_at"])
+    enrollment = db.execute(
+        "SELECT occurred_at,payload FROM execution_events WHERE kind='SCOPE_WATCH_ENROLLED' LIMIT 2"
+    ).fetchall()
+    latest = db.execute(
+        "SELECT occurred_at FROM execution_events WHERE kind='SCOPE_WATCH_ACTION' "
+        "ORDER BY sequence DESC LIMIT 1"
+    ).fetchone()
+    if (
+        len(enrollment) != 1
+        or read_json(enrollment[0]["payload"]) != policy.model_dump(mode="json")
+        or last_action != _stamp((latest or enrollment[0])["occurred_at"])
+    ):
+        raise ValueError("Stored Scope policy/action clock lost its enrollment binding")
     count = db.execute("SELECT COUNT(*) FROM execution_option_scope_watches").fetchone()[0]
     rows = db.execute(
         "SELECT * FROM execution_option_scope_watches ORDER BY session_date DESC,rowid DESC LIMIT 25"
     ).fetchall()
-    watches = [_watch(row, policy, now, read_json, owner_policy) for row in rows]
+    watches = [_watch(db, row, policy, now, read_json, owner_policy) for row in rows]
     active = db.execute(
         "SELECT * FROM execution_option_scope_watches WHERE active_lock IS NOT NULL LIMIT 2"
     ).fetchall()
@@ -213,5 +363,7 @@ def stored_scope(db, tables, limits, now, read_json, *, owner_policy):
         "history_limit": 25,
         "history_truncated": count > len(watches),
         "watches": watches,
-        "active_watch": _watch(active[0], policy, now, read_json, owner_policy) if active else None,
+        "active_watch": _watch(db, active[0], policy, now, read_json, owner_policy)
+        if active
+        else None,
     }

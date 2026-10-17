@@ -143,6 +143,10 @@ owner restart. A later explicitly supplied session starts its own count while
 retaining old records; an old active watch must first be expired explicitly.
 `snapshot()` reads stored state only. It never polls a provider, advances time,
 expires a watch or mutates journal/authority files.
+The separate [stored observer](OPTIONS_OBSERVER.md#scope-research-visibility) now
+projects selected original/latest quality and contract evidence after checking each
+visible watch against its latest action and receipt. Its missing/stale labels and
+collapsed decision details grant no fresh eligibility or execution authority.
 
 ## Still required for Scope execution
 

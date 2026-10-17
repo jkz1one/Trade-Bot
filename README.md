@@ -88,6 +88,8 @@ pivots and exact session VWAP. A separate frozen extension adds confirmed equal-
 plateaus to quality, arming and current-price admission; full path proof remains open.
 The stored observer now displays Scope research watches, arming and sizing, with
 explicit expired-evidence labels and no order authority.
+Collapsed decision details now expose saved quality, contract profiles and path
+blockers, with original/latest reviews and recorded action/receipt consistency.
 Optional new-cohort Degen/Swing loss controls now add independent family streaks,
 cooldowns and signed targeted resets while retaining account-wide guards and costs.
 Enrolled replay/export now retains cumulative loss state, consumed-entry evidence

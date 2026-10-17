@@ -1,6 +1,67 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
 
+## P7 Scope stored decision evidence and action binding: 2026-10-17 UTC
+
+The stored observer now exposes selected original and latest sampled Scope quality,
+contract profile and path evidence. Scores/components, classifications, exact
+obstructions and plateau formation/confirmation provenance remain attached to their
+saved input/policy hashes and evaluation time. The existing authenticated page adds
+collapsed **Decision evidence** details; the API retains the full bounded level set.
+[Read contract and limits](OPTIONS_OBSERVER.md#scope-research-visibility).
+
+Every displayed watch must match its latest action event and original receipt,
+including exact record, revision and false authority values. Frozen enrollment and
+last-action time must match their recorded events. Typed scans must retain their
+input/policy/time bindings and unique selected pattern/parent/direction; contract
+reviews must contain the same quality review. Missing or independently altered
+bindings make the report unavailable. This is stored consistency checking, not
+request replay, provider authentication or protection against coordinated rewriting
+of the complete journal.
+
+Missing latest scans remain missing, even when the original call passed. Future,
+expired and within-recorded-window labels remain distinct from eligibility. The
+page shows at most five path levels with an explicit total; raw market frames and
+unselected alternatives are not added to the report. Reads do not call scanners,
+attach an owner, submit orders or change journal revisions. Account costs and
+independent A/B/C/D execution remain unchanged.
+
+Fresh GitHub baseline: `7812763d9a8871de48aee53980a0922f36710edf`, tree
+`df45e847fc528794f89c3afd6a1fd8269225268c`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Focused source evidence/observer/plateau suites: **81 passed in 22.22s**, warnings
+  treated as errors. New cases cover original/current selections, CALL/PUT,
+  stale/future/missing inputs, altered watch/event/receipt/enrollment records,
+  input/policy/clock/selection mismatches, no scanner/owner calls, authenticated
+  HTML/API rendering, and unchanged journal revisions.
+- Installed wheel outside checkout: **763 passed in 121.61s**, warnings treated as
+  errors. Includes all 17 Scope files, the general observer and historical comparison
+  suites, plus enrolled A/B/C/D replay with every entry/management charge.
+- All 169 Python modules and four HTML templates match source/wheel/installation;
+  all 17 copied Scope test files match. Scoped lint/format, dependency and whitespace
+  checks pass; 60 unique local documentation targets exist.
+- Wheel SHA-256: `474b3b1b2a035fa6c387447acdcf078fac137ccadb30e2ac3080823e3d45968d`.
+  Artifacts/logs beside checkout: `scope-evidence-env`, `scope-evidence-dist`,
+  `scope-evidence-proof`, `scope-evidence-build.log`, `scope-evidence-source.log`
+  and `scope-evidence-installed-tests.log`.
+- Initial focused run: 59 passed / one failed because an old retained-history
+  fixture inserted watches without their action/receipt evidence. The fixture now
+  seeds consistent historical records; the production binding check remains intact.
+  Original output is retained in `scope-evidence-initial.log`.
+
+Functional read-only UI evidence is delivered; the dedicated desktop/mobile design
+and visual acceptance pass remains open. Scope full path coverage, native watch/order
+linkage, filled family-loss/reset controls, missing four-contract T3 and runtime/replay
+enrollment remain open. Authentic provider/model/host and prospective economics,
+remaining Swing and mixed-instrument support remain separate gates. Main untouched,
+PR draft, LIVE disabled and deployment frozen. No authentic provider/model/broker
+call, dependency or host/deployment change.
+
+---
+
 ## P7 Scope confirmed plateau path evidence: 2026-10-17 UTC
 
 New research cohorts can freeze `completed-spx-plateaus-v2`, extending the existing

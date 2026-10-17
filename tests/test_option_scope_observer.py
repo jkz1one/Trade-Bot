@@ -152,6 +152,21 @@ def test_bounded_history_keeps_active_record_visible(tmp_path):
                     "INSERT INTO execution_option_scope_watches VALUES(?,?,NULL,?)",
                     (raw["play_key"], raw["session_date"], json.dumps(raw)),
                 )
+                # A visible retained record must have its original action and receipt.
+                action_key = raw["play_key"] + "-action"
+                engine.journal.event(
+                    db, AT, "SCOPE_WATCH_ACTION", {"action_key": action_key, "record": raw}
+                )
+                receipt = {
+                    "revision": engine.journal.revision(db),
+                    "record": raw,
+                    "authority": False,
+                    "live_enabled": False,
+                }
+                db.execute(
+                    "INSERT INTO execution_option_scope_watch_actions VALUES(?,?,?)",
+                    (action_key, "a" * 64, json.dumps(receipt)),
+                )
         s = observer(engine).report()["scope"]
         assert s["total_watches"] == 27 and s["history_truncated"]
         assert len(s["watches"]) == 25

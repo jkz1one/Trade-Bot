@@ -48,6 +48,32 @@ report unavailable. Policy, frame, choice, geometry and admission data use their
 existing validators. This is a bounded stored projection, not a replay or audit of
 every historical action, and it grants no execution or restore authority.
 
+Every displayed watch must now match its latest `SCOPE_WATCH_ACTION` event and
+that action's original receipt, including the exact record and event revision.
+The receipt must retain false authority/LIVE values and a valid request-hash shape.
+Frozen policy and last-action time must match the enrollment/latest action events.
+Missing, independently altered or rewound rows make the report unavailable. This
+checks stored cross-record consistency; it does not replay requests, authenticate
+the provider, or protect against coordinated rewriting of the entire journal.
+
+`decision_evidence.called` and `decision_evidence.latest_sample` expose only the
+selected pattern/parent/direction from saved quality and contract scans. They retain
+scores, components, grades, profile, rejection reasons and exact known path levels,
+including plateau formation/confirmation evidence. The projection validates each
+scan's original input hash, frozen policy hash, evaluation time and unique selected
+identity. A contract scan must contain the same quality review. Raw market frames
+and unrelated candidate alternatives are not added to the report.
+
+Original call reviews have no separate validity promise. Sample reviews retain
+future/expired/within-recorded-window labels, and missing latest scans remain null.
+An earlier passing call never substitutes for a failed or missing latest sample.
+The existing authenticated page adds a collapsed **Decision evidence** detail with
+original/latest quality and contract profile, blockers and the saved admission or
+latest sampled path. It shows at most five path levels with an explicit total;
+the API retains the complete bounded set. Admission-path timestamps remain separate
+from later arming samples. This is functional HTML/API acceptance, not the dedicated
+desktop/mobile design pass or permission to trade.
+
 The latest 25 stored watches appear newest first by session and insertion order.
 The total count and truncation flag are explicit. The active record is fetched
 separately so it cannot disappear beyond that history limit. Opportunity-family
