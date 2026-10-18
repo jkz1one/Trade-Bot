@@ -1,6 +1,47 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
 
+## Portable dashboard review handoff: 2026-10-18 UTC
+
+The next real-market gate still requires actual private provider responses; no
+wire mapping or entitlement is inferred from schemas. To advance hands-on testing
+without repeating completed build work, the existing installed fixture results
+now have a portable UI handoff. [Review procedure](OPTIONS_TESTING.md#your-first-hands-on-review).
+
+Successful `options-test-kit.py` runs create `Trade-Bot-UI-Review.zip`: the exact
+24 dashboard HTML files (eight states and both width wrappers), a review index,
+README and limited build/test summary with page hashes. Fixed filenames exclude
+fixture databases, credentials, source copies, logs and arbitrary report extras.
+Incomplete/failed/skipped phase evidence, missing/symlinked pages and an existing
+archive are rejected. No browser/server/provider/model/broker call is introduced.
+
+The current pack was exported directly from the completed installed test run at
+`21e6a55f37bb6fd39d00dd3204233db9a78be571`, which retained 289 passing cases.
+All 24 pages match that output byte for byte. Reviewers can extract and open
+`index.html` without installing Python or rerunning tests. This is a review
+handoff, not completed visual, provider, host, profitability or LIVE acceptance.
+The cloud browser file-URL restriction remains unresolved; no workaround was used.
+
+Fresh GitHub baseline: `21e6a55f37bb6fd39d00dd3204233db9a78be571`, tree
+`5db5913369577666166139aaabafe5a78e9467d3`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation: **14 runner/export checks passed in 7.83s**, warnings as errors,
+including the existing native import/plugin regression. The real prior completed
+run exported 27 ZIP members, passed archive CRC and exact page-byte checks, and
+retained 289 passing cases in its limited summary. Scoped lint/format and whitespace
+checks pass. Application/runtime code and dependencies did not change, so the
+already verified installed trading suites were not repeated. Archive SHA-256:
+`6c4dbc520f3cb8caf04f496520916095b6a322967a907bb0141afd2446edb482`.
+
+Proof beside checkout: `ui-review-export-tests.log` and the archive inside
+`options-testing-proof-v3`. Main untouched, PR draft, LIVE disabled and the deployed
+experiment frozen. Remaining provider samples, normalization, authentic model/host
+acceptance, browser/user review and broader strategy implementation stay open.
+
+---
+
+
 ## Installed PAPER testing entry point: 2026-10-18 UTC
 
 The user asked to get ready for testing efficiently without skipping required work.

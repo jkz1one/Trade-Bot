@@ -49,7 +49,7 @@ subprocesses receive only basic locale/PATH values, not shell API credentials.
 The output directory must be new, absolute and outside the checkout. It is private;
 the CLI uses a restrictive umask. It retains copied test sources, independent
 fixture state, per-phase logs/JUnit summaries, before/after installed identity,
-`report.json` and `index.html`. Do not reuse fixture journals as a live population.
+`report.json`, `index.html` and `Trade-Bot-UI-Review.zip`. Do not reuse fixture journals as a live population.
 No test outcome grants entry authority or changes the deployed experiment.
 
 ## What the command verifies
@@ -74,9 +74,14 @@ inspect remaining local processes before starting a fresh run.
 
 ## Your first hands-on review
 
-After the command succeeds, open `trade-bot-testing-results/index.html` locally in
-your desktop browser. If the run was on a separate machine, securely copy that
-private results directory to your computer first. It is a local file review;
+After the command succeeds, use `Trade-Bot-UI-Review.zip` for portable visual
+review: extract the entire ZIP, then open its `index.html` locally in your desktop
+browser. No Python installation, login or test rerun is needed on the review
+computer. The pack contains only the 24 fixed display HTML files, review index,
+README and limited build/test summary with page hashes. It excludes fixture
+databases, credentials, source copies and logs. Keep the original private results
+directory separately for engineering diagnostics. Alternatively, open the full
+run's `index.html` on the test machine. It is a local file review;
 this procedure starts no HTTP server and changes no deployed route.
 
 1. Open populated and HOLD views at both widths. Confirm proposal, review, order,

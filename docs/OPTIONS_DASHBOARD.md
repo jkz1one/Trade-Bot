@@ -64,6 +64,10 @@ These are implemented semantics, not a claim of completed browser acceptance.
 For one installed test run plus all review files and retained results, use the
 [options testing procedure](OPTIONS_TESTING.md). It wraps the existing drill below
 and verifies the installed application matches the checkout before running.
+Successful runs also produce `Trade-Bot-UI-Review.zip` for review on another
+computer without installing Python or repeating the tests. Extract it and open
+`index.html`; the original rendered pages are unchanged and visual acceptance
+remains pending.
 
 With the matching package and existing test dependencies installed, run the helper
 from the checkout. Choose a new absolute destination:

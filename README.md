@@ -6,7 +6,7 @@ Small, auditable experiment for testing whether an autonomous reasoning trader c
 
 Use the [isolated options test procedure](docs/OPTIONS_TESTING.md) to verify an
 installed wheel, run native runtime/recovery and full-cost replay checks, and
-generate desktop/mobile dashboard review files. This is offline fixture testing;
+generate desktop/mobile dashboard review files plus a portable review ZIP. This is offline fixture testing;
 authentic data/model, host and visual acceptance remain separate gates.
 
 ## Current product direction

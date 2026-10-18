@@ -9,6 +9,7 @@ import signal
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -154,6 +155,75 @@ def save(output, report):
     )
 
 
+def package_review(output, report):
+    """Export only the fixed display files and a bounded evidence summary."""
+    if report.get("status") != "PASSED_OFFLINE_FIXTURES" or report.get("dashboard") != "GENERATED":
+        raise ValueError("Completed fixture proof and dashboard required")
+    pages = {}
+    for name in STATES:
+        for suffix in ("", "-desktop", "-mobile"):
+            filename = name + suffix + ".html"
+            path = output / "dashboard" / filename
+            if path.is_symlink() or not path.is_file() or path.stat().st_size > 1024 * 1024:
+                raise ValueError("Bounded regular dashboard page required")
+            pages["dashboard/" + filename] = path.read_bytes()
+    phases = {name: report["phases"][name] for name in PHASES}
+    if any(
+        p.get("status") != "PASSED"
+        or p.get("tests", 0) <= 0
+        or any(p.get(k) != 0 for k in ("failures", "errors", "skipped"))
+        for p in phases.values()
+    ):
+        raise ValueError("All fixed phases require completed passing evidence")
+    summary = {
+        "status": "DISPLAY_FIXTURES_ONLY",
+        "visual_acceptance": "PENDING",
+        "execution_authority": False,
+        "live_enabled": False,
+        "application_sha256": report["release"]["application_sha256"],
+        "wheel_sha256": report["release"]["wheel_sha256"],
+        "source_test_harness_sha256": report["harness_sha256"],
+        "passed_tests": {name: p["tests"] for name, p in phases.items()},
+        "page_sha256": {name: digest(raw) for name, raw in pages.items()},
+    }
+    links = "".join(
+        f'<li>{name}: <a href="dashboard/{name}-desktop.html">desktop</a> · '
+        f'<a href="dashboard/{name}-mobile.html">mobile</a></li>'
+        for name in STATES
+    )
+    index = (
+        '<!doctype html><html lang="en"><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        "<title>Trade-Bot dashboard review</title><style>"
+        "body{max-width:800px;margin:32px auto;padding:0 20px;background:#0c1422;"
+        "color:#dfebf8;font:16px/1.7 system-ui}a{color:#80c5ff}"
+        ":focus-visible{outline:3px solid #78dfc1}</style>"
+        "<h1>Trade-Bot dashboard review</h1><p>DISPLAY FIXTURES · LIVE DISABLED</p>"
+        "<p>Open the populated view first, then review the remaining states at both widths.</p>"
+        f"<ul>{links}</ul><h2>Check</h2><ul><li>Clipping, spacing and long text</li>"
+        "<li>Proposal, review, order, fills and costs are distinct</li>"
+        "<li>Stale, unknown and halted states are clear</li>"
+        "<li>Tab focus, Enter on disclosures and expanded details</li></ul>"
+        "<p>Save screenshots and a short list of issues. Visual acceptance remains pending.</p>"
+        "<p>These are saved synthetic display examples. No trader is attached. Family filters, "
+        "pagination and API links require the authenticated app and are not simulated here.</p>"
+        '<p><a href="evidence.json">Build and fixture evidence</a></p></html>'
+    )
+    path = output / "Trade-Bot-UI-Review.zip"
+    with zipfile.ZipFile(path, "x", compression=zipfile.ZIP_DEFLATED) as archive:
+        for name, raw in pages.items():
+            archive.writestr(name, raw)
+        archive.writestr("index.html", index)
+        archive.writestr("evidence.json", json.dumps(summary, indent=2) + "\n")
+        archive.writestr(
+            "README.txt",
+            "Extract the entire ZIP, then open index.html locally in a desktop browser.\n"
+            "Review both desktop and mobile widths; no installation or login is needed.\n"
+            "Synthetic display fixtures only. No trader is attached. Visual acceptance is pending.\n",
+        )
+    return path
+
+
 def run_tests(output, name, selection):
     copied = output / "tests"
     args = [
@@ -243,6 +313,7 @@ def run(output, wheel_sha256):
         ):
             raise ValueError("Application or test inputs changed during the run")
         report["status"] = "PASSED_OFFLINE_FIXTURES"
+        report["review_archive"] = package_review(output, report).name
     except (
         OSError,
         ValueError,

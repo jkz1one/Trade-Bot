@@ -87,3 +87,63 @@ def test_isolated_copied_tests_load_package_imports_and_required_plugin(tmp_path
         ],
     )
     assert result == {"tests": 2, "failures": 0, "errors": 0, "skipped": 0}
+
+
+def review_inputs(path):
+    dashboard = path / "dashboard"
+    dashboard.mkdir()
+    for name in kit.STATES:
+        for suffix in ("", "-desktop", "-mobile"):
+            (dashboard / (name + suffix + ".html")).write_text("<!doctype html><p>fixture</p>")
+    return {
+        "status": "PASSED_OFFLINE_FIXTURES",
+        "dashboard": "GENERATED",
+        "phases": {
+            name: {"status": "PASSED", "tests": 1, "failures": 0, "errors": 0, "skipped": 0}
+            for name in kit.PHASES
+        },
+        "release": {"application_sha256": "a" * 64, "wheel_sha256": "b" * 64},
+        "harness_sha256": "c" * 64,
+        "private_extra": "not-for-export",
+    }
+
+
+def test_portable_review_exports_only_fixed_pages_and_limited_evidence(tmp_path):
+    import zipfile
+
+    report = review_inputs(tmp_path)
+    (tmp_path / "secret.key").write_text("not-for-export")
+    (tmp_path / "dashboard" / "private.db").write_text("not-for-export")
+    archive = kit.package_review(tmp_path, report)
+    with zipfile.ZipFile(archive) as z:
+        assert len(z.namelist()) == 27 and z.testzip() is None
+        assert not any(name.endswith((".db", ".key", ".log")) for name in z.namelist())
+        assert not any(b"not-for-export" in z.read(name) for name in z.namelist())
+        evidence = json.loads(z.read("evidence.json"))
+        assert evidence["visual_acceptance"] == "PENDING"
+        assert evidence["execution_authority"] is False and evidence["live_enabled"] is False
+        for name, expected in evidence["page_sha256"].items():
+            assert kit.digest(z.read(name)) == expected
+    before = archive.read_bytes()
+    with pytest.raises(FileExistsError):
+        kit.package_review(tmp_path, report)
+    assert archive.read_bytes() == before
+
+
+@pytest.mark.parametrize("damage", ["running", "failed_phase", "skip", "missing", "symlink"])
+def test_incomplete_review_cannot_be_exported(tmp_path, damage):
+    report = review_inputs(tmp_path)
+    page = tmp_path / "dashboard" / "populated.html"
+    if damage == "running":
+        report["status"] = "RUNNING"
+    elif damage == "failed_phase":
+        report["phases"]["accounting"]["status"] = "FAILED"
+    elif damage == "skip":
+        report["phases"]["accounting"]["skipped"] = 1
+    else:
+        page.unlink()
+        if damage == "symlink":
+            page.symlink_to(tmp_path / "dashboard" / "empty.html")
+    with pytest.raises(ValueError):
+        kit.package_review(tmp_path, report)
+    assert not (tmp_path / "Trade-Bot-UI-Review.zip").exists()

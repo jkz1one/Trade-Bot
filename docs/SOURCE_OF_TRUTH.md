@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.69. Adopted product direction and working delivery contract, 2026-10-18 UTC.
+Version 1.70. Adopted product direction and working delivery contract, 2026-10-18 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -14,7 +14,9 @@ desktop/mobile rendering, keyboard and user visual acceptance remain open.
 The [isolated options test procedure](OPTIONS_TESTING.md) now joins installed-file
 identity, native runtime/recovery, shared entry, observer and full-cost replay
 checks with those display files. Its retained receipt requires completed test
-summaries and never grants provider, host, visual or LIVE acceptance.
+summaries and never grants provider, host, visual or LIVE acceptance. Successful
+runs now export a portable dashboard review pack containing only the fixed display
+pages and limited build/test evidence, so visual reviewers need no Python setup.
 P3 paired accounting, sealed market tapes, setup/shortlist replay and automatic
 native first-session A/B/C journal export and independent virtual-clock replay
 with scripted model delays are fixture verified. Multi-session replay/export now
