@@ -184,10 +184,54 @@ terminal; historical opportunity rows remain observations from their own cycle.
 Reading the dashboard does not sample quotes or advance lifecycle state. Authentic
 provider data and actual browser visual acceptance remain separate gates.
 
-This closes observed-quote invalidation for the existing session-close Swing
-adaptation. Unfilled T1 consumption, new setup families, overnight lifecycle and
-full Swing acceptance remain open. Missing observations never imply an unbroken
+This v2 policy closes observed-quote invalidation for the existing session-close
+Swing adaptation. It does not consume unfilled T1; the separately enrolled v3
+policy below adds that rule. New setup families, overnight lifecycle and full
+Swing acceptance remain open. Missing observations never imply an unbroken
 live price path or a proven trading edge.
+
+### Original first-target consumption
+
+New populations may enroll `SwingPolicy.unfilled_lifecycle="observed-lifecycle-v3"`.
+It includes the previous completed-bar and observed-quote invalidation rules and
+adds the pinned promotion contract's terminal unfilled T1 rule. A valid v3 seed
+requires an explicit positive `first_target`, beyond the last daily high for CALLs
+or below the last daily low for PUTs. This is a supplied original underlying price,
+not a generated fixed-R objective, model revision or option-premium target. It is
+part of the full seed recorded before the target session opens and its immutable
+hash. Missing/wrong-side targets cannot establish an eligible v3 seed; changing
+the target after locking produces the same seed-lock conflict as changing its
+contract or history. Earlier policies reject supplied target fields, and absent
+fields stay omitted from legacy serialization. Existing populations are unchanged.
+
+A validated completed target-session bar consumes T1 when its high reaches the
+CALL target or its low reaches the PUT target. If one bar crosses both original
+stop and target, invalidation takes precedence because OHLC does not reveal their
+within-bar order. A valid fresh underlying quote consumes it when CALL bid reaches
+or exceeds T1, or PUT ask reaches or falls below T1. An ask-only CALL touch or
+bid-only PUT touch is insufficient. Exact touches count. All v2 source, clock,
+price, session, duplicate-quote and ownership restrictions remain in force.
+
+The first retained terminal wins. `TARGET_CONSUMED` stores the original first
+target, seed hash, trigger/observation times and either full quote or completed
+history hash. Recovery, revised later history, restart, new model output and
+provider churn cannot revive it. Native cycles/supervision and atomic preparation/
+dispatch review use the same journal. Paid rejected calls remain charged. Attempted
+orders and held positions retain their existing protection/management semantics;
+this rule grants no fill, cancel, held-profit exit or new ownership authority.
+A later observed target after verified closure can retire the seed for future entry.
+
+Shortlist replay reconstructs only its visible event prefix; native replay applies
+the rule to each independent account. Subsequent stored observer opportunities show
+the original first target and terminal reason. Reads never advance lifecycle;
+historical opportunity rows keep their original cycle observations. No provider
+attestation, complete unseen price path or profitability claim follows from a
+supplied seed and fixture replay.
+
+This closes unfilled T1 consumption for explicitly supplied original targets in
+this session-close adaptation. Automatic target derivation, broader Swing families,
+overnight ownership and authentic input/host/economic/visual acceptance remain open.
+The model's separate held-position targets do not rewrite this seed objective.
 
 ### Population creation
 

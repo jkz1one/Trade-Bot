@@ -33,7 +33,7 @@
       <small>Approval until {{ c.approved_until }}</small>
     </div>{% else %}<p class="muted">No admitted candidate</p>{% endfor %}
     {% for o in item.setup_observations %}<p>{{ o.symbol }} {{ o.family }} {{ o.right }}: {{ o.status }}{% if o.reasons %}<small>{{ o.reasons|join(' · ') }}</small>{% endif %}
-    {% if o.terminal %}<small>Seed {{ o.terminal.status|lower }} · Trigger {{ o.terminal.triggered_at }} · Recorded observation {{ o.terminal.observed_at }}{% if o.terminal.invalidation is not none %} · Original invalidation {{ o.terminal.invalidation }}{% endif %}</small>{% endif %}</p>{% endfor %}
+    {% if o.terminal %}<small>Seed {{ o.terminal.status|lower }} · Trigger {{ o.terminal.triggered_at }} · Recorded observation {{ o.terminal.observed_at }}{% if o.terminal.invalidation is not none %} · Original invalidation {{ o.terminal.invalidation }}{% endif %}{% if o.terminal.first_target is defined %} · Original first target {{ o.terminal.first_target }}{% endif %}</small>{% endif %}</p>{% endfor %}
   </details>
 </article>
 {% endfor %}

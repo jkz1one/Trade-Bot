@@ -33,9 +33,10 @@ class SwingPolicy(OptionRecord):
     catalyst_max_age_seconds: int = Field(gt=0, le=60, strict=True)
     family_priority: tuple[Literal["DEGEN", "SWING"], Literal["DEGEN", "SWING"]]
     holding_policy: Literal["SESSION_CLOSE"] = "SESSION_CLOSE"
-    unfilled_lifecycle: Literal["completed-invalidation-v1", "observed-invalidation-v2"] | None = (
-        Field(default=None, exclude_if=lambda v: v is None)
-    )
+    unfilled_lifecycle: (
+        Literal["completed-invalidation-v1", "observed-invalidation-v2", "observed-lifecycle-v3"]
+        | None
+    ) = Field(default=None, exclude_if=lambda v: v is None)
 
     @model_validator(mode="after")
     def coherent(self):
@@ -66,6 +67,7 @@ class SwingSeed(OptionRecord):
     target_session: date
     history: SwingHistory
     instrument: OptionInstrument
+    first_target: Money | None = Field(default=None, gt=0, exclude_if=lambda v: v is None)
 
 
 class CatalystEvidence(Evidence):
@@ -91,23 +93,29 @@ class SwingObservation(OptionRecord):
 
 class SwingTerminal(OptionRecord):
     seed_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
-    status: Literal["INVALIDATED", "EXPIRED"]
+    status: Literal["INVALIDATED", "TARGET_CONSUMED", "EXPIRED"]
     observed_at: datetime
     triggered_at: datetime
     invalidation: Money | None = Field(default=None, gt=0)
     history_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    first_target: Money | None = Field(default=None, gt=0, exclude_if=lambda v: v is None)
     quote: UnderlyingQuote | None = Field(default=None, exclude_if=lambda v: v is None)
 
     @model_validator(mode="after")
     def coherent(self):
         invalidated = self.status == "INVALIDATED"
+        consumed = self.status == "TARGET_CONSUMED"
         if (
             self.triggered_at > self.observed_at
             or invalidated != (self.invalidation is not None)
-            or int(self.history_hash is not None) + int(self.quote is not None) != int(invalidated)
+            or consumed != (self.first_target is not None)
+            or int(self.history_hash is not None) + int(self.quote is not None)
+            != int(invalidated or consumed)
             or (self.quote is not None and self.triggered_at != self.quote.source_at)
         ):
-            raise ValueError("Dated terminal evidence with exact invalidation evidence required")
+            raise ValueError(
+                "Dated terminal evidence with exact reason-specific price and observation required"
+            )
         return self
 
 
@@ -148,6 +156,14 @@ def seed_issues(seed, policy, calendar, symbols):
         or len(h.bars) != policy.daily_lookback
     ):
         issues.append("SWING_DAILY_HISTORY_BINDING_OR_COVERAGE")
+    reference = h.bars[-1].high if c.right == "CALL" else h.bars[-1].low
+    if policy.unfilled_lifecycle == "observed-lifecycle-v3":
+        if seed.first_target is None or (
+            seed.first_target <= reference if c.right == "CALL" else seed.first_target >= reference
+        ):
+            issues.append("SWING_ORIGINAL_FIRST_TARGET_REQUIRED")
+    elif seed.first_target is not None:
+        issues.append("SWING_FIRST_TARGET_POLICY_REQUIRED")
     expected = previous
     for bar in reversed(h.bars):
         if (
@@ -252,11 +268,11 @@ def scan_swing(item, policy, intraday, history, calendar, symbols, *, now, recei
             issues=tuple(issues),
         )
         if policy.unfilled_lifecycle is not None:
-            from app.options.swing_lifecycle import apply_terminal, completed_invalidation
+            from app.options.swing_lifecycle import apply_terminal, completed_terminal
 
             return apply_terminal(
                 scan,
-                completed_invalidation(scan, history, intraday, policy, calendar, symbols),
+                completed_terminal(scan, history, intraday, policy, calendar, symbols),
             )
         return scan
 

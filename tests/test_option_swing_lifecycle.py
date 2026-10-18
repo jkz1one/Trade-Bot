@@ -322,7 +322,7 @@ def test_shortlist_reconstructs_only_visible_terminal_prefix(tmp_path, breach_fi
         assert datetime.fromisoformat(b["terminal"]["observed_at"]) == later_at
 
 
-@pytest.mark.parametrize("lifecycle", [POLICY, "observed-invalidation-v2"])
+@pytest.mark.parametrize("lifecycle", [POLICY, "observed-invalidation-v2", "observed-lifecycle-v3"])
 def test_enrolled_native_abcd_replay_retains_independent_accounts_and_every_cost(
     tmp_path, lifecycle
 ):
@@ -333,7 +333,12 @@ def test_enrolled_native_abcd_replay_retains_independent_accounts_and_every_cost
 
     from app.options.replay import run_replay
 
-    tape = shared_tape(tmp_path, full=True, lifecycle=lifecycle)
+    tape = shared_tape(
+        tmp_path,
+        full=True,
+        lifecycle=lifecycle,
+        first_target=D(605) if lifecycle == "observed-lifecycle-v3" else None,
+    )
     result = asyncio.run(run_replay(managed_settings(tape), tape, tmp_path / "run"))
     assert result["report"]["status"] == "COMPLETE_ARITHMETIC"
     assert result["report"]["economic_conclusion"] == "INCONCLUSIVE"
@@ -359,8 +364,8 @@ def test_enrolled_native_abcd_replay_retains_independent_accounts_and_every_cost
         with sqlite3.connect(tmp_path / "run" / arm / "journal.db") as db:
             assert db.execute("SELECT count(*) FROM execution_option_swing_terminals").fetchone()[
                 0
-            ] == (1 if lifecycle == "observed-invalidation-v2" else 0)
-            if lifecycle == "observed-invalidation-v2":
+            ] == (1 if lifecycle in ("observed-invalidation-v2", "observed-lifecycle-v3") else 0)
+            if lifecycle in ("observed-invalidation-v2", "observed-lifecycle-v3"):
                 terminal = json.loads(
                     db.execute(
                         "SELECT terminal_json FROM execution_option_swing_terminals"

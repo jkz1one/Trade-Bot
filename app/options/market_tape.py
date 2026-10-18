@@ -393,13 +393,13 @@ def _replay_swing(tape, event, histories, scans):
     locks, terminals, locked_seeds = {}, {}, {}
 
     def observe_quote(seed, previous):
-        if h.swing.unfilled_lifecycle != "observed-invalidation-v2":
+        if h.swing.unfilled_lifecycle not in ("observed-invalidation-v2", "observed-lifecycle-v3"):
             return
-        from app.options.swing_lifecycle import quote_invalidation
+        from app.options.swing_lifecycle import quote_terminal
 
         quotes = [q for q in previous.frame.underlyings if q.symbol == seed.history.symbol]
         if len(quotes) == 1:
-            terminal = quote_invalidation(
+            terminal = quote_terminal(
                 seed, h.swing, h.limits, calendar, quotes[0], previous.recorded_at
             )
             if terminal is not None:

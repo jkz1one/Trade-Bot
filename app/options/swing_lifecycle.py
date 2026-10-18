@@ -5,7 +5,7 @@ from app.options.engine import exact, fingerprint
 from app.options.swing import SwingSeed, SwingTerminal, seed_issues
 
 
-def completed_invalidation(scan, history, intraday, policy, calendar, symbols):
+def completed_terminal(scan, history, intraday, policy, calendar, symbols):
     """Inspect only validated, completed target-session bars; no quote inference."""
     seed, at = scan.seed, scan.evaluated_at
     window = calendar.current_window(at)
@@ -22,15 +22,27 @@ def completed_invalidation(scan, history, intraday, policy, calendar, symbols):
     stop = scan.observations[0].invalidation
     call = seed.instrument.contract.right == "CALL"
     for bar in history.bars:
-        if bar.ends_at <= min(at, history.source_at, history.received_at) and (
-            bar.low <= stop if call else bar.high >= stop
-        ):
+        if bar.ends_at > min(at, history.source_at, history.received_at):
+            continue
+        # A bar gives no within-bar order. Prefer invalidation when both were touched.
+        if bar.low <= stop if call else bar.high >= stop:
             return SwingTerminal(
                 seed_hash=fingerprint(seed),
                 status="INVALIDATED",
                 observed_at=at,
                 triggered_at=bar.ends_at,
                 invalidation=stop,
+                history_hash=fingerprint(history),
+            )
+        if policy.unfilled_lifecycle == "observed-lifecycle-v3" and (
+            bar.high >= seed.first_target if call else bar.low <= seed.first_target
+        ):
+            return SwingTerminal(
+                seed_hash=fingerprint(seed),
+                status="TARGET_CONSUMED",
+                observed_at=at,
+                triggered_at=bar.ends_at,
+                first_target=seed.first_target,
                 history_hash=fingerprint(history),
             )
     return None
@@ -128,14 +140,17 @@ def retain_scans(c, scans):
 
 
 @exact
-def quote_invalidation(seed, policy, limits, calendar, quote, now):
+def quote_terminal(seed, policy, limits, calendar, quote, now):
     """Use only an observed, fresh, uncrossed quote for the locked target session."""
     from decimal import ROUND_CEILING, ROUND_FLOOR
 
     from app.options.degen import _metric
     from app.options.governor import _fresh
 
-    if policy.unfilled_lifecycle != "observed-invalidation-v2" or quote is None:
+    if (
+        policy.unfilled_lifecycle not in ("observed-invalidation-v2", "observed-lifecycle-v3")
+        or quote is None
+    ):
         return None
     window = calendar.current_window(now)
     if (
@@ -166,20 +181,34 @@ def quote_invalidation(seed, policy, limits, calendar, quote, now):
         else bar.high * (1 + policy.stop_buffer_fraction),
         ROUND_CEILING if call else ROUND_FLOOR,
     )
-    if quote.bid > stop if call else quote.ask < stop:
-        return None
-    return SwingTerminal(
-        seed_hash=fingerprint(seed),
-        status="INVALIDATED",
-        observed_at=now,
-        triggered_at=quote.source_at,
-        invalidation=stop,
-        quote=quote,
-    )
+    if quote.bid <= stop if call else quote.ask >= stop:
+        return SwingTerminal(
+            seed_hash=fingerprint(seed),
+            status="INVALIDATED",
+            observed_at=now,
+            triggered_at=quote.source_at,
+            invalidation=stop,
+            quote=quote,
+        )
+    if policy.unfilled_lifecycle == "observed-lifecycle-v3" and (
+        quote.bid >= seed.first_target if call else quote.ask <= seed.first_target
+    ):
+        return SwingTerminal(
+            seed_hash=fingerprint(seed),
+            status="TARGET_CONSUMED",
+            observed_at=now,
+            triggered_at=quote.source_at,
+            first_target=seed.first_target,
+            quote=quote,
+        )
+    return None
 
 
 def observe_quotes(c, underlyings):
-    if c.swing_policy is None or c.swing_policy.unfilled_lifecycle != "observed-invalidation-v2":
+    if c.swing_policy is None or c.swing_policy.unfilled_lifecycle not in (
+        "observed-invalidation-v2",
+        "observed-lifecycle-v3",
+    ):
         return
     at = c.now()
     window = c.engine.calendar.current_window(at)
@@ -205,7 +234,7 @@ def observe_quotes(c, underlyings):
                     c,
                     db,
                     seed,
-                    quote_invalidation(
+                    quote_terminal(
                         seed, c.swing_policy, c.engine.limits, c.engine.calendar, quotes[0], at
                     ),
                 )

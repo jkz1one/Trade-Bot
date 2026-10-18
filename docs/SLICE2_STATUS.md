@@ -1,6 +1,78 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
 
+## P7 original Swing first-target consumption: 2026-10-18 UTC
+
+New populations may enroll `observed-lifecycle-v3` with an explicit original
+`SwingSeed.first_target`. This closes the pinned promotion contract's unfilled T1
+retirement rule for the existing session-close daily-breakout adaptation.
+[Policy and limits](OPTIONS_SHARED_STRATEGIES.md#original-first-target-consumption).
+
+The target must be beyond the directional daily breakout reference, recorded in
+the seed before the target session opens, and retained in its immutable hash.
+Missing/wrong-side targets block v3 eligibility; changing a locked target conflicts.
+No target is generated from a generic R multiple, AI output or a later quote.
+Earlier cohort policies and omitted-field serialization remain unchanged.
+
+Validated completed bars or fresh authoritative underlying quotes now retain
+`TARGET_CONSUMED`, with the exact first target, seed hash, trigger/observation times
+and history hash or full quote. Exact touches count. A bar touching stop and target
+records invalidation because OHLC cannot establish within-bar order. Quotes use
+CALL bid / PUT ask and all prior source/clock/session/price/ownership gates.
+Retirement survives recovery, revised histories and restart. Attempted/held orders
+retain their existing ownership/protection path, and every paid rejected entry
+remains charged. Native replay preserves each independent account's state.
+
+The saved observer displays the original consumed target on subsequent opportunity
+records; reads are side-effect free and historical rows retain their own observations.
+This does not create held-position target exits, overnight authority or a provider
+attestation. Broader target derivation/families, overnight Swing, Scope execution,
+mixed stock/options and authentic provider/host/economic/visual acceptance remain open.
+
+Fresh GitHub baseline: `1641c8c7bfbeea26030be03f73513a0b20f9aa06`, tree
+`a96968a5f161c6f6625ab2fea6479ca9c9d6d2f0`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Pre-change reproducer failed because the seed had no original first-target
+  field. The pinned SignalFlow promotion contract was re-read at
+  `f9eaf2c1b5d13dca287ee7138126883065b00395`; no broader strategy replan.
+- Source lifecycle/quote/target regression: **94 passed, two full-session cases
+  deselected in 30.72s**. Final expanded target suite: **45 passed in 16.77s**.
+  Both treat warnings as errors. Covers CALL/PUT, original target geometry and
+  immutability, exact touches, invalid evidence, bar ambiguity, recovery/restart,
+  paid preparation/dispatch races, ownership, runtime/observer and prefix/native replay.
+- The initial combined installed run ended without a final pytest summary and is
+  not counted as completed proof. The same cases were split into separate full
+  replay and regression invocations; no application change was made.
+- Final installed regression outside checkout: **288 passed, three full replay
+  cases deselected in 116.53s**. Separate v3 full-session replay: **one passed in
+  165.62s**. Both treat warnings as errors, totaling **289 verified installed
+  cases**. All eight selected test files and the shared replay helper match the
+  copied inputs. The replay preserves independent A/B/C/D orders, all entry and
+  management charges, fees and data/host allocations; complete arithmetic remains
+  economically INCONCLUSIVE. Previously verified v1/v2 full-session cases were not
+  repeated. All 62 local documentation link targets resolve.
+- All 172 Python modules and seven HTML templates match source/wheel/installation.
+  Wheel SHA-256: `a566fd3cec9fcebe9afb8773d4962442f399bdf4b59fea5baf37c14d70356403`.
+  Initial installed collection was discarded after an environment setup error
+  selected an older shared package; the corrected environment explicitly installs
+  this wheel and asserts its import path before tests. No application change was
+  made for that setup issue. Scoped lint/format, dependencies and whitespace pass.
+- Scratch proof: `swing-targets-env`, `swing-targets-dist`, `swing-targets-proof`,
+  `swing-targets-build.log`, `swing-targets-reproducer.log`, `swing-targets-source.log`,
+  `swing-targets-final-source.log`, `swing-targets-install-collection-failure.log`
+  `swing-targets-installed.log`, `swing-targets-installed-replay.log` and
+  `swing-targets-installed-regression.log` beside checkout.
+
+Status: **fixture verified**.
+Main untouched, PR draft, LIVE disabled and deployed experiment frozen. No authentic
+provider/model/broker calls, dependency/host change or deployment.
+
+---
+
+
 ## P7 observed Swing quote invalidation: 2026-10-17 UTC
 
 New populations may now enroll
