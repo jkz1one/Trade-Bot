@@ -73,6 +73,9 @@ class OptionExecutionPolicy(OptionRecord):
     target_stops: Literal["frozen-target-stops-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
+    target_entry_reference: Literal["fill-weighted-underlying-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     trade_floor: Literal["native-target-floor-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -85,6 +88,10 @@ class OptionExecutionPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def bounded(self):
+        if self.target_entry_reference is not None and (
+            self.target_exits != "frozen-target-milestones-v2" or self.target_stops is None
+        ):
+            raise ValueError("Fill-bound target stops require v2 milestones and target stops")
         if self.target_exits is not None and self.partial_closes is None:
             raise ValueError("Target exits require whole-contract partial closes")
         if self.trade_floor is not None and self.target_exits is None:
@@ -147,10 +154,19 @@ class TargetExitStep(OptionRecord):
     underlying_price: Money = Field(gt=0)
     quantity: Count
     tighten_underlying_to: Money | None = Field(default=None, gt=0, exclude_if=lambda v: v is None)
+    tighten_to_entry: Literal["fill-weighted-underlying-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
 
     @model_validator(mode="after")
     def meaningful(self):
-        if self.quantity == 0 and self.tighten_underlying_to is None:
+        if self.tighten_to_entry is not None and self.tighten_underlying_to is not None:
+            raise ValueError("An entry-bound stop cannot also name a fixed price")
+        if (
+            self.quantity == 0
+            and self.tighten_underlying_to is None
+            and self.tighten_to_entry is None
+        ):
             raise ValueError("A stop-only milestone requires an explicit tighter stop")
         return self
 
@@ -164,6 +180,11 @@ class TargetExitSchedule(OptionRecord):
 
     @model_validator(mode="after")
     def bounded(self):
+        if any(s.tighten_to_entry is not None for s in self.steps) and (
+            self.version != "frozen-target-milestones-v2"
+            or any(s.tighten_to_entry is not None for s in self.steps[1:])
+        ):
+            raise ValueError("Only the first v2 milestone may bind an entry reference")
         if self.version == "frozen-targets-v1" and any(s.quantity == 0 for s in self.steps):
             raise ValueError("Stop-only milestones require the v2 schedule")
         if sum(s.quantity for s in self.steps) > self.entry_quantity:
@@ -181,23 +202,57 @@ class TargetExitSchedule(OptionRecord):
             reference = step.underlying_price
 
     def check_stops(self, right, original):
+        entry_bound = False
         for step in self.steps:
+            if step.tighten_to_entry is not None:
+                original, entry_bound = step.underlying_price, True
+                continue
             stop = step.tighten_underlying_to
             if stop is None:
                 continue
             if not (
-                original < stop < step.underlying_price
+                (original <= stop if entry_bound else original < stop)
+                and stop < step.underlying_price
                 if right == "CALL"
-                else original > stop > step.underlying_price
+                else (original >= stop if entry_bound else original > stop)
+                and stop > step.underlying_price
             ):
                 raise ValueError(
                     "Target stops must tighten strictly and remain behind their target"
                 )
-            original = stop
+            original, entry_bound = stop, False
 
     @property
     def has_stops(self):
-        return any(s.tighten_underlying_to is not None for s in self.steps)
+        return any(
+            s.tighten_underlying_to is not None or s.tighten_to_entry is not None
+            for s in self.steps
+        )
+
+    @property
+    def needs_entry_reference(self):
+        return self.steps[0].tighten_to_entry is not None
+
+
+class EntryUnderlyingSample(OptionRecord):
+    fill_id: Name
+    fill_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    quantity: PositiveCount
+    reference: Money | None = Field(default=None, gt=0)
+
+
+class EntryUnderlyingReference(OptionRecord):
+    version: Literal["fill-weighted-underlying-v1"] = "fill-weighted-underlying-v1"
+    entry_quantity: PositiveCount
+    samples: tuple[EntryUnderlyingSample, ...] = Field(min_length=1, max_length=1000)
+
+    @model_validator(mode="after")
+    def coverage(self):
+        if sum(s.quantity for s in self.samples) > self.entry_quantity or len(
+            {s.fill_id for s in self.samples}
+        ) != len(self.samples):
+            raise ValueError("Entry reference requires distinct bounded original fills")
+        return self
 
 
 class PositionExitProtection(OptionRecord):
@@ -377,6 +432,9 @@ class OptionLot(OptionRecord):
 
 class OptionPosition(OptionHolding):
     entry_client_id: Name
+    entry_underlying_reference: EntryUnderlyingReference | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     trade_floor: TradeFloorState | None = Field(default=None, exclude_if=lambda v: v is None)
     premium_trail: PremiumTrailState | None = Field(default=None, exclude_if=lambda v: v is None)
     lots: tuple[OptionLot, ...] = Field(min_length=1, max_length=1000)
@@ -408,6 +466,18 @@ class OptionPosition(OptionHolding):
 
     @model_validator(mode="after")
     def owned(self):
+        needs_reference = bool(
+            self.target_exit_schedule and self.target_exit_schedule.needs_entry_reference
+        )
+        if needs_reference != (self.entry_underlying_reference is not None) or (
+            needs_reference
+            and (
+                self.entry_underlying_reference.entry_quantity
+                != self.target_exit_schedule.entry_quantity
+                or self.quantity > sum(s.quantity for s in self.entry_underlying_reference.samples)
+            )
+        ):
+            raise ValueError("Entry reference must bind the original dynamic target schedule")
         if (
             self.trade_floor is not None
             and self.trade_floor.reference_stage > self.target_exit_stage

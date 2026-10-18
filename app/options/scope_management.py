@@ -22,7 +22,9 @@ MISSING_THIRD = "SCOPE_THIRD_TARGET_UNSPECIFIED"
 
 
 class ScopeManagementPolicy(OptionRecord):
-    version: Literal["scope-management-plan-v1"] = "scope-management-plan-v1"
+    version: Literal["scope-management-plan-v1", "scope-management-plan-v2"] = (
+        "scope-management-plan-v1"
+    )
     # Explicit enrollment values, bounded by source estimates and then by the owner.
     responsive_loss_fraction: Money = Field(gt=0, le=Decimal(".35"))
     balanced_loss_fraction: Money = Field(gt=0, le=Decimal(".45"))
@@ -32,10 +34,27 @@ class ScopeManagementPolicy(OptionRecord):
         return getattr(self, profile.lower() + "_loss_fraction")
 
 
-def _schedule(geometry, quantity):
+def _schedule(geometry, quantity, version="scope-management-plan-v1"):
     if quantity == 4:
         return None
     allocation = ALLOCATIONS[quantity]
+    if version == "scope-management-plan-v2":
+        return TargetExitSchedule(
+            version="frozen-target-milestones-v2",
+            entry_quantity=quantity,
+            steps=(
+                TargetExitStep(
+                    underlying_price=geometry.target_one,
+                    quantity=allocation[0],
+                    tighten_to_entry="fill-weighted-underlying-v1",
+                ),
+                TargetExitStep(
+                    underlying_price=geometry.target_two,
+                    quantity=allocation[1],
+                    tighten_underlying_to=geometry.target_one,
+                ),
+            ),
+        )
     return TargetExitSchedule(
         entry_quantity=quantity,
         steps=tuple(
@@ -49,7 +68,9 @@ def _schedule(geometry, quantity):
 
 
 class ScopeManagementReview(OptionRecord):
-    version: Literal["scope-management-plan-v1"] = "scope-management-plan-v1"
+    version: Literal["scope-management-plan-v1", "scope-management-plan-v2"] = (
+        "scope-management-plan-v1"
+    )
     reference_commit: Literal["f9eaf2c1b5d13dca287ee7138126883065b00395"] = (
         "f9eaf2c1b5d13dca287ee7138126883065b00395"
     )
@@ -91,10 +112,12 @@ class ScopeManagementReview(OptionRecord):
         expected_reasons = (MISSING_THIRD,) if self.admitted_quantity == 4 else ()
         if (
             self.valid_until <= self.evaluated_at
+            or self.version != self.policy.version
             or self.source_estimated_premium_stop_fraction != SOURCE_ESTIMATES[observation.profile]
             or self.entry_premium_protection.maximum_loss_fraction != fraction
             or self.source_allocation != ALLOCATIONS[self.admitted_quantity]
-            or self.target_exit_schedule != _schedule(self.geometry, self.admitted_quantity)
+            or self.target_exit_schedule
+            != _schedule(self.geometry, self.admitted_quantity, self.version)
             or self.reasons != expected_reasons
             or self.passed != (not expected_reasons)
         ):
@@ -130,6 +153,7 @@ def review_scope_management(admission, geometry, choice, scan, policy, owner_fra
         raise ValueError("Scope quantity must come from the bounded owned admission")
     reasons = (MISSING_THIRD,) if quantity == 4 else ()
     return ScopeManagementReview(
+        version=policy.version,
         evaluated_at=admission.approved_at,
         valid_until=admission.valid_until,
         contract_id=admission.contract_id,
@@ -145,7 +169,7 @@ def review_scope_management(admission, geometry, choice, scan, policy, owner_fra
         ),
         admitted_quantity=quantity,
         source_allocation=ALLOCATIONS[quantity],
-        target_exit_schedule=_schedule(geometry, quantity),
+        target_exit_schedule=_schedule(geometry, quantity, policy.version),
         passed=not reasons,
         reasons=reasons,
     )

@@ -551,6 +551,11 @@ class OptionExecution:
                         raise ExecutionBlocked("OPTION_TARGET_ENTRY_NOT_ENROLLED")
                     if target_exit_schedule.version != self.policy.target_exits:
                         raise ExecutionBlocked("OPTION_TARGET_VERSION_NOT_ENROLLED")
+                    if (
+                        target_exit_schedule.needs_entry_reference
+                        and self.policy.target_entry_reference is None
+                    ):
+                        raise ExecutionBlocked("OPTION_TARGET_ENTRY_REFERENCE_NOT_ENROLLED")
                     if target_exit_schedule.has_stops and self.policy.target_stops is None:
                         raise ExecutionBlocked("OPTION_TARGET_STOPS_NOT_ENROLLED")
                     if result.outcome == "APPROVED":
@@ -761,6 +766,11 @@ class OptionExecution:
                         raise ExecutionBlocked("OPTION_TARGET_NOT_ENROLLED")
                     if intent.target_exit_schedule.version != self.policy.target_exits:
                         raise ExecutionBlocked("OPTION_TARGET_VERSION_NOT_ENROLLED")
+                    if (
+                        intent.target_exit_schedule.needs_entry_reference
+                        and self.policy.target_entry_reference is None
+                    ):
+                        raise ExecutionBlocked("OPTION_TARGET_ENTRY_REFERENCE_NOT_ENROLLED")
                     if intent.target_exit_schedule.has_stops and self.policy.target_stops is None:
                         raise ExecutionBlocked("OPTION_TARGET_STOPS_NOT_ENROLLED")
                     if underlying is None:
@@ -1144,6 +1154,12 @@ class OptionExecution:
                 raise ValueError("UNOWNED_OR_UNATTEMPTED_OPTION_ORDER")
             intent = OptionIntent.model_validate_json(row["intent_json"])
             attempted = datetime.fromisoformat(row["attempted_at"])
+            if (
+                intent.target_exit_schedule is not None
+                and intent.target_exit_schedule.needs_entry_reference
+                and self.policy.target_entry_reference is None
+            ):
+                raise ValueError("OPTION_TARGET_ENTRY_REFERENCE_NOT_ENROLLED")
             if row["order_id"] and row["order_id"] != obs.order_id:
                 raise ValueError("OPTION_ORDER_ID_MISMATCH")
             if any(
@@ -1246,6 +1262,7 @@ class OptionExecution:
             or state.position.entry_protection != snap.position.entry_protection
             or state.position.entry_premium_protection != snap.position.entry_premium_protection
             or state.position.target_exit_schedule != snap.position.target_exit_schedule
+            or state.position.entry_underlying_reference != snap.position.entry_underlying_reference
             or floor_terms(state.position) != floor_terms(snap.position)
             or trail_terms(state.position) != trail_terms(snap.position)
         ):
@@ -1256,6 +1273,16 @@ class OptionExecution:
             and prior.position
             and state.position.entry_client_id == prior.position.entry_client_id
         ):
+            prior_reference, reference = (
+                prior.position.entry_underlying_reference,
+                state.position.entry_underlying_reference,
+            )
+            if prior_reference is not None and (
+                reference is None
+                or reference.entry_quantity != prior_reference.entry_quantity
+                or reference.samples[: len(prior_reference.samples)] != prior_reference.samples
+            ):
+                raise ValueError("OPTION_TARGET_ENTRY_REFERENCE_CHANGED")
             if floor_terms(prior.position) != floor_terms(state.position):
                 raise ValueError("OPTION_TRADE_FLOOR_ENROLLMENT_CHANGED")
             trail = state.position.premium_trail
@@ -1343,6 +1370,11 @@ class OptionExecution:
             raise ExecutionBlocked("OPTION_PARTIAL_CLOSE_FULL_EXIT_REQUIRED")
         if assessed.supervision_issue is not None:
             raise ExecutionBlocked("OPTION_PARTIAL_CLOSE_FRESH_PROTECTION_REQUIRED")
+        if assessed.entry_underlying_reference is not None:
+            from app.options.entry_reference import review_reference
+
+            if review_reference(assessed)["status"] != "READY":
+                raise ExecutionBlocked("OPTION_TARGET_ENTRY_REFERENCE_REQUIRED")
         from app.options.trade_floor import blocked
 
         if blocked(assessed):
@@ -1411,6 +1443,10 @@ class OptionExecution:
                     else {}
                 ),
             }
+            if p and p.entry_underlying_reference is not None:
+                from app.options.entry_reference import review_reference
+
+                payload["entry_underlying_reference"] = review_reference(p)
             if p and self.policy.health_management is not None:
                 from app.options.health_management import stored
 

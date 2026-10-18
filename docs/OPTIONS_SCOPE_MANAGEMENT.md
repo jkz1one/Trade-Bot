@@ -41,7 +41,7 @@ a price, relabel it as runner or reduce an approved four-contract size to three.
 The account admission can remain eligible while this separate management plan is
 blocked. Resolving the third objective/allocation remains a recorded Scope gate.
 
-For one through three contracts, the review produces the existing native
+For one through three contracts, the v1 review produces the existing native
 `TargetExitSchedule` at the exact locked prices. Its stage index counts executable
 steps: for a one-contract plan, native stage 1 refers to Scope T2. It is not a new
 Scope target label. Any stricter cash, fee, liquidity or exposure limit has already
@@ -114,14 +114,13 @@ Scope still requires reviewed four-contract allocation, native watch/entry linka
 complete obstruction coverage, Scope family loss/reset, full management behavior
 and runtime/replay acceptance. The shared native target engine now supports
 [explicit frozen stop adjustments](OPTIONS_TARGET_EXITS.md#optional-frozen-target-stops),
-but Scope previews omit those fields until actual entry binding defines their prices.
-The separately enrolled [v2 native milestones](OPTIONS_TARGET_EXITS.md#stop-only-target-milestones)
-now support tightening at objectives with no sale allocation. Scope previews remain
-v1 and require actual-entry binding before using this capability.
-Native [fill-bound underlying observations](OPTIONS_FILL_UNDERLYING.md) now retain
-separate quotes for actual option fills, including partial-fill coverage and explicit
-missing evidence. This supplies the evidence dependency; it does not yet define
-Scope's fill-bound stop rule, change its previews or authorize its native entries.
+with a new [Scope v2 milestone plan](OPTIONS_ENTRY_REFERENCE.md#scope-management-v2)
+that preserves both locked objectives and defers its T1 stop to the native fill-bound
+entry reference. V1 previews retain their original behavior. New v2 previews use
+stop-only milestones when the source allocation sells nothing at an objective;
+T2 protection uses locked T1. Quantities one through three are supported, while
+four contracts still report the missing T3. Preview prices never substitute for
+actual native fill evidence. The native Scope entry guard remains enforced.
 The shared [premium trail](OPTIONS_PREMIUM_TRAIL.md) now has a separate frozen-owner
 enrollment; full Scope management and its strategy-specific enrollment remain open.
 Authentic provider/calendar/host, prospective economic and UI acceptance

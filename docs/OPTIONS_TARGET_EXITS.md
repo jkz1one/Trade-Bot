@@ -154,11 +154,12 @@ and every entry/management charge remain in native outcomes. No cost is discount
 
 The pinned SignalFlow
 [`play_management.target_stop_price()`](https://github.com/jkz1one/SignalFlow/blob/f9eaf2c1b5d13dca287ee7138126883065b00395/backend/platform/play_management.py)
-provides the target-dependent tightening precedent. This primitive deliberately
+provides the target-dependent tightening precedent. This fixed-price primitive
 requires explicit prices; it does not equate a native executable stage with a Scope
-T1/T2 label or use a research reference price as an actual entry. Scope previews
-still omit these stop fields pending native watch/entry binding. Its missing third
-objective and full management acceptance remain open. Shared native premium trailing
+T1/T2 label or use a research reference price as an actual entry. Scope v1 previews
+omit these fields. The separately enrolled [fill-bound extension](OPTIONS_ENTRY_REFERENCE.md)
+now supplies the first-milestone reference and Scope v2 plan; native Scope linkage,
+its missing third objective and full management acceptance remain open. Shared native premium trailing
 is now separately available through an explicitly frozen owner policy.
 
 ## Stop-only target milestones
@@ -215,10 +216,11 @@ proves profit. Native exports preserve original schedule, actual holdings and al
 costs; open boundaries remain inconclusive. Independent owners do not share stage,
 stop, cash or fill state.
 
-Scope previews still use their frozen v1 factory. Native Scope entry binding must
-choose and freeze the correct actual-entry stop prices and milestone mapping before
-this v2 capability can be enrolled there. No Scope entry guard, allocation or
-complete-path requirement is removed by this shared-engine addition.
+New [fill-bound target protection](OPTIONS_ENTRY_REFERENCE.md) can resolve the
+first milestone stop from complete native entry observations under a separately
+frozen policy. Scope management v2 now emits both milestones with this entry-bound
+marker and the T2-to-T1 stop; v1 remains unchanged. Scope execution linkage and its
+entry guard remain separate, and no missing T3 or path requirement is bypassed.
 
 ## Acceptance boundary
 

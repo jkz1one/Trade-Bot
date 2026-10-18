@@ -1,5 +1,77 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Fill-bound target protection and Scope management v2: 2026-10-18 UTC
+
+Continuing the settled engine-first order, the native target owner now resolves an
+explicit first-milestone stop from actual original entry-fill observations. The
+pinned SignalFlow `play_management.target_stop_price()` was reread at
+`f9eaf2c1b5d13dca287ee7138126883065b00395`: T1 uses its entry reference, T2 uses T1,
+and target protection is independent of scale allocations. Our documented partial-
+fill adaptation uses exact quantity weighting of observed CALL asks / PUT bids,
+with protective rounding to twelve decimals. It does not copy the source's setup-
+price fallback or claim an option/net-profit breakeven.
+
+New native cohorts explicitly enroll `fill-weighted-underlying-v1` with v2 target
+milestones and target stops. Preparation, dispatch, reconciliation and portable
+accounting enforce enrollment. The original buy retains each fill's quantity,
+receipt hash and observed reference or missing data. Complete original quantity
+and coverage are required; each sample must be strictly inside original stop/T1
+geometry. Scales and restart retain the full original basis, never remaining-lot
+or later-quote prices. Frozen plans cannot name both a fixed and entry-bound stop.
+
+Fresh target touches latch independently; usable supervision applies the tighter
+reference and checks rebounds immediately. Missing/invalid reference evidence
+blocks scales without turning ordinary partial-entry completion into a global halt.
+Original stop, premium/time/expiry protection, later fixed stops and full owned
+closes remain available under their existing rules. No fill, fee, sale proceeds,
+entry/management charge or unknown cost is omitted. Independent owners retain
+separate reference and account state.
+
+Scope management v2 now emits both locked milestones for one through three
+contracts: T1 protection uses the native entry-bound marker and T2 protection uses
+locked T1, including zero-sale milestones. V1 behavior and existing cohort hashes
+remain unchanged. Four contracts still report the missing T3; no source allocation
+is resized or relabeled. Stored observer and portable research verification retain
+the exact v2 plan. The Scope native entry guard remains enforced.
+[Contract, source boundary and examples](OPTIONS_ENTRY_REFERENCE.md).
+
+Fresh GitHub baseline: `801ef93c4cfc21381d6b38e8995f1f1f85540abd`, tree
+`d067544e403fcb9755ebf2448fcdaf6310dfff14`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation: **315 installed cases passed in 312.09s**, covering the new native
+reference behavior, Scope management v1/v2, target exits/stops/milestones and open-
+runner export, fill observations, partial closes, cost-floor review, Scope entry
+boundaries, research replay/verifier and full-session independent A/B/C/D accounting.
+A separate disjoint **33-case installed run passed in 37.67s**, including two new
+reference/cost-floor combinations and the complete native cost-floor execution
+suite. Both runs use isolated Python, a noneditable wheel and copied tests outside
+the checkout, with warnings treated as errors. No failed gate was waived.
+
+An earlier focused 22-case native run passed in 21.31s before the Scope v2 factory
+extension; it overlaps the final suite and is not added to its counts. The final
+suites verify quantity weighting, protective decimal rounding, partial-entry
+completion, missing/invalid observations, stop-only milestones, restart/rebounds,
+immutable enrollment, dispatch rejection, rollback, read-only receipt verification,
+independent owners and tampered portable basis rejection. Missing entry reference
+evidence cannot suppress the independent whole-trade cost-floor exit.
+
+All 181 application/template files match source/wheel/install; copied tests match
+final source. Scoped lint/format, dependency consistency, whitespace and 65 distinct
+local documentation targets pass. Final wheel SHA-256:
+`c5df3dd482d8bf545c1f6b55e9cf2b2da322fda02322917dd7797db16d5fa529`.
+Proof beside checkout: `entry-reference-focused.log`, `entry-reference-installed.log`,
+`entry-reference-floors.log`, `entry-reference-proof`, `entry-reference-final-dist`
+and build/install logs.
+
+Remaining native Scope watch/order/family-loss linkage, complete path requirements,
+four-contract T3 resolution, overnight Swing and mixed ownership stay open. UI and
+authentic provider/model/data/host/economic acceptance remain final gates. Main
+untouched, PR draft, LIVE disabled and deployed experiment frozen; no authentic
+provider/model/broker call, dependency update or host/deployment change.
+
+---
+
 ## Fill-bound underlying observations: 2026-10-18 UTC
 
 Continuing the settled strategy/engine-first order, native option fill receipts

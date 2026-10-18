@@ -66,11 +66,13 @@ remain separately stored. Independent accounts retain their own receipts and cos
 
 ## Management and acceptance boundary
 
-This is an evidence dependency for actual-entry target protection. It does not yet
-convert the observations into a Scope entry reference or enable Scope orders.
+The new [fill-bound target policy](OPTIONS_ENTRY_REFERENCE.md) now converts complete
+original entry observations into an explicitly enrolled quantity-weighted reference.
+Scope management v2 binds its first milestone to that native rule, without enabling
+Scope orders.
 The existing progress-health baseline still uses its documented original approval
 reference; this change does not silently change that diagnostic or its frozen policy.
-Scope still needs a reviewed fill-bound stop rule, watch/order/family-loss linkage,
+Scope still needs native watch/order/family-loss linkage,
 complete path requirements, four-contract T3 resolution and runtime enrollment.
 
 Option fill prices, conservative slippage, every entry/exit fee, all entry and

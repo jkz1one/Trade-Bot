@@ -735,7 +735,15 @@ class OptionObserver:
         from app.options.health_management import stored as stored_health
 
         health = stored_health(db, p.entry_client_id)
+        from app.options.entry_reference import stored_reference
+
+        entry_reference = stored_reference(db, p, limits)
         return {
+            **(
+                {"entry_underlying_reference": entry_reference}
+                if entry_reference is not None
+                else {}
+            ),
             **(
                 {
                     "health_management": {

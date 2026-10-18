@@ -38,6 +38,16 @@ def apply_fill(ledger, intent, fill):
                 or position.contract != intent.instrument.contract
             ):
                 raise ValueError("A new buy cannot add to an owned position")
+            reference = None
+            if (
+                intent.target_exit_schedule is not None
+                and intent.target_exit_schedule.needs_entry_reference
+            ):
+                from app.options.entry_reference import append_reference
+
+                reference = append_reference(
+                    position.entry_underlying_reference if position else None, intent, fill
+                )
             lots = (
                 (*position.lots, OptionLot(quantity=fill.quantity, price=fill.price))
                 if position
@@ -45,7 +55,11 @@ def apply_fill(ledger, intent, fill):
             )
             if position:
                 position = position.model_copy(
-                    update={"lots": lots, "quantity": position.quantity + fill.quantity}
+                    update={
+                        "lots": lots,
+                        "quantity": position.quantity + fill.quantity,
+                        "entry_underlying_reference": reference,
+                    }
                 )
             else:
                 position = OptionPosition(
@@ -54,6 +68,7 @@ def apply_fill(ledger, intent, fill):
                     original_underlying_invalidation=intent.original_underlying_invalidation,
                     tightened_underlying_invalidation=intent.original_underlying_invalidation,
                     entry_client_id=intent.client_id,
+                    entry_underlying_reference=reference,
                     lots=lots,
                     exit_at=intent.exit_at,
                     entry_protection=intent.entry_protection,

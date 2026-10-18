@@ -39,6 +39,12 @@ def _replay(a, definition, session, sequence, used_ids, previous_close):
     previous_order_end = session.opens_at
     for order in sorted(a.orders, key=lambda x: x.attempted_at or x.intent.prepared_at):
         i, o = order.intent, order.observation
+        if (
+            i.target_exit_schedule is not None
+            and i.target_exit_schedule.needs_entry_reference
+            and definition.policy.target_entry_reference is None
+        ):
+            raise ValueError("TARGET_ENTRY_REFERENCE_NOT_ENROLLED")
         if i.side == "BUY" and i.health_management != definition.policy.health_management:
             raise ValueError("HEALTH_MANAGEMENT_POLICY_MISMATCH")
         if i.side == "BUY" and i.premium_trail != definition.policy.premium_trail:

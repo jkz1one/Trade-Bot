@@ -1,7 +1,7 @@
 """Shared pure mandatory position protection; no model or execution authority."""
 
 from datetime import timedelta
-from decimal import ROUND_FLOOR, Context, localcontext
+from decimal import ROUND_FLOOR, Context, Decimal, localcontext
 
 from app.options.governor import _fresh, _tick_price
 from app.options.lifecycle import EntryPremiumProtection
@@ -23,6 +23,9 @@ def assess_position(p, quote, underlying, limits, policy, *, now):
 
 
 def _assess(p, quote, underlying, limits, policy, now):
+    from app.options.entry_reference import review_reference
+
+    entry_reference = review_reference(p)
     reason, issue = p.exit_reason, None
     if now >= p.contract.last_trading_at - timedelta(seconds=policy.expiry_guard_seconds):
         reason = reason or "EXPIRY_GUARD"
@@ -107,11 +110,16 @@ def _assess(p, quote, underlying, limits, policy, now):
         and reason is None
     ):
         for step in p.target_exit_schedule.steps[:stage]:
-            if step.tighten_underlying_to is not None:
+            target_stop = step.tighten_underlying_to
+            if (
+                step.tighten_to_entry is not None
+                and policy.target_entry_reference == step.tighten_to_entry
+                and entry_reference["status"] == "READY"
+            ):
+                target_stop = Decimal(entry_reference["reference"])
+            if target_stop is not None:
                 stop = (
-                    max(stop, step.tighten_underlying_to)
-                    if p.contract.right == "CALL"
-                    else min(stop, step.tighten_underlying_to)
+                    max(stop, target_stop) if p.contract.right == "CALL" else min(stop, target_stop)
                 )
         # A target can have latched while the option quote was unavailable. Apply
         # its frozen stop when supervision recovers, then check the rebound now.

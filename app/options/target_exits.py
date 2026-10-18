@@ -25,6 +25,11 @@ def remaining(db, position, stage):
     schedule = position.target_exit_schedule
     if schedule is None or not 1 <= stage <= position.target_exit_stage <= len(schedule.steps):
         raise ExecutionBlocked("OPTION_TARGET_NOT_REACHED")
+    if schedule.needs_entry_reference:
+        from app.options.entry_reference import review_reference
+
+        if review_reference(position)["status"] != "READY":
+            raise ExecutionBlocked("OPTION_TARGET_ENTRY_REFERENCE_REQUIRED")
     row = db.execute(
         "SELECT * FROM execution_orders WHERE client_id=?", (position.entry_client_id,)
     ).fetchone()

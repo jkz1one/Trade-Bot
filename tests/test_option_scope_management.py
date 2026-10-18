@@ -221,9 +221,10 @@ def test_observer_rejects_inconsistent_plan_without_recalculating_it(tmp_path, d
         assert observer(e, now).report()["status"] == "UNAVAILABLE"
 
 
-def test_management_preview_never_bypasses_native_scope_entry_guard(tmp_path):
+@pytest.mark.parametrize("version", ["scope-management-plan-v1", "scope-management-plan-v2"])
+def test_management_preview_never_bypasses_native_scope_entry_guard(tmp_path, version):
     with owned(tmp_path, enroll=False) as (e, v, _):
-        _, out, f, _, u, now = admitted(e, v)
+        _, out, f, _, u, now = admitted(e, v, p=watch_policy(version=version))
         r = out["record"]["admission_review"]
         plan = ScopeManagementReview.model_validate(r["management"])
         result = e.prepare(
@@ -258,3 +259,63 @@ def test_management_review_rolls_back_with_failed_audit(tmp_path, monkeypatch):
         with pytest.raises(RuntimeError, match="injected"):
             review(book, fresh, c, u, now)
         assert book.snapshot() == before
+
+
+@pytest.mark.parametrize("right", ["CALL", "PUT"])
+@pytest.mark.parametrize("quantity", [1, 2, 3, 4])
+def test_v2_retains_both_milestones_and_defers_entry_price_to_native_fills(
+    tmp_path, right, quantity
+):
+    with owned(tmp_path, enroll=False) as (e, v, _):
+        book, out, _, _, _, now = admitted(
+            e, v, right, quantity, p=watch_policy(version="scope-management-plan-v2")
+        )
+        raw = out["record"]["admission_review"]["management"]
+        review = ScopeManagementReview.model_validate(raw)
+        assert review.version == review.policy.version == "scope-management-plan-v2"
+        if quantity == 4:
+            assert review.target_exit_schedule is None
+            assert review.reasons == ("SCOPE_THIRD_TARGET_UNSPECIFIED",)
+        else:
+            schedule = review.target_exit_schedule
+            assert schedule.version == "frozen-target-milestones-v2"
+            first, second = schedule.steps
+            assert first.underlying_price == review.geometry.target_one
+            assert second.underlying_price == review.geometry.target_two
+            assert first.quantity == review.source_allocation[0]
+            assert second.quantity == review.source_allocation[1]
+            assert first.tighten_underlying_to is None
+            assert first.tighten_to_entry == "fill-weighted-underlying-v1"
+            assert second.tighten_underlying_to == review.geometry.target_one
+            schedule.check_stops(right, review.geometry.invalidation)
+        assert observer(e, now).report()["scope"]["active_watch"]["admission"]["management"] == raw
+        assert not review.native_execution_ready and v.submit_count == 0
+        with pytest.raises(ValidationError, match="exact source allocations"):
+            ScopeManagementReview.model_validate(raw | {"version": "scope-management-plan-v1"})
+        with pytest.raises(ExecutionBlocked, match="FROZEN_SCOPE_WATCH_POLICY_MISMATCH"):
+            ScopeWatchBook(e, watch_policy(), now=now)
+        assert book.snapshot()["watches"][0]["play_key"] == "first"
+
+
+@pytest.mark.parametrize("right", ["CALL", "PUT"])
+def test_v2_plan_survives_portable_scope_reproduction(tmp_path, right):
+    from test_option_scope_replay import settings, tape
+    from test_option_scope_replay_verify import snapshot
+
+    from app.options.scope_replay import run_scope_replay
+    from app.options.scope_replay_verify import verify_scope_replay
+
+    request = settings(tape(right), watch=watch_policy(version="scope-management-plan-v2"))
+    home = tmp_path / "replay"
+    run_scope_replay(request, home)
+    before = snapshot(home)
+    result = verify_scope_replay(home, fingerprint(request))
+    assert result["status"] == "VERIFIED_RESEARCH_REPLAY"
+    raw = json.loads((home / "actions/007.json").read_text())["receipt"]["record"][
+        "admission_review"
+    ]["management"]
+    plan = ScopeManagementReview.model_validate(raw)
+    assert plan.target_exit_schedule.needs_entry_reference
+    assert plan.target_exit_schedule.steps[1].quantity == 0
+    assert not plan.native_execution_ready
+    assert snapshot(home) == before

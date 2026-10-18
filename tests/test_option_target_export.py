@@ -10,7 +10,7 @@ import pytest
 from test_degen_options import policies
 from test_option_admission import END, NOW
 from test_option_evaluation import bundle_for
-from test_option_execution import intent_for, ledger, owned, quote_at
+from test_option_execution import intent_for, ledger, owned, quote_at, underlying_at
 from test_option_market_tape import header_for
 from test_option_target_exits import at_target
 from test_option_target_stops import ENROLLED, plan
@@ -25,7 +25,7 @@ D = Decimal
 POLICY = {**ENROLLED, "premium_trail": "executable-premium-v1"}
 
 
-def native_boundary(root, right="CALL", sold=2):
+def native_boundary(root, right="CALL", sold=2, *, observed_entry=False):
     base = bundle_for()
     frames = []
     with owned(root, right, **POLICY) as (engine, venue, data):
@@ -54,9 +54,10 @@ def native_boundary(root, right="CALL", sold=2):
         )
         at = NOW + timedelta(seconds=1)
         q = quote_at(data, at)
-        venue.fill(buy, buy.quantity, q, at, fill_id="entry")
+        u_entry = underlying_at(data, at) if observed_entry else None
+        venue.fill(buy, buy.quantity, q, at, fill_id="entry", underlying=u_entry)
         assert engine.reconcile(venue.snapshot(at), now=at)["reconciled"]
-        frames.append((at, DegenFrame(quotes=(q,))))
+        frames.append((at, DegenFrame(quotes=(q,), underlyings=(u_entry,) if u_entry else ())))
         at += timedelta(seconds=1)
         q = quote_at(data, at, bid=D("1.4"), ask=D("1.41"))
         u = at_target(data, at=at)

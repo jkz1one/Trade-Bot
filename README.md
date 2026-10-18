@@ -20,6 +20,10 @@ New [fill-bound underlying observations](docs/OPTIONS_FILL_UNDERLYING.md) retain
 the exact available quote per option fill through reconciliation, attribution and
 replay, keeping missing evidence separate from earlier setup/approval prices.
 
+New [fill-bound target protection](docs/OPTIONS_ENTRY_REFERENCE.md) now resolves
+entry stops from verified fills and preserves them through scales and restart.
+Scope management v2 retains both milestones; native Scope entry remains blocked.
+
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
 rules, implementation milestones, acceptance gates and continuation discipline.
 The [October 10 reasoning-trader plan](docs/AI_TRADER_RESEARCH_PLAN.md) defines the
