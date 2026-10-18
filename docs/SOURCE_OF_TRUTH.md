@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.74. Adopted product direction and working delivery contract, 2026-10-18 UTC.
+Version 1.75. Adopted product direction and working delivery contract, 2026-10-18 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -23,7 +23,11 @@ sealed replay/export. Historical missing data stays absent. New opt-in
 [fill-bound target protection](OPTIONS_ENTRY_REFERENCE.md) now resolves the native
 reference from complete entry fills and retains it through scales, restart and
 export. Scope management v2 retains both original milestones and binds T1 protection
-to that reference. Native Scope watch/order/family-loss enrollment remains open.
+to that reference. New [Scope entry evidence binding](OPTIONS_SCOPE_ENTRY_BINDING.md)
+retains the original watch and exact owner/admission/management receipt through
+stored selection and portable research replay. Later journal actions require fresh
+admission; evidence selection grants no order authority. Native Scope order/fill
+and family-loss enrollment remain open.
 P3 paired accounting, sealed market tapes, setup/shortlist replay and automatic
 native first-session A/B/C journal export and independent virtual-clock replay
 with scripted model delays are fixture verified. Multi-session replay/export now

@@ -23,6 +23,9 @@ replay, keeping missing evidence separate from earlier setup/approval prices.
 New [fill-bound target protection](docs/OPTIONS_ENTRY_REFERENCE.md) now resolves
 entry stops from verified fills and preserves them through scales and restart.
 Scope management v2 retains both milestones; native Scope entry remains blocked.
+New [Scope entry evidence binding](docs/OPTIONS_SCOPE_ENTRY_BINDING.md) links the
+original watch to an exact account, admission and management receipt. Revision-bound
+selection is read-only; native Scope entry and family loss enrollment remain open.
 
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
 rules, implementation milestones, acceptance gates and continuation discipline.

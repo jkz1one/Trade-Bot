@@ -73,8 +73,18 @@ class ScopeWatchPolicy(OptionRecord):
         default=None, exclude_if=lambda value: value is None
     )
 
+    entry_binding: Literal["scope-entry-binding-v1"] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+
     @model_validator(mode="after")
     def matching_quality_context(self):
+        if self.entry_binding is not None and (
+            self.management is None
+            or self.management.version != "scope-management-plan-v2"
+            or self.quote_lifecycle is None
+        ):
+            raise ValueError("Scope entry binding requires v2 management and observed quotes")
         if self.management is not None and self.admission is None:
             raise ValueError("Scope management requires frozen owned admission")
         if self.quality is not None and self.quality.context != self.context:
@@ -210,7 +220,28 @@ class ScopeWatchBook:
         self._untraded(db)
         return digest, None
 
-    def _finish(self, db, action, digest, record, now):
+    def _finish(self, db, action, digest, record, now, *, bind_entry=False):
+        if self.policy.entry_binding is not None:
+            # Every subsequent watch mutation retires the previous selection.
+            record.pop("entry_binding", None)
+            if bind_entry and record["admission_review"]["eligible"]:
+                from app.options.scope_entry import build_binding
+
+                record["entry_binding"] = build_binding(
+                    db,
+                    record,
+                    self.policy,
+                    self.engine.policy,
+                    self.engine.limits,
+                    action.key,
+                    digest,
+                    self.engine.journal.revision(db) + 1,
+                    json.loads,
+                ).model_dump(mode="json")
+            db.execute(
+                "UPDATE execution_option_scope_watches SET record_json=? WHERE play_key=?",
+                (json.dumps(record, sort_keys=True), record["play_key"]),
+            )
         self.engine.journal.event(
             db, now, "SCOPE_WATCH_ACTION", {"action_key": action.key, "record": record}
         )
@@ -829,7 +860,16 @@ class ScopeWatchBook:
                     play_key,
                 ),
             )
-            return self._finish(db, action, digest, record, now)
+            return self._finish(db, action, digest, record, now, bind_entry=True)
+
+    def entry_selection(self, play_key, *, expected_revision, now):
+        """Select exact stored terms, with false authority and no native activity."""
+        from app.options.scope_entry import select_entry
+
+        play_key = _Action(key=play_key, expected_revision=expected_revision).key
+        with self.engine.journal.read() as db:
+            self._untraded(db)
+            return select_entry(self.engine, db, self.policy, play_key, expected_revision, now)
 
     def _review_arming(self, record, result, frame, context, now):
         old = ScopePreflightInput.model_validate(record["reviewed_frame"])

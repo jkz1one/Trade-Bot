@@ -163,3 +163,9 @@ filled family-loss/reset controls, four-contract T3 resolution and trading runti
 replay acceptance. Dedicated UI design, authentic provider/calendar/host validation
 and prospective economics remain separate. Main untouched, PR #1 draft, LIVE
 disabled and deployed experiment frozen.
+
+Optional [Scope entry-binding cohorts](OPTIONS_SCOPE_ENTRY_BINDING.md) now retain
+exact original-watch/account/admission/management links in their action receipts.
+Portable reproduction checks these links without granting native entry authority
+or changing model/execution cost accounting. Later watch actions retire a binding;
+its historical action receipt remains available for verification.

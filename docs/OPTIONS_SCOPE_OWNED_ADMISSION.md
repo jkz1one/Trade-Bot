@@ -201,3 +201,11 @@ also includes confirmed equal-high/low runs in the same current-price path. Stor
 admission/observer evidence retains exact levels, formation times, touch counts
 and confirmation times. This extends known-level coverage without changing costs,
 sizing, locked geometry or the native entry guard; complete path proof remains open.
+
+## Optional bound entry selection
+
+New [Scope entry-binding cohorts](OPTIONS_SCOPE_ENTRY_BINDING.md) atomically retain
+the exact original call and latest owned admission/management receipt. Read-only
+selection requires that exact current journal revision and unexpired evidence. Any
+later journal event requires a new admission; a newer revision argument alone cannot
+revive the old binding. Generic native preparation/dispatch remain blocked.

@@ -1,5 +1,61 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Scope watch-to-entry evidence binding: 2026-10-18 UTC
+
+The next native Scope dependency is now fixture implemented: new frozen
+`scope-entry-binding-v1` research cohorts bind the original called watch to the
+exact latest owned admission and management v2 receipt. The binding includes
+population/account, frozen policies, original call receipt, latest action/request,
+journal revision, whole-record hash and original validity. It is committed with
+watch state and audit evidence, and rolls back with them.
+
+Read-only `ScopeWatchBook.entry_selection()` verifies those bindings and returns
+exact proposal, quote, fee-inclusive sizing, account/session and management terms.
+Later journal events require fresh admission; a new revision argument cannot revive
+an old selection. Later watch mutations remove it. Historical retries remain
+historical, and restart cannot extend validity. Stored observer and portable research
+reproduction retain and verify this evidence. Independent accounts cannot exchange
+bindings, and four-contract plans retain the missing-T3 blocker without resizing.
+[Contract and boundaries](OPTIONS_SCOPE_ENTRY_BINDING.md).
+
+This is evidence linkage, not native Scope execution enrollment. Generic native
+preparation/dispatch still reject Scope even with the exact selected admission.
+There are no new native orders, fills, model calls or costs. Existing entry and
+management charges, unknown-cost treatment and split-exit fee reserves remain intact.
+Native order/fill lineage, full-cost Scope family loss/reset and complete obstruction
+coverage still gate execution; Scope runtime and four-contract T3 remain open.
+
+Fresh GitHub baseline: `f502339a3a44111c48e95511a67d736f5311d46e`, tree
+`43027efc8b2f66fd7eeb668ae65180994bbf42f2`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation: **190 installed cases passed in 226.80s**, including all 32 new
+binding/selection cases, Scope management/admission/native boundaries, observer,
+research replay and portable verifier, known/unknown entry-management costs through
+partial closes, and full-session independent A/B/C/D attribution. Tests used isolated
+Python, a noneditable wheel and copied tests outside the checkout, with warnings
+as errors. No failed gate was waived.
+
+The earlier source run had 31 passing cases and one incorrect restart assertion:
+reopening alone does not append an event. The corrected test proves unchanged
+binding/deadline after reopen and rejection after reconciliation. No production
+change or gate waiver was needed. These cases overlap the final installed run.
+
+All 182 application/template files match source/wheel/install, and copied tests
+match final source. Scoped lint/format, dependency consistency, whitespace and
+66 distinct local documentation targets pass. Wheel SHA-256:
+`bb7b61e2cf9acdbd467db011f4c9c33ff08503d1fd9e4e6d82b54636d69f5d8c`.
+Proof beside checkout: `scope-entry-source.log`, `scope-entry-installed.log`,
+`scope-entry-proof`, `scope-entry-dist`, and build/install logs.
+
+Remaining Scope execution and loss linkage, complete path requirements, four-contract
+T3, overnight Swing and mixed ownership stay open. UI and authentic provider/model/
+data/host/economic acceptance remain final passes. Main untouched, PR draft, LIVE
+disabled and deployment frozen; no authentic broker/provider/model call, dependency
+update or host/deployment change.
+
+---
+
 ## Fill-bound target protection and Scope management v2: 2026-10-18 UTC
 
 Continuing the settled engine-first order, the native target owner now resolves an

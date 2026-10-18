@@ -335,6 +335,17 @@ def _watch(db, row, policy, now, read_json, owner_policy, limits):
             ):
                 raise ValueError("Conflicting stored Scope management plan")
             result["admission"]["management"] = management.model_dump(mode="json")
+    if "entry_binding" in record:
+        from app.options.scope_entry import verify_binding
+
+        binding = verify_binding(db, record, policy, owner_policy, limits, audit, read_json)
+        result["entry_binding"] = binding.model_dump(mode="json") | {
+            "time_status": _timing(binding.evaluated_at, binding.valid_until, now),
+            "current_revision": db.execute(
+                "SELECT COALESCE(MAX(sequence),0) FROM execution_events"
+            ).fetchone()[0]
+            == binding.revision,
+        }
     return result
 
 
@@ -345,6 +356,39 @@ def stored_scope(db, tables, limits, now, read_json, *, owner_policy):
         return base | {"status": "NOT_ENROLLED", "watches": [], "active_watch": None}
     if not TABLES <= tables:
         raise ValueError("Incomplete Scope schema")
+    policy = stored_policy(db, limits, read_json)
+    last_action = _stamp(
+        db.execute(
+            "SELECT last_action_at FROM execution_option_scope_watch_policy WHERE id=1"
+        ).fetchone()[0]
+    )
+    count = db.execute("SELECT COUNT(*) FROM execution_option_scope_watches").fetchone()[0]
+    rows = db.execute(
+        "SELECT * FROM execution_option_scope_watches ORDER BY session_date DESC,rowid DESC LIMIT 25"
+    ).fetchall()
+    watches = [_watch(db, row, policy, now, read_json, owner_policy, limits) for row in rows]
+    active = db.execute(
+        "SELECT * FROM execution_option_scope_watches WHERE active_lock IS NOT NULL LIMIT 2"
+    ).fetchall()
+    if len(active) > 1:
+        raise ValueError("Multiple active Scope watches")
+    return base | {
+        "status": "RESEARCH_ONLY",
+        "policy_hash": fingerprint(policy),
+        "last_action_at": last_action.isoformat(),
+        "last_action_time_status": "FUTURE" if last_action > now else "RECORDED",
+        "total_watches": count,
+        "history_limit": 25,
+        "history_truncated": count > len(watches),
+        "watches": watches,
+        "active_watch": _watch(db, active[0], policy, now, read_json, owner_policy, limits)
+        if active
+        else None,
+    }
+
+
+def stored_policy(db, limits, read_json):
+    """Read the frozen enrollment and its clock binding, without owner mutation."""
     rows = db.execute("SELECT * FROM execution_option_scope_watch_policy LIMIT 2").fetchall()
     if len(rows) != 1 or rows[0]["id"] != 1:
         raise ValueError("Scope enrollment required")
@@ -370,26 +414,4 @@ def stored_scope(db, tables, limits, now, read_json, *, owner_policy):
         or last_action != _stamp((latest or enrollment[0])["occurred_at"])
     ):
         raise ValueError("Stored Scope policy/action clock lost its enrollment binding")
-    count = db.execute("SELECT COUNT(*) FROM execution_option_scope_watches").fetchone()[0]
-    rows = db.execute(
-        "SELECT * FROM execution_option_scope_watches ORDER BY session_date DESC,rowid DESC LIMIT 25"
-    ).fetchall()
-    watches = [_watch(db, row, policy, now, read_json, owner_policy, limits) for row in rows]
-    active = db.execute(
-        "SELECT * FROM execution_option_scope_watches WHERE active_lock IS NOT NULL LIMIT 2"
-    ).fetchall()
-    if len(active) > 1:
-        raise ValueError("Multiple active Scope watches")
-    return base | {
-        "status": "RESEARCH_ONLY",
-        "policy_hash": fingerprint(policy),
-        "last_action_at": last_action.isoformat(),
-        "last_action_time_status": "FUTURE" if last_action > now else "RECORDED",
-        "total_watches": count,
-        "history_limit": 25,
-        "history_truncated": count > len(watches),
-        "watches": watches,
-        "active_watch": _watch(db, active[0], policy, now, read_json, owner_policy, limits)
-        if active
-        else None,
-    }
+    return policy
