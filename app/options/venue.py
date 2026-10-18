@@ -27,7 +27,14 @@ from app.options.lifecycle import (
     OptionVenueSnapshot,
     UnderlyingExposure,
 )
-from app.options.models import Count, Money, OptionLimits, OptionQuote, OptionRecord
+from app.options.models import (
+    Count,
+    Money,
+    OptionLimits,
+    OptionQuote,
+    OptionRecord,
+    UnderlyingQuote,
+)
 
 
 def private_path(path):
@@ -183,9 +190,23 @@ class DurableOptionVenue:
 
         return self._mutate(accept, deadline=deadline, parent_pid=parent_pid)
 
-    def fill(self, intent: OptionIntent, quantity: int, quote: OptionQuote, at, *, fill_id):
+    def fill(
+        self,
+        intent: OptionIntent,
+        quantity: int,
+        quote: OptionQuote,
+        at,
+        *,
+        fill_id,
+        underlying=None,
+    ):
         intent = OptionIntent.model_validate(intent.model_dump(warnings=False))
         quote = OptionQuote.model_validate(quote.model_dump(warnings=False))
+        if underlying is not None:
+            from app.options.fill_evidence import validate_underlying
+
+            underlying = UnderlyingQuote.model_validate(underlying.model_dump(warnings=False))
+            validate_underlying(self.limits, intent, quote, underlying, at)
 
         def fill(state):
             order = next(o for o in state.orders if o.client_id == intent.client_id)
@@ -266,6 +287,7 @@ class DurableOptionVenue:
                 occurred_at=at,
                 quote_hash=digest,
                 quote=quote,
+                underlying=underlying,
             )
             ledger = apply_fill(
                 OptionLedger(

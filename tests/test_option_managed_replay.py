@@ -161,6 +161,18 @@ def test_arm_d_costs_ownership_and_proposal_approval_fill_lineage(managed_comple
     ) - Decimal(".03")
     assert result["report"]["economic_conclusion"] == "INCONCLUSIVE"
     assert len({r["orders"][0]["intent"]["client_id"] for r in rows.values()}) == 4
+    for row in rows.values():
+        for order in row["orders"]:
+            for fill in order["observation"]["fills"]:
+                assert fill["underlying"]["source_at"] == fill["occurred_at"]
+                assert (
+                    fill["underlying"]["symbol"]
+                    == order["intent"]["instrument"]["contract"]["underlying"]
+                )
+    assert (
+        attr["fill_underlyings"][0]["underlying"]
+        == d["orders"][1]["observation"]["fills"][0]["underlying"]
+    )
     assert result["scheduling"]["D"]["model_scripts_used"] == sorted([KEY, MKEY])
     view = OptionObserver(root / "run/D/journal.db", "evaluation-D", clock=lambda: END).report(
         limit=100
@@ -410,7 +422,9 @@ def test_arm_d_multi_session_preserves_accounts_costs_and_unknown_history(tmp_pa
     )  # Sparse tape retains missing slots.
 
 
-@pytest.mark.parametrize("change", ["role", "cost", "fill", "attribution"])
+@pytest.mark.parametrize(
+    "change", ["role", "cost", "fill", "attribution", "underlying_removed", "underlying_changed"]
+)
 def test_evaluator_rejects_inconsistent_management_projection(managed_complete, change):
     from app.options.evaluation import evaluate
     from app.options.evaluation_models import EvaluationBundle
@@ -425,6 +439,10 @@ def test_evaluator_rejects_inconsistent_management_projection(managed_complete, 
         cycle["attribution"]["model_cost"] = "0"
     elif change == "fill":
         cycle["attribution"]["fill_ids"] = []
+    elif change == "underlying_removed":
+        cycle["attribution"]["fill_underlyings"] = []
+    elif change == "underlying_changed":
+        cycle["attribution"]["fill_underlyings"][0]["underlying"]["bid"] = "589"
     else:
         cycle["attribution"] = None
     report = evaluate(EvaluationBundle.model_validate(raw), tapes=(tape,))

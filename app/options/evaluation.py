@@ -157,6 +157,12 @@ def _costs(a, definition, session, used_ids):
             f.quantity for f in fills
         ):
             raise ValueError("ATTRIBUTION_FILL_MISMATCH")
+        from app.options.attribution import fill_underlying_observation
+
+        if tuple(o.model_dump(mode="json") for o in attr.fill_underlyings) != tuple(
+            fill_underlying_observation(f) for f in fills if f.underlying is not None
+        ):
+            raise ValueError("ATTRIBUTION_FILL_UNDERLYING_MISMATCH")
         if order and (
             attr.approved_quantity != order.intent.quantity
             or attr.attempted != (order.attempted_at is not None)

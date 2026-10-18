@@ -16,6 +16,10 @@ authentic data/model validation pass. Offline test tools remain available during
 New [stop-only target milestones](docs/OPTIONS_TARGET_EXITS.md#stop-only-target-milestones)
 let protection tighten at an objective without selling a contract or inventing proceeds.
 
+New [fill-bound underlying observations](docs/OPTIONS_FILL_UNDERLYING.md) retain
+the exact available quote per option fill through reconciliation, attribution and
+replay, keeping missing evidence separate from earlier setup/approval prices.
+
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
 rules, implementation milestones, acceptance gates and continuation discipline.
 The [October 10 reasoning-trader plan](docs/AI_TRADER_RESEARCH_PLAN.md) defines the

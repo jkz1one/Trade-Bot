@@ -1,5 +1,67 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Fill-bound underlying observations: 2026-10-18 UTC
+
+Continuing the settled strategy/engine-first order, native option fill receipts
+previously retained the option quote but no underlying observation at the fill
+instant. The older setup/approval reference cannot establish that missing evidence.
+This slice adds the receipt-level dependency for subsequent actual-entry management
+binding. It does not enable Scope entries or invent an aggregate entry/stop rule.
+
+Optional exact underlying quotes now survive individual partial fills, native
+reconciliation, restart, stored order/decision attribution and portable export.
+Explicitly supplied observations use the existing owner source, freshness,
+receipt-lag, synchronization and price limits. Invalid evidence rejects atomically;
+reconciliation independently rejects it and refuses any rewrite of accepted fills.
+Legacy receipts omit the new field and retain their original encoding. Mixed
+coverage stays mixed, without borrowing from approval or later prices.
+
+Replay attaches only usable observations already delivered to each independent
+account. Unusable or missing context does not erase an executable option fill or
+its charges. Sealed comparison requires attached evidence to have been recorded
+by fill time. The evaluator checks projected attribution against the exact fills;
+the stored observer retains nullable evidence without refreshing it. Existing
+cash, slippage, fees, entry/management charges and unknown-cost treatment remain
+unchanged. [Contract and boundaries](OPTIONS_FILL_UNDERLYING.md).
+
+Fresh GitHub baseline: `cafce4866c767109f7541073e3ebf3a00aa221b6`, tree
+`f78f6bfd816617b3aab51950b4947827b704a4ca`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation: **22 final installed fill-evidence cases passed in 10.14s**.
+The broader installed run passed **288 cases in 297.50s**, with one test-fixture
+assertion failure: its altered receipt reused an already recorded snapshot ID,
+so the snapshot conflict correctly rejected it before the intended fill conflict.
+The final fixture uses a later snapshot and now verifies the exact fill-history
+rejection. The initial focused run also had an incorrect result-key assertion.
+Only test code changed after these runs; no production fix or waived gate was
+needed. The final 22-case rerun covers the corrected fixture and all new cases;
+counts overlap and are not added.
+
+The broader checks cover native execution/reconciliation, independent accounting,
+sealed tapes, export/CLI, stored observer, stop-only target protection, known/unknown
+entry-management costs and the full-session independent A/B/C/D replay. Its managed
+attribution checks also verify exact fill-time quotes and reject changed/removed
+projections. Runs use isolated Python, a noneditable wheel and copied tests outside
+the checkout, with warnings as errors.
+
+All 180 application/template files match source/wheel/install; copied tests match
+final source. Scoped lint/format, dependency consistency, whitespace and local
+link checks pass. Wheel SHA-256:
+`5d9218addd0a0047fc02460986395d1736f1b5d40eb5ca6ed80edb49e32c7e14`.
+Proof beside checkout: `fill-underlying-focused.log`, `fill-underlying-conflict.log`,
+`fill-underlying-installed.log`, `fill-underlying-final-focused.log`,
+`fill-underlying-proof`, `fill-underlying-dist` and build/install logs.
+
+Remaining Scope fill-bound stop rule, native watch/order/family-loss linkage,
+complete path requirements, four-contract T3 resolution, overnight Swing and mixed
+ownership stay open. Final UI and authentic provider/model/data/host/economic
+acceptance remain separate gates. Main untouched, PR draft, LIVE disabled and the
+deployed experiment frozen; no authentic provider/model/broker call, dependency
+update or host/deployment change.
+
+---
+
 ## Durable Scope quote invalidation: 2026-10-18 UTC
 
 Continuing the user's strategy/engine-first delivery order, the prior installed

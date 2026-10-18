@@ -1,14 +1,38 @@
 """Pure fixture-fill audit shared by authoritative reconciliation and offline evaluation."""
 
 import hashlib
+from datetime import timedelta
 from decimal import ROUND_CEILING, ROUND_FLOOR
 
 from app.options.engine import fingerprint
 from app.options.governor import _fresh, _tick_price
 
 
+def validate_underlying(limits, intent, quote, underlying, at):
+    """Validate an explicitly observed fill-time quote; never substitute approval data."""
+    u = underlying
+    if (
+        u.symbol != intent.instrument.contract.underlying
+        or u.source != limits.underlying_source
+        or not u.complete
+        or u.entitlement != "REALTIME"
+        or not limits.minimum_underlying_price <= u.bid <= u.ask
+        or not _fresh(
+            u.source_at,
+            u.received_at,
+            at,
+            limits.quote_max_age_seconds,
+            limits.max_receive_lag_seconds,
+        )
+        or abs(u.source_at - quote.source_at) > timedelta(seconds=limits.max_sync_seconds)
+    ):
+        raise ValueError("OPTION_FILL_UNDERLYING_EVIDENCE_INVALID")
+
+
 def validate_fill(limits, intent, fill, index, used):
     q = fill.quote
+    if fill.underlying is not None:
+        validate_underlying(limits, intent, q, fill.underlying, fill.occurred_at)
     if (
         q.instrument != intent.instrument
         or q.source != limits.option_source

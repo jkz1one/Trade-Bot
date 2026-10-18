@@ -46,11 +46,12 @@ def tape_issues(bundle, tapes):
         }
         if set(cycles) != expected:
             reasons.append("RECORDED_CYCLE_COVERAGE_INCOMPLETE")
-        quotes, underlyings = {}, set()
+        quotes, underlyings = {}, {}
         for event in tape.events:
             for q in event.frame.quotes:
                 quotes.setdefault(fingerprint(q), event.recorded_at)
-            underlyings.update(fingerprint(q) for q in event.frame.underlyings)
+            for q in event.frame.underlyings:
+                underlyings.setdefault(fingerprint(q), event.recorded_at)
         for arm in (a for a in bundle.evidence if a.session_key == session.key):
             for c in arm.cycles:
                 e = cycles.get(c.key)
@@ -69,6 +70,10 @@ def tape_issues(bundle, tapes):
                     available_at = quotes.get(fingerprint(fill.quote))
                     if available_at is None or available_at > fill.occurred_at:
                         reasons.append("FILL_QUOTE_NOT_RECORDED_BY_FILL_TIME")
+                    if fill.underlying is not None:
+                        available_at = underlyings.get(fingerprint(fill.underlying))
+                        if available_at is None or available_at > fill.occurred_at:
+                            reasons.append("FILL_UNDERLYING_NOT_RECORDED_BY_FILL_TIME")
         benchmark = next((b for b in bundle.benchmarks if b.session_key == session.key), None)
         if benchmark is None or any(
             fingerprint(q) not in underlyings for q in (benchmark.start, benchmark.end)

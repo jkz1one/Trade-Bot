@@ -118,6 +118,10 @@ but Scope previews omit those fields until actual entry binding defines their pr
 The separately enrolled [v2 native milestones](OPTIONS_TARGET_EXITS.md#stop-only-target-milestones)
 now support tightening at objectives with no sale allocation. Scope previews remain
 v1 and require actual-entry binding before using this capability.
+Native [fill-bound underlying observations](OPTIONS_FILL_UNDERLYING.md) now retain
+separate quotes for actual option fills, including partial-fill coverage and explicit
+missing evidence. This supplies the evidence dependency; it does not yet define
+Scope's fill-bound stop rule, change its previews or authorize its native entries.
 The shared [premium trail](OPTIONS_PREMIUM_TRAIL.md) now has a separate frozen-owner
 enrollment; full Scope management and its strategy-specific enrollment remain open.
 Authentic provider/calendar/host, prospective economic and UI acceptance

@@ -149,3 +149,10 @@ The mixed stock/options selector, Degen strategy, observer UI and actual-host
 installation remain later milestones. Do not run this separate fixture owner against
 an equity service's bankroll or claim shared live authority. The deployed synthetic
 population stays frozen, LIVE disabled, main untouched and PR #1 draft.
+
+## Optional fill-time underlying evidence
+
+[Fill-bound underlying observations](OPTIONS_FILL_UNDERLYING.md) now retain an
+optional exact quote per option fill through the same native validation, stored
+attribution and independent replay. Missing evidence is never substituted from
+approval prices; this adds no stop authority or changes to cash, fees or model costs.

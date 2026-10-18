@@ -1,5 +1,6 @@
 """Read-only decision lineage. Proposals, approvals, attempts and fills stay distinct."""
 
+from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 
@@ -15,7 +16,36 @@ from app.options.lifecycle import (
     OptionObservation,
     TargetExitSchedule,
 )
-from app.options.models import Money, Name, OptionProposal, OptionRecord, PositiveCount
+from app.options.models import (
+    Money,
+    Name,
+    OptionProposal,
+    OptionRecord,
+    PositiveCount,
+    UnderlyingQuote,
+)
+
+
+class FillUnderlyingObservation(OptionRecord):
+    """An observed underlying quote, not an underlying transaction or stop decision."""
+
+    fill_id: Name
+    quantity: PositiveCount
+    occurred_at: datetime
+    fill_hash: Digest
+    underlying: UnderlyingQuote
+
+
+def fill_underlying_observation(fill):
+    if fill.underlying is None:
+        return None
+    return FillUnderlyingObservation(
+        fill_id=fill.fill_id,
+        quantity=fill.quantity,
+        occurred_at=fill.occurred_at,
+        fill_hash=fingerprint(fill),
+        underlying=fill.underlying,
+    ).model_dump(mode="json")
 
 
 class DecisionAttribution(OptionRecord):
@@ -68,6 +98,9 @@ class DecisionAttribution(OptionRecord):
     attempted: bool = False
     fill_ids: tuple[Name, ...] = Field(default=(), max_length=1000)
     filled_quantity: int = Field(default=0, ge=0)
+    fill_underlyings: tuple[FillUnderlyingObservation, ...] = Field(
+        default=(), max_length=1000, exclude_if=lambda v: not v
+    )
 
 
 def order_attribution(db, row):
@@ -170,7 +203,9 @@ def order_attribution(db, row):
             raise ValueError("Stored exit entry identity mismatch")
     if entry_id is not None:
         lineage = entry_lineage(db, entry_id)
+    observed = tuple(fill_underlying_observation(f) for f in fills if f.underlying is not None)
     return {
+        **({"fill_underlyings": observed} if observed else {}),
         **({"health_management": health_policy} if health_policy is not None else {}),
         **({"trade_floor": floor_policy} if floor_policy is not None else {}),
         **({"premium_trail": trail_policy} if trail_policy is not None else {}),

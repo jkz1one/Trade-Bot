@@ -307,6 +307,11 @@ class OptionObserver:
         ):
             fill = OptionFill.model_validate(_json(row["payload"]))
             intent = OptionIntent.model_validate(_json(row["intent_json"]))
+            from app.options.attribution import fill_underlying_observation
+            from app.options.fill_evidence import validate_underlying
+
+            if fill.underlying is not None:
+                validate_underlying(limits, intent, fill.quote, fill.underlying, fill.occurred_at)
             fills.append(
                 {
                     "fill_id": fill.fill_id,
@@ -317,6 +322,7 @@ class OptionObserver:
                     "price": str(fill.price),
                     "fee": str(fill.fee),
                     "occurred_at": fill.occurred_at.isoformat(),
+                    "underlying_observation": fill_underlying_observation(fill),
                 }
             )
         receipts = []

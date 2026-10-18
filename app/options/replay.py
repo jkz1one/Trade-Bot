@@ -173,12 +173,22 @@ class _ArmReplay:
                 current = next(o for o in snapshot.orders if o.client_id == order.client_id)
                 count = fill_quantity(intent, current, snapshot, quote, at, self.c.engine.limits)
                 if count:
+                    from app.options.fill_evidence import validate_underlying
+
+                    underlying = self.underlyings.get(intent.instrument.contract.underlying)
+                    if underlying is not None:
+                        try:
+                            validate_underlying(self.c.engine.limits, intent, quote, underlying, at)
+                        except ValueError:
+                            # Missing usable context cannot erase an executable option fill.
+                            underlying = None
                     self.venue.fill(
                         intent,
                         count,
                         quote,
                         at,
                         fill_id=f"replay-{event.sequence}-{order.client_id}",
+                        underlying=underlying,
                     )
         snapshot = self.venue.snapshot(at)
         if not self.c.engine.reconcile(snapshot, now=at)["reconciled"]:
