@@ -1,6 +1,79 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
 
+## Installed PAPER testing entry point: 2026-10-18 UTC
+
+The user asked to get ready for testing efficiently without skipping required work.
+The current Degen/shared-Swing fixture path is testable before all later families
+are complete. The concrete usability gap was scattered commands and proof files,
+with no single installed-package run joining runtime/recovery, strategy, observer,
+full-cost accounting and dashboard review. [Start testing](OPTIONS_TESTING.md).
+
+`scripts/options-test-kit.py` now requires a new private output directory, a retained
+wheel SHA-256 and an installed application matching the checkout. It copies test
+inputs outside the checkout, records their hashes and the harness hash, invokes
+fixed isolated phases with local fixture workers, and retains logs/JUnit results,
+independent test state, before/after release identity and a JSON receipt. Every
+phase requires a nonempty completed summary with no failure, error or skip; a zero
+exit without a summary cannot become a pass. Application/test drift, interruption,
+timeout or failure retain non-passing evidence. Existing output is never adopted.
+
+After all phases pass, the existing eight dashboard display states are generated
+at both widths and linked from a local results index. It opens no browser, server,
+provider/model/broker connection or deployed population. Static route limitations
+and required desktop/mobile/keyboard/contrast review stay explicit. Actual visual
+acceptance remains PENDING, including the prior cloud file-URL limitation.
+
+This closes a repeatable offline operator testing path, not authentic PAPER data
+or host readiness. The next external dependency is the already documented bounded
+Robinhood sample capture with separate authorization, followed by reviewed exact
+normalization and authentic model/host acceptance. Scope/overnight/mixed-asset work
+remains separate; there is no strategy replan or new live authority.
+
+Fresh GitHub baseline: `4406d7548d3ba813c4d66fa4fc98731e892daeeb`, tree
+`de43cb890f029bc73b986987bea700f406acb8f1`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation:
+
+- Final runner checks: **eight passed in 7.74s**, warnings as errors.
+  Covers existing output, wrong installed identity, empty/failed/skipped summaries,
+  and zero process exit with missing completion evidence. The added integration
+  case runs the two affected native observer tests through the actual isolated
+  runner, proving copied-package imports and explicit async-plugin registration.
+- Initial real runner attempt: **85 passed, two failed in 73.69s** in the first
+  phase because the isolated copied-tests import path omitted the package parent.
+  It correctly retained FAILED, stopped before later phases and did not claim a
+  dashboard result. A second attempt retained **85 passed, two failed in 76.22s**
+  because disabled plugin auto-loading also needed explicit registration of the
+  existing async plugin. The runner now supplies both copied paths and that plugin;
+  warnings remain errors. No trading code changed.
+- Final complete installed procedure: **289 passed** across runtime/recovery
+  (**87**), shared entry (**137**), observer (**64**) and full-session accounting
+  (**one**). Each phase retained completed JUnit with zero failures/errors/skips,
+  warnings as errors. The accounting phase preserves independent A/B/C/D owners,
+  entry and management charges, fees and data/host costs; economics stay INCONCLUSIVE.
+  The final receipt is `PASSED_OFFLINE_FIXTURES`. All eight dashboard states were
+  generated at both widths; no visual acceptance is claimed. Before/after identity
+  and copied test hashes match. Scoped lint/format/whitespace checks pass; all
+  63 local documentation targets resolve.
+- The existing installed wheel is reused because application sources/templates did
+  not change: SHA-256
+  `a566fd3cec9fcebe9afb8773d4962442f399bdf4b59fea5baf37c14d70356403`,
+  application digest `5d125ccc695d8d0d962befc62f363bec82794539e1a456ddc9c39477e5035e28`.
+  Native identity verifies all 179 application files before/after the run. Dependency
+  locks remain unchanged. The harness is a checkout script, not a new runtime service.
+- Proof beside checkout: `options-testing-proof` (retained failed run),
+  `options-testing-proof-v2` (retained plugin-registration failure),
+  `options-testing-proof-v3` (final full procedure), `options-test-kit-tests.log`
+  and `options-test-kit-tests-final.log`.
+
+Main untouched, PR draft, LIVE disabled and deployed experiment frozen. No authentic
+provider/model/broker calls, dependency/host change or deployment.
+
+---
+
+
 ## P7 original Swing first-target consumption: 2026-10-18 UTC
 
 New populations may enroll `observed-lifecycle-v3` with an explicit original

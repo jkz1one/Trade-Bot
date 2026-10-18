@@ -61,6 +61,10 @@ These are implemented semantics, not a claim of completed browser acceptance.
 
 ## Reproducible offline rendering drill
 
+For one installed test run plus all review files and retained results, use the
+[options testing procedure](OPTIONS_TESTING.md). It wraps the existing drill below
+and verifies the installed application matches the checkout before running.
+
 With the matching package and existing test dependencies installed, run the helper
 from the checkout. Choose a new absolute destination:
 

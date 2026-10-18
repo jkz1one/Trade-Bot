@@ -2,6 +2,13 @@
 
 Small, auditable experiment for testing whether an autonomous reasoning trader can add value while deterministic software owns authority and risk.
 
+## Start PAPER testing
+
+Use the [isolated options test procedure](docs/OPTIONS_TESTING.md) to verify an
+installed wheel, run native runtime/recovery and full-cost replay checks, and
+generate desktop/mobile dashboard review files. This is offline fixture testing;
+authentic data/model, host and visual acceptance remain separate gates.
+
 ## Current product direction
 
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
