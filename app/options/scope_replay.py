@@ -29,7 +29,9 @@ MAX_REQUEST_BYTES = 16 * 1024 * 1024
 
 class ScopeReplayStep(OptionRecord):
     key: Name
-    kind: Literal["CALL", "OBSERVE_ARMING", "REVIEW_ADMISSION", "ADVANCE", "NEUTRALIZE"]
+    kind: Literal[
+        "CALL", "OBSERVE_ARMING", "REVIEW_ADMISSION", "ADVANCE", "NEUTRALIZE", "OBSERVE_QUOTE"
+    ]
     at: datetime
     play_key: Name
     choice: ScopeWatchChoice | None = None
@@ -50,8 +52,12 @@ class ScopeReplayStep(OptionRecord):
             raise ValueError("Price advance/reset accepts no context override")
         if self.kind == "NEUTRALIZE" and self.frame is None:
             raise ValueError("Neutral reset requires completed evidence")
-        if self.kind != "REVIEW_ADMISSION" and self.underlying is not None:
-            raise ValueError("Only owned admission accepts an underlying quote")
+        if self.kind == "OBSERVE_QUOTE" and (self.frame is not None or self.context is not None):
+            raise ValueError("Quote observation accepts no frame or context override")
+        if self.kind not in {"REVIEW_ADMISSION", "OBSERVE_QUOTE"} and self.underlying is not None:
+            raise ValueError(
+                "Only owned admission or quote observation accepts an underlying quote"
+            )
 
         # Future validity windows/contract expiry are permitted, future received data is not.
         def observed(value):
@@ -104,6 +110,8 @@ def _perform(book, step, revision):
         return book.neutralize(step.key, step.play_key, step.frame, **common)
     if step.kind == "ADVANCE":
         return book.advance(step.key, step.play_key, frame=step.frame, **common)
+    if step.kind == "OBSERVE_QUOTE":
+        return book.observe_quote(step.key, step.play_key, step.underlying, **common)
     common.update(frame=step.frame, context=step.context)
     if step.kind == "REVIEW_ADMISSION":
         return book.review_admission(step.key, step.play_key, underlying=step.underlying, **common)

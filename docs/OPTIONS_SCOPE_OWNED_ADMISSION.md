@@ -5,6 +5,9 @@ for a new explicitly enrolled research watch. It refreshes the arming hold and
 uses the existing `admit_option` governor. It creates no order, reservation,
 execution decision or model request; `authority` and `live_enabled` remain false.
 Native Scope dispatch and filled-position lifecycle integration remain open.
+New cohorts may enroll the [observed-quote lifecycle](OPTIONS_SCOPE_WATCHES.md#optional-observed-quote-lifecycle):
+admission then permanently records fresh original-stop/second-objective breaches
+before account or arming checks, preventing a later rebound from reviving that watch.
 
 ## Frozen enrollment and evidence
 

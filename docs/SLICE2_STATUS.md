@@ -1,5 +1,77 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Durable Scope quote invalidation: 2026-10-18 UTC
+
+Continuing the user's strategy/engine-first delivery order, the prior installed
+build reproduced a real watch revival defect: a fresh quote exactly at the original
+stop left the same watch `WATCHING` with rejected admission, and later fresh recovery
+samples made it eligible again. Completed-bar invalidation already existed; this
+slice closes the separately observed quote lifecycle before Scope execution linkage.
+A follow-up test also reproduced new-key reuse of a completed bar predating the
+terminal quote. New calls now require a strictly later completed bar, while a
+genuinely later valid setup retains eligibility under the original call limit.
+
+New frozen watch cohorts may enroll `quote_lifecycle="scope-observed-quotes-v1"`.
+The new quote-observation action and enrolled admission reviews share the owner's
+frozen SPX source, freshness/receipt-lag bounds, source-clock/content checks and
+original geometry. Valid quotes permanently retire the watch at original invalidation
+or the locked second objective. Admission observes price before account/context/
+arming readiness, so unrelated missing inputs cannot erase an actual observed breach.
+Old cohorts retain their prior behavior and cannot adopt the policy on reopen.
+
+Quote evidence, active lock, arming reset and action/audit receipt commit together.
+No completed bar, fill, proceeds or loss is invented. Missing/stale/foreign/conflicting
+quotes reset an enrolled hold without manufacturing a terminal. Quote-only observations
+remove prior admission evidence and never extend the hold. Exact retries, original
+terminal evidence, independent watches and original neutral/cooldown rules survive
+restart. Native activity still blocks unfilled mutations and Scope entry remains
+blocked. [Contract and limits](OPTIONS_SCOPE_WATCHES.md#optional-observed-quote-lifecycle).
+
+Stored observer output retains the exact historical quote, geometry, observation time
+and owner-limit hash. The research replay now accepts `OBSERVE_QUOTE`, and the portable
+verifier reproduces terminal/rejected recovery steps from the retained request hash
+without changing originals. No native order/model call or account mutation is added;
+unknown data/host costs remain unknown. Existing independent trading-arm accounting
+retains every entry and management charge.
+
+Fresh GitHub baseline: `6e106924a7190eff76e36e90141dcab6c187788c`, tree
+`4656a64ba4144385bbcf7b9813c5d5ba8e1d5220`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation: **768 final installed Scope cases passed in 141.53s**, covering all
+20 Scope test files and 32 new quote-lifecycle cases, with warnings treated as
+errors, isolated Python, noneditable installation and copied tests outside source.
+
+The preceding installed build passed **770 cases in 257.52s**, including all Scope
+suites, known/unknown entry-management cost attribution and the independent A/B/C/D
+full-session replay. The final change after that run is confined to the six-line
+new-call post-terminal bar guard in `scope_watch.py`; all other application bytes
+are identical. The complete final Scope suite is rerun rather than repeating the
+unchanged trading/accounting implementation. Counts overlap and are not summed.
+
+Focused source runs passed 26 cases in 21.12s and 29 in 23.53s before the additional
+neutral/new-key checks. The new-key regression initially selected a setup that was
+not detected and failed for that unrelated fixture reason. After selecting an
+actually detected setup, it reproduced the missing gate (no exception). The fix
+then passed its negative and positive cases in 2.33s. No failed gate was waived.
+
+All 180 application/template files match final source/wheel/install, and copied
+tests match source. Scoped lint/format, dependency consistency, whitespace and 63
+distinct local documentation targets pass. Final wheel SHA-256:
+`11b2f6db31191a5c61b72c28758da5b2b6ebf86c2b06490d2b44275c8fa5ae3d`.
+
+Proof beside checkout: `scope-quotes-source.log`, `scope-quotes-source-final.log`,
+`scope-quotes-installed.log`, `scope-quotes-installed-final.log`,
+`scope-quotes-post-terminal-*.log`, `scope-quotes-proof`, build/install logs and
+`scope-quotes-final-dist`. Remaining native Scope watch/order/family-loss linkage,
+complete path requirements, four-contract T3 resolution, overnight Swing and mixed
+ownership stay open. UI and authentic data/model/host/economic acceptance remain
+final gates. Main untouched, PR draft, LIVE disabled and deployed experiment frozen;
+no authentic provider/model/broker call, dependency update or host/deployment change.
+
+---
+
+
 ## Native stop-only target milestones: 2026-10-18 UTC
 
 The user clarified the delivery order: finish remaining strategy/engine plumbing

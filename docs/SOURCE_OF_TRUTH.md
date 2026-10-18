@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.71. Adopted product direction and working delivery contract, 2026-10-18 UTC.
+Version 1.72. Adopted product direction and working delivery contract, 2026-10-18 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -192,6 +192,11 @@ Complete obstruction coverage, native full-cost loss/cooldown linkage and
 dispatch/management remain required
 before Scope execution.
 Authentic collection/coverage and prospective economic evidence remain open.
+Optional Scope observed-quote cohorts now retain original-stop/second-objective
+terminals before admission readiness checks, preventing recovery from reviving the
+same unfilled watch. Exact quotes, geometry, receipt time and owner-limit hashes
+persist through restart, observer reads and reproducible research replay. Invalid
+quotes reset holds without inventing terminals; native Scope entry remains blocked.
 Report capabilities and gates, not completion percentages.
 
 ## Goal and definition of completion
@@ -394,8 +399,10 @@ The [headless options schema/sample acquisition](OPTIONS_READ_CAPTURE.md) is fix
 The [optional candidate model selector](OPTIONS_MODEL_SELECTION.md) also has fixture/native
 proof. The [first M4 stored options observer](OPTIONS_OBSERVER.md) has fixture/native
 proof; browser visual acceptance and matched cost/benchmark/cohort evaluation remain open.
-**Next is P1 actual bounded market samples and exact normalized collection; P2
-full-plan entry now has local durable integration proof. P3 has a supplied-evidence
+**Current engineering priority is the remaining P7 strategy/engine work. P1 actual
+bounded market samples and exact normalized collection remain required for the final
+integration validation pass; P2 full-plan entry now has local durable integration
+proof. P3 has a supplied-evidence
 accounting evaluator, sealed shared tape, native first-session journal export and
 scripted A/B/C replay scheduling with multi-session state/export and explicit
 settlement. Position reasoning now has opt-in durable attempts/costs and atomic

@@ -104,6 +104,9 @@ Entry-model admission now checks that guard before starting a paid call; expecte
 loss pauses become HOLD without creating a global halt. Owned management remains separate.
 Scope's stored sizing review now applies the approved ask-price quantity tiers
 through the common governor, retaining stricter account limits and all fees.
+New [Scope quote lifecycle](docs/OPTIONS_SCOPE_WATCHES.md#optional-observed-quote-lifecycle)
+cohorts permanently retain observed original-stop/second-objective breaches through
+admission, restart, stored reads and portable research replay.
 Opt-in Scope path review now adds completed SPX opening-range levels, confirmed
 pivots and exact session VWAP. A separate frozen extension adds confirmed equal-high/low
 plateaus to quality, arming and current-price admission; full path proof remains open.

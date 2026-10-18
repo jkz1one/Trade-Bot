@@ -12,6 +12,7 @@ from app.options.scope_context import ScopeContextInput
 from app.options.scope_contract import ScopeContractScan
 from app.options.scope_management import ScopeManagementReview
 from app.options.scope_quality import ScopeQualityScan
+from app.options.scope_quote import ScopeQuoteReview
 from app.options.scope_structure import ScopeGeometry
 from app.options.scope_watch import ScopeWatchChoice, ScopeWatchPolicy
 
@@ -184,7 +185,7 @@ def _decision_evidence(record, policy, choice, now):
     }
 
 
-def _watch(db, row, policy, now, read_json, owner_policy):
+def _watch(db, row, policy, now, read_json, owner_policy, limits):
     record = read_json(row["record_json"])
     key = TypeAdapter(Name).validate_python(record["play_key"])
     frame = ScopePreflightInput.model_validate(record["locked_frame"])
@@ -234,6 +235,31 @@ def _watch(db, row, policy, now, read_json, owner_policy):
         "authority": False,
         "live_enabled": False,
     }
+    for name in ("quote_review", "terminal_quote"):
+        if name not in record:
+            continue
+        quote_review = ScopeQuoteReview.model_validate(record[name])
+        if (
+            policy.quote_lifecycle is None
+            or quote_review.geometry != geometry
+            or quote_review.limits_hash != fingerprint(limits)
+            or not called <= quote_review.evaluated_at <= _stamp(audit["recorded_at"])
+            or (
+                name == "terminal_quote"
+                and (
+                    quote_review.status
+                    not in {"INVALIDATED_UNFILLED", "OBJECTIVE_CONSUMED_UNFILLED"}
+                    or quote_review.status != status
+                    or quote_review.evaluated_at != terminal
+                    or quote_review.quote.model_dump(mode="json")
+                    != record.get("last_observed_quote")
+                )
+            )
+        ):
+            raise ValueError("Conflicting stored Scope quote lifecycle")
+        result[name] = quote_review.model_dump(mode="json") | {
+            "time_status": "FUTURE" if quote_review.evaluated_at > now else "HISTORICAL"
+        }
     if "arming" in record:
         a = record["arming"]
         if (
@@ -348,7 +374,7 @@ def stored_scope(db, tables, limits, now, read_json, *, owner_policy):
     rows = db.execute(
         "SELECT * FROM execution_option_scope_watches ORDER BY session_date DESC,rowid DESC LIMIT 25"
     ).fetchall()
-    watches = [_watch(db, row, policy, now, read_json, owner_policy) for row in rows]
+    watches = [_watch(db, row, policy, now, read_json, owner_policy, limits) for row in rows]
     active = db.execute(
         "SELECT * FROM execution_option_scope_watches WHERE active_lock IS NOT NULL LIMIT 2"
     ).fetchall()
@@ -363,7 +389,7 @@ def stored_scope(db, tables, limits, now, read_json, *, owner_policy):
         "history_limit": 25,
         "history_truncated": count > len(watches),
         "watches": watches,
-        "active_watch": _watch(db, active[0], policy, now, read_json, owner_policy)
+        "active_watch": _watch(db, active[0], policy, now, read_json, owner_policy, limits)
         if active
         else None,
     }

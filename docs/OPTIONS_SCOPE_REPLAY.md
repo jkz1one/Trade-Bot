@@ -2,13 +2,19 @@
 
 `app.options.scope_replay.run_scope_replay(request, directory)` runs a frozen,
 ordered fixture sequence through a new native PAPER owner and `ScopeWatchBook`.
-It supports CALL, OBSERVE_ARMING, REVIEW_ADMISSION, ADVANCE and NEUTRALIZE. It does
-not prepare or dispatch orders, call a model, poll a provider or enroll Scope in
+It supports CALL, OBSERVE_ARMING, REVIEW_ADMISSION, ADVANCE, NEUTRALIZE and
+optionally enrolled OBSERVE_QUOTE. It does not prepare or dispatch orders, call a model, poll a provider or enroll Scope in
 the trading runtime. Native Scope entry remains blocked.
 
 This provides reproducible end-to-end watch research before Scope execution is
 available. Passing a research replay is neither a filled trade nor an economic
 comparison. It does not add Scope to the independent A/B/C/D trading arms.
+
+Enrolled observed-quote cohorts also accept `OBSERVE_QUOTE` with an optional
+underlying quote and no frame/context/choice override. Missing quotes record a
+failed observation (or cutoff expiry); valid boundaries preserve the terminal quote.
+Subsequent attempts to revive that watch remain explicit rejected actions. Portable
+verification reproduces the same results and keeps data/host costs unknown.
 
 ## Frozen input and owned state
 
@@ -25,6 +31,7 @@ Each `ScopeReplayStep` carries a unique `key`, `kind`, aware `at` and `play_key`
 | CALL | Choice, frame and context; the action key is the new play key |
 | OBSERVE_ARMING | Optional frame/context; missing evidence produces the native reset |
 | REVIEW_ADMISSION | Optional frame/context/current underlying; native review records eligibility or blockers |
+| OBSERVE_QUOTE | Optional underlying quote; enrolled lifecycle observation without frame/context overrides |
 | ADVANCE | Optional frame; cutoff expiry can proceed without fresh data |
 | NEUTRALIZE | Required completed frame; original direction-reset policy still applies |
 

@@ -2,8 +2,8 @@
 
 `app.options.scope_watch.ScopeWatchBook` persists the first called-play layer in
 an existing `OptionExecution` journal. This is an explicitly enrolled **research
-watch workflow**, with false trade/LIVE authority. It does not add Scope to the
-runtime, AI packet, admission, management or replay paths.
+watch workflow**, with false trade/LIVE authority. Its research admission, management
+and replay paths do not enroll Scope in the trading runtime or native entry dispatch.
 
 `ScopeWatchPolicy` freezes the complete context/structure/preflight policy and an
 explicit daily call ceiling of one or two. The source ceiling is two called plays,
@@ -126,6 +126,64 @@ It takes precedence over a supplied frame, records no inferred crossing bar, and
 makes no claim about the missing market path. Missing/stale data before cutoff
 leaves the watch active. Native execution history blocks advancement rather than
 falsely marking a potentially traded watch unfilled.
+
+## Optional observed-quote lifecycle
+
+New watch cohorts may freeze `quote_lifecycle="scope-observed-quotes-v1"`.
+Omitting it preserves existing completed-bar behavior and serialization; a book
+cannot enable or change this policy on reopen. This closes a reproduced admission
+gap: a fresh quote at the original invalidation previously rejected sizing but
+left the watch active, allowing later recovery samples to re-arm the same play.
+
+`observe_quote(key, play_key, underlying, expected_revision=..., now=...)` records
+one supplied SPX quote without requesting a provider, account refresh, option quote,
+model call or order. Enrolled `review_admission()` performs the same observation
+before account readiness, arming or context checks. A valid original-price breach
+therefore persists even when admission cannot proceed. Native trading/model history
+still blocks these unfilled-watch mutations; this never relabels a held trade.
+
+Only complete REALTIME SPX quotes from the owner's frozen underlying source are
+accepted, with uncrossed positive prices, existing age/receipt-lag bounds and source
+time no earlier than both the call and last reviewed completed bar. Accepted source
+clocks cannot rewind. Identical original quotes may be reread while still fresh;
+changed content at the same source timestamp is rejected, and later receipt times
+cannot make an old source observation new.
+
+| Fresh observed boundary | Terminal status |
+| --- | --- |
+| CALL bid at/below the original stop, or PUT ask at/above it | `INVALIDATED_UNFILLED` |
+| CALL bid at/above the locked second objective, or PUT ask at/below it | `OBJECTIVE_CONSUMED_UNFILLED` |
+| Clock at/after the locked entry cutoff, even without a quote | `EXPIRED_UNFILLED` |
+
+The first objective retains its separate current-price admission gate; this does
+not replace Scope's settled second-objective terminal rule. A wide spread cannot
+establish a target using only CALL ask or PUT bid. Cutoff takes precedence over a
+supplied quote. Terminal quote evidence retains the exact quote, original geometry,
+owner-limit hash and actual observation time, with no fabricated crossing bar.
+The first recorded terminal state cannot be revived, overwritten or refunded.
+A new call key in the same session must use a completed bar strictly later than
+the recorded terminal quote time. Changing the key cannot reuse a bar that was
+already complete when the prior watch was invalidated.
+Existing neutral/reset rules still require a later completed bar, cooldown and
+fresh reversal confirmation; the original quote remains attached through neutral.
+
+Missing/stale/foreign/conflicting quote evidence records a rejection and resets
+an enrolled arming hold without fabricating a price terminal. A quote-only action
+removes an earlier admission review, and never extends or progresses the hold.
+A valid nonterminal quote preserves only the existing dated hold state. Later
+admission still requires all fresh frame/context/account/quote/path checks.
+
+Action receipts, quote watermark, terminal state, active lock and audit commit
+atomically. Exact retries retain historical receipts; current state is read through
+`snapshot()`. Stored observer output exposes `quote_review` and `terminal_quote`
+with historical/future labels after validating their original record/action binding.
+Reads never poll, advance, re-arm or approve the watch. The research replay accepts
+`OBSERVE_QUOTE` steps, and its portable verifier reproduces them from the frozen
+request hash without changing the original files.
+
+No called-play count, cash, fees, fills, entry/management charges or native execution
+authority changes. This is observed fixture lifecycle evidence, not proof of an
+uninterrupted market path or authentic feed acceptance.
 
 ## Durable actions and reads
 

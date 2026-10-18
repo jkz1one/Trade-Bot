@@ -52,6 +52,9 @@ class ScopeWatchPolicy(OptionRecord):
     version: Literal["scope-unfilled-watch-v1"] = "scope-unfilled-watch-v1"
     context: ScopeContextPolicy
     max_called_plays_per_session: int = Field(strict=True, ge=1, le=2)
+    quote_lifecycle: Literal["scope-observed-quotes-v1"] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
     direction_reset: ScopeDirectionResetPolicy | None = Field(
         default=None, exclude_if=lambda value: value is None
     )
@@ -293,6 +296,12 @@ class ScopeWatchBook:
             for p in previous:
                 if p["choice"]["right"] != choice.right:
                     self._review_flip(p, selected[0], frame, now)
+            if any(
+                p.get("terminal_quote") is not None
+                and scan.structure.completed_through <= datetime.fromisoformat(p["terminal_at"])
+                for p in previous
+            ):
+                raise ExecutionBlocked("SCOPE_WATCH_POST_TERMINAL_BAR_REQUIRED")
             if any(
                 scan.structure.completed_through.isoformat() <= p["reviewed_through"]
                 for p in previous
@@ -575,6 +584,61 @@ class ScopeWatchBook:
             )
             return self._finish(db, action, digest, record, now)
 
+    def _observe_quote(self, record, underlying, now):
+        from app.options.scope_quote import TERMINALS, review_quote
+
+        result = review_quote(record, underlying, self.engine.limits, now)
+        record["quote_review"] = result.model_dump(mode="json")
+        if result.status not in {"REJECTED", "EXPIRED_UNFILLED"}:
+            record["last_observed_quote"] = underlying.model_dump(mode="json")
+        if result.status in TERMINALS:
+            record["status"] = result.status
+            record["terminal_at"] = now.isoformat()
+            if result.status != "EXPIRED_UNFILLED":
+                record["terminal_quote"] = result.model_dump(mode="json")
+        return result
+
+    def observe_quote(self, key, play_key, underlying=None, *, expected_revision, now):
+        """Retain original-price breaches independently of arming/account readiness."""
+        now = clock(now)
+        action = _Action(key=key, expected_revision=expected_revision)
+        play_key = _Action(key=play_key, expected_revision=0).key
+        if underlying is not None:
+            underlying = UnderlyingQuote.model_validate(underlying.model_dump(warnings=False))
+        request = {
+            "kind": "OBSERVE_QUOTE",
+            "action": action,
+            "play_key": play_key,
+            "underlying": underlying,
+            "now": now,
+        }
+        with self.engine.journal.write() as db:
+            digest, prior = self._begin(db, action, request, now)
+            if prior is not None:
+                return prior
+            if self.policy.quote_lifecycle is None:
+                raise ExecutionBlocked("SCOPE_WATCH_QUOTES_NOT_ENROLLED")
+            row = db.execute(
+                "SELECT * FROM execution_option_scope_watches WHERE play_key=?", (play_key,)
+            ).fetchone()
+            if row is None or row["active_lock"] != 1:
+                raise ExecutionBlocked("SCOPE_WATCH_NOT_ACTIVE")
+            record = json.loads(row["record_json"])
+            result = self._observe_quote(record, underlying, now)
+            # A quote alone never refreshes a dated admission or progresses the hold.
+            record.pop("admission_review", None)
+            if self.policy.arming is not None and result.status != "OBSERVED":
+                record["arming"] = self._arming_reset(record, now, "SCOPE_QUOTE_" + result.status)
+            db.execute(
+                "UPDATE execution_option_scope_watches SET active_lock=?,record_json=? WHERE play_key=?",
+                (
+                    1 if record["status"] == "WATCHING" else None,
+                    json.dumps(record, sort_keys=True),
+                    play_key,
+                ),
+            )
+            return self._finish(db, action, digest, record, now)
+
     def review_admission(
         self, key, play_key, *, expected_revision, now, frame=None, context=None, underlying=None
     ):
@@ -637,6 +701,14 @@ class ScopeWatchBook:
                 "live_enabled": False,
             }
             try:
+                if self.policy.quote_lifecycle is not None:
+                    observed = self._observe_quote(record, underlying, now)
+                    if observed.status != "OBSERVED":
+                        raise ExecutionBlocked(
+                            observed.reasons[0]
+                            if observed.reasons
+                            else "SCOPE_QUOTE_" + observed.status
+                        )
                 account = self.engine._account(db, now)
                 review["account"] = account.model_dump(mode="json")
                 self._ready(db, now)
