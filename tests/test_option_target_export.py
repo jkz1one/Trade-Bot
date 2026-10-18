@@ -25,7 +25,7 @@ D = Decimal
 POLICY = {**ENROLLED, "premium_trail": "executable-premium-v1"}
 
 
-def native_boundary(root, right="CALL", sold=2, *, observed_entry=False):
+def native_boundary(root, right="CALL", sold=2, *, observed_entry=False, entry_time=None):
     base = bundle_for()
     frames = []
     with owned(root, right, **POLICY) as (engine, venue, data):
@@ -45,6 +45,7 @@ def native_boundary(root, right="CALL", sold=2, *, observed_entry=False):
             data["underlying"],
             now=NOW,
             target_exit_schedule=plan(right),
+            entry_time_protection=entry_time,
         )
         assert out["status"] == "PREPARED", out
         buy = intent_for(engine, out["client_id"])

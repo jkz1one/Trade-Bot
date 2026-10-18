@@ -24,6 +24,7 @@ from app.options.lifecycle import (
     TERMINAL,
     EntryPremiumProtection,
     EntryProtection,
+    EntryTimeProtection,
     OptionExecutionPolicy,
     OptionIntent,
     OptionLedger,
@@ -42,7 +43,12 @@ from app.options.models import (
     UnderlyingQuote,
 )
 from app.options.process import run_option_process
-from app.options.protection import assess_position, verify_premium_binding
+from app.options.protection import (
+    assess_position,
+    verify_premium_binding,
+    verify_time_binding,
+    verify_time_owner,
+)
 from app.options.venue import DurableOptionVenue, private_path
 from app.robinhood.schedule import XNYSCalendar
 
@@ -391,6 +397,7 @@ class OptionExecution:
         target_exit_schedule=None,
         target_exit_stage=None,
         entry_premium_protection=None,
+        entry_time_protection=None,
     ):
         now = clock(now)
         proposal = OptionProposal.model_validate(proposal.model_dump(warnings=False))
@@ -438,6 +445,12 @@ class OptionExecution:
             )
             inputs["target_exit_schedule"] = target_exit_schedule.model_dump(mode="json")
             bound_inputs["target_exit_schedule"] = target_exit_schedule
+        if entry_time_protection is not None:
+            entry_time_protection = EntryTimeProtection.model_validate(
+                entry_time_protection.model_dump(warnings=False)
+            )
+            inputs["entry_time_protection"] = entry_time_protection.model_dump(mode="json")
+            bound_inputs["entry_time_protection"] = entry_time_protection
         if entry_premium_protection is not None:
             entry_premium_protection = EntryPremiumProtection.model_validate(
                 entry_premium_protection.model_dump(warnings=False)
@@ -572,6 +585,28 @@ class OptionExecution:
                     from app.options.target_exits import review_close
 
                     review_close(self, db, proposal, target_exit_stage, origin)
+                if entry_time_protection is not None:
+                    if (
+                        self.policy.entry_time_protection is None
+                        or origin != "DETERMINISTIC"
+                        or proposal.action != "OPEN_LONG"
+                        or entry_request is not None
+                    ):
+                        raise ExecutionBlocked("OPTION_ENTRY_TIME_NOT_ENROLLED")
+                    if entry_time_protection.exit_by <= now:
+                        raise ExecutionBlocked("OPTION_ENTRY_TIME_EXPIRED")
+                    if result.outcome == "APPROVED":
+                        deadline = min(
+                            entry_time_protection.exit_by,
+                            session.closes_at - timedelta(minutes=self.policy.exit_cutoff_minutes),
+                            proposal.contract.last_trading_at
+                            - timedelta(seconds=self.policy.expiry_guard_seconds),
+                        )
+                        if deadline <= now:
+                            raise ExecutionBlocked("OPTION_ENTRY_TIME_EXPIRED")
+                        result = result.model_copy(
+                            update={"valid_until": min(result.valid_until, deadline)}
+                        )
                 if entry_premium_protection is not None:
                     if (
                         self.policy.entry_premium_protection is None
@@ -634,6 +669,8 @@ class OptionExecution:
                         proposal.contract.last_trading_at
                         - timedelta(seconds=self.policy.expiry_guard_seconds),
                     )
+                    if entry_time_protection is not None:
+                        exit_at = min(exit_at, entry_time_protection.exit_by)
                     protection = None
                     if entry_review is not None:
                         exit_at = min(exit_at, entry_review.exit_by)
@@ -660,7 +697,7 @@ class OptionExecution:
                         prepared_at=now,
                         approval_expires_at=result.valid_until,
                         order_expires_at=min(session.closes_at, exit_at)
-                        if protection
+                        if protection or entry_time_protection
                         else session.closes_at,
                         exit_at=exit_at
                         if proposal.action == "OPEN_LONG"
@@ -676,6 +713,7 @@ class OptionExecution:
                         target_exit_schedule=target_exit_schedule,
                         target_exit_stage=target_exit_stage,
                         entry_premium_protection=entry_premium_protection,
+                        entry_time_protection=entry_time_protection,
                         premium_trail=trail_policy,
                         trade_floor=floor_policy,
                         health_management=health_policy,
@@ -739,6 +777,10 @@ class OptionExecution:
                 verified_lineage(db, intent, approval)
                 verify_binding(intent, approval)
                 verify_premium_binding(intent, approval)
+                verify_time_binding(db, intent, approval)
+                if intent.entry_time_protection is not None:
+                    window = self._session(intent.instrument.contract, intent.prepared_at)
+                    verify_time_owner(intent, self.policy, window.closes_at if window else None)
                 from app.options.health_management import verify_binding as verify_health
                 from app.options.premium_trail import verify_binding as verify_trail
                 from app.options.trade_floor import verify_binding as verify_floor
@@ -1154,6 +1196,10 @@ class OptionExecution:
                 raise ValueError("UNOWNED_OR_UNATTEMPTED_OPTION_ORDER")
             intent = OptionIntent.model_validate_json(row["intent_json"])
             attempted = datetime.fromisoformat(row["attempted_at"])
+            verify_time_binding(db, intent, json.loads(row["approval_json"]))
+            if intent.entry_time_protection is not None:
+                window = self._session(intent.instrument.contract, intent.prepared_at)
+                verify_time_owner(intent, self.policy, window.closes_at if window else None)
             if (
                 intent.target_exit_schedule is not None
                 and intent.target_exit_schedule.needs_entry_reference
@@ -1260,6 +1306,7 @@ class OptionExecution:
             or state.position.exit_at != snap.position.exit_at
             or state.position.entry_client_id != snap.position.entry_client_id
             or state.position.entry_protection != snap.position.entry_protection
+            or state.position.entry_time_protection != snap.position.entry_time_protection
             or state.position.entry_premium_protection != snap.position.entry_premium_protection
             or state.position.target_exit_schedule != snap.position.target_exit_schedule
             or state.position.entry_underlying_reference != snap.position.entry_underlying_reference

@@ -11,6 +11,7 @@ from app.options.entry_reasoning import Digest
 from app.options.lifecycle import (
     EntryLineage,
     EntryPremiumProtection,
+    EntryTimeProtection,
     OptionFill,
     OptionIntent,
     OptionObservation,
@@ -88,6 +89,9 @@ class DecisionAttribution(OptionRecord):
     target_exit_schedule: TargetExitSchedule | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
+    entry_time_protection: EntryTimeProtection | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     entry_premium_protection: EntryPremiumProtection | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -146,9 +150,10 @@ def order_attribution(db, row):
     from app.options.target_exits import verify_binding
 
     verify_binding(intent, approval)
-    from app.options.protection import verify_premium_binding
+    from app.options.protection import verify_premium_binding, verify_time_binding
 
     verify_premium_binding(intent, approval)
+    verify_time_binding(db, intent, approval)
     from app.options.premium_trail import verify_binding as verify_trail
 
     verify_trail(intent, approval)
@@ -162,6 +167,7 @@ def order_attribution(db, row):
     floor_policy = intent.trade_floor
     trail_policy = intent.premium_trail
     premium_protection = intent.entry_premium_protection
+    time_protection = intent.entry_time_protection
     if intent.requested_close_quantity != proposal.close_quantity or (
         intent.requested_close_quantity is not None and approval["origin"] != "DETERMINISTIC"
     ):
@@ -187,6 +193,7 @@ def order_attribution(db, row):
             raise ValueError("Stored exit entry reference missing")
         entry_intent = OptionIntent.model_validate(_json(entry[0]))
         verify_premium_binding(entry_intent, _json(entry[1]))
+        verify_time_binding(db, entry_intent, _json(entry[1]))
         verify_trail(entry_intent, _json(entry[1]))
         verify_floor(entry_intent, _json(entry[1]))
         verify_health(entry_intent, _json(entry[1]))
@@ -194,6 +201,7 @@ def order_attribution(db, row):
         floor_policy = entry_intent.trade_floor
         trail_policy = entry_intent.premium_trail
         premium_protection = entry_intent.entry_premium_protection
+        time_protection = entry_intent.entry_time_protection
         if (
             entry_intent.side != "BUY"
             or entry_intent.instrument != intent.instrument
@@ -206,6 +214,11 @@ def order_attribution(db, row):
     observed = tuple(fill_underlying_observation(f) for f in fills if f.underlying is not None)
     return {
         **({"fill_underlyings": observed} if observed else {}),
+        **(
+            {"entry_time_protection": time_protection.model_dump(mode="json")}
+            if time_protection is not None
+            else {}
+        ),
         **({"health_management": health_policy} if health_policy is not None else {}),
         **({"trade_floor": floor_policy} if floor_policy is not None else {}),
         **({"premium_trail": trail_policy} if trail_policy is not None else {}),
@@ -395,6 +408,7 @@ def decision_attribution(db, key, outcome, policy):
             "target_exit_schedule",
             "target_exit_stage",
             "entry_premium_protection",
+            "entry_time_protection",
             "premium_trail",
             "trade_floor",
             "health_management",

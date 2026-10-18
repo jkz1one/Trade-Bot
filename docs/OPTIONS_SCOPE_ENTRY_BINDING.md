@@ -53,6 +53,10 @@ watch, complete binding, exact journal revision and unexpired admission. It retu
 the original proposal, fee-inclusive admission, management plan, instrument/quotes,
 geometry, account, effective limits and session, plus the binding and its hash.
 There is no caller-supplied quantity, balance, stop, profile or replacement quote.
+The handoff also carries [entry time protection](OPTIONS_ENTRY_TIME_PROTECTION.md)
+from the original locked index session `protect_at`. Native use requires separate
+frozen owner enrollment and always retains an earlier owner/expiry cutoff. This
+derived field cannot extend the admission binding's short validity window.
 
 Any later native journal event requires fresh admission; passing the newer revision
 cannot make the old binding current. Any subsequent watch mutation removes the

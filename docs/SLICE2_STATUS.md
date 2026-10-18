@@ -1,5 +1,70 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Deterministic entry deadlines and Scope handoff: 2026-10-18 UTC
+
+A concrete native Scope prerequisite is now implemented: deterministic entries can
+freeze an earlier exit deadline without borrowing an AI plan/target. The pinned
+SignalFlow approved V2 playbook at `f9eaf2c1b5d13dca287ee7138126883065b00395`
+was reread: remaining Scope modeled positions must exit by 15:45 ET. The previous
+native deterministic API could apply only owner session/expiry time, which cannot
+represent an earlier strategy deadline when the owner's cutoff is later.
+
+New frozen PAPER owners can enroll `entry_time_protection="tighten-only-v1"` and
+bind `EntryTimeProtection` to trusted deterministic buys. The effective deadline
+is the earliest of the entry's request, owner session cutoff and exact expiry guard.
+Approval and buy-order lifetime cannot outlive it. Original decision, approval,
+intent and filled position retain the terms through partial buys, scales, runners,
+restart, stored attribution and portable economic reconstruction. Native dispatch
+and reconciliation recheck the original decision and stricter owner ceilings.
+
+With fresh reconciled account evidence, the existing `TIME_EXIT` latches at the
+deadline even without usable market quotes; later usable evidence can execute the
+owned close. Entry expiry does not prevent protective sales. Unattempted scales
+can be preempted, while attempted orders retain reservations and failed/canceled
+attempted exits retain their reviewed-recovery requirement. No cancellation, fill,
+fee or entry/management charge is invented or omitted. Unknown costs stay unknown.
+
+Scope's bound selection now derives the deadline from original locked session
+`protect_at`. An enrolled time policy and exact handoff cannot bypass the existing
+Scope native entry guard. This closes the native time-protection dependency, not
+Scope order/fill or family-loss enrollment. Complete path requirements, missing
+four-contract T3 and Scope runtime acceptance remain open.
+[API and boundaries](OPTIONS_ENTRY_TIME_PROTECTION.md).
+
+Fresh GitHub baseline: `cc69c84643a1bfd9e1f9cf0a9ca3088fc012cf95`, tree
+`b5920d8ce15013795348bc2ab4140a808b2168b0`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation: **237 installed cases passed in 260.57s**, covering native deadline
+behavior, Scope binding, premium protection, execution/reconciliation, target export,
+partial closes with known/unknown entry-management costs, fill-bound stops, Scope
+entry guards and full-session independent A/B/C/D accounting. One additional,
+disjoint installed Scope handoff/owner-enrollment guard case passed in 3.54s.
+Together these include 26 new deadline cases. Both runs used isolated Python,
+a noneditable wheel and copied tests outside the checkout, with warnings as errors.
+
+The first installed focused run had 52 passing cases and four fixture assertion
+failures: three omitted required fresh account reconciliation at the deadline,
+and one incorrectly expected an automatic retry after a canceled attempted exit.
+The fixtures were corrected to retain those existing controls; no production fix
+or waived gate was needed. The final tests also cover earlier owner/expiry ceilings,
+atomic rollback, independent deadlines and rejection of changed portable ownership.
+
+All 182 application/template files match source/wheel/install, and final copied
+tests match source. Scoped lint/format, dependency consistency, whitespace and
+67 distinct local documentation targets pass. Wheel SHA-256:
+`621b534083105d10806b077004f29d2b7e6a12848380a28c1fc9dd362c5985fb`.
+Proof beside checkout: `entry-time-focused.log`, `entry-time-installed.log`,
+`entry-time-scope-boundary.log`, `entry-time-proof`, `entry-time-dist` and build/install logs.
+
+Scope execution/loss integration, complete path requirements, four-contract T3,
+overnight Swing and mixed ownership remain open. UI and authentic provider/model/
+data/host/economic acceptance remain final passes. Main untouched, PR draft, LIVE
+disabled and deployment frozen; no authentic broker/provider/model call, dependency
+update or host/deployment change.
+
+---
+
 ## Scope watch-to-entry evidence binding: 2026-10-18 UTC
 
 The next native Scope dependency is now fixture implemented: new frozen

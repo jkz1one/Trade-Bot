@@ -39,6 +39,11 @@ def _replay(a, definition, session, sequence, used_ids, previous_close):
     previous_order_end = session.opens_at
     for order in sorted(a.orders, key=lambda x: x.attempted_at or x.intent.prepared_at):
         i, o = order.intent, order.observation
+        from app.options.protection import verify_time_owner
+
+        verify_time_owner(
+            i, definition.policy, min(session.closes_at, i.instrument.contract.last_trading_at)
+        )
         if (
             i.target_exit_schedule is not None
             and i.target_exit_schedule.needs_entry_reference
@@ -169,6 +174,11 @@ def _costs(a, definition, session, used_ids):
             fill_underlying_observation(f) for f in fills if f.underlying is not None
         ):
             raise ValueError("ATTRIBUTION_FILL_UNDERLYING_MISMATCH")
+        entry = order
+        if order and order.intent.side == "SELL":
+            entry = next((o for o in a.orders if o.intent.client_id == attr.entry_client_id), None)
+        if attr.entry_time_protection != (entry.intent.entry_time_protection if entry else None):
+            raise ValueError("ATTRIBUTION_ENTRY_TIME_MISMATCH")
         if order and (
             attr.approved_quantity != order.intent.quantity
             or attr.attempted != (order.attempted_at is not None)

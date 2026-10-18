@@ -7,6 +7,7 @@ from typing import Annotated, Literal
 from pydantic import Field
 
 from app.options.engine import clock, fingerprint
+from app.options.lifecycle import EntryTimeProtection
 from app.options.models import Name, OptionAdmission, OptionProposal, OptionRecord
 from app.options.scope import ScopePreflightInput
 from app.options.scope_admission import ScopeEntryPathReview
@@ -232,6 +233,9 @@ def select_entry(engine, db, policy, play_key, expected_revision, now):
         "proposal": proposal.model_dump(mode="json"),
         "admission": admission.model_dump(mode="json"),
         "management": plan.model_dump(mode="json"),
+        "entry_time_protection": EntryTimeProtection(
+            exit_by=ScopePreflightInput.model_validate(record["locked_frame"]).session.protect_at
+        ).model_dump(mode="json"),
         "account": record["admission_review"]["account"],
         "effective_limits": record["admission_review"]["effective_limits"],
         "session": record["admission_review"]["session"],

@@ -53,6 +53,10 @@ def test_exact_stored_selection_retains_all_terms_and_never_grants_authority(
         assert selected["proposal"] == r["proposal"]
         assert selected["admission"] == r["admission"]
         assert selected["management"] == r["management"]
+        assert (
+            selected["entry_time_protection"]["exit_by"]
+            == record["locked_frame"]["session"]["protect_at"]
+        )
         assert selected["geometry"] == record["geometry"]
         assert selected["account"] == r["account"]
         assert selected["effective_limits"] == r["effective_limits"]

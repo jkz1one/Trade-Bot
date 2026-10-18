@@ -4,7 +4,42 @@ from datetime import timedelta
 from decimal import ROUND_FLOOR, Context, Decimal, localcontext
 
 from app.options.governor import _fresh, _tick_price
-from app.options.lifecycle import EntryPremiumProtection
+from app.options.lifecycle import EntryPremiumProtection, EntryTimeProtection
+
+
+def verify_time_binding(db, intent, approval):
+    raw = approval.get("entry_time_protection")
+    protection = EntryTimeProtection.model_validate(raw) if raw is not None else None
+    if intent.entry_time_protection != protection:
+        raise ValueError("OPTION_ENTRY_TIME_PROTECTION_CHANGED")
+    if protection is not None and approval.get("origin") != "DETERMINISTIC":
+        raise ValueError("OPTION_ENTRY_TIME_DETERMINISTIC_ONLY")
+    if protection is not None:
+        import json
+
+        row = db.execute(
+            "SELECT inputs_json FROM execution_option_decisions WHERE source_key=?",
+            (intent.source_key,),
+        ).fetchone()
+        if row is None or json.loads(row[0]).get("entry_time_protection") != raw:
+            raise ValueError("OPTION_ENTRY_TIME_DECISION_CHANGED")
+
+
+def verify_time_owner(intent, policy, closes_at):
+    protection = intent.entry_time_protection
+    if protection is None:
+        return
+    if policy.entry_time_protection is None:
+        raise ValueError("OPTION_ENTRY_TIME_NOT_ENROLLED")
+    if closes_at is None:
+        raise ValueError("OPTION_ENTRY_TIME_SESSION_REQUIRED")
+    expected = min(
+        protection.exit_by,
+        closes_at - timedelta(minutes=policy.exit_cutoff_minutes),
+        intent.instrument.contract.last_trading_at - timedelta(seconds=policy.expiry_guard_seconds),
+    )
+    if intent.exit_at != expected or intent.order_expires_at != expected:
+        raise ValueError("OPTION_ENTRY_TIME_CEILING_CHANGED")
 
 
 def verify_premium_binding(intent, approval):

@@ -82,6 +82,9 @@ class OptionExecutionPolicy(OptionRecord):
     premium_trail: Literal["executable-premium-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
+    entry_time_protection: Literal["tighten-only-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     entry_premium_protection: Literal["tighten-only-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -113,6 +116,11 @@ class EntryProtection(OptionRecord):
     packet_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
     plan_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
     underlying_target: Money = Field(gt=0)
+    exit_by: datetime
+
+
+class EntryTimeProtection(OptionRecord):
+    version: Literal["tighten-only-v1"] = "tighten-only-v1"
     exit_by: datetime
 
 
@@ -306,6 +314,9 @@ class OptionIntent(OptionRecord):
     target_exit_schedule: TargetExitSchedule | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
+    entry_time_protection: EntryTimeProtection | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     entry_premium_protection: EntryPremiumProtection | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -320,6 +331,15 @@ class OptionIntent(OptionRecord):
 
     @model_validator(mode="after")
     def lifetime(self):
+        if self.entry_time_protection is not None and (
+            self.side != "BUY"
+            or self.entry_protection is not None
+            or not self.prepared_at < self.exit_at <= self.entry_time_protection.exit_by
+            or self.order_expires_at > self.exit_at
+        ):
+            raise ValueError(
+                "Entry deadline binds a deterministic buy and cannot extend its lifetime"
+            )
         if self.health_management is not None and self.side != "BUY":
             raise ValueError("Health management enrollment binds only the original buy")
         if self.trade_floor is not None and self.side != "BUY":
@@ -441,6 +461,9 @@ class OptionPosition(OptionHolding):
     exit_at: datetime
     tightened_underlying_invalidation: Money = Field(gt=0)
     entry_protection: EntryProtection | None = Field(default=None, exclude_if=lambda v: v is None)
+    entry_time_protection: EntryTimeProtection | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     entry_premium_protection: EntryPremiumProtection | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -466,6 +489,11 @@ class OptionPosition(OptionHolding):
 
     @model_validator(mode="after")
     def owned(self):
+        if (
+            self.entry_time_protection is not None
+            and self.exit_at > self.entry_time_protection.exit_by
+        ):
+            raise ValueError("Owned position cannot extend the frozen entry deadline")
         needs_reference = bool(
             self.target_exit_schedule and self.target_exit_schedule.needs_entry_reference
         )
