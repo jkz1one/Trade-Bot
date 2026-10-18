@@ -11,6 +11,11 @@ authentic data/model, host and visual acceptance remain separate gates.
 
 ## Current product direction
 
+Current work finishes remaining strategy/engine plumbing before the final UI and
+authentic data/model validation pass. Offline test tools remain available during development.
+New [stop-only target milestones](docs/OPTIONS_TARGET_EXITS.md#stop-only-target-milestones)
+let protection tighten at an objective without selling a contract or inventing proceeds.
+
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
 rules, implementation milestones, acceptance gates and continuation discipline.
 The [October 10 reasoning-trader plan](docs/AI_TRADER_RESEARCH_PLAN.md) defines the

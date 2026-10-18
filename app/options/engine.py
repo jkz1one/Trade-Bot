@@ -549,6 +549,8 @@ class OptionExecution:
                         or entry_request is not None
                     ):
                         raise ExecutionBlocked("OPTION_TARGET_ENTRY_NOT_ENROLLED")
+                    if target_exit_schedule.version != self.policy.target_exits:
+                        raise ExecutionBlocked("OPTION_TARGET_VERSION_NOT_ENROLLED")
                     if target_exit_schedule.has_stops and self.policy.target_stops is None:
                         raise ExecutionBlocked("OPTION_TARGET_STOPS_NOT_ENROLLED")
                     if result.outcome == "APPROVED":
@@ -757,6 +759,8 @@ class OptionExecution:
                 if intent.target_exit_schedule is not None:
                     if self.policy.target_exits is None:
                         raise ExecutionBlocked("OPTION_TARGET_NOT_ENROLLED")
+                    if intent.target_exit_schedule.version != self.policy.target_exits:
+                        raise ExecutionBlocked("OPTION_TARGET_VERSION_NOT_ENROLLED")
                     if intent.target_exit_schedule.has_stops and self.policy.target_stops is None:
                         raise ExecutionBlocked("OPTION_TARGET_STOPS_NOT_ENROLLED")
                     if underlying is None:

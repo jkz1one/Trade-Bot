@@ -66,7 +66,7 @@ class OptionExecutionPolicy(OptionRecord):
     partial_closes: Literal["whole-contract-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
-    target_exits: Literal["frozen-targets-v1"] | None = Field(
+    target_exits: Literal["frozen-targets-v1", "frozen-target-milestones-v2"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
     target_stops: Literal["frozen-target-stops-v1"] | None = Field(
@@ -90,6 +90,8 @@ class OptionExecutionPolicy(OptionRecord):
             raise ValueError("Whole-trade floors require frozen target exits")
         if self.target_stops is not None and self.target_exits is None:
             raise ValueError("Target stops require frozen target exits")
+        if self.target_exits == "frozen-target-milestones-v2" and self.target_stops is None:
+            raise ValueError("Target milestones require frozen target stops")
         if self.total_loss_limit > self.capital or self.daily_loss_limit > self.total_loss_limit:
             raise ValueError("Explicit loss limits must fit the original PAPER capital")
         if self.exit_cutoff_minutes >= self.entry_cutoff_minutes:
@@ -142,19 +144,27 @@ class PremiumTrailState(OptionRecord):
 
 class TargetExitStep(OptionRecord):
     underlying_price: Money = Field(gt=0)
-    quantity: PositiveCount
+    quantity: Count
     tighten_underlying_to: Money | None = Field(default=None, gt=0, exclude_if=lambda v: v is None)
+
+    @model_validator(mode="after")
+    def meaningful(self):
+        if self.quantity == 0 and self.tighten_underlying_to is None:
+            raise ValueError("A stop-only milestone requires an explicit tighter stop")
+        return self
 
 
 class TargetExitSchedule(OptionRecord):
     """Trusted software's explicit allocations, frozen before any entry attempt."""
 
-    version: Literal["frozen-targets-v1"] = "frozen-targets-v1"
+    version: Literal["frozen-targets-v1", "frozen-target-milestones-v2"] = "frozen-targets-v1"
     entry_quantity: PositiveCount
     steps: tuple[TargetExitStep, ...] = Field(min_length=1, max_length=3)
 
     @model_validator(mode="after")
     def bounded(self):
+        if self.version == "frozen-targets-v1" and any(s.quantity == 0 for s in self.steps):
+            raise ValueError("Stop-only milestones require the v2 schedule")
         if sum(s.quantity for s in self.steps) > self.entry_quantity:
             raise ValueError("Target allocations cannot exceed the entry quantity")
         return self

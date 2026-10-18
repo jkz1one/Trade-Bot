@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.70. Adopted product direction and working delivery contract, 2026-10-18 UTC.
+Version 1.71. Adopted product direction and working delivery contract, 2026-10-18 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -137,6 +137,9 @@ attempted failures require review. Partial entries are not silently reallocated.
 Optional frozen target stops now tighten effective invalidation on fresh target
 evidence, preserving stricter existing stops, exact rebound triggers, order
 reservations and restart state. No underlying target touch claims an option profit.
+New frozen v2 target schedules also represent stop-only milestones with zero sale
+quantity, preserving protection at objectives with no scale allocation. Version
+binding, native fills, full costs and Scope entry restrictions remain enforced.
 Native export and portable replay now retain open target-managed positions without
 mistaking saved target progress for changed ownership. Frozen schedules, original
 entry basis, actual holdings and all costs remain checked; open boundaries remain
@@ -215,8 +218,12 @@ new cohorts; the delivered SELECT/HOLD model remains unchanged. The
 through durable PAPER execution and independent protection, alongside that arm.
 
 This document owns current scope and implementation order. Latest explicit user
-instructions take precedence. README is the entry point, research explains the
-decisions, and status/evidence documents record observations. Older stock-only
+instructions take precedence. The October 18 direction is to finish remaining
+strategy/engine implementation efficiently, then perform UI and authentic data/model
+integration as the final validation pass. Only concrete blocking dependencies
+should interrupt implementation; this does not waive any acceptance gate. README is
+the entry point, research explains the decisions, and status/evidence documents
+record observations. Older stock-only
 continuations remain historical. Code describes delivered behavior; a future goal
 in this file must never be reported as implemented code. Record any discrepancy as
 a blocker instead of quietly changing the plan or relabeling results.

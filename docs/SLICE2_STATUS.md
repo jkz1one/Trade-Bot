@@ -1,5 +1,64 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Native stop-only target milestones: 2026-10-18 UTC
+
+The user clarified the delivery order: finish remaining strategy/engine plumbing
+before the final UI and authentic data/model validation pass. Existing strategy
+research remains authoritative; only concrete missing rules/dependencies need a
+focused follow-up. The UI review pack remains available but is not the current
+engineering milestone.
+
+A concrete management gap was reproduced against the prior installed build:
+`TargetExitStep(quantity=0, tighten_underlying_to=...)` was rejected. Thus a
+one-contract plan allocated entirely to T2 could not tighten independently at T1.
+The pinned SignalFlow `play_management.target_stop_price()` was re-read at
+`f9eaf2c1b5d13dca287ee7138126883065b00395`; it advances target protection independently
+of scale fills. No new strategy target or allocation is inferred from that source.
+
+New frozen PAPER owners can explicitly enroll `frozen-target-milestones-v2` with
+whole-contract closes and frozen target stops. A zero-sale milestone requires an
+explicit tighter stop. Schedule and owner versions must match at preparation and
+dispatch; old v1 schedules/cohorts remain unchanged. Native target latching,
+protection, cumulative fill accounting, order reservations, restart and portable
+export now cover stop-only objectives. Zero due creates no target sale or proceeds.
+Separately enrolled cost floors use the explicit milestone stages and retain all
+fees/model charges. Unknown costs and unvalued open positions remain incomplete.
+
+This closes a shared-engine requirement for small allocations and protected runners.
+It does not enable Scope entry or change its frozen v1 management factory. Scope
+still needs actual-entry stop/geometry binding, native watch/order/family-loss linkage,
+complete path requirements and runtime/replay enrollment; its missing four-contract
+T3 remains explicit. Overnight Swing and mixed ownership remain separate work.
+See [native milestone contract](OPTIONS_TARGET_EXITS.md#stop-only-target-milestones).
+
+Fresh GitHub baseline: `0211510d6c597c6277df4cf4df15d37c578e0f2f`, tree
+`ebcffd3add2540073cc215d55ab97369d107d023`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft.
+
+Validation: **205 installed tests passed in 294.99s**, warnings as errors, outside
+the checkout using the noneditable wheel, isolated Python and copied tests. This
+covers 19 new milestone cases, native targets/stops/export, partial closes,
+cost-aware floors, Scope management and execution boundaries, plus the independent
+A/B/C/D full-session replay with every entry/management charge. A strengthened
+exact dispatch-version rejection assertion passed separately in 2.89s with no
+production change. The initial focused 14-case run passed in 18.19s; these counts
+overlap and are not added. No failed test was waived.
+
+All 179 application/template files match source/wheel/install, and final copied
+tests match source. Scoped lint/format, dependency consistency, whitespace and 63
+distinct local documentation targets pass. Wheel SHA-256:
+`2f69815a89693f5cafaf080e57daa358a4079c091fe88ab82fb7fb09c42059e9`.
+
+Proof beside checkout: `target-milestones-focused.log`,
+`target-milestones-installed.log`, `target-milestones-proof`, build/install logs
+and `target-milestones-dist`. Main untouched, PR draft, LIVE disabled and deployed
+experiment frozen. No authentic provider/model/broker call, dependency update or
+host/deployment change. Visual, authentic input/model, host and economic acceptance
+remain separate gates.
+
+---
+
+
 
 ## Portable dashboard review handoff: 2026-10-18 UTC
 

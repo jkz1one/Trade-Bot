@@ -161,6 +161,65 @@ still omit these stop fields pending native watch/entry binding. Its missing thi
 objective and full management acceptance remain open. Shared native premium trailing
 is now separately available through an explicitly frozen owner policy.
 
+## Stop-only target milestones
+
+New PAPER owners may instead enroll
+`target_exits="frozen-target-milestones-v2"`, with the existing whole-contract
+partial-close and frozen-target-stop policies. The schedule must name the same v2
+version. Preparation and dispatch reject any schedule/owner version mismatch;
+existing v1 cohorts and serialized schedules retain positive exit quantities.
+Enrollment cannot be changed on reopen.
+
+A v2 step may have `quantity=0` only with an explicit `tighten_underlying_to`.
+It observes an objective and tightens protection without requesting a sale. For
+example, a one-contract position can tighten at its first objective and sell at
+its second:
+
+```python
+schedule = TargetExitSchedule(
+    version="frozen-target-milestones-v2",
+    entry_quantity=1,
+    steps=(
+        TargetExitStep(underlying_price="602", quantity=0, tighten_underlying_to="600"),
+        TargetExitStep(underlying_price="604", quantity=1, tighten_underlying_to="602"),
+    ),
+)
+```
+
+Prices above are explicit illustrative inputs, not inferred Scope entry/target
+prices. The existing directional, original-stop, common-governor quantity and
+freshness checks still apply. A step cannot be a no-op, loosen protection or carry
+a negative/fractional quantity. An all-stop schedule leaves the whole position as
+a runner under mandatory protection; it does not imply a later voluntary sale.
+
+The pinned `play_management.target_stop_price()` advances protection from observed
+target labels independently of scale fills. Previously our native schedule could
+only represent milestones with positive allocations, so a one-contract T2 exit
+could not represent a separate T1 tightening. The new version closes that engine
+gap without changing source allocations or fabricating Scope's missing third target.
+
+Stages now count explicit milestones, including stop-only steps. Fresh underlying
+observations latch them, valid executable quotes allow tightening, and rebound
+checks, restart and atomic supervision persistence use the existing native path.
+A gap sums only actual scheduled sale quantities. Verified earlier sales reduce
+that total; a later stop-only stage cannot sell the same contracts again. Zero due
+means no close decision, order, reservation, fee or proceeds. A caller cannot turn
+a zero-allocation milestone into a target sale. Terminal partial entries retain
+protective tightening but cannot silently resize the planned allocation.
+
+When separately enrolled, the existing 0/10/25% whole-trade floor references apply
+to the explicitly ordered milestones, even when a milestone sells nothing. They
+still require verified original entry basis and complete recorded fees/model costs,
+with future exit fees reserved. A target touch never supplies sale proceeds or
+proves profit. Native exports preserve original schedule, actual holdings and all
+costs; open boundaries remain inconclusive. Independent owners do not share stage,
+stop, cash or fill state.
+
+Scope previews still use their frozen v1 factory. Native Scope entry binding must
+choose and freeze the correct actual-entry stop prices and milestone mapping before
+this v2 capability can be enrolled there. No Scope entry guard, allocation or
+complete-path requirement is removed by this shared-engine addition.
+
 ## Acceptance boundary
 
 Fixture and installed-worker tests cover CALL/PUT, one-to-four-contract full exits,
