@@ -9,7 +9,7 @@ from pydantic import Field, model_validator
 from app.execution.economics import UsageEvidence
 from app.options import entry_judgment, judgment, position_judgment
 from app.options.engine import fingerprint
-from app.options.entry_reasoning import EntryPlan
+from app.options.entry_reasoning import plan_class
 from app.options.models import Money, Name, OptionRecord
 from app.options.position_reasoning import PositionPlan
 
@@ -25,7 +25,7 @@ class ScriptedDecision(OptionRecord):
     underlying_trigger: Money | None = Field(default=None, gt=0)
     underlying_invalidation: Money | None = Field(default=None, gt=0)
     underlying_target: Money | None = Field(default=None, gt=0)
-    horizon_seconds: int | None = Field(default=None, gt=0, le=21600, strict=True)
+    horizon_seconds: int | None = Field(default=None, gt=0, le=5184000, strict=True)
 
     @model_validator(mode="after")
     def geometry(self):
@@ -173,7 +173,7 @@ class ReplayModel:
         plan = entry_judgment.hold(request.packet)
         if decision.action == "ENTER":
             opportunity = request.packet.opportunities[decision.candidate_index]
-            plan = EntryPlan(
+            plan = plan_class(request.packet.policy)(
                 decision_id=request.packet.decision_id,
                 packet_hash=fingerprint(request.packet),
                 action="ENTER",

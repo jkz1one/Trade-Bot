@@ -16,10 +16,12 @@ from app.execution.judgment import JudgmentDiagnostics, JudgmentLimits
 from app.execution.process import _cleanup
 from app.options.engine import clock, fingerprint
 from app.options.entry_reasoning import (
+    CarryEntryPlan,
     Digest,
     EntryPacket,
     EntryPlan,
     EntryReasoningPolicy,
+    plan_class,
     review_entry_plan,
 )
 from app.options.models import OptionRecord
@@ -47,19 +49,41 @@ fresh evidence and may reject any proposal. Never issue management or exit order
 """
 
 
+def instructions(policy):
+    return (
+        INSTRUCTIONS
+        if policy.max_carry_horizon_seconds is None
+        else INSTRUCTIONS
+        + """
+Only supplied Swing carry_terms permit a multi-session horizon. Respect their locked
+exit_at and original first_target; choose an exit during an enumerated regular
+session. Degen and candidates without carry_terms retain the intraday horizon cap.
+Entry approval and DAY orders still expire in the entry session. Carry creates no
+assurance of overnight liquidity, continuous observations or stop execution.
+"""
+    )
+
+
+def prompt_version(policy):
+    return PROMPT_VERSION if policy.max_carry_horizon_seconds is None else "option-entry-carry-v1"
+
+
 class EntryModelConfiguration(OptionRecord):
     version: Literal["option-entry-responses-v1"] = "option-entry-responses-v1"
     costs: CostPolicy
     limits: JudgmentLimits
     entry_policy: EntryReasoningPolicy
-    prompt_version: Literal["option-entry-thesis-v1"] = PROMPT_VERSION
+    prompt_version: Literal["option-entry-thesis-v1", "option-entry-carry-v1"] = PROMPT_VERSION
     prompt_hash: Digest
     schema_hash: Digest
 
     @model_validator(mode="after")
     def bound(self):
-        if self.prompt_hash != fingerprint(INSTRUCTIONS) or self.schema_hash != fingerprint(
-            AgentOutputSchema(EntryPlan).json_schema()
+        if (
+            self.prompt_version != prompt_version(self.entry_policy)
+            or self.prompt_hash != fingerprint(instructions(self.entry_policy))
+            or self.schema_hash
+            != fingerprint(AgentOutputSchema(plan_class(self.entry_policy)).json_schema())
         ):
             raise ValueError("Frozen entry prompt/schema mismatch")
         with localcontext(Context(prec=192)):
@@ -77,8 +101,9 @@ def configuration(costs, limits, entry_policy):
         costs=CostPolicy.model_validate(costs.model_dump(warnings=False)),
         limits=JudgmentLimits.model_validate(limits.model_dump(warnings=False)),
         entry_policy=EntryReasoningPolicy.model_validate(entry_policy.model_dump(warnings=False)),
-        prompt_hash=fingerprint(INSTRUCTIONS),
-        schema_hash=fingerprint(AgentOutputSchema(EntryPlan).json_schema()),
+        prompt_version=prompt_version(entry_policy),
+        prompt_hash=fingerprint(instructions(entry_policy)),
+        schema_hash=fingerprint(AgentOutputSchema(plan_class(entry_policy)).json_schema()),
     )
 
 
@@ -126,7 +151,7 @@ def create_request(packet, config, *, request_id, now):
 
 
 def hold(packet):
-    return EntryPlan(
+    return plan_class(packet.policy)(
         decision_id=packet.decision_id,
         packet_hash=fingerprint(packet),
         action="HOLD",
@@ -141,7 +166,7 @@ class EntryResult(OptionRecord):
     request_id: str = Field(pattern=r"^[a-f0-9]{32}$")
     packet_hash: Digest
     configuration_hash: Digest
-    plan: EntryPlan
+    plan: EntryPlan | CarryEntryPlan
     usage: UsageEvidence | None = None
     counted_input_tokens: int | None = Field(default=None, gt=0, strict=True)
     error: str | None = Field(default=None, max_length=128, pattern=r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -172,7 +197,7 @@ def result_for(request, *, plan=None, usage=None, count=None, error=None, diagno
 def request_content(request):
     return {
         "model": request.configuration.costs.model,
-        "instructions": INSTRUCTIONS,
+        "instructions": instructions(request.packet.policy),
         "input": "ENTRY_EVIDENCE_JSON\n"
         + json.dumps(
             {
@@ -193,7 +218,7 @@ def request_content(request):
                 "type": "json_schema",
                 "name": "EntryPlan",
                 "strict": True,
-                "schema": AgentOutputSchema(EntryPlan).json_schema(),
+                "schema": AgentOutputSchema(plan_class(request.packet.policy)).json_schema(),
             }
         },
     }

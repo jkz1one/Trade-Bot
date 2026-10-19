@@ -7,6 +7,7 @@ from typing import Literal
 
 from pydantic import Field, model_validator
 
+from app.options.carry_models import SwingCarryPolicy, SwingCarryTerms
 from app.options.degen import DegenBar, DegenScan, _metric
 from app.options.governor import _fresh
 from app.options.models import (
@@ -32,7 +33,8 @@ class SwingPolicy(OptionRecord):
     stop_buffer_fraction: Money = Field(gt=0, le=Decimal(".01"))
     catalyst_max_age_seconds: int = Field(gt=0, le=60, strict=True)
     family_priority: tuple[Literal["DEGEN", "SWING"], Literal["DEGEN", "SWING"]]
-    holding_policy: Literal["SESSION_CLOSE"] = "SESSION_CLOSE"
+    holding_policy: Literal["SESSION_CLOSE", "BOUNDED_CARRY_V1"] = "SESSION_CLOSE"
+    carry: SwingCarryPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
     unfilled_lifecycle: (
         Literal["completed-invalidation-v1", "observed-invalidation-v2", "observed-lifecycle-v3"]
         | None
@@ -40,6 +42,10 @@ class SwingPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def coherent(self):
+        if (self.holding_policy == "BOUNDED_CARRY_V1") != (self.carry is not None) or (
+            self.carry is not None and self.unfilled_lifecycle != "observed-lifecycle-v3"
+        ):
+            raise ValueError("Carry requires explicit bounds and original target lifecycle")
         if self.minimum_dte > self.maximum_dte or set(self.family_priority) != {"DEGEN", "SWING"}:
             raise ValueError("Ordered DTE bounds and both unique families required")
         return self
@@ -68,6 +74,7 @@ class SwingSeed(OptionRecord):
     history: SwingHistory
     instrument: OptionInstrument
     first_target: Money | None = Field(default=None, gt=0, exclude_if=lambda v: v is None)
+    carry_exit_session: date | None = Field(default=None, exclude_if=lambda v: v is None)
 
 
 class CatalystEvidence(Evidence):
@@ -128,7 +135,8 @@ class SwingScan(OptionRecord):
     last_close: Money | None
     seed: SwingSeed
     catalyst: CatalystEvidence
-    holding_policy: Literal["SESSION_CLOSE"] = "SESSION_CLOSE"
+    holding_policy: Literal["SESSION_CLOSE", "BOUNDED_CARRY_V1"] = "SESSION_CLOSE"
+    carry_terms: SwingCarryTerms | None = Field(default=None, exclude_if=lambda v: v is None)
     observations: tuple[SwingObservation, ...] = Field(min_length=1, max_length=1)
     issues: tuple[Name, ...] = ()
     terminal: SwingTerminal | None = Field(default=None, exclude_if=lambda v: v is None)
@@ -156,6 +164,8 @@ def seed_issues(seed, policy, calendar, symbols):
         or len(h.bars) != policy.daily_lookback
     ):
         issues.append("SWING_DAILY_HISTORY_BINDING_OR_COVERAGE")
+    if (policy.carry is not None) != (seed.carry_exit_session is not None):
+        issues.append("SWING_CARRY_SEED_POLICY_REQUIRED")
     reference = h.bars[-1].high if c.right == "CALL" else h.bars[-1].low
     if policy.unfilled_lifecycle == "observed-lifecycle-v3":
         if seed.first_target is None or (
@@ -224,6 +234,12 @@ def scan_swing(item, policy, intraday, history, calendar, symbols, *, now, recei
             or catalyst.valid_through < window.closes_at
         ):
             issues.append("SWING_CATALYST_CLEARANCE_REQUIRED")
+        carry_terms = None
+        if policy.carry is not None:
+            from app.options.swing_execution import scan_carry_terms
+
+            carry_terms, carry_issues = scan_carry_terms(seed, policy, catalyst, calendar)
+            issues.extend(carry_issues)
         if item.metadata.instrument != seed.instrument:
             issues.append("SWING_CONTRACT_LOCK_CHANGED")
         right = seed.instrument.contract.right
@@ -256,6 +272,8 @@ def scan_swing(item, policy, intraday, history, calendar, symbols, *, now, recei
             last_close=intraday.last_close,
             seed=seed,
             catalyst=catalyst,
+            holding_policy=policy.holding_policy,
+            carry_terms=carry_terms,
             observations=(
                 SwingObservation(
                     right=right,

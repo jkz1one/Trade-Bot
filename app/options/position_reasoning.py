@@ -25,10 +25,14 @@ from app.options.models import (
     UnderlyingQuote,
 )
 from app.options.protection import assess_position
+from app.options.swing import SwingScan
 
 
 class PositionReasoningPolicy(OptionRecord):
     version: Literal["option-position-reasoning-v1"] = "option-position-reasoning-v1"
+    swing_carry: Literal["bounded-swing-carry-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     cadence_seconds: Literal[300] = 300
     max_lease_seconds: int = Field(gt=0, le=30, strict=True)
 
@@ -54,6 +58,11 @@ def _account_ready(account, position, limits, now):
     )
 
 
+class CarryPositionContext(OptionRecord):
+    original_scan: SwingScan
+    overnight_coverage: Literal["NOT_CONTINUOUSLY_OBSERVED"] = "NOT_CONTINUOUSLY_OBSERVED"
+
+
 class PositionPacket(OptionRecord):
     """Trusted snapshot of one owned position; revision is owned by the future coordinator."""
 
@@ -67,6 +76,7 @@ class PositionPacket(OptionRecord):
     position_revision: PositiveCount
     position: OptionPosition
     entry: OptionIntent
+    carry_context: CarryPositionContext | None = Field(default=None, exclude_if=lambda v: v is None)
     account: OptionAccount
     quote: OptionQuote
     underlying: UnderlyingQuote
@@ -80,6 +90,21 @@ class PositionPacket(OptionRecord):
     @model_validator(mode="after")
     def preflight(self):
         p, e, s = self.position, self.entry, self.scan
+        if p.swing_carry != e.swing_carry or (p.swing_carry is not None) != (
+            self.carry_context is not None
+        ):
+            raise ValueError("Carry position and original entry/context must match")
+        if p.swing_carry is not None:
+            original = self.carry_context.original_scan
+            if (
+                self.policy.swing_carry != p.swing_carry.version
+                or self.execution_policy.swing_carry != p.swing_carry.version
+                or original.carry_terms != p.swing_carry
+                or fingerprint(original.seed) != p.swing_carry.seed_hash
+                or original.seed.instrument != e.instrument
+                or not any(s.opens_at <= self.as_of < s.closes_at for s in p.swing_carry.sessions)
+            ):
+                raise ValueError("Frozen original Swing context and current carry session required")
         end_slot = (int(self.as_of.timestamp()) // 300 + 1) * 300
         if (
             self.cycle_key != "position:" + str(int(self.as_of.timestamp()) // 300)

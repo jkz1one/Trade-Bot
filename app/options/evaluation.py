@@ -40,7 +40,9 @@ def _replay(a, definition, session, sequence, used_ids, previous_close):
     for order in sorted(a.orders, key=lambda x: x.attempted_at or x.intent.prepared_at):
         i, o = order.intent, order.observation
         from app.options.protection import verify_time_owner
+        from app.options.swing_execution import verify_portable
 
+        verify_portable(i, definition.policy)
         verify_time_owner(
             i, definition.policy, min(session.closes_at, i.instrument.contract.last_trading_at)
         )
@@ -141,7 +143,7 @@ def _replay(a, definition, session, sequence, used_ids, previous_close):
     return sequence, active, turnover
 
 
-def _costs(a, definition, session, used_ids):
+def _costs(a, definition, session, used_ids, prior_orders=()):
     known, unknown = ZERO, 0
     by_role = {r: {"known_cost": ZERO, "unknown_calls": 0} for r in ("ENTRY", "MANAGEMENT")}
     calls = {c.source_key: c for c in a.calls}
@@ -175,9 +177,22 @@ def _costs(a, definition, session, used_ids):
         ):
             raise ValueError("ATTRIBUTION_FILL_UNDERLYING_MISMATCH")
         entry = order
-        if order and order.intent.side == "SELL":
-            entry = next((o for o in a.orders if o.intent.client_id == attr.entry_client_id), None)
-        if attr.entry_time_protection != (entry.intent.entry_time_protection if entry else None):
+        if (order and order.intent.side == "SELL") or attr.role == "MANAGEMENT":
+            entry = next(
+                (
+                    o
+                    for o in (*prior_orders, *a.orders)
+                    if o.intent.client_id == attr.entry_client_id
+                ),
+                None,
+            )
+            if entry is None or entry.intent.side != "BUY":
+                raise ValueError("ATTRIBUTION_ORIGINAL_ENTRY_MISSING")
+        if attr.swing_carry != (entry.intent.swing_carry if entry else None):
+            raise ValueError("ATTRIBUTION_SWING_CARRY_MISMATCH")
+        if (order or attr.entry_time_protection) and attr.entry_time_protection != (
+            entry.intent.entry_time_protection if entry else None
+        ):
             raise ValueError("ATTRIBUTION_ENTRY_TIME_MISMATCH")
         if order and (
             attr.approved_quantity != order.intent.quantity
@@ -295,6 +310,7 @@ def _evaluate(bundle, recorded=None, tapes=None):
     rows = []
     previous_close = None
     previous_loss = dict.fromkeys(previous)
+    prior_orders = {arm: [] for arm in previous}
     for s in m.sessions:
         expected = {
             "degen:" + str(t // 300)
@@ -331,7 +347,10 @@ def _evaluate(bundle, recorded=None, tapes=None):
                         a, definition, s, sequences[arm], used_ids[arm], previous_close
                     )
                     verified = True
-                    known, unknown, cost_roles = _costs(a, definition, s, used_ids[arm])
+                    known, unknown, cost_roles = _costs(
+                        a, definition, s, used_ids[arm], prior_orders[arm]
+                    )
+                    prior_orders[arm].extend(a.orders)
                     cycle_map = {c.key: c.frame_hash for c in a.cycles}
                     if len(cycle_map) != len(a.cycles) or set(cycle_map) != expected:
                         reasons.append("INCOMPLETE_SCHEDULER_COVERAGE")
@@ -478,6 +497,11 @@ def _evaluate(bundle, recorded=None, tapes=None):
         "session_analysis": session_analysis(m, rows),
         "sessions": rows,
         "totals": totals,
+        **(
+            {"carry_accounting": carry_accounting(bundle, rows, recorded)}
+            if any(a.policy.swing_carry for a in m.arms)
+            else {}
+        ),
         "mean_paired_net_difference": {
             arm: str(
                 (Decimal(totals[arm]["net_change"]) - Decimal(totals["A"]["net_change"]))
@@ -499,3 +523,54 @@ def _evaluate(bundle, recorded=None, tapes=None):
             "Underlying-only baseline and arm D require explicit enrollment",
         ],
     }
+
+
+def carry_accounting(bundle, rows, recorded):
+    """Whole-period cash arithmetic; never mark open positions or compare gapless SPY."""
+    result = {}
+    evidence = {(e.session_key, e.arm): e for e in bundle.evidence}
+    for definition in bundle.manifest.arms:
+        arm = definition.arm
+        slices = [r["arms"][arm] for r in rows]
+        first = evidence.get((rows[0]["session"], arm))
+        last = evidence.get((rows[-1]["session"], arm))
+        reasons = sorted(
+            {
+                reason
+                for s in slices
+                for reason in s["reasons"]
+                if reason != "OPEN_BOUNDARY_POSITION_UNVALUED"
+            }
+        )
+        if first is None or last is None or first.initial.position or last.closing.position:
+            reasons.append("OPEN_PERIOD_BOUNDARY_UNVALUED")
+        if recorded is None or any(recorded.values()):
+            reasons.append("RECORDED_MARKET_NOT_VERIFIED")
+        if any(set(r["reasons"]) - {"INCOMPLETE_ARM_EVIDENCE"} for r in rows):
+            reasons.append("INCOMPLETE_PAIRED_MARKET_EVIDENCE")
+        net = None
+        if not reasons:
+            net = (
+                last.closing.cash
+                - first.initial.cash
+                - sum(
+                    (
+                        Decimal(s["known_model_cost"])
+                        + Decimal(s["allocated_data_cost"])
+                        + Decimal(s["allocated_host_cost"])
+                        for s in slices
+                    ),
+                    ZERO,
+                )
+            )
+        result[arm] = {
+            "status": "COMPLETE_ARITHMETIC" if not reasons else "INCONCLUSIVE",
+            "reasons": reasons,
+            "net_change": str(net) if net is not None else None,
+            "known_model_cost": str(sum((Decimal(s["known_model_cost"]) for s in slices), ZERO))
+            if all(s["known_model_cost"] is not None for s in slices)
+            else None,
+            "economic_conclusion": "INCONCLUSIVE",
+            "benchmark_comparison": None,
+        }
+    return result

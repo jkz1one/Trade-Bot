@@ -152,15 +152,14 @@ def review_shared_entry(engine, db, key, proposal, quote, underlying, now):
         if terminal is not None:
             retain_owned_terminal(engine, db, seed, terminal, now)
             raise ExecutionBlocked("SWING_SEED_TERMINAL")
-    if (
-        not _fresh(
-            catalyst.source_at,
-            catalyst.received_at,
-            now,
-            policy.catalyst_max_age_seconds,
-            engine.limits.max_receive_lag_seconds,
-        )
-        or catalyst.valid_through < window.closes_at
+    if not _fresh(
+        catalyst.source_at,
+        catalyst.received_at,
+        now,
+        policy.catalyst_max_age_seconds,
+        engine.limits.max_receive_lag_seconds,
+    ) or catalyst.valid_through < (
+        scan.carry_terms.exit_at if scan.carry_terms else window.closes_at
     ):
         raise ExecutionBlocked("SWING_CATALYST_CLEARANCE_EXPIRED")
     reference = scan.observations[0].reference

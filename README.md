@@ -35,6 +35,11 @@ time exits, full-cost loss cooldown/lock and signed resets. Create-only fixture
 replay and portable accounting are available; convexity and missing-T3 four-contract
 plans remain rejected. Existing research cohorts stay order-free.
 
+New [native bounded Swing carry](docs/OPTIONS_SWING_EXECUTION.md) connects frozen
+carry horizons to DAY entry orders, retained protection, rollover/restart, original
+held context and four-account full-cost replay. Existing session-close cohorts stay
+frozen; open daily boundaries remain unvalued and inconclusive.
+
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
 rules, implementation milestones, acceptance gates and continuation discipline.
 The [October 10 reasoning-trader plan](docs/AI_TRADER_RESEARCH_PLAN.md) defines the
@@ -73,7 +78,8 @@ is now recorded at each runtime start and shown from stored evidence in the obse
 [Shared Degen/Swing candidate selection](docs/OPTIONS_SHARED_STRATEGIES.md) now lets
 a newly enrolled PAPER population use one AI, cash ledger and execution owner.
 The first Swing family uses locked next-session daily structure with current
-catalyst/chase checks and session-close protection; overnight Swing remains open.
+catalyst/chase checks and session-close protection. Native overnight carry is a
+separately enrolled adaptation linked above.
 New [overnight Swing preflight](docs/OPTIONS_SWING_CARRY.md) reconstructs actual
 exchange-session horizons, expiry buffers, catalyst coverage and fee-inclusive
 admission in portable offline evidence. It does not extend native holding authority.

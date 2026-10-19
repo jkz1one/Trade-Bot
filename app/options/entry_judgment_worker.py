@@ -20,7 +20,7 @@ from app.options.entry_judgment import (
     result_for,
     validate_result,
 )
-from app.options.entry_reasoning import EntryPlan
+from app.options.entry_reasoning import plan_class
 
 
 def perform(request, client):
@@ -88,7 +88,9 @@ def perform(request, client):
         timely()
         if response.status != "completed" or response.error is not None:
             raise ValueError("Entry response incomplete")
-        plan = AgentOutputSchema(EntryPlan).validate_json(_decision_text(response))
+        plan = AgentOutputSchema(plan_class(request.packet.policy)).validate_json(
+            _decision_text(response)
+        )
         validated = validate_result(request, finish(plan))
         timely()
         return validated

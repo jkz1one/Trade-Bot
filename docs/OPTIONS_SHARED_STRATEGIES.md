@@ -259,26 +259,19 @@ available as described in [local runtime](OPTIONS_LOCAL_RUNTIME.md) and
 [reviewed recovery](OPTIONS_OPERATOR_RECOVERY.md). Model and operator credentials
 remain separate; none belongs in packets, fixture examples or Git.
 
-## Overnight evidence preflight
+## Overnight carry and acceptance boundaries
 
-The separate [carry preflight](OPTIONS_SWING_CARRY.md) now reconstructs explicit
-future exchange sessions, expiry buffers, full-horizon catalyst coverage and current
-fee-inclusive admission. Its portable result always retains a native execution
-blocker. It does not change this owner, its frozen `SESSION_CLOSE` policy, the model
-horizon or any held deadline. Calendar evidence is now fixture implemented; carry
-execution, management context and multi-session ownership/accounting remain open.
+The [carry preflight](OPTIONS_SWING_CARRY.md) remains research-only, with a native
+execution blocker. Separate [native bounded carry](OPTIONS_SWING_EXECUTION.md)
+now freezes original horizons/targets in new owners, binds DAY entry and retained
+protection, and provides carry-aware AI context and full-cost multi-session replay.
+`SESSION_CLOSE` cohorts do not migrate. The explicit alternative is `BOUNDED_CARRY_V1`.
 
-## Acceptance boundaries
-
-This is **session-close PAPER fixture capability**, not complete Swing acceptance.
-`holding_policy` accepts only `SESSION_CLOSE`. Existing deterministic close/expiry
-and model target/horizon cutoffs still apply even when the locked option expires
-later. No overnight position, holiday carry, exercise funding or overnight risk
-policy is granted. Broader Swing families, authentic daily/catalyst/option inputs,
-overnight lifecycle/evaluation, Scope/SPXW and mixed stock/options arbitration
-remain separate P7 work. The first next-session family shares Degen's current
-intraday management context; it does not claim an implemented overnight Swing
-management model or replicated SignalFlow economics.
+This is PAPER fixture capability. Authentic daily/catalyst/option inputs,
+prospective overnight economics, broader families, Scope/shared arbitration and
+mixed stock/options ownership remain separate P7 work. No exercise funding or
+continuous overnight observations are presumed. The native carry guide documents
+the explicit local holding adaptation and its remaining acceptance boundaries.
 
 The separate [Scope preflight](OPTIONS_SCOPE_PREFLIGHT.md) now checks required
 coverage and exact SPXW identity. It does not enroll Scope in this shared owner,

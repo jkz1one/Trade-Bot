@@ -31,6 +31,9 @@ MAX_PACKET_BYTES = 256 * 1024
 class EntryReasoningPolicy(OptionRecord):
     version: Literal["option-entry-reasoning-v1"] = "option-entry-reasoning-v1"
     max_horizon_seconds: int = Field(gt=0, le=21600, strict=True)
+    max_carry_horizon_seconds: int | None = Field(
+        default=None, gt=21600, le=5184000, strict=True, exclude_if=lambda v: v is None
+    )
     max_target_fraction: Money = Field(gt=0, le=Decimal(".1"))
     max_trigger_fraction: Money = Field(gt=0, le=Decimal(".1"))
     minimum_reward_risk: Money = Field(gt=0, le=100)
@@ -179,12 +182,21 @@ class EntryPlan(OptionRecord):
         return self
 
 
+class CarryEntryPlan(EntryPlan):
+    version: Literal["option-entry-plan-carry-v1"] = "option-entry-plan-carry-v1"
+    horizon_seconds: int | None = Field(default=None, gt=0, le=5184000, strict=True)
+
+
+def plan_class(policy):
+    return CarryEntryPlan if policy.max_carry_horizon_seconds is not None else EntryPlan
+
+
 class EntryReview(OptionRecord):
     execution_authority: Literal[False] = False
     outcome: Literal["HOLD", "REJECTED", "ELIGIBLE"]
     reasons: tuple[Name, ...]
     packet_hash: Digest
-    plan: EntryPlan
+    plan: EntryPlan | CarryEntryPlan
     proposal: OptionProposal | None = None
     admission: OptionAdmission | None = None
     exit_by: datetime | None = None
@@ -199,7 +211,7 @@ def review_entry_plan(packet, plan, *, quote, underlying, account, now):
     """
     now = clock(now)
     packet = EntryPacket.model_validate(packet.model_dump(warnings=False))
-    plan = EntryPlan.model_validate(plan.model_dump(warnings=False))
+    plan = plan_class(packet.policy).model_validate(plan.model_dump(warnings=False))
     digest = fingerprint(packet)
 
     def result(outcome, *reasons, **values):
@@ -252,11 +264,23 @@ def _review(packet, plan, o, quote, underlying, account, now, result):
     if abs(target - anchor) > anchor * p.max_target_fraction:
         return result("REJECTED", "TARGET_OUTSIDE_FROZEN_ENVELOPE")
     exit_by = packet.as_of + timedelta(seconds=plan.horizon_seconds)
-    if (
-        plan.horizon_seconds > p.max_horizon_seconds
-        or exit_by <= now
-        or exit_by > min(o.session.entry_cutoff_at, c.instrument.contract.last_trading_at)
-    ):
+    carry = o.scan.carry_terms if isinstance(o.scan, SwingScan) else None
+    horizon_cap = p.max_horizon_seconds
+    deadline = min(o.session.entry_cutoff_at, c.instrument.contract.last_trading_at)
+    if carry is not None:
+        from app.robinhood.schedule import XNYSCalendar
+
+        if p.max_carry_horizon_seconds is None:
+            return result("REJECTED", "CARRY_REASONING_NOT_ENROLLED")
+        horizon_cap, deadline = p.max_carry_horizon_seconds, carry.exit_at
+        window = XNYSCalendar().current_window(exit_by)
+        if window is None or window.session_date not in {
+            s.session.isoformat() for s in carry.sessions
+        }:
+            return result("REJECTED", "CARRY_HORIZON_NOT_TRADING_SESSION")
+        if target > carry.first_target if call else target < carry.first_target:
+            return result("REJECTED", "CARRY_TARGET_WIDENS_ORIGINAL")
+    if plan.horizon_seconds > horizon_cap or exit_by <= now or exit_by > deadline:
         return result("REJECTED", "HORIZON_OUTSIDE_FROZEN_ENVELOPE")
     entry = underlying.ask if call else underlying.bid
     risk, reward = (entry - stop, target - entry) if call else (stop - entry, entry - target)

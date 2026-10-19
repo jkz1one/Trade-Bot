@@ -6,6 +6,7 @@ from typing import Literal
 
 from pydantic import Field
 
+from app.options.carry_models import SwingCarryTerms
 from app.options.engine import exact, fingerprint
 from app.options.entry_reasoning import Digest
 from app.options.lifecycle import (
@@ -50,6 +51,7 @@ def fill_underlying_observation(fill):
 
 
 class DecisionAttribution(OptionRecord):
+    swing_carry: SwingCarryTerms | None = Field(default=None, exclude_if=lambda v: v is None)
     health_management: Literal["observed-daytrade-health-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -167,6 +169,7 @@ def order_attribution(db, row):
     floor_policy = intent.trade_floor
     trail_policy = intent.premium_trail
     premium_protection = intent.entry_premium_protection
+    carry = intent.swing_carry
     time_protection = intent.entry_time_protection
     if intent.requested_close_quantity != proposal.close_quantity or (
         intent.requested_close_quantity is not None and approval["origin"] != "DETERMINISTIC"
@@ -201,6 +204,7 @@ def order_attribution(db, row):
         floor_policy = entry_intent.trade_floor
         trail_policy = entry_intent.premium_trail
         premium_protection = entry_intent.entry_premium_protection
+        carry = entry_intent.swing_carry
         time_protection = entry_intent.entry_time_protection
         if (
             entry_intent.side != "BUY"
@@ -214,6 +218,7 @@ def order_attribution(db, row):
     observed = tuple(fill_underlying_observation(f) for f in fills if f.underlying is not None)
     return {
         **({"fill_underlyings": observed} if observed else {}),
+        **({"swing_carry": carry.model_dump(mode="json")} if carry else {}),
         **(
             {"entry_time_protection": time_protection.model_dump(mode="json")}
             if time_protection is not None
@@ -405,6 +410,7 @@ def decision_attribution(db, key, outcome, policy):
         ):
             raise ValueError("Stored close proposal quantity mismatch")
         for field in (
+            "swing_carry",
             "target_exit_schedule",
             "target_exit_stage",
             "entry_premium_protection",
@@ -437,6 +443,13 @@ def decision_attribution(db, key, outcome, policy):
         lineage = entry_lineage(db, packet.position.entry_client_id)
         if lineage is not None:
             order["entry_lineage"] = lineage.model_dump(mode="json")
+    if prefix == "position" and packet.position.swing_carry is not None:
+        from app.options.swing_execution import stored_terms
+
+        carry = stored_terms(db, packet.entry.source_key)
+        if carry != packet.position.swing_carry:
+            raise ValueError("Stored management carry terms mismatch")
+        order["swing_carry"] = carry.model_dump(mode="json")
     cost = Decimal(call["cost"]) if call and call["cost"] is not None else None
     if cost is not None:
         usage = _json(call["usage_json"])

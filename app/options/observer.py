@@ -409,7 +409,9 @@ class OptionObserver:
                 "symbols": strategy["setup"].get("symbols", []) if strategy else [],
                 "families": {
                     "DEGEN": "ENROLLED" if strategy else "NOT_ENROLLED",
-                    "SWING": "SESSION_CLOSE_FIXTURE"
+                    "SWING": (
+                        "BOUNDED_CARRY_FIXTURE" if policy.swing_carry else "SESSION_CLOSE_FIXTURE"
+                    )
                     if strategy and strategy.get("swing")
                     else "NOT_ENROLLED",
                     "SCOPE": scope["status"],
@@ -653,7 +655,7 @@ class OptionObserver:
         ).fetchone()
         entry = OptionIntent.model_validate(_json(row[0]))
         entry_approval = _json(row[1])
-        if entry.instrument.contract != p.contract:
+        if entry.instrument.contract != p.contract or entry.swing_carry != p.swing_carry:
             raise ValueError("Owned position/entry identity mismatch")
 
         def same_id(q):
@@ -739,6 +741,7 @@ class OptionObserver:
 
         entry_reference = stored_reference(db, p, limits)
         return {
+            **({"swing_carry": p.swing_carry.model_dump(mode="json")} if p.swing_carry else {}),
             **(
                 {"entry_underlying_reference": entry_reference}
                 if entry_reference is not None

@@ -74,6 +74,7 @@ def apply_fill(ledger, intent, fill):
                     entry_protection=intent.entry_protection,
                     entry_premium_protection=intent.entry_premium_protection,
                     entry_time_protection=intent.entry_time_protection,
+                    swing_carry=intent.swing_carry,
                     target_exit_schedule=intent.target_exit_schedule,
                     trade_floor=TradeFloorState() if intent.trade_floor is not None else None,
                     premium_trail=PremiumTrailState(entry_quantity=intent.quantity)

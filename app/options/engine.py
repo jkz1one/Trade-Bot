@@ -495,6 +495,7 @@ class OptionExecution:
             entry_review = None
             lineage = None
             scope_packet = None
+            carry_terms = None
             strategy_table = db.execute(
                 "SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_option_strategy'"
             ).fetchone()
@@ -541,6 +542,13 @@ class OptionExecution:
                     from app.options.entry_lineage import selected_lineage
 
                     lineage = lineage or selected_lineage(db, source_key, quote.instrument)
+                from app.options.swing_execution import prepare_terms
+
+                carry_terms = prepare_terms(self, db, source_key, proposal)
+                if carry_terms is not None:
+                    if entry_time_protection is not None:
+                        raise ExecutionBlocked("SWING_CARRY_SEPARATE_TIME_OVERRIDE_UNSUPPORTED")
+                    inputs["swing_carry"] = carry_terms.model_dump(mode="json")
                 account = (
                     self._account(db, now, closing=proposal.action == "CLOSE")
                     if proposal.action != "HOLD"
@@ -689,6 +697,8 @@ class OptionExecution:
                         proposal.contract.last_trading_at
                         - timedelta(seconds=self.policy.expiry_guard_seconds),
                     )
+                    if carry_terms is not None:
+                        exit_at = carry_terms.exit_at
                     if entry_time_protection is not None:
                         exit_at = min(exit_at, entry_time_protection.exit_by)
                     protection = None
@@ -717,7 +727,7 @@ class OptionExecution:
                         prepared_at=now,
                         approval_expires_at=result.valid_until,
                         order_expires_at=min(session.closes_at, exit_at)
-                        if protection or entry_time_protection
+                        if protection or entry_time_protection or carry_terms
                         else session.closes_at,
                         exit_at=exit_at
                         if proposal.action == "OPEN_LONG"
@@ -726,6 +736,7 @@ class OptionExecution:
                         thesis=proposal.thesis,
                         entry_protection=protection,
                         entry_lineage=lineage,
+                        swing_carry=carry_terms,
                         closing_entry_client_id=ledger.position.entry_client_id
                         if proposal.action == "CLOSE"
                         else None,
@@ -1177,7 +1188,7 @@ class OptionExecution:
             from app.options.scope_execution import sync
 
             sync(self, db, now)
-            if self.policy.scope_execution is not None:
+            if self.policy.scope_execution is not None or self.policy.swing_carry is not None:
                 from app.options.loss_control import refresh
 
                 refresh(self, db, now)
@@ -1348,6 +1359,7 @@ class OptionExecution:
             or state.position.entry_client_id != snap.position.entry_client_id
             or state.position.entry_protection != snap.position.entry_protection
             or state.position.entry_time_protection != snap.position.entry_time_protection
+            or state.position.swing_carry != snap.position.swing_carry
             or state.position.entry_premium_protection != snap.position.entry_premium_protection
             or state.position.target_exit_schedule != snap.position.target_exit_schedule
             or state.position.entry_underlying_reference != snap.position.entry_underlying_reference
@@ -1797,9 +1809,13 @@ class OptionExecution:
         return self._record_model_usage(source_key, usage, proposal, now=now)
 
     def record_entry_usage(self, source_key, usage, plan, *, now):
-        from app.options.entry_reasoning import EntryPlan
+        from pydantic import TypeAdapter
 
-        plan = EntryPlan.model_validate(plan.model_dump(warnings=False))
+        from app.options.entry_reasoning import CarryEntryPlan, EntryPlan
+
+        plan = TypeAdapter(EntryPlan | CarryEntryPlan).validate_python(
+            plan.model_dump(warnings=False)
+        )
         return self._record_model_usage(source_key, usage, plan, now=now)
 
     def record_position_usage(self, source_key, usage, plan, *, now):

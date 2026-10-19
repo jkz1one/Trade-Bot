@@ -123,6 +123,16 @@ def _assess(p, quote, underlying, limits, policy, now):
         )
     ):
         reason = reason or "UNDERLYING_TARGET"
+    if (
+        underlying_ok
+        and p.swing_carry is not None
+        and (
+            underlying.bid >= p.swing_carry.first_target
+            if p.contract.right == "CALL"
+            else underlying.ask <= p.swing_carry.first_target
+        )
+    ):
+        reason = reason or "UNDERLYING_TARGET"
     if not quote_ok:
         issue = "OPTION_UNPRICED_OR_STALE"
     elif not underlying_ok:

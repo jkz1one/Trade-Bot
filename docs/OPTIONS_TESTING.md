@@ -132,5 +132,7 @@ The separate [carry preflight procedure](OPTIONS_SWING_CARRY.md) includes a comp
 synthetic request and create-only installed CLI. `test_option_swing_carry.py` covers
 actual session/expiry/catalyst boundaries, current fee-inclusive admission, portable
 verification and the unchanged native same-day exit. READY describes supplied
-evidence only; it never enables overnight trading. Native carry lifecycle and its
-multi-session economic acceptance remain open.
+evidence only; it never enables overnight trading. Separate [native carry tests](OPTIONS_SWING_EXECUTION.md)
+are `test_option_swing_execution.py` and `test_option_swing_carry_replay.py`. Run them
+with the calendar suite and entry/management/evaluation regressions in an isolated
+noneditable install. Full-period fixture cash arithmetic is not economic acceptance.

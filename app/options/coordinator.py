@@ -127,6 +127,21 @@ class DegenCoordinator:
             raise ValueError(
                 "Frozen symbols and global quote capacity must fit the execution owner"
             )
+        carrying = self.swing_policy is not None and self.swing_policy.carry is not None
+        if carrying != (engine.policy.swing_carry is not None):
+            raise ValueError("Matching frozen Swing carry owner and strategy required")
+        if (
+            carrying
+            and self.entry_policy is not None
+            and self.entry_policy.max_carry_horizon_seconds is None
+        ):
+            raise ValueError("Carry entry AI requires its explicit horizon contract")
+        if (
+            carrying
+            and self.position_policy is not None
+            and self.position_policy.swing_carry is None
+        ):
+            raise ValueError("Carry management requires its explicit context contract")
         frozen = self._configuration()
         self._frozen = frozen
         with engine.journal.write() as db:

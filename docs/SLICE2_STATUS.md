@@ -1,5 +1,81 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Native bounded Swing carry: 2026-10-19 UTC
+
+Fresh GitHub/local state began at `fb6da02fb27d344c2f63e52dcb7145b87dad932f`, tree
+`f4377fabd74a049269bc64240f39713373f2a0d1`. Scope's supported native execution/loss
+integration was already closed. This slice connects the next open Swing holding
+path through native execution, held reasoning and full-period cash accounting.
+[Enrollment, behavior, reproduction and remaining gates](OPTIONS_SWING_EXECUTION.md).
+
+A new explicitly frozen `BOUNDED_CARRY_V1` strategy requires original-target v3
+lifecycle, an original seed exit session, explicit session/calendar/expiry bounds,
+full-horizon catalyst clearance, matching native carry enrollment and Swing family
+loss control. Original seed/policy hashes, actual sessions, T1 and the final deadline
+are retained in decisions, approvals, intents and fills. Native preparation,
+dispatch, reconciliation, restart and stored attribution verify those bindings.
+The preflight report remains order-free and cannot enable or migrate an owner.
+
+Entry approval remains short lived and the entry order remains DAY. Partial fills
+keep the original position deadline; the remainder needs observed terminal evidence.
+Original stop, premium protection, T1 and fixed deadline stay independent of model
+availability. This explicit local adaptation exits the whole holding at original
+T1, with no invented partial ladder. Missing overnight/reopening quotes stay unknown;
+a fixed deadline can latch without quotes, while submission/fills require executable
+evidence. There is no assumed stop fill, automatic calendar roll or exercise funding.
+
+Carry entry reasoning has a separately hashed schema/prompt and explicit maximum
+horizon. Only supplied carry terms authorize the longer envelope; Degen remains
+intraday. Models cannot extend T1/deadline or end their horizon in a closed session.
+Held packets retain the original daily Swing setup alongside fresh intraday context
+and explicit non-continuous overnight coverage. MAINTAIN/TIGHTEN/EXIT_ALL retain
+original position identity, costs, proposal/review/application and fill attribution.
+Legacy model configuration hashes remain byte-for-byte unchanged.
+
+Native full-cost loss accounting refreshes across rollover and counts a closed entry
+once with all attributable entry/management charges and execution fees. Independent
+A/B/C/D replay keeps the same account ledgers across sessions. Detached accounting
+resolves later exits and management to prior-session entries. Daily open boundaries
+remain unvalued/inconclusive. Separate `carry_accounting` gives flat-ended whole-period
+cash arithmetic only with verified complete evidence and every model/data/host cost;
+unknown cost or open final exposure suppresses net results. There is no comparison
+against the existing gap-excluding SPY session compound or profitability claim.
+
+Validation: **507 distinct installed cases passed**, without adding overlapping reruns.
+The core run passed 254 cases in 230.78s; model protocol/held reasoning passed 196 in
+11.83s; the complete two-session carry/native run passed 21 in 704.40s. After the
+final stored-observer label/terms correction, all 71 native-carry/observer cases
+passed in 27.62s on the final wheel. Trading/model/accounting files are byte-identical
+between those wheels; only `app/options/observer.py` changed for that final run.
+Isolated Python used noneditable wheels, copied tests outside the checkout,
+disabled ambient pytest plugins and warnings as errors. No failed gate was waived.
+
+Coverage includes CALL/PUT, DAY partial remainders, restart without quotes, fixed
+deadline/original-T1 exits, carry schema through the SDK stub, closed-session and
+extended-target rejection, MAINTAIN/TIGHTEN/EXIT_ALL, both paid charges, exactly-once
+loss consumption, tamper rejection and unchanged legacy hashes. Full Friday/Monday
+A/B/C/D replay exports eight boundaries and independently reconstructs every cost;
+unknown model/allocation costs and open final exposure suppress period net results.
+The initial development tape omitted mandatory seed coverage and correctly halted;
+its coverage was fixed before the passing installed replay, without relaxing a guard.
+
+All **188 application/template files** match final source/wheel/install. Scoped
+lint/format, dependency consistency, whitespace and local documentation targets pass.
+Final wheel SHA-256:
+`865a8d8c94b348912afdd2f8ac1f875ef72997ce21e4c91809b9f1221a9dbb50`.
+Retained proof beside checkout: `native-carry-proof/{core,protocol,carry,observer-final}.xml`,
+`native-carry-proof-*.log`, `native-carry-final-dist` and build/install logs.
+
+README, source of truth v1.79 and continuation/testing documents describe the new
+boundary. Main remains `b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 remains open
+and draft, LIVE remains disabled and the deployed experiment remains frozen.
+No authentic provider/model/broker calls, deployment, host or dependency changes.
+
+Next P7 work remains broader families, shared arbitration including Scope and mixed
+stock/options ownership, followed by the requested final UI/visual and authentic
+data/model testing passes. Native carry fixture integration does not grant those
+acceptances or reopen settled Scope decisions.
+
 ## Overnight Swing evidence contract: 2026-10-19 UTC
 
 Scope native execution/loss integration was already closed at the fresh GitHub

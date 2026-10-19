@@ -1,6 +1,7 @@
 # Swing overnight evidence preflight
 
-The next-session Swing owner currently closes positions in the entry session.
+The original next-session Swing owner closes positions in the entry session.
+New [native carry enrollment](OPTIONS_SWING_EXECUTION.md) is a separate frozen path.
 This slice supplies the missing **overnight evidence contract**, not permission to
 hold overnight. `app.options.swing_carry` independently reconstructs a proposed
 carry window, existing setup/contract gates and current fee-inclusive admission.
@@ -8,8 +9,8 @@ It performs no journal writes, model/provider calls, reservations or orders.
 
 Every result has `authority=false` and the execution blocker
 `SWING_OVERNIGHT_EXECUTION_NOT_ENROLLED`, even when `evidence_status=READY`.
-`SwingPolicy.holding_policy` still accepts only `SESSION_CLOSE`; a preflight report
-cannot extend a native position, order or model horizon. Scope's supported native
+This preflight report cannot extend a native position, order or model horizon;
+`BOUNDED_CARRY_V1` requires separate native owner/model/seed enrollment. Scope's supported native
 execution/loss integration remains closed as documented separately.
 
 ## Inputs and reviewed boundaries
@@ -91,18 +92,13 @@ Retain the hash printed by the original review separately before transporting th
 export. The fixture evaluates its explicit historical `at`, never the current wall
 clock. All quoted data is synthetic. No credentials or broker setup are required.
 
-## What remains before overnight execution
+## Native integration boundary
 
-This closes calendar/coverage preflight, not the overnight holding lifecycle.
-The next integration must freeze eligible carry terms in the same shared owner,
-bind them to exact entry decisions and fills, preserve tighter protections through
-session rollover/restart, and handle missing overnight/reopening observations
-without inventing fills. DAY-order expiration, uncertain attempts, expiry/exercise
-and unexpected exposure retain separate native reconciliation boundaries. Held
-model context and horizons must explicitly support carry before an AI can request
-it. Independent multi-session replay/export must retain open exposure, settlement,
-loss controls and every entry/management/data/host cost. Existing session-close
-cohorts cannot migrate or acquire carry through this preflight.
+[Native bounded carry](OPTIONS_SWING_EXECUTION.md) now implements explicit new-owner
+enrollment, original seed/decision/fill binding, retained protection, rollover and
+restart, carry-aware model contracts and independent full-cost replay/export.
+This research preflight still grants no authority and never migrates an owner.
+Authentic inputs, prospective economics, host acceptance and final UI remain open.
 
 The pinned SignalFlow next-session promotion and contract-selection documents were
 reread at `f9eaf2c1b5d13dca287ee7138126883065b00395`. They preserve exact contract,

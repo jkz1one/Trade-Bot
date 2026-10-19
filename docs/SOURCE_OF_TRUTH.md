@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.78. Adopted product direction and working delivery contract, 2026-10-19 UTC.
+Version 1.79. Adopted product direction and working delivery contract, 2026-10-19 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -61,11 +61,15 @@ evidence for a new normalized-fixture options population.
 keyed local halt/resume/revocation requests with exact revision and evidence gates.
 [Shared Degen/Swing arbitration](OPTIONS_SHARED_STRATEGIES.md) now adds a locked
 next-session daily-breakout family to the same PAPER owner and full-entry AI packet.
-This first adaptation uses session-close protection; overnight Swing is not enabled.
+The original adaptation retains session-close protection. New populations can separately
+enroll [native bounded Swing carry](OPTIONS_SWING_EXECUTION.md), with original-seed
+terms, DAY orders, retained protection, rollover/restart, carry-aware model contracts
+and independent full-cost multi-session replay.
 New [overnight carry preflight](OPTIONS_SWING_CARRY.md) now verifies explicit actual-
 session horizons, expiry buffers, catalyst coverage and fee-inclusive current admission.
-Its portable report always retains an execution blocker. Native carry enrollment,
-held model context and multi-session ownership/accounting integration remain open.
+Its portable report always retains an execution blocker; native carry requires the
+separate frozen enrollment above. Daily open boundaries remain inconclusive; a
+flat-ended full-period cash diagnostic includes all costs without a gapless SPY comparison.
 An optional frozen completed-bar lifecycle now retains original-stop invalidation
 across recovery, revised history and restart, with native preparation/dispatch
 guards and stored observer evidence. Revisited expired seeds use actual XNYS closes.
@@ -73,7 +77,7 @@ A separate frozen observed-quote policy now retains between-bar original-stop
 breaches during supervision and native entry review, including independent replay.
 A separate frozen lifecycle now requires an original first target in the pre-open
 seed and retains unfilled target consumption through native review and replay.
-Automatic target derivation, broader families and overnight Swing remain open.
+Automatic target derivation, broader families and authentic overnight acceptance remain open.
 [Shared-family replay/export](OPTIONS_SHARED_REPLAY.md) now runs frozen Degen/Swing
 tapes through independent A/B/C/D accounts across sessions, preserving every
 entry/management charge and the existing proposal/review/fill attribution.

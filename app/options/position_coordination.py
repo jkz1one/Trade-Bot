@@ -291,6 +291,14 @@ async def run_position_cycle(c, key, frame):
             )
             account = c.engine._account(db, at)
             q, u = c._position_quotes[0], c._position_underlyings[0]
+            from app.options.position_reasoning import CarryPositionContext
+            from app.options.swing_execution import selected_scan
+
+            carry_context = (
+                CarryPositionContext(original_scan=selected_scan(db, entry.source_key))
+                if p.swing_carry
+                else None
+            )
             packet = PositionPacket(
                 decision_id=fingerprint(
                     {
@@ -312,6 +320,7 @@ async def run_position_cycle(c, key, frame):
                 position_revision=c.engine.journal.revision(db),
                 position=p,
                 entry=entry,
+                carry_context=carry_context,
                 account=account,
                 quote=q,
                 underlying=u,

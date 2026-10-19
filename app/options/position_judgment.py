@@ -47,19 +47,42 @@ fresh position/account/market evidence after cost settlement before any action.
 """
 
 
+def instructions(policy):
+    return (
+        INSTRUCTIONS
+        if policy.swing_carry is None
+        else INSTRUCTIONS
+        + """
+For a carried Swing holding, carry_context supplies the original locked daily setup
+and clearance, not fresh daily data. The current scan is completed intraday evidence.
+Overnight prices are not continuously observed. Consider elapsed sessions and gaps
+without inventing a path. Original target, exit_at and mandatory protection cannot
+be widened or postponed; this remains the same owned position and cost ledger.
+"""
+    )
+
+
+def prompt_version(policy):
+    return PROMPT_VERSION if policy.swing_carry is None else "option-position-carry-v1"
+
+
 class PositionModelConfiguration(OptionRecord):
     version: Literal["option-position-responses-v1"] = "option-position-responses-v1"
     costs: CostPolicy
     limits: JudgmentLimits
     position_policy: PositionReasoningPolicy
-    prompt_version: Literal["option-position-thesis-v1"] = PROMPT_VERSION
+    prompt_version: Literal["option-position-thesis-v1", "option-position-carry-v1"] = (
+        PROMPT_VERSION
+    )
     prompt_hash: Digest
     schema_hash: Digest
 
     @model_validator(mode="after")
     def bound(self):
-        if self.prompt_hash != fingerprint(INSTRUCTIONS) or self.schema_hash != fingerprint(
-            AgentOutputSchema(PositionPlan).json_schema()
+        if (
+            self.prompt_version != prompt_version(self.position_policy)
+            or self.prompt_hash != fingerprint(instructions(self.position_policy))
+            or self.schema_hash != fingerprint(AgentOutputSchema(PositionPlan).json_schema())
         ):
             raise ValueError("Frozen position prompt/schema mismatch")
         with localcontext(Context(prec=192)):
@@ -79,7 +102,8 @@ def configuration(costs, limits, position_policy):
         position_policy=PositionReasoningPolicy.model_validate(
             position_policy.model_dump(warnings=False)
         ),
-        prompt_hash=fingerprint(INSTRUCTIONS),
+        prompt_version=prompt_version(position_policy),
+        prompt_hash=fingerprint(instructions(position_policy)),
         schema_hash=fingerprint(AgentOutputSchema(PositionPlan).json_schema()),
     )
 
@@ -178,7 +202,7 @@ def result_for(request, *, plan=None, usage=None, count=None, error=None, diagno
 def request_content(request):
     return {
         "model": request.configuration.costs.model,
-        "instructions": INSTRUCTIONS,
+        "instructions": instructions(request.packet.policy),
         "input": "POSITION_EVIDENCE_JSON\n"
         + json.dumps(
             {

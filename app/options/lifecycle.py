@@ -7,6 +7,7 @@ from typing import Literal
 from pydantic import Field, StrictBool, model_validator
 
 from app.execution.economics import CostPolicy
+from app.options.carry_models import SwingCarryTerms
 from app.options.models import (
     Count,
     Money,
@@ -89,12 +90,22 @@ class OptionExecutionPolicy(OptionRecord):
         default=None, exclude_if=lambda v: v is None
     )
 
+    swing_carry: Literal["bounded-swing-carry-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+
     scope_execution: Literal["scope-native-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
 
     @model_validator(mode="after")
     def bounded(self):
+        if self.swing_carry is not None and (
+            self.scope_execution is not None
+            or self.loss_control is None
+            or not any(p.family == "SWING" for p in self.loss_control.families)
+        ):
+            raise ValueError("Swing carry requires independent Swing loss enrollment")
         if self.scope_execution is not None and (
             self.target_exits != "frozen-target-milestones-v2"
             or self.target_entry_reference is None
@@ -329,6 +340,7 @@ class OptionIntent(OptionRecord):
     target_exit_schedule: TargetExitSchedule | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
+    swing_carry: SwingCarryTerms | None = Field(default=None, exclude_if=lambda v: v is None)
     entry_time_protection: EntryTimeProtection | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -346,6 +358,16 @@ class OptionIntent(OptionRecord):
 
     @model_validator(mode="after")
     def lifetime(self):
+        if self.swing_carry is not None and (
+            self.side != "BUY"
+            or self.entry_time_protection is not None
+            or not self.swing_carry.sessions[0].opens_at
+            <= self.prepared_at
+            < self.swing_carry.sessions[0].closes_at
+            or not self.prepared_at < self.exit_at <= self.swing_carry.exit_at
+            or self.order_expires_at > min(self.swing_carry.sessions[0].closes_at, self.exit_at)
+        ):
+            raise ValueError("Carry binds a frozen buy with an entry-session DAY order")
         if self.entry_time_protection is not None and (
             self.side != "BUY"
             or self.entry_protection is not None
@@ -476,6 +498,7 @@ class OptionPosition(OptionHolding):
     exit_at: datetime
     tightened_underlying_invalidation: Money = Field(gt=0)
     entry_protection: EntryProtection | None = Field(default=None, exclude_if=lambda v: v is None)
+    swing_carry: SwingCarryTerms | None = Field(default=None, exclude_if=lambda v: v is None)
     entry_time_protection: EntryTimeProtection | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -504,6 +527,8 @@ class OptionPosition(OptionHolding):
 
     @model_validator(mode="after")
     def owned(self):
+        if self.swing_carry is not None and self.exit_at > self.swing_carry.exit_at:
+            raise ValueError("Owned carry cannot extend its deadline")
         if (
             self.entry_time_protection is not None
             and self.exit_at > self.entry_time_protection.exit_by

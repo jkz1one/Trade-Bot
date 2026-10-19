@@ -11,6 +11,7 @@ from typing import Literal
 
 from pydantic import Field
 
+from app.options.carry_models import CarrySession, SwingCarryPolicy
 from app.options.degen import DegenHistory, DegenPolicy, scan_degen
 from app.options.engine import fingerprint
 from app.options.governor import admit_option
@@ -41,16 +42,6 @@ from app.robinhood.schedule import XNYSCalendar
 MAX_BYTES = 2 * 1024 * 1024
 
 
-class SwingCarryPolicy(OptionRecord):
-    """Explicit research bounds, not approved live limits or native holding authority."""
-
-    version: Literal["swing-carry-preflight-v1"] = "swing-carry-preflight-v1"
-    maximum_carry_sessions: int = Field(strict=True, ge=1, le=20)
-    maximum_calendar_days: int = Field(strict=True, ge=1, le=60)
-    exit_before_close_minutes: int = Field(strict=True, ge=1, le=120)
-    expiry_session_buffer: int = Field(strict=True, ge=1, le=5)
-
-
 class SwingCarryRequest(OptionRecord):
     version: Literal["swing-carry-request-v1"] = "swing-carry-request-v1"
     at: datetime
@@ -67,12 +58,6 @@ class SwingCarryRequest(OptionRecord):
     underlying: UnderlyingQuote | None
     account: OptionAccount
     retained_terminal: SwingTerminal | None = None
-
-
-class CarrySession(OptionRecord):
-    session: date
-    opens_at: datetime
-    closes_at: datetime
 
 
 class SwingCarryReview(OptionRecord):
