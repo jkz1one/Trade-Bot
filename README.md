@@ -42,7 +42,9 @@ frozen; open daily boundaries remain unvalued and inconclusive.
 
 New [shared Scope/Degen/Swing selection](docs/OPTIONS_SCOPE_ARBITRATION.md) adds a
 frozen deterministic candidate boundary, original-plan attribution and portable
-whole-account accounting. Shared Scope AI/runtime ingestion remain follow-on work.
+whole-account accounting. A new [post-cost Scope review](docs/OPTIONS_SCOPE_POST_COST.md)
+checks a fresh owned admission against the original plan and settled model charge.
+Shared Scope AI coordination/runtime ingestion remain follow-on work.
 
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
 rules, implementation milestones, acceptance gates and continuation discipline.

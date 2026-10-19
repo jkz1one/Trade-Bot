@@ -1,5 +1,57 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Post-cost Scope reapproval prerequisite: 2026-10-19 UTC
+
+Fresh GitHub/local state matched `4dbf19a589dccf36c82b1b71e10eccadb6cb6134`,
+tree `5375596eb5c2653ed61244990f5dce1bdc0e399a`. PR #1 was open/draft and main
+remained `b5359aaf396e692d2142d7e02908f1544e045ee6`.
+
+The new [post-cost Scope review](OPTIONS_SCOPE_POST_COST.md) closes the read-only
+comparison boundary needed before a shared paid decision can receive fresh native
+approval. It verifies the original immutable watch action, an intervening settled
+model attempt/usage receipt, and the latest exact-revision owned admission. It
+requires newer observations rather than replayed source clocks. Trading terms,
+quantity, fee-inclusive ceilings and original expiry cannot expand after the call.
+Current account evidence must reflect all recorded costs, including management;
+unknown costs and foreign-owner receipts remain blocking.
+
+The diagnostic retains both packet hashes/bindings, original and fresh native
+source identities, the paid source/usage/cost and bounded deadline. It writes
+nothing and grants no order authority. The deterministic shared coordinator still
+rejects model settings. This is a prerequisite, not completed shared Scope AI:
+full request/result binding, atomic consumption and explicit model-cycle-to-native-
+trade attribution remain next. Do not enable model enrollment merely because this
+review passes, use a refreshed admission's longer lease, or silently replace the
+selected plan when costs reduce its admissible quantity.
+
+Validation: **86 installed cases passed** in 158.85s, including all 33 new
+post-cost review cases and shared selection/history, owned admission and native
+execution-boundary regressions. The run used an isolated noneditable wheel,
+copied tests outside the checkout, Python `-I`, disabled ambient plugins and
+warnings as errors. All **190 application/template files** match source, wheel
+and installation. Scoped lint/format, dependency consistency, whitespace and
+local documentation targets pass. No test failure was waived.
+
+Wheel SHA-256:
+`b517791f5c592cec657d3ada65873ffc2250ad40965ce1ce286376460adc1a90`.
+Retained proof beside checkout: `scope-postcost-proof/installed.xml`,
+`installed.log`, `identity.json`, `retained-tmp`, and the separate wheel/build/install
+logs. The initial source checks exposed fixture mistakes (repeated source clocks
+and equivalent timestamp string encodings); both were corrected before the clean
+installed run. No native revision/freshness gate was relaxed.
+
+README, source of truth v1.81, shared Scope/entry reasoning and the research
+continuation now distinguish this completed prerequisite from remaining integration.
+Main stays untouched, PR #1 stays draft, LIVE stays disabled and the deployed
+experiment stays frozen. No authentic model/provider/broker request, deployment,
+host or dependency change occurred.
+
+Next: connect this boundary to the full shared AI request/result, native preparation
+and stored entry/scale/final-exit cost attribution. Continuous Scope watch ingestion,
+common A/B/C/D tapes, combined carry/Scope enrollment and broader/mixed ownership
+remain subsequent plumbing; final visual and authentic-data acceptance remain open.
+
+
 ## Deterministic shared Scope selection: 2026-10-19 UTC
 
 Fresh GitHub/local state began at `fa7843924d2dc1f8bc4cc09cdfecfff46857bded`, tree

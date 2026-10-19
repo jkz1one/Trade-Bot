@@ -1,6 +1,11 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.80. Adopted product direction and working delivery contract, 2026-10-19 UTC.
+Version 1.81. Adopted product direction and working delivery contract, 2026-10-19 UTC.
+The [post-cost Scope review](OPTIONS_SCOPE_POST_COST.md) now verifies original/fresh
+admission correspondence, intervening paid usage, unchanged protection and original
+ceilings/deadline without granting order authority. Shared Scope AI request/result
+binding, atomic consumption and trade-level cost attribution remain open; existing
+shared deterministic owners still reject model enrollment.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed

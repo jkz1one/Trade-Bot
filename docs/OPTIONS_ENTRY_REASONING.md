@@ -132,3 +132,11 @@ now have fixture proof through atomic stop/full-exit application in an opt-in co
 comparative accounting are implemented with scripted inputs. Authentic market/model
 acceptance, arm D comparison and deployed runtime/UI remain open. These are fixture fills,
 not broker fills or profitability evidence. See [the completion plan](AI_TRADER_RESEARCH_PLAN.md).
+
+## Shared Scope continuation
+
+The existing Degen/Swing full-plan path remains unchanged. Scope keeps its native
+contract, targets and protection. The [post-cost Scope review](OPTIONS_SCOPE_POST_COST.md)
+now checks original/fresh owned admissions and intervening usage without granting
+execution authority. Binding the full shared model decision and its charge to the
+selected native entry remains required before shared Scope AI enrollment.

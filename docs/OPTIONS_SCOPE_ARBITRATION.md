@@ -9,6 +9,9 @@ Existing Scope-only and Degen/Swing populations do not migrate.
 This closes the deterministic selection baseline. Paid shared Scope reasoning,
 continuous Scope watch ingestion in the local runtime, common A/B/C/D Scope tapes,
 combined carry/Scope enrollment and mixed stock/options ownership remain open.
+The [post-cost review prerequisite](OPTIONS_SCOPE_POST_COST.md) now checks the
+original and fresh admissions against a settled charge; shared model coordination
+and trade attribution are still required before enabling AI.
 It is offline fixture capability, not authentic provider or trading-edge acceptance.
 
 ## Explicit enrollment and inputs
