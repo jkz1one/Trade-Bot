@@ -48,6 +48,18 @@ fresh position/account/market evidence after cost settlement before any action.
 
 
 def instructions(policy):
+    if policy.scope_management is not None:
+        return (
+            INSTRUCTIONS
+            + """
+For Scope, scope_context retains the original owned fixed plan and supplies a
+fresh completed SPX/SPY/QQQ context scan. Its verified selection retains the
+original paid entry thesis and uncertainty. New observations are context, never a
+replacement setup or authority to change the original targets, allocations,
+profile premium protection or deadline. Target progress and remaining contracts
+come from the owned position. A consumed watch is not a new entry opportunity.
+"""
+        )
     return (
         INSTRUCTIONS
         if policy.swing_carry is None
@@ -63,6 +75,8 @@ be widened or postponed; this remains the same owned position and cost ledger.
 
 
 def prompt_version(policy):
+    if policy.scope_management is not None:
+        return "option-position-scope-v1"
     return PROMPT_VERSION if policy.swing_carry is None else "option-position-carry-v1"
 
 
@@ -71,9 +85,9 @@ class PositionModelConfiguration(OptionRecord):
     costs: CostPolicy
     limits: JudgmentLimits
     position_policy: PositionReasoningPolicy
-    prompt_version: Literal["option-position-thesis-v1", "option-position-carry-v1"] = (
-        PROMPT_VERSION
-    )
+    prompt_version: Literal[
+        "option-position-thesis-v1", "option-position-carry-v1", "option-position-scope-v1"
+    ] = PROMPT_VERSION
     prompt_hash: Digest
     schema_hash: Digest
 

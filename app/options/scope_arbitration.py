@@ -68,9 +68,15 @@ def configuration(db):
 
         model = EntryModelConfiguration.model_validate(config.get("entry_model"))
         if model.entry_policy.scope_selection is None or any(
-            k in config for k in ("replay_model", "position_model")
+            k in config for k in ("replay_model",)
         ):
             raise ExecutionBlocked("SHARED_SCOPE_AI_CONFIGURATION_REQUIRED")
+        if "position_model" in config:
+            from app.options.position_judgment import PositionModelConfiguration
+
+            management = PositionModelConfiguration.model_validate(config["position_model"])
+            if management.position_policy.scope_management != "scope-fixed-position-v1":
+                raise ExecutionBlocked("SHARED_SCOPE_POSITION_CONFIGURATION_REQUIRED")
     return policy
 
 

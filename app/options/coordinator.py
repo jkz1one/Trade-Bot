@@ -81,7 +81,6 @@ class DegenCoordinator:
                 or entry_policy is None
                 or entry_policy.scope_selection is None
                 or replay_model is not None
-                or position_policy is not None
                 or not callable(scope_refresh)
             ):
                 raise ValueError(
@@ -150,6 +149,14 @@ class DegenCoordinator:
             if position_policy is not None
             else None
         )
+        if self.position_policy is not None and (
+            (self.scope_policy is not None) != (self.position_policy.scope_management is not None)
+            or (
+                self.position_policy.scope_management is not None
+                and self.position_policy.swing_carry is not None
+            )
+        ):
+            raise ValueError("Shared Scope management requires explicit matching enrollment")
         if self.position_policy is not None and (
             self.entry_policy is None
             or (replay_model is not None and replay_model.script.arm != "D")

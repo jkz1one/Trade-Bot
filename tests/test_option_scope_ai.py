@@ -17,7 +17,9 @@ from app.options.entry_reasoning import SharedScopeEntryPlan
 
 
 @contextmanager
-def ai_owner(path, monkeypatch, *, family="SCOPE", right="CALL", mode="ENTER"):
+def ai_owner(
+    path, monkeypatch, *, family="SCOPE", right="CALL", mode="ENTER", position_policy=None
+):
     state = {}
 
     async def scope_refresh(play):
@@ -49,6 +51,7 @@ def ai_owner(path, monkeypatch, *, family="SCOPE", right="CALL", mode="ENTER"):
         "judgment_limits": JudgmentLimits(process_timeout_seconds=5, request_timeout_seconds=3),
         "key_file": path / "private-model-key",
         "scope_refresh": scope_refresh,
+        "position_policy": position_policy,
     }
     with shared(
         path,

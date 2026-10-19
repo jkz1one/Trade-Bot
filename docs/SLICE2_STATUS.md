@@ -1,5 +1,80 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Shared Scope position reasoning: 2026-10-19 UTC
+
+Fresh GitHub/local state matched `42e1711d1d300a0d50d076920278883c506f758e`,
+tree `6c02ac4256f3c9ce1ea190122e28243b5fa59cb9`. Main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 was open/draft.
+
+[Shared Scope position reasoning](OPTIONS_SCOPE_POSITION.md) now explicitly enrolls
+`scope-fixed-position-v1` with the existing shared entry AI owner. It uses one
+bounded management worker and native account across Scope, Degen and session-close
+Swing. Original policies serialize unchanged when the new setting is absent;
+existing cohorts cannot acquire management on reopen. Scope/carry remains rejected.
+
+A held Scope packet verifies the original native entry and paid selection, retains
+the AI thesis/uncertainty and fixed native targets/profile/deadline, and recomputes
+current SPX/SPY/QQQ context through the frozen Scope policy. It requires the exact
+consumed play and held contract; unavailable/stale/foreign context starts no call.
+New observations are management evidence, not permission to replace the setup.
+
+MAINTAIN, tighter invalidation and full exits use the existing atomic revision
+consumption, native dispatch and restart path. Target scales and mandatory stops,
+premium/time exits remain independently authoritative. Known entry and management
+charges remain in trade outcomes and native portable accounting; unknown usage
+still fences the account. Management after a partial close uses the remaining
+owned quantity without resetting original terms or losing prior fees/costs.
+Stored attribution rechecks the exact native entry and complete original paid
+selection, including after closure. Independent research accounts remain separate.
+
+Validation: **330 distinct installed cases passed**, with no unresolved failures
+in the normalized case ledger. The broad run passed 326 of 328 cases (805.71s),
+including native management, entry/Scope arbitration, lineage/outcomes, observer
+and independent A/B/C/D accounting replay. Its two failures were new fixture errors:
+a coverage-only payload was mutated instead of the recomputed technical payload,
+and the restart test attempted a second owner on an already attached engine.
+Both fixtures were corrected without changing those engine boundaries.
+
+The final wheel passed **175 distinct installed cases**, including all **18 new
+Scope/shared-family management cases**. Its main run passed 172 of 173 (363.55s);
+the corrected actual-restart/worker/tamper case then passed (20.86s), and both
+Degen/Swing management cases under the shared Scope owner passed (13.98s).
+The final-wheel case ledger has no unresolved failures. Earlier partial-close
+fixtures were corrected to reconcile and supervise at their new clock before
+requesting a scale; both focused scale cases passed. The mocked child fixture now
+includes both copied-test import roots, matching the existing worker harness.
+No freshness, one-owner, process, usage or risk gate was relaxed.
+
+Coverage includes CALL/PUT MAINTAIN/TIGHTEN/EXIT_ALL, paid entry plus management
+costs through full closure and portable export, management after a partial close,
+missing/stale/foreign context, bound technical payloads, late/lost usage,
+mandatory stop precedence, frozen enrollment, exact original terms and paid thesis,
+real installed worker execution with mocked SDK transport, reopening and tampering.
+All runs used isolated noneditable wheels, copied tests outside the checkout,
+Python `-I`, disabled ambient plugins, warnings as errors and retained distinct
+pytest base directories. No actual provider traffic was used.
+
+All **193 application/template files** match final source/wheel/install. The final
+wheel differs from the broad wheel only in the three directly retested position
+contract/prompt/context modules. Lint, formatting, dependency consistency, whitespace
+and local documentation targets pass. Final wheel SHA-256:
+`89f5102c09b319606b6df99f6ba2dd8b383d20a397ba1936e8a58cd90ad2ad13`.
+Retained proof beside checkout: `scope-position-proof`, `scope-position-release-proof`,
+`scope-position-worker-final-proof`, `scope-position-family-proof`, the intermediate
+`scope-position-final-proof`, scale/worker proofs, XML/logs and fixture directories.
+Final `identity.json`, `final-wheel-validation.json` and `validation-summary.json`
+retain file identity and per-case resolution. Build/install logs and wheels are
+retained alongside these proofs.
+
+README, source of truth v1.83, research continuation and Scope/position/testing
+guides now record the contract. No actual provider/model/broker request, deployment,
+host or dependency change occurred. Main remains untouched, PR #1 draft, LIVE
+disabled and the deployed experiment frozen.
+
+Next: common A/B/C/D Scope tapes/replay and continuous watch runtime input,
+combined Scope/carry enrollment and remaining family/mixed ownership plumbing.
+Final UI/visual and authentic-data/model acceptance remain open.
+
 ## Shared Scope entry AI and native cost attribution: 2026-10-19 UTC
 
 Fresh GitHub/local state matched `fe0fe44c333138c813bf3a1a1276533af749873d`,

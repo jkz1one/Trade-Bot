@@ -8,6 +8,10 @@ cost admission/settlement, atomic consumption and stop/full-exit application.
 scripted responses. No deployed service invokes management. Existing A/B/C behavior
 and frozen populations remain unchanged.
 
+[Shared Scope management](OPTIONS_SCOPE_POSITION.md) separately enrolls current
+SPX/SPY/QQQ context and verified original Scope terms in this same native path.
+Existing populations remain frozen.
+
 ## Trusted packet and strict output
 
 `PositionPacket` binds the original entry intent/thesis, exact current position,

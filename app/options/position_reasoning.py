@@ -25,6 +25,8 @@ from app.options.models import (
     UnderlyingQuote,
 )
 from app.options.protection import assess_position
+from app.options.scope_context import ScopeContextScan
+from app.options.scope_position import ScopePositionContext
 from app.options.swing import SwingScan
 
 
@@ -33,8 +35,17 @@ class PositionReasoningPolicy(OptionRecord):
     swing_carry: Literal["bounded-swing-carry-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
+    scope_management: Literal["scope-fixed-position-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     cadence_seconds: Literal[300] = 300
     max_lease_seconds: int = Field(gt=0, le=30, strict=True)
+
+    @model_validator(mode="after")
+    def matching_context(self):
+        if self.scope_management is not None and self.swing_carry is not None:
+            raise ValueError("Combined Scope/carry management is not enrolled")
+        return self
 
 
 def _account_ready(account, position, limits, now):
@@ -80,7 +91,8 @@ class PositionPacket(OptionRecord):
     account: OptionAccount
     quote: OptionQuote
     underlying: UnderlyingQuote
-    scan: DegenScan
+    scope_context: ScopePositionContext | None = Field(default=None, exclude_if=lambda v: v is None)
+    scan: DegenScan | ScopeContextScan
     session: SessionWindow
     limits: OptionLimits
     execution_policy: OptionExecutionPolicy
@@ -105,6 +117,55 @@ class PositionPacket(OptionRecord):
                 or not any(s.opens_at <= self.as_of < s.closes_at for s in p.swing_carry.sessions)
             ):
                 raise ValueError("Frozen original Swing context and current carry session required")
+        scope = e.entry_lineage is not None and e.entry_lineage.family == "SCOPE"
+        if scope != (self.scope_context is not None) or scope != isinstance(s, ScopeContextScan):
+            raise ValueError("Scope ownership requires its own exact context")
+        if scope:
+            from app.options.scope_execution import lineage
+
+            c = self.scope_context
+            o = c.original
+            if (
+                self.policy.scope_management != "scope-fixed-position-v1"
+                or self.execution_policy.scope_arbitration != "shared-scope-entry-v1"
+                or self.carry_context is not None
+                or c.scan != s
+                or c.current.frame.quote != self.quote
+                or c.current.underlying != self.underlying
+                or e.entry_lineage != lineage(o.model_dump(mode="json"))
+                or o.binding.account_id != self.limits.account_id
+                or o.binding.population_id != self.limits.population_id
+                or o.instrument != e.instrument
+                or o.geometry.invalidation != e.original_underlying_invalidation
+                or o.admission.quantity != e.quantity
+                or o.management.target_exit_schedule != e.target_exit_schedule
+                or o.management.entry_premium_protection != e.entry_premium_protection
+                or o.entry_time_protection != e.entry_time_protection
+                or any(
+                    getattr(p, name) != getattr(e, name)
+                    for name in (
+                        "target_exit_schedule",
+                        "entry_premium_protection",
+                        "entry_time_protection",
+                    )
+                )
+            ):
+                raise ValueError("Scope management must preserve original native protection")
+        context_ready = (
+            s.evaluated_at == self.as_of and not s.issues
+            if scope
+            else (
+                s.symbol == p.contract.underlying
+                and s.evaluated_at == self.as_of
+                and not s.issues
+                and s.completed_through is not None
+                and s.higher_timeframe_through is not None
+                and s.higher_timeframe_through <= s.completed_through <= self.as_of
+                and self.as_of - s.completed_through < timedelta(seconds=300)
+                and self.as_of - s.higher_timeframe_through < timedelta(seconds=900)
+                and s.last_close is not None
+            )
+        )
         end_slot = (int(self.as_of.timestamp()) // 300 + 1) * 300
         if (
             self.cycle_key != "position:" + str(int(self.as_of.timestamp()) // 300)
@@ -131,16 +192,8 @@ class PositionPacket(OptionRecord):
             or e.exit_at != p.exit_at
             or p.quantity > e.quantity
             or e.prepared_at > self.as_of
-            or s.symbol != p.contract.underlying
-            or s.evaluated_at != self.as_of
-            or s.issues
+            or not context_ready
             or p.supervision_issue is not None
-            or s.completed_through is None
-            or s.higher_timeframe_through is None
-            or not s.higher_timeframe_through <= s.completed_through <= self.as_of
-            or self.as_of - s.completed_through >= timedelta(seconds=300)
-            or self.as_of - s.higher_timeframe_through >= timedelta(seconds=900)
-            or s.last_close is None
             or not _account_ready(self.account, p, self.limits, self.as_of)
         ):
             raise ValueError("Exact healthy owned position, entry and completed context required")

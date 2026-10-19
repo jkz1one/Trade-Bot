@@ -7,8 +7,8 @@ separate journals, capital and costs. Existing deterministic shared Scope and
 Degen/Swing model populations retain their frozen configuration and behavior.
 
 This is fixture-tested entry plumbing, not authentic model/provider acceptance,
-a profitability result or permission to deploy. Shared Scope position-model
-enrollment, common A/B/C/D Scope tapes, continuous watch ingestion and combined
+a profitability result or permission to deploy. [Shared Scope position-model enrollment](OPTIONS_SCOPE_POSITION.md) is separately
+opt-in for new owners. Common A/B/C/D Scope tapes, continuous watch ingestion and combined
 Scope/carry enrollment remain separate work. Native Scope target, profile-stop and
 time protection remain independently deterministic.
 
@@ -32,8 +32,9 @@ checks still validate every supplied observation.
 The model path requires a new healthy, untraded owner with a frozen cost policy.
 Reopening must use the same policies and key path plus an available fresh-input
 reader. Legacy deterministic enrollment still rejects model settings. Shared entry
-AI rejects the old scripted replay model, position-model settings and combined
-Swing carry. These require their own matching contracts and replay/runtime work.
+AI rejects the old scripted replay model and combined Swing carry. Position-model
+settings require explicit `scope-fixed-position-v1` enrollment; see the linked
+management contract. Replay/runtime work remains separate.
 No test limits are implied production defaults.
 
 ## One request, fixed Scope terms
@@ -128,7 +129,7 @@ observer reads. Run with entry reasoning/worker/coordination, shared strategy,
 Scope reapproval/native boundaries, lineage, outcome, loss and observer regressions.
 Exact installed results are recorded in [status](SLICE2_STATUS.md).
 
-Next: shared Scope position reasoning and common A/B/C/D replay, continuous watch
+Next: common A/B/C/D Scope replay, continuous watch
 input/runtime integration, then remaining family/mixed ownership plumbing and the
 final UI/authentic-data acceptance pass. Main remains untouched, PR #1 draft,
 LIVE disabled and the deployed experiment frozen.

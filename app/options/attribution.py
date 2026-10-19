@@ -355,6 +355,9 @@ def decision_attribution(db, key, outcome, policy):
         ):
             raise ValueError("Stored proposal application mismatch")
         if prefix == "position":
+            from app.options.scope_position import verify_owned_context
+
+            verify_owned_context(db, packet)
             review = applied.get("position_review")
             if review is not None:
                 checked = PositionReview.model_validate(review)

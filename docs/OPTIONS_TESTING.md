@@ -144,8 +144,8 @@ The [shared deterministic procedure](OPTIONS_SCOPE_ARBITRATION.md) adds
 attribution and observer checks. Its fixtures select CALL/PUT Scope, Degen and
 Swing in one native owner, retain separate research accounts, exercise restart/
 tamper/atomicity and reconstruct full-cost portable accounting. No new dependency
-or provider call is required. Paid shared Scope AI, continuous Scope runtime
-watch ingestion and common A/B/C/D Scope tapes remain separate implementation work.
+or provider call is required. Paid shared Scope AI is covered below. Continuous
+Scope runtime watch ingestion and common A/B/C/D tapes remain separate work.
 
 ## Shared Scope entry AI fixtures
 
@@ -156,4 +156,7 @@ entry reasoning/worker/coordination, shared strategy, Scope native/reapproval,
 lineage/outcome, family/model loss-admission and observer regressions. Keep distinct
 pytest base directories for every retained run. The worker fixtures mock provider
 transport; they do not authorize an authenticated call, deployment or LIVE mode.
-Shared Scope position reasoning and common A/B/C/D tapes remain separate gates.
+Run `test_option_scope_position.py` with position reasoning/worker/coordination,
+Scope entry, native outcome, lineage and observer regressions for the separately
+enrolled [Scope management path](OPTIONS_SCOPE_POSITION.md). Common A/B/C/D
+Scope tapes remain separate work.

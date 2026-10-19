@@ -43,6 +43,9 @@ def _bound_request(engine, db, key, request):
     ).fetchone()
     if entry is None or OptionIntent.model_validate_json(entry[0]) != packet.entry:
         raise ExecutionBlocked("POSITION_ENTRY_CHANGED")
+    from app.options.scope_position import verify_owned_context
+
+    verify_owned_context(db, packet)
     return ledger, evidence
 
 
@@ -276,19 +279,28 @@ async def run_position_cycle(c, key, frame):
             if p is None:
                 raise ValueError("Exact owned position required")
             history = [h for h in histories if h.symbol == p.contract.underlying]
-            if (
-                len(history) != 1
-                or len(c._position_quotes) != 1
-                or len(c._position_underlyings) != 1
-            ):
+            if len(c._position_quotes) != 1 or len(c._position_underlyings) != 1:
                 raise ValueError("Current held contract/context required")
-            scan = scan_degen(history[0], c.policy, c.engine.calendar.current_window(at), now=at)
             entry = OptionIntent.model_validate_json(
                 db.execute(
                     "SELECT intent_json FROM execution_orders WHERE client_id=?",
                     (p.entry_client_id,),
                 ).fetchone()[0]
             )
+            scope_context = None
+            if entry.entry_lineage and entry.entry_lineage.family == "SCOPE":
+                from app.options.scope_position import owned_context
+
+                if frame.scope is None:
+                    raise ValueError("Current Scope context required")
+                scope_context = owned_context(db, entry, frame.scope, now=at)
+                scan = scope_context.scan
+            else:
+                if len(history) != 1:
+                    raise ValueError("Current held family context required")
+                scan = scan_degen(
+                    history[0], c.policy, c.engine.calendar.current_window(at), now=at
+                )
             account = c.engine._account(db, at)
             q, u = c._position_quotes[0], c._position_underlyings[0]
             from app.options.position_reasoning import CarryPositionContext
@@ -321,6 +333,7 @@ async def run_position_cycle(c, key, frame):
                 position=p,
                 entry=entry,
                 carry_context=carry_context,
+                scope_context=scope_context,
                 account=account,
                 quote=q,
                 underlying=u,

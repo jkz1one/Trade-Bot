@@ -46,7 +46,9 @@ whole-account accounting. A new [post-cost Scope review](docs/OPTIONS_SCOPE_POST
 checks a fresh owned admission against the original plan and settled model charge.
 [Shared Scope entry AI](docs/OPTIONS_SCOPE_AI.md) now connects the paid decision,
 fresh owned approval, native entry and full-cost attribution for a new frozen owner.
-Shared position reasoning, common Scope tapes and runtime ingestion remain follow-on work.
+[Shared Scope position reasoning](docs/OPTIONS_SCOPE_POSITION.md) now binds held
+management to the original native plan and current Scope context. Common Scope
+tapes and runtime ingestion remain follow-on work.
 
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
 rules, implementation milestones, acceptance gates and continuation discipline.
