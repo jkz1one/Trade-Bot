@@ -259,6 +259,15 @@ available as described in [local runtime](OPTIONS_LOCAL_RUNTIME.md) and
 [reviewed recovery](OPTIONS_OPERATOR_RECOVERY.md). Model and operator credentials
 remain separate; none belongs in packets, fixture examples or Git.
 
+## Overnight evidence preflight
+
+The separate [carry preflight](OPTIONS_SWING_CARRY.md) now reconstructs explicit
+future exchange sessions, expiry buffers, full-horizon catalyst coverage and current
+fee-inclusive admission. Its portable result always retains a native execution
+blocker. It does not change this owner, its frozen `SESSION_CLOSE` policy, the model
+horizon or any held deadline. Calendar evidence is now fixture implemented; carry
+execution, management context and multi-session ownership/accounting remain open.
+
 ## Acceptance boundaries
 
 This is **session-close PAPER fixture capability**, not complete Swing acceptance.

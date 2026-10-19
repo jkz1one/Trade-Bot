@@ -1,5 +1,82 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Overnight Swing evidence contract: 2026-10-19 UTC
+
+Scope native execution/loss integration was already closed at the fresh GitHub
+checkpoint `59c842c1da8289f6266ba8bfe5e860807564b338`, tree
+`061aa0e25f68f9e0d59852dcb7f71b24daad944d`. This slice advances the next open plumbing
+area: overnight Swing. The concrete missing dependency was a reproducible contract
+for actual carry sessions, expiry buffers and catalyst coverage beyond today's close.
+[API, complete fixture, installed CLI and remaining integration](OPTIONS_SWING_CARRY.md).
+
+`SwingCarryRequest` now freezes explicit research limits and supplied original/current
+evidence. Review recomputes completed Swing structure, original first-target/terminal
+lifecycle, exact contract selection, current directional break/chase and the existing
+account governor. It enumerates actual XNYS sessions across weekends, holidays, DST
+and early closes. The requested final session must satisfy both calendar-day and
+exchange-session bounds, the configured before-close deadline, a whole-session expiry
+buffer and the exact earlier contract cutoff. It never rolls an invalid exit date,
+substitutes a contract or silently shortens the requested horizon.
+
+Catalyst clearance must be fresh, complete, REALTIME, exact-source/symbol CLEAR and
+cover the entire proposed deadline. Missing or today's-only coverage blocks. Current
+admission retains the short entry-session approval; no future date widens it. Sizing
+uses the native per-contract exit-order fee reserve, every execution fee and adverse
+slippage, with supplied independent-account available loss budgets. Unknown cost
+budgets remain blocked. Preflight does not generate model bills, future costs or P&L;
+all actual entry/management charges must already be included in supplied account truth.
+It proves neither native ownership nor unseen prices/provider authenticity.
+
+Portable export retains all typed inputs and the complete review. Verification
+requires an independently retained request hash and independently reproduces calendar,
+setup, contract, admission and every output field. The create-only installed CLI
+bounds input size, rejects duplicate JSON fields and never overwrites a report.
+A complete synthetic request is committed; it needs no credentials or broker setup.
+
+Every report, including READY evidence, has `authority=false` and the explicit
+`SWING_OVERNIGHT_EXECUTION_NOT_ENROLLED` blocker. Existing native Swing remains
+`SESSION_CLOSE`. The regression proves that a positive carry report neither mutates
+an owner nor changes its same-day order/position deadlines. No frozen cohort migrates.
+The pinned SignalFlow promotion and contract-selection sources were reread at
+`f9eaf2c1b5d13dca287ee7138126883065b00395`; this new research contract does not claim
+an overnight execution policy from those sources.
+
+Validation: **382 installed cases passed in 493.97s**, including **58 new carry
+preflight cases**. The run used isolated Python, a noneditable wheel, copied tests
+outside the checkout, disabled ambient pytest plugins and warnings as errors.
+Coverage includes CALL/PUT, weekends/holidays/DST/early closes, exact horizon and
+expiry boundaries, insufficient/stale catalyst evidence, missing quotes, exact
+contract/seed identity, terminal observations, low/unknown budgets, per-contract
+exit fees, changed portable data and installed CLI create-only/verification errors.
+Existing shared-owner, completed/quote/target lifecycle and admission suites pass,
+including all three native A/B/C/D lifecycle variants with independent accounts and
+every entry/management charge. No failed gate was waived. The earlier source run
+passed 57 cases with only the installed CLI case deliberately deferred to the
+installed run; overlapping results are not added.
+
+All **186 application/template files** match source/wheel/install, and all six
+selected copied test files match source. Scoped lint/format, dependency consistency,
+whitespace and local documentation targets pass. The committed synthetic example
+was reviewed and verified separately through the installed CLI. Final wheel SHA-256:
+`a3426229fe8823d85fda2218a10085c65abdfcfa9c807d1b5f334a7aadc8f2a0`.
+Proof beside checkout: `swing-carry-proof/installed.xml`, `swing-carry-installed.log`,
+`swing-carry-dist`, `swing-carry-verification.json` and source/build/install logs.
+
+README, source of truth v1.78, testing and continuation documents now describe this
+boundary. Stale P7/source-of-truth claims that Scope execution/family loss linkage
+were still unimplemented were corrected to match the prior delivered commit.
+
+Next: bind an explicit native Swing carry policy to entry decisions/fills and retained
+protection, then session rollover/restart, carry-aware held model context and independent
+multi-session full-cost replay/export. Broader families, shared arbitration including
+Scope, mixed stock/options ownership, final UI and authentic data/model/calendar,
+host and prospective economic acceptance remain open. Scope convexity and missing-T3
+four-contract plans retain their explicit rejection boundaries. Main untouched, PR #1
+draft, LIVE disabled and deployment frozen; no authentic broker/provider/model call,
+service change or dependency update.
+
+---
+
 ## Scope native execution and loss-control integration closed: 2026-10-19 UTC
 
 The requested integration is closed for explicitly enrolled `scope-native-v1`

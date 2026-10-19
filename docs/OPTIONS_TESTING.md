@@ -125,3 +125,12 @@ full-cost loss controls, signed reviewed resets and portable accounting. Its foc
 fixtures are `test_option_scope_execution.py` and `test_option_scope_execution_replay.py`.
 Use the same isolated installed-wheel discipline as above; this does not change the
 deployed experiment or the final authentic-data/visual acceptance gates.
+
+## Overnight Swing evidence
+
+The separate [carry preflight procedure](OPTIONS_SWING_CARRY.md) includes a complete
+synthetic request and create-only installed CLI. `test_option_swing_carry.py` covers
+actual session/expiry/catalyst boundaries, current fee-inclusive admission, portable
+verification and the unchanged native same-day exit. READY describes supplied
+evidence only; it never enables overnight trading. Native carry lifecycle and its
+multi-session economic acceptance remain open.

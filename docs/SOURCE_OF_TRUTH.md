@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.77. Adopted product direction and working delivery contract, 2026-10-19 UTC.
+Version 1.78. Adopted product direction and working delivery contract, 2026-10-19 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -62,6 +62,10 @@ keyed local halt/resume/revocation requests with exact revision and evidence gat
 [Shared Degen/Swing arbitration](OPTIONS_SHARED_STRATEGIES.md) now adds a locked
 next-session daily-breakout family to the same PAPER owner and full-entry AI packet.
 This first adaptation uses session-close protection; overnight Swing is not enabled.
+New [overnight carry preflight](OPTIONS_SWING_CARRY.md) now verifies explicit actual-
+session horizons, expiry buffers, catalyst coverage and fee-inclusive current admission.
+Its portable report always retains an execution blocker. Native carry enrollment,
+held model context and multi-session ownership/accounting integration remain open.
 An optional frozen completed-bar lifecycle now retains original-stop invalidation
 across recovery, revised history and restart, with native preparation/dispatch
 guards and stored observer evidence. Revisited expired seeds use actual XNYS closes.
@@ -370,12 +374,11 @@ Freeze both cadences in the new cohort. Do not change the old 15-minute schedule
 The October 12 clarification reinforces one shared engine and AI selection boundary
 for Degen and Swing. The new opt-in shared PAPER slice now implements that boundary
 with one ledger/order reservation/model budget, preserving separate research accounts.
-Family-specific evidence and holding rules remain explicit. Scope execution and mixed
-stock/options ownership are still unimplemented; the separate Scope preflight
-validates supplied coverage and exact contract identity. The separate structure
-and context scanners add completed-pattern/confirmation and context-risk diagnostics.
-The durable watch book records unfilled calls, original evidence and invalidation/expiry
-inside the existing owner; it grants no execution authority.
+Family-specific evidence and holding rules remain explicit. Scope now has separately
+enrolled native PAPER execution/loss integration for responsive/balanced one-to-three-
+contract plans. Its research watches remain order-free unless enrolled under the
+native contract. Convexity and missing-T3 four-contract plans remain blocked. Mixed
+stock/options ownership and shared candidate arbitration including Scope remain open.
 
 Swing retains completed higher-timeframe bars, exact contract locking, next actual
 exchange session, catalyst/earnings clearance, chase and invalidation geometry.

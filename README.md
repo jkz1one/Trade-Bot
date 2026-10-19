@@ -74,6 +74,9 @@ is now recorded at each runtime start and shown from stored evidence in the obse
 a newly enrolled PAPER population use one AI, cash ledger and execution owner.
 The first Swing family uses locked next-session daily structure with current
 catalyst/chase checks and session-close protection; overnight Swing remains open.
+New [overnight Swing preflight](docs/OPTIONS_SWING_CARRY.md) reconstructs actual
+exchange-session horizons, expiry buffers, catalyst coverage and fee-inclusive
+admission in portable offline evidence. It does not extend native holding authority.
 New frozen cohorts can retain completed-bar Swing invalidation across recovery,
 revised histories and restart, with native entry guards and stored observer evidence.
 A separate frozen quote policy now retains fresh stop breaches between completed bars,
