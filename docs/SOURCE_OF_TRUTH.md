@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.79. Adopted product direction and working delivery contract, 2026-10-19 UTC.
+Version 1.80. Adopted product direction and working delivery contract, 2026-10-19 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -382,7 +382,12 @@ Family-specific evidence and holding rules remain explicit. Scope now has separa
 enrolled native PAPER execution/loss integration for responsive/balanced one-to-three-
 contract plans. Its research watches remain order-free unless enrolled under the
 native contract. Convexity and missing-T3 four-contract plans remain blocked. Mixed
-stock/options ownership and shared candidate arbitration including Scope remain open.
+stock/options ownership remains open. New
+[deterministic Scope/Degen/Swing arbitration](OPTIONS_SCOPE_ARBITRATION.md) now selects
+from bound native candidates in one owner,
+with immutable alternatives/selection, fresh dispatch gates and full-cost portable
+accounting. Shared Scope paid AI, continuous watch ingestion/common A/B/C/D tapes
+and combined carry/Scope enrollment remain open; existing cohorts stay frozen.
 
 Swing retains completed higher-timeframe bars, exact contract locking, next actual
 exchange session, catalyst/earnings clearance, chase and invalidation geometry.
@@ -608,7 +613,9 @@ costs. M4 browser visual acceptance and full economic/cohort evaluation remain o
 M3 authenticated normalized collection/model acceptance and M5–M8 are not complete
 for options. M7 now has shared Degen/Swing PAPER candidate arbitration and a first
 locked next-session daily-breakout adaptation with session-close protection.
-Overnight Swing, remaining families and mixed stock/options remain open. Scope
+Native bounded Swing carry and deterministic shared Scope selection now have
+fixture integration. Shared Scope AI/runtime/tape integration, combined carry/Scope,
+remaining families and mixed stock/options remain open. Scope
 native execution/loss integration is fixture implemented within its explicit profile/quantity
 boundaries; authentic provider and prospective performance acceptance remain open. Existing
 runtime services still execute equities only; local M2 is not an options deployment.

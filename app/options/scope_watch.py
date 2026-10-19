@@ -918,7 +918,7 @@ class ScopeWatchBook:
             self._untraded(db)
             return select_entry(self.engine, db, self.policy, play_key, expected_revision, now)
 
-    def prepare_entry(self, play_key, *, expected_revision, now):
+    def prepare_entry(self, play_key, *, expected_revision, now, arbitration_cycle=None):
         from app.options.lifecycle import (
             EntryPremiumProtection,
             EntryTimeProtection,
@@ -946,7 +946,9 @@ class ScopeWatchBook:
                 packet["entry_time_protection"]
             ),
             scope_entry=ScopeExecutionRequest(
-                play_key=play_key, expected_revision=expected_revision
+                play_key=play_key,
+                expected_revision=expected_revision,
+                arbitration_cycle=arbitration_cycle,
             ),
             now=now,
         )

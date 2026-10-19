@@ -28,6 +28,7 @@ FINISHED = {"CLOSED", "ENDED_UNFILLED"}
 class ScopeExecutionRequest(OptionRecord):
     play_key: Name
     expected_revision: int = Field(strict=True, ge=1)
+    arbitration_cycle: Name | None = Field(default=None, exclude_if=lambda v: v is None)
 
 
 def enrolled(engine, policy):
@@ -62,6 +63,9 @@ def prepare_review(engine, db, source_key, inputs, request, now):
         if request is not None:
             raise ExecutionBlocked("SCOPE_ENTRY_BUY_REQUIRED")
         return None
+    if request is None and engine.policy.scope_arbitration is not None:
+        # The common prepare boundary has already verified the selected Degen/Swing source.
+        return None
     if request is None:
         reject_unlinked_scope_entry(db, OptionProposal.model_validate(inputs["proposal"]))
         if engine.policy.scope_execution is not None:
@@ -78,6 +82,13 @@ def prepare_review(engine, db, source_key, inputs, request, now):
         k in inputs for k in ("entry_request", "entry_result")
     ):
         raise ExecutionBlocked("SCOPE_DETERMINISTIC_ENTRY_REQUIRED")
+    if request.arbitration_cycle is not None:
+        row = db.execute(
+            "SELECT result_json FROM execution_option_opportunities WHERE cycle_key=?",
+            (request.arbitration_cycle,),
+        ).fetchone()
+        if not row or json.loads(row[0]).get("scope_candidate") != packet:
+            raise ExecutionBlocked("SHARED_SCOPE_ADMISSION_CHANGED")
     expected = {
         "proposal": packet["proposal"],
         "quote": packet["quote"],
@@ -230,6 +241,8 @@ def verify_native_intent(db, intent, approval):
         },
     }
     original = json.loads(decision[0]) if decision else {}
+    if "scope_arbitration" in original:
+        expected["scope_entry"]["arbitration_cycle"] = original["scope_arbitration"]["cycle_key"]
     if (
         intent.side != "BUY"
         or intent.client_id != receipt["client_id"]
@@ -274,6 +287,9 @@ def dispatch_review(engine, db, intent, approval, quote, underlying, now):
     if intent.side != "BUY":
         return
     receipt = verify_native_intent(db, intent, approval)
+    if receipt is None and engine.policy.scope_arbitration is not None:
+        # verified_lineage checks the immutable common selection receipt before dispatch.
+        return
     if receipt is None:
         reject_unlinked_scope_entry(db, OptionProposal.model_validate(approval["proposal"]))
         if engine.policy.scope_execution is not None:

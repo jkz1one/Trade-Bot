@@ -495,6 +495,7 @@ class OptionExecution:
             entry_review = None
             lineage = None
             scope_packet = None
+            arbitration = None
             carry_terms = None
             strategy_table = db.execute(
                 "SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_option_strategy'"
@@ -525,10 +526,14 @@ class OptionExecution:
                 ):
                     reason = "OPTION_MODEL_RECEIPT_REQUIRED"
             try:
+                from app.options.scope_arbitration import review_entry
                 from app.options.scope_execution import lineage as scope_lineage
                 from app.options.scope_execution import prepare_review
                 from app.options.shared_strategy import review_shared_entry
 
+                arbitration = review_entry(self, db, source_key, proposal, quote, inputs, now)
+                if arbitration is not None:
+                    inputs["scope_arbitration"] = arbitration
                 scope_packet = prepare_review(self, db, source_key, inputs, scope_entry, now)
                 if scope_packet is not None:
                     lineage = scope_lineage(scope_packet)
@@ -784,6 +789,10 @@ class OptionExecution:
             self.journal.event(
                 db, now, "OPTION_PROPOSAL_RECORDED", {"source_key": source_key, **output}
             )
+            if arbitration is not None and output["status"] == "PREPARED":
+                self.journal.event(
+                    db, now, "SHARED_SCOPE_ENTRY_SELECTED", arbitration, intent.client_id
+                )
             if scope_packet is not None and output["status"] == "PREPARED":
                 from app.options.scope_execution import consume
 

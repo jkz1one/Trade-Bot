@@ -40,6 +40,10 @@ carry horizons to DAY entry orders, retained protection, rollover/restart, origi
 held context and four-account full-cost replay. Existing session-close cohorts stay
 frozen; open daily boundaries remain unvalued and inconclusive.
 
+New [shared Scope/Degen/Swing selection](docs/OPTIONS_SCOPE_ARBITRATION.md) adds a
+frozen deterministic candidate boundary, original-plan attribution and portable
+whole-account accounting. Shared Scope AI/runtime ingestion remain follow-on work.
+
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
 rules, implementation milestones, acceptance gates and continuation discipline.
 The [October 10 reasoning-trader plan](docs/AI_TRADER_RESEARCH_PLAN.md) defines the

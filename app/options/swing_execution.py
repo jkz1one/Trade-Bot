@@ -68,11 +68,27 @@ def stored_terms(db, source_key):
     from app.options.swing import SwingPolicy
     from app.robinhood.schedule import XNYSCalendar
 
+    # Legacy native family-risk fixtures/owners need no optional carry scan contract.
+    # A carry-enrolled owner, however, must retain its frozen strategy enrollment.
+    row = (
+        db.execute("SELECT policy_json FROM execution_option_strategy WHERE id=1").fetchone()
+        if db.execute(
+            "SELECT 1 FROM sqlite_master WHERE name='execution_option_strategy'"
+        ).fetchone()
+        else None
+    )
+    config = json.loads(row[0]) if row else {}
+    if "swing" not in config:
+        owner = json.loads(
+            db.execute("SELECT config_json FROM execution_control WHERE id=1").fetchone()[0]
+        )
+        if owner["policy"].get("swing_carry") is not None:
+            raise ValueError("SWING_CARRY_STRATEGY_REQUIRED")
+        return None
     scan = selected_scan(db, source_key)
     if scan is None:
         return None
-    row = db.execute("SELECT policy_json FROM execution_option_strategy WHERE id=1").fetchone()
-    policy = SwingPolicy.model_validate(json.loads(row[0])["swing"])
+    policy = SwingPolicy.model_validate(config["swing"])
     if policy.carry is None:
         if scan.carry_terms is not None:
             raise ValueError("SWING_CARRY_NOT_ENROLLED")

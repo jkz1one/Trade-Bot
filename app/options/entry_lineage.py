@@ -58,9 +58,11 @@ def selected_lineage(db, source_key, instrument):
 
 def verified_lineage(db, intent, approval):
     """Validate a frozen buy label. Historical unlabeled intents stay unlabeled."""
+    from app.options.scope_arbitration import verify_entry
     from app.options.scope_execution import verify_native_intent
     from app.options.swing_execution import verify_binding
 
+    verify_entry(db, intent, approval)
     verify_binding(db, intent, approval)
     if intent.side == "BUY":
         verify_native_intent(db, intent, approval)

@@ -51,6 +51,7 @@ def fill_underlying_observation(fill):
 
 
 class DecisionAttribution(OptionRecord):
+    scope_arbitration: dict | None = Field(default=None, exclude_if=lambda v: v is None)
     swing_carry: SwingCarryTerms | None = Field(default=None, exclude_if=lambda v: v is None)
     health_management: Literal["observed-daytrade-health-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
@@ -169,6 +170,7 @@ def order_attribution(db, row):
     floor_policy = intent.trade_floor
     trail_policy = intent.premium_trail
     premium_protection = intent.entry_premium_protection
+    arbitration = approval.get("scope_arbitration")
     carry = intent.swing_carry
     time_protection = intent.entry_time_protection
     if intent.requested_close_quantity != proposal.close_quantity or (
@@ -204,6 +206,7 @@ def order_attribution(db, row):
         floor_policy = entry_intent.trade_floor
         trail_policy = entry_intent.premium_trail
         premium_protection = entry_intent.entry_premium_protection
+        arbitration = _json(entry[1]).get("scope_arbitration")
         carry = entry_intent.swing_carry
         time_protection = entry_intent.entry_time_protection
         if (
@@ -217,6 +220,7 @@ def order_attribution(db, row):
         lineage = entry_lineage(db, entry_id)
     observed = tuple(fill_underlying_observation(f) for f in fills if f.underlying is not None)
     return {
+        **({"scope_arbitration": arbitration} if arbitration else {}),
         **({"fill_underlyings": observed} if observed else {}),
         **({"swing_carry": carry.model_dump(mode="json")} if carry else {}),
         **(

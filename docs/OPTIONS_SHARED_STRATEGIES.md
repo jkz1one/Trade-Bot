@@ -19,6 +19,12 @@ closes and management charges inherit it from the buy. See
 Historical unlabeled orders remain unlabeled, and family loss/reset enforcement
 is delivered through the separately enrolled [native loss guard](OPTIONS_NATIVE_LOSS_CONTROL.md).
 
+New [shared Scope selection](OPTIONS_SCOPE_ARBITRATION.md) extends a separately
+frozen deterministic owner to Scope/Degen/optional session-close Swing. It preserves
+exact Scope admissions, common selection/dispatch and full-cost attribution. Shared
+Scope paid AI, continuous watch ingestion/common tapes and carry/Scope combination
+remain open. Existing Degen/Swing AI owners remain unchanged.
+
 ## Delivered family and evidence
 
 `app.options.swing` defines `swing-next-session-v1`, an explicitly smaller
@@ -268,7 +274,7 @@ protection, and provides carry-aware AI context and full-cost multi-session repl
 `SESSION_CLOSE` cohorts do not migrate. The explicit alternative is `BOUNDED_CARRY_V1`.
 
 This is PAPER fixture capability. Authentic daily/catalyst/option inputs,
-prospective overnight economics, broader families, Scope/shared arbitration and
+prospective overnight economics, broader families, shared Scope AI/runtime/tapes and
 mixed stock/options ownership remain separate P7 work. No exercise funding or
 continuous overnight observations are presumed. The native carry guide documents
 the explicit local holding adaptation and its remaining acceptance boundaries.

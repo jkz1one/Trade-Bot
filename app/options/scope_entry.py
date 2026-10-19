@@ -219,11 +219,17 @@ def select_entry(engine, db, policy, play_key, expected_revision, now):
         raise ExecutionBlocked("SCOPE_ENTRY_FRESH_ADMISSION_REQUIRED")
     if not binding.evaluated_at <= now < binding.valid_until:
         raise ExecutionBlocked("SCOPE_ENTRY_ADMISSION_EXPIRED")
-    frame, proposal, admission, plan = _terms(record, policy, engine.policy, engine.limits)
+    return packet_from_record(record, policy, engine.policy, engine.limits)
+
+
+def packet_from_record(record, policy, owner_policy, limits):
+    """Project verified stored terms; the caller separately verifies the action binding."""
+    binding = ScopeEntryBinding.model_validate(record["entry_binding"])
+    frame, proposal, admission, plan = _terms(record, policy, owner_policy, limits)
     reasons = (
         []
         if policy.native_execution == "scope-native-v1"
-        and engine.policy.scope_execution == "scope-native-v1"
+        and owner_policy.scope_execution == "scope-native-v1"
         else ["SCOPE_COMPLETE_PATH_UNPROVEN", "SCOPE_NATIVE_EXECUTION_NOT_ENROLLED"]
     )
     reasons.extend(plan.reasons)

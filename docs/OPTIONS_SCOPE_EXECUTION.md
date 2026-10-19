@@ -10,6 +10,11 @@ This is offline implementation acceptance. Authentic normalized data/calendar,
 prospective economics, host deployment and the final UI/visual pass remain separate.
 LIVE stays disabled; existing research cohorts and the deployed experiment are frozen.
 
+Separate [shared deterministic selection](OPTIONS_SCOPE_ARBITRATION.md) now permits
+Scope/Degen/optional session-close Swing in one explicitly new owner. It retains
+all native Scope terms and adds a mandatory common selection receipt; the standalone
+contract below and existing cohorts retain their original behavior.
+
 ## Frozen enrollment
 
 The owner explicitly enrolls `OptionExecutionPolicy.scope_execution="scope-native-v1"`.

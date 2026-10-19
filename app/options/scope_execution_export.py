@@ -28,6 +28,8 @@ SCHEMA = {
     "execution_option_receipts": "receipt_id payload",
     "execution_option_opportunities": "cycle_key fingerprint started_at inputs_json status result_json",
     "execution_option_strategy": "id policy_json",
+    "execution_option_swing_seeds": "session symbol seed_hash seed_json",
+    "execution_option_swing_terminals": "seed_hash terminal_json",
     "execution_option_loss_control": "id policy_json state_json",
     "execution_option_loss_outcomes": "entry_client_id outcome_hash record_json",
     "execution_option_scope_watch_policy": "id config_json last_action_at",
@@ -71,9 +73,16 @@ def _report(db, now, data_cost, host_cost):
     attrs = [order_attribution(db, r) for r in orders]
     buys = [OptionIntent.model_validate_json(r["intent_json"]) for r in orders]
     buys = [i for i in buys if i.side == "BUY"]
-    if any(i.entry_lineage is None or i.entry_lineage.family != "SCOPE" for i in buys):
+    shared = policy.scope_arbitration is not None
+    if shared:
+        from app.options.scope_arbitration import configuration
+
+        families = set(configuration(db).family_priority)
+    else:
+        families = {"SCOPE"}
+    if any(i.entry_lineage is None or i.entry_lineage.family not in families for i in buys):
         raise ValueError("Scope export contains an unrelated entry")
-    if {i.client_id for i in buys} != {
+    if {i.client_id for i in buys if i.entry_lineage.family == "SCOPE"} != {
         r[0] for r in db.execute("SELECT client_id FROM execution_option_scope_entries")
     }:
         raise ValueError("Scope native entry coverage mismatch")
@@ -117,10 +126,14 @@ def _report(db, now, data_cost, host_cost):
                     != (buy.instrument.contract if name == "contract" else getattr(buy, name))
                     for name in frozen
                 )
-                or position.entry_underlying_reference is None
+                or (
+                    buy.entry_lineage.family == "SCOPE"
+                    and position.entry_underlying_reference is None
+                )
             ):
                 raise ValueError("Scope held protection differs from original entry")
-            stored_reference(db, position, limits)
+            if position.entry_underlying_reference is not None:
+                stored_reference(db, position, limits)
     costs = economics.summary(db, now)
     reasons = []
     if ledger.position is not None:
@@ -139,6 +152,7 @@ def _report(db, now, data_cost, host_cost):
     known = Decimal(costs["known_cost"])
     net = None if reasons else ledger.cash - policy.capital - known - data_cost - host_cost
     return {
+        **({"shared_families": sorted(families)} if shared else {}),
         "population_id": limits.population_id,
         "account_id": limits.account_id,
         "status": "INCOMPLETE" if reasons else "COMPLETE_FLAT_ACCOUNTING",
@@ -175,7 +189,9 @@ def export_scope_execution(journal, *, now, data_cost=None, host_cost=None):
             evidence[table] = [list(r) for r in rows]
         report = _report(db, now, data_cost, host_cost)
     value = {
-        "version": "scope-native-export-v1",
+        "version": "shared-scope-native-export-v1"
+        if "shared_families" in report
+        else "scope-native-export-v1",
         "as_of": now.isoformat(),
         "evidence": evidence,
         "report": report,
@@ -202,7 +218,7 @@ def verify_scope_execution_export(value, expected_export_hash):
         raise ValueError("Bounded Scope native export required")
     body = {k: v for k, v in value.items() if k != "export_hash"}
     if (
-        value["version"] != "scope-native-export-v1"
+        value["version"] not in {"scope-native-export-v1", "shared-scope-native-export-v1"}
         or value["export_hash"] != expected_export_hash
         or fingerprint(body) != expected_export_hash
     ):
@@ -216,9 +232,11 @@ def verify_scope_execution_export(value, expected_export_hash):
             cols = [
                 n
                 + (" INTEGER" if n in {"id", "sequence", "active_lock", "halted"} else " TEXT")
-                + (" PRIMARY KEY" if i == 0 else "")
+                + (" PRIMARY KEY" if i == 0 and table != "execution_option_swing_seeds" else "")
                 for i, n in enumerate(names)
             ]
+            if table == "execution_option_swing_seeds":
+                cols.append("PRIMARY KEY(session,symbol)")
             db.execute(f"CREATE TABLE {table} ({','.join(cols)})")
             if (
                 not isinstance(rows, list)
@@ -238,6 +256,8 @@ def verify_scope_execution_export(value, expected_export_hash):
             _cost(value["report"]["data_cost"]),
             _cost(value["report"]["host_cost"]),
         )
+        if (value["version"] == "shared-scope-native-export-v1") != ("shared_families" in report):
+            raise ValueError("Shared Scope export enrollment mismatch")
         if fingerprint(report) != fingerprint(value["report"]):
             raise ValueError("Scope native accounting reconstruction differs")
     return {

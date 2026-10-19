@@ -94,6 +94,9 @@ def review_shared_entry(engine, db, key, proposal, quote, underlying, now):
         return
     strategy = db.execute("SELECT policy_json FROM execution_option_strategy WHERE id=1").fetchone()
     config = json.loads(strategy[0]) if strategy else {}
+    if "scope" in config and key.startswith("scope:"):
+        # The Scope native binding and shared selection receipt own this exact plan.
+        return
     if "swing" not in config:
         return
     policy = SwingPolicy.model_validate(config["swing"])

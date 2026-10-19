@@ -98,8 +98,18 @@ class OptionExecutionPolicy(OptionRecord):
         default=None, exclude_if=lambda v: v is None
     )
 
+    scope_arbitration: Literal["shared-scope-selection-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+
     @model_validator(mode="after")
     def bounded(self):
+        if self.scope_arbitration is not None and (
+            self.scope_execution is None
+            or self.loss_control is None
+            or not {"DEGEN", "SCOPE"} <= {p.family for p in self.loss_control.families}
+        ):
+            raise ValueError("Shared Scope requires native Scope and every family loss policy")
         if self.swing_carry is not None and (
             self.scope_execution is not None
             or self.loss_control is None
@@ -305,6 +315,12 @@ class EntryLineage(OptionRecord):
     opportunity_key: Name
     candidate_id: Name
     candidate_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+    @model_validator(mode="after")
+    def source_family(self):
+        if self.family == "SCOPE" and not self.opportunity_key.startswith("scope:"):
+            raise ValueError("SCOPE_LINEAGE_SOURCE_NAMESPACE_REQUIRED")
+        return self
 
 
 class OptionIntent(OptionRecord):

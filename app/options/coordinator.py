@@ -18,6 +18,7 @@ from app.options.engine import EntryModelBlocked, OptionExecution, clock, finger
 from app.options.governor import _fresh
 from app.options.lifecycle import OptionIntent, OptionLedger
 from app.options.models import OptionProposal, OptionQuote, OptionRecord, UnderlyingQuote
+from app.options.scope_arbitration import ScopeCycleInput, SharedScopePolicy
 from app.options.selection import (
     ContractReadPlan,
     ContractSelectionPolicy,
@@ -33,6 +34,7 @@ class DegenFrame(OptionRecord):
     inventories: tuple[OptionInventory, ...] = Field(default=(), max_length=2)
     quotes: tuple[OptionQuote, ...] = Field(default=(), max_length=8)
     underlyings: tuple[UnderlyingQuote, ...] = Field(default=(), max_length=2)
+    scope: ScopeCycleInput | None = Field(default=None, exclude_if=lambda v: v is None)
     swing: tuple[SwingInput, ...] = Field(default=(), max_length=2, exclude_if=lambda v: not v)
 
 
@@ -51,10 +53,30 @@ class DegenCoordinator:
         replay_model=None,
         position_policy=None,
         swing_policy=None,
+        scope_policy=None,
     ):
         if type(engine) is not OptionExecution or getattr(engine, "_degen_owner", None) is not None:
             raise ValueError("One active built-in options owner is required")
         self.engine, self.clock = engine, clock
+        self.scope_policy = (
+            SharedScopePolicy.model_validate(scope_policy.model_dump(warnings=False))
+            if scope_policy is not None
+            else None
+        )
+        if (scope_policy is not None) != (engine.policy.scope_arbitration is not None):
+            raise ValueError("Shared Scope requires matching owner/coordinator enrollment")
+        if self.scope_policy is not None:
+            if any(
+                x is not None
+                for x in (judgment_limits, key_file, entry_policy, replay_model, position_policy)
+            ):
+                raise ValueError("Shared Scope v1 is deterministic only")
+            if (swing_policy is not None) != ("SWING" in self.scope_policy.family_priority):
+                raise ValueError("Shared Scope priority must cover exactly enrolled families")
+            if not set(self.scope_policy.family_priority) <= {
+                p.family for p in engine.policy.loss_control.families
+            }:
+                raise ValueError("Shared Scope requires all enrolled family loss policies")
         self.policy = DegenPolicy.model_validate(policy.model_dump(warnings=False))
         self.selection = ContractSelectionPolicy.model_validate(
             selection.model_dump(warnings=False)
@@ -207,6 +229,12 @@ class DegenCoordinator:
                     (json.dumps(result, sort_keys=True), pending[0]),
                 )
                 engine._halt(db, "DEGEN_CYCLE_INTERRUPTED", self.now())
+        if self.scope_policy is not None:
+            from app.options.scope_watch import ScopeWatchBook
+
+            self.scope_book = ScopeWatchBook(
+                engine, self.scope_policy.watch, now=self.now(), create=create
+            )
         engine._degen_owner = self
 
     def now(self):
@@ -217,6 +245,8 @@ class DegenCoordinator:
             "setup": self.policy.model_dump(mode="json"),
             "selection": self.selection.model_dump(mode="json"),
         }
+        if self.scope_policy is not None:
+            config["scope"] = self.scope_policy.model_dump(mode="json")
         if self.swing_policy is not None:
             config["swing"] = self.swing_policy.model_dump(mode="json")
         if self.judgment_limits is not None:
@@ -371,12 +401,21 @@ class DegenCoordinator:
             "plans": plans,
         }
 
+    def _family_evidence(self):
+        if self.scope_policy is not None:
+            return {
+                "families": [
+                    f for f in ("DEGEN", "SWING", "SCOPE") if f in self.scope_policy.family_priority
+                ]
+            }
+        return {"families": ["DEGEN", "SWING"]} if self.swing_policy else {}
+
     def _finish(self, key, result):
         result = json.loads(
             json.dumps(
                 {
                     "cycle_key": key,
-                    **({"families": ["DEGEN", "SWING"]} if self.swing_policy else {}),
+                    **self._family_evidence(),
                     **result,
                 },
                 sort_keys=True,
@@ -530,6 +569,8 @@ class DegenCoordinator:
 
     async def cycle(self, frame):
         frame = DegenFrame.model_validate(frame.model_dump(warnings=False))
+        if frame.scope is not None and self.scope_policy is None:
+            raise ValueError("Scope frames require explicit shared enrollment")
         at = self.now()
         # One durable attempt per actual five-minute clock slot, including HOLD,
         # failed inputs and interruption. Repeated calls do not read the venue.
@@ -574,7 +615,16 @@ class DegenCoordinator:
                 held = self._held_instrument(db, ledger)
             if ledger.position:
                 # Exact owned identity comes from the journal, never a current chain.
-                result = await self.supervise(frame.quotes, frame.underlyings)
+                if (
+                    self.scope_policy is not None
+                    and held.contract.underlying == "SPX"
+                    and frame.scope is not None
+                ):
+                    result = await self.supervise(
+                        (frame.scope.frame.quote,), (frame.scope.underlying,)
+                    )
+                else:
+                    result = await self.supervise(frame.quotes, frame.underlyings)
                 if self.position_policy is not None and result.get("status") == "HEALTHY":
                     from app.options.position_coordination import run_position_cycle
 
@@ -610,7 +660,7 @@ class DegenCoordinator:
             quotes = {q.instrument.instrument_id: q for q in frame.quotes}
             underlyings = {q.symbol: q for q in frame.underlyings}
             evidence = {
-                **({"families": ["DEGEN", "SWING"]} if self.swing_policy else {}),
+                **self._family_evidence(),
                 "scans": [s.model_dump(mode="json") for s in planned["scans"]],
                 "read_plans": [p.model_dump(mode="json") for p in planned["plans"]],
             }
@@ -655,6 +705,13 @@ class DegenCoordinator:
             evidence.update(
                 candidates=[c.model_dump(mode="json") for c in candidates], rejections=rejections
             )
+            shared_choice = None
+            if self.scope_policy is not None:
+                from app.options.scope_arbitration import collect, execute_scope
+
+                shared_choice = collect(self, key, frame, evidence)
+                if shared_choice and shared_choice["family"] == "SCOPE":
+                    return await execute_scope(self, key, frame, evidence)
             if not candidates:
                 hold = OptionProposal(
                     action="HOLD",
@@ -664,7 +721,11 @@ class DegenCoordinator:
                 return self._finish(
                     key, {"status": "HOLD", "reason": "NO_ADMITTED_CONTRACT", **evidence}
                 )
-            selected = candidates[0]
+            selected = (
+                next(c for c in candidates if c.candidate_id == shared_choice["candidate_id"])
+                if shared_choice
+                else candidates[0]
+            )
             if self.entry_policy is not None:
                 from app.options.entry_coordination import run_entry_cycle
 

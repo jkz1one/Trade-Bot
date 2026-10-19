@@ -136,3 +136,13 @@ evidence only; it never enables overnight trading. Separate [native carry tests]
 are `test_option_swing_execution.py` and `test_option_swing_carry_replay.py`. Run them
 with the calendar suite and entry/management/evaluation regressions in an isolated
 noneditable install. Full-period fixture cash arithmetic is not economic acceptance.
+
+## Shared Scope selection
+
+The [shared deterministic procedure](OPTIONS_SCOPE_ARBITRATION.md) adds
+`test_option_scope_arbitration.py` to the installed Scope/shared-entry, loss,
+attribution and observer checks. Its fixtures select CALL/PUT Scope, Degen and
+Swing in one native owner, retain separate research accounts, exercise restart/
+tamper/atomicity and reconstruct full-cost portable accounting. No new dependency
+or provider call is required. Paid shared Scope AI, continuous Scope runtime
+watch ingestion and common A/B/C/D Scope tapes remain separate implementation work.

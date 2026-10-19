@@ -25,7 +25,7 @@ from app.options.lifecycle import (
     OptionReceipt,
     OptionVenueSnapshot,
 )
-from app.options.models import Name, OptionLimits
+from app.options.models import Name, OptionInstrument, OptionLimits
 from app.options.scope_observer import stored_scope
 from app.options.selection import parse_candidate
 
@@ -533,7 +533,7 @@ class OptionObserver:
                 "SELECT inputs_json FROM execution_option_opportunities ORDER BY rowid DESC LIMIT 100"
             )
         ]
-        if family == "SCOPE":
+        if family == "SCOPE" and not (strategy and strategy.get("scope")):
             return empty[:2] + (counts, frames)
         rows = db.execute(
             "SELECT rowid,* FROM execution_option_opportunities WHERE (? IS NULL OR rowid<?) ORDER BY rowid DESC LIMIT ?",
@@ -550,7 +550,12 @@ class OptionObserver:
             families = data.get(
                 "families", ["DEGEN", "SWING"] if strategy and strategy.get("swing") else ["DEGEN"]
             )
-            if families not in (["DEGEN"], ["DEGEN", "SWING"]):
+            if families not in (
+                ["DEGEN"],
+                ["DEGEN", "SWING"],
+                ["DEGEN", "SCOPE"],
+                ["DEGEN", "SWING", "SCOPE"],
+            ):
                 raise ValueError("Unknown stored family membership")
             if family != "ALL" and family not in families:
                 continue
@@ -597,6 +602,27 @@ class OptionObserver:
                 else None
             )
             selected = data.get("candidate_id")
+            scope_packet = data.get("scope_candidate") if family in {"ALL", "SCOPE"} else None
+            scope_choice = (data.get("scope_arbitration") or {}).get("selected")
+            if scope_choice and scope_choice["family"] == "SCOPE":
+                selected = scope_choice["candidate_id"]
+            scope_candidates = []
+            if scope_packet is not None:
+                a = scope_packet["admission"]
+                scope_candidates.append(
+                    {
+                        "candidate_id": scope_packet["binding"]["play_key"],
+                        "setup": "SCOPE:" + scope_packet["choice"]["pattern"],
+                        "contract": _contract(
+                            OptionInstrument.model_validate(scope_packet["instrument"]).contract
+                        ),
+                        "outcome": a["outcome"],
+                        "quantity_ceiling": a["quantity"],
+                        "limit_ceiling": a["limit_price"],
+                        "full_premium_ceiling": a["full_premium_loss"],
+                        "approved_until": a["valid_until"],
+                    }
+                )
             output.append(
                 {
                     "id": row["rowid"],
@@ -607,6 +633,11 @@ class OptionObserver:
                     "status": data.get("status", "IN_PROGRESS"),
                     "reason": data.get("blocker") or data.get("reason"),
                     "candidate_id": selected,
+                    **(
+                        {"scope_arbitration": data["scope_arbitration"]}
+                        if "scope_arbitration" in data
+                        else {}
+                    ),
                     "client_id": data.get("client_id"),
                     "candidates": [
                         {
@@ -622,11 +653,19 @@ class OptionObserver:
                             else None,
                         }
                         for c in candidates
-                    ],
+                    ]
+                    + scope_candidates,
                     "setup_observations": observations,
                     "model_choice": choice,
                     "attribution": decision_attribution(
-                        db, row["cycle_key"], data, policy
+                        db,
+                        data.get("scope_arbitration", {})
+                        .get("selected", {})
+                        .get("source_key", row["cycle_key"])
+                        if data.get("scope_arbitration", {}).get("selected")
+                        else row["cycle_key"],
+                        data,
+                        policy,
                     ).model_dump(mode="json"),
                     "error_class": data.get("error_class") or data.get("model_error_class"),
                 }
@@ -665,6 +704,9 @@ class OptionObserver:
             )
 
         quotes = [q for f in frames for q in f.quotes if same_id(q)]
+        quotes.extend(
+            f.scope.frame.quote for f in frames if f.scope and same_id(f.scope.frame.quote)
+        )
         # A fresh protective decision may be newer than an entry-cycle frame.
         from app.options.models import OptionQuote
 
@@ -705,6 +747,11 @@ class OptionObserver:
         underlyings = [
             u for f in frames for u in f.underlyings if u.symbol == p.contract.underlying
         ]
+        underlyings.extend(
+            f.scope.underlying
+            for f in frames
+            if f.scope and f.scope.underlying.symbol == p.contract.underlying
+        )
         underlying = max(underlyings, key=lambda u: u.received_at) if underlyings else None
         from app.options.premium_trail import floor_value
 

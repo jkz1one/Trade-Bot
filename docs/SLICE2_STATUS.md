@@ -1,5 +1,71 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Deterministic shared Scope selection: 2026-10-19 UTC
+
+Fresh GitHub/local state began at `fa7843924d2dc1f8bc4cc09cdfecfff46857bded`, tree
+`714b4104304d8dbc02ab90bfaa5119482584d1ca`. Scope native execution/loss and separate
+bounded Swing carry were already fixture integrated. This slice closes the next
+deterministic shared-selection boundary. [Enrollment, APIs and remaining work](OPTIONS_SCOPE_ARBITRATION.md).
+
+New `shared-scope-selection-v1` owners select among Scope, Degen and optional
+session-close Swing in one coordinator, five-minute claim, cash ledger, reservation
+and native loss-control boundary. The full Scope watch policy and explicit family
+priority are frozen with the coordinator. Every enabled family needs its loss policy.
+The shared v1 rejects paid entry/management model settings and scripted model replay;
+old Degen/Swing AI populations and standalone Scope owners remain unchanged.
+
+Fresh Scope admission follows reconciliation and other cycle events. Exact active
+watch coverage is mandatory. Original candidates and selection are retained with
+policy/packet hashes and native source identities. Native preparation rejects bypass
+requests; order, decision, selection event and Scope consumption commit together.
+Dispatch and attribution recheck the original selection. Rejection stops that cycle
+without trying a second candidate. Scope targets, quantity/price ceilings, fees,
+profile protection and deadlines remain exact; held/native partial-exit protection
+stays independent. No SPY fallback, invented T3, changed convexity rule or fill is added.
+
+Stored attribution carries the selection into entry, scale and final-sale records.
+The observer exposes shared Scope candidates and held quote evidence. Portable
+`shared-scope-native-export-v1` reconstructs the entire account and every enrolled
+family from fixed typed native tables. Unselected Scope alternatives remain bound
+to their original action after later watch mutations. Every entry/management charge
+and fee remains counted; unknown cost, incomplete outcomes, open exposure or absent
+operating allocations suppress net results. Independent owners do not share costs,
+reservations or loss counters.
+
+Validation: **384 distinct installed cases passed**, deduplicating overlapping
+reruns. The broad 381-case run exposed three earlier integration gaps: a Scope
+family label could parse with a Degen/Swing source, and two legacy family-risk
+cases incorrectly needed carry scan evidence without strategy enrollment. The
+Scope source namespace is now validated. Carry checks preserve unenrolled legacy
+behavior while rejecting missing strategy records for carry-enrolled owners.
+No failed gate was waived: 134 Scope/lineage/observer cases passed after the first
+correction (291.55s), and 64 family-loss/carry/shared/history cases passed on the
+release wheel after the second (159.79s). The earlier broad run's other 378 cases
+and the separate two-case historical-alternative proof also passed. There are no
+unresolved failures in the normalized case ledger.
+
+All runs used isolated Python, noneditable wheels, copied tests outside the checkout,
+disabled ambient plugins and warnings as errors. Fixture directories are explicitly
+retained. All **189 application/template files** match final source/wheel/install.
+Only `lifecycle.py` and `swing_execution.py` differ from the broad-test wheel; both
+corrections were covered by the passing focused reruns. Scoped lint/format,
+dependency consistency, whitespace and local documentation targets pass.
+Release wheel SHA-256:
+`6a544bc6125512dbd616d472a6b0b36364ee7c9f151bc930c1f7766ea5ed3850`.
+Retained proof beside checkout: `shared-scope-proof/{installed,history,final,release}.xml`,
+corresponding logs, `validation-summary.json`, `release-identity.json`, and the
+release wheel/build/install logs.
+
+README, source of truth v1.80, research/continuation and testing guides now record
+this boundary. Main remains `b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 stays
+open/draft, LIVE stays disabled and the deployed experiment stays frozen. No actual
+provider/model/broker calls, host/deployment changes or dependency changes occurred.
+
+Next: shared Scope paid AI, continuous watch ingestion and common A/B/C/D tapes;
+combined carry/Scope enrollment, broader families and mixed stock/options remain
+open. The final UI/visual and authentic data/model acceptance passes still follow
+this plumbing. Do not reopen the settled Scope management/loss decisions.
+
 ## Native bounded Swing carry: 2026-10-19 UTC
 
 Fresh GitHub/local state began at `fb6da02fb27d344c2f63e52dcb7145b87dad932f`, tree
