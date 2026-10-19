@@ -277,10 +277,11 @@ def model_family_reasons(engine, db, source_key, state):
         "SELECT result_json FROM execution_option_opportunities WHERE cycle_key=?", (source_key,)
     ).fetchone()
     try:
-        candidates = _json(row[0])["candidates"] if row else []
+        data = _json(row[0]) if row else {}
+        candidates = data.get("candidates", [])
         if (
             not isinstance(candidates, list)
-            or not 1 <= len(candidates) <= 100
+            or len(candidates) > 100
             or any(not isinstance(c, dict) for c in candidates)
         ):
             return ["NATIVE_FAMILY_MODEL_CANDIDATES_REQUIRED"]
@@ -288,6 +289,15 @@ def model_family_reasons(engine, db, source_key, state):
             "SWING" if isinstance(parse_candidate(c), SwingCandidate) else "DEGEN"
             for c in candidates
         }
+        if engine.policy.scope_arbitration == "shared-scope-entry-v1" and data.get(
+            "scope_candidate"
+        ):
+            from app.options.scope_arbitration import configuration, verify_scope_candidate
+
+            verify_scope_candidate(db, data, configuration(db))
+            families.add("SCOPE")
+        if not families:
+            return ["NATIVE_FAMILY_MODEL_CANDIDATES_REQUIRED"]
     except (ValueError, TypeError, KeyError):
         return ["NATIVE_FAMILY_MODEL_CANDIDATES_REQUIRED"]
     paused = {s["family"] for s in state["families"] if s["reasons"]}

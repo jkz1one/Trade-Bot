@@ -26,10 +26,18 @@ from app.options.scope_execution_export import export_scope_execution, verify_sc
 
 
 @contextmanager
-def shared(path, priority=("SCOPE", "DEGEN"), right="CALL", *, costs=False):
+def shared(
+    path,
+    priority=("SCOPE", "DEGEN"),
+    right="CALL",
+    *,
+    costs=False,
+    ai=False,
+    coordinator_options=None,
+):
     path.mkdir(parents=True, exist_ok=True)
     ep = execution_policy() | {
-        "scope_arbitration": "shared-scope-selection-v1",
+        "scope_arbitration": "shared-scope-entry-v1" if ai else "shared-scope-selection-v1",
         "loss_control": NativeLossPolicy(
             max_consecutive_losses=2,
             cooldown_seconds=1800,
@@ -54,7 +62,12 @@ def shared(path, priority=("SCOPE", "DEGEN"), right="CALL", *, costs=False):
             selection,
             create=True,
             clock=lambda: times[0],
-            scope_policy=SharedScopePolicy(watch=policy(), family_priority=priority),
+            scope_policy=SharedScopePolicy(
+                watch=policy(),
+                family_priority=priority,
+                version="shared-scope-entry-v1" if ai else "shared-scope-selection-v1",
+            ),
+            **(coordinator_options or {}),
             swing_policy=swing_policy() if "SWING" in priority else None,
         )
         f, context = data(right)

@@ -512,6 +512,10 @@ class OptionExecution:
                 and strategy
                 and "entry_model" in json.loads(strategy[0])
                 and entry_request is None
+                and not (
+                    scope_entry is not None
+                    and self.policy.scope_arbitration == "shared-scope-entry-v1"
+                )
             ):
                 reason = "FULL_ENTRY_PLAN_REQUIRED"
             if origin == "MODEL":
@@ -684,6 +688,18 @@ class OptionExecution:
                         result = result.model_copy(
                             update={"valid_until": min(result.valid_until, ceiling.valid_until)}
                         )
+            if reason is None and result.outcome == "APPROVED" and "scope_paid_review" in inputs:
+                result = result.model_copy(
+                    update={
+                        "valid_until": min(
+                            result.valid_until,
+                            datetime.fromisoformat(inputs["scope_paid_review"]["valid_until"]),
+                            datetime.fromisoformat(
+                                inputs["scope_arbitration"]["model_valid_until"]
+                            ),
+                        )
+                    }
+                )
             output = {
                 "status": "REJECTED",
                 "reason": reason,
@@ -1820,9 +1836,9 @@ class OptionExecution:
     def record_entry_usage(self, source_key, usage, plan, *, now):
         from pydantic import TypeAdapter
 
-        from app.options.entry_reasoning import CarryEntryPlan, EntryPlan
+        from app.options.entry_reasoning import CarryEntryPlan, EntryPlan, SharedScopeEntryPlan
 
-        plan = TypeAdapter(EntryPlan | CarryEntryPlan).validate_python(
+        plan = TypeAdapter(EntryPlan | CarryEntryPlan | SharedScopeEntryPlan).validate_python(
             plan.model_dump(warnings=False)
         )
         return self._record_model_usage(source_key, usage, plan, now=now)

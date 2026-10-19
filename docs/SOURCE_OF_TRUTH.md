@@ -1,11 +1,12 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.81. Adopted product direction and working delivery contract, 2026-10-19 UTC.
-The [post-cost Scope review](OPTIONS_SCOPE_POST_COST.md) now verifies original/fresh
-admission correspondence, intervening paid usage, unchanged protection and original
-ceilings/deadline without granting order authority. Shared Scope AI request/result
-binding, atomic consumption and trade-level cost attribution remain open; existing
-shared deterministic owners still reject model enrollment.
+Version 1.82. Adopted product direction and working delivery contract, 2026-10-19 UTC.
+[Shared Scope entry AI](OPTIONS_SCOPE_AI.md) now binds one paid Degen/Swing/Scope
+decision to native approval, fixed Scope terms, fresh post-cost admission and stored
+trade-level cost attribution. The original expiry still caps dispatch; scale/final
+exits and loss outcomes retain the paid entry. This requires a new frozen owner;
+legacy deterministic cohorts remain model-off. Shared Scope position AI, common
+A/B/C/D tapes and continuous watch/runtime input remain open.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -391,7 +392,9 @@ stock/options ownership remains open. New
 [deterministic Scope/Degen/Swing arbitration](OPTIONS_SCOPE_ARBITRATION.md) now selects
 from bound native candidates in one owner,
 with immutable alternatives/selection, fresh dispatch gates and full-cost portable
-accounting. Shared Scope paid AI, continuous watch ingestion/common A/B/C/D tapes
+accounting. Shared Scope entry AI now binds full paid decisions, fresh owned
+approval and trade-level cost attribution. Shared position reasoning, continuous
+watch ingestion/common A/B/C/D tapes
 and combined carry/Scope enrollment remain open; existing cohorts stay frozen.
 
 Swing retains completed higher-timeframe bars, exact contract locking, next actual
@@ -619,7 +622,8 @@ M3 authenticated normalized collection/model acceptance and M5–M8 are not comp
 for options. M7 now has shared Degen/Swing PAPER candidate arbitration and a first
 locked next-session daily-breakout adaptation with session-close protection.
 Native bounded Swing carry and deterministic shared Scope selection now have
-fixture integration. Shared Scope AI/runtime/tape integration, combined carry/Scope,
+fixture integration. Shared Scope paid entry is now fixture integrated. Shared
+position AI/runtime/tape integration, combined carry/Scope,
 remaining families and mixed stock/options remain open. Scope
 native execution/loss integration is fixture implemented within its explicit profile/quantity
 boundaries; authentic provider and prospective performance acceptance remain open. Existing

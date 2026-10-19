@@ -54,6 +54,7 @@ class DegenCoordinator:
         position_policy=None,
         swing_policy=None,
         scope_policy=None,
+        scope_refresh=None,
     ):
         if type(engine) is not OptionExecution or getattr(engine, "_degen_owner", None) is not None:
             raise ValueError("One active built-in options owner is required")
@@ -65,12 +66,27 @@ class DegenCoordinator:
         )
         if (scope_policy is not None) != (engine.policy.scope_arbitration is not None):
             raise ValueError("Shared Scope requires matching owner/coordinator enrollment")
+        self.scope_refresh = scope_refresh
         if self.scope_policy is not None:
-            if any(
+            if self.scope_policy.version != engine.policy.scope_arbitration:
+                raise ValueError("Matching shared Scope versions required")
+            if self.scope_policy.version == "shared-scope-selection-v1" and any(
                 x is not None
                 for x in (judgment_limits, key_file, entry_policy, replay_model, position_policy)
             ):
                 raise ValueError("Shared Scope v1 is deterministic only")
+            if self.scope_policy.version == "shared-scope-entry-v1" and (
+                judgment_limits is None
+                or key_file is None
+                or entry_policy is None
+                or entry_policy.scope_selection is None
+                or replay_model is not None
+                or position_policy is not None
+                or not callable(scope_refresh)
+            ):
+                raise ValueError(
+                    "Shared Scope AI requires full entry configuration and fresh input reader"
+                )
             if (swing_policy is not None) != ("SWING" in self.scope_policy.family_priority):
                 raise ValueError("Shared Scope priority must cover exactly enrolled families")
             if not set(self.scope_policy.family_priority) <= {
@@ -117,6 +133,16 @@ class DegenCoordinator:
             if entry_policy is not None
             else None
         )
+        if (
+            self.entry_policy is not None
+            and self.entry_policy.scope_selection is not None
+            and (self.scope_policy is None or self.scope_policy.version != "shared-scope-entry-v1")
+        ):
+            raise ValueError("Scope reasoning requires shared AI owner enrollment")
+        if scope_refresh is not None and (
+            self.scope_policy is None or self.scope_policy.version != "shared-scope-entry-v1"
+        ):
+            raise ValueError("Scope refresh requires shared AI owner enrollment")
         from app.options.position_reasoning import PositionReasoningPolicy
 
         self.position_policy = (
@@ -710,6 +736,21 @@ class DegenCoordinator:
                 from app.options.scope_arbitration import collect, execute_scope
 
                 shared_choice = collect(self, key, frame, evidence)
+                if self.scope_policy.version == "shared-scope-entry-v1" and (
+                    candidates or evidence.get("scope_candidate")
+                ):
+                    from app.options.entry_coordination import run_entry_cycle
+
+                    return await run_entry_cycle(
+                        self,
+                        key,
+                        candidates,
+                        planned["scans"],
+                        account,
+                        quotes,
+                        underlyings,
+                        evidence,
+                    )
                 if shared_choice and shared_choice["family"] == "SCOPE":
                     return await execute_scope(self, key, frame, evidence)
             if not candidates:

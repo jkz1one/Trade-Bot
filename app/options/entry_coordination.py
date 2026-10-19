@@ -89,6 +89,7 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
             )
         )
     as_of = scans[0].evaluated_at
+    scope = evidence.get("scope_candidate") if c.entry_policy.scope_selection is not None else None
     packet = EntryPacket(
         decision_id=fingerprint(
             {"population": c.engine.limits.population_id, "cycle": key, "configuration": config}
@@ -98,12 +99,14 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
         as_of=as_of,
         valid_until=min(
             *(o.candidate.admission.valid_until for o in opportunities),
+            *([datetime.fromisoformat(scope["binding"]["valid_until"])] if scope else []),
             datetime.fromtimestamp((int(as_of.timestamp()) // 300 + 1) * 300, tz=as_of.tzinfo),
         ),
         account=account,
         limits=c.engine._effective_limits(),
         policy=c.entry_policy,
         opportunities=tuple(opportunities),
+        scope=scope,
     )
     request = judgment.create_request(packet, config, request_id=uuid4().hex, now=at)
     if len(request.model_dump_json().encode()) > judgment.MAX_REQUEST_BYTES:
@@ -167,6 +170,12 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
         return c._finish(
             key, {**evidence, "status": "HOLD", "reason": "ENTRY_MODEL_HOLD_OR_REJECTED"}
         )
+    if c.entry_policy.scope_selection is not None:
+        from app.options.scope_ai import choose_after_usage
+
+        scope_result = await choose_after_usage(c, key, evidence, request, result)
+        if scope_result is not None:
+            return scope_result
     selected = next((x for x in candidates if x.candidate_id == result.plan.candidate_id), None)
     if selected is None:
         c._model_halt("OPTION_MODEL_EVIDENCE_REJECTED", completed)

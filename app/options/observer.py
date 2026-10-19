@@ -527,12 +527,17 @@ class OptionObserver:
             )
         }
         # Market evidence is current across navigation; a historical page cannot replace it.
-        frames = [
-            DegenFrame.model_validate(_json(r[0]))
-            for r in db.execute(
-                "SELECT inputs_json FROM execution_option_opportunities ORDER BY rowid DESC LIMIT 100"
-            )
-        ]
+        frames = []
+        for saved in db.execute(
+            "SELECT inputs_json,result_json FROM execution_option_opportunities ORDER BY rowid DESC LIMIT 100"
+        ):
+            frames.append(DegenFrame.model_validate(_json(saved[0])))
+            data = _json(saved[1]) if saved[1] else {}
+            if data.get("scope_fresh_candidate") is not None:
+                from app.options.scope_reasoning import ScopeReasoningEvidence
+
+                fresh = ScopeReasoningEvidence.model_validate(data["scope_fresh_candidate"])
+                frames.append(DegenFrame(quotes=(fresh.quote,), underlyings=(fresh.underlying,)))
         if family == "SCOPE" and not (strategy and strategy.get("scope")):
             return empty[:2] + (counts, frames)
         rows = db.execute(
@@ -623,6 +628,9 @@ class OptionObserver:
                         "approved_until": a["valid_until"],
                     }
                 )
+            attribution_key = row["cycle_key"]
+            if scope_choice and data["scope_arbitration"]["version"] == "shared-scope-selection-v1":
+                attribution_key = scope_choice["source_key"]
             output.append(
                 {
                     "id": row["rowid"],
@@ -659,11 +667,7 @@ class OptionObserver:
                     "model_choice": choice,
                     "attribution": decision_attribution(
                         db,
-                        data.get("scope_arbitration", {})
-                        .get("selected", {})
-                        .get("source_key", row["cycle_key"])
-                        if data.get("scope_arbitration", {}).get("selected")
-                        else row["cycle_key"],
+                        attribution_key,
                         data,
                         policy,
                     ).model_dump(mode="json"),

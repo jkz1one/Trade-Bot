@@ -138,5 +138,6 @@ not broker fills or profitability evidence. See [the completion plan](AI_TRADER_
 The existing Degen/Swing full-plan path remains unchanged. Scope keeps its native
 contract, targets and protection. The [post-cost Scope review](OPTIONS_SCOPE_POST_COST.md)
 now checks original/fresh owned admissions and intervening usage without granting
-execution authority. Binding the full shared model decision and its charge to the
-selected native entry remains required before shared Scope AI enrollment.
+execution authority. The separately enrolled [shared Scope entry AI path](OPTIONS_SCOPE_AI.md) now binds
+the full decision and its charge to the selected native entry. Scope selects its
+fixed plan; Degen/Swing retain their full underlying entry reasoning.

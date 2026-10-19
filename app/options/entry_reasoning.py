@@ -21,6 +21,7 @@ from app.options.models import (
     SessionWindow,
     UnderlyingQuote,
 )
+from app.options.scope_reasoning import ScopeReasoningEvidence
 from app.options.selection import DegenCandidate, SwingCandidate
 from app.options.swing import SwingScan
 
@@ -30,6 +31,9 @@ MAX_PACKET_BYTES = 256 * 1024
 
 class EntryReasoningPolicy(OptionRecord):
     version: Literal["option-entry-reasoning-v1"] = "option-entry-reasoning-v1"
+    scope_selection: Literal["scope-fixed-plan-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     max_horizon_seconds: int = Field(gt=0, le=21600, strict=True)
     max_carry_horizon_seconds: int | None = Field(
         default=None, gt=21600, le=5184000, strict=True, exclude_if=lambda v: v is None
@@ -69,7 +73,8 @@ class EntryPacket(OptionRecord):
     account: OptionAccount
     limits: OptionLimits
     policy: EntryReasoningPolicy
-    opportunities: tuple[EntryOpportunity, ...] = Field(min_length=1, max_length=24)
+    opportunities: tuple[EntryOpportunity, ...] = Field(max_length=24)
+    scope: ScopeReasoningEvidence | None = Field(default=None, exclude_if=lambda v: v is None)
 
     @model_validator(mode="after")
     def preflight(self):
@@ -79,6 +84,24 @@ class EntryPacket(OptionRecord):
             or self.valid_until.timestamp() > (int(self.as_of.timestamp()) // 300 + 1) * 300
         ):
             raise ValueError("Packet must expire within its original five-minute opportunity")
+        if not self.opportunities and self.scope is None:
+            raise ValueError("At least one entry opportunity required")
+        if self.scope is not None:
+            p = self.scope
+            if (
+                self.policy.scope_selection is None
+                or not self.as_of <= p.binding.evaluated_at < self.valid_until
+                or self.valid_until > p.binding.valid_until
+                or p.account != self.account
+                or p.binding.population_id != self.limits.population_id
+                or p.binding.account_id != self.limits.account_id
+            ):
+                raise ValueError("Scope evidence requires its explicit policy and owner binding")
+        if (
+            self.policy.scope_selection is not None
+            and self.policy.max_carry_horizon_seconds is not None
+        ):
+            raise ValueError("Shared Scope carry reasoning is not enrolled")
         ids = [o.candidate.candidate_id for o in self.opportunities]
         if len(set(ids)) != len(ids):
             raise ValueError("Duplicate entry candidates")
@@ -187,7 +210,38 @@ class CarryEntryPlan(EntryPlan):
     horizon_seconds: int | None = Field(default=None, gt=0, le=5184000, strict=True)
 
 
+class SharedScopeEntryPlan(EntryPlan):
+    version: Literal["shared-scope-entry-plan-v1"] = "shared-scope-entry-plan-v1"
+    scope: bool = Field(strict=True)
+
+    @model_validator(mode="after")
+    def coherent(self):
+        if not self.scope:
+            return super().coherent()
+        if (
+            self.action != "ENTER"
+            or self.candidate_id is None
+            or any(
+                x is not None
+                for x in (
+                    self.condition,
+                    self.underlying_trigger,
+                    self.underlying_invalidation,
+                    self.underlying_target,
+                    self.horizon_seconds,
+                )
+            )
+            or not self.thesis.strip()
+            or not self.uncertainty.strip()
+            or len(set(self.evidence_ids)) != len(self.evidence_ids)
+        ):
+            raise ValueError("Scope selects its fixed plan without replacement trading terms")
+        return self
+
+
 def plan_class(policy):
+    if policy.scope_selection is not None:
+        return SharedScopeEntryPlan
     return CarryEntryPlan if policy.max_carry_horizon_seconds is not None else EntryPlan
 
 
@@ -196,7 +250,7 @@ class EntryReview(OptionRecord):
     outcome: Literal["HOLD", "REJECTED", "ELIGIBLE"]
     reasons: tuple[Name, ...]
     packet_hash: Digest
-    plan: EntryPlan | CarryEntryPlan
+    plan: EntryPlan | CarryEntryPlan | SharedScopeEntryPlan
     proposal: OptionProposal | None = None
     admission: OptionAdmission | None = None
     exit_by: datetime | None = None
@@ -224,12 +278,36 @@ def review_entry_plan(packet, plan, *, quote, underlying, account, now):
     known = {fingerprint(packet.account)}
     for o in packet.opportunities:
         known.update(o.evidence_ids)
+    if packet.scope is not None:
+        known.add(fingerprint(packet.scope.model_dump(mode="json")))
     if not set(plan.evidence_ids) <= known:
         return result("REJECTED", "UNKNOWN_EVIDENCE_REFERENCE")
     if not packet.as_of <= now < packet.valid_until:
         return result("REJECTED", "ORIGINAL_PLAN_DEADLINE_EXPIRED")
     if plan.action == "HOLD":
         return result("HOLD", "MODEL_HOLD")
+    if getattr(plan, "scope", False):
+        p = packet.scope
+        if (
+            p is None
+            or plan.candidate_id != fingerprint(p.model_dump(mode="json"))
+            or fingerprint(p.model_dump(mode="json")) not in plan.evidence_ids
+        ):
+            return result("REJECTED", "ORIGINAL_SCOPE_PLAN_REQUIRED")
+        if (
+            quote != p.quote
+            or underlying != p.underlying
+            or account != p.account
+            or now != p.binding.evaluated_at
+        ):
+            return result("REJECTED", "SCOPE_OWNED_POST_COST_REVIEW_REQUIRED")
+        return result(
+            "ELIGIBLE",
+            "FIXED_SCOPE_PLAN_SELECTED",
+            proposal=p.proposal,
+            admission=p.admission,
+            exit_by=p.entry_time_protection.exit_by,
+        )
     opportunity = next(
         (o for o in packet.opportunities if o.candidate.candidate_id == plan.candidate_id), None
     )

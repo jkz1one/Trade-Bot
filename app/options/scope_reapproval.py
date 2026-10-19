@@ -235,6 +235,10 @@ def review_paid_scope(
         or account.model_dump(mode="json") != fresh["account"]
     ):
         raise ExecutionBlocked("SCOPE_REAPPROVAL_POST_COST_ACCOUNT_REQUIRED")
+    return review_receipt(original, fresh, deadline, charge)
+
+
+def review_receipt(original, fresh, deadline, charge):
     body = {
         "version": "scope-post-cost-review-v1",
         "authority": False,
@@ -248,6 +252,6 @@ def review_paid_scope(
         "original_source_key": lineage(original).opportunity_key,
         "fresh_source_key": lineage(fresh).opportunity_key,
         "model_charge": charge,
-        "account_hash": fingerprint(account),
+        "account_hash": fingerprint(fresh["account"]),
     }
     return {**body, "review_hash": fingerprint(body)}

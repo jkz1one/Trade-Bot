@@ -3,9 +3,9 @@
 `app.options.scope_reapproval.review_paid_scope` is a read-only prerequisite for
 shared Scope AI. It verifies the original admission, the intervening settled model
 charge and a new revision-bound owned admission. It grants no native order authority.
-The deterministic shared coordinator still rejects model enrollment. Full shared
-Scope model request/result binding, atomic consumption and trade-outcome cost
-attribution remain the next integration work.
+The deterministic shared coordinator still rejects model enrollment. Separately
+enrolled [shared Scope entry AI](OPTIONS_SCOPE_AI.md) now binds the full model
+request/result, atomic native consumption and trade-outcome cost attribution.
 
 ## Why a second admission is necessary
 
@@ -67,18 +67,15 @@ bounded deadline. Both `authority` and `live_enabled` remain false. Reading it
 writes no events, decisions, orders or cost rows and is repeatable at the same
 revision. A review hash is correspondence evidence, not a provider signature.
 
-## Deliberately separate remaining boundary
+## Separate execution boundary
 
-A fresh admission has a different native Scope source identity. The future shared
-AI coordinator must retain the original alternatives and full model response,
-bind the selected plan to this review, and atomically consume it while attributing
-the paid cycle to the resulting native entry and every scale/final exit. This API
-checks charge correspondence; it does not establish that the model selected this
-play or attach the charge to a trade outcome. No existing deterministic enrollment
-can use it to bypass shared selection, convert a HOLD into an order, or enable AI.
-Unknown cost is never converted to zero. Existing full-account export includes all
-recorded charges regardless of selection; native trade attribution needs its explicit
-integration before shared Scope AI can be enabled.
+A fresh admission has a different native Scope source identity. The separately
+enrolled [shared AI coordinator](OPTIONS_SCOPE_AI.md) now retains the original
+alternatives and full model response, binds its selected plan to this review,
+atomically consumes it and attributes the paid cycle to the native entry and its
+scale/final exits. This read API still checks correspondence only; callers cannot
+use its result as execution authority. Deterministic enrollment cannot adopt AI,
+convert HOLD into an order or bypass the common selection boundary.
 
 Installed fixtures cover CALL/PUT, newer admission after settled costs, unchanged
 original terms, bounded expiry, stale revisions, unknown and foreign calls, changed

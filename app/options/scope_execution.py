@@ -87,8 +87,20 @@ def prepare_review(engine, db, source_key, inputs, request, now):
             "SELECT result_json FROM execution_option_opportunities WHERE cycle_key=?",
             (request.arbitration_cycle,),
         ).fetchone()
-        if not row or json.loads(row[0]).get("scope_candidate") != packet:
+        evidence = json.loads(row[0]) if row else {}
+        field = (
+            "scope_fresh_candidate"
+            if engine.policy.scope_arbitration == "shared-scope-entry-v1"
+            else "scope_candidate"
+        )
+        if not row or evidence.get(field) != packet:
             raise ExecutionBlocked("SHARED_SCOPE_ADMISSION_CHANGED")
+        if engine.policy.scope_arbitration == "shared-scope-entry-v1":
+            from app.options.scope_ai import paid_review_for_prepare
+
+            inputs["scope_paid_review"] = paid_review_for_prepare(
+                engine, db, request.arbitration_cycle, evidence, now
+            )
     expected = {
         "proposal": packet["proposal"],
         "quote": packet["quote"],

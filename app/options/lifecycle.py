@@ -98,7 +98,7 @@ class OptionExecutionPolicy(OptionRecord):
         default=None, exclude_if=lambda v: v is None
     )
 
-    scope_arbitration: Literal["shared-scope-selection-v1"] | None = Field(
+    scope_arbitration: Literal["shared-scope-selection-v1", "shared-scope-entry-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
 

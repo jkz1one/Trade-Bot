@@ -13,7 +13,10 @@ LIVE stays disabled; existing research cohorts and the deployed experiment are f
 Separate [shared deterministic selection](OPTIONS_SCOPE_ARBITRATION.md) now permits
 Scope/Degen/optional session-close Swing in one explicitly new owner. It retains
 all native Scope terms and adds a mandatory common selection receipt; the standalone
-contract below and existing cohorts retain their original behavior.
+contract below and existing cohorts retain their original behavior. A separate
+[shared Scope entry AI enrollment](OPTIONS_SCOPE_AI.md) now binds paid selection,
+fresh post-cost approval and trade-level cost attribution to these fixed native
+terms. It does not enable models on standalone or deterministic shared owners.
 
 ## Frozen enrollment
 

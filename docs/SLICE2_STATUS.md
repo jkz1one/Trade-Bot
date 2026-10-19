@@ -1,5 +1,82 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Shared Scope entry AI and native cost attribution: 2026-10-19 UTC
+
+Fresh GitHub/local state matched `fe0fe44c333138c813bf3a1a1276533af749873d`,
+tree `013358b77d88b3f8f8d765cc0af2338d191444e7`. Main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 was open/draft.
+
+New [shared Scope entry AI](OPTIONS_SCOPE_AI.md) connects one paid Degen/Swing/Scope
+entry decision to the native owner. Explicit `shared-scope-entry-v1` enrollment
+freezes the model prompt/schema, rates/bounds, entry policy, family set and complete
+Scope watch policy in a new healthy, untraded account. Existing deterministic and
+Degen/Swing AI configurations remain unchanged. Scope can be the only admitted
+family; it counts toward pre-call family loss admission only after its original
+stored admission is verified. Family/account locks and unknown costs still gate calls.
+
+Degen/Swing retain full underlying entry reasoning. Scope selects its exact fixed
+plan by supplied digest; the model cannot replace its contract, quantity, stop,
+targets, profile or protection deadline. HOLD remains a paid final outcome. Full
+requests, results, alternatives and known/unknown usage are retained. A Scope choice
+requires genuinely newer observations and a new owned admission after settlement.
+The fresh-input reader is bounded by the original remaining lease. Rejection never
+falls through to another candidate or retries the paid opportunity.
+
+The original/fresh Scope actions and the complete paid decision are independently
+rechecked at native preparation. Decision, order, shared selection and watch
+consumption commit atomically. Scope approval expires at the earliest original
+Scope, fresh Scope or shared model packet deadline. Clock movement between family
+scans and Scope admission is supported without admitting future evidence. Restart,
+dispatch and stored attribution verify the original bindings and settled charge.
+
+Paid cycles now link explicitly to native Scope buys and their scales/final exits.
+Full-cost closed outcomes count the entry charge once, preserve all other recorded
+entry/management costs and actual fees, and feed native account/family loss controls.
+Partial exits are not closed losses. Portable shared native export reconstructs
+these links; unknown costs, incomplete exposure and missing operating allocations
+still suppress net results. Stored observer reads follow the paid cycle and fresh
+Scope quote without making a model/provider call. Independent owners share no cash,
+reservations, model receipts or loss counters.
+
+Validation: **399 distinct installed cases passed**, deduplicating the broad and
+focused runs. The broad run passed 385 of 386 cases (498.60s), exposing the missing
+Scope-only candidate in the pre-call family loss guard. After correcting that
+boundary, all 83 installed family/model/shared-entry cases passed (266.85s).
+The final wheel passed all **139 installed cases** (156.64s), including all **35 new
+shared Scope AI cases**, the strict entry contract/worker, model loss admission and
+native Scope execution boundaries. No failed gate was waived; the normalized case
+ledger has no unresolved failures.
+
+The final timing checks also cover a stalled fresh-input reader, a shorter shared
+model-packet deadline and clock progress between family scans and Scope admission.
+Fixture-only setup errors during those checks were corrected without relaxing source
+history, arming or freshness gates. Two code fixes from review bound the reader and
+native expiry, while the packet now permits valid later Scope admission timestamps.
+The observer's paid-entry lookup was corrected before the broad installed run.
+
+All runs used isolated noneditable wheels, copied tests outside the checkout,
+Python `-I`, disabled ambient plugins, warnings as errors and distinct retained
+pytest base directories. All **192 application/template files** match final
+source/wheel/install. The final wheel differs from the intermediate wheel only in
+five directly covered entry/Scope modules; the intermediate wheel additionally fixes
+`loss_control.py`. Scoped lint/format, dependency consistency, whitespace and local
+documentation targets pass. Final wheel SHA-256:
+`40e607116642e180b53441b3e9ff67a8434fb210119cff4d12fcc68d004cb62b`.
+Retained proof beside checkout: `scope-ai-proof`, `scope-ai-release-proof`,
+`scope-ai-final-proof`, their XML/logs/fixture directories, final `identity.json`,
+`validation-summary.json`, and the corresponding wheel/build/install logs.
+
+README, source of truth v1.82, research continuation and Scope/entry/testing guides
+now record this boundary and its explicit enrollment. No actual provider/model/broker
+request, host/deployment or dependency change occurred. Main remains untouched,
+PR #1 draft, LIVE disabled and the deployed experiment frozen.
+
+Next: shared Scope position reasoning and common A/B/C/D replay, continuous watch
+input/runtime integration, combined Scope/carry enrollment and the remaining
+family/mixed ownership plumbing. Final UI/visual and authentic-data/model acceptance
+remain open. Shared entry AI does not enable a position model or migrate any cohort.
+
+
 ## Post-cost Scope reapproval prerequisite: 2026-10-19 UTC
 
 Fresh GitHub/local state matched `4dbf19a589dccf36c82b1b71e10eccadb6cb6134`,

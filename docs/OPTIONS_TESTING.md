@@ -146,3 +146,14 @@ Swing in one native owner, retain separate research accounts, exercise restart/
 tamper/atomicity and reconstruct full-cost portable accounting. No new dependency
 or provider call is required. Paid shared Scope AI, continuous Scope runtime
 watch ingestion and common A/B/C/D Scope tapes remain separate implementation work.
+
+## Shared Scope entry AI fixtures
+
+The separately enrolled [shared Scope entry path](OPTIONS_SCOPE_AI.md) now includes
+paid selection, fresh post-cost native approval and full-cost trade attribution.
+Run `test_option_scope_ai.py` with the installed wheel procedure above and the
+entry reasoning/worker/coordination, shared strategy, Scope native/reapproval,
+lineage/outcome, family/model loss-admission and observer regressions. Keep distinct
+pytest base directories for every retained run. The worker fixtures mock provider
+transport; they do not authorize an authenticated call, deployment or LIVE mode.
+Shared Scope position reasoning and common A/B/C/D tapes remain separate gates.

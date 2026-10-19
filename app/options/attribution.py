@@ -51,6 +51,7 @@ def fill_underlying_observation(fill):
 
 
 class DecisionAttribution(OptionRecord):
+    scope_paid_review: dict | None = Field(default=None, exclude_if=lambda v: v is None)
     scope_arbitration: dict | None = Field(default=None, exclude_if=lambda v: v is None)
     swing_carry: SwingCarryTerms | None = Field(default=None, exclude_if=lambda v: v is None)
     health_management: Literal["observed-daytrade-health-v1"] | None = Field(
@@ -171,6 +172,7 @@ def order_attribution(db, row):
     trail_policy = intent.premium_trail
     premium_protection = intent.entry_premium_protection
     arbitration = approval.get("scope_arbitration")
+    paid_scope = approval.get("scope_paid_review")
     carry = intent.swing_carry
     time_protection = intent.entry_time_protection
     if intent.requested_close_quantity != proposal.close_quantity or (
@@ -207,6 +209,7 @@ def order_attribution(db, row):
         trail_policy = entry_intent.premium_trail
         premium_protection = entry_intent.entry_premium_protection
         arbitration = _json(entry[1]).get("scope_arbitration")
+        paid_scope = _json(entry[1]).get("scope_paid_review")
         carry = entry_intent.swing_carry
         time_protection = entry_intent.entry_time_protection
         if (
@@ -221,6 +224,7 @@ def order_attribution(db, row):
     observed = tuple(fill_underlying_observation(f) for f in fills if f.underlying is not None)
     return {
         **({"scope_arbitration": arbitration} if arbitration else {}),
+        **({"scope_paid_review": paid_scope} if paid_scope else {}),
         **({"fill_underlyings": observed} if observed else {}),
         **({"swing_carry": carry.model_dump(mode="json")} if carry else {}),
         **(
@@ -272,6 +276,11 @@ def decision_attribution(db, key, outcome, policy):
     Unknown or foreign model results retain their proposal but grant no review or
     fill attribution. No provider call, owner attachment or mutation is performed.
     """
+    from app.options.scope_ai import attributed_scope_entry
+
+    shared = attributed_scope_entry(db, key, policy)
+    if shared is not None:
+        return shared
     from app.options import entry_judgment, position_judgment
     from app.options.entry_reasoning import EntryReview
     from app.options.observer import _json

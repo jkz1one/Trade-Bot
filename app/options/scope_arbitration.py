@@ -16,7 +16,7 @@ VERSION = "shared-scope-selection-v1"
 
 
 class SharedScopePolicy(OptionRecord):
-    version: Literal["shared-scope-selection-v1"] = VERSION
+    version: Literal["shared-scope-selection-v1", "shared-scope-entry-v1"] = VERSION
     watch: ScopeWatchPolicy
     family_priority: tuple[Literal["DEGEN", "SWING", "SCOPE"], ...] = Field(
         min_length=2, max_length=3
@@ -59,8 +59,18 @@ def configuration(db):
     ).fetchone()
     if watch is None or ScopeWatchPolicy.model_validate_json(watch[0]) != policy.watch:
         raise ExecutionBlocked("SHARED_SCOPE_WATCH_POLICY_CHANGED")
-    if "entry_model" in config or "model" in config or "replay_model" in config:
+    if policy.version == VERSION and any(
+        k in config for k in ("entry_model", "model", "replay_model", "position_model")
+    ):
         raise ExecutionBlocked("SHARED_SCOPE_DETERMINISTIC_ONLY")
+    if policy.version != VERSION:
+        from app.options.entry_judgment import EntryModelConfiguration
+
+        model = EntryModelConfiguration.model_validate(config.get("entry_model"))
+        if model.entry_policy.scope_selection is None or any(
+            k in config for k in ("replay_model", "position_model")
+        ):
+            raise ExecutionBlocked("SHARED_SCOPE_AI_CONFIGURATION_REQUIRED")
     return policy
 
 
@@ -106,12 +116,43 @@ def selection(policy, key, evidence):
     if len({(c["family"], c["candidate_id"]) for c in choices}) != len(choices):
         raise ValueError("Duplicate shared choice")
     choices.sort(key=lambda c: policy.family_priority.index(c["family"]))
+    selected = choices[0] if choices else None
+    extra = {}
+    if policy.version != VERSION:
+        selected = None
+        plan = evidence.get("entry_result", {}).get("plan", {})
+        if plan.get("action") == "ENTER":
+            matches = [
+                x
+                for x in choices
+                if (
+                    x["family"] == "SCOPE"
+                    and plan.get("scope") is True
+                    and x["candidate_hash"] == plan.get("candidate_id")
+                )
+                or (
+                    x["family"] != "SCOPE"
+                    and plan.get("scope") is False
+                    and x["candidate_id"] == plan.get("candidate_id")
+                )
+            ]
+            if len(matches) != 1:
+                raise ValueError("SHARED_SCOPE_MODEL_SELECTION_REQUIRED")
+            selected = matches[0]
+            source = selected["source_key"]
+            if selected["family"] == "SCOPE" and evidence.get("scope_fresh_candidate"):
+                from app.options.scope_execution import lineage
+
+                source = lineage(evidence["scope_fresh_candidate"]).opportunity_key
+            extra["execution_source_key"] = source
+            extra["model_valid_until"] = evidence["entry_request"]["packet"]["valid_until"]
     return {
-        "version": VERSION,
+        **extra,
+        "version": policy.version,
         "cycle_key": key,
         "policy_hash": fingerprint(policy),
         "choices": choices,
-        "selected": choices[0] if choices else None,
+        "selected": selected,
     }
 
 
@@ -187,10 +228,19 @@ def review_entry(engine, db, source_key, proposal, quote, inputs, now):
     chosen = receipt["selected"]
     if receipt != evidence.get("scope_arbitration") or chosen is None:
         raise ExecutionBlocked("SHARED_SCOPE_SELECTION_CHANGED")
-    if source_key != chosen["source_key"] or inputs["origin"] != "DETERMINISTIC":
+    ai = policy.version != VERSION
+    if ai:
+        from app.options.scope_ai import validate_stored
+
+        validate_stored(db, key, evidence, policy)
+    expected_origin = "MODEL" if ai and chosen["family"] != "SCOPE" else "DETERMINISTIC"
+    if (
+        source_key != receipt.get("execution_source_key", chosen["source_key"])
+        or inputs["origin"] != expected_origin
+    ):
         raise ExecutionBlocked("SHARED_SCOPE_SELECTED_SOURCE_REQUIRED")
     if chosen["family"] == "SCOPE":
-        packet = evidence["scope_candidate"]
+        packet = evidence["scope_fresh_candidate" if ai else "scope_candidate"]
         if (
             request.get("arbitration_cycle") != key
             or request.get("play_key") != chosen["candidate_id"]
@@ -205,7 +255,7 @@ def review_entry(engine, db, source_key, proposal, quote, inputs, now):
             request
             or evidence.get("candidate_id") != chosen["candidate_id"]
             or len(matches) != 1
-            or matches[0]["proposal"] != proposal.model_dump(mode="json")
+            or (not ai and matches[0]["proposal"] != proposal.model_dump(mode="json"))
             or quote is None
             or matches[0]["instrument"] != quote.instrument.model_dump(mode="json")
         ):
@@ -229,7 +279,11 @@ def verify_entry(db, intent, approval):
             raise ValueError("SHARED_SCOPE_NOT_ENROLLED")
         return
     policy = configuration(db)
-    if not receipt or receipt["selected"]["source_key"] != intent.source_key:
+    if (
+        not receipt
+        or receipt.get("execution_source_key", receipt["selected"]["source_key"])
+        != intent.source_key
+    ):
         raise ValueError("SHARED_SCOPE_RECEIPT_REQUIRED")
     key = receipt["cycle_key"]
     row = db.execute(
@@ -237,6 +291,10 @@ def verify_entry(db, intent, approval):
     ).fetchone()
     data = json.loads(row[0]) if row and row[0] else {}
     verify_scope_candidate(db, data, policy)
+    if policy.version != VERSION:
+        from app.options.scope_ai import verify_paid_entry
+
+        verify_paid_entry(db, intent, approval, data, policy)
     events = db.execute(
         "SELECT payload FROM execution_events WHERE kind='SHARED_SCOPE_ENTRY_SELECTED' AND client_id=?",
         (intent.client_id,),
@@ -308,7 +366,7 @@ def collect(c, key, frame, evidence):
 
 
 async def execute_scope(c, key, frame, evidence):
-    packet = evidence["scope_candidate"]
+    packet = evidence.get("scope_fresh_candidate") or evidence["scope_candidate"]
     prepared = c.scope_book.prepare_entry(
         frame.scope.play_key,
         expected_revision=packet["binding"]["revision"],

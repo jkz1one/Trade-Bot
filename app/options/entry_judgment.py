@@ -21,6 +21,7 @@ from app.options.entry_reasoning import (
     EntryPacket,
     EntryPlan,
     EntryReasoningPolicy,
+    SharedScopeEntryPlan,
     plan_class,
     review_entry_plan,
 )
@@ -50,6 +51,19 @@ fresh evidence and may reject any proposal. Never issue management or exit order
 
 
 def instructions(policy):
+    if policy.scope_selection is not None:
+        return (
+            INSTRUCTIONS
+            + """
+The optional Scope packet is an already locked specialist plan. To select it,
+set scope=true, action=ENTER, candidate_id to the supplied scope_candidate_id,
+and cite that same ID in evidence_ids. Leave all condition, trigger, invalidation,
+target and horizon fields null. Software preserves its exact quantity, targets,
+stop and protection deadline and may reject it after model costs. For Degen/Swing
+set scope=false and use the complete ordinary entry terms above. For HOLD set
+scope=false. Never replace Scope terms or substitute another contract.
+"""
+        )
     return (
         INSTRUCTIONS
         if policy.max_carry_horizon_seconds is None
@@ -65,6 +79,8 @@ assurance of overnight liquidity, continuous observations or stop execution.
 
 
 def prompt_version(policy):
+    if policy.scope_selection is not None:
+        return "shared-scope-entry-v1"
     return PROMPT_VERSION if policy.max_carry_horizon_seconds is None else "option-entry-carry-v1"
 
 
@@ -73,7 +89,9 @@ class EntryModelConfiguration(OptionRecord):
     costs: CostPolicy
     limits: JudgmentLimits
     entry_policy: EntryReasoningPolicy
-    prompt_version: Literal["option-entry-thesis-v1", "option-entry-carry-v1"] = PROMPT_VERSION
+    prompt_version: Literal[
+        "option-entry-thesis-v1", "option-entry-carry-v1", "shared-scope-entry-v1"
+    ] = PROMPT_VERSION
     prompt_hash: Digest
     schema_hash: Digest
 
@@ -133,7 +151,9 @@ class EntryRequest(OptionRecord):
 def create_request(packet, config, *, request_id, now):
     """Call only after durable attempt admission. Does not create a cost reservation."""
     now = clock(now)
-    if not packet.as_of <= now < packet.valid_until:
+    if not packet.as_of <= now < packet.valid_until or (
+        packet.scope is not None and now < packet.scope.binding.evaluated_at
+    ):
         raise ValueError("Original entry packet expired")
     remaining = min(
         config.limits.process_timeout_seconds, (packet.valid_until - now).total_seconds()
@@ -152,10 +172,15 @@ def create_request(packet, config, *, request_id, now):
 
 def hold(packet):
     return plan_class(packet.policy)(
+        **({"scope": False} if packet.policy.scope_selection is not None else {}),
         decision_id=packet.decision_id,
         packet_hash=fingerprint(packet),
         action="HOLD",
-        evidence_ids=(packet.opportunities[0].evidence_ids[0],),
+        evidence_ids=(
+            packet.opportunities[0].evidence_ids[0]
+            if packet.opportunities
+            else fingerprint(packet.scope.model_dump(mode="json")),
+        ),
         thesis="Preserve cash; entry reasoning unavailable or rejected",
         uncertainty="No usable entry judgment; retain usage and failure evidence",
     )
@@ -166,7 +191,7 @@ class EntryResult(OptionRecord):
     request_id: str = Field(pattern=r"^[a-f0-9]{32}$")
     packet_hash: Digest
     configuration_hash: Digest
-    plan: EntryPlan | CarryEntryPlan
+    plan: EntryPlan | CarryEntryPlan | SharedScopeEntryPlan
     usage: UsageEvidence | None = None
     counted_input_tokens: int | None = Field(default=None, gt=0, strict=True)
     error: str | None = Field(default=None, max_length=128, pattern=r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -204,6 +229,15 @@ def request_content(request):
                 "binding": {
                     "decision_id": request.packet.decision_id,
                     "packet_hash": fingerprint(request.packet),
+                    **(
+                        {
+                            "scope_candidate_id": fingerprint(
+                                request.packet.scope.model_dump(mode="json")
+                            )
+                        }
+                        if request.packet.scope is not None
+                        else {}
+                    ),
                 },
                 "packet": request.packet.model_dump(mode="json"),
             },
@@ -250,15 +284,21 @@ def validate_result(request, result):
                 for o in request.packet.opportunities
                 if o.candidate.candidate_id == result.plan.candidate_id
             ),
-            request.packet.opportunities[0],
+            request.packet.opportunities[0]
+            if request.packet.opportunities
+            else request.packet.scope,
         )
+        if getattr(result.plan, "scope", False) and request.packet.scope is not None:
+            o = request.packet.scope
         review = review_entry_plan(
             request.packet,
             result.plan,
             quote=o.quote,
             underlying=o.underlying,
             account=request.packet.account,
-            now=request.packet.as_of,
+            now=request.packet.scope.binding.evaluated_at
+            if getattr(result.plan, "scope", False) and request.packet.scope is not None
+            else request.packet.as_of,
         )
         if review.outcome == "REJECTED":
             raise ValueError("Entry child plan failed original-evidence review")
