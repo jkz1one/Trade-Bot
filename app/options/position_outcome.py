@@ -122,8 +122,8 @@ def _settlement_links(db, rows, receipts, policy):
 def native_position_outcome(db, entry_client_id, population_id):
     """Read within the caller's existing journal snapshot; never infer absent exit links.
 
-    This supplies evidence for future Scope loss controls. It does not enroll a
-    watch, import a caller's P&L, reset limits or authorize execution.
+    Scope and other enrolled family loss controls consume this full-cost evidence.
+    It does not import caller P&L, reset limits or authorize execution.
     """
     control = db.execute("SELECT config_json FROM execution_control WHERE id=1").fetchone()
     config = json.loads(control[0])

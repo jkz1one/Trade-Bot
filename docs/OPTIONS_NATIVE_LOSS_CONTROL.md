@@ -1,15 +1,20 @@
 # Native PAPER loss cooldown and lock
 
+Current extension: [native Scope execution/loss integration](OPTIONS_SCOPE_EXECUTION.md)
+is available only to explicitly enrolled new PAPER owners. Existing research versions
+retain the boundaries below. The native extension supports responsive/balanced
+one-to-three-contract plans; convexity and missing-T3 four-contract plans stay blocked.
+
 New populations can explicitly freeze `OptionExecutionPolicy.loss_control` with a
 `NativeLossPolicy`. It allows a maximum consecutive-loss threshold of one or two
 and a cooldown of at least 1,800 seconds (at most one day). These preserve the
 pinned Scope two-loss/30-minute baselines as conservative bounds. They are research
 settings, not approved LIVE limits.
 
-This is an **account-wide common-engine guard**, a foundation for Scope integration.
+This is an **account-wide common-engine guard**, also used by native Scope integration.
 It applies to every native entry in its explicitly enrolled population, including
-shared Degen/Swing entries. It does not label trades as Scope. Optional Degen/Swing
-family controls below add stricter independent checks. Independent populations
+shared Degen/Swing entries. Native Scope derives its label only from a consumed
+watch receipt. Optional family controls below add stricter independent checks. Independent populations
 retain separate state. Existing
 cohorts omit the field and retain their original serialized configuration; policy
 cannot be added, removed or changed on reopen. No existing cohort is enrolled.
@@ -74,7 +79,7 @@ The audit binds command ID, actor/reason, exact reviewed revision, population,
 event time, and prior/new state. State, audit and command receipt commit atomically;
 an authenticated replay returns the original result without another reset.
 
-This is common account recovery, not the future Scope family-scoped reset. It
+This is common account recovery; Scope's separate targeted reset is described below. It
 does not approve an order, resume a globally halted runner, or enable LIVE.
 
 ### Entry gates and stored reads
@@ -112,17 +117,19 @@ refunded; the existing preparation/dispatch checks remain authoritative afterwar
 Unenrolled cohorts preserve their existing model-admission behavior.
 
 The [Scope research entry guard](OPTIONS_SCOPE_OWNED_ADMISSION.md#native-execution-boundary)
-remains in force. Scope watch/order association and Scope family-scoped consumption/reset,
-complete path coverage, Scope dispatch/runtime/replay and dashboard controls remain
-open. LIVE stays disabled and the deployed experiment stays frozen.
+remains in force for research cohorts. Separately enrolled native Scope now has
+watch/order association, full-cost family consumption/reset, dispatch/management,
+fixture replay and stored observer labels. Convexity and missing-T3 four-contract
+plans remain blocked; authentic provider and visual acceptance remain open. LIVE stays disabled and the deployed experiment stays frozen.
 
-## Optional Degen/Swing family controls
+## Optional native family controls
 
-New cohorts can additionally freeze `NativeLossPolicy.families` with up to two
-unique `FamilyLossPolicy` entries: `DEGEN` and `SWING`. Each has a loss threshold
+New cohorts can additionally freeze `NativeLossPolicy.families` with up to three
+unique `FamilyLossPolicy` entries: `DEGEN`, `SWING` and `SCOPE`. Each has a loss threshold
 of one or two and a cooldown of 1,800–86,400 seconds. Omitted families preserve
 legacy serialization. Adding or changing family enrollment requires a new cohort;
-Scope is not a supported family here and its research-only entry guard remains.
+SCOPE uses the separate native watch receipt and explicit owner enrollment. Its
+research-only entry guard remains in force for existing cohorts.
 
 The account-wide guard still applies to every entry. Each enrolled family also
 has its own consumed-entry count, consecutive-loss count, recognition-time cooldown
@@ -133,7 +140,7 @@ Unknown costs still block consumption. Accounts never share state. Data/host cos
 remain in session economics, outside this operational outcome basis.
 
 All new entries in a family-enrolled cohort require stored selected-candidate
-lineage, including entries from a family without an additional rule. Preparation
+or consumed Scope-watch lineage, including entries from a family without an additional rule. Preparation
 and dispatch refresh the global guard and then enforce the selected family's
 pause. Direct unlabeled entries cannot bypass family review. HOLD, owned CLOSE,
 validated paid management and independent protection retain their normal gates.
@@ -145,7 +152,7 @@ family: preparation rejects that choice and the call's cost remains recorded.
 This is not candidate filtering or a promise that every paid call yields a trade.
 No model worker or unknown-cost row is started for a family pause.
 
-A signed `RESET_LOSS_LOCK` may now specify `loss_family=DEGEN` or `SWING` (CLI:
+A signed `RESET_LOSS_LOCK` may specify `loss_family=DEGEN`, `SWING` or `SCOPE` (CLI:
 `--loss-family DEGEN`). It uses the same exact-revision, signature, fresh flat
 account, known-cost, positive budget and idle-runtime checks as account recovery.
 The selected family must already be locked and its cooldown must have elapsed.

@@ -295,7 +295,7 @@ def test_frozen_policy_reopen_and_legacy_omission(tmp_path):
 @pytest.mark.parametrize(
     "change",
     [
-        {"family": "SCOPE"},
+        {"family": "UNKNOWN"},
         {"max_consecutive_losses": 3},
         {"cooldown_seconds": 1799},
         {"cooldown_seconds": True},
@@ -310,7 +310,7 @@ def test_family_target_is_signed_reset_only(tmp_path):
     with owned(tmp_path, loss_control=policy()) as (e, _, _):
         OptionsControl.enroll(e, KEY, now=NOW)
         assert "loss_family" not in request(e).model_dump(mode="json")
-        for changes in ({"action": "HALT", "loss_family": "DEGEN"}, {"loss_family": "SCOPE"}):
+        for changes in ({"action": "HALT", "loss_family": "DEGEN"}, {"loss_family": "UNKNOWN"}):
             with pytest.raises(ValidationError):
                 request(e, **changes)
 

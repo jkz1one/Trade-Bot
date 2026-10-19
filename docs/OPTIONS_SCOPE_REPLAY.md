@@ -1,5 +1,10 @@
 # Scope research lifecycle replay
 
+Current extension: [native Scope execution/loss integration](OPTIONS_SCOPE_EXECUTION.md)
+is available only to explicitly enrolled new PAPER owners. Existing research versions
+retain the boundaries below. The native extension supports responsive/balanced
+one-to-three-contract plans; convexity and missing-T3 four-contract plans stay blocked.
+
 `app.options.scope_replay.run_scope_replay(request, directory)` runs a frozen,
 ordered fixture sequence through a new native PAPER owner and `ScopeWatchBook`.
 It supports CALL, OBSERVE_ARMING, REVIEW_ADMISSION, ADVANCE, NEUTRALIZE and

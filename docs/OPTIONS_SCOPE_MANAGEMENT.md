@@ -1,5 +1,10 @@
 # Scope management plans and entry premium protection
 
+Current extension: [native Scope execution/loss integration](OPTIONS_SCOPE_EXECUTION.md)
+is available only to explicitly enrolled new PAPER owners. Existing research versions
+retain the boundaries below. The native extension supports responsive/balanced
+one-to-three-contract plans; convexity and missing-T3 four-contract plans stay blocked.
+
 New research books may explicitly enroll `ScopeWatchPolicy.management` with a
 `ScopeManagementPolicy`. It requires the existing frozen arming, contract and owned
 admission policies. A successful fresh admission stores a management review using
@@ -110,9 +115,9 @@ contract reviews, exact premium boundaries, tighter owner/profile limits, all na
 fees and entry/management-cost regressions, target/stop races, runner/restart
 retention, independent owners, stale evidence, tamper rejection and rollback.
 
-Scope still requires reviewed four-contract allocation, native watch/entry linkage,
-complete obstruction coverage, Scope family loss/reset, full management behavior
-and runtime/replay acceptance. The shared native target engine now supports
+The separate native extension now connects watch/entry linkage, native management,
+full-cost Scope family loss/reset and fixture replay. Four-contract T3 and convexity
+path evidence remain explicit rejection boundaries. The shared native target engine now supports
 [explicit frozen stop adjustments](OPTIONS_TARGET_EXITS.md#optional-frozen-target-stops),
 with a new [Scope v2 milestone plan](OPTIONS_ENTRY_REFERENCE.md#scope-management-v2)
 that preserves both locked objectives and defers its T1 stop to the native fill-bound
@@ -120,9 +125,11 @@ entry reference. V1 previews retain their original behavior. New v2 previews use
 stop-only milestones when the source allocation sells nothing at an objective;
 T2 protection uses locked T1. Quantities one through three are supported, while
 four contracts still report the missing T3. Preview prices never substitute for
-actual native fill evidence. The native Scope entry guard remains enforced.
+actual native fill evidence. The generic Scope entry guard remains enforced outside
+the explicit native consumer.
 The shared [premium trail](OPTIONS_PREMIUM_TRAIL.md) now has a separate frozen-owner
-enrollment; full Scope management and its strategy-specific enrollment remain open.
+enrollment. Authentic collection, prospective strategy evidence and host acceptance
+remain separate from native fixture integration.
 Authentic provider/calendar/host, prospective economic and UI acceptance
 remain separate. Main untouched, PR #1 draft, LIVE disabled and deployment frozen.
 

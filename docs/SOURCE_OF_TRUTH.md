@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.76. Adopted product direction and working delivery contract, 2026-10-18 UTC.
+Version 1.77. Adopted product direction and working delivery contract, 2026-10-19 UTC.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -27,12 +27,22 @@ to that reference. New [Scope entry evidence binding](OPTIONS_SCOPE_ENTRY_BINDIN
 retains the original watch and exact owner/admission/management receipt through
 stored selection and portable research replay. Later journal actions require fresh
 admission; evidence selection grants no order authority. Native Scope order/fill
-and family-loss enrollment remain open.
+and family-loss enrollment are connected by the separate frozen native version.
 New [deterministic entry deadlines](OPTIONS_ENTRY_TIME_PROTECTION.md) freeze an
 earlier strategy exit in native decisions, orders and holdings. The stricter owner
 session/expiry cutoff still wins; partial fills, runners, attribution and export
 retain the terms. Scope handoff includes its original protection time without
 granted entry authority. Attempted-order and account-freshness controls remain.
+New [native Scope execution/loss integration](OPTIONS_SCOPE_EXECUTION.md) connects
+responsive/balanced one-to-three-contract plans to native PAPER decisions, orders,
+fills, target/time exits, full-cost outcomes, family cooldown/lock and signed resets.
+Create-only native fixture replay and portable accounting reconstruction are available.
+Research cohorts remain order-free. The pinned approved playbook reserves the full
+unobstructed-path requirement for convexity, which remains blocked. Four-contract
+plans remain blocked by missing T3; neither case is silently resized or relaxed.
+This supersedes earlier broad statements that all Scope execution requires complete
+obstruction proof. Authentic data/provider, prospective economics, host and final
+UI/visual acceptance remain open. See the latest status entry for installed proof.
 P3 paired accounting, sealed market tapes, setup/shortlist replay and automatic
 native first-session A/B/C journal export and independent virtual-clock replay
 with scripted model delays are fixture verified. Multi-session replay/export now
@@ -72,7 +82,7 @@ now recorded per runtime generation and displayed from stored evidence. File
 consistency and installer metadata do not grant release approval or prove liveness.
 [Scope evidence preflight](OPTIONS_SCOPE_PREFLIGHT.md) now checks all nine required
 evidence groups, SPX/SPY/QQQ completed coverage and exact 0DTE SPXW identity.
-It grants no setup, account or order authority; Scope execution remains open.
+Preflight alone grants no setup, account or order authority; native enrollment is separate.
 [Scope completed structure](OPTIONS_SCOPE_STRUCTURE.md) now adds nine price-derived
 patterns, explicit SPY/QQQ directional confirmation and exact-strike reachability.
 [Scope context review](OPTIONS_SCOPE_CONTEXT.md) now adds the six level-anchored
@@ -107,7 +117,7 @@ bindings make the report unavailable; saved passes never replace missing latest 
 [Scope research lifecycle replay](OPTIONS_SCOPE_REPLAY.md) now runs frozen ordered
 watch/arming/admission/advance/reset fixtures through a create-only native owner,
 retaining action receipts, explicit rejects and independent state. It supplies no
-orders, model calls or Scope economic result; trading runtime/replay remains open.
+orders, model calls or Scope economic result. Native execution replay uses its separate contract.
 Portable JSON verification now reproduces the frozen request in temporary independent
 state and compares all action receipts and final evidence. It requires the original
 request hash retained separately, never opens source journals and grants no authority.
@@ -203,16 +213,16 @@ balanced allocations for one through three owned contracts and explicit profile
 premium limits beneath the owner ceiling. A new-cohort native entry premium
 protector retains those tighter terms through fills, scales, restart and attribution.
 Four-contract Scope allocation remains blocked because locked geometry lacks T3;
-the generic source fixed-R fallback is not adopted. Scope watch execution remains open.
-Complete obstruction coverage, native full-cost loss/cooldown linkage and
-dispatch/management remain required
-before Scope execution.
+the generic source fixed-R fallback is not adopted. Native responsive/balanced
+one-to-three-contract execution, management and full-cost loss/cooldown linkage are
+connected under explicit new-cohort enrollment. Convexity remains blocked without
+its complete-path evidence.
 Authentic collection/coverage and prospective economic evidence remain open.
 Optional Scope observed-quote cohorts now retain original-stop/second-objective
 terminals before admission readiness checks, preventing recovery from reviving the
 same unfilled watch. Exact quotes, geometry, receipt time and owner-limit hashes
 persist through restart, observer reads and reproducible research replay. Invalid
-quotes reset holds without inventing terminals; native Scope entry remains blocked.
+quotes reset holds without inventing terminals. Research books cannot bypass the native entry guard.
 Report capabilities and gates, not completion percentages.
 
 ## Goal and definition of completion
@@ -591,7 +601,9 @@ costs. M4 browser visual acceptance and full economic/cohort evaluation remain o
 M3 authenticated normalized collection/model acceptance and M5–M8 are not complete
 for options. M7 now has shared Degen/Swing PAPER candidate arbitration and a first
 locked next-session daily-breakout adaptation with session-close protection.
-Overnight Swing, remaining families, Scope and mixed stock/options remain open. Existing
+Overnight Swing, remaining families and mixed stock/options remain open. Scope
+native execution/loss integration is fixture implemented within its explicit profile/quantity
+boundaries; authentic provider and prospective performance acceptance remain open. Existing
 runtime services still execute equities only; local M2 is not an options deployment.
 Some underlying stock-engine/host procedures already exist and are reused, but do
 not mark an options milestone complete from that prior work. Report concrete

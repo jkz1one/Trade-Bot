@@ -1,4 +1,4 @@
-"""Bounded stored Scope research projection; no watch owner or fresh evaluation."""
+"""Bounded stored Scope research/native projection; no owner or fresh evaluation."""
 
 from datetime import datetime
 
@@ -192,12 +192,15 @@ def _watch(db, row, policy, now, read_json, owner_policy, limits):
     choice = ScopeWatchChoice.model_validate(record["choice"])
     geometry = ScopeGeometry.model_validate(record["geometry"])
     status = record["status"]
+    native = policy.native_execution is not None and "native_client_id" in record
+    active_statuses = {"WATCHING", "ORDER_WORKING", "POSITION_OPEN"} if native else {"WATCHING"}
+    terminal_statuses = TERMINAL | {"CLOSED", "ENDED_UNFILLED"} if native else TERMINAL
     if (
         key != row["play_key"]
         or record["session_date"] != row["session_date"]
         or record["session_date"] != str(frame.session.session_date)
-        or status not in TERMINAL | {"WATCHING"}
-        or (row["active_lock"] == 1) != (status == "WATCHING")
+        or status not in terminal_statuses | active_statuses
+        or (row["active_lock"] == 1) != (status in active_statuses)
         or row["active_lock"] not in (None, 1)
         or frame.metadata is None
         or choice.right != geometry.right
@@ -209,7 +212,7 @@ def _watch(db, row, policy, now, read_json, owner_policy, limits):
     called = _stamp(record["called_at"])
     reviewed = _stamp(record["reviewed_through"])
     terminal = _stamp(record["terminal_at"]) if record["terminal_at"] else None
-    if (terminal is None) != (status == "WATCHING"):
+    if (terminal is None) != (status in active_statuses):
         raise ValueError("Conflicting terminal Scope evidence")
     result = {
         "audit": audit,
@@ -346,6 +349,17 @@ def _watch(db, row, policy, now, read_json, owner_policy, limits):
             ).fetchone()[0]
             == binding.revision,
         }
+    if native:
+        from app.options.scope_execution import stored_entry
+
+        receipt = stored_entry(db, play_key=key)
+        if receipt is None or receipt["client_id"] != record["native_client_id"]:
+            raise ValueError("Stored Scope native linkage missing")
+        result["native_execution"] = {
+            "client_id": receipt["client_id"],
+            "entry_binding": receipt["packet"]["binding"],
+            "status": status,
+        }
     return result
 
 
@@ -373,7 +387,8 @@ def stored_scope(db, tables, limits, now, read_json, *, owner_policy):
     if len(active) > 1:
         raise ValueError("Multiple active Scope watches")
     return base | {
-        "status": "RESEARCH_ONLY",
+        "status": "NATIVE_PAPER" if policy.native_execution else "RESEARCH_ONLY",
+        "execution": policy.native_execution or "NOT_ENROLLED",
         "policy_hash": fingerprint(policy),
         "last_action_at": last_action.isoformat(),
         "last_action_time_status": "FUTURE" if last_action > now else "RECORDED",

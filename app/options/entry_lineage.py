@@ -8,6 +8,13 @@ from app.options.selection import SwingCandidate, parse_candidate
 
 
 def selected_lineage(db, source_key, instrument):
+    from app.options.scope_execution import lineage, stored_entry
+
+    scope = stored_entry(db, source_key)
+    if scope is not None:
+        if scope["packet"]["instrument"] != instrument.model_dump(mode="json"):
+            raise ValueError("SCOPE_NATIVE_INSTRUMENT_CHANGED")
+        return lineage(scope["packet"])
     if not db.execute(
         "SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_option_opportunities'"
     ).fetchone():
@@ -51,6 +58,10 @@ def selected_lineage(db, source_key, instrument):
 
 def verified_lineage(db, intent, approval):
     """Validate a frozen buy label. Historical unlabeled intents stay unlabeled."""
+    from app.options.scope_execution import verify_native_intent
+
+    if intent.side == "BUY":
+        verify_native_intent(db, intent, approval)
     lineage = intent.entry_lineage
     if lineage is None and "entry_lineage" not in approval:
         return None

@@ -3,6 +3,7 @@
 import json
 from datetime import datetime, timedelta
 from typing import Literal
+from zoneinfo import ZoneInfo
 
 from pydantic import Field, StrictBool
 
@@ -15,7 +16,7 @@ from app.options.position_outcome import native_position_outcome
 
 
 class FamilyLossState(OptionRecord):
-    family: Literal["DEGEN", "SWING"]
+    family: Literal["DEGEN", "SWING", "SCOPE"]
     consecutive_losses: int = Field(strict=True, ge=0)
     locked: StrictBool
     cooldown_until: datetime | None = None
@@ -31,7 +32,7 @@ class LossState(OptionRecord):
     consumed_entries: int = Field(strict=True, ge=0, le=200)
     reasons: tuple[str, ...] = ()
     families: tuple[FamilyLossState, ...] = Field(
-        default=(), max_length=2, exclude_if=lambda v: not v
+        default=(), max_length=3, exclude_if=lambda v: not v
     )
 
 
@@ -236,7 +237,9 @@ def family_reasons(state, now):
     return tuple(reasons)
 
 
-def guard_entry(engine, db, proposal, now, *, exclude=None, source_key=None, quote=None):
+def guard_entry(
+    engine, db, proposal, now, *, exclude=None, source_key=None, quote=None, lineage=None
+):
     if proposal.action != "OPEN_LONG" or engine.policy.loss_control is None:
         return
     state = refresh(engine, db, now, exclude=exclude)
@@ -245,7 +248,7 @@ def guard_entry(engine, db, proposal, now, *, exclude=None, source_key=None, quo
     if engine.policy.loss_control.families:
         from app.options.entry_lineage import selected_lineage
 
-        lineage = (
+        lineage = lineage or (
             selected_lineage(db, source_key, quote.instrument) if source_key and quote else None
         )
         if lineage is None:
@@ -373,6 +376,11 @@ def reset_reviewed(engine, db, command, now):
             "reason": command.reason,
             "expected_revision": command.expected_revision,
             "population_id": engine.limits.population_id,
+            **(
+                {"session_date": now.astimezone(ZoneInfo("America/New_York")).date().isoformat()}
+                if target == "SCOPE"
+                else {}
+            ),
             "prior_state": current,
             "state": state.model_dump(mode="json"),
         },

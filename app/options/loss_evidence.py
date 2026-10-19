@@ -35,7 +35,7 @@ class EntryRiskPause(OptionRecord):
 
 class LossResetEvidence(OptionRecord):
     command_id: str = Field(pattern=r"^[a-f0-9]{32}$")
-    loss_family: Literal["DEGEN", "SWING"] | None = Field(
+    loss_family: Literal["DEGEN", "SWING", "SCOPE"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
     occurred_at: datetime

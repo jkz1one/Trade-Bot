@@ -84,6 +84,8 @@ class ScopeReplayRequest(OptionRecord):
 
     @model_validator(mode="after")
     def frozen_sequence(self):
+        if self.watch.native_execution or self.execution.scope_execution:
+            raise ValueError("Native Scope requires its execution replay contract")
         times = [self.started_at, *(s.at for s in self.steps)]
         p = self.watch.context.structure.preflight
         if (

@@ -22,13 +22,18 @@ replay, keeping missing evidence separate from earlier setup/approval prices.
 
 New [fill-bound target protection](docs/OPTIONS_ENTRY_REFERENCE.md) now resolves
 entry stops from verified fills and preserves them through scales and restart.
-Scope management v2 retains both milestones; native Scope entry remains blocked.
+Scope management v2 retains both original milestones.
 New [Scope entry evidence binding](docs/OPTIONS_SCOPE_ENTRY_BINDING.md) links the
 original watch to an exact account, admission and management receipt. Revision-bound
-selection is read-only; native Scope entry and family loss enrollment remain open.
+selection remains read-only; a separately enrolled native owner consumes it.
 New [deterministic entry deadlines](docs/OPTIONS_ENTRY_TIME_PROTECTION.md) retain
 earlier exit times through fills, runners and restart. Scope selections now carry
-their original session protection time; the native Scope guard remains enforced.
+their original session protection time.
+New [native Scope execution and loss integration](docs/OPTIONS_SCOPE_EXECUTION.md)
+connects responsive/balanced one-to-three-contract plans to native fills, target and
+time exits, full-cost loss cooldown/lock and signed resets. Create-only fixture
+replay and portable accounting are available; convexity and missing-T3 four-contract
+plans remain rejected. Existing research cohorts stay order-free.
 
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
 rules, implementation milestones, acceptance gates and continuation discipline.
@@ -87,13 +92,13 @@ An eight-state local rendering drill is available; browser visual acceptance rem
 coverage and exact SPXW identity without granting setup or trade authority.
 [Scope completed structure](docs/OPTIONS_SCOPE_STRUCTURE.md) adds nine price-derived
 patterns, SPY/QQQ confirmation and exact-strike reachability diagnostics; Scope
-trade admission and runtime enrollment remain open.
+scanners remain evidence components; native enrollment is described above.
 [Scope context review](docs/OPTIONS_SCOPE_CONTEXT.md) adds the six level-anchored
 variants and bound flow/news/event/expected-move risk checks without execution authority.
 [Durable Scope watches](docs/OPTIONS_SCOPE_WATCHES.md) now preserve unfilled call
 counts, locked evidence and deterministic invalidation/expiry in the existing
 journal, with opt-in neutral resets and fresh reversal/cooldown checks. Scope
-execution and full-cost loss/cooldown linkage remain open.
+native execution and full-cost loss/cooldown linkage now require explicit new-cohort enrollment.
 [Scope quality review](docs/OPTIONS_SCOPE_QUALITY.md) now records the pinned point
 schedule and conservative known-level path checks, with optional frozen watch
 integration. A high score does not prove a clear path or grant execution authority.
@@ -170,7 +175,7 @@ order reservations, and retains every entry/management cost in independent accou
 [Scope management plans](docs/OPTIONS_SCOPE_MANAGEMENT.md) now derive balanced
 whole-contract allocations from owned sizing and bind explicit profile premium
 limits beneath the owner cap. Four-contract Scope plans remain blocked by their
-missing third objective; native watch linkage remains open.
+missing third objective; native v2 watch linkage is now connected.
 Authentic provider, host and prospective evidence remain open.
 M1 option identity and deterministic admission is **fixture verified**. Read
 [OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.

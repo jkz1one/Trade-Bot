@@ -16,7 +16,7 @@ class OptionsCommand(OptionRecord):
     credential_generation: int = Field(ge=1, strict=True)
     actor: str = Field(min_length=1, max_length=80)
     action: Literal["HALT", "RESUME", "REVOKE_KEY", "RESET_LOSS_LOCK"]
-    loss_family: Literal["DEGEN", "SWING"] | None = Field(
+    loss_family: Literal["DEGEN", "SWING", "SCOPE"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
     reason: str = Field(min_length=1, max_length=300)

@@ -1,4 +1,4 @@
-"""Durable unfilled Scope watches. No proposal, fill, P&L or order authority."""
+"""Durable Scope watches and explicit native PAPER execution enrollment."""
 
 import json
 from datetime import datetime, timedelta
@@ -73,12 +73,20 @@ class ScopeWatchPolicy(OptionRecord):
         default=None, exclude_if=lambda value: value is None
     )
 
+    native_execution: Literal["scope-native-v1"] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+
     entry_binding: Literal["scope-entry-binding-v1"] | None = Field(
         default=None, exclude_if=lambda value: value is None
     )
 
     @model_validator(mode="after")
     def matching_quality_context(self):
+        if self.native_execution is not None and (
+            self.entry_binding is None or self.direction_reset is None
+        ):
+            raise ValueError("Native Scope requires frozen entry binding and direction reset")
         if self.entry_binding is not None and (
             self.management is None
             or self.management.version != "scope-management-plan-v2"
@@ -110,10 +118,10 @@ class _Action(OptionRecord):
 
 
 class ScopeWatchBook:
-    """Opt-in research state inside one lifetime-owned, restore-fenced journal.
+    """Frozen research watches, with explicit new-owner native PAPER enrollment.
 
-    This version refuses any native order/model/decision history. Linking watches
-    to execution and settling full-cost outcomes requires a later frozen version.
+    Research cohorts still refuse native history. Native cohorts consume a bound
+    watch once and retain its lifecycle through the common execution/loss owner.
     """
 
     def __init__(self, engine, policy, *, now, create=False):
@@ -128,6 +136,10 @@ class ScopeWatchBook:
             or preflight.quote_source != engine.limits.option_source
         ):
             raise ExecutionBlocked("SCOPE_WATCH_OWNER_IDENTITY_MISMATCH")
+        if self.policy.native_execution is not None:
+            from app.options.scope_execution import enrolled
+
+            enrolled(engine, self.policy)
         self._config = self.policy.model_dump_json()
         now = clock(now)
         with engine.journal.write() as db:
@@ -150,17 +162,26 @@ class ScopeWatchBook:
             if row is None:
                 if not create:
                     raise ExecutionBlocked("SCOPE_WATCH_NOT_ENROLLED")
-                self._untraded(db)
+                self._untraded(db, enrollment=True)
                 self._ready(db, now)
                 db.execute(
                     "INSERT INTO execution_option_scope_watch_policy VALUES(1,?,?)",
                     (self._config, now.isoformat()),
                 )
                 engine.journal.event(db, now, "SCOPE_WATCH_ENROLLED", json.loads(self._config))
+                if self.policy.native_execution is not None:
+                    db.execute(
+                        "CREATE TABLE execution_option_scope_entries(play_key TEXT PRIMARY KEY,client_id TEXT UNIQUE NOT NULL,receipt_json TEXT NOT NULL)"
+                    )
             elif create or row["config_json"] != self._config:
                 raise ExecutionBlocked("FROZEN_SCOPE_WATCH_POLICY_MISMATCH")
 
-    def _untraded(self, db):
+    def _untraded(self, db, *, enrollment=False):
+        if self.policy.native_execution is not None and not enrollment:
+            from app.options.scope_execution import enrolled
+
+            enrolled(self.engine, self.policy)
+            return
         for table in (
             "execution_orders",
             "execution_model_calls",
@@ -177,6 +198,16 @@ class ScopeWatchBook:
                 raise ExecutionBlocked("SCOPE_WATCH_EXECUTION_LINK_NOT_IMPLEMENTED")
 
     def _ready(self, db, now):
+        if self.policy.native_execution is not None:
+            from app.options.loss_control import stored_state
+
+            state = stored_state(db)
+            reasons = list(state["reasons"])
+            reasons.extend(
+                r for f in state["families"] if f["family"] == "SCOPE" for r in f["reasons"]
+            )
+            if reasons:
+                raise ExecutionBlocked(";".join(reasons))
         account = self.engine._account(db, now)
         if (
             not account.complete
@@ -218,6 +249,17 @@ class ScopeWatchBook:
         if now < datetime.fromisoformat(config["last_action_at"]):
             raise ExecutionBlocked("SCOPE_WATCH_CLOCK_REWOUND")
         self._untraded(db)
+        if (
+            self.policy.native_execution is not None
+            and request.get("play_key")
+            and request["kind"] != "NEUTRALIZE"
+        ):
+            row = db.execute(
+                "SELECT record_json FROM execution_option_scope_watches WHERE play_key=?",
+                (request["play_key"],),
+            ).fetchone()
+            if row and json.loads(row[0]).get("native_client_id"):
+                raise ExecutionBlocked("SCOPE_PLAY_ALREADY_SUBMITTED")
         return digest, None
 
     def _finish(self, db, action, digest, record, now, *, bind_entry=False):
@@ -421,7 +463,12 @@ class ScopeWatchBook:
                 raise ExecutionBlocked("SCOPE_WATCH_INVALIDATED_PLAY_REQUIRED")
             record = json.loads(row[0])
             if (
-                record["status"] != "INVALIDATED_UNFILLED"
+                record["status"]
+                not in (
+                    {"INVALIDATED_UNFILLED", "CLOSED", "ENDED_UNFILLED"}
+                    if self.policy.native_execution
+                    else {"INVALIDATED_UNFILLED"}
+                )
                 or record.get("neutral_reset") is not None
             ):
                 raise ExecutionBlocked("SCOPE_WATCH_INVALIDATED_PLAY_REQUIRED")
@@ -870,6 +917,39 @@ class ScopeWatchBook:
         with self.engine.journal.read() as db:
             self._untraded(db)
             return select_entry(self.engine, db, self.policy, play_key, expected_revision, now)
+
+    def prepare_entry(self, play_key, *, expected_revision, now):
+        from app.options.lifecycle import (
+            EntryPremiumProtection,
+            EntryTimeProtection,
+            TargetExitSchedule,
+        )
+        from app.options.models import OptionAdmission, OptionQuote
+        from app.options.scope_execution import ScopeExecutionRequest, entry_source
+
+        packet = self.entry_selection(play_key, expected_revision=expected_revision, now=now)
+        return self.engine.prepare(
+            entry_source(play_key, packet["binding"]["action_key"]),
+            OptionProposal.model_validate(packet["proposal"]),
+            OptionQuote.model_validate(packet["quote"]),
+            UnderlyingQuote.model_validate(packet["underlying"]),
+            ceiling=OptionAdmission.model_validate(packet["admission"]),
+            target_exit_schedule=TargetExitSchedule.model_validate(
+                packet["management"]["target_exit_schedule"]
+            )
+            if packet["management"]["target_exit_schedule"]
+            else None,
+            entry_premium_protection=EntryPremiumProtection.model_validate(
+                packet["management"]["entry_premium_protection"]
+            ),
+            entry_time_protection=EntryTimeProtection.model_validate(
+                packet["entry_time_protection"]
+            ),
+            scope_entry=ScopeExecutionRequest(
+                play_key=play_key, expected_revision=expected_revision
+            ),
+            now=now,
+        )
 
     def _review_arming(self, record, result, frame, context, now):
         old = ScopePreflightInput.model_validate(record["reviewed_frame"])

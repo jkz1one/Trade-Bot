@@ -220,7 +220,12 @@ def select_entry(engine, db, policy, play_key, expected_revision, now):
     if not binding.evaluated_at <= now < binding.valid_until:
         raise ExecutionBlocked("SCOPE_ENTRY_ADMISSION_EXPIRED")
     frame, proposal, admission, plan = _terms(record, policy, engine.policy, engine.limits)
-    reasons = ["SCOPE_COMPLETE_PATH_UNPROVEN", "SCOPE_NATIVE_EXECUTION_NOT_ENROLLED"]
+    reasons = (
+        []
+        if policy.native_execution == "scope-native-v1"
+        and engine.policy.scope_execution == "scope-native-v1"
+        else ["SCOPE_COMPLETE_PATH_UNPROVEN", "SCOPE_NATIVE_EXECUTION_NOT_ENROLLED"]
+    )
     reasons.extend(plan.reasons)
     return {
         "binding": binding.model_dump(mode="json"),

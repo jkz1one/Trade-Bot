@@ -1,15 +1,20 @@
 # Scope watch-to-entry evidence binding
 
+Current extension: [native Scope execution/loss integration](OPTIONS_SCOPE_EXECUTION.md)
+is available only to explicitly enrolled new PAPER owners. Existing research versions
+retain the boundaries below. The native extension supports responsive/balanced
+one-to-three-contract plans; convexity and missing-T3 four-contract plans stay blocked.
+
 New research cohorts can enroll
 `ScopeWatchPolicy.entry_binding="scope-entry-binding-v1"`. This requires observed
 Scope quote lifecycle and management v2, in addition to their existing arming,
 contract, quality and owned-admission prerequisites. Existing cohorts omit the
 field and cannot add it on reopen.
 
-This delivers the durable selection link needed by later native Scope integration.
-It does **not** enable native Scope entry, family loss/reset, runtime enrollment or
-performance evaluation. `EntryLineage` for executed native trades remains limited
-to its existing Degen/Swing owners. A Scope evidence label is not a trade label.
+The evidence binding alone does **not** enable native execution. The separate native
+consumer derives SCOPE trade lineage from the consumed original receipt and verifies
+it through orders, fills and full-cost loss recognition. A caller's evidence label
+cannot substitute for that receipt.
 
 ## Binding and original identity
 
@@ -73,10 +78,10 @@ provider, model or venue, and create no decision, reservation, order, fill or co
 `authority=false` and `live_enabled=false` remain explicit. The selection lists
 incomplete path proof and missing native execution enrollment; a four-contract
 selection also lists its missing third objective. This is not an exhaustive live
-readiness assessment. A future execution consumer must re-read this exact binding
-and freshly enforce owner, market, risk, loss and dispatch gates within its native
-transaction. The existing generic `prepare()` and dispatch Scope guard remains in
-force even when supplied with the exact selected proposal and admission ceiling.
+readiness assessment. The separate native execution consumer re-reads this exact
+binding and freshly enforces owner, market, risk, loss and dispatch gates within its
+native transaction. Generic preparation/dispatch remain blocked without that
+consumer's exact request and frozen enrollment.
 
 ## Stored reads, costs and reproduction
 

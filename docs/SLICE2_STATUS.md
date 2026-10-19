@@ -1,5 +1,109 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Scope native execution and loss-control integration closed: 2026-10-19 UTC
+
+The requested integration is closed for explicitly enrolled `scope-native-v1`
+PAPER owners: original called watch → current armed admission → native decision/
+order → actual fills and target/time management → full-cost outcome → SCOPE
+cooldown/lock → signed reviewed reset. This is bounded offline implementation
+acceptance, not authentic provider, prospective economic, host or visual acceptance.
+[Enrollment, API, source boundary and testing](OPTIONS_SCOPE_EXECUTION.md).
+
+Fresh GitHub baseline was `402ec6c8743551c2aee7ef7015467593dccb2ede`, tree
+`25b9eb6bca72473f89cb6caf80b58295f7525935`. Main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 open/draft. The baseline was
+checked again before publication preparation.
+
+New native owner/watch enrollments require existing v2 target milestones, actual
+fill references, tighter profile premium/deadline protection, exact entry binding,
+quote/arming/admission gates, direction resets and SCOPE family loss rules. Existing
+research cohorts remain order-free and cannot migrate. Generic native entry cannot
+bypass the Scope consumer. Inside one transaction, preparation rechecks original
+and latest receipts, owner, revision, account/risk, exact proposal and management
+terms, then saves native decision/order, consumption receipt and watch transition.
+A rejected stale preparation does not burn the watch: a fresh admission has a new
+source identity. A consumed play can never create another native entry.
+
+Dispatch rechecks current quote/profile/price tier, coverage age, known path,
+remaining R, original admission lifetime and the current common governor/loss guard.
+Lineage derives from the consumed original receipt and survives closes, stored
+attribution, reconciliation and exports. Native lifecycle distinguishes working
+orders, actual held positions, closed trades and terminal never-filled attempts.
+Partial buys/canceled remainders keep their position; scales keep their runner,
+original fill basis, profile limit and earlier deadline. Uncertain/attempted orders
+retain reservations and existing reviewed-recovery requirements. Calls still count
+when never filled. Neutral reset, fresh reversal bars and cooldown remain necessary
+for an opposing call; resets never refund calls or reopen plays.
+
+The pinned approved SignalFlow V2 playbook at
+`f9eaf2c1b5d13dca287ee7138126883065b00395` was reread. Its unobstructed-path condition
+is specific to cheap convexity consideration. Earlier continuation notes overstated
+that as a prerequisite for every profile; the new native version follows the pinned
+rule. Responsive/balanced one-to-three-contract plans execute with existing known-
+level, reachability and remaining-R gates. Convexity remains blocked, and four-
+contract plans retain `SCOPE_THIRD_TARGET_UNSPECIFIED`; no objective, resize, extra
+runner or complete-path claim is invented.
+
+Reconciliation feeds actual native outcomes into both account and SCOPE loss state.
+All entry/management charges and execution fees remain included; unknown/unallocated
+costs or open runners cannot become completed losses. Completed outcomes count once,
+cooldown starts at recognition, and locks persist across sessions/restart. Signed
+Scope resets require an actual lock, expired cooldown, exact revision and fresh flat
+complete evidence. Actor/reason/time/session/prior state remain audited. Only Scope's
+operational boundary clears; global locks, daily P&L, costs and independent accounts
+remain intact.
+
+Create-only native replay now drives watch actions, entries, actual fills, owned/
+protective exits, observed terminal/settlement receipts and signed fixture resets.
+Protective orders can be filled by their replay action key. Portable export verifies
+original native links, cash/fill/settlement accounting, risk/reset evidence and all
+costs in an in-memory reconstruction. It also checks open holdings' original deadline,
+protection and fill reference. Data/host costs default to unknown. The stored observer
+labels native PAPER plays and exact entry links; reads remain non-mutating. This is
+semantic integration, not final visual acceptance.
+
+Validation covers **1,117 distinct installed cases with no unresolved failures**,
+including **40 new native Scope/replay cases**. All runs use isolated Python,
+noneditable wheels, copied tests outside the checkout and warnings as errors:
+
+- Broad run: 1,114 cases in 655.76s, with 1,111 passing and three fixture/harness
+  failures. It includes all existing Scope suites, native execution, family/account
+  loss/reset/operator controls, partial closes, deadlines/targets and full independent
+  A/B/C/D entry/management-cost attribution.
+- Final Scope/native-observer run: 59 passed in 183.67s, including original holding
+  protection checks, orphaned native receipt rejection and corrected observer fixture.
+- Final replay/export run: 12 passed in 87.51s after adding action-key linkage for
+  protective fills; this was the only application change after the 59-case run.
+- Corrected compatibility run: 5 passed in 4.14s. SCOPE is now a supported loss family,
+  so the old invalid-family fixture now uses UNKNOWN. The isolated harness now includes
+  its copied test-package root for an existing qualified helper import.
+
+The other broad-run failure was a too-short password in the new observer fixture;
+its corrected case passed independently and in the final 59-case run. The underlying
+minimum-password rule was retained. Earlier development runs also caught the new
+export's duplicated-capital consistency omission, a Decimal/string comparison and
+incorrect fixture assumptions/field names; all were corrected before relevant final
+installed gates. No failed application gate was waived, no dependency was changed,
+and overlapping runs are not added together. JUnit identity union records 1,117 cases.
+
+All **185 application/template files** match final source/wheel/install; final selected
+copied tests match source. Scoped lint/format, dependency consistency, whitespace and
+local documentation targets pass. Final wheel SHA-256:
+`e8042258cedf1c11f1090963620a0c495b42f76d5a62cedd8b768db2bd60520d`.
+Proof beside checkout: `scope-native-proof`, `scope-ready-proof`,
+`scope-delivery-proof`, `scope-compat-fixed-proof`, their installed logs/JUnit files,
+`scope-delivery-dist` and `scope-verification.json`. Historical development proofs
+are retained separately.
+
+Remaining broader work: overnight Swing, remaining families/mixed stock-options
+ownership, final UI/visual review and authentic normalized data/model/calendar,
+prospective economic and host acceptance. Unsupported convexity/four-contract cases
+remain explicit Scope rejection boundaries. Main untouched, PR draft, LIVE disabled
+and the deployed experiment frozen; no authentic broker/provider/model call,
+service/deployment change or dependency update.
+
+---
+
 ## Deterministic entry deadlines and Scope handoff: 2026-10-18 UTC
 
 A concrete native Scope prerequisite is now implemented: deterministic entries can

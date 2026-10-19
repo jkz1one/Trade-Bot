@@ -27,7 +27,7 @@ CALENDAR_SOURCE = "XNYS_REGULAR_INTERSECTION_V1"
 
 
 class FamilyLossPolicy(OptionRecord):
-    family: Literal["DEGEN", "SWING"]
+    family: Literal["DEGEN", "SWING", "SCOPE"]
     max_consecutive_losses: int = Field(strict=True, ge=1, le=2)
     cooldown_seconds: int = Field(strict=True, ge=1800, le=86400)
 
@@ -37,7 +37,7 @@ class NativeLossPolicy(OptionRecord):
     max_consecutive_losses: int = Field(strict=True, ge=1, le=2)
     cooldown_seconds: int = Field(strict=True, ge=1800, le=86400)
     families: tuple[FamilyLossPolicy, ...] = Field(
-        default=(), max_length=2, exclude_if=lambda v: not v
+        default=(), max_length=3, exclude_if=lambda v: not v
     )
 
     @model_validator(mode="after")
@@ -89,8 +89,23 @@ class OptionExecutionPolicy(OptionRecord):
         default=None, exclude_if=lambda v: v is None
     )
 
+    scope_execution: Literal["scope-native-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+
     @model_validator(mode="after")
     def bounded(self):
+        if self.scope_execution is not None and (
+            self.target_exits != "frozen-target-milestones-v2"
+            or self.target_entry_reference is None
+            or self.entry_premium_protection is None
+            or self.entry_time_protection is None
+            or self.loss_control is None
+            or not any(p.family == "SCOPE" for p in self.loss_control.families)
+        ):
+            raise ValueError(
+                "Scope execution requires native targets, fill reference, premium/time protection and Scope loss control"
+            )
         if self.target_entry_reference is not None and (
             self.target_exits != "frozen-target-milestones-v2" or self.target_stops is None
         ):
@@ -274,7 +289,7 @@ class EntryLineage(OptionRecord):
     """Frozen selected-opportunity identity; never a caller-selected strategy label."""
 
     version: Literal["native-entry-lineage-v1"] = "native-entry-lineage-v1"
-    family: Literal["DEGEN", "SWING"]
+    family: Literal["DEGEN", "SWING", "SCOPE"]
     setup: Name
     opportunity_key: Name
     candidate_id: Name

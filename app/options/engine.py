@@ -117,6 +117,7 @@ class OptionJournal(ExecutionJournal):
             "execution_option_scope_watch_policy",
             "execution_option_scope_watches",
             "execution_option_scope_watch_actions",
+            "execution_option_scope_entries",
         }
     )
 
@@ -398,6 +399,7 @@ class OptionExecution:
         target_exit_stage=None,
         entry_premium_protection=None,
         entry_time_protection=None,
+        scope_entry=None,
     ):
         now = clock(now)
         proposal = OptionProposal.model_validate(proposal.model_dump(warnings=False))
@@ -471,6 +473,14 @@ class OptionExecution:
             ceiling = OptionAdmission.model_validate(ceiling.model_dump(warnings=False))
             inputs["ceiling"] = ceiling.model_dump(mode="json")
             bound_inputs["ceiling"] = ceiling
+        if scope_entry is not None:
+            from app.options.scope_execution import ScopeExecutionRequest
+
+            scope_entry = ScopeExecutionRequest.model_validate(
+                scope_entry.model_dump(warnings=False)
+            )
+            inputs["scope_entry"] = scope_entry.model_dump(mode="json")
+            bound_inputs["scope_entry"] = scope_entry
         digest = fingerprint(bound_inputs)
         with self.journal.write() as db:
             self._control(db)
@@ -484,6 +494,7 @@ class OptionExecution:
             reason = None
             entry_review = None
             lineage = None
+            scope_packet = None
             strategy_table = db.execute(
                 "SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_option_strategy'"
             ).fetchone()
@@ -513,18 +524,23 @@ class OptionExecution:
                 ):
                     reason = "OPTION_MODEL_RECEIPT_REQUIRED"
             try:
-                from app.options.scope_admission import reject_unlinked_scope_entry
+                from app.options.scope_execution import lineage as scope_lineage
+                from app.options.scope_execution import prepare_review
                 from app.options.shared_strategy import review_shared_entry
 
-                reject_unlinked_scope_entry(db, proposal)
+                scope_packet = prepare_review(self, db, source_key, inputs, scope_entry, now)
+                if scope_packet is not None:
+                    lineage = scope_lineage(scope_packet)
                 from app.options.loss_control import guard_entry
 
-                guard_entry(self, db, proposal, now, source_key=source_key, quote=quote)
+                guard_entry(
+                    self, db, proposal, now, source_key=source_key, quote=quote, lineage=lineage
+                )
                 review_shared_entry(self, db, source_key, proposal, quote, underlying, now)
                 if proposal.action == "OPEN_LONG" and quote is not None:
                     from app.options.entry_lineage import selected_lineage
 
-                    lineage = selected_lineage(db, source_key, quote.instrument)
+                    lineage = lineage or selected_lineage(db, source_key, quote.instrument)
                 account = (
                     self._account(db, now, closing=proposal.action == "CLOSE")
                     if proposal.action != "HOLD"
@@ -548,8 +564,12 @@ class OptionExecution:
                         quote,
                         underlying,
                         account,
-                        self._effective_limits(),
-                        session,
+                        OptionLimits.model_validate(scope_packet["effective_limits"])
+                        if scope_packet
+                        else self._effective_limits(),
+                        SessionWindow.model_validate(scope_packet["session"])
+                        if scope_packet
+                        else session,
                         now=now,
                     )
                 if result.outcome == "APPROVED" and proposal.close_quantity is not None:
@@ -753,6 +773,10 @@ class OptionExecution:
             self.journal.event(
                 db, now, "OPTION_PROPOSAL_RECORDED", {"source_key": source_key, **output}
             )
+            if scope_packet is not None and output["status"] == "PREPARED":
+                from app.options.scope_execution import consume
+
+                consume(self, db, intent, scope_packet, now)
             return output
 
     @exact
@@ -851,10 +875,10 @@ class OptionExecution:
                     raise ExecutionBlocked("OPTION_INSTRUMENT_MAPPING_CHANGED")
                 if (intent.entry_protection is None) != ("entry_request" not in approval):
                     raise ExecutionBlocked("OPTION_ENTRY_PROTECTION_MISSING")
-                from app.options.scope_admission import reject_unlinked_scope_entry
+                from app.options.scope_execution import dispatch_review
                 from app.options.shared_strategy import review_shared_entry
 
-                reject_unlinked_scope_entry(db, proposal)
+                dispatch_review(self, db, intent, approval, quote, underlying, now)
                 from app.options.loss_control import guard_entry
 
                 guard_entry(
@@ -982,6 +1006,13 @@ class OptionExecution:
                 self.journal.event(
                     db, now, "OPTION_DISPATCH_REJECTED", {"reason": reason}, client_id
                 )
+                from app.options.scope_execution import sync
+
+                try:
+                    sync(self, db, now)
+                except ValueError:
+                    # Corrupt linkage retains the play reservation for review.
+                    pass
                 return "REJECTED"
             db.execute(
                 "UPDATE execution_orders SET status='SUBMITTING',attempted_at=? WHERE client_id=?",
@@ -1143,6 +1174,13 @@ class OptionExecution:
                     "new_receipts": len(new_receipts),
                 },
             )
+            from app.options.scope_execution import sync
+
+            sync(self, db, now)
+            if self.policy.scope_execution is not None:
+                from app.options.loss_control import refresh
+
+                refresh(self, db, now)
             return {
                 "reconciled": True,
                 "new_fills": len(new_fills),
@@ -1196,6 +1234,9 @@ class OptionExecution:
                 raise ValueError("UNOWNED_OR_UNATTEMPTED_OPTION_ORDER")
             intent = OptionIntent.model_validate_json(row["intent_json"])
             attempted = datetime.fromisoformat(row["attempted_at"])
+            from app.options.entry_lineage import verified_lineage
+
+            verified_lineage(db, intent, json.loads(row["approval_json"]))
             verify_time_binding(db, intent, json.loads(row["approval_json"]))
             if intent.entry_time_protection is not None:
                 window = self._session(intent.instrument.contract, intent.prepared_at)

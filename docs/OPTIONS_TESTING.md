@@ -116,3 +116,12 @@ followed by the existing [isolated-host requirements](SOURCE_OF_TRUTH.md) for ow
 lifecycle, independent alerts and off-host recovery. These are required steps, not
 closed by this kit. Broader strategy work can continue independently; Scope,
 overnight Swing and mixed stock/options are not enabled by this test run.
+
+## Scope execution/loss integration
+
+The separate [native Scope procedure](OPTIONS_SCOPE_EXECUTION.md) now covers explicit
+new-cohort enrollment, CALL/PUT native entry/fills, targets and runner deadlines,
+full-cost loss controls, signed reviewed resets and portable accounting. Its focused
+fixtures are `test_option_scope_execution.py` and `test_option_scope_execution_replay.py`.
+Use the same isolated installed-wheel discipline as above; this does not change the
+deployed experiment or the final authentic-data/visual acceptance gates.

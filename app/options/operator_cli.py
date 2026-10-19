@@ -114,7 +114,7 @@ def main(argv=None):
     send.add_argument(
         "--action", choices=["HALT", "RESUME", "REVOKE_KEY", "RESET_LOSS_LOCK"], required=True
     )
-    send.add_argument("--loss-family", choices=["DEGEN", "SWING"])
+    send.add_argument("--loss-family", choices=["DEGEN", "SWING", "SCOPE"])
     send.add_argument("--actor", required=True)
     send.add_argument("--reason", required=True)
     send.add_argument("--ttl", type=int, default=60)

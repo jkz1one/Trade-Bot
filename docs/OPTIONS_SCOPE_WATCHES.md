@@ -1,5 +1,10 @@
 # Durable unfilled Scope watches
 
+Current extension: [native Scope execution/loss integration](OPTIONS_SCOPE_EXECUTION.md)
+is available only to explicitly enrolled new PAPER owners. Existing research versions
+retain the boundaries below. The native extension supports responsive/balanced
+one-to-three-contract plans; convexity and missing-T3 four-contract plans stay blocked.
+
 `app.options.scope_watch.ScopeWatchBook` persists the first called-play layer in
 an existing `OptionExecution` journal. This is an explicitly enrolled **research
 watch workflow**, with false trade/LIVE authority. Its research admission, management
