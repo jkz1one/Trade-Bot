@@ -8,6 +8,11 @@ clocks/deadlines, restart and portable accounting. Run the native Scope executio
 export and legacy research replay regressions too. Full Scope A/B/C/D trading
 comparison remains blocked until the model/post-cost/later-fill contracts are bound.
 
+The deterministic Scope A tape baseline is exercised by
+`test_option_scope_trading_replay.py`, including later receipt fills, partial fills,
+missing executions, deadline protection, account isolation and portable accounting.
+See its [contract](OPTIONS_SCOPE_TRADING_REPLAY.md) and the latest measured status.
+
 The current Degen/shared-Swing implementation can be tested offline now. Completing
 every planned Swing/Scope family is not a prerequisite for this first test pass.
 Real market/model testing still requires authenticated samples and normalization;

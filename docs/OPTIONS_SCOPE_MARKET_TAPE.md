@@ -107,7 +107,9 @@ fees and loss controls separately. Authentic market/model evidence remains open.
 ## Explicit remaining replay boundary
 
 Common Scope observations, diagnostic reproduction and independent native watch
-lifecycles are fixture verified. Full Scope A/B/C/D trading replay/export is
+lifecycles are fixture verified. The separate [deterministic A baseline](OPTIONS_SCOPE_TRADING_REPLAY.md)
+now connects native shared selection, later fills, independent exits and full-cost
+accounting. Full Scope A/B/C/D trading comparison is
 **not yet implemented**. The
 legacy shortlist, native replay scheduler and native comparison exporter reject
 enrolled Scope tapes explicitly. Replay rejection happens before creating its

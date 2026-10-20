@@ -50,8 +50,10 @@ fresh owned approval, native entry and full-cost attribution for a new frozen ow
 management to the original native plan and current Scope context. Common Scope
 tapes now have [sealed observations and independent native watch replay](docs/OPTIONS_SCOPE_MARKET_TAPE.md).
 Tape-linked calls, arming, admission, invalidation and expiry run through each owner's
-actual revision and retain portable native receipts. Full Scope A/B/C/D trading
-replay/export and runtime ingestion remain follow-on work.
+actual revision and retain portable native receipts. The [deterministic Scope A
+baseline](docs/OPTIONS_SCOPE_TRADING_REPLAY.md) now connects those watches to native
+selection, later fills, protective exits and full-cost export. Full B/C/D comparison
+and runtime ingestion remain follow-on work.
 
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
 rules, implementation milestones, acceptance gates and continuation discipline.

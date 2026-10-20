@@ -1,5 +1,65 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Deterministic Scope tape trading baseline: 2026-10-20 UTC
+
+Fresh GitHub state matched `8cb6b5142cdc712c3cedbbd0f6dff6fdb86156a0`,
+tree `d1fc90aba4972016b99a41bb993c2517fcd412c1`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6` and PR #1 open/draft.
+The previous scratch checkout/environment/proof were not retained. A fresh clean
+branch checkout and isolated environment were restored from the unchanged exact
+runtime, development and build locks. No dependency versions changed.
+
+[Deterministic Scope tape trading](OPTIONS_SCOPE_TRADING_REPLAY.md) now connects
+sealed watch references to one independently funded native A baseline. Shared
+selection, owned approval, attempts, later executable fills, partial fills, original
+Scope time protection and final family/global loss controls use the existing native
+coordinator and scheduler. Exact nested Scope prices enter the fill/protection loop
+once; future equal-time observations cannot affect earlier cycles. Complete enrolled
+family evidence remains mandatory. Native cycle failure leaves an incomplete marker.
+
+The create-only API rejects policy drift, model/AI enrollment, carry, bad seals,
+unordered/duplicate references and out-of-session instructions before output creation.
+Each owner retains its own cash, reservations, order/fill identities and loss state.
+Portable accounting preserves every actual fee, explicit allocation and unknown cost;
+missing exit liquidity leaves exposure and net accounting incomplete. Returned report
+and saved JSON agree. The result explicitly remains arm A, comparison incomplete and
+NOT_EVALUATED. Existing app modules, legacy serializers/consumers and the Scope AI
+replay-adapter restriction are unchanged.
+
+Validation: **77 distinct installed checks passed** on the final noneditable wheel:
+24 new trading cases and 53 focused compatibility checks. The complete new suite
+passed in 585.30 seconds; compatibility passed in 48.86 seconds. Tests were copied
+outside the checkout, run with Python `-I`, warnings as errors and plugin autoload
+disabled. An attempted deselection used absolute IDs and did not take effect; the
+six repeated passes are counted only once, using the complete final 24-case run.
+
+Release wheel SHA-256:
+`9e299480824f677cbd67653bd128381034710f2564add99895012d02e99b3a0c`.
+All 196 application/template files matched source, wheel and both installed copies.
+Proof: `../scope-trading-proof/final-proof.json`, `identity.json` and
+`local-release/{remaining,regression}.{log,xml}`. The copied local environment was
+`/tmp/scope-replay-env`; the restored workspace environment is `../scope-replay-env`.
+Complete logs and failed/interrupted diagnostic artifacts remain under that proof
+root. Frozen tape bytes, nested source clocks/capacity, all old consumer guards,
+Scope AI adapter rejection and legacy watch-request serialization passed.
+
+Initial failures identified an incomplete mixed-family fixture and tuple/list report
+normalization; both were corrected. Subsequent concurrent and workspace-serial runs
+hit the unchanged native five-second child deadline. These interrupted/failed runs
+are retained as diagnostics, not passed proof. The isolated failure journal showed
+an uncertain attempt followed by authoritative reconciliation refusal. Tests were
+moved to a temporary local copy of the same noneditable installed environment and
+copied tests; all 196 installed app/template files still matched the release wheel.
+One partial-fill case also hit that deadline in the temporary environment, then
+passed in the subsequent complete run. No native deadline, approval lifetime or execution
+gate was relaxed. Failed/interrupted attempts are not added to distinct pass counts.
+
+Full B/C/D role contracts, paid fresh post-cost Scope admission and managed common-tape
+comparison/export remain next, followed by continuous Scope watch/runtime inputs.
+Combined Scope/Swing carry, remaining family/mixed stock-options plumbing, final
+UI/visual and authentic-data/model acceptance remain open. No provider/model/broker
+calls, deployment, LIVE activation, merge or main changes were made.
+
 ## Tape-linked independent native Scope watches: 2026-10-20 UTC
 
 Fresh GitHub/local state matched `c8beed32702ead238e3d100db4bde25d533ad7dc`,
