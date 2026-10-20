@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.84. Adopted product direction and working delivery contract, 2026-10-20 UTC.
+Version 1.85. Adopted product direction and working delivery contract, 2026-10-20 UTC.
 [Shared Scope entry AI](OPTIONS_SCOPE_AI.md) now binds one paid Degen/Swing/Scope
 decision to native approval, fixed Scope terms, fresh post-cost admission and stored
 trade-level cost attribution. The original expiry still caps dispatch; scale/final
@@ -8,9 +8,12 @@ exits and loss outcomes retain the paid entry. This requires a new frozen owner;
 legacy deterministic cohorts remain model-off. [Shared Scope position reasoning](OPTIONS_SCOPE_POSITION.md)
 now retains original native protection and freshly recomputed Scope context through
 paid management and stored cost attribution. [Common Scope observations](OPTIONS_SCOPE_MARKET_TAPE.md)
-now retain frozen session/source policy and point-in-time diagnostic replay.
-Independent Scope A/B/C/D native replay/export and continuous watch/runtime input
-remain open; unsupported consumers explicitly reject Scope tapes.
+now retain frozen session/source policy, point-in-time diagnostics and tape-linked
+native watch replay. Each independent owner computes its own arming/admission and
+retains original terms, native revisions and portable accounting. This watch-only
+mode does not implement model roles or trading comparison. Full Scope A/B/C/D native
+replay/export and continuous watch/runtime input remain open; unsupported comparison
+consumers explicitly reject Scope tapes.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -398,9 +401,10 @@ from bound native candidates in one owner,
 with immutable alternatives/selection, fresh dispatch gates and full-cost portable
 accounting. Shared Scope entry AI now binds full paid decisions, fresh owned
 approval and trade-level cost attribution. Shared Scope position reasoning now
-binds original native terms and current Scope context. Continuous
-watch ingestion/common A/B/C/D tapes
-and combined carry/Scope enrollment remain open; existing cohorts stay frozen.
+binds original native terms and current Scope context. Common Scope observations
+and independent native watch replay are fixture implemented. Full A/B/C/D trading
+replay/export, continuous watch ingestion and combined carry/Scope enrollment remain
+open; existing cohorts stay frozen.
 
 Swing retains completed higher-timeframe bars, exact contract locking, next actual
 exchange session, catalyst/earnings clearance, chase and invalidation geometry.

@@ -48,8 +48,10 @@ checks a fresh owned admission against the original plan and settled model charg
 fresh owned approval, native entry and full-cost attribution for a new frozen owner.
 [Shared Scope position reasoning](docs/OPTIONS_SCOPE_POSITION.md) now binds held
 management to the original native plan and current Scope context. Common Scope
-tapes now have [sealed observation capture and diagnostic replay](docs/OPTIONS_SCOPE_MARKET_TAPE.md).
-Independent Scope A/B/C/D native replay/export and runtime ingestion remain follow-on work.
+tapes now have [sealed observations and independent native watch replay](docs/OPTIONS_SCOPE_MARKET_TAPE.md).
+Tape-linked calls, arming, admission, invalidation and expiry run through each owner's
+actual revision and retain portable native receipts. Full Scope A/B/C/D trading
+replay/export and runtime ingestion remain follow-on work.
 
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
 rules, implementation milestones, acceptance gates and continuation discipline.

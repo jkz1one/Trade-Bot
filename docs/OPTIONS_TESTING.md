@@ -1,10 +1,12 @@
 # Start testing the options PAPER build
 
-The common Scope tape acceptance suites are `test_option_scope_market_tape.py` and
-`test_option_scope_tape_boundaries.py`; use the installed-wheel isolation below.
-They verify the [market-input contract](OPTIONS_SCOPE_MARKET_TAPE.md), including
-explicit rejection by unsupported account replay/export consumers. Independent
-Scope A/B/C/D watch/account replay remains separate work.
+The common Scope tape suites are `test_option_scope_market_tape.py`,
+`test_option_scope_tape_boundaries.py` and `test_option_scope_tape_watch.py`; use the
+installed-wheel isolation below. They verify the [market-input and native-watch
+contract](OPTIONS_SCOPE_MARKET_TAPE.md), independent owner admissions, original
+clocks/deadlines, restart and portable accounting. Run the native Scope execution/
+export and legacy research replay regressions too. Full Scope A/B/C/D trading
+comparison remains blocked until the model/post-cost/later-fill contracts are bound.
 
 The current Degen/shared-Swing implementation can be tested offline now. Completing
 every planned Swing/Scope family is not a prerequisite for this first test pass.

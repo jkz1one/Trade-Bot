@@ -14,6 +14,7 @@ from pydantic import Field, model_validator
 from app.execution.engine import ExecutionBlocked
 from app.options.engine import OptionExecution, fingerprint
 from app.options.lifecycle import OptionExecutionPolicy, OptionIntent, OptionReceipt
+from app.options.market_tape import RecordedTape
 from app.options.models import (
     Money,
     Name,
@@ -30,6 +31,7 @@ from app.options.scope import ScopePreflightInput
 from app.options.scope_context import ScopeContextInput
 from app.options.scope_execution_export import export_scope_execution
 from app.options.scope_replay import MAX_REQUEST_BYTES, ScopeReplayStep, _perform, _revision
+from app.options.scope_tape_watch import ScopeTapeWatchAction, resolve_scope_watch_actions
 from app.options.scope_watch import ScopeWatchBook, ScopeWatchPolicy
 from app.options.venue import DurableOptionVenue
 
@@ -87,7 +89,10 @@ class ScopeExecutionReplay(OptionRecord):
     execution: OptionExecutionPolicy
     watch: ScopeWatchPolicy
     started_at: datetime
-    steps: tuple[ScopeReplayStep | ScopeNativeStep, ...] = Field(min_length=1, max_length=200)
+    steps: tuple[ScopeReplayStep | ScopeNativeStep | ScopeTapeWatchAction, ...] = Field(
+        min_length=1, max_length=200
+    )
+    scope_tape: RecordedTape | None = Field(default=None, exclude_if=lambda v: v is None)
     data_cost: Money | None = Field(default=None, ge=0)
     host_cost: Money | None = Field(default=None, ge=0)
 
@@ -102,6 +107,23 @@ class ScopeExecutionReplay(OptionRecord):
             {s.key for s in self.steps}
         ) != len(self.steps):
             raise ValueError("Ordered unique Scope replay steps required")
+        if self.scope_tape is None:
+            if any(isinstance(s, ScopeTapeWatchAction) for s in self.steps):
+                raise ValueError("Tape watch actions require a sealed common Scope tape")
+        else:
+            header = self.scope_tape.header
+            identities = {"population_id", "account_id"}
+            if (
+                header.scope is None
+                or self.watch != header.scope.watch
+                or self.limits.model_dump(exclude=identities)
+                != header.limits.model_dump(exclude=identities)
+                or self.started_at != header.opens_at
+                or self.execution.scope_arbitration is not None
+                or not all(isinstance(s, ScopeTapeWatchAction) for s in self.steps)
+            ):
+                raise ValueError("Exact common-tape watch-only owner configuration required")
+            resolve_scope_watch_actions(self.scope_tape, self.steps)
         return self
 
 
@@ -217,6 +239,11 @@ def run_scope_execution_replay(request, directory):
     request = ScopeExecutionReplay.model_validate(request.model_dump(warnings=False))
     if len(request.model_dump_json().encode()) > MAX_REQUEST_BYTES:
         raise ValueError("Bounded Scope replay request required")
+    resolved = (
+        resolve_scope_watch_actions(request.scope_tape, request.steps)
+        if request.scope_tape is not None
+        else tuple((s, None) for s in request.steps)
+    )
     directory = Path(directory)
     if not directory.is_absolute():
         raise ValueError("Absolute new Scope execution replay directory required")
@@ -249,17 +276,20 @@ def run_scope_execution_replay(request, directory):
                 OptionsControl.enroll(engine, key, now=request.started_at)
             actions = []
             order_links = {}
-            for step in request.steps:
+            for original, (step, binding) in zip(request.steps, resolved, strict=True):
                 if not engine.reconcile(venue.snapshot(step.at), now=step.at)["reconciled"]:
                     raise ValueError("Scope replay reconciliation failed")
                 engine.assess(getattr(step, "quote", None), step.underlying, now=step.at)
+                before = _revision(engine)
                 try:
                     result = (
-                        _perform(book, step, _revision(engine))
+                        _perform(book, step, before)
                         if isinstance(step, ScopeReplayStep)
                         else _native(engine, venue, book, step, key, order_links)
                     )
                 except ExecutionBlocked as exc:
+                    if binding is not None and _revision(engine) != before:
+                        raise ValueError("Rejected tape watch action changed its journal") from exc
                     result = {"status": "REJECTED", "reason": str(exc)}
                 if result.get("client_id") is not None:
                     order_links[step.key] = result["client_id"]
@@ -268,18 +298,46 @@ def run_scope_execution_replay(request, directory):
                         "key": step.key,
                         "kind": step.kind,
                         "at": step.at.isoformat(),
-                        "step_hash": fingerprint(step),
+                        "step_hash": fingerprint(original),
+                        **(
+                            {"tape_binding": binding, "expected_revision": before}
+                            if binding is not None
+                            else {}
+                        ),
                         "result": result,
                     }
                 )
             now = request.steps[-1].at
+            if request.scope_tape is not None:
+                with engine.journal.read() as db:
+                    for table in (
+                        "execution_orders",
+                        "execution_fills",
+                        "execution_model_calls",
+                        "execution_option_decisions",
+                    ):
+                        if db.execute(f"SELECT 1 FROM {table} LIMIT 1").fetchone():
+                            raise ValueError("Tape watch replay produced native trading activity")
             export = export_scope_execution(
                 engine.journal, now=now, data_cost=request.data_cost, host_cost=request.host_cost
             )
             _save(directory / "native.json", export)
             report = {
                 "version": request.version,
-                "status": "COMPLETE_FIXTURE_REPLAY",
+                "status": (
+                    "COMPLETE_TAPE_WATCH_REPLAY"
+                    if request.scope_tape is not None
+                    else "COMPLETE_FIXTURE_REPLAY"
+                ),
+                **(
+                    {
+                        "tape_hash": request.scope_tape.digest,
+                        "comparison_complete": False,
+                        "economic_conclusion": "NOT_EVALUATED",
+                    }
+                    if request.scope_tape is not None
+                    else {}
+                ),
                 "request_hash": digest,
                 "export_hash": export["export_hash"],
                 "actions": actions,

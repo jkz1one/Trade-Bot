@@ -169,3 +169,11 @@ signatures, strategy profitability or replay of every historical risk decision.
 The observer remains read-only and now distinguishes native PAPER plays from
 research watches, showing the exact native entry link. This semantic correction
 is not the final visual acceptance pass.
+
+## Common-tape watch replay
+
+The native fixture runner now optionally accepts a sealed common Scope tape and
+strict observation-reference watch actions. It computes each owner's watch/admission
+receipts from its own native revision, retains original source clocks and deadlines,
+and exports portable native accounting. This is explicitly watch-only: no trading
+steps or A/B/C/D model comparison are enabled. See [the tape contract](OPTIONS_SCOPE_MARKET_TAPE.md#tape-linked-native-watches).
