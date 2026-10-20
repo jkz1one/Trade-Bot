@@ -12,6 +12,9 @@ The deterministic Scope A tape baseline is exercised by
 `test_option_scope_trading_replay.py`, including later receipt fills, partial fills,
 missing executions, deadline protection, account isolation and portable accounting.
 See its [contract](OPTIONS_SCOPE_TRADING_REPLAY.md) and the latest measured status.
+`test_option_scope_replay_model.py` covers the separate [C/D response contract](OPTIONS_SCOPE_REPLAY_MODEL.md),
+including full native request bindings, known/unknown usage, original leases,
+cancellation, matched scripts and continued execution-enrollment rejection.
 
 The current Degen/shared-Swing implementation can be tested offline now. Completing
 every planned Swing/Scope family is not a prerequisite for this first test pass.

@@ -1,5 +1,67 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Full shared Scope C/D scripted response contract: 2026-10-20 UTC
+
+Fresh GitHub/local state matched `800844045a1a65f0d4675c42fba825b6ca591617`,
+tree `f6e7c7e6b1d00a537ea34d29cf14d963bd935d93`; the working tree was clean,
+main remained `b5359aaf396e692d2142d7e02908f1544e045ee6` and PR #1 open/draft.
+
+The separate [C/D response contract](OPTIONS_SCOPE_REPLAY_MODEL.md) now supplies
+strictly typed, tool-less scripted full entry and position receipts. Fixed Scope
+ENTER binds the original candidate digest/evidence without replacement terms.
+Ordinary family entry retains explicit indexed selection and complete geometry;
+HOLD and D MAINTAIN/TIGHTEN/EXIT_ALL retain their full native protocol. Original
+packet/configuration hashes, source context, owned entry/revision and deadlines
+survive unchanged. Matching C/D declarations must agree on every entry slot,
+choice, geometry, delay and token count; D management remains separate.
+
+The response adapter owns no account, clock, tape, venue, credential or cost ledger.
+Its future exposes the original virtual completion time without advancing clocks
+or renewing leases. Missing/UNKNOWN scripts retain unknown usage. Invalid proposals
+return safe full error receipts with known synthetic usage retained. Late release
+retains its known usage and original deadline for the future native owner to enforce.
+Cancellation consumes the in-memory slot and clears pending state; overlapping calls
+cannot consume a second opportunity. Durable restart prevention, paid cost settlement
+and execution approval remain native integration work.
+
+**This is not native replay enrollment.** Tests prove both old and new adapters are
+still rejected by the shared Scope coordinator. No existing application module was
+modified, and all 196 prior application/template files match the previous wheel
+byte-for-byte. The deterministic A baseline remains the only delivered Scope trading
+replay. B integration, C/D tape scheduling, exact fresh post-cost Scope observations,
+original deadline consumption, mandatory protection during pending calls and
+independent all-cost comparison/export remain open. No strategy decision was changed.
+
+Validation: **115 distinct installed checks passed**, comprising 62 new contract
+cases in 99.26 seconds and 53 compatibility cases in 12.57 seconds. New cases use
+captured native CALL/PUT entry and owned-position requests, verify full result
+protocols and original request preservation, and cover ordinary/HOLD alternatives,
+late/unknown/missing usage, rejected selections/stops, cancellation, overlap, matched
+scripts and continued enrollment rejection. Compatibility retains golden tape bytes,
+source/clock/capacity checks, legacy consumers, old adapter guards and watch serialization.
+No overlapping cases or previous checkpoint passes were added to the total.
+
+Tests ran serially from copied tests outside the checkout, against a noneditable
+installed wheel with Python `-I`, warnings as errors and plugin autoload disabled.
+The first invocation failed collection because the isolated harness omitted the
+copied test package root; adding that copied root fixed collection without exposing
+the checkout. The two complete application runs passed without timeout/retry.
+Ruff, dependency consistency and 181 local documentation targets passed.
+
+Wheel SHA-256:
+`deb62d4e1a6d18ebd6d2ae47b8156904bf82879173d1ae108fa6565d67ccbe75`.
+All 197 current application/template files match source, wheel and installed files.
+Proof: `../scope-model-proof/final-proof.json`, `build.log`, `install.log` and
+`release/{contract,compatibility}.{log,xml}`. Environment: `/tmp/scope-replay-env`.
+The release proof also retains the copied tests, native capture journals and initial
+collection diagnostic. No dependency versions, provider/model/broker calls,
+deployment, LIVE activation, main or merge state changed.
+
+Next: connect the C/D response contract to explicitly enrolled native tape scheduling
+and fresh post-cost Scope admission, then complete B and independent A/B/C/D export.
+Continuous Scope watch/runtime inputs follow. Carry/mixed-family plumbing and final
+UI/visual/authentic-data/model acceptance remain later work.
+
 ## Deterministic Scope tape trading baseline: 2026-10-20 UTC
 
 Fresh GitHub state matched `8cb6b5142cdc712c3cedbbd0f6dff6fdb86156a0`,

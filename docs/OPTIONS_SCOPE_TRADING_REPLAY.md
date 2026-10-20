@@ -78,3 +78,7 @@ acceptance or profitability claim. Full B/C/D model-role contracts, fresh post-c
 Scope admission and managed comparison export remain next, followed by continuous
 watch/runtime inputs. Legacy comparison consumers and the old Scope AI adapter remain
 blocked. Main stays untouched, PR #1 draft, LIVE disabled and deployment frozen.
+
+The separate [C/D scripted response contract](OPTIONS_SCOPE_REPLAY_MODEL.md) now
+provides full typed fixed-plan entry and management receipts. It remains disconnected
+from native execution pending the scheduler, fresh admission and comparison bindings.

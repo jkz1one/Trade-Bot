@@ -53,7 +53,9 @@ Tape-linked calls, arming, admission, invalidation and expiry run through each o
 actual revision and retain portable native receipts. The [deterministic Scope A
 baseline](docs/OPTIONS_SCOPE_TRADING_REPLAY.md) now connects those watches to native
 selection, later fills, protective exits and full-cost export. Full B/C/D comparison
-and runtime ingestion remain follow-on work.
+and runtime ingestion remain follow-on work. A separate [C/D response contract](docs/OPTIONS_SCOPE_REPLAY_MODEL.md)
+now preserves full typed receipts and matched scripts; native replay enrollment
+remains blocked until scheduler and post-cost admission are bound.
 
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
 rules, implementation milestones, acceptance gates and continuation discipline.
