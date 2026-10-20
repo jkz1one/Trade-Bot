@@ -68,8 +68,15 @@ Continuous watch/runtime input follows that replay integration. Combined carry,
 remaining families, mixed stock/options and final UI/authentic-data acceptance
 remain open. No strategy decision is reopened by the market format.
 
-Run `test_option_scope_market_tape.py` with the noneditable installed-wheel procedure
+Run `test_option_scope_market_tape.py` and `test_option_scope_tape_boundaries.py`
+with the noneditable installed-wheel procedure
 in [testing](OPTIONS_TESTING.md), alongside market-tape, independent/shared/managed
 replay, multi-session and native-export regressions. [Status](SLICE2_STATUS.md)
 records the reproduced old boundary and exact proof. No provider/model/broker
 request, dependency change, deployment or LIVE activation is involved.
+
+The boundary suite additionally checks every nested source clock, quote-receipt
+Greek availability, common/nested quote capacity, full historical tape hashes,
+all unsupported account consumers (including empty enrolled tapes) and the unchanged
+old replay-model restriction. These are acceptance checks for this market-input
+contract; they do not enable independent Scope account replay.

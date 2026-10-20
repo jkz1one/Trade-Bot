@@ -1,5 +1,50 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Scope tape publication reconciliation and acceptance: 2026-10-20 UTC
+
+The working branch advanced from `33106efa6a064d1c8b0415a5f888752759e70155` to
+`8f407f2e6fdb409fcee228699690bfe38326a42c` during publication. The protected ref
+update did not overwrite that concurrent work. This follow-up adopts its full
+`ScopeTapePolicy`, frozen index session/deadlines, between-cycle SCOPE observations,
+context reproduction and explicit unsupported-consumer behavior. Application code
+is unchanged from `8f407f2`; this commit adds acceptance tests and documentation.
+
+`test_option_scope_tape_boundaries.py` adds **52 cases** covering every nested
+source/receipt-clock boundary, rejected-write atomicity, nested Greek availability,
+combined quote capacity, the original shared-Swing header and complete legacy tape
+digests, every account consumer with both populated and empty enrolled Scope tapes,
+and continued rejection of the old C/D model adapter. Golden hashes were captured
+independently from the original installed `33106efa` wheel. Account consumers cannot
+create/open owner state or report complete Scope economics through the legacy path.
+
+Final consolidated verification: **145 distinct installed cases passed** (30.92s),
+including all 43 published Scope tape cases, the 52 added boundary cases, the legacy
+market-tape suite and the installed replay CLI permission/create-only case. There
+were no failures, errors or skips. Tests used an isolated noneditable wheel, copied
+tests outside the checkout, Python `-I`, disabled ambient plugins, warnings as errors
+and a new retained pytest base directory. All **194 application/template files**
+match the published `8f407f2` source, local source, wheel and installed package.
+Lint/format, dependency consistency, whitespace and local documentation targets pass.
+Final wheel SHA-256:
+`673bc7d8881dd3fc442db3c66493bd4c0f73cf734e70e30fc94e144214676c9b`.
+
+The superseded local prototype separately passed 280 distinct installed cases,
+including a focused rerun of one CLI permission-invocation timeout. Those results
+and the prior entry's 198 cases are **not added** to this final 145-case count.
+The prototype's incompatible tape schema was not published. Its source/tree and
+proof remain retained separately for audit; this follow-up preserves the remote
+contract rather than adding a competing implementation.
+
+Final proof: `/workspace/scratch/c2a4a0346b96/scope-tape-merged-proof`, with copied
+tests, installed JUnit/log, fixture state, build/install logs and per-case/file
+`validation-summary.json`; wheel in the adjacent `scope-tape-merged-wheels`.
+Original prototype proof remains beside `/workspace/scratch/a622c2254d81/Trade-Bot`
+under the `scope-tape-*proof` directories. No dependency, authenticated provider/
+model/broker call, host change or deployment occurred. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 open/draft, LIVE disabled and the
+deployed experiment frozen. Next remains independent Scope watch lifecycle and
+A/B/C/D model/replay/export binding, then continuous watch/runtime inputs.
+
 ## Common Scope observation tapes and explicit replay boundary: 2026-10-20 UTC
 
 Fresh GitHub and the retained checkout matched
