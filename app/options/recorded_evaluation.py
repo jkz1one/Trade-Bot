@@ -28,6 +28,9 @@ def tape_issues(bundle, tapes):
             reasons.append("SEALED_MARKET_TAPE_MISSING")
             continue
         h = tape.header
+        if h.scope is not None:
+            reasons.append("SCOPE_TAPE_COMPARISON_NOT_SUPPORTED")
+            continue
         if (h.experiment_id, h.declared_at, h.opens_at, h.closes_at, tape.digest) != (
             manifest.experiment_id,
             manifest.declared_at,

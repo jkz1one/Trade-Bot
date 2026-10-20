@@ -77,6 +77,9 @@ def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=
     """
     definition = ArmDefinition.model_validate(definition.model_dump(warnings=False))
     tape = RecordedTape.model_validate(tape.model_dump(warnings=False))
+    from app.options.scope_market_tape import require_legacy_comparison
+
+    require_legacy_comparison((tape,))
     from app.options.evaluation_models import EvaluationSession
 
     session = EvaluationSession.model_validate(session.model_dump(warnings=False))

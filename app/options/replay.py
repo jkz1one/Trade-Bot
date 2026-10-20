@@ -323,6 +323,9 @@ async def run_replay_series(settings, tapes, directory):
     """
     settings = ReplaySettings.model_validate(settings.model_dump(warnings=False))
     tapes = validate_tape_series(tapes)
+    from app.options.scope_market_tape import require_legacy_comparison
+
+    require_legacy_comparison(tapes)
     manifest = settings.manifest
     EvaluationBundle(
         manifest=manifest, evidence=(), underlying_settlements=settings.underlying_settlements

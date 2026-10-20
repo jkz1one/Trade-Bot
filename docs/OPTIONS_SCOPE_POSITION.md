@@ -48,3 +48,12 @@ This is offline fixture plumbing. Common Scope A/B/C/D tapes, continuous watch
 runtime input, remaining family/mixed ownership work and final UI/authentic-data
 acceptance remain separate. No provider/model/broker call, deployment or LIVE
 activation is part of this slice. See [status](SLICE2_STATUS.md) for installed proof.
+
+## Common Scope input checkpoint
+
+[Sealed Scope observations](OPTIONS_SCOPE_MARKET_TAPE.md) now freeze their source/watch
+policy and session deadlines and support original-time diagnostic reproduction.
+This does not complete independent Scope A/B/C/D native replay/export. Existing
+comparison consumers explicitly reject Scope tapes until the full model, fresh
+owned admission, deadline, later-fill and all-cost contracts are connected. The
+shared Scope AI replay-adapter restriction remains in place.

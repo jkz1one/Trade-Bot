@@ -99,3 +99,12 @@ refund calls. The two-session fixture covers A/B/C/D preservation, including D's
 entry and management charges and later unpaid entry pauses.
 See [native risk export](OPTIONS_EVALUATION_EXPORT.md#native-loss-control-evidence)
 for validation, capacity and provenance limits.
+
+## Common Scope input checkpoint
+
+[Sealed Scope observations](OPTIONS_SCOPE_MARKET_TAPE.md) now freeze their source/watch
+policy and session deadlines and support original-time diagnostic reproduction.
+This does not complete independent Scope A/B/C/D native replay/export. Existing
+comparison consumers explicitly reject Scope tapes until the full model, fresh
+owned admission, deadline, later-fill and all-cost contracts are connected. The
+shared Scope AI replay-adapter restriction remains in place.

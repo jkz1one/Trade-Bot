@@ -14,6 +14,7 @@ from app.options.degen import DegenPolicy, scan_degen
 from app.options.engine import clock, fingerprint
 from app.options.entry_reasoning import Digest
 from app.options.models import Name, OptionLimits, OptionRecord
+from app.options.scope_market_tape import ScopeTapePolicy, validate_header, validate_scope_event
 from app.options.selection import ContractSelectionPolicy, plan_contract_reads
 from app.options.swing import SwingPolicy, plan_swing_reads, scan_swing, seed_issues
 from app.robinhood.schedule import XNYSCalendar
@@ -35,6 +36,7 @@ class TapeHeader(OptionRecord):
     setup: DegenPolicy
     selection: ContractSelectionPolicy
     swing: SwingPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
+    scope: ScopeTapePolicy | None = Field(default=None, exclude_if=lambda v: v is None)
 
     @model_validator(mode="after")
     def coherent(self):
@@ -47,9 +49,12 @@ class TapeHeader(OptionRecord):
             or not set(self.setup.symbols) <= set(self.limits.allowed_underlyings)
             or (self.selection.max_quote_contracts + (1 if self.swing else 0))
             * len(self.setup.symbols)
+            + (1 if self.scope else 0)
             > 8
         ):
             raise ValueError("Frozen complete session and bounded universe required")
+        if self.scope is not None:
+            validate_header(self)
         return self
 
 
@@ -57,7 +62,7 @@ class TapeEvent(OptionRecord):
     sequence: int = Field(ge=1, le=MAX_EVENTS, strict=True)
     previous_hash: Digest
     recorded_at: datetime
-    kind: Literal["CYCLE", "MARKET"]
+    kind: Literal["CYCLE", "MARKET", "SCOPE"]
     frame: DegenFrame
 
     @property
@@ -77,8 +82,20 @@ def _validate_event(header, event):
         raise ValueError("Observation outside recorded session")
     if event.kind == "CYCLE" and at >= header.closes_at:
         raise ValueError("Cycle outside regular session")
-    if event.kind == "MARKET" and (frame.histories or frame.inventories or frame.swing):
+    if event.kind == "MARKET" and (
+        frame.histories or frame.inventories or frame.swing or frame.scope is not None
+    ):
         raise ValueError("Market updates contain quotes only")
+    if event.kind == "SCOPE" and (
+        frame.scope is None
+        or frame.histories
+        or frame.inventories
+        or frame.swing
+        or frame.quotes
+        or frame.underlyings
+    ):
+        raise ValueError("Scope observations require only the nested Scope input")
+    validate_scope_event(header, event)
     if frame.swing and header.swing is None:
         raise ValueError("Swing evidence requires frozen shared-family enrollment")
     if len({s.seed.history.symbol for s in frame.swing}) != len(frame.swing):
@@ -118,11 +135,17 @@ def _validate_event(header, event):
             )
             # SPY quotes are retained even if the strategy trades QQQ only.
             allowed = set(header.setup.symbols) | ({"SPY"} if items is frame.underlyings else set())
+            if header.scope is not None and (items is frame.quotes or items is frame.underlyings):
+                allowed.add("SPX")
             if symbol not in allowed or item.source != source:
                 raise ValueError("Foreign market source or universe")
             if not item.source_at <= item.received_at <= at:
                 raise ValueError("Market evidence unavailable at recording time")
     for quote in frame.quotes:
+        if quote.instrument.contract.underlying == "SPX" and header.scope is not None:
+            from app.options.scope_market_tape import validate_instrument
+
+            validate_instrument(header, quote.instrument)
         g = quote.greeks
         if g is not None and (
             g.source != header.limits.option_source
@@ -342,6 +365,9 @@ def replay_shortlist(tape, cycle_key, *, as_of):
     substituted. A/B/C can share this market stage but need their own portfolios.
     """
     tape = RecordedTape.model_validate(tape.model_dump(warnings=False))
+    from app.options.scope_market_tape import require_legacy_comparison
+
+    require_legacy_comparison((tape,))
     event = next(
         (e for e in tape.available(as_of) if e.kind == "CYCLE" and e.cycle_key == cycle_key), None
     )
@@ -488,6 +514,13 @@ def validate_tape_series(values):
         if len(tapes) == 60:
             raise ValueError("Tape count exceeds session capacity")
         tape = RecordedTape.model_validate(value.model_dump(warnings=False))
+        if tapes:
+            original = tapes[0].header.scope
+            current = tape.header.scope
+            if (original is None) != (current is None) or (
+                original is not None and current.watch != original.watch
+            ):
+                raise ValueError("Scope tape series requires unchanged frozen watch enrollment")
         size += len(tape.model_dump_json().encode())
         if size > 2 * MAX_TAPE_BYTES:
             raise ValueError("Combined tape evidence capacity exceeded")

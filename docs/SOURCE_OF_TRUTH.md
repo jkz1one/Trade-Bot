@@ -1,14 +1,16 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.83. Adopted product direction and working delivery contract, 2026-10-19 UTC.
+Version 1.84. Adopted product direction and working delivery contract, 2026-10-20 UTC.
 [Shared Scope entry AI](OPTIONS_SCOPE_AI.md) now binds one paid Degen/Swing/Scope
 decision to native approval, fixed Scope terms, fresh post-cost admission and stored
 trade-level cost attribution. The original expiry still caps dispatch; scale/final
 exits and loss outcomes retain the paid entry. This requires a new frozen owner;
 legacy deterministic cohorts remain model-off. [Shared Scope position reasoning](OPTIONS_SCOPE_POSITION.md)
 now retains original native protection and freshly recomputed Scope context through
-paid management and stored cost attribution. Common A/B/C/D tapes and continuous
-watch/runtime input remain open.
+paid management and stored cost attribution. [Common Scope observations](OPTIONS_SCOPE_MARKET_TAPE.md)
+now retain frozen session/source policy and point-in-time diagnostic replay.
+Independent Scope A/B/C/D native replay/export and continuous watch/runtime input
+remain open; unsupported consumers explicitly reject Scope tapes.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed

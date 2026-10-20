@@ -1,5 +1,69 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Common Scope observation tapes and explicit replay boundary: 2026-10-20 UTC
+
+Fresh GitHub and the retained checkout matched
+`33106efa6a064d1c8b0415a5f888752759e70155`, tree
+`8a8cf63f28050bf0d21e6cfe0845ec76b575f4e5`. Main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 was open/draft.
+The retained checkout was initially clean. A concurrent writer subsequently changed
+those same files, so this slice moved to an isolated checkout at
+`/workspace/scratch/375f7ed7f8ff/Trade-Bot`, preserving the other working tree.
+
+The old installed wheel reproduced the concrete boundary failure: both CYCLE and
+MARKET accepted nested Scope evidence without any Scope header enrollment.
+[Common Scope observations](OPTIONS_SCOPE_MARKET_TAPE.md) now explicitly freeze the
+watch/source policy and reviewed session, including original cutoff/protection
+clocks. Recording and loading reject unenrolled Scope, future/foreign/duplicate
+evidence, unfinished histories, wrong SPXW identity, changed session/deadlines and
+conflicting common/nested prices. Existing header/frame serialization and the old
+header hash remain unchanged when enrollment is absent.
+
+A distinct Scope-only observation event retains between-cycle inputs without
+creating extra decision slots. Quote-only MARKET remains separate. Original-time
+context reproduction exposes only recorded prefixes and returns native scanner
+diagnostics with exact input/policy/event/tape bindings and no authority. Missing,
+stale or blocked source evidence remains explicit. Source capture never consumes
+an account revision, copies an admission or asserts a fill. A multi-session input
+series must retain the same Scope watch policy and enrollment.
+
+Independent Scope A/B/C/D native replay/export remains open. Legacy shortlist,
+replay and export now explicitly reject Scope enrollment; replay refuses before
+creating accounts/output, and recorded evaluation suppresses totals with
+SCOPE_TAPE_COMPARISON_NOT_SUPPORTED. The old Scope AI replay-model restriction was
+not removed. No model/native approval/position logic or cost policy changed.
+Next: bind separate native watch lifecycles and model-role contracts to these
+common observations, preserve original deadlines and fresh post-cost admission,
+then extend later-fill/management/full-cost export and continuous runtime inputs.
+Combined carry, remaining families/mixed ownership and final UI/authentic-data
+acceptance remain later gates.
+
+Validation: **198 distinct installed cases passed**, including all **43 new
+Scope tape cases**, with no skipped cases or unresolved failures. The final run completed in 1180.88 seconds and
+used an isolated noneditable wheel, copied tests outside the checkout, Python `-I`,
+disabled ambient plugins and warnings as errors. It includes common tape integrity,
+independent/shared A/B/C/D replay, multi-session settlement and cost continuity,
+native export, management attribution and unknown-cost regressions.
+
+The initial focused run passed 42 of 43 cases. Its one failure was a test-only
+comparison between native canonical hashing and JSON-string values. The corrected
+assertion pins the exact header digest independently reproduced on the previous
+installed wheel. All 43 cases passed in the final run; overlapping runs are not
+summed. No application gate was relaxed to fix that expectation.
+
+All 194 application/template files match source/wheel/install. Copied tests match
+source. Lint, format, dependency consistency, whitespace and 233 local documentation
+links pass. Wheel SHA-256:
+`5deb96e7322752dce5269a95ad8ba373f34d90178f2713d510ced7990e322568`.
+Proof beside the isolated checkout: `scope-tape-proof` (initial run and old-wheel
+reproducer), `scope-tape-final-proof` (final installed run, JUnit/log, fixture state,
+identity and distinct-case summary), `scope-tape-dist` and build/install logs.
+
+README, source of truth v1.84, research continuation and tape/replay/testing guides
+record the delivered boundary. Main remains untouched, PR draft, LIVE disabled and
+the deployed experiment frozen. No dependency, deployment, host configuration or
+authenticated provider/model/broker call changed.
+
 ## Shared Scope position reasoning: 2026-10-19 UTC
 
 Fresh GitHub/local state matched `42e1711d1d300a0d50d076920278883c506f758e`,

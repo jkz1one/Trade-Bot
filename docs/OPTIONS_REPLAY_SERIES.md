@@ -151,3 +151,12 @@ attempt; already admitted calls and D's management charges remain in economics.
 Boundary export now carries [audit-bound native risk evidence](OPTIONS_EVALUATION_EXPORT.md#native-loss-control-evidence).
 Previously unenrolled policies retain their prior behavior and omitted fields.
 This is LOCAL_FIXTURE proof, not provider, host, strategy-profitability or LIVE acceptance.
+
+## Common Scope input checkpoint
+
+[Sealed Scope observations](OPTIONS_SCOPE_MARKET_TAPE.md) now freeze their source/watch
+policy and session deadlines and support original-time diagnostic reproduction.
+This does not complete independent Scope A/B/C/D native replay/export. Existing
+comparison consumers explicitly reject Scope tapes until the full model, fresh
+owned admission, deadline, later-fill and all-cost contracts are connected. The
+shared Scope AI replay-adapter restriction remains in place.

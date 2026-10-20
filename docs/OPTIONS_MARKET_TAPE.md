@@ -12,6 +12,9 @@ to authenticated collection or continuous options PAPER operation.
 ID, declared enrollment time, limits, Degen setup and contract selection policy.
 An optional `swing` policy explicitly enrolls the
 [shared Degen/Swing universe](OPTIONS_SHARED_REPLAY.md); absence preserves old hashes.
+Optional [Scope enrollment](OPTIONS_SCOPE_MARKET_TAPE.md) freezes its watch/source
+policy and reviewed session. Scope observations and diagnostics are implemented;
+Scope A/B/C/D native comparison remains explicitly blocked pending its own contracts.
 `TapeRecorder(path, header)` creates a new mode-0600 file in an existing owned
 mode-0700 directory. It never replaces a file, changes an existing directory's
 permissions, reopens a prior capture or resumes an interrupted recording.
@@ -20,7 +23,8 @@ The append API is `append(frame, recorded_at=at, kind="CYCLE")`. `frame` is the
 existing `DegenFrame`. `CYCLE` records the common five-minute strategy input,
 including an empty frame for missing data. `MARKET` records quote-only observations
 between decisions, for subsequent fill evidence and SPY endpoints. Inventory and
-history are retained only in cycle frames. The recording does not initiate reads
+ordinary history are retained only in cycle frames. Explicit Scope enrollment
+also permits `SCOPE` events containing only the nested Scope observation. The recording does not initiate reads
 or choose contracts independently for any arm.
 
 Each event has a contiguous sequence, previous-record hash and nonregressing

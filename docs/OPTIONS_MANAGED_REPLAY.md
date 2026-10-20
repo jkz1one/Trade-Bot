@@ -97,3 +97,12 @@ statistical evidence, continuous options PAPER runtime/UI,
 actual host lifecycle/alerts/off-host recovery, Swing/Scope/mixed ownership and the
 finished dashboard remain open. LIVE stays disabled; no broker writes, model/API
 calls, service changes or frozen deployed-experiment changes are part of this slice.
+
+## Common Scope input checkpoint
+
+[Sealed Scope observations](OPTIONS_SCOPE_MARKET_TAPE.md) now freeze their source/watch
+policy and session deadlines and support original-time diagnostic reproduction.
+This does not complete independent Scope A/B/C/D native replay/export. Existing
+comparison consumers explicitly reject Scope tapes until the full model, fresh
+owned admission, deadline, later-fill and all-cost contracts are connected. The
+shared Scope AI replay-adapter restriction remains in place.

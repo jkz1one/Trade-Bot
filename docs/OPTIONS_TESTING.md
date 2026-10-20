@@ -160,3 +160,13 @@ Run `test_option_scope_position.py` with position reasoning/worker/coordination,
 Scope entry, native outcome, lineage and observer regressions for the separately
 enrolled [Scope management path](OPTIONS_SCOPE_POSITION.md). Common A/B/C/D
 Scope tapes remain separate work.
+
+## Common Scope observation fixtures
+
+Run `test_option_scope_market_tape.py` against an isolated noneditable wheel with
+copied tests outside the checkout, Python `-I` and warnings as errors. Include
+market-tape, replay, series, shared/managed replay and native-export regressions.
+The [Scope tape contract](OPTIONS_SCOPE_MARKET_TAPE.md) covers enrollment, source
+clocks, completed bars, session deadlines, exact instruments, visible prefixes,
+blocked-data diagnostics, old hashes and explicit unsupported-consumer rejection.
+It establishes no Scope A/B/C/D performance or native replay acceptance.

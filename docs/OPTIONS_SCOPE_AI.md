@@ -133,3 +133,12 @@ Next: common A/B/C/D Scope replay, continuous watch
 input/runtime integration, then remaining family/mixed ownership plumbing and the
 final UI/authentic-data acceptance pass. Main remains untouched, PR #1 draft,
 LIVE disabled and the deployed experiment frozen.
+
+## Common Scope input checkpoint
+
+[Sealed Scope observations](OPTIONS_SCOPE_MARKET_TAPE.md) now freeze their source/watch
+policy and session deadlines and support original-time diagnostic reproduction.
+This does not complete independent Scope A/B/C/D native replay/export. Existing
+comparison consumers explicitly reject Scope tapes until the full model, fresh
+owned admission, deadline, later-fill and all-cost contracts are connected. The
+shared Scope AI replay-adapter restriction remains in place.
