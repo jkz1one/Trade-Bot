@@ -54,6 +54,7 @@ class DegenCoordinator:
         position_policy=None,
         swing_policy=None,
         scope_policy=None,
+        scope_replay=None,
         scope_refresh=None,
     ):
         if type(engine) is not OptionExecution or getattr(engine, "_degen_owner", None) is not None:
@@ -67,6 +68,13 @@ class DegenCoordinator:
         if (scope_policy is not None) != (engine.policy.scope_arbitration is not None):
             raise ValueError("Shared Scope requires matching owner/coordinator enrollment")
         self.scope_refresh = scope_refresh
+        self.scope_replay = None
+        if scope_replay is not None:
+            from app.options.scope_replay_enrollment import validate_adapter
+
+            self.scope_replay = validate_adapter(scope_replay, replay_model)
+            if self.scope_policy is None or self.scope_policy.version != "shared-scope-entry-v1":
+                raise ValueError("Scope tape replay requires explicit shared AI enrollment")
         if self.scope_policy is not None:
             if self.scope_policy.version != engine.policy.scope_arbitration:
                 raise ValueError("Matching shared Scope versions required")
@@ -77,10 +85,10 @@ class DegenCoordinator:
                 raise ValueError("Shared Scope v1 is deterministic only")
             if self.scope_policy.version == "shared-scope-entry-v1" and (
                 judgment_limits is None
-                or key_file is None
+                or (key_file is None if self.scope_replay is None else key_file is not None)
                 or entry_policy is None
                 or entry_policy.scope_selection is None
-                or replay_model is not None
+                or (replay_model is not None and self.scope_replay is None)
                 or not callable(scope_refresh)
             ):
                 raise ValueError(
@@ -99,7 +107,7 @@ class DegenCoordinator:
         from app.options.replay_model import ReplayModel
 
         if replay_model is not None and (
-            type(replay_model) is not ReplayModel
+            (type(replay_model) is not ReplayModel and self.scope_replay is None)
             or key_file is not None
             or judgment_limits is None
             or engine.policy.cost_policy is None
@@ -293,6 +301,8 @@ class DegenCoordinator:
             }
         if self.replay_model is not None:
             config["replay_model"] = self.replay_model.configuration()
+        if self.scope_replay is not None:
+            config["scope_replay"] = self.scope_replay.model_dump(mode="json")
         if self.entry_policy is not None:
             from app.options.entry_judgment import configuration
 
@@ -326,6 +336,18 @@ class DegenCoordinator:
         return await judgment.run_candidate_process(request, secret)
 
     def _model_timely(self, request, started, completed):
+        if self.scope_replay is not None:
+            # Only explicitly enrolled, tool-less tape responses use virtual elapsed
+            # time. Keep the original request duration and native packet deadline.
+            elapsed = (completed - started).total_seconds()
+            return (
+                0
+                <= elapsed
+                < min(
+                    request.deadline_monotonic - request.started_monotonic,
+                    self.judgment_limits.process_timeout_seconds,
+                )
+            )
         return time.monotonic() < request.deadline_monotonic and (
             self.replay_model is None
             or (completed - started).total_seconds() < self.judgment_limits.process_timeout_seconds

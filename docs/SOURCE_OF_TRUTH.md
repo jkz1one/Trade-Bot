@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.87. Adopted product direction and working delivery contract, 2026-10-20 UTC.
+Version 1.88. Adopted product direction and working delivery contract, 2026-10-20 UTC.
 [Shared Scope entry AI](OPTIONS_SCOPE_AI.md) now binds one paid Degen/Swing/Scope
 decision to native approval, fixed Scope terms, fresh post-cost admission and stored
 trade-level cost attribution. The original expiry still caps dispatch; scale/final
@@ -17,8 +17,11 @@ selection, native later fills, independent protection and full-cost accounting. 
 Scope B/C/D comparison and continuous watch/runtime input remain open; unsupported
 comparison consumers explicitly reject Scope tapes. A separate
 [C/D scripted response contract](OPTIONS_SCOPE_REPLAY_MODEL.md) now binds full shared
-Scope entry/management receipts and matched declared entry scripts. It grants no
-native replay enrollment; scheduler/post-cost/comparison integration remains open.
+Scope entry/management receipts and matched declared entry scripts. A separate frozen
+[native C/D tape enrollment](OPTIONS_SCOPE_MODEL_REPLAY.md) now connects that contract
+to delivered fresh observations, native paid admission, later fills and full-cost export.
+Full B/comparison integration, continuous inputs, combined Scope/Swing carry and
+remaining family/mixed stock-options plumbing precede final UI and authentic PAPER testing.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed

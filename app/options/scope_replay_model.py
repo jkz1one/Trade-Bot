@@ -1,4 +1,4 @@
-"""Tool-less C/D response fixtures. Not enrolled in any execution coordinator."""
+"""Tool-less C/D response fixtures; execution requires separate frozen tape enrollment."""
 
 import asyncio
 from datetime import timedelta
@@ -99,9 +99,9 @@ class MatchedScopeScripts(OptionRecord):
 class ScopeReplayModel:
     """Only full typed requests enter; only nonauthoritative model receipts leave.
 
-    A future replay scheduler must deliver market receipts before releasing `pending`.
+    The enrolled tape scheduler delivers market receipts before releasing `pending`.
     This class owns no clock, tape, account, venue, credentials or cost settlement.
-    Existing coordinators deliberately reject it until those contracts are connected.
+    Coordinators reject this adapter without explicit full Scope tape enrollment.
     """
 
     def __init__(self, script):

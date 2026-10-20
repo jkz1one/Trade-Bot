@@ -201,6 +201,26 @@ def native_position_outcome(db, entry_client_id, population_id):
             if key == entry.source_key and attr.role == "MANAGEMENT":
                 raise ValueError("Entry call has management lineage")
             calls.append(attr)
+            cycle = cycles.get(key)
+            if (
+                attr.role == "MANAGEMENT"
+                and cycle is not None
+                and cycle["status"] == "STARTED"
+                and policy.scope_arbitration == "shared-scope-entry-v1"
+            ):
+                strategy = json.loads(
+                    db.execute(
+                        "SELECT policy_json FROM execution_option_strategy WHERE id=1"
+                    ).fetchone()[0]
+                )
+                if "scope_replay" in strategy:
+                    from app.options.scope_replay_enrollment import validate_stored
+
+                    validate_stored(strategy)
+                    # This new cohort freezes complete decision attribution in its
+                    # loss record. A charged response can still be awaiting native
+                    # application after a protective fill; do not freeze it early.
+                    reasons.append("POSITION_MODEL_DECISION_PENDING")
         elif key not in buy_keys and attr.entry_client_id not in buy_ids:
             unallocated.append(attr)
     if unallocated:

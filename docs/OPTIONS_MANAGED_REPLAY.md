@@ -102,7 +102,8 @@ calls, service changes or frozen deployed-experiment changes are part of this sl
 
 [Sealed Scope observations](OPTIONS_SCOPE_MARKET_TAPE.md) now freeze their source/watch
 policy and session deadlines and support original-time diagnostic reproduction.
-This does not complete independent Scope A/B/C/D native replay/export. Existing
-comparison consumers explicitly reject Scope tapes until the full model, fresh
-owned admission, deadline, later-fill and all-cost contracts are connected. The
-shared Scope AI replay-adapter restriction remains in place.
+The separate [native C/D tape path](OPTIONS_SCOPE_MODEL_REPLAY.md) now binds full
+model receipts, delivered fresh post-cost admission, original deadlines, later fills
+and native full-cost export. This does not complete independent A/B/C/D comparison;
+B and the matched comparison wrapper remain open. Existing comparison consumers
+still reject Scope tapes, and the old/unbound model adapters remain blocked.

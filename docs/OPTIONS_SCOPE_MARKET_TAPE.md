@@ -119,10 +119,10 @@ silently treating the tape as a Degen/Swing experiment. This restriction also
 applies to an enrolled Scope tape with no Scope observations.
 
 The shared Scope AI restriction on the old replay-model adapter remains intact.
-The next slice must connect these watch lifecycles to A/B/C/D role-specific model
-contracts, fresh post-cost Scope admissions, original
-account revisions and approval deadlines, later actual fills, management and
-portable full-cost attribution. Watch actions and account-specific admission
+The separate [native C/D tape path](OPTIONS_SCOPE_MODEL_REPLAY.md) now connects full
+model contracts, delivered fresh post-cost admissions, original account revisions
+and approval deadlines, later fills, management and portable native accounting.
+B and the matched independent A/B/C/D comparison wrapper remain next. Watch actions and account-specific admission
 receipts cannot be copied from one arm into another. Every entry/management charge,
 fee and explicit operating allocation remains required; unknown stays unknown.
 Continuous watch/runtime input follows that replay integration. Combined carry,

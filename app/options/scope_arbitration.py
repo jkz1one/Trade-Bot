@@ -60,16 +60,21 @@ def configuration(db):
     if watch is None or ScopeWatchPolicy.model_validate_json(watch[0]) != policy.watch:
         raise ExecutionBlocked("SHARED_SCOPE_WATCH_POLICY_CHANGED")
     if policy.version == VERSION and any(
-        k in config for k in ("entry_model", "model", "replay_model", "position_model")
+        k in config
+        for k in ("entry_model", "model", "replay_model", "position_model", "scope_replay")
     ):
         raise ExecutionBlocked("SHARED_SCOPE_DETERMINISTIC_ONLY")
     if policy.version != VERSION:
         from app.options.entry_judgment import EntryModelConfiguration
 
         model = EntryModelConfiguration.model_validate(config.get("entry_model"))
-        if model.entry_policy.scope_selection is None or any(
-            k in config for k in ("replay_model",)
-        ):
+        if model.entry_policy.scope_selection is None:
+            raise ExecutionBlocked("SHARED_SCOPE_AI_CONFIGURATION_REQUIRED")
+        if "scope_replay" in config:
+            from app.options.scope_replay_enrollment import validate_stored
+
+            validate_stored(config)
+        elif "replay_model" in config:
             raise ExecutionBlocked("SHARED_SCOPE_AI_CONFIGURATION_REQUIRED")
         if "position_model" in config:
             from app.options.position_judgment import PositionModelConfiguration

@@ -1,4 +1,4 @@
-# Start testing the options PAPER build
+# Offline options development checks
 
 The common Scope tape suites are `test_option_scope_market_tape.py`,
 `test_option_scope_tape_boundaries.py` and `test_option_scope_tape_watch.py`; use the
@@ -6,7 +6,7 @@ installed-wheel isolation below. They verify the [market-input and native-watch
 contract](OPTIONS_SCOPE_MARKET_TAPE.md), independent owner admissions, original
 clocks/deadlines, restart and portable accounting. Run the native Scope execution/
 export and legacy research replay regressions too. Full Scope A/B/C/D trading
-comparison remains blocked until the model/post-cost/later-fill contracts are bound.
+comparison remains open; individual A/C/D native trading runs are available.
 
 The deterministic Scope A tape baseline is exercised by
 `test_option_scope_trading_replay.py`, including later receipt fills, partial fills,
@@ -14,10 +14,13 @@ missing executions, deadline protection, account isolation and portable accounti
 See its [contract](OPTIONS_SCOPE_TRADING_REPLAY.md) and the latest measured status.
 `test_option_scope_replay_model.py` covers the separate [C/D response contract](OPTIONS_SCOPE_REPLAY_MODEL.md),
 including full native request bindings, known/unknown usage, original leases,
-cancellation, matched scripts and continued execution-enrollment rejection.
+cancellation, matched scripts and rejection without explicit execution enrollment.
+`test_option_scope_model_replay.py` covers the [native C/D tape path](OPTIONS_SCOPE_MODEL_REPLAY.md),
+paid fresh admission, original deadline enforcement, actual fills, management,
+known/unknown charges and rejected contracts.
 
-The current Degen/shared-Swing implementation can be tested offline now. Completing
-every planned Swing/Scope family is not a prerequisite for this first test pass.
+Offline fixture checks continue while plumbing is built. Finish the remaining
+strategy/engine plumbing before final UI work and authentic PAPER testing.
 Real market/model testing still requires authenticated samples and normalization;
 the current runtime consumes normalized fixtures. This procedure does not convert
 fixture success into provider, host, visual or LIVE acceptance.

@@ -2,9 +2,9 @@
 
 `app.options.scope_replay_model` supplies a separately versioned, tool-less C/D
 response fixture for the existing full shared Scope entry and position protocols.
-It is **not execution enrollment**. Both the old adapter and this new contract
-remain rejected by the native shared Scope coordinator. The deterministic A tape
-baseline remains the only delivered Scope trading replay.
+It is **not execution enrollment by itself**. The old adapter and unbound new
+contract remain rejected. [Native C/D tape replay](OPTIONS_SCOPE_MODEL_REPLAY.md)
+now supplies a separate frozen enrollment, scheduler and fresh-input reader.
 
 ## Declared decisions
 
@@ -41,7 +41,7 @@ position revisions, source evidence and deadlines remain unchanged. The adapter
 receives no engine, tape, venue, credentials, fresh-input reader or cost authority.
 
 A declared response suspends on `pending=(original_as_of + delay, future)` and
-signals `started`. A future scheduler must deliver all equal-time market receipts
+signals `started`. The native tape scheduler delivers all equal-time market receipts
 before releasing that future. The adapter does not move clocks, refresh evidence,
 renew a lease or deem a late response timely. Known usage survives a late release;
 the native owner must settle it and enforce the original deadline independently.
@@ -58,7 +58,7 @@ order attempt or fill. They do not settle any native charge themselves.
 Synthetic usage IDs bind script, request and packet, preventing identical slots in
 different requests from being mislabeled as one receipt. Attempted slots cannot be
 retried within that adapter instance. Durable restart/retry prevention still belongs
-to the future native journal integration. Concurrent calls are rejected without consuming the second opportunity;
+to the native journal. Concurrent calls are rejected without consuming the second opportunity;
 cancellation clears pending state while retaining the first slot as consumed.
 Malformed or unenrolled requests fail before consuming a slot. Independent adapter
 instances retain independent use/pending state.
@@ -66,11 +66,10 @@ instances retain independent use/pending state.
 ## Remaining integration
 
 This contract is fixture evidence, not authentic model performance or billing.
-It deliberately leaves native enrollment blocked. Next work must bind the tape
-scheduler, exact delivered Scope observations, fresh post-cost owned admission,
-original approval deadlines, mandatory exits during pending calls, all entry and
-management charges, actual later fills and independent comparison/export accounts.
-No old guard should be removed simply because this response class exists.
+Native execution now requires the separate full tape enrollment. Individual C/D
+runs retain their own journal and complete costs; B and full A/B/C/D comparison
+remain open. Matching declarations alone do not establish comparable accounts,
+reached opportunities or economic results. The old replay adapter remains blocked.
 
 See [Scope trading replay](OPTIONS_SCOPE_TRADING_REPLAY.md),
 [shared Scope AI](OPTIONS_SCOPE_AI.md), [Scope position reasoning](OPTIONS_SCOPE_POSITION.md)

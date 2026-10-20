@@ -1,5 +1,83 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Native shared Scope C/D tape scheduling and accounting: 2026-10-20 UTC
+
+Resumed the retained uncommitted draft after the workspace connection failed.
+Fresh local/GitHub state matched `e777def5a1f866c9dd0efc40797c56f3a9b04c84`,
+tree `c970a33e01a5657afca07d860169a3107cc7e53a`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6` and PR #1 open/draft.
+
+The separate [native C/D tape path](OPTIONS_SCOPE_MODEL_REPLAY.md) now binds the
+full scripted entry/management contract to a frozen tape/request/script enrollment.
+Each invocation creates independent native journal/venue files, capital, reservations,
+orders, fills and loss state. All equal-time receipts are delivered before releasing
+a model result. Fresh Scope selection uses only the exact latest complete observation
+already delivered for that play, with receipt sequence and event/input/tape hashes
+retained. No source clock is rewritten and no cached quote is merged into old context.
+
+Native usage settlement precedes fresh owned admission. Original Scope terms,
+quantity/fee ceilings, source clocks, account revisions and original deadlines remain
+binding. Proposals, native approval, attempts and later actual fills stay distinct.
+D uses the existing MAINTAIN/TIGHTEN/EXIT_ALL path; deterministic protection continues
+while a response is pending. Unknown usage and explicit operating allocations stay
+unknown. Portable export retains every entry/management charge and execution fee.
+
+The pending-stop case exposed a loss-finalization race: a charged management result
+could be consumed into a closed loss record before its native application was stored.
+For this new frozen replay enrollment only, position outcomes now remain incomplete
+while that exact management cycle is STARTED. The scheduler refreshes loss controls
+once the decision becomes terminal, at the original completion clock. Known charges
+and mandatory fills are never deferred. Unknown management usage leaves the loss
+outcome unresolved. Existing cohort loss-record serialization/behavior is unchanged.
+
+The old replay adapter and unbound new adapter remain rejected. Legacy comparison
+consumers still reject Scope. This slice delivers individual C/D native runs, not
+B or the matched independent A/B/C/D comparison/export wrapper. No strategy decision
+was reopened. All remaining plumbing precedes final UI and authentic PAPER testing.
+
+Validation: **148 distinct installed checks passed on the final wheel**: 23 new
+native replay cases and 125 compatibility cases. The new cases cover both rights,
+C entry, all three D actions, same-time fresh reads, original approval deadlines,
+later fills, late/HOLD/missing/unknown/stale responses, seven enrollment boundaries,
+known/unknown management during protective closure, frozen reopen without retry,
+tampered configuration, unknown operating allocation and create-only output.
+Compatibility covers full response contracts, historical tape/watch serialization,
+unsupported consumers/old adapter rejection, native shared-family behavior, legacy
+loss controls and the deterministic A native replay/export.
+
+Runs are serial noneditable installed-wheel checks using copied tests outside the
+checkout, Python `-I`, warnings as errors and disabled plugin autoload. The final
+receipt unions exact passed case IDs: `additional6` (2), `reopen` (1), `boundaries`
+(12), `release` (5), `release3` (3) and `compatibility` (125). Their elapsed seconds
+are respectively 349.198, 108.096, 44.807, 914.854, 440.373 and 200.727. Partial-run
+failures are retained, and each failed final-wheel case has a later focused pass.
+No overlapping cases, diagnostic passes or earlier checkpoint counts were added.
+
+Initial fixture assumptions were corrected: a flat rejected entry must not request
+a held-only cycle, stale evidence returns explicit native admission rejection,
+required policy fields and sealed-tape mutation must be valid, and reopening a
+venue must omit creation capital. A near-close management attempt correctly hit
+its existing preflight gate, so pending protection uses an earlier stop breach.
+That exposed the actual loss-finalization race fixed above. Two native five-second
+worker timeout failures are retained: an initial uncertain entry acknowledgement
+and the final matrix's PUT TIGHTEN snapshot read. Focused reruns passed without
+changing worker limits or deadlines. An overly broad retry selector was interrupted
+and replaced by exact case IDs; it contributes no passes. Host acceptance remains open.
+
+Wheel SHA-256:
+`73fd0e6f9ad27e8e13442187e1e6383e8249bfa3b8271aa5a401167de5c7d374`.
+All 199 application/template files match source, wheel and installed files. Ruff,
+dependency consistency and 360 local documentation targets passed. Proof:
+`../scope-native-model-proof/final-proof.json`, `build.log`, `install.log` and
+`release/` (copied tests, completed summaries/XML, native journals and diagnostics).
+Environment: `/tmp/scope-replay-env`; wheel: `../scope-native-model-wheels/`.
+
+Next: B shortlist integration and matched independent A/B/C/D comparison/export,
+then continuous Scope watch/runtime inputs. Combined Scope/Swing carry and remaining
+family/mixed stock-options plumbing remain later. Final UI/visual and authentic
+feed/model acceptance remain open. No dependency, authenticated provider/model/broker
+call, deployment, LIVE, main or merge change is authorized by this fixture proof.
+
 ## Full shared Scope C/D scripted response contract: 2026-10-20 UTC
 
 Fresh GitHub/local state matched `800844045a1a65f0d4675c42fba825b6ca591617`,

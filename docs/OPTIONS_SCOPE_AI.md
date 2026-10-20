@@ -34,7 +34,10 @@ Reopening must use the same policies and key path plus an available fresh-input
 reader. Legacy deterministic enrollment still rejects model settings. Shared entry
 AI rejects the old scripted replay model and combined Swing carry. Position-model
 settings require explicit `scope-fixed-position-v1` enrollment; see the linked
-management contract. Replay/runtime work remains separate.
+management contract. The separate [native C/D tape enrollment](OPTIONS_SCOPE_MODEL_REPLAY.md)
+binds full scripted receipts, exact delivered fresh observations and native post-cost
+approval without a key file. The old adapter and unbound new adapter stay rejected;
+continuous runtime inputs and full comparison remain separate.
 No test limits are implied production defaults.
 
 ## One request, fixed Scope terms

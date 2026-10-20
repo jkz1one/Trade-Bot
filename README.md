@@ -2,7 +2,7 @@
 
 Small, auditable experiment for testing whether an autonomous reasoning trader can add value while deterministic software owns authority and risk.
 
-## Start PAPER testing
+## Offline development checks
 
 Use the [isolated options test procedure](docs/OPTIONS_TESTING.md) to verify an
 installed wheel, run native runtime/recovery and full-cost replay checks, and
@@ -53,9 +53,10 @@ Tape-linked calls, arming, admission, invalidation and expiry run through each o
 actual revision and retain portable native receipts. The [deterministic Scope A
 baseline](docs/OPTIONS_SCOPE_TRADING_REPLAY.md) now connects those watches to native
 selection, later fills, protective exits and full-cost export. Full B/C/D comparison
-and runtime ingestion remain follow-on work. A separate [C/D response contract](docs/OPTIONS_SCOPE_REPLAY_MODEL.md)
-now preserves full typed receipts and matched scripts; native replay enrollment
-remains blocked until scheduler and post-cost admission are bound.
+and runtime ingestion remain follow-on work. The [C/D response contract](docs/OPTIONS_SCOPE_REPLAY_MODEL.md)
+now connects to explicitly enrolled [native C/D tape replay](docs/OPTIONS_SCOPE_MODEL_REPLAY.md),
+with delivered fresh observations, paid admission, original deadlines and full-cost export.
+Finish the remaining plumbing before final UI work and authentic PAPER testing.
 
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
 rules, implementation milestones, acceptance gates and continuation discipline.

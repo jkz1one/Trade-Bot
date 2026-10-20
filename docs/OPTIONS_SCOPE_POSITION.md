@@ -44,7 +44,7 @@ entry and management charge and every execution fee. Independent owners retain
 separate capital, reservations and loss counters. Missing costs or unfinished
 exposure do not become a zero-cost or complete result.
 
-This is offline fixture plumbing. Common Scope A/B/C/D tapes, continuous watch
+This is offline fixture plumbing. Full Scope A/B/C/D comparison, continuous watch
 runtime input, remaining family/mixed ownership work and final UI/authentic-data
 acceptance remain separate. No provider/model/broker call, deployment or LIVE
 activation is part of this slice. See [status](SLICE2_STATUS.md) for installed proof.
@@ -53,7 +53,8 @@ activation is part of this slice. See [status](SLICE2_STATUS.md) for installed p
 
 [Sealed Scope observations](OPTIONS_SCOPE_MARKET_TAPE.md) now freeze their source/watch
 policy and session deadlines and support original-time diagnostic reproduction.
-This does not complete independent Scope A/B/C/D native replay/export. Existing
-comparison consumers explicitly reject Scope tapes until the full model, fresh
-owned admission, deadline, later-fill and all-cost contracts are connected. The
-shared Scope AI replay-adapter restriction remains in place.
+The separate [native C/D tape path](OPTIONS_SCOPE_MODEL_REPLAY.md) now binds full
+model receipts, delivered fresh post-cost admission, original deadlines, later fills
+and native full-cost export. This does not complete independent A/B/C/D comparison;
+B and the matched comparison wrapper remain open. Existing comparison consumers
+still reject Scope tapes, and the old/unbound model adapters remain blocked.
