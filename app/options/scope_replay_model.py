@@ -106,6 +106,7 @@ class ScopeReplayModel:
 
     script_type = ScopeReplayScript
     selection_policy = "scope-fixed-plan-v1"
+    carry_policy = None
 
     def __init__(self, script):
         self.script = self.script_type.model_validate(script.model_dump(warnings=False))
@@ -137,6 +138,8 @@ class ScopeReplayModel:
         if len(request.model_dump_json().encode()) > protocol.MAX_REQUEST_BYTES:
             raise ValueError("Bounded shared Scope request required")
         p = request.packet
+        if p.policy.scope_carry != self.carry_policy:
+            raise ValueError("Exact Scope carry response enrollment required")
         key = p.cycle_key
         if key in self.used or self.pending is not None:
             raise ValueError("Scripted opportunity cannot replay or overlap")

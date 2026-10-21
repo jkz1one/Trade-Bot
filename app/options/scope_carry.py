@@ -1,8 +1,26 @@
 """Explicit combined owner enrollment; individual holdings retain their native terms."""
 
 
-def validate_enrollment(owner, scope, swing, entry=None, position=None, *, replay=False):
+def validate_enrollment(
+    owner, scope, swing, entry=None, position=None, *, replay=False, replay_enrollment=None
+):
     """Used before owner creation and again when reconstructing stored evidence."""
+    from app.options.scope_replay_enrollment import ScopeCarrySeriesEnrollment
+
+    replay_carry = type(replay_enrollment) is ScopeCarrySeriesEnrollment
+    if replay_carry and (not replay or owner.scope_carry is None):
+        raise ValueError("Combined carry replay requires its exact owner enrollment")
+    combined = scope is not None and owner.swing_carry is not None
+    marked = any(
+        p is not None and p.scope_carry is not None for p in (owner, scope, entry, position)
+    )
+    if replay and (combined or marked) and not replay_carry:
+        raise ValueError("Complete matching shared Scope carry enrollment required")
+    validate_policy(owner, scope, swing, entry, position, shortlist=replay_carry)
+
+
+def validate_policy(owner, scope, swing, entry=None, position=None, *, shortlist=False):
+    """Pure policy coherence; grants neither replay enrollment nor execution authority."""
     parts = (owner, scope, entry, position)
     marked = [p for p in parts if p is not None and p.scope_carry is not None]
     combined = scope is not None and owner.swing_carry is not None
@@ -12,7 +30,6 @@ def validate_enrollment(owner, scope, swing, entry=None, position=None, *, repla
         return
     if (
         not combined
-        or replay
         or swing is None
         or swing.carry is None
         or owner.scope_carry != "shared-scope-carry-v1"
@@ -24,7 +41,12 @@ def validate_enrollment(owner, scope, swing, entry=None, position=None, *, repla
             and (
                 entry is None
                 or entry.scope_carry != owner.scope_carry
-                or entry.scope_selection != "scope-fixed-plan-v1"
+                or entry.scope_selection
+                not in (
+                    {"scope-fixed-plan-v1", "scope-fixed-shortlist-v1"}
+                    if shortlist
+                    else {"scope-fixed-plan-v1"}
+                )
                 or entry.max_carry_horizon_seconds is None
             )
         )

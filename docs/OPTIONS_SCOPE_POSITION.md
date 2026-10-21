@@ -65,8 +65,8 @@ still reject Scope tapes, and the old/unbound model adapters remain blocked.
 
 [Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) and
 [continuous Scope runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now have native fixture
-plumbing. Earlier open-work descriptions above are historical checkpoints. Scope
-multi-session comparison, remaining families and mixed stock/options ownership still precede
+plumbing. Earlier open-work descriptions above are historical checkpoints. [Scope session comparison](OPTIONS_SCOPE_SERIES.md) is now implemented. Remaining
+families and mixed stock/options ownership still precede
 final UI and authentic PAPER testing. Original paid terms, mandatory protection,
 full costs and all authentic acceptance gates remain unchanged.
 
@@ -77,6 +77,7 @@ full costs and all authentic acceptance gates remain unchanged.
 enrolled native owner, full entry/management contracts, continuous runtime, restart
 and stored accounting/export. Scope retains its original fixed intraday terms;
 Swing retains original bounded carry terms. Earlier restrictions above describe
-legacy enrollments. Current Scope replay/comparison adapters still reject combined
-carry pending a complete multi-session contract. Remaining family/mixed plumbing
-precedes final UI and authentic PAPER acceptance.
+legacy enrollments. Those original replay/comparison adapters still reject combined
+carry; the separate [combined carry series](OPTIONS_SCOPE_CARRY_SERIES.md) now binds
+complete independent replay/export, original deadlines and explicit overnight costs.
+Remaining family/mixed plumbing precedes final UI and authentic PAPER acceptance.

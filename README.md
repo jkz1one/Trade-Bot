@@ -61,7 +61,8 @@ owner, entry/management, continuous runtime and stored export contracts.
 [Continuous Scope session comparison](docs/OPTIONS_SCOPE_SERIES.md) now preserves
 four independent owners, explicit settlement, saved closing evidence and full costs
 across frozen session-close tapes. [Native repeat-entry attribution](docs/OPTIONS_NATIVE_ENTRY_ATTRIBUTION.md)
-now has separate frozen enrollment. Combined carry replay and remaining
+now has separate frozen enrollment. [Combined carry series](docs/OPTIONS_SCOPE_CARRY_SERIES.md)
+now binds separate replay/export and explicit overnight allocations. Remaining
 family/mixed plumbing precede final UI and
 authentic PAPER testing.
 

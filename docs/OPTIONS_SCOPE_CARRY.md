@@ -70,11 +70,12 @@ must cover the supplied entire holding period, including overnight carry. Missin
 costs or unresolved positions keep net results unknown; no overnight mark, return,
 drawdown, comparison result or operating expense is inferred.
 
-Scope tape/model/comparison adapters reject combined carry. Neither the old replay
-adapter nor choice-only B can be attached to this new owner. The separate
+Legacy Scope tape/model/comparison adapters reject combined carry. The old replay
+adapter and old choice-only B remain unavailable to this owner. The separate
 [Scope series contract](OPTIONS_SCOPE_SERIES.md) now retains continuous independent
-accounts for session-close tapes. Combined carry series still requires full model
-enrollment and overnight comparison; this native enrollment does not broaden old tapes.
+accounts for session-close tapes. The separate [combined carry series](OPTIONS_SCOPE_CARRY_SERIES.md)
+now binds full model enrollment, an explicitly marked choice-only B, original
+overnight terms and complete session/gap allocations. It does not broaden old tapes.
 Remaining family completion and mixed stock/options ownership also remain open.
 New full-entry carry owners can also enroll the separately frozen
 [native repeated-entry cost policy](OPTIONS_NATIVE_ENTRY_ATTRIBUTION.md). It keeps

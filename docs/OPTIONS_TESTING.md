@@ -211,7 +211,7 @@ reasoning and worker, native Swing carry, Scope entry/management/runtime and fro
 comparison regressions. Native workers run serially. Count exact distinct test IDs
 on the final wheel; diagnostic passes and overlapping reruns are not extra checks.
 No dependency changes, deployment, authenticated provider/model calls or LIVE
-permission are part of this procedure. Combined carry replay and remaining family/mixed ownership still precede UI and authentic
+permission are part of this procedure. Remaining family/mixed ownership still precedes UI and authentic
 PAPER acceptance.
 
 ## Continuous Scope session comparison
@@ -223,7 +223,7 @@ accounts, explicit settlement, original protection, paid entry/management, cumul
 loss controls, unknown costs, saved boundaries, portable tamper rejection and known-only
 SPY endpoints. Include single-session Scope comparison/model/shortlist, native carry,
 legacy series and tape-boundary regressions. Run native workers serially; count only
-distinct completed case IDs on the final wheel. Combined carry replay and remaining family/mixed ownership are still separate
+distinct completed case IDs on the final wheel. Remaining family/mixed ownership is still separate
 plumbing, before UI/authentic PAPER testing.
 
 ## Native repeated-entry attribution
@@ -238,3 +238,22 @@ Include native outcome/loss, shared Scope AI, runtime and carry compatibility.
 Keep native runs serial and retain exact distinct case IDs; failed diagnostics
 and overlapping focused reruns are not extra proof. Stored series exports can
 also be reconstructed on the new wheel as separate artifact compatibility checks.
+
+
+## Combined Scope/Swing carry series
+
+`tests/test_option_scope_carry_series.py` exercises the separately enrolled four-arm
+series with actual native fills, overnight holdings, fixed Scope same-session exits,
+original deadlines, paid management, explicit gap allocations and portable export.
+Missed intraday and bounded-carry closes retain original ownership/deadlines;
+a later quote cannot clear an expired-order review halt or invent a protective fill.
+Unknown usage, unknown gap costs, unfilled final closes and changed retained inputs
+must remain incomplete or fail verification. `tests/test_option_scope_carry_replay_contract.py`
+checks exact adapter/script enrollment and B's separate geometry-free carry marker.
+`tests/test_option_scope_carry_series_reentry.py` verifies a subsequent paid Scope
+entry preserves the prior closed loss and cumulative per-account charges/locks.
+Legacy Scope, native carry, entry/usage and series behavior remain compatibility gates.
+Use noneditable installed wheels, copied tests, Python `-I`, warnings as errors and
+serial native execution. Count only distinct successful cases on the final wheel;
+retain diagnostic failures separately. No authentic provider/model/broker call,
+dependency update or deployment is part of this procedure.

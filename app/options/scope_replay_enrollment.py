@@ -8,8 +8,8 @@ from app.execution.engine import ExecutionBlocked
 from app.options.engine import fingerprint
 from app.options.entry_reasoning import Digest
 from app.options.models import OptionRecord
-from app.options.scope_replay_model import ScopeReplayModel, ScopeReplayScript
-from app.options.scope_shortlist_replay import ScopeShortlistModel, ScopeShortlistScript
+from app.options.scope_replay_model import ScopeReplayModel
+from app.options.scope_shortlist_replay import ScopeShortlistModel
 
 
 class ScopeReplayEnrollment(OptionRecord):
@@ -32,14 +32,31 @@ class ScopeSeriesEnrollment(OptionRecord):
         return self
 
 
+class ScopeCarrySeriesEnrollment(ScopeSeriesEnrollment):
+    version: Literal["scope-carry-series-model-v1"] = "scope-carry-series-model-v1"
+
+
 def parse_enrollment(value):
-    return TypeAdapter(ScopeReplayEnrollment | ScopeSeriesEnrollment).validate_python(value)
+    return TypeAdapter(
+        ScopeReplayEnrollment | ScopeSeriesEnrollment | ScopeCarrySeriesEnrollment
+    ).validate_python(value)
+
+
+def script_types(enrollment):
+    if type(enrollment) is ScopeCarrySeriesEnrollment:
+        from app.options.scope_carry_replay_model import (
+            ScopeCarryReplayModel,
+            ScopeCarryShortlistModel,
+        )
+
+        return ScopeCarryReplayModel, ScopeCarryShortlistModel
+    return ScopeReplayModel, ScopeShortlistModel
 
 
 def validate_adapter(enrollment, adapter):
     enrollment = parse_enrollment(enrollment.model_dump(warnings=False))
     if (
-        type(adapter) not in (ScopeReplayModel, ScopeShortlistModel)
+        type(adapter) not in script_types(enrollment)
         or fingerprint(adapter.script) != enrollment.script_hash
     ):
         raise ValueError("Exact full Scope replay script enrollment required")
@@ -49,12 +66,13 @@ def validate_adapter(enrollment, adapter):
 def validate_stored(config):
     try:
         enrollment = parse_enrollment(config["scope_replay"])
-        script_type = (
-            ScopeShortlistScript if config["replay_model"].get("arm") == "B" else ScopeReplayScript
-        )
+        full, shortlist = script_types(enrollment)
+        script_type = (shortlist if config["replay_model"].get("arm") == "B" else full).script_type
         script = script_type.model_validate(config["replay_model"])
         if (
             fingerprint(script) != enrollment.script_hash
+            or (config["entry_model"]["entry_policy"].get("scope_carry") is not None)
+            != (type(enrollment) is ScopeCarrySeriesEnrollment)
             or config["model"]["key_file"] != "None"
             or (script.arm == "D") != ("position_model" in config)
             or config["entry_model"]["entry_policy"]["scope_selection"]

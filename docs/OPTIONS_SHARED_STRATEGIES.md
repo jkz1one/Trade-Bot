@@ -275,8 +275,9 @@ protection, and provides carry-aware AI context and full-cost multi-session repl
 `SESSION_CLOSE` cohorts do not migrate. The explicit alternative is `BOUNDED_CARRY_V1`.
 
 This is PAPER fixture capability. Authentic daily/catalyst/option inputs,
-prospective overnight economics, broader families, multi-session Scope comparison and
-mixed stock/options ownership remain separate P7 work. Shared Scope AI, single-session
+prospective overnight economics, broader families and mixed stock/options ownership
+remain separate P7 work. Independent [Scope session comparison](OPTIONS_SCOPE_SERIES.md)
+is now fixture implemented. Shared Scope AI, single-session
 tapes/comparison and [continuous runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now have
 separate fixture integration. No exercise funding or
 continuous overnight observations are presumed. The native carry guide documents
@@ -308,6 +309,7 @@ LIVE-disabled state and the deployed frozen experiment are preserved.
 enrolled native owner, full entry/management contracts, continuous runtime, restart
 and stored accounting/export. Scope retains its original fixed intraday terms;
 Swing retains original bounded carry terms. Earlier restrictions above describe
-legacy enrollments. Current Scope replay/comparison adapters still reject combined
-carry pending a complete multi-session contract. Remaining family/mixed plumbing
-precedes final UI and authentic PAPER acceptance.
+legacy enrollments. Those original replay/comparison adapters still reject combined
+carry; the separate [combined carry series](OPTIONS_SCOPE_CARRY_SERIES.md) now binds
+complete independent replay/export, original deadlines and explicit overnight costs.
+Remaining family/mixed plumbing precedes final UI and authentic PAPER acceptance.

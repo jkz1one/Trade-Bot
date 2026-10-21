@@ -62,6 +62,6 @@ and portable native export. See [testing](OPTIONS_TESTING.md) and
 [latest measured proof](SLICE2_STATUS.md). These are supplied-fixture checks;
 authentic provider/model/host/economic acceptance remains open.
 
-Combined carry replay, remaining family integration and one mixed stock/options
-owner remain separate plumbing before final UI and authentic PAPER testing.
+Combined carry replay now has a [separate series contract](OPTIONS_SCOPE_CARRY_SERIES.md).
+Remaining family integration and one mixed stock/options owner remain plumbing before final UI and authentic PAPER testing.
 LIVE stays disabled and the deployed experiment stays frozen.

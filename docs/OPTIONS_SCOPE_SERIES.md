@@ -95,9 +95,9 @@ the portable series is bounded to 256 MiB. Each session retains the existing
 ## Remaining boundaries
 
 This version covers the existing session-close Scope/Degen/Swing replay contracts.
-Combined Scope/Swing carry is available in native continuous runtime but remains
-rejected by these replay requests, including B's choice-only contract. Carry series
-needs its own complete model/enrollment and overnight comparison contract; this
-module does not lift those restrictions. Broader family completion, mixed stock/options
+Combined Scope/Swing carry remains rejected by these replay requests, including B's
+original choice-only contract. The separate [combined carry series](OPTIONS_SCOPE_CARRY_SERIES.md)
+now binds its own full enrollment, marked B policy and explicit overnight costs;
+this version does not lift its historical restrictions. Broader family completion, mixed stock/options
 ownership, statistical/authentic acceptance and final UI remain separate work.
 LIVE stays disabled, the deployed experiment frozen, PR #1 draft and main untouched.

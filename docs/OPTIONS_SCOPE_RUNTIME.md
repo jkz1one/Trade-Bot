@@ -112,6 +112,7 @@ is implemented for one session and [continuous session replay](OPTIONS_SCOPE_SER
 now retains independent accounts across sessions. Its later-flat-entry attribution
 rule is bound to the new series contract. [Native repeated-entry attribution](OPTIONS_NATIVE_ENTRY_ATTRIBUTION.md)
 now supplies separate opt-in loss enrollment for new full-entry runtime owners.
-Combined native Scope/Swing carry has
-explicit enrollment, while combined carry replay, remaining families and mixed
-stock/options ownership remain ahead of final UI and authentic PAPER testing.
+Combined native Scope/Swing carry has explicit enrollment, and a separate
+[combined carry series](OPTIONS_SCOPE_CARRY_SERIES.md) now preserves independent
+replay/export with original deadlines and overnight costs. Remaining families and
+mixed stock/options ownership remain ahead of final UI and authentic PAPER testing.

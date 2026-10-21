@@ -67,8 +67,8 @@ interrupting pending slots without retry; the runner itself is create-only.
 
 Reports explicitly withhold comparison and economic conclusions. B shortlist and
 matched independent A/B/C/D comparison/export now use the separate contract linked
-below. Next are continuous Scope watch/runtime inputs and the remaining
-carry/family/mixed stock-options plumbing. Final UI and authentic PAPER testing
+below. Continuous Scope runtime and the separate [combined carry series](OPTIONS_SCOPE_CARRY_SERIES.md)
+are implemented. Remaining work is family/mixed stock-options plumbing. Final UI and authentic PAPER testing
 follow completion of that plumbing. LIVE stays disabled and the deployed
 experiment remains frozen.
 
@@ -79,4 +79,5 @@ enrolled choice-only B and matched independent one-session native replay/export.
 The historical runners and C/D contracts described above retain their original
 versions and rejection boundaries. The separate wrapper preserves unknown costs,
 all native fees/charges and inconclusive economic status. Continuous Scope runtime
-inputs, carry/family/mixed plumbing and authentic acceptance remain open.
+and separately enrolled carry replay/export are implemented. Remaining family/mixed
+plumbing and authentic acceptance remain open.

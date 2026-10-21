@@ -77,7 +77,7 @@ def configuration(db):
         if "scope_replay" in config:
             from app.options.scope_replay_enrollment import validate_stored
 
-            validate_stored(config)
+            replay_enrollment = validate_stored(config)
         elif (
             "replay_model" in config
             or model.entry_policy.scope_selection == "scope-fixed-shortlist-v1"
@@ -103,6 +103,7 @@ def configuration(db):
         model.entry_policy if policy.version != VERSION else None,
         management.position_policy if "position_model" in config else None,
         replay="scope_replay" in config or "replay_model" in config,
+        replay_enrollment=replay_enrollment if "scope_replay" in config else None,
     )
     return policy
 

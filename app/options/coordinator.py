@@ -221,6 +221,7 @@ class DegenCoordinator:
             self.entry_policy,
             self.position_policy,
             replay=replay_model is not None or scope_replay is not None,
+            replay_enrollment=self.scope_replay,
         )
         frozen = self._configuration()
         self._frozen = frozen

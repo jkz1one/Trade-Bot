@@ -1,5 +1,91 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Combined Scope/Swing carry replay plumbing: 2026-10-21 UTC
+
+The working branch and local HEAD started clean at
+`42cdc630aa9df0957300ceed7d68b05ce3782bc3`, tree
+`9229d377c6de0b644cafa0850096bae2534716c8`. GitHub branch and PR head matched;
+PR #1 remained open/draft and main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6`.
+
+The separate [combined carry series](OPTIONS_SCOPE_CARRY_SERIES.md) now connects
+four independent native A/B/C/D owners, common Scope/Swing observations, original
+carry sessions and deadlines, full entry/management receipts and portable export.
+Each owner retains its own cash, reservation, fees, fills, model budget and loss
+controls. C/D declared entry scripts match; D management is separately charged.
+Scope retains its original intraday authority. Entry proposals, approvals, attempts and
+actual fills remain separate. Fresh owned post-cost Scope admission and original
+model/approval/protection deadlines remain mandatory.
+
+`scope-carry-series-model-v1` freezes the ordered tapes, full request and complete
+script. Only the exact new carry response adapters can bind it. B additionally
+requires `scope_carry_shortlist="scope-carry-shortlist-v1"` and its own prompt/schema;
+no replacement geometry or horizon is accepted. Existing native runtime and old
+Scope replay/cohort serialization and rejection boundaries stay frozen. Complete
+result parsing and native usage settlement now retain the new B receipt type.
+
+Every exact between-session gap has an explicit data/host allocation for each
+independent account. Missing gap/session costs and unknown model usage remain
+unknown. Native closing exports retain cumulative costs and immutable prior
+history; settlement remains explicit. Daily open holdings stay unvalued. Separate
+whole-period cash arithmetic is available only after final flat complete accounting;
+paired differences require all four accounts complete. An unfilled Scope close
+remains explicit unresolved intraday exposure with its original cutoff across
+sessions, without dropping its export or granting a carry horizon. A bounded Swing
+exit missed before another gap stays explicitly unresolved with its original
+deadline and native expired-order review halt. Later quotes cannot clear that halt
+or trigger an automatic retry; held accounting stays incomplete. Overnight
+return/drawdown and an unsupported matched SPY whole-period benchmark are never inferred.
+
+The new carry scheduler defers its initial empty opening observation when a real
+same-clock receipt is recorded. Diagnostics exposed the legacy flat-session scheduler's
+synthetic empty opening tick latching a stale-price halt before that receipt.
+Only the new carry scheduler defers that tick; missing/later opening quotes retain
+the persistent native halt, and mandatory exits still operate independently.
+No halt is automatically cleared and no deadline is extended.
+
+Validation: **172 distinct installed checks passed on the final wheel**,
+including **30 new cases**. Exact case IDs and phase timings are retained in
+`../scope-carry-series-proof/final-proof.json`. This is separate from prior wheels'
+counts; prior-wheel results and repeated case IDs are not added. Native runs were
+serial against a noneditable wheel with copied tests outside the checkout, Python
+`-I`, warnings as errors and plugin autoload disabled. Coverage includes actual
+weekend Swing holdings, paid reopening management, Scope same-session closes,
+independent accounting, complete gap costs, unknown usage, unknown gap allocation,
+unfilled final close, expired protective-order review with the original cutoff,
+missing opening quotes, frozen contract changes and detached export tampering. A subsequent paid Scope entry in the same carry-series owner
+retains the first closed loss, cumulative charges and the second-loss lock. Existing
+entry/model, native combined carry and Scope comparison compatibility
+also passed on the final wheel. The preceding candidate wheel passed 263 distinct
+installed checks, including legacy Scope shortlist/model and session-series checks.
+Only `app/options/scope_carry_series.py` changed afterward to preserve unresolved
+intraday exposure and overdue bounded-carry exits in the gap report. That broader
+proof, exact source delta and its earlier wheel are retained separately and are not added to the final count.
+
+Diagnostic failures and their logs/XML remain retained. They exposed an initially
+incomplete new B result/usage union, unshifted fixture session boundaries, and a
+Scope fixture incorrectly attempting a second-day entry cycle without new Scope
+input. The complete B receipt binding and fixture evidence were corrected; old
+adapters, missing-input gates and native unknown-cost protection remain intact.
+A focused diagnostic also corrected an expectation of automatic retry after an
+expired protective order; the existing native review halt was preserved and
+explicitly verified. A reused proof directory was retained as a separate failed
+diagnostic; final native runs use fresh directories. The earlier final four-account
+Scope session bundle also reconstructs exactly on this wheel; that artifact check is separate from the pytest count.
+
+Wheel SHA-256: `6a4daefee36c3f5537c914be20409b075c755bed3c82054ad333ec6d587337b6`. All 206 application/template files match
+source, wheel and installed bytes. Proof/source/test copies: `../scope-carry-series-proof/`;
+wheels: `../scope-carry-series-wheels/`; installed environment: `../scope-replay-env/`.
+Ruff, dependency consistency, local Markdown links and copied-test identity passed.
+
+Next plumbing: automatic Swing target derivation, remaining supported family
+integration and one mixed stock/options owner. Continue from the pinned source
+contracts without reopening strategy decisions. Final UI and authentic
+provider/model/host/economic/PAPER acceptance remain open and follow plumbing. LIVE stays disabled, the deployed experiment frozen,
+PR #1 draft and main untouched. No dependencies, authenticated provider/model/broker
+calls, deployment or merge were introduced. Settled strategy decisions and blocked
+unsupported Scope plans remain unchanged.
+
 ## Native repeated-entry attribution plumbing: 2026-10-21 UTC
 
 The working branch and local HEAD started at

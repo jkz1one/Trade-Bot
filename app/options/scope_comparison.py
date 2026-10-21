@@ -31,7 +31,7 @@ class ScopeComparison(OptionRecord):
         arms = (self.baseline, self.shortlist, self.entry, self.managed)
         if tuple(r.script.arm for r in arms[1:]) != ("B", "C", "D"):
             raise ValueError("Exactly independent A/B/C/D roles required")
-        MatchedScopeScripts(entry=self.entry.script, managed=self.managed.script)
+        self._matched_scripts()
         if any(
             len({getattr(r.limits, key) for r in arms}) != 4
             for key in ("population_id", "account_id")
@@ -57,11 +57,17 @@ class ScopeComparison(OptionRecord):
             if (
                 r.execution.cost_policy != self.entry.execution.cost_policy
                 or r.judgment_limits != self.entry.judgment_limits
-                or r.entry_policy.model_dump(exclude={"scope_selection"})
-                != self.entry.entry_policy.model_dump(exclude={"scope_selection"})
+                or r.entry_policy.model_dump(exclude=self._entry_policy_exclusions())
+                != self.entry.entry_policy.model_dump(exclude=self._entry_policy_exclusions())
             ):
                 raise ValueError("Matched model costs, deadlines and entry configuration required")
         return self
+
+    def _entry_policy_exclusions(self):
+        return {"scope_selection"}
+
+    def _matched_scripts(self):
+        MatchedScopeScripts(entry=self.entry.script, managed=self.managed.script)
 
 
 def _requests(request):

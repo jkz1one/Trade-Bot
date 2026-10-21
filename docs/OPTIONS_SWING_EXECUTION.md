@@ -107,8 +107,9 @@ management, tamper rejection and legacy model contract identity.
 portable full-cost accounting. The research calendar suite covers holidays, DST,
 early closes and expiry boundaries reused by native carry construction.
 
-Remaining P7 work includes broader families, multi-session Scope comparison and mixed
-stock/options ownership. Shared Scope arbitration/AI, single-session A/B/C/D comparison
+Remaining P7 work includes broader families and mixed stock/options ownership.
+Session-close Scope comparison and the separate [combined carry series](OPTIONS_SCOPE_CARRY_SERIES.md)
+now retain independent multi-session accounts and full costs. Shared Scope arbitration/AI, single-session A/B/C/D comparison
 and [continuous runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now have separate fixture
 integration. Authentic daily/catalyst/options feeds and model evidence,
 prospective full-period comparisons, host acceptance and the final UI/visual pass
@@ -121,6 +122,7 @@ remain separate. Main, PR draft status, LIVE and the deployed experiment are unc
 enrolled native owner, full entry/management contracts, continuous runtime, restart
 and stored accounting/export. Scope retains its original fixed intraday terms;
 Swing retains original bounded carry terms. Earlier restrictions above describe
-legacy enrollments. Current Scope replay/comparison adapters still reject combined
-carry pending a complete multi-session contract. Remaining family/mixed plumbing
+legacy enrollments. Those Scope replay/comparison versions still reject combined
+carry; the new separately frozen carry series binds complete model contracts and
+explicit overnight allocations. Remaining family/mixed plumbing
 precedes final UI and authentic PAPER acceptance.

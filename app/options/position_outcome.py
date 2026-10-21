@@ -332,7 +332,11 @@ def _later_entry_call(db, attribution, closed_at, policy):
     Legacy outcomes and uncertain/management/overlapping calls remain unchanged.
     """
     from app.options.entry_judgment import EntryRequest
-    from app.options.scope_replay_enrollment import ScopeSeriesEnrollment, validate_stored
+    from app.options.scope_replay_enrollment import (
+        ScopeCarrySeriesEnrollment,
+        ScopeSeriesEnrollment,
+        validate_stored,
+    )
 
     if attribution.role != "ENTRY":
         return False
@@ -351,9 +355,12 @@ def _later_entry_call(db, attribution, closed_at, policy):
         ):
             raise ValueError("Frozen later-entry attribution policy mismatch")
     else:
-        if config.get("scope_replay", {}).get("version") != "scope-native-series-model-v1":
+        if config.get("scope_replay", {}).get("version") not in {
+            "scope-native-series-model-v1",
+            "scope-carry-series-model-v1",
+        }:
             return False
-        if type(validate_stored(config)) is not ScopeSeriesEnrollment:
+        if type(validate_stored(config)) not in (ScopeSeriesEnrollment, ScopeCarrySeriesEnrollment):
             return False
     row = db.execute(
         "SELECT result_json FROM execution_option_opportunities WHERE cycle_key=?",

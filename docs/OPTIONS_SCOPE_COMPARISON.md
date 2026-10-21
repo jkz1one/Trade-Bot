@@ -79,13 +79,13 @@ remain visible. No costs are pooled, netted away or filled with zero.
 conclusion remains `INCONCLUSIVE`; benchmark evaluation is explicitly absent.
 This wrapper covers one common session. The separate [Scope series contract](OPTIONS_SCOPE_SERIES.md)
 now retains continuous independent accounts and session endpoint comparison.
-Combined carry replay, statistical acceptance and authentic data/model evidence remain open.
+[Combined carry replay/export](OPTIONS_SCOPE_CARRY_SERIES.md) now uses a separate frozen
+series contract. Statistical acceptance and authentic data/model evidence remain open.
 An exception preserves completed arm directories and `interrupted.json`, with no
 successful comparison report. Requests and exports retain explicit size bounds.
 
 Continuous Scope runtime and combined native carry are implemented separately.
 Native repeated-entry attribution now has separate frozen loss enrollment.
-Next plumbing: combined carry replay and remaining
-family/mixed stock-options integration. Complete that plumbing
+Next plumbing: remaining family/mixed stock-options integration. Complete that plumbing
 before final UI and authentic PAPER testing. Main stays untouched, PR #1 remains
 draft, LIVE stays disabled and the deployed experiment remains frozen.

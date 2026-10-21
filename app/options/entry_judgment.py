@@ -21,6 +21,7 @@ from app.options.entry_reasoning import (
     EntryPacket,
     EntryPlan,
     EntryReasoningPolicy,
+    ScopeCarryShortlistPlan,
     ScopeShortlistPlan,
     SharedScopeCarryEntryPlan,
     SharedScopeEntryPlan,
@@ -53,6 +54,16 @@ fresh evidence and may reject any proposal. Never issue management or exit order
 
 
 def instructions(policy):
+    if policy.scope_carry is not None and policy.scope_selection == "scope-fixed-shortlist-v1":
+        plain = policy.model_copy(update={"scope_carry": None, "max_carry_horizon_seconds": None})
+        return (
+            instructions(plain)
+            + """
+A supplied Swing carry candidate retains its original native carry sessions, first
+target and exit_at. Select it without a replacement horizon. Scope remains intraday.
+Overnight coverage is not continuous; do not infer an overnight path or stop fill.
+"""
+        )
     if policy.scope_carry is not None:
         scope = policy.model_copy(update={"scope_carry": None, "max_carry_horizon_seconds": None})
         carry = policy.model_copy(update={"scope_carry": None, "scope_selection": None})
@@ -93,6 +104,8 @@ assurance of overnight liquidity, continuous observations or stop execution.
 
 
 def prompt_version(policy):
+    if policy.scope_carry is not None and policy.scope_selection == "scope-fixed-shortlist-v1":
+        return "shared-scope-carry-shortlist-v1"
     if policy.scope_carry is not None:
         return "shared-scope-carry-entry-v1"
     if policy.scope_selection == "scope-fixed-shortlist-v1":
@@ -113,6 +126,7 @@ class EntryModelConfiguration(OptionRecord):
         "shared-scope-entry-v1",
         "shared-scope-shortlist-v1",
         "shared-scope-carry-entry-v1",
+        "shared-scope-carry-shortlist-v1",
     ] = PROMPT_VERSION
     prompt_hash: Digest
     schema_hash: Digest
@@ -218,6 +232,7 @@ class EntryResult(OptionRecord):
         | CarryEntryPlan
         | SharedScopeEntryPlan
         | ScopeShortlistPlan
+        | ScopeCarryShortlistPlan
         | SharedScopeCarryEntryPlan
     )
     usage: UsageEvidence | None = None

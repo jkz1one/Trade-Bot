@@ -35,37 +35,41 @@ class ScopeTradingReplay(OptionRecord):
 
     @model_validator(mode="after")
     def frozen_owner(self):
-        h = self.tape.header
-        identities = {"population_id", "account_id"}
-        if (
-            h.scope is None
-            or self.scope.version != "shared-scope-selection-v1"
-            or self.execution.scope_arbitration != self.scope.version
-            or self.execution.scope_execution != "scope-native-v1"
-            or self.execution.cost_policy is not None
-            or self.scope.watch != h.scope.watch
-            or self.limits.model_dump(exclude=identities) != h.limits.model_dump(exclude=identities)
-            or (h.swing is not None) != ("SWING" in self.scope.family_priority)
-            or (h.swing is not None and h.swing.carry is not None)
-            or self.execution.swing_carry is not None
-            or self.execution.loss_control is None
-            or not set(self.scope.family_priority)
-            <= {f.family for f in self.execution.loss_control.families}
-        ):
-            raise ValueError("Matching model-off shared Scope tape/owner policies required")
-        actions = self.watch_actions
-        if len({a.key for a in actions}) != len(actions) or any(
-            a.at > b.at for a, b in pairwise(actions)
-        ):
-            raise ValueError("Ordered unique tape watch actions required")
-        # Equal-time instructions cannot consume evidence before it is delivered.
-        for a, b in pairwise(actions):
-            if a.at == b.at and (a.sequence or 0) > (b.sequence or 0):
-                raise ValueError("Equal-time watch references must follow receipt order")
-        if any(a.at > h.closes_at for a in actions):
-            raise ValueError("Watch instructions must finish within the session")
-        resolve_scope_watch_actions(self.tape, actions)
-        return self
+        return _validate_trading_owner(self)
+
+
+def _validate_trading_owner(self, *, carry=False, model=False):
+    h = self.tape.header
+    identities = {"population_id", "account_id"}
+    if (
+        h.scope is None
+        or self.scope.version != ("shared-scope-entry-v1" if model else "shared-scope-selection-v1")
+        or self.execution.scope_arbitration != self.scope.version
+        or self.execution.scope_execution != "scope-native-v1"
+        or (self.execution.cost_policy is not None) != model
+        or self.scope.watch != h.scope.watch
+        or self.limits.model_dump(exclude=identities) != h.limits.model_dump(exclude=identities)
+        or (h.swing is not None) != ("SWING" in self.scope.family_priority)
+        or (h.swing is not None and h.swing.carry is not None) != carry
+        or (self.execution.swing_carry is not None) != carry
+        or self.execution.loss_control is None
+        or not set(self.scope.family_priority)
+        <= {f.family for f in self.execution.loss_control.families}
+    ):
+        raise ValueError("Matching model-off shared Scope tape/owner policies required")
+    actions = self.watch_actions
+    if len({a.key for a in actions}) != len(actions) or any(
+        a.at > b.at for a, b in pairwise(actions)
+    ):
+        raise ValueError("Ordered unique tape watch actions required")
+    # Equal-time instructions cannot consume evidence before it is delivered.
+    for a, b in pairwise(actions):
+        if a.at == b.at and (a.sequence or 0) > (b.sequence or 0):
+            raise ValueError("Equal-time watch references must follow receipt order")
+    if any(a.at > h.closes_at for a in actions):
+        raise ValueError("Watch instructions must finish within the session")
+    resolve_scope_watch_actions(self.tape, actions)
+    return self
 
 
 class _ScopeReplay(_ArmReplay):

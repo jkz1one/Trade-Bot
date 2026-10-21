@@ -37,6 +37,9 @@ class EntryReasoningPolicy(OptionRecord):
     scope_selection: Literal["scope-fixed-plan-v1", "scope-fixed-shortlist-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
+    scope_carry_shortlist: Literal["scope-carry-shortlist-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     max_horizon_seconds: int = Field(gt=0, le=21600, strict=True)
     max_carry_horizon_seconds: int | None = Field(
         default=None, gt=21600, le=5184000, strict=True, exclude_if=lambda v: v is None
@@ -48,8 +51,9 @@ class EntryReasoningPolicy(OptionRecord):
     @model_validator(mode="after")
     def combined(self):
         paired = self.scope_selection is not None and self.max_carry_horizon_seconds is not None
-        if paired != (self.scope_carry is not None) or (
-            paired and self.scope_selection != "scope-fixed-plan-v1"
+        shortlist = paired and self.scope_selection == "scope-fixed-shortlist-v1"
+        if paired != (self.scope_carry is not None) or shortlist != (
+            self.scope_carry_shortlist is not None
         ):
             raise ValueError("Shared Scope carry reasoning requires explicit full-plan enrollment")
         return self
@@ -279,7 +283,15 @@ class ScopeShortlistPlan(SharedScopeEntryPlan):
         return self
 
 
+class ScopeCarryShortlistPlan(ScopeShortlistPlan):
+    version: Literal["shared-scope-carry-shortlist-plan-v1"] = (
+        "shared-scope-carry-shortlist-plan-v1"
+    )
+
+
 def plan_class(policy):
+    if policy.scope_carry is not None and policy.scope_selection == "scope-fixed-shortlist-v1":
+        return ScopeCarryShortlistPlan
     if policy.scope_carry is not None:
         return SharedScopeCarryEntryPlan
     if policy.scope_selection == "scope-fixed-shortlist-v1":
@@ -299,6 +311,7 @@ class EntryReview(OptionRecord):
         | CarryEntryPlan
         | SharedScopeEntryPlan
         | ScopeShortlistPlan
+        | ScopeCarryShortlistPlan
         | SharedScopeCarryEntryPlan
     )
     proposal: OptionProposal | None = None

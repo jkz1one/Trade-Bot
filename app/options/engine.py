@@ -1865,6 +1865,7 @@ class OptionExecution:
         from app.options.entry_reasoning import (
             CarryEntryPlan,
             EntryPlan,
+            ScopeCarryShortlistPlan,
             ScopeShortlistPlan,
             SharedScopeCarryEntryPlan,
             SharedScopeEntryPlan,
@@ -1875,6 +1876,7 @@ class OptionExecution:
             | CarryEntryPlan
             | SharedScopeEntryPlan
             | ScopeShortlistPlan
+            | ScopeCarryShortlistPlan
             | SharedScopeCarryEntryPlan
         ).validate_python(plan.model_dump(warnings=False))
         return self._record_model_usage(source_key, usage, plan, now=now)

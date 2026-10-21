@@ -23,8 +23,6 @@ from app.options.scope_comparison import ScopeComparison, _account_report, _requ
 from app.options.scope_execution_export import export_scope_execution
 from app.options.scope_model_replay import _ScopeModelReplay
 from app.options.scope_replay_enrollment import ScopeSeriesEnrollment
-from app.options.scope_replay_model import ScopeReplayModel
-from app.options.scope_shortlist_replay import ScopeShortlistModel
 from app.options.scope_trading_replay import _ScopeReplay
 from app.options.venue import DurableOptionVenue
 
@@ -94,7 +92,13 @@ def _enrollment(request, arm):
     if arm == "A":
         return None
     r = _requests(request.sessions[0])[arm]
-    return ScopeSeriesEnrollment(
+    if request.version == "scope-carry-independent-series-v1":
+        from app.options.scope_replay_enrollment import ScopeCarrySeriesEnrollment
+
+        enrollment_type = ScopeCarrySeriesEnrollment
+    else:
+        enrollment_type = ScopeSeriesEnrollment
+    return enrollment_type(
         tape_hashes=tuple(s.baseline.tape.digest for s in request.sessions),
         request_hash=fingerprint(request),
         script_hash=fingerprint(r.script),
@@ -102,14 +106,24 @@ def _enrollment(request, arm):
 
 
 @exact
+def _session_costs(request, index):
+    session = request.sessions[index].baseline
+    costs = session.data_cost, session.host_cost
+    if request.version == "scope-carry-independent-series-v1" and index:
+        gap = request.gaps[index - 1]
+        return tuple(
+            None if a is None or b is None else a + b
+            for a, b in zip(costs, (gap.data_cost, gap.host_cost), strict=True)
+        )
+    return costs
+
+
+@exact
 def _allocations(request, index):
     # A missing earlier allocation stays missing; it cannot disappear on a later day.
     return tuple(
         None if any(v is None for v in values) else sum(values, Decimal(0))
-        for values in (
-            [getattr(s.baseline, name) for s in request.sessions[: index + 1]]
-            for name in ("data_cost", "host_cost")
-        )
+        for values in ([_session_costs(request, j)[k] for j in range(index + 1)] for k in (0, 1))
     )
 
 
@@ -181,6 +195,11 @@ def _spy(tape):
 @exact
 def series_report(request, boundaries):
     request = ScopeSeries.model_validate(request.model_dump(warnings=False))
+    return _series_report(request, boundaries)
+
+
+@exact
+def _series_report(request, boundaries):
     if len(boundaries) != len(request.sessions):
         raise ValueError("Every declared closing boundary required")
     rows, previous = [], {}
@@ -239,13 +258,14 @@ def series_report(request, boundaries):
             complete = account["status"] == "COMPLETE_FLAT_ACCOUNTING" and (
                 earlier is None or earlier["report"]["status"] == "COMPLETE_FLAT_ACCOUNTING"
             )
+            data_cost, host_cost = _session_costs(request, index)
             net = (
                 (
                     Decimal(account["ledger"]["cash"])
                     - Decimal(initial["cash"])
                     - known_cost
-                    - r.data_cost
-                    - r.host_cost
+                    - data_cost
+                    - host_cost
                 )
                 if complete
                 else None
@@ -259,8 +279,8 @@ def series_report(request, boundaries):
                     Decimal(account["execution_fees"])
                     - (Decimal(earlier["report"]["execution_fees"]) if earlier else Decimal(0))
                 ),
-                "data_cost": str(r.data_cost) if r.data_cost is not None else None,
-                "host_cost": str(r.host_cost) if r.host_cost is not None else None,
+                "data_cost": str(data_cost) if data_cost is not None else None,
+                "host_cost": str(host_cost) if host_cost is not None else None,
                 "net_after_all_costs": str(net) if net is not None else None,
                 "complete": complete,
             }
@@ -342,6 +362,10 @@ def series_report(request, boundaries):
 async def run_scope_series(request, directory):
     """Create once per arm; never resume, reset capital or change a frozen strategy."""
     request = ScopeSeries.model_validate(request.model_dump(warnings=False))
+    return await _run_scope_series(request, directory, series_report)
+
+
+async def _run_scope_series(request, directory, report_for):
     directory = Path(directory)
     if not directory.is_absolute():
         raise ValueError("Absolute new Scope series directory required")
@@ -379,15 +403,13 @@ async def run_scope_series(request, directory):
                 if not engine.reconcile(venue.snapshot(clock[0]), now=clock[0])["reconciled"]:
                     raise ValueError("Fresh Scope series reconciliation required")
                 engine.assess(None, None, now=clock[0])
-                model = (
-                    None
-                    if arm == "A"
-                    else (
-                        ScopeShortlistModel(original.script)
-                        if arm == "B"
-                        else ScopeReplayModel(original.script)
-                    )
-                )
+                from app.options.scope_replay_enrollment import script_types
+
+                if arm == "A":
+                    model = None
+                else:
+                    full, shortlist = script_types(_enrollment(request, arm))
+                    model = (shortlist if arm == "B" else full)(original.script)
                 c = DegenCoordinator(
                     engine,
                     h.setup,
@@ -429,7 +451,16 @@ async def run_scope_series(request, directory):
                         clock[0] = h.opens_at
                     c._replay_quotes, c._replay_underlyings = {}, {}
                     c._position_quotes, c._position_underlyings = (), ()
-                    active[0] = (_ScopeModelReplay if model else _ScopeReplay)(c, venue, r, clock)
+                    if request.version == "scope-carry-independent-series-v1":
+                        from app.options.scope_carry_series import (
+                            _ScopeCarryModelReplay,
+                            _ScopeCarryReplay,
+                        )
+
+                        replay_type = _ScopeCarryModelReplay if model else _ScopeCarryReplay
+                    else:
+                        replay_type = _ScopeModelReplay if model else _ScopeReplay
+                    active[0] = replay_type(c, venue, r, clock)
                     async with asyncio.timeout(900):
                         scheduler = await active[0].run()
                     engine.refresh_loss_control(now=clock[0])
@@ -452,7 +483,7 @@ async def run_scope_series(request, directory):
                         raise ValueError("Scope series retained evidence capacity exceeded")
                     boundaries[index][arm] = exported
                     active[0] = None
-        report = series_report(request, boundaries)
+        report = report_for(request, boundaries)
         bundle = {
             "request": request.model_dump(mode="json"),
             "boundaries": boundaries,
