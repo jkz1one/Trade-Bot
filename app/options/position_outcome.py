@@ -1,12 +1,13 @@
 """Stored native position cash flows and model costs. No watch linkage or trade authority."""
 
 import json
+from datetime import datetime
 from decimal import Decimal
 from itertools import pairwise
 
 from app.options.accounting import apply_fill, apply_receipt
 from app.options.attribution import decision_attribution, order_attribution
-from app.options.engine import exact
+from app.options.engine import exact, fingerprint
 from app.options.lifecycle import (
     TERMINAL,
     OptionExecutionPolicy,
@@ -149,20 +150,33 @@ def native_position_outcome(db, entry_client_id, population_id):
     }
     decisions = {r["source_key"]: r for r in _bounded(db, "execution_option_decisions")}
     cycles = {r["cycle_key"]: r for r in _bounded(db, "execution_option_opportunities")}
+    evidence_cache, attribution_cache = {}, {}
 
     def outcome(key):
+        if key in evidence_cache:
+            return evidence_cache[key]
         cycle = cycles.get(key)
         if cycle and cycle["result_json"] is not None:
-            return json.loads(cycle["result_json"])
-        decision = decisions.get(key)
-        return json.loads(decision["inputs_json"]) if decision else {}
+            evidence = json.loads(cycle["result_json"])
+        else:
+            decision = decisions.get(key)
+            evidence = json.loads(decision["inputs_json"]) if decision else {}
+        evidence_cache[key] = evidence
+        return evidence
+
+    def attribute(key):
+        # This function does no writes. Reuse complete validation only within this
+        # one reconstruction and its caller's transaction, never across revisions.
+        if key not in attribution_cache:
+            attribution_cache[key] = decision_attribution(db, key, outcome(key), policy)
+        return attribution_cache[key]
 
     # Paid advice can exist without an order (MAINTAIN/TIGHTEN/rejected plans).
     # Check retained results even when a damaged journal has lost the call row.
     for key in sorted(set(decisions) | set(cycles)):
         evidence = outcome(key)
         if "entry_result" in evidence or "position_result" in evidence:
-            decision_attribution(db, key, evidence, policy)
+            attribute(key)
     reasons, linked, buy_keys = [], [], set()
     for candidate in sorted(rows, key=lambda r: r["client_id"]):
         intent = OptionIntent.model_validate_json(candidate["intent_json"])
@@ -171,7 +185,7 @@ def native_position_outcome(db, entry_client_id, population_id):
             buy_keys.add(intent.source_key)
         if candidate["client_id"] == entry_client_id or attr["entry_client_id"] == entry_client_id:
             # Reuse full decision/proposal/approval checks, not just matching IDs.
-            decision_attribution(db, intent.source_key, outcome(intent.source_key), policy)
+            attribute(intent.source_key)
             if intent.instrument != entry.instrument:
                 raise ValueError("Position outcome instrument mismatch")
             if candidate["client_id"] != entry_client_id and intent.side != "SELL":
@@ -196,7 +210,7 @@ def native_position_outcome(db, entry_client_id, population_id):
     calls, unallocated = [], []
     for call in sorted(_bounded(db, "execution_model_calls"), key=lambda r: r["source_key"]):
         key = call["source_key"]
-        attr = decision_attribution(db, key, outcome(key), policy)
+        attr = attribute(key)
         if key == entry.source_key or attr.entry_client_id == entry_client_id:
             if key == entry.source_key and attr.role == "MANAGEMENT":
                 raise ValueError("Entry call has management lineage")
@@ -223,8 +237,6 @@ def native_position_outcome(db, entry_client_id, population_id):
                     reasons.append("POSITION_MODEL_DECISION_PENDING")
         elif key not in buy_keys and attr.entry_client_id not in buy_ids:
             unallocated.append(attr)
-    if unallocated:
-        reasons.append("ACCOUNT_MODEL_COST_LINK_UNPROVEN")
     if any(c.model_cost is None for c in calls):
         reasons.append("POSITION_MODEL_COST_UNKNOWN")
     entry_quantity = exit_quantity = 0
@@ -264,6 +276,11 @@ def native_position_outcome(db, entry_client_id, population_id):
     )
     if not closed:
         reasons.append("POSITION_NOT_VERIFIABLY_CLOSED")
+    closed_at = max([*exit_times, *(r.occurred_at for r in receipts)]) if closed else None
+    if unallocated and (
+        closed_at is None or any(not _later_series_entry(db, c, closed_at) for c in unallocated)
+    ):
+        reasons.append("ACCOUNT_MODEL_COST_LINK_UNPROVEN")
     known_cost = sum((c.model_cost for c in calls if c.model_cost is not None), Decimal(0))
     gross = exit_cash + settlement_cash - entry_cash if closed else None
     net = gross - fees - known_cost if closed and not reasons else None
@@ -278,9 +295,7 @@ def native_position_outcome(db, entry_client_id, population_id):
         "instrument": entry.instrument.model_dump(mode="json"),
         "status": "COMPLETE" if net is not None else "INCOMPLETE",
         "outcome": None if net is None else "LOSS" if net < 0 else "WIN" if net > 0 else "FLAT",
-        "closed_at": max([*exit_times, *(r.occurred_at for r in receipts)]).isoformat()
-        if closed
-        else None,
+        "closed_at": closed_at.isoformat() if closed_at else None,
         "entry_quantity": entry_quantity,
         "exit_quantity": exit_quantity,
         "entry_premium": str(entry_cash),
@@ -304,3 +319,47 @@ def native_position_outcome(db, entry_client_id, population_id):
         "live_enabled": False,
         "data_host_costs_included": False,
     }
+
+
+def _later_series_entry(db, attribution, closed_at):
+    """A proven later flat-account entry call cannot belong to this closed holding.
+
+    Only the separately frozen series contract opts in. Keep the call visible as
+    an unallocated account charge; never waive usage, cost or global admission gates.
+    Legacy outcomes and uncertain/management/overlapping calls remain unchanged.
+    """
+    from app.options.entry_judgment import EntryRequest
+    from app.options.scope_replay_enrollment import ScopeSeriesEnrollment, validate_stored
+
+    if attribution.role != "ENTRY":
+        return False
+    strategy = db.execute("SELECT policy_json FROM execution_option_strategy WHERE id=1").fetchone()
+    if strategy is None:
+        return False
+    config = json.loads(strategy[0])
+    if config.get("scope_replay", {}).get("version") != "scope-native-series-model-v1":
+        return False
+    if type(validate_stored(config)) is not ScopeSeriesEnrollment:
+        return False
+    row = db.execute(
+        "SELECT result_json FROM execution_option_opportunities WHERE cycle_key=?",
+        (attribution.source_key,),
+    ).fetchone()
+    evidence = json.loads(row[0]) if row and row[0] else {}
+    if "entry_request" not in evidence:
+        return False
+    request = EntryRequest.model_validate(evidence["entry_request"])
+    p = request.packet
+    call = db.execute(
+        "SELECT started_at FROM execution_model_calls WHERE source_key=?",
+        (attribution.source_key,),
+    ).fetchone()
+    return (
+        call is not None
+        and attribution.packet_hash == fingerprint(p)
+        and p.account.position is None
+        and p.account.complete
+        and p.account.reconciled
+        and p.account.captured_at > closed_at
+        and closed_at < p.as_of <= datetime.fromisoformat(call[0])
+    )

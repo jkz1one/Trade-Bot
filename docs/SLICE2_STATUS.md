@@ -1,5 +1,80 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Continuous Scope session replay/accounting plumbing: 2026-10-21 UTC
+
+Fresh local/GitHub state matched `b7cbd51d27063144cbc5a5f4f7b6b91ead902e49`,
+tree `9e2cf164441eb2adad4e13d64037b67dd2cdcef8`, with a clean working tree.
+Main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 was open/draft.
+
+[Continuous Scope series](OPTIONS_SCOPE_SERIES.md) now retains four independent
+native A/B/C/D owners across ordered session-close tapes. Cash, reservations,
+positions, explicit funds settlement, all entry/management charges, fees and
+account/family loss controls remain continuous. Each owner enrolls once. The new
+`scope-native-series-model-v1` contract binds every ordered tape, the whole request
+and the complete original per-arm script. Existing single-session contracts, old
+adapters and combined-carry replay restrictions remain intact.
+
+Each session starts with empty delivered-market/position caches and its own Scope
+reader. Fresh paid admission retains original source clocks, native revisions,
+fixed Scope terms and approval deadlines. Independent protection and later-quote
+fills remain authoritative. Consistent evidence-only SQLite snapshots and portable
+native exports preserve every closing boundary. Reconstruction checks exact frozen
+owner/model/source policies, event prefixes, old economic rows, original order
+and watch identities, explicit settlements and cumulative operating allocations.
+Backdated new economic evidence cannot be silently moved into the next session.
+Unknown earlier costs remain unknown; unresolved holdings remain owned and unvalued.
+
+Session rows open from the prior closing ledger and charge only the new model/fee
+increments plus explicit period allocations. Whole-series paired nets require all
+four accounts and all boundaries to be complete and flat. Known account totals
+remain separate. Supplied valid SPY endpoints support session midpoint returns and
+known-only compounding; missing evidence is not interpolated. Overnight gaps,
+dividends and benchmark costs remain excluded. Economics stays INCONCLUSIVE.
+
+A diagnostic found a real second-entry attribution blocker: a later paid entry
+request temporarily made a previously closed trade's outcome pending. The new
+series contract now proves the later request was made on a flat account after that
+close, keeps its charge in account totals/diagnostics, and preserves the old trade's
+loss record. It does not waive unknown costs, management linkage or fresh approval.
+Legacy cohorts keep their existing conservative behavior. Explicit native/runtime
+adoption and repeated-entry proof remain a named follow-up before native plumbing
+can be called complete.
+
+A later diagnostic hit the original five-second dispatch window while repeatedly
+reconstructing the same paid evidence. Read-only outcome reconstruction now reuses
+validation only within that one call/transaction. Canonical fingerprint processing
+avoids repeated model/date introspection for exact built-in JSON primitives, while
+retaining the old normalization path for subclasses and identical canonical bytes.
+A subsequent return-format assertion found internal tuples versus portable JSON lists;
+the series report now normalizes its returned JSON representation. Native execution
+and the reconstructed amounts were already correct.
+No approval, model, process or protective deadline was extended; uncertain attempts
+still halt and never retry. Focused timing evidence is retained separately and is
+not counted as final pytest proof. The focused second-entry validation times were
+2.57 seconds for C and 2.98 seconds for D, with the original five-second process
+limit and earlier approval deadline intact.
+
+Validation: **267 distinct installed checks passed on the final wheel**,
+including **42 new cases** and **225 compatibility cases**. Exact case
+IDs and phase timings are retained in `../scope-series-proof/final-proof.json`.
+Every phase used a noneditable installed wheel, copied tests outside the checkout,
+Python `-I`, warnings as errors, disabled plugin autoload and serial native workers.
+Diagnostic runs and overlapping checks are excluded. Source/wheel/installation
+identity, Ruff, dependency consistency and local Markdown links passed.
+
+Environment: `../scope-replay-env`; proof: `../scope-series-proof/`;
+wheel directory: `../scope-series-wheels`; SHA-256:
+`285861e5ed85a71a787d16448ee71618fa9469236a674e99795ec7d8f36e348f`. All 204 application/template files matched exactly.
+Proof retains logs/XML, copied tests, native journals, closing snapshots, portable
+exports, source and identity. No authenticated provider/model/broker call, dependency
+change, deployment, merge or main modification occurred. LIVE remains disabled and
+the deployed experiment frozen.
+
+Next: explicit native repeated-entry attribution, combined Scope/carry replay,
+remaining family integration and one mixed stock/options owner. Final UI and
+authentic PAPER testing remain after plumbing. Convexity/full-path and missing-T3
+four-contract Scope plans remain blocked; no settled strategy rule was relaxed.
+
 ## Combined native Scope/Swing carry plumbing: 2026-10-21 UTC
 
 Fresh local/GitHub state matched `f4da7937e721e7dd1f3765a2715f7102cf79d613`,

@@ -102,6 +102,9 @@ still come from the native account, not transport status.
 
 See [testing](OPTIONS_TESTING.md) and [latest status](SLICE2_STATUS.md) for measured
 installed-wheel proof. Independent [Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md)
-is already implemented for one session. Combined native Scope/Swing carry now has explicit enrollment. Remaining
-families, mixed stock/options ownership and Scope multi-session/benchmark plumbing
-remain ahead of final UI and authentic PAPER testing.
+is implemented for one session and [continuous session replay](OPTIONS_SCOPE_SERIES.md)
+now retains independent accounts across sessions. Its later-flat-entry attribution
+rule is bound to the new series contract; this runtime still needs explicit native
+enrollment and repeated-paid-entry proof. Combined native Scope/Swing carry has
+explicit enrollment, while combined carry replay, remaining families and mixed
+stock/options ownership remain ahead of final UI and authentic PAPER testing.

@@ -57,8 +57,11 @@ choice-only B and matched full-cost native export. [Continuous Scope runtime inp
 now connects to explicitly enrolled [native C/D tape replay](docs/OPTIONS_SCOPE_MODEL_REPLAY.md),
 with delivered fresh observations, paid admission, original deadlines and full-cost export.
 [Combined Scope/Swing carry](docs/OPTIONS_SCOPE_CARRY.md) now binds explicit native
-owner, entry/management, continuous runtime and stored export contracts. Remaining
-family/mixed plumbing and Scope multi-session comparison precede final UI and
+owner, entry/management, continuous runtime and stored export contracts.
+[Continuous Scope session comparison](docs/OPTIONS_SCOPE_SERIES.md) now preserves
+four independent owners, explicit settlement, saved closing evidence and full costs
+across frozen session-close tapes. Explicit native repeat-entry attribution,
+combined carry replay and remaining family/mixed plumbing precede final UI and
 authentic PAPER testing.
 
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,

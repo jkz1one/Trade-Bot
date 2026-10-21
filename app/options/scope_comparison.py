@@ -74,6 +74,77 @@ def _requests(request):
     )
 
 
+def _account_report(arm, r, exported, *, enrollment=None, allocations=None):
+    verify_scope_execution_export(exported, exported["export_hash"])
+    if datetime.fromisoformat(exported["as_of"]) < max(
+        r.tape.header.closes_at, r.tape.events[-1].recorded_at
+    ):
+        raise ValueError("Comparison requires the completed tape accounting boundary")
+    # Native evidence must identify the exact retained runner enrollment/owner.
+    tables = {
+        table: [dict(zip(SCHEMA[table].split(), row, strict=True)) for row in rows]
+        for table, rows in exported["evidence"].items()
+    }
+    control = json.loads(tables["execution_control"][0]["config_json"])
+    strategy = json.loads(tables["execution_option_strategy"][0]["policy_json"])
+    if control["limits"] != r.limits.model_dump(mode="json") or control[
+        "policy"
+    ] != r.execution.model_dump(mode="json"):
+        raise ValueError("Comparison owner configuration changed")
+    if strategy["scope"] != r.scope.model_dump(mode="json"):
+        raise ValueError("Comparison shared policy changed")
+    if (
+        strategy["setup"] != r.tape.header.setup.model_dump(mode="json")
+        or strategy["selection"] != r.tape.header.selection.model_dump(mode="json")
+        or strategy.get("swing")
+        != (r.tape.header.swing.model_dump(mode="json") if r.tape.header.swing else None)
+    ):
+        raise ValueError("Comparison tape strategy changed")
+    expected = (
+        enrollment
+        if enrollment is not None
+        else (
+            {
+                "version": "scope-native-tape-model-v1",
+                "request_hash": fingerprint(r),
+                "tape_hash": r.tape.digest,
+                "script_hash": fingerprint(r.script),
+            }
+            if arm != "A"
+            else None
+        )
+    )
+    if arm != "A" and strategy.get("scope_replay") != expected:
+        raise ValueError("Comparison replay enrollment changed")
+    if arm != "A" and (
+        strategy.get("entry_model")
+        != entry_judgment.configuration(
+            r.execution.cost_policy, r.judgment_limits, r.entry_policy
+        ).model_dump(mode="json")
+        or strategy.get("position_model")
+        != (
+            position_judgment.configuration(
+                r.execution.cost_policy, r.judgment_limits, r.position_policy
+            ).model_dump(mode="json")
+            if r.position_policy is not None
+            else None
+        )
+        or strategy.get("model")
+        != {
+            "key_file": "None",
+            "configuration": judgment.configuration(r.execution.cost_policy, r.judgment_limits),
+        }
+    ):
+        raise ValueError("Comparison full model configuration changed")
+    a = exported["report"]
+    allocations = allocations if allocations is not None else (r.data_cost, r.host_cost)
+    if (a["data_cost"], a["host_cost"]) != tuple(
+        str(c) if c is not None else None for c in allocations
+    ):
+        raise ValueError("Comparison operating allocations changed")
+    return a
+
+
 def comparison_report(request, exports):
     """Reconstruct each independent native export; never trust supplied totals."""
     request = ScopeComparison.model_validate(request.model_dump(warnings=False))
@@ -81,65 +152,7 @@ def comparison_report(request, exports):
         raise ValueError("Four complete native export envelopes required")
     accounts = {}
     for arm, r in _requests(request).items():
-        exported = exports[arm]
-        verify_scope_execution_export(exported, exported["export_hash"])
-        if datetime.fromisoformat(exported["as_of"]) < max(
-            r.tape.header.closes_at, r.tape.events[-1].recorded_at
-        ):
-            raise ValueError("Comparison requires the completed tape accounting boundary")
-        # Native evidence must identify the exact retained runner enrollment/owner.
-        tables = {
-            table: [dict(zip(SCHEMA[table].split(), row, strict=True)) for row in rows]
-            for table, rows in exported["evidence"].items()
-        }
-        control = json.loads(tables["execution_control"][0]["config_json"])
-        strategy = json.loads(tables["execution_option_strategy"][0]["policy_json"])
-        if control["limits"] != r.limits.model_dump(mode="json") or control[
-            "policy"
-        ] != r.execution.model_dump(mode="json"):
-            raise ValueError("Comparison owner configuration changed")
-        if strategy["scope"] != r.scope.model_dump(mode="json"):
-            raise ValueError("Comparison shared policy changed")
-        if (
-            strategy["setup"] != r.tape.header.setup.model_dump(mode="json")
-            or strategy["selection"] != r.tape.header.selection.model_dump(mode="json")
-            or strategy.get("swing")
-            != (r.tape.header.swing.model_dump(mode="json") if r.tape.header.swing else None)
-        ):
-            raise ValueError("Comparison tape strategy changed")
-        if arm != "A" and (
-            strategy["scope_replay"]["request_hash"] != fingerprint(r)
-            or strategy["scope_replay"]["tape_hash"] != r.tape.digest
-            or strategy["scope_replay"]["script_hash"] != fingerprint(r.script)
-        ):
-            raise ValueError("Comparison replay enrollment changed")
-        if arm != "A" and (
-            strategy.get("entry_model")
-            != entry_judgment.configuration(
-                r.execution.cost_policy, r.judgment_limits, r.entry_policy
-            ).model_dump(mode="json")
-            or strategy.get("position_model")
-            != (
-                position_judgment.configuration(
-                    r.execution.cost_policy, r.judgment_limits, r.position_policy
-                ).model_dump(mode="json")
-                if r.position_policy is not None
-                else None
-            )
-            or strategy.get("model")
-            != {
-                "key_file": "None",
-                "configuration": judgment.configuration(r.execution.cost_policy, r.judgment_limits),
-            }
-        ):
-            raise ValueError("Comparison full model configuration changed")
-        a = exported["report"]
-        if (a["data_cost"], a["host_cost"]) != (
-            str(r.data_cost) if r.data_cost is not None else None,
-            str(r.host_cost) if r.host_cost is not None else None,
-        ):
-            raise ValueError("Comparison operating allocations changed")
-        accounts[arm] = a
+        accounts[arm] = _account_report(arm, r, exports[arm])
     complete = all(a["status"] == "COMPLETE_FLAT_ACCOUNTING" for a in accounts.values())
     with localcontext(Context(prec=192)):
         differences = {

@@ -77,12 +77,14 @@ remain visible. No costs are pooled, netted away or filled with zero.
 
 `COMPLETE_FLAT_COMPARISON` means complete supplied-fixture arithmetic. The economic
 conclusion remains `INCONCLUSIVE`; benchmark evaluation is explicitly absent.
-This first wrapper covers one common session. Scope multi-session comparison,
-benchmark/statistical acceptance and authentic data/model evidence remain open.
+This wrapper covers one common session. The separate [Scope series contract](OPTIONS_SCOPE_SERIES.md)
+now retains continuous independent accounts and session endpoint comparison.
+Combined carry replay, statistical acceptance and authentic data/model evidence remain open.
 An exception preserves completed arm directories and `interrupted.json`, with no
 successful comparison report. Requests and exports retain explicit size bounds.
 
-Next plumbing: continuous Scope watch/runtime inputs, then combined Scope/Swing
-carry and remaining family/mixed stock-options integration. Complete that plumbing
+Continuous Scope runtime and combined native carry are implemented separately.
+Next plumbing: native repeated-entry enrollment, combined carry replay and remaining
+family/mixed stock-options integration. Complete that plumbing
 before final UI and authentic PAPER testing. Main stays untouched, PR #1 remains
 draft, LIVE stays disabled and the deployed experiment remains frozen.

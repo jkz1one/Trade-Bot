@@ -211,5 +211,19 @@ reasoning and worker, native Swing carry, Scope entry/management/runtime and fro
 comparison regressions. Native workers run serially. Count exact distinct test IDs
 on the final wheel; diagnostic passes and overlapping reruns are not extra checks.
 No dependency changes, deployment, authenticated provider/model calls or LIVE
-permission are part of this procedure. Scope multi-session comparison and remaining
-family/mixed ownership still precede UI and authentic PAPER acceptance.
+permission are part of this procedure. Native repeated-entry enrollment, combined
+carry replay and remaining family/mixed ownership still precede UI and authentic
+PAPER acceptance.
+
+## Continuous Scope session comparison
+
+Run `test_option_scope_series.py` and `test_option_scope_series_unresolved.py` using
+the isolated installed-wheel procedure above.
+The [series contract](OPTIONS_SCOPE_SERIES.md) covers independent continuous native
+accounts, explicit settlement, original protection, paid entry/management, cumulative
+loss controls, unknown costs, saved boundaries, portable tamper rejection and known-only
+SPY endpoints. Include single-session Scope comparison/model/shortlist, native carry,
+legacy series and tape-boundary regressions. Run native workers serially; count only
+distinct completed case IDs on the final wheel. Native repeated-entry enrollment,
+combined carry replay and remaining family/mixed ownership are still separate
+plumbing, before UI/authentic PAPER testing.

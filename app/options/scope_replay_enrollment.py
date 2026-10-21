@@ -2,6 +2,8 @@
 
 from typing import Literal
 
+from pydantic import Field, TypeAdapter, model_validator
+
 from app.execution.engine import ExecutionBlocked
 from app.options.engine import fingerprint
 from app.options.entry_reasoning import Digest
@@ -17,8 +19,25 @@ class ScopeReplayEnrollment(OptionRecord):
     script_hash: Digest
 
 
+class ScopeSeriesEnrollment(OptionRecord):
+    version: Literal["scope-native-series-model-v1"] = "scope-native-series-model-v1"
+    tape_hashes: tuple[Digest, ...] = Field(min_length=2, max_length=60)
+    request_hash: Digest
+    script_hash: Digest
+
+    @model_validator(mode="after")
+    def unique(self):
+        if len(set(self.tape_hashes)) != len(self.tape_hashes):
+            raise ValueError("Distinct ordered series tapes required")
+        return self
+
+
+def parse_enrollment(value):
+    return TypeAdapter(ScopeReplayEnrollment | ScopeSeriesEnrollment).validate_python(value)
+
+
 def validate_adapter(enrollment, adapter):
-    enrollment = ScopeReplayEnrollment.model_validate(enrollment.model_dump(warnings=False))
+    enrollment = parse_enrollment(enrollment.model_dump(warnings=False))
     if (
         type(adapter) not in (ScopeReplayModel, ScopeShortlistModel)
         or fingerprint(adapter.script) != enrollment.script_hash
@@ -29,7 +48,7 @@ def validate_adapter(enrollment, adapter):
 
 def validate_stored(config):
     try:
-        enrollment = ScopeReplayEnrollment.model_validate(config["scope_replay"])
+        enrollment = parse_enrollment(config["scope_replay"])
         script_type = (
             ScopeShortlistScript if config["replay_model"].get("arm") == "B" else ScopeReplayScript
         )

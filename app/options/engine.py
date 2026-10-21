@@ -77,6 +77,16 @@ def exact(function):
 
 def fingerprint(value):
     def normalize(item):
+        # Native Scope receipts contain large nested JSON records. Preserve their
+        # exact canonical bytes without repeated model/date introspection on every
+        # primitive. Subclasses retain the original normalization path below.
+        kind = type(item)
+        if item is None or kind in (str, int, float, bool):
+            return item
+        if kind is dict:
+            return {k: normalize(v) for k, v in item.items()}
+        if kind in (list, tuple):
+            return [normalize(v) for v in item]
         if hasattr(item, "model_dump"):
             return normalize(item.model_dump(warnings=False))
         if isinstance(item, Decimal):
