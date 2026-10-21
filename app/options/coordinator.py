@@ -164,10 +164,6 @@ class DegenCoordinator:
         )
         if self.position_policy is not None and (
             (self.scope_policy is not None) != (self.position_policy.scope_management is not None)
-            or (
-                self.position_policy.scope_management is not None
-                and self.position_policy.swing_carry is not None
-            )
         ):
             raise ValueError("Shared Scope management requires explicit matching enrollment")
         if self.position_policy is not None and (
@@ -210,6 +206,16 @@ class DegenCoordinator:
             and self.position_policy.swing_carry is None
         ):
             raise ValueError("Carry management requires its explicit context contract")
+        from app.options.scope_carry import validate_enrollment
+
+        validate_enrollment(
+            engine.policy,
+            self.scope_policy,
+            self.swing_policy,
+            self.entry_policy,
+            self.position_policy,
+            replay=replay_model is not None or scope_replay is not None,
+        )
         frozen = self._configuration()
         self._frozen = frozen
         with engine.journal.write() as db:

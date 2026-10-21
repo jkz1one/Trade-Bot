@@ -22,8 +22,9 @@ is delivered through the separately enrolled [native loss guard](OPTIONS_NATIVE_
 New [shared Scope selection](OPTIONS_SCOPE_ARBITRATION.md) extends a separately
 frozen deterministic owner to Scope/Degen/optional session-close Swing. It preserves
 exact Scope admissions, common selection/dispatch and full-cost attribution. Shared
-Scope paid AI, continuous watch ingestion/common tapes and carry/Scope combination
-remain open. Existing Degen/Swing AI owners remain unchanged.
+Scope paid AI, continuous watch ingestion/common tapes and separately enrolled
+[combined native Scope/carry](OPTIONS_SCOPE_CARRY.md) now have fixture contracts.
+Existing Degen/Swing AI owners remain unchanged.
 
 ## Delivered family and evidence
 
@@ -274,7 +275,7 @@ protection, and provides carry-aware AI context and full-cost multi-session repl
 `SESSION_CLOSE` cohorts do not migrate. The explicit alternative is `BOUNDED_CARRY_V1`.
 
 This is PAPER fixture capability. Authentic daily/catalyst/option inputs,
-prospective overnight economics, broader families, combined Scope/carry and
+prospective overnight economics, broader families, multi-session Scope comparison and
 mixed stock/options ownership remain separate P7 work. Shared Scope AI, single-session
 tapes/comparison and [continuous runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now have
 separate fixture integration. No exercise funding or
@@ -299,3 +300,14 @@ current dispatch gates, frozen enrollment and stored family filtering. Exact fin
 installed regression evidence is in [status](SLICE2_STATUS.md). Provider, host,
 prospective economics and dashboard visual acceptance remain open. Main, PR draft,
 LIVE-disabled state and the deployed frozen experiment are preserved.
+
+
+## Combined native carry checkpoint: 2026-10-21
+
+[Combined Scope/Swing carry](OPTIONS_SCOPE_CARRY.md) now connects a separately
+enrolled native owner, full entry/management contracts, continuous runtime, restart
+and stored accounting/export. Scope retains its original fixed intraday terms;
+Swing retains original bounded carry terms. Earlier restrictions above describe
+legacy enrollments. Current Scope replay/comparison adapters still reject combined
+carry pending a complete multi-session contract. Remaining family/mixed plumbing
+precedes final UI and authentic PAPER acceptance.

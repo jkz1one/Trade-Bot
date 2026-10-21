@@ -20,8 +20,8 @@ Model-off enrollment uses `shared-scope-selection-v1`. Full entry reasoning uses
 `scope-fixed-plan-v1`; optional management also requires
 `scope-fixed-position-v1`. The runtime binds its own delivered-input reader before
 any cycle. Scope B remains an explicitly isolated replay role; neither old replay
-adapters nor the choice-only B adapter can enter this runtime. Combined Scope/Swing
-carry remains a separate unfinished contract and is still rejected.
+adapters nor the choice-only B adapter can enter this runtime. [Combined Scope/Swing
+carry](OPTIONS_SCOPE_CARRY.md) requires its complete separately frozen enrollment.
 
 ## Delivered packets and watch actions
 
@@ -102,6 +102,6 @@ still come from the native account, not transport status.
 
 See [testing](OPTIONS_TESTING.md) and [latest status](SLICE2_STATUS.md) for measured
 installed-wheel proof. Independent [Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md)
-is already implemented for one session. Combined Scope/Swing carry, remaining
+is already implemented for one session. Combined native Scope/Swing carry now has explicit enrollment. Remaining
 families, mixed stock/options ownership and Scope multi-session/benchmark plumbing
 remain ahead of final UI and authentic PAPER testing.

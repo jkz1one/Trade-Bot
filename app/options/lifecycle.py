@@ -90,6 +90,9 @@ class OptionExecutionPolicy(OptionRecord):
         default=None, exclude_if=lambda v: v is None
     )
 
+    scope_carry: Literal["shared-scope-carry-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     swing_carry: Literal["bounded-swing-carry-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -104,6 +107,10 @@ class OptionExecutionPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def bounded(self):
+        if self.scope_carry is not None and (
+            self.swing_carry is None or self.scope_arbitration is None
+        ):
+            raise ValueError("Combined carry requires native Swing and shared Scope")
         if self.scope_arbitration is not None and (
             self.scope_execution is None
             or self.loss_control is None
@@ -111,7 +118,7 @@ class OptionExecutionPolicy(OptionRecord):
         ):
             raise ValueError("Shared Scope requires native Scope and every family loss policy")
         if self.swing_carry is not None and (
-            self.scope_execution is not None
+            (self.scope_execution is not None and self.scope_carry is None)
             or self.loss_control is None
             or not any(p.family == "SWING" for p in self.loss_control.families)
         ):

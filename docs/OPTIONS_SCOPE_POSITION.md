@@ -5,7 +5,8 @@ New PAPER populations may freeze
 alongside the shared Scope entry AI configuration. Both sides must be explicitly
 enrolled; a legacy entry-only or deterministic cohort cannot gain management on
 reopen. The same bounded worker and single native account support Degen, session-
-close Swing and Scope. Combined Scope/overnight carry remains rejected.
+close Swing and Scope. [Combined Scope/overnight carry](OPTIONS_SCOPE_CARRY.md)
+requires a separately marked native owner and matching full model contracts.
 
 For a held Scope contract, the supplied `DegenFrame.scope` must identify the exact
 consumed play and held SPXW instrument. Its completed SPX/SPY/QQQ histories and
@@ -64,7 +65,18 @@ still reject Scope tapes, and the old/unbound model adapters remain blocked.
 
 [Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) and
 [continuous Scope runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now have native fixture
-plumbing. Earlier open-work descriptions above are historical checkpoints. Combined
-Scope/Swing carry, remaining families and mixed stock/options ownership still precede
+plumbing. Earlier open-work descriptions above are historical checkpoints. Scope
+multi-session comparison, remaining families and mixed stock/options ownership still precede
 final UI and authentic PAPER testing. Original paid terms, mandatory protection,
 full costs and all authentic acceptance gates remain unchanged.
+
+
+## Combined native carry checkpoint: 2026-10-21
+
+[Combined Scope/Swing carry](OPTIONS_SCOPE_CARRY.md) now connects a separately
+enrolled native owner, full entry/management contracts, continuous runtime, restart
+and stored accounting/export. Scope retains its original fixed intraday terms;
+Swing retains original bounded carry terms. Earlier restrictions above describe
+legacy enrollments. Current Scope replay/comparison adapters still reject combined
+carry pending a complete multi-session contract. Remaining family/mixed plumbing
+precedes final UI and authentic PAPER acceptance.

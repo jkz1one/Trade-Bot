@@ -198,3 +198,18 @@ The [Scope tape contract](OPTIONS_SCOPE_MARKET_TAPE.md) covers enrollment, sourc
 clocks, completed bars, session deadlines, exact instruments, visible prefixes,
 blocked-data diagnostics, old hashes and explicit unsupported-consumer rejection.
 It establishes no Scope A/B/C/D performance or native replay acceptance.
+
+
+## Combined native Scope/Swing carry
+
+Run `test_option_scope_carry.py` using the isolated wheel/copy/`-I`/warnings-as-errors
+procedure above. [Combined enrollment](OPTIONS_SCOPE_CARRY.md) exercises all three
+entry families, both rights, full-plan schema/SDK mock transport, per-position
+management, original horizons, paid rejection, full-cost export, runtime restart
+and independent deadline/watch expiry. Include the existing entry/position
+reasoning and worker, native Swing carry, Scope entry/management/runtime and frozen
+comparison regressions. Native workers run serially. Count exact distinct test IDs
+on the final wheel; diagnostic passes and overlapping reruns are not extra checks.
+No dependency changes, deployment, authenticated provider/model calls or LIVE
+permission are part of this procedure. Scope multi-session comparison and remaining
+family/mixed ownership still precede UI and authentic PAPER acceptance.

@@ -93,8 +93,6 @@ class RuntimeSettings(OptionRecord):
                 or self.execution.scope_execution != "scope-native-v1"
                 or (self.scope_policy.version == "shared-scope-entry-v1") != model
                 or (self.swing_policy is not None) != ("SWING" in self.scope_policy.family_priority)
-                or self.execution.swing_carry is not None
-                or (self.swing_policy is not None and self.swing_policy.carry is not None)
                 or self.execution.loss_control is None
                 or not set(self.scope_policy.family_priority)
                 <= {f.family for f in self.execution.loss_control.families}
@@ -106,18 +104,23 @@ class RuntimeSettings(OptionRecord):
                     and (
                         self.entry_policy is None
                         or self.entry_policy.scope_selection != "scope-fixed-plan-v1"
-                        or self.entry_policy.max_carry_horizon_seconds is not None
                     )
                 )
                 or (
                     self.position_policy is not None
-                    and (
-                        self.position_policy.scope_management != "scope-fixed-position-v1"
-                        or self.position_policy.swing_carry is not None
-                    )
+                    and (self.position_policy.scope_management != "scope-fixed-position-v1")
                 )
             ):
                 raise ValueError("Complete native Scope runtime configuration required")
+        from app.options.scope_carry import validate_enrollment
+
+        validate_enrollment(
+            self.execution,
+            self.scope_policy,
+            self.swing_policy,
+            self.entry_policy,
+            self.position_policy,
+        )
         age = self.execution.process_timeout_seconds + self.runtime.tick_seconds
         if age >= min(
             self.runtime.heartbeat_max_age_seconds,

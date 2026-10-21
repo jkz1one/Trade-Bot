@@ -48,6 +48,10 @@ fresh position/account/market evidence after cost settlement before any action.
 
 
 def instructions(policy):
+    if policy.scope_carry is not None:
+        scope = policy.model_copy(update={"scope_carry": None, "swing_carry": None})
+        carry = policy.model_copy(update={"scope_carry": None, "scope_management": None})
+        return instructions(scope) + instructions(carry)[len(INSTRUCTIONS) :]
     if policy.scope_management is not None:
         return (
             INSTRUCTIONS
@@ -75,6 +79,8 @@ be widened or postponed; this remains the same owned position and cost ledger.
 
 
 def prompt_version(policy):
+    if policy.scope_carry is not None:
+        return "option-position-scope-carry-v1"
     if policy.scope_management is not None:
         return "option-position-scope-v1"
     return PROMPT_VERSION if policy.swing_carry is None else "option-position-carry-v1"
@@ -86,7 +92,10 @@ class PositionModelConfiguration(OptionRecord):
     limits: JudgmentLimits
     position_policy: PositionReasoningPolicy
     prompt_version: Literal[
-        "option-position-thesis-v1", "option-position-carry-v1", "option-position-scope-v1"
+        "option-position-thesis-v1",
+        "option-position-carry-v1",
+        "option-position-scope-v1",
+        "option-position-scope-carry-v1",
     ] = PROMPT_VERSION
     prompt_hash: Digest
     schema_hash: Digest

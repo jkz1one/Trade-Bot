@@ -1,12 +1,13 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.90. Adopted product direction and working delivery contract, 2026-10-21 UTC.
+Version 1.91. Adopted product direction and working delivery contract, 2026-10-21 UTC.
 [Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now connects
 choice-only B, matched independent native accounts and portable full-cost export.
 [Continuous Scope runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now connect explicit
 watch instructions, durable delivery/restart receipts, fresh paid admission and
-independent protection. Remaining carry/family/mixed plumbing precedes final UI and
-authentic PAPER testing.
+independent protection. [Combined Scope/Swing carry](OPTIONS_SCOPE_CARRY.md) now
+binds explicit native owner, entry/management, runtime and stored export contracts.
+Remaining family/mixed plumbing precedes final UI and authentic PAPER testing.
 [Shared Scope entry AI](OPTIONS_SCOPE_AI.md) now binds one paid Degen/Swing/Scope
 decision to native approval, fixed Scope terms, fresh post-cost admission and stored
 trade-level cost attribution. The original expiry still caps dispatch; scale/final
@@ -26,8 +27,8 @@ watch/runtime inputs now have explicit native enrollment. Legacy comparison cons
 Scope entry/management receipts and matched declared entry scripts. A separate frozen
 [native C/D tape enrollment](OPTIONS_SCOPE_MODEL_REPLAY.md) now connects that contract
 to delivered fresh observations, native paid admission, later fills and full-cost export.
-Combined Scope/Swing carry and
-remaining family/mixed stock-options plumbing precede final UI and authentic PAPER testing.
+Remaining family/mixed stock-options plumbing and Scope multi-session comparison
+precede final UI and authentic PAPER testing.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -418,7 +419,8 @@ approval and trade-level cost attribution. Shared Scope position reasoning now
 binds original native terms and current Scope context. Common Scope observations
 and independent native watch replay are fixture implemented. Independent single-session
 A/B/C/D trading replay/export and continuous watch/runtime inputs now have fixture
-proof. Combined carry/Scope, multi-session Scope comparison and remaining family/mixed
+proof. Combined Scope/Swing carry now has explicit native entry/management/runtime
+and stored export contracts. Multi-session Scope comparison and remaining family/mixed
 ownership plumbing remain open; existing cohorts stay frozen.
 
 Swing retains completed higher-timeframe bars, exact contract locking, next actual
@@ -647,9 +649,9 @@ for options. M7 now has shared Degen/Swing PAPER candidate arbitration and a fir
 locked next-session daily-breakout adaptation with session-close protection.
 Native bounded Swing carry and deterministic shared Scope selection now have
 fixture integration. Shared Scope paid entry/management, single-session A/B/C/D
-tape comparison and continuous runtime inputs now have fixture integration. Combined
-carry/Scope, multi-session Scope comparison, remaining families and mixed stock/options
-remain open. Scope
+tape comparison, continuous runtime inputs and combined native Scope/Swing carry
+now have fixture integration. Multi-session Scope comparison, remaining families
+and mixed stock/options remain open. Scope
 native execution/loss integration is fixture implemented within its explicit profile/quantity
 boundaries; authentic provider and prospective performance acceptance remain open. Existing
 runtime services still execute equities only; local M2 is not an options deployment.

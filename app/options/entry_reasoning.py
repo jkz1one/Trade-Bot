@@ -31,6 +31,9 @@ MAX_PACKET_BYTES = 256 * 1024
 
 class EntryReasoningPolicy(OptionRecord):
     version: Literal["option-entry-reasoning-v1"] = "option-entry-reasoning-v1"
+    scope_carry: Literal["shared-scope-carry-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     scope_selection: Literal["scope-fixed-plan-v1", "scope-fixed-shortlist-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -41,6 +44,15 @@ class EntryReasoningPolicy(OptionRecord):
     max_target_fraction: Money = Field(gt=0, le=Decimal(".1"))
     max_trigger_fraction: Money = Field(gt=0, le=Decimal(".1"))
     minimum_reward_risk: Money = Field(gt=0, le=100)
+
+    @model_validator(mode="after")
+    def combined(self):
+        paired = self.scope_selection is not None and self.max_carry_horizon_seconds is not None
+        if paired != (self.scope_carry is not None) or (
+            paired and self.scope_selection != "scope-fixed-plan-v1"
+        ):
+            raise ValueError("Shared Scope carry reasoning requires explicit full-plan enrollment")
+        return self
 
 
 class EntryOpportunity(OptionRecord):
@@ -97,11 +109,6 @@ class EntryPacket(OptionRecord):
                 or p.binding.account_id != self.limits.account_id
             ):
                 raise ValueError("Scope evidence requires its explicit policy and owner binding")
-        if (
-            self.policy.scope_selection is not None
-            and self.policy.max_carry_horizon_seconds is not None
-        ):
-            raise ValueError("Shared Scope carry reasoning is not enrolled")
         ids = [o.candidate.candidate_id for o in self.opportunities]
         if len(set(ids)) != len(ids):
             raise ValueError("Duplicate entry candidates")
@@ -239,6 +246,11 @@ class SharedScopeEntryPlan(EntryPlan):
         return self
 
 
+class SharedScopeCarryEntryPlan(SharedScopeEntryPlan):
+    version: Literal["shared-scope-carry-plan-v1"] = "shared-scope-carry-plan-v1"
+    horizon_seconds: int | None = Field(default=None, gt=0, le=5184000, strict=True)
+
+
 class ScopeShortlistPlan(SharedScopeEntryPlan):
     """B's choice-only receipt; no family may acquire replacement geometry."""
 
@@ -268,6 +280,8 @@ class ScopeShortlistPlan(SharedScopeEntryPlan):
 
 
 def plan_class(policy):
+    if policy.scope_carry is not None:
+        return SharedScopeCarryEntryPlan
     if policy.scope_selection == "scope-fixed-shortlist-v1":
         return ScopeShortlistPlan
     if policy.scope_selection is not None:
@@ -280,7 +294,13 @@ class EntryReview(OptionRecord):
     outcome: Literal["HOLD", "REJECTED", "ELIGIBLE"]
     reasons: tuple[Name, ...]
     packet_hash: Digest
-    plan: EntryPlan | CarryEntryPlan | SharedScopeEntryPlan | ScopeShortlistPlan
+    plan: (
+        EntryPlan
+        | CarryEntryPlan
+        | SharedScopeEntryPlan
+        | ScopeShortlistPlan
+        | SharedScopeCarryEntryPlan
+    )
     proposal: OptionProposal | None = None
     admission: OptionAdmission | None = None
     exit_by: datetime | None = None

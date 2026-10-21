@@ -22,6 +22,7 @@ from app.options.entry_reasoning import (
     EntryPlan,
     EntryReasoningPolicy,
     ScopeShortlistPlan,
+    SharedScopeCarryEntryPlan,
     SharedScopeEntryPlan,
     plan_class,
     review_entry_plan,
@@ -52,6 +53,10 @@ fresh evidence and may reject any proposal. Never issue management or exit order
 
 
 def instructions(policy):
+    if policy.scope_carry is not None:
+        scope = policy.model_copy(update={"scope_carry": None, "max_carry_horizon_seconds": None})
+        carry = policy.model_copy(update={"scope_carry": None, "scope_selection": None})
+        return instructions(scope) + instructions(carry)[len(INSTRUCTIONS) :]
     if policy.scope_selection == "scope-fixed-shortlist-v1":
         return """Choose one supplied admitted Degen, Swing or Scope candidate, or HOLD.
 For ENTER cite its exact candidate ID and supplied evidence IDs; set scope=true
@@ -88,6 +93,8 @@ assurance of overnight liquidity, continuous observations or stop execution.
 
 
 def prompt_version(policy):
+    if policy.scope_carry is not None:
+        return "shared-scope-carry-entry-v1"
     if policy.scope_selection == "scope-fixed-shortlist-v1":
         return "shared-scope-shortlist-v1"
     if policy.scope_selection is not None:
@@ -105,6 +112,7 @@ class EntryModelConfiguration(OptionRecord):
         "option-entry-carry-v1",
         "shared-scope-entry-v1",
         "shared-scope-shortlist-v1",
+        "shared-scope-carry-entry-v1",
     ] = PROMPT_VERSION
     prompt_hash: Digest
     schema_hash: Digest
@@ -205,7 +213,13 @@ class EntryResult(OptionRecord):
     request_id: str = Field(pattern=r"^[a-f0-9]{32}$")
     packet_hash: Digest
     configuration_hash: Digest
-    plan: EntryPlan | CarryEntryPlan | SharedScopeEntryPlan | ScopeShortlistPlan
+    plan: (
+        EntryPlan
+        | CarryEntryPlan
+        | SharedScopeEntryPlan
+        | ScopeShortlistPlan
+        | SharedScopeCarryEntryPlan
+    )
     usage: UsageEvidence | None = None
     counted_input_tokens: int | None = Field(default=None, gt=0, strict=True)
     error: str | None = Field(default=None, max_length=128, pattern=r"^[A-Za-z_][A-Za-z0-9_]*$")

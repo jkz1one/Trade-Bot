@@ -8,8 +8,9 @@ Degen/Swing model populations retain their frozen configuration and behavior.
 
 This is fixture-tested entry plumbing, not authentic model/provider acceptance,
 a profitability result or permission to deploy. [Shared Scope position-model enrollment](OPTIONS_SCOPE_POSITION.md) is separately
-opt-in for new owners. Common A/B/C/D Scope tapes, continuous watch ingestion and combined
-Scope/carry enrollment remain separate work. Native Scope target, profile-stop and
+opt-in for new owners. Common A/B/C/D Scope tapes and continuous watch ingestion
+have separate native contracts. [Combined Scope/carry enrollment](OPTIONS_SCOPE_CARRY.md)
+requires its new frozen marker and full model contracts. Native Scope target, profile-stop and
 time protection remain independently deterministic.
 
 ## Explicit enrollment
@@ -32,12 +33,13 @@ checks still validate every supplied observation.
 The model path requires a new healthy, untraded owner with a frozen cost policy.
 Reopening must use the same policies and key path plus an available fresh-input
 reader. Legacy deterministic enrollment still rejects model settings. Shared entry
-AI rejects the old scripted replay model and combined Swing carry. Position-model
+AI rejects the old scripted replay model. Combined Swing carry requires the separate
+explicit combined contract; it cannot be added to an existing owner. Position-model
 settings require explicit `scope-fixed-position-v1` enrollment; see the linked
 management contract. The separate [native C/D tape enrollment](OPTIONS_SCOPE_MODEL_REPLAY.md)
 binds full scripted receipts, exact delivered fresh observations and native post-cost
 approval without a key file. The old adapter and unbound new adapter stay rejected;
-continuous runtime inputs and full comparison remain separate.
+continuous runtime inputs and full comparison use their separate enrolled contracts.
 No test limits are implied production defaults.
 
 ## One request, fixed Scope terms
@@ -132,9 +134,8 @@ observer reads. Run with entry reasoning/worker/coordination, shared strategy,
 Scope reapproval/native boundaries, lineage, outcome, loss and observer regressions.
 Exact installed results are recorded in [status](SLICE2_STATUS.md).
 
-Next: common A/B/C/D Scope replay, continuous watch
-input/runtime integration, then remaining family/mixed ownership plumbing and the
-final UI/authentic-data acceptance pass. Main remains untouched, PR #1 draft,
+Next: Scope multi-session comparison and remaining family/mixed ownership plumbing,
+then the final UI/authentic-data acceptance pass. Main remains untouched, PR #1 draft,
 LIVE disabled and the deployed experiment frozen.
 
 ## Common Scope input checkpoint
@@ -151,7 +152,18 @@ shared Scope AI replay-adapter restriction remains in place.
 
 [Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) and
 [continuous Scope runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now have native fixture
-plumbing. Earlier open-work descriptions above are historical checkpoints. Combined
-Scope/Swing carry, remaining families and mixed stock/options ownership still precede
+plumbing. Earlier open-work descriptions above are historical checkpoints. Scope
+multi-session comparison, remaining families and mixed stock/options ownership still precede
 final UI and authentic PAPER testing. Original paid terms, mandatory protection,
 full costs and all authentic acceptance gates remain unchanged.
+
+
+## Combined native carry checkpoint: 2026-10-21
+
+[Combined Scope/Swing carry](OPTIONS_SCOPE_CARRY.md) now connects a separately
+enrolled native owner, full entry/management contracts, continuous runtime, restart
+and stored accounting/export. Scope retains its original fixed intraday terms;
+Swing retains original bounded carry terms. Earlier restrictions above describe
+legacy enrollments. Current Scope replay/comparison adapters still reject combined
+carry pending a complete multi-session contract. Remaining family/mixed plumbing
+precedes final UI and authentic PAPER acceptance.

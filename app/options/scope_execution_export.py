@@ -122,6 +122,7 @@ def _report(db, now, data_cost, host_cost):
             "entry_premium_protection",
             "target_exit_schedule",
             "entry_protection",
+            "swing_carry",
         )
         for position in (ledger.position, snapshot.position):
             if (

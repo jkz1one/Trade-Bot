@@ -34,6 +34,7 @@ def shared(
     costs=False,
     ai=False,
     coordinator_options=None,
+    carry=False,
 ):
     path.mkdir(parents=True, exist_ok=True)
     ep = execution_policy() | {
@@ -47,6 +48,8 @@ def shared(
             ),
         ),
     }
+    if carry:
+        ep.update(swing_carry="bounded-swing-carry-v1", scope_carry="shared-scope-carry-v1")
     if costs:
         from app.execution.economics import CostPolicy
 
@@ -56,6 +59,11 @@ def shared(
     ) as (e, v, _):
         times = [AT]
         setup, selection = policies()
+        swing = swing_policy() if "SWING" in priority else None
+        if carry:
+            from test_option_swing_execution import settings
+
+            _, swing, _ = settings(right)
         c = DegenCoordinator(
             e,
             setup,
@@ -64,11 +72,12 @@ def shared(
             clock=lambda: times[0],
             scope_policy=SharedScopePolicy(
                 watch=policy(),
+                scope_carry="shared-scope-carry-v1" if carry else None,
                 family_priority=priority,
                 version="shared-scope-entry-v1" if ai else "shared-scope-selection-v1",
             ),
             **(coordinator_options or {}),
-            swing_policy=swing_policy() if "SWING" in priority else None,
+            swing_policy=swing,
         )
         f, context = data(right)
         c.scope_book.call(
@@ -116,7 +125,12 @@ def shared(
 
         base = replace(base)
         if "SWING" in priority:
-            item = swing_input(right).model_dump(mode="json")
+            if carry:
+                from test_option_swing_execution import carry_frame
+
+                item = carry_frame(right).swing[0].model_dump(mode="json")
+            else:
+                item = swing_input(right).model_dump(mode="json")
             # Seed timestamps/identity remain original; only observed catalyst and locked quote advance.
             item["seed"]["instrument"]["provider"] = "fixture-provider"
             item["catalyst"]["source_at"] = now.isoformat()

@@ -1856,11 +1856,16 @@ class OptionExecution:
             CarryEntryPlan,
             EntryPlan,
             ScopeShortlistPlan,
+            SharedScopeCarryEntryPlan,
             SharedScopeEntryPlan,
         )
 
         plan = TypeAdapter(
-            EntryPlan | CarryEntryPlan | SharedScopeEntryPlan | ScopeShortlistPlan
+            EntryPlan
+            | CarryEntryPlan
+            | SharedScopeEntryPlan
+            | ScopeShortlistPlan
+            | SharedScopeCarryEntryPlan
         ).validate_python(plan.model_dump(warnings=False))
         return self._record_model_usage(source_key, usage, plan, now=now)
 

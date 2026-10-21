@@ -17,6 +17,9 @@ VERSION = "shared-scope-selection-v1"
 
 class SharedScopePolicy(OptionRecord):
     version: Literal["shared-scope-selection-v1", "shared-scope-entry-v1"] = VERSION
+    scope_carry: Literal["shared-scope-carry-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     watch: ScopeWatchPolicy
     family_priority: tuple[Literal["DEGEN", "SWING", "SCOPE"], ...] = Field(
         min_length=2, max_length=3
@@ -25,7 +28,8 @@ class SharedScopePolicy(OptionRecord):
     @model_validator(mode="after")
     def bounded(self):
         if (
-            len(set(self.family_priority)) != len(self.family_priority)
+            (self.scope_carry is not None and "SWING" not in self.family_priority)
+            or len(set(self.family_priority)) != len(self.family_priority)
             or not {"DEGEN", "SCOPE"} <= set(self.family_priority)
             or self.watch.native_execution != "scope-native-v1"
         ):
@@ -85,6 +89,21 @@ def configuration(db):
             management = PositionModelConfiguration.model_validate(config["position_model"])
             if management.position_policy.scope_management != "scope-fixed-position-v1":
                 raise ExecutionBlocked("SHARED_SCOPE_POSITION_CONFIGURATION_REQUIRED")
+    from app.options.lifecycle import OptionExecutionPolicy
+    from app.options.scope_carry import validate_enrollment
+    from app.options.swing import SwingPolicy
+
+    owner = json.loads(
+        db.execute("SELECT config_json FROM execution_control WHERE id=1").fetchone()[0]
+    )
+    validate_enrollment(
+        OptionExecutionPolicy.model_validate(owner["policy"]),
+        policy,
+        SwingPolicy.model_validate(config["swing"]) if "swing" in config else None,
+        model.entry_policy if policy.version != VERSION else None,
+        management.position_policy if "position_model" in config else None,
+        replay="scope_replay" in config or "replay_model" in config,
+    )
     return policy
 
 

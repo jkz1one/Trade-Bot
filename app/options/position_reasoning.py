@@ -32,6 +32,9 @@ from app.options.swing import SwingScan
 
 class PositionReasoningPolicy(OptionRecord):
     version: Literal["option-position-reasoning-v1"] = "option-position-reasoning-v1"
+    scope_carry: Literal["shared-scope-carry-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     swing_carry: Literal["bounded-swing-carry-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -43,8 +46,9 @@ class PositionReasoningPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def matching_context(self):
-        if self.scope_management is not None and self.swing_carry is not None:
-            raise ValueError("Combined Scope/carry management is not enrolled")
+        paired = self.scope_management is not None and self.swing_carry is not None
+        if paired != (self.scope_carry is not None):
+            raise ValueError("Combined Scope/carry management requires explicit enrollment")
         return self
 
 
@@ -102,6 +106,8 @@ class PositionPacket(OptionRecord):
     @model_validator(mode="after")
     def preflight(self):
         p, e, s = self.position, self.entry, self.scan
+        if self.policy.scope_carry != self.execution_policy.scope_carry:
+            raise ValueError("Matching combined owner and management packet required")
         if p.swing_carry != e.swing_carry or (p.swing_carry is not None) != (
             self.carry_context is not None
         ):

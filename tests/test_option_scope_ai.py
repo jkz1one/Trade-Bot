@@ -13,12 +13,19 @@ from app.execution.economics import UsageEvidence
 from app.execution.judgment import JudgmentLimits
 from app.options.engine import fingerprint
 from app.options.entry_judgment import hold, result_for
-from app.options.entry_reasoning import SharedScopeEntryPlan
+from app.options.entry_reasoning import SharedScopeEntryPlan, plan_class
 
 
 @contextmanager
 def ai_owner(
-    path, monkeypatch, *, family="SCOPE", right="CALL", mode="ENTER", position_policy=None
+    path,
+    monkeypatch,
+    *,
+    family="SCOPE",
+    right="CALL",
+    mode="ENTER",
+    position_policy=None,
+    carry=False,
 ):
     state = {}
 
@@ -46,7 +53,14 @@ def ai_owner(
 
     options = {
         "entry_policy": packet_for(right).policy.model_copy(
-            update={"scope_selection": "scope-fixed-plan-v1"}
+            update={
+                "scope_selection": "scope-fixed-plan-v1",
+                **(
+                    {"scope_carry": "shared-scope-carry-v1", "max_carry_horizon_seconds": 600000}
+                    if carry
+                    else {}
+                ),
+            }
         ),
         "judgment_limits": JudgmentLimits(process_timeout_seconds=5, request_timeout_seconds=3),
         "key_file": path / "private-model-key",
@@ -55,11 +69,12 @@ def ai_owner(
     }
     with shared(
         path,
-        ("SCOPE", "DEGEN") if family != "SWING" else ("SCOPE", "SWING", "DEGEN"),
+        ("SCOPE", "DEGEN") if family != "SWING" and not carry else ("SCOPE", "SWING", "DEGEN"),
         right,
         costs=True,
         ai=True,
         coordinator_options=options,
+        carry=carry,
     ) as owner:
         state["owner"] = owner
         c, _, times, _ = owner
@@ -71,7 +86,7 @@ def ai_owner(
             if mode == "HOLD":
                 plan = hold(request.packet)
             elif family == "SCOPE":
-                plan = SharedScopeEntryPlan(
+                plan = plan_class(request.packet.policy)(
                     decision_id=request.packet.decision_id,
                     packet_hash=fingerprint(request.packet),
                     action="ENTER",
@@ -98,6 +113,22 @@ def ai_owner(
                     ).model_dump(mode="json")
                     | {"version": "shared-scope-entry-plan-v1", "scope": False}
                 )
+            if carry and family != "SCOPE" and mode != "HOLD":
+                values = plan.model_dump()
+                values["version"] = "shared-scope-carry-plan-v1"
+                if family == "SWING":
+                    o = next(
+                        o
+                        for o in request.packet.opportunities
+                        if o.candidate.candidate_id == plan.candidate_id
+                    )
+                    values.update(
+                        horizon_seconds=int(
+                            (o.scan.carry_terms.exit_at - request.packet.as_of).total_seconds()
+                        ),
+                        underlying_target=o.scan.carry_terms.first_target,
+                    )
+                plan = plan_class(request.packet.policy).model_validate(values)
             return result_for(
                 request,
                 plan=plan,

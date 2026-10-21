@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from pydantic import model_validator
 
-from app.options.entry_reasoning import SharedScopeEntryPlan
+from app.options.entry_reasoning import SharedScopeCarryEntryPlan, SharedScopeEntryPlan
 from app.options.models import OptionRecord
 from app.options.scope_arbitration import ScopeCycleInput, configuration
 from app.options.scope_context import ScopeContextPolicy, ScopeContextScan, scan_scope_context
@@ -13,7 +13,7 @@ from app.options.scope_reasoning import ScopeReasoningEvidence
 
 
 class ScopePositionContext(OptionRecord):
-    selection: SharedScopeEntryPlan
+    selection: SharedScopeEntryPlan | SharedScopeCarryEntryPlan
     original: ScopeReasoningEvidence
     current: ScopeCycleInput
     policy: ScopeContextPolicy

@@ -56,7 +56,10 @@ selection, later fills, protective exits and full-cost export. The [independent 
 choice-only B and matched full-cost native export. [Continuous Scope runtime inputs](docs/OPTIONS_SCOPE_RUNTIME.md) now connect explicit watch packets, delivered post-cost refreshes and independent protection. The [C/D response contract](docs/OPTIONS_SCOPE_REPLAY_MODEL.md)
 now connects to explicitly enrolled [native C/D tape replay](docs/OPTIONS_SCOPE_MODEL_REPLAY.md),
 with delivered fresh observations, paid admission, original deadlines and full-cost export.
-Finish the remaining plumbing before final UI work and authentic PAPER testing.
+[Combined Scope/Swing carry](docs/OPTIONS_SCOPE_CARRY.md) now binds explicit native
+owner, entry/management, continuous runtime and stored export contracts. Remaining
+family/mixed plumbing and Scope multi-session comparison precede final UI and
+authentic PAPER testing.
 
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
 rules, implementation milestones, acceptance gates and continuation discipline.

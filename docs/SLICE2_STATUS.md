@@ -1,5 +1,80 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Combined native Scope/Swing carry plumbing: 2026-10-21 UTC
+
+Fresh local/GitHub state matched `f4da7937e721e7dd1f3765a2715f7102cf79d613`,
+tree `0c9a6c487d22dd5136d3cfc88ec01016e24fb64c`, with a clean working tree.
+Main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 was open/draft.
+
+[Combined native Scope/Swing carry](OPTIONS_SCOPE_CARRY.md) now requires explicit
+`shared-scope-carry-v1` markers on the native owner and shared strategy, plus the
+full entry/management policies when enabled. The owner retains all three family
+loss controls and the existing bounded Swing policy. Runtime creation, coordinator
+creation, management packets and stored shared/export reconstruction check matching
+contracts. Existing populations cannot acquire the enrollment; absent optional
+fields and old prompt/schema/configuration hashes preserve frozen cohorts.
+
+The separately hashed entry prompt and strict plan permit a multi-session horizon
+only for a selected Swing candidate with original native carry terms. Degen remains
+intraday. Scope still selects its exact fixed plan without replacement geometry,
+quantity, target, premium profile or deadline. Its paid selection still requires
+fresh owned post-cost admission, advancing source clocks, account revision and the
+original approval/model deadline. Native usage settlement now recognizes the full
+combined plan; paid rejected advice remains charged.
+
+The separately hashed management prompt binds either Scope's original fixed plan
+and paid entry thesis or Swing's original daily scan and enumerated carry sessions.
+MAINTAIN/TIGHTEN/EXIT_ALL retain original protection and actual native fills. Scope
+never acquires an overnight horizon. Swing retains its original first target and
+exit, short-lived approval, DAY attempt and explicit unknown overnight path. Held
+and unresolved exposure continues to reserve the common account.
+
+Continuous runtime/restart retains the exact holding and original deadline. Feed
+loss cannot erase independent latched exits; fresh exact quotes remain necessary
+for a close. An unfilled Scope watch expires at its original cutoff while a Swing
+holding carries. Native portable export verifies the combined frozen contract and
+compares original carry terms against ledger/venue holdings. Entry/management
+charges, execution fees and explicit whole-period data/host allocations remain in
+full-cost accounting. Unknown costs and unresolved exposure remain unknown.
+
+Validation: **489 distinct installed checks passed on the final wheel**, including
+**40 new combined-carry cases** and **449 compatibility cases**. The disjoint
+new-case phases `boundaries` and `native` took 37.52 and
+230.06 seconds. Compatibility phases `profile`, `core`, `runtime` and
+`comparison` took 700.08 seconds in total. New cases cover all three
+entry families, CALL/PUT, both holding contexts, all three management actions,
+restart/feed loss/watch expiry, malformed enrollment, fixed Scope geometry,
+original horizon/target limits, paid refresh rejection, mocked SDK schema/transport,
+portable accounting and rehashed stored-enrollment tampering. Compatibility covers
+legacy entry/position reasoning and workers, native standalone carry, Scope paid
+entry/management, Scope/legacy runtime, tape rejection/release identity, four-account
+comparison and unknown-cost account isolation.
+
+All runs used a noneditable wheel, copied tests outside the checkout, Python `-I`,
+warnings as errors, disabled plugin autoload and serial native workers. Diagnostic
+runs and overlapping reruns are excluded. Initial diagnostics found the missing
+combined-plan usage parser; it was fixed. Subsequent fixture-only corrections
+created runtime enrollment before trading and used explicit order chronology.
+No native protection was relaxed to make a fixture pass. An interrupted broad
+compatibility run is excluded after an apparent partial-close management stall.
+The focused final-wheel run passed in 55.23 seconds versus 45.96 in the prior
+proof, without further application changes. Remaining compatibility phases ran in separate serial interpreters.
+
+Environment: `../scope-replay-env`; proof: `../scope-carry-proof/final-proof.json`;
+wheel directory: `../scope-carry-wheels`. Wheel SHA-256:
+`794a483bcad8309d28131b0d14b33e754becfcc7d65a5a2b76f4ef5a22295238`.
+All 203 application/template files matched source, wheel and installed bytes.
+Ruff, dependency consistency and local Markdown link checks passed. Proof retains
+exact case IDs, logs/XML, copied tests, native journals/exports, source and identity.
+
+Current Scope replay/model/comparison adapters remain single-session contracts and
+reject combined carry. The old replay adapter and choice-only B cannot enter this
+new runtime owner. Remaining work: Scope multi-session/benchmark comparison, broader
+family completion and one mixed stock/options owner. UI and authentic PAPER testing
+follow that plumbing. Convexity and missing-T3 four-contract Scope plans stay blocked.
+No dependencies, authenticated provider/model/broker calls or deployments changed.
+LIVE remains disabled; the deployed experiment stays frozen. Do not merge or modify main.
+
 ## Continuous Scope watch/runtime input plumbing: 2026-10-21 UTC
 
 Fresh local/GitHub state matched `24025825bca7794bd09739f4e7d994843cdf4587`,
