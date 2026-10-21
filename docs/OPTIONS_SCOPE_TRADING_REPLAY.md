@@ -73,9 +73,9 @@ no successful final report; existing directories are never reused or resumed.
 
 `COMPLETE_DETERMINISTIC_TAPE_REPLAY` means the supplied A sequence finished. The
 report retains `comparison_complete=false` and `economic_conclusion=NOT_EVALUATED`.
-There is no complete A/B/C/D comparison, benchmark evaluation, authentic source
-acceptance or profitability claim. B and full matched comparison export remain next, followed by continuous
-watch/runtime inputs. Legacy comparison consumers and the old Scope AI adapter remain
+This individual report does not perform A/B/C/D comparison, benchmark evaluation,
+authentic source acceptance or make a profitability claim. The separate matched
+comparison wrapper is now available; continuous watch/runtime inputs remain next. Legacy comparison consumers and the old Scope AI adapter remain
 blocked. Main stays untouched, PR #1 draft, LIVE disabled and deployment frozen.
 
 The separate [C/D scripted response contract](OPTIONS_SCOPE_REPLAY_MODEL.md) now
@@ -83,3 +83,12 @@ provides full typed fixed-plan entry and management receipts. The separate
 [native C/D tape enrollment](OPTIONS_SCOPE_MODEL_REPLAY.md) connects its scheduler,
 delivered fresh admission, original deadlines, later fills and complete costs.
 It does not change the model-off A contract or complete the comparison wrapper.
+
+## Independent Scope comparison continuation
+
+The [Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now adds explicitly
+enrolled choice-only B and matched independent one-session native replay/export.
+The historical runners and C/D contracts described above retain their original
+versions and rejection boundaries. The separate wrapper preserves unknown costs,
+all native fees/charges and inconclusive economic status. Continuous Scope runtime
+inputs, carry/family/mixed plumbing and authentic acceptance remain open.

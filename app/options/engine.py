@@ -723,7 +723,7 @@ class OptionExecution:
                     if entry_time_protection is not None:
                         exit_at = min(exit_at, entry_time_protection.exit_by)
                     protection = None
-                    if entry_review is not None:
+                    if entry_review is not None and entry_review.exit_by is not None:
                         exit_at = min(exit_at, entry_review.exit_by)
                         protection = EntryProtection(
                             packet_hash=entry_review.packet_hash,
@@ -909,7 +909,16 @@ class OptionExecution:
                     raise ExecutionBlocked("OPTION_APPROVAL_EXPIRED")
                 if quote.instrument != intent.instrument:
                     raise ExecutionBlocked("OPTION_INSTRUMENT_MAPPING_CHANGED")
-                if (intent.entry_protection is None) != ("entry_request" not in approval):
+                shortlist = (
+                    approval.get("entry_request", {})
+                    .get("packet", {})
+                    .get("policy", {})
+                    .get("scope_selection")
+                    == "scope-fixed-shortlist-v1"
+                )
+                if (intent.entry_protection is not None) != (
+                    "entry_request" in approval and not shortlist
+                ):
                     raise ExecutionBlocked("OPTION_ENTRY_PROTECTION_MISSING")
                 from app.options.scope_execution import dispatch_review
                 from app.options.shared_strategy import review_shared_entry
@@ -980,7 +989,7 @@ class OptionExecution:
                     if intent.position_protection != expected:
                         raise ExecutionBlocked("POSITION_PROTECTION_CHANGED")
                     result = review.admission
-                if intent.entry_protection is not None:
+                if intent.entry_protection is not None or "entry_request" in approval:
                     from app.options.entry_coordination import review_for_execution
                     from app.options.entry_judgment import EntryRequest, EntryResult
 
@@ -999,13 +1008,19 @@ class OptionExecution:
                         raise ExecutionBlocked(
                             "OPTION_ENTRY_DISPATCH_REJECTED:" + ";".join(review.reasons)
                         )
-                    expected = EntryProtection(
-                        packet_hash=review.packet_hash,
-                        plan_hash=fingerprint(review.plan),
-                        underlying_target=review.plan.underlying_target,
-                        exit_by=review.exit_by,
+                    expected = (
+                        EntryProtection(
+                            packet_hash=review.packet_hash,
+                            plan_hash=fingerprint(review.plan),
+                            underlying_target=review.plan.underlying_target,
+                            exit_by=review.exit_by,
+                        )
+                        if review.exit_by is not None
+                        else None
                     )
-                    if expected != intent.entry_protection or intent.exit_at > review.exit_by:
+                    if expected != intent.entry_protection or (
+                        review.exit_by is not None and intent.exit_at > review.exit_by
+                    ):
                         raise ExecutionBlocked("OPTION_ENTRY_PROTECTION_CHANGED")
                     result = review.admission
                 if result.outcome != "APPROVED" or result.quantity < intent.quantity:
@@ -1836,11 +1851,16 @@ class OptionExecution:
     def record_entry_usage(self, source_key, usage, plan, *, now):
         from pydantic import TypeAdapter
 
-        from app.options.entry_reasoning import CarryEntryPlan, EntryPlan, SharedScopeEntryPlan
-
-        plan = TypeAdapter(EntryPlan | CarryEntryPlan | SharedScopeEntryPlan).validate_python(
-            plan.model_dump(warnings=False)
+        from app.options.entry_reasoning import (
+            CarryEntryPlan,
+            EntryPlan,
+            ScopeShortlistPlan,
+            SharedScopeEntryPlan,
         )
+
+        plan = TypeAdapter(
+            EntryPlan | CarryEntryPlan | SharedScopeEntryPlan | ScopeShortlistPlan
+        ).validate_python(plan.model_dump(warnings=False))
         return self._record_model_usage(source_key, usage, plan, now=now)
 
     def record_position_usage(self, source_key, usage, plan, *, now):

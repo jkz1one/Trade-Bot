@@ -21,6 +21,7 @@ from app.options.entry_reasoning import (
     EntryPacket,
     EntryPlan,
     EntryReasoningPolicy,
+    ScopeShortlistPlan,
     SharedScopeEntryPlan,
     plan_class,
     review_entry_plan,
@@ -51,6 +52,14 @@ fresh evidence and may reject any proposal. Never issue management or exit order
 
 
 def instructions(policy):
+    if policy.scope_selection == "scope-fixed-shortlist-v1":
+        return """Choose one supplied admitted Degen, Swing or Scope candidate, or HOLD.
+For ENTER cite its exact candidate ID and supplied evidence IDs; set scope=true
+only for the supplied Scope plan. Leave every geometry field null. Never replace
+the original proposal, contract, stop, target, quantity, budget or deadline.
+Software settles costs and reviews fresh owned evidence before any attempt.
+You have no tools or execution authority. This is a local scripted comparator.
+"""
     if policy.scope_selection is not None:
         return (
             INSTRUCTIONS
@@ -79,6 +88,8 @@ assurance of overnight liquidity, continuous observations or stop execution.
 
 
 def prompt_version(policy):
+    if policy.scope_selection == "scope-fixed-shortlist-v1":
+        return "shared-scope-shortlist-v1"
     if policy.scope_selection is not None:
         return "shared-scope-entry-v1"
     return PROMPT_VERSION if policy.max_carry_horizon_seconds is None else "option-entry-carry-v1"
@@ -90,7 +101,10 @@ class EntryModelConfiguration(OptionRecord):
     limits: JudgmentLimits
     entry_policy: EntryReasoningPolicy
     prompt_version: Literal[
-        "option-entry-thesis-v1", "option-entry-carry-v1", "shared-scope-entry-v1"
+        "option-entry-thesis-v1",
+        "option-entry-carry-v1",
+        "shared-scope-entry-v1",
+        "shared-scope-shortlist-v1",
     ] = PROMPT_VERSION
     prompt_hash: Digest
     schema_hash: Digest
@@ -191,7 +205,7 @@ class EntryResult(OptionRecord):
     request_id: str = Field(pattern=r"^[a-f0-9]{32}$")
     packet_hash: Digest
     configuration_hash: Digest
-    plan: EntryPlan | CarryEntryPlan | SharedScopeEntryPlan
+    plan: EntryPlan | CarryEntryPlan | SharedScopeEntryPlan | ScopeShortlistPlan
     usage: UsageEvidence | None = None
     counted_input_tokens: int | None = Field(default=None, gt=0, strict=True)
     error: str | None = Field(default=None, max_length=128, pattern=r"^[A-Za-z_][A-Za-z0-9_]*$")

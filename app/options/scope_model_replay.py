@@ -22,6 +22,7 @@ from app.options.scope_execution_export import export_scope_execution
 from app.options.scope_replay import MAX_REQUEST_BYTES
 from app.options.scope_replay_enrollment import ScopeReplayEnrollment
 from app.options.scope_replay_model import ScopeReplayModel, ScopeReplayScript
+from app.options.scope_shortlist_replay import ScopeShortlistModel, ScopeShortlistScript
 from app.options.scope_tape_watch import ScopeTapeWatchAction
 from app.options.scope_trading_replay import ScopeTradingReplay, _ScopeReplay
 from app.options.venue import DurableOptionVenue
@@ -34,7 +35,7 @@ class ScopeModelReplay(OptionRecord):
     execution: OptionExecutionPolicy
     scope: SharedScopePolicy
     watch_actions: tuple[ScopeTapeWatchAction, ...] = Field(min_length=1, max_length=200)
-    script: ScopeReplayScript
+    script: ScopeReplayScript | ScopeShortlistScript
     judgment_limits: JudgmentLimits
     entry_policy: EntryReasoningPolicy
     position_policy: PositionReasoningPolicy | None = None
@@ -47,7 +48,8 @@ class ScopeModelReplay(OptionRecord):
             self.scope.version != "shared-scope-entry-v1"
             or self.execution.scope_arbitration != self.scope.version
             or self.execution.cost_policy is None
-            or self.entry_policy.scope_selection != "scope-fixed-plan-v1"
+            or self.entry_policy.scope_selection
+            != ("scope-fixed-shortlist-v1" if self.script.arm == "B" else "scope-fixed-plan-v1")
             or self.entry_policy.max_carry_horizon_seconds is not None
             or (self.script.arm == "D") != (self.position_policy is not None)
             or (
@@ -218,7 +220,11 @@ async def run_scope_model_replay(request, directory):
                 swing_policy=h.swing,
                 scope_refresh=fresh_scope,
                 scope_replay=enrollment,
-                replay_model=ScopeReplayModel(request.script),
+                replay_model=(
+                    ScopeShortlistModel(request.script)
+                    if request.script.arm == "B"
+                    else ScopeReplayModel(request.script)
+                ),
                 judgment_limits=request.judgment_limits,
                 entry_policy=request.entry_policy,
                 position_policy=request.position_policy,

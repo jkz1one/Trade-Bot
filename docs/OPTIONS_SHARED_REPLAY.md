@@ -106,6 +106,15 @@ for validation, capacity and provenance limits.
 policy and session deadlines and support original-time diagnostic reproduction.
 The separate [native C/D tape path](OPTIONS_SCOPE_MODEL_REPLAY.md) now binds full
 model receipts, delivered fresh post-cost admission, original deadlines, later fills
-and native full-cost export. This does not complete independent A/B/C/D comparison;
-B and the matched comparison wrapper remain open. Existing comparison consumers
+and native full-cost export. The separate Scope wrapper now completes one-session independent A/B/C/D
+fixture accounting, as described below. Existing comparison consumers
 still reject Scope tapes, and the old/unbound model adapters remain blocked.
+
+## Independent Scope comparison continuation
+
+The [Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now adds explicitly
+enrolled choice-only B and matched independent one-session native replay/export.
+The historical runners and C/D contracts described above retain their original
+versions and rejection boundaries. The separate wrapper preserves unknown costs,
+all native fees/charges and inconclusive economic status. Continuous Scope runtime
+inputs, carry/family/mixed plumbing and authentic acceptance remain open.

@@ -170,6 +170,11 @@ def verify_paid_entry(db, intent, approval, evidence, policy):
     if intent.entry_lineage is None or intent.entry_lineage.family != "SCOPE":
         if "scope_paid_review" in approval:
             raise ValueError("SHARED_SCOPE_PAID_RECEIPT_FOREIGN_FAMILY")
+        if request.packet.policy.scope_selection == "scope-fixed-shortlist-v1" and (
+            approval.get("entry_request") != request.model_dump(mode="json")
+            or approval.get("entry_result") != result.model_dump(mode="json")
+        ):
+            raise ValueError("SHARED_SCOPE_SHORTLIST_RECEIPT_CHANGED")
         return
     from app.options.entry_judgment import request_content
     from app.options.lifecycle import OptionExecutionPolicy

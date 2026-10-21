@@ -5,8 +5,10 @@ The common Scope tape suites are `test_option_scope_market_tape.py`,
 installed-wheel isolation below. They verify the [market-input and native-watch
 contract](OPTIONS_SCOPE_MARKET_TAPE.md), independent owner admissions, original
 clocks/deadlines, restart and portable accounting. Run the native Scope execution/
-export and legacy research replay regressions too. Full Scope A/B/C/D trading
-comparison remains open; individual A/C/D native trading runs are available.
+export and legacy research replay regressions too. The separate [Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) is covered by
+`test_option_scope_shortlist.py` and `test_option_scope_comparison.py`, including
+choice-only B, matched owner/configuration boundaries, independent costs and
+portable all-arm reconstruction.
 
 The deterministic Scope A tape baseline is exercised by
 `test_option_scope_trading_replay.py`, including later receipt fills, partial fills,

@@ -9,7 +9,7 @@ from pydantic import Field, model_validator
 from app.execution.economics import UsageEvidence
 from app.options import entry_judgment, position_judgment
 from app.options.engine import fingerprint
-from app.options.entry_reasoning import SharedScopeEntryPlan
+from app.options.entry_reasoning import plan_class
 from app.options.models import Money, Name, OptionRecord
 from app.options.position_reasoning import PositionPlan
 from app.options.replay_model import ScriptedDecision
@@ -104,8 +104,11 @@ class ScopeReplayModel:
     Coordinators reject this adapter without explicit full Scope tape enrollment.
     """
 
+    script_type = ScopeReplayScript
+    selection_policy = "scope-fixed-plan-v1"
+
     def __init__(self, script):
-        self.script = ScopeReplayScript.model_validate(script.model_dump(warnings=False))
+        self.script = self.script_type.model_validate(script.model_dump(warnings=False))
         self.started = asyncio.Event()
         self.pending = None
         self.used = set()
@@ -117,7 +120,7 @@ class ScopeReplayModel:
         if type(request) is entry_judgment.EntryRequest:
             protocol = entry_judgment
             request = protocol.EntryRequest.model_validate(request.model_dump(warnings=False))
-            if request.packet.policy.scope_selection != "scope-fixed-plan-v1":
+            if request.packet.policy.scope_selection != self.selection_policy:
                 raise ValueError("Explicit shared Scope entry request required")
             managed = False
         elif type(request) is position_judgment.PositionRequest:
@@ -196,7 +199,7 @@ class ScopeReplayModel:
                             "horizon_seconds",
                         }
                     )
-                plan = SharedScopeEntryPlan(
+                plan = plan_class(p.policy)(
                     decision_id=p.decision_id,
                     packet_hash=fingerprint(p),
                     action="ENTER",

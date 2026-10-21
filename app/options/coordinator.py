@@ -111,7 +111,8 @@ class DegenCoordinator:
             or key_file is not None
             or judgment_limits is None
             or engine.policy.cost_policy is None
-            or (replay_model.script.arm in {"C", "D"}) != (entry_policy is not None)
+            or (replay_model.script.arm in {"C", "D"} or self.scope_replay is not None)
+            != (entry_policy is not None)
         ):
             raise ValueError("Explicit isolated scripted model configuration required")
         self.swing_policy = (
@@ -140,6 +141,10 @@ class DegenCoordinator:
             if entry_policy is not None
             else None
         )
+        if self.entry_policy is not None and (
+            self.entry_policy.scope_selection == "scope-fixed-shortlist-v1"
+        ) != (self.scope_replay is not None and replay_model.script.arm == "B"):
+            raise ValueError("Scope shortlist requires its exact isolated B enrollment")
         if (
             self.entry_policy is not None
             and self.entry_policy.scope_selection is not None

@@ -1,5 +1,79 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Independent Scope A/B/C/D comparison and choice-only B: 2026-10-21 UTC
+
+Fresh GitHub/local state matched `cccf68072c8636039d0be32da9d781983ae0d491`,
+tree `148ba7cc0d9736ff61678661a7e63e755d5d9280`, with a clean working tree.
+Main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 was open/draft.
+
+The [separate Scope comparison](OPTIONS_SCOPE_COMPARISON.md) now runs independent
+A/B/C/D owners against the same sealed tape and ordered watch actions. It rejects
+reused population/account identities, tape/watch drift, unequal capital/risk/fees,
+operating allocations and mismatched model costs/limits before creating output.
+C/D retain exactly matched declared entry scripts; D management remains separately
+paid. Actual reached opportunities, cash, reservations, order/fill identities and
+loss controls stay native to each account. No account state or fill is copied.
+
+B now has a versioned SELECT/HOLD/UNKNOWN script, choice-only prompt and full native
+receipt. It cannot change any family's original geometry. Ordinary Degen/Swing
+selection preserves the original proposal, caps and deadline, with native family/
+session exits and no invented model target/horizon. Scope selection still requires
+fresh owned post-cost review and the original terms/source clocks/revision/deadline.
+The normal authenticated runtime, old adapter and unenrolled new adapters remain
+blocked. Existing cohort serialization and ordinary C/D behavior are preserved.
+
+An ordinary B test exposed a dispatch assumption that every full entry receipt has
+a model target protection record. Dispatch now recognizes only the explicit B
+shortlist policy, still rechecks the complete paid receipt, and rejects missing or
+changed stored receipts before an attempt. Known model charges survive rejection.
+No protection threshold, source clock or model deadline was relaxed.
+
+The portable comparison binds each owner/strategy/model configuration to the
+retained request and each B/C/D enrollment to its tape/script. It reconstructs
+native accounting and exact decimal differences versus A. All entry/management
+charges, execution fees and explicit allocations remain; unknown costs or unresolved
+exposure suppress paired net results while retaining known independent account
+results. Root-hash and native reconstruction detect altered reports/transplanted
+exports. Create-only failures preserve partial evidence. This is single-session
+fixture accounting, economically INCONCLUSIVE, with no benchmark/provider/host claim.
+
+Validation: **239 distinct installed checks passed on the final wheel**: 43 new
+shortlist/comparison cases and 196 compatibility cases. The new cases cover both
+Scope rights, ordinary Degen/Swing selection, lost/changed paid receipts, fixed
+geometry and ceilings, late/HOLD/missing/unknown/stale responses, matching and
+independence boundaries, portable tamper checks, interruption and unknown-cost
+isolation. Compatibility covers historical entry geometry/dispatch/restart/optional
+serialization, C/D response contracts, old tape/adapter rejection and native shared
+family/Scope management behavior. Final run times were 7.82, 484.01, 4.53 and
+68.03 seconds respectively; no overlapping cases or earlier checkpoints are added. Final proof and exact case IDs are in `../scope-comparison-proof/final-proof.json`;
+initial diagnostics and focused reruns are retained without double-counting. The
+first script test exposed a slot-pattern validation gap, fixed with explicit entry
+slot validation. The ordinary dispatch blocker above was reproduced and fixed;
+subsequent fixture assertions were corrected to respect omitted optional fields
+and the existing family-priority order of the Swing shortlist.
+
+All tests run serially against a noneditable wheel with copied tests outside the
+checkout, Python `-I`, warnings as errors and plugin autoload disabled. Final-wheel
+runs are `ordinary2`, `release`, `swing2` and `compatibility`; earlier wheel/diagnostic
+passes are excluded. Native evidence also verifies four distinct entry IDs and eight
+distinct fills. No authenticated provider/model/broker calls occurred.
+
+Wheel SHA-256:
+`ab2640fad8de16d955ed03bf6240b250cda244709247ede5ec50506ec4209b3f`.
+All 201 application/template files match source, wheel and installation. Ruff,
+dependency consistency and 367 local documentation targets pass. Proof includes logs,
+JUnit summaries, copied tests, final native journals/exports, `account-isolation.json`
+and source/wheel identity. Environment: `../scope-replay-env`; wheel:
+`../scope-comparison-wheels/`. Abandoned copies of this project's prior installed
+wheel were removed from the scratch environment; no dependency version changed.
+
+Next: continuous Scope watch/runtime inputs, then combined Scope/Swing carry and
+remaining family/mixed stock-options plumbing. Scope multi-session/benchmark
+comparison and final authentic data/model, host and visual acceptance remain open.
+Finish plumbing before final UI and authentic PAPER testing. Main, PR draft status,
+LIVE-disabled state and the deployed experiment remain unchanged.
+
+
 ## Native shared Scope C/D tape scheduling and accounting: 2026-10-20 UTC
 
 Resumed the retained uncommitted draft after the workspace connection failed.

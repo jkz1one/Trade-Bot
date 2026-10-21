@@ -12,7 +12,7 @@ now supplies a separate frozen enrollment, scheduler and fresh-input reader.
 and at most 100 unique original five-minute opportunity keys. Entry uses `degen:`;
 only D accepts `position:` management. Delay is explicit, bounded to 600 seconds,
 and synthetic input/output token counts are retained. B is not accepted by this
-contract; its Scope shortlist/comparison integration remains open.
+C/D contract; it has a [separate choice-only contract](OPTIONS_SCOPE_COMPARISON.md).
 
 `ScopeScriptedDecision` permits:
 
@@ -29,8 +29,8 @@ Unknown/extra fields, mixed roles, duplicate slots, authoritative quantity field
 C management and B scripts fail validation. `MatchedScopeScripts` requires C/D to
 declare exactly the same entry slots, selections, geometry, delays and usage.
 D may additionally declare management. This comparison is of declared scripts,
-not reached opportunities, owners, account state or actual results. A future
-comparison must separately bind cost/configuration policies and independent owners.
+not reached opportunities, owners, account state or actual results. The separate
+comparison wrapper binds cost/configuration policies and independent owners.
 
 ## Full requests and receipts
 
@@ -67,11 +67,20 @@ instances retain independent use/pending state.
 
 This contract is fixture evidence, not authentic model performance or billing.
 Native execution now requires the separate full tape enrollment. Individual C/D
-runs retain their own journal and complete costs; B and full A/B/C/D comparison
-remain open. Matching declarations alone do not establish comparable accounts,
+runs retain their own journal and complete costs; the separate comparison wrapper
+now supplies B and matched A/B/C/D accounting. Matching declarations alone do not establish comparable accounts,
 reached opportunities or economic results. The old replay adapter remains blocked.
 
 See [Scope trading replay](OPTIONS_SCOPE_TRADING_REPLAY.md),
 [shared Scope AI](OPTIONS_SCOPE_AI.md), [Scope position reasoning](OPTIONS_SCOPE_POSITION.md)
 and [the latest installed proof](SLICE2_STATUS.md). Main remains unchanged, PR #1
 draft, LIVE disabled and the deployed experiment frozen.
+
+## Independent Scope comparison continuation
+
+The [Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now adds explicitly
+enrolled choice-only B and matched independent one-session native replay/export.
+The historical runners and C/D contracts described above retain their original
+versions and rejection boundaries. The separate wrapper preserves unknown costs,
+all native fees/charges and inconclusive economic status. Continuous Scope runtime
+inputs, carry/family/mixed plumbing and authentic acceptance remain open.

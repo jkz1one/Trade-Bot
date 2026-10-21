@@ -115,3 +115,12 @@ observer attribution. Authenticated normalized collection, prospective enrollmen
 runtime/UI, independent retention and host acceptance remain open. Tests and wheel
 proof are recorded in [status](SLICE2_STATUS.md); the [source of truth](SOURCE_OF_TRUTH.md)
 owns the remaining delivery order. LIVE remains disabled.
+
+## Independent Scope comparison continuation
+
+The [Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now adds explicitly
+enrolled choice-only B and matched independent one-session native replay/export.
+The historical runners and C/D contracts described above retain their original
+versions and rejection boundaries. The separate wrapper preserves unknown costs,
+all native fees/charges and inconclusive economic status. Continuous Scope runtime
+inputs, carry/family/mixed plumbing and authentic acceptance remain open.

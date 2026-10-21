@@ -74,7 +74,10 @@ def configuration(db):
             from app.options.scope_replay_enrollment import validate_stored
 
             validate_stored(config)
-        elif "replay_model" in config:
+        elif (
+            "replay_model" in config
+            or model.entry_policy.scope_selection == "scope-fixed-shortlist-v1"
+        ):
             raise ExecutionBlocked("SHARED_SCOPE_AI_CONFIGURATION_REQUIRED")
         if "position_model" in config:
             from app.options.position_judgment import PositionModelConfiguration

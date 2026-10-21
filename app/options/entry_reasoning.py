@@ -31,7 +31,7 @@ MAX_PACKET_BYTES = 256 * 1024
 
 class EntryReasoningPolicy(OptionRecord):
     version: Literal["option-entry-reasoning-v1"] = "option-entry-reasoning-v1"
-    scope_selection: Literal["scope-fixed-plan-v1"] | None = Field(
+    scope_selection: Literal["scope-fixed-plan-v1", "scope-fixed-shortlist-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
     max_horizon_seconds: int = Field(gt=0, le=21600, strict=True)
@@ -239,7 +239,37 @@ class SharedScopeEntryPlan(EntryPlan):
         return self
 
 
+class ScopeShortlistPlan(SharedScopeEntryPlan):
+    """B's choice-only receipt; no family may acquire replacement geometry."""
+
+    version: Literal["shared-scope-shortlist-plan-v1"] = "shared-scope-shortlist-plan-v1"
+
+    @model_validator(mode="after")
+    def coherent(self):
+        if (
+            (self.action == "ENTER") != (self.candidate_id is not None)
+            or (self.action == "HOLD" and self.scope)
+            or any(
+                x is not None
+                for x in (
+                    self.condition,
+                    self.underlying_trigger,
+                    self.underlying_invalidation,
+                    self.underlying_target,
+                    self.horizon_seconds,
+                )
+            )
+            or not self.thesis.strip()
+            or not self.uncertainty.strip()
+            or len(set(self.evidence_ids)) != len(self.evidence_ids)
+        ):
+            raise ValueError("Shortlist selection cannot replace original trading terms")
+        return self
+
+
 def plan_class(policy):
+    if policy.scope_selection == "scope-fixed-shortlist-v1":
+        return ScopeShortlistPlan
     if policy.scope_selection is not None:
         return SharedScopeEntryPlan
     return CarryEntryPlan if policy.max_carry_horizon_seconds is not None else EntryPlan
@@ -250,7 +280,7 @@ class EntryReview(OptionRecord):
     outcome: Literal["HOLD", "REJECTED", "ELIGIBLE"]
     reasons: tuple[Name, ...]
     packet_hash: Digest
-    plan: EntryPlan | CarryEntryPlan | SharedScopeEntryPlan
+    plan: EntryPlan | CarryEntryPlan | SharedScopeEntryPlan | ScopeShortlistPlan
     proposal: OptionProposal | None = None
     admission: OptionAdmission | None = None
     exit_by: datetime | None = None
@@ -331,6 +361,32 @@ def review_entry_plan(packet, plan, *, quote, underlying, account, now):
 
 def _review(packet, plan, o, quote, underlying, account, now, result):
     c, p = o.candidate, packet.policy
+    if p.scope_selection == "scope-fixed-shortlist-v1":
+        ceiling = c.admission
+        limits = packet.limits.model_copy(
+            update={
+                "max_contracts": min(packet.limits.max_contracts, ceiling.quantity),
+                "max_entry_debit": min(packet.limits.max_entry_debit, ceiling.entry_debit),
+                "max_full_premium_loss": min(
+                    packet.limits.max_full_premium_loss, ceiling.full_premium_loss
+                ),
+            }
+        )
+        # The original proposal (including its debit cap and thesis) is immutable.
+        admission = admit_option(c.proposal, quote, underlying, account, limits, o.session, now=now)
+        if admission.outcome != "APPROVED":
+            return result("REJECTED", *admission.reasons)
+        if admission.limit_price > ceiling.limit_price:
+            return result("REJECTED", "ORIGINAL_PRICE_CEILING_EXCEEDED")
+        admission = admission.model_copy(
+            update={
+                "valid_until": min(admission.valid_until, ceiling.valid_until, packet.valid_until),
+            }
+        )
+        # No invented target or model horizon: native family/session protection owns exits.
+        return result(
+            "ELIGIBLE", "FIXED_SHORTLIST_SELECTED", proposal=c.proposal, admission=admission
+        )
     stop, target = plan.underlying_invalidation, plan.underlying_target
     assert stop is not None and target is not None and plan.horizon_seconds is not None
     call = c.instrument.contract.right == "CALL"

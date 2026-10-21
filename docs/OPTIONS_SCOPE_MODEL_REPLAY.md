@@ -1,4 +1,4 @@
-# Native Scope C/D tape replay
+# Native Scope B/C/D tape replay
 
 `ScopeModelReplay` and `run_scope_model_replay(request, absolute_new_directory)`
 connect the full shared Scope response contract to an independent native PAPER
@@ -6,7 +6,8 @@ owner. This is local fixture plumbing. It is not authentic model/data acceptance
 full A/B/C/D comparison or a runtime feed adapter.
 
 The request freezes the sealed Scope tape, watch instructions, owner and family
-loss policies, full entry policy, costs and C/D script. D additionally requires the
+loss policies, entry policy, costs and a role-specific B/C/D script.
+B uses the separate [choice-only contract](OPTIONS_SCOPE_COMPARISON.md); C/D use full entry reasoning. D additionally requires the
 full Scope position policy. Carry, absent costs, incomplete Scope enrollment and
 mismatched roles are rejected before output creation. The deterministic A tape/watch
 validation is reused as validation only; its model-off projection is never executed
@@ -14,7 +15,8 @@ or persisted. Each run creates its own journal, venue, cash and reservations.
 
 ## Explicit enrollment and scheduling
 
-The native coordinator accepts the exact `ScopeReplayModel` only with a
+The native coordinator accepts the exact `ScopeReplayModel` or B
+`ScopeShortlistModel` only with a
 `scope-native-tape-model-v1` enrollment binding tape, request and script hashes.
 It freezes this additional configuration in the new owner. The old adapter and
 unbound new adapter remain rejected. Existing serialized configurations do not gain
@@ -63,9 +65,18 @@ than a successful report. Output creation is exclusive; it never resumes or
 replaces an existing account. Native owner recovery remains responsible for
 interrupting pending slots without retry; the runner itself is create-only.
 
-Reports explicitly withhold comparison and economic conclusions. B shortlist
-integration and a matched independent A/B/C/D comparison/export wrapper remain
-next, followed by continuous Scope watch/runtime inputs and the remaining
+Reports explicitly withhold comparison and economic conclusions. B shortlist and
+matched independent A/B/C/D comparison/export now use the separate contract linked
+below. Next are continuous Scope watch/runtime inputs and the remaining
 carry/family/mixed stock-options plumbing. Final UI and authentic PAPER testing
 follow completion of that plumbing. LIVE stays disabled and the deployed
 experiment remains frozen.
+
+## Independent Scope comparison continuation
+
+The [Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now adds explicitly
+enrolled choice-only B and matched independent one-session native replay/export.
+The historical runners and C/D contracts described above retain their original
+versions and rejection boundaries. The separate wrapper preserves unknown costs,
+all native fees/charges and inconclusive economic status. Continuous Scope runtime
+inputs, carry/family/mixed plumbing and authentic acceptance remain open.
