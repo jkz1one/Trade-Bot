@@ -53,7 +53,7 @@ Tape-linked calls, arming, admission, invalidation and expiry run through each o
 actual revision and retain portable native receipts. The [deterministic Scope A
 baseline](docs/OPTIONS_SCOPE_TRADING_REPLAY.md) now connects those watches to native
 selection, later fills, protective exits and full-cost export. The [independent A/B/C/D comparison](docs/OPTIONS_SCOPE_COMPARISON.md) now adds
-choice-only B and matched full-cost native export; continuous runtime ingestion remains next. The [C/D response contract](docs/OPTIONS_SCOPE_REPLAY_MODEL.md)
+choice-only B and matched full-cost native export. [Continuous Scope runtime inputs](docs/OPTIONS_SCOPE_RUNTIME.md) now connect explicit watch packets, delivered post-cost refreshes and independent protection. The [C/D response contract](docs/OPTIONS_SCOPE_REPLAY_MODEL.md)
 now connects to explicitly enrolled [native C/D tape replay](docs/OPTIONS_SCOPE_MODEL_REPLAY.md),
 with delivered fresh observations, paid admission, original deadlines and full-cost export.
 Finish the remaining plumbing before final UI work and authentic PAPER testing.

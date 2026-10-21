@@ -162,3 +162,13 @@ pin and approved installation procedure are still required for host acceptance.
 This closes local installed-file reporting, not provider/model/host/visual or LIVE
 acceptance. Compare the reported identity with the intended release before a host
 review; a matching hash alone is not a permission to trade.
+
+
+## Explicit Scope runtime enrollment
+
+The separate [Scope runtime contract](OPTIONS_SCOPE_RUNTIME.md) now adds native
+watch actions, sequence-complete delivery receipts, nested-quote protection and
+fresh paid admission to a newly enrolled local runtime. WATCH/MARKET updates do not
+claim decision slots; interrupted actions are not retried. Legacy packet bytes stay
+unchanged and nested Scope in a legacy packet is rejected. This remains normalized
+fixture input, with all authentic acceptance and remaining strategy plumbing open.

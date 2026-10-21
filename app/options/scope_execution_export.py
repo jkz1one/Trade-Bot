@@ -36,6 +36,7 @@ SCHEMA = {
     "execution_option_scope_watches": "play_key session_date active_lock record_json",
     "execution_option_scope_watch_actions": "action_key request_hash result_json",
     "execution_option_scope_entries": "play_key client_id receipt_json",
+    "execution_option_scope_runtime_inputs": "sequence packet_hash packet_json accepted_at action_key status result_json",
 }
 MAX_BYTES = 128 * 1024 * 1024
 
@@ -69,6 +70,11 @@ def _report(db, now, data_cost, host_cost):
         raise ValueError("Native Scope export requires frozen enrollment")
     tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     scope = stored_scope(db, tables, limits, now, json.loads, owner_policy=policy)
+    runtime = {}
+    if "execution_option_scope_runtime_inputs" in tables:
+        from app.options.scope_runtime import stored_inputs
+
+        runtime["scope_runtime"] = stored_inputs(db, now)
     orders = db.execute("SELECT * FROM execution_orders ORDER BY rowid").fetchall()
     attrs = [order_attribution(db, r) for r in orders]
     buys = [OptionIntent.model_validate_json(r["intent_json"]) for r in orders]
@@ -162,6 +168,7 @@ def _report(db, now, data_cost, host_cost):
         "loss_control": risk.model_dump(mode="json"),
         "ledger": ledger.model_dump(mode="json"),
         "model_costs": costs,
+        **runtime,
         "execution_fees": str(ledger.fees_paid),
         "data_cost": str(data_cost) if data_cost is not None else None,
         "host_cost": str(host_cost) if host_cost is not None else None,

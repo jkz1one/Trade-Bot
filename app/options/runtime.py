@@ -5,11 +5,15 @@ import json
 import os
 import stat
 from datetime import datetime
+from typing import Annotated
+
+from pydantic import Field, TypeAdapter
 
 from app.execution.engine import ExecutionBlocked
 from app.options.coordinator import DegenCoordinator, DegenFrame
 from app.options.engine import fingerprint
-from app.options.runtime_models import RuntimePacket, RuntimePolicy
+from app.options.runtime_models import RuntimePacket, RuntimePolicy, ScopeRuntimePacket
+from app.options.scope_runtime import ScopeRuntimeInputs, enrollment, protection
 
 MAX_PACKET_BYTES = 256 * 1024
 
@@ -36,7 +40,13 @@ def read_private(path):
 
 
 def read_packet(path):
-    return RuntimePacket.model_validate_json(read_private(path))
+    raw = read_private(path)
+    value = json.loads(raw)
+    if isinstance(value, dict) and "version" not in value:
+        return RuntimePacket.model_validate_json(raw)
+    return TypeAdapter(
+        Annotated[RuntimePacket | ScopeRuntimePacket, Field(discriminator="version")]
+    ).validate_json(raw)
 
 
 class OptionRuntime:
@@ -47,6 +57,7 @@ class OptionRuntime:
             raise ValueError("One runtime per active owner")
         self.c = coordinator
         self.policy = RuntimePolicy.model_validate(policy.model_dump())
+        enrollment(self.c, self.policy)
         budget = self.policy.tick_seconds + self.c.engine.policy.process_timeout_seconds
         if budget >= min(
             self.policy.heartbeat_max_age_seconds,
@@ -99,6 +110,9 @@ class OptionRuntime:
                     (self.c.now().isoformat(),),
                 )
         self.c.engine._option_runtime = self
+        self.scope = ScopeRuntimeInputs(self) if self.policy.scope_inputs else None
+        if self.scope is not None and self.c.scope_policy.version == "shared-scope-entry-v1":
+            self.c.scope_refresh = self.scope.fresh
         if self.policy.operator_key_file is not None:
             from app.options.operator_inbox import CommandInbox
 
@@ -148,6 +162,8 @@ class OptionRuntime:
         packet, issue = None, None
         try:
             packet = read_packet(self.policy.feed_file)
+            if isinstance(packet, ScopeRuntimePacket) != (self.scope is not None):
+                raise ValueError("Packet and frozen runtime enrollment mismatch")
             with self.c.engine.journal.read() as db:
                 row = self._bound(db)
                 if (
@@ -166,6 +182,8 @@ class OptionRuntime:
                     )
                 ):
                     raise ValueError("Fixture feed identity, time or sequence mismatch")
+            if self.scope is not None:
+                self.scope.accept(packet, at)
         except (OSError, ValueError):
             packet, issue = None, "OPTION_RUNTIME_FEED_UNAVAILABLE"
         issue = issue or operator_issue
@@ -180,9 +198,11 @@ class OptionRuntime:
                     "UPDATE execution_option_runtime SET status='BLOCKED',reason=? WHERE id=1",
                     (issue,),
                 )
+        if self.scope is not None:
+            self.scope.expire()
         frame = packet.frame if packet else DegenFrame()
         # Feed failure never skips reconciliation/protection or invents market quotes.
-        result = await self.c.supervise(frame.quotes, frame.underlyings)
+        result = await self.c.supervise(*protection(frame))
         if result.get("reconciled") is False and result.get("issues") not in (
             ["OPTION_READ_SUPERSEDED"],
             ["OPTION_SUBMISSION_IN_PROGRESS"],
@@ -224,6 +244,12 @@ class OptionRuntime:
                         packet.recorded_at.isoformat(),
                     ),
                 )
+        if self.scope is not None and packet is not None:
+            self.scope.apply(packet, issue)
+            if packet.kind != "CYCLE":
+                return result
+        with self.c.engine.journal.write() as db:
+            self._bound(db)
             if window is None:
                 return result
             slot = int(self.c.now().timestamp()) // 300

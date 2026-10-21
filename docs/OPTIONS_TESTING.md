@@ -1,5 +1,12 @@
 # Offline options development checks
 
+`test_option_scope_runtime.py` exercises the [continuous Scope runtime](OPTIONS_SCOPE_RUNTIME.md),
+including explicit packet/enrollment boundaries, native watch arming, decision slots,
+actual fills, independent nested-quote protection, paid fresh admission and retained
+charges, interrupted/rejected actions, cutoff expiry and portable receipt validation.
+Run it serially with the legacy runtime/recovery and shared Scope suites using the
+installed-wheel isolation below.
+
 The common Scope tape suites are `test_option_scope_market_tape.py`,
 `test_option_scope_tape_boundaries.py` and `test_option_scope_tape_watch.py`; use the
 installed-wheel isolation below. They verify the [market-input and native-watch

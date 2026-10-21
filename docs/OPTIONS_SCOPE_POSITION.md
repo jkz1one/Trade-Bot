@@ -58,3 +58,13 @@ model receipts, delivered fresh post-cost admission, original deadlines, later f
 and native full-cost export. This does not complete independent A/B/C/D comparison;
 B and the matched comparison wrapper remain open. Existing comparison consumers
 still reject Scope tapes, and the old/unbound model adapters remain blocked.
+
+
+## Runtime continuation
+
+[Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) and
+[continuous Scope runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now have native fixture
+plumbing. Earlier open-work descriptions above are historical checkpoints. Combined
+Scope/Swing carry, remaining families and mixed stock/options ownership still precede
+final UI and authentic PAPER testing. Original paid terms, mandatory protection,
+full costs and all authentic acceptance gates remain unchanged.

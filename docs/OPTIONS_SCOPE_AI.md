@@ -145,3 +145,13 @@ This does not complete independent Scope A/B/C/D native replay/export. Existing
 comparison consumers explicitly reject Scope tapes until the full model, fresh
 owned admission, deadline, later-fill and all-cost contracts are connected. The
 shared Scope AI replay-adapter restriction remains in place.
+
+
+## Runtime continuation
+
+[Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) and
+[continuous Scope runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now have native fixture
+plumbing. Earlier open-work descriptions above are historical checkpoints. Combined
+Scope/Swing carry, remaining families and mixed stock/options ownership still precede
+final UI and authentic PAPER testing. Original paid terms, mandatory protection,
+full costs and all authentic acceptance gates remain unchanged.

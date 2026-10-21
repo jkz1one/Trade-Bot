@@ -30,6 +30,10 @@ def _save(path, settings):
         os.fsync(stream.fileno())
 
 
+async def _unbound_scope_refresh(_play):
+    raise ValueError("Scope runtime must bind its delivered input reader before use")
+
+
 def _coordinator(engine, settings, create, clock):
     return DegenCoordinator(
         engine,
@@ -41,6 +45,13 @@ def _coordinator(engine, settings, create, clock):
         entry_policy=settings.entry_policy,
         position_policy=settings.position_policy,
         swing_policy=settings.swing_policy,
+        scope_policy=settings.scope_policy,
+        scope_refresh=(
+            _unbound_scope_refresh
+            if settings.scope_policy is not None
+            and settings.scope_policy.version == "shared-scope-entry-v1"
+            else None
+        ),
         clock=clock,
     )
 

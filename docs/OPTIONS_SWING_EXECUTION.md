@@ -107,7 +107,9 @@ management, tamper rejection and legacy model contract identity.
 portable full-cost accounting. The research calendar suite covers holidays, DST,
 early closes and expiry boundaries reused by native carry construction.
 
-Remaining P7 work includes broader families, Scope/shared arbitration and mixed
-stock/options ownership. Authentic daily/catalyst/options feeds and model evidence,
+Remaining P7 work includes broader families, combined Scope/carry and mixed
+stock/options ownership. Shared Scope arbitration/AI, single-session A/B/C/D comparison
+and [continuous runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now have separate fixture
+integration. Authentic daily/catalyst/options feeds and model evidence,
 prospective full-period comparisons, host acceptance and the final UI/visual pass
 remain separate. Main, PR draft status, LIVE and the deployed experiment are unchanged.

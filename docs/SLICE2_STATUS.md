@@ -1,5 +1,78 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Continuous Scope watch/runtime input plumbing: 2026-10-21 UTC
+
+Fresh local/GitHub state matched `24025825bca7794bd09739f4e7d994843cdf4587`,
+tree `3ce4515ea77a138529d1b8ebe37d0a00938aa56d`, with a clean working tree.
+Main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 was open/draft.
+
+[Explicit Scope runtime enrollment](OPTIONS_SCOPE_RUNTIME.md) now connects the
+installed create/run path to the existing native watch/coordinator owner. Frozen
+settings bind family priorities, source/universe/quote capacity, loss policies and
+model-off or full entry/management contracts. Old packet serialization and missing-
+version defaults remain intact. Legacy packets reject nested Scope; Scope packets
+require their own explicit version/enrollment. Old and B replay adapters remain
+excluded from the continuous native runtime. Combined carry/Scope remains blocked.
+
+WATCH, MARKET and CYCLE receipts are distinct. Watch/market updates do not consume
+a five-minute entry/management slot. New packets require consecutive sequences;
+repeated identical packets do not repeat work. Missing sequence, foreign/future/
+conflicting evidence, changed original session/deadlines and reused action identities
+fence entry before the next awaited native snapshot. Exact common/nested quotes
+feed independent protection. Original unfilled-watch cutoffs expire during missing
+feeds and halts without inventing observations or changing submitted positions.
+
+The runtime persists delivery before suspension, then applies an explicit watch
+instruction at the actual current clock/revision after supervision. No external
+account revision, approval or fill is accepted. Durable rejection/interruption
+receipts prevent retries, including the process window after native watch commit
+but before transport receipt completion. Restart retains halt/recovery semantics.
+Full paid Scope review consumes only delivered, completed observations for the exact
+play. It preserves original terms, advancing source clocks, native post-cost
+admission and original deadlines. Known charges remain for rejected/late advice;
+unknown usage remains unknown. Protection continues during pending model work.
+
+Stored runtime summaries expose bounded receipt metadata without reading the feed.
+Optional native export retains complete Scope runtime packets/actions and verifies
+packet hashes plus exact native request/revision/receipt links. Existing exports
+without this enrollment keep their shape. Every entry/management charge, execution
+fee and explicit operating allocation still belongs to its independent native
+account. Unfinished exposure and unknown costs remain unresolved.
+
+Validation: **284 distinct installed checks passed on the final wheel**, including
+**31 new Scope runtime cases** and **253 compatibility cases**. Runs `final`,
+`compatibility` and `crash` took 88.61, 998.44 and 3.27 seconds respectively. The
+compatibility suite covers legacy runtime/operator recovery/release identity,
+shared Scope paid entry/position reasoning, deterministic arbitration, old tape
+boundaries and the full independent A/B/C/D comparison, including unknown-cost
+isolation. New cases cover both rights, complete watch/arming/entry/fill/deadline
+paths, explicit enrollment and transport rejection, source/session/sequence faults,
+delivered versus stale/late/missing post-cost input, paid charges, independent
+management-time protection, cutoff expiry and before/after-native-commit interruption.
+Portable runtime packet/request/receipt links are reconstructed and tamper checked.
+
+All runs use a noneditable installed wheel, copied external tests, Python `-I`,
+warnings as errors, disabled plugin autoload and serial native workers. Exact case
+IDs and phase receipts are in `../scope-runtime-proof/final-proof.json`; diagnostic
+runs and focused passes are excluded from the distinct count. The proof retains
+logs/XML, copied tests, native journals/exports, source snapshots and identity.
+Environment: `../scope-replay-env`; wheel directory: `../scope-runtime-wheels`.
+Wheel SHA-256: `fe8b0f3a64557b9e63430ff136d96555680fd0e4dd09f14e72c7d32bb187dcb0`.
+All 202 application/template files match source, wheel and installation. Ruff and
+dependency consistency pass; local Markdown link references were checked.
+
+Diagnostics initially
+caught the new table missing from the native journal reopen allowlist; that was
+fixed. A test fixture skipped its last required arming sample and correctly failed
+Scope admission; the sample was restored without relaxing native continuity.
+Another fixture used text instead of Decimal in a copied quote and was corrected
+under warnings-as-errors. Earlier diagnostic passes are not added to final totals.
+
+Next: combined Scope/Swing carry, remaining families and mixed stock/options
+ownership, plus Scope multi-session/benchmark comparison. Final UI and authentic
+PAPER testing remain after plumbing. No dependency version, deployment, authenticated
+provider/model/broker call, main merge or LIVE change occurred.
+
 ## Independent Scope A/B/C/D comparison and choice-only B: 2026-10-21 UTC
 
 Fresh GitHub/local state matched `cccf68072c8636039d0be32da9d781983ae0d491`,

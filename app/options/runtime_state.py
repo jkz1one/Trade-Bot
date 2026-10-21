@@ -40,7 +40,25 @@ def report(db, now):
     )
     from app.options.release_identity import stored_release
 
+    extra = {}
+    if policy.scope_inputs is not None:
+        extra["scope_inputs"] = {
+            "statuses": {
+                r[0]: r[1]
+                for r in db.execute(
+                    "SELECT status,COUNT(*) FROM execution_option_scope_runtime_inputs GROUP BY status"
+                )
+            },
+            "latest": [
+                dict(r)
+                for r in db.execute(
+                    "SELECT sequence,packet_hash,accepted_at,action_key,status "
+                    "FROM execution_option_scope_runtime_inputs ORDER BY sequence DESC LIMIT 20"
+                )
+            ],
+        }
     return {
+        **extra,
         "release": stored_release(db, row["generation"]),
         "status": row["status"],
         "freshness": freshness,

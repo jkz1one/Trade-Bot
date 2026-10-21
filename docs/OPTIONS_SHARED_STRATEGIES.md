@@ -274,8 +274,10 @@ protection, and provides carry-aware AI context and full-cost multi-session repl
 `SESSION_CLOSE` cohorts do not migrate. The explicit alternative is `BOUNDED_CARRY_V1`.
 
 This is PAPER fixture capability. Authentic daily/catalyst/option inputs,
-prospective overnight economics, broader families, shared Scope AI/runtime/tapes and
-mixed stock/options ownership remain separate P7 work. No exercise funding or
+prospective overnight economics, broader families, combined Scope/carry and
+mixed stock/options ownership remain separate P7 work. Shared Scope AI, single-session
+tapes/comparison and [continuous runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now have
+separate fixture integration. No exercise funding or
 continuous overnight observations are presumed. The native carry guide documents
 the explicit local holding adaptation and its remaining acceptance boundaries.
 
