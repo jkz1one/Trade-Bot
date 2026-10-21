@@ -141,6 +141,12 @@ class DegenCoordinator:
             if entry_policy is not None
             else None
         )
+        if (
+            engine.policy.loss_control is not None
+            and engine.policy.loss_control.entry_cost_attribution is not None
+            and (self.entry_policy is None or replay_model is not None)
+        ):
+            raise ValueError("Later-entry attribution requires native full-entry enrollment")
         if self.entry_policy is not None and (
             self.entry_policy.scope_selection == "scope-fixed-shortlist-v1"
         ) != (self.scope_replay is not None and replay_model.script.arm == "B"):

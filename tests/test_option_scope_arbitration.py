@@ -35,11 +35,13 @@ def shared(
     ai=False,
     coordinator_options=None,
     carry=False,
+    later_entry=False,
 ):
     path.mkdir(parents=True, exist_ok=True)
     ep = execution_policy() | {
         "scope_arbitration": "shared-scope-entry-v1" if ai else "shared-scope-selection-v1",
         "loss_control": NativeLossPolicy(
+            entry_cost_attribution="later-flat-entry-v1" if later_entry else None,
             max_consecutive_losses=2,
             cooldown_seconds=1800,
             families=tuple(

@@ -1,10 +1,45 @@
 """Exact strategy identity from stored selected candidates, never thesis/contract inference."""
 
 import json
+from contextvars import ContextVar
+from functools import wraps
 
 from app.options.engine import fingerprint
 from app.options.lifecycle import EntryLineage, OptionIntent
 from app.options.selection import SwingCandidate, parse_candidate
+
+_OUTCOME_SNAPSHOT = ContextVar("option_outcome_lineage_snapshot", default=None)
+
+
+def outcome_snapshot(function):
+    """Reuse exact lineage validation only inside one synchronous outcome read."""
+
+    @wraps(function)
+    def wrapped(db, *args, **kwargs):
+        value = (db, db.total_changes, {}) if db.in_transaction else None
+        token = _OUTCOME_SNAPSHOT.set(value)
+        try:
+            return function(db, *args, **kwargs)
+        finally:
+            _OUTCOME_SNAPSHOT.reset(token)
+
+    return wrapped
+
+
+def _snapshot_key(db, intent, approval):
+    snapshot = _OUTCOME_SNAPSHOT.get()
+    if (
+        snapshot is None
+        or snapshot[0] is not db
+        or not db.in_transaction
+        or snapshot[1] != db.total_changes
+        or type(intent) is not OptionIntent
+        or type(approval) is not dict
+    ):
+        return None
+    # Exact serialized arguments, not only the order ID. The caller's existing
+    # transaction binds all database reads; any write disables reuse immediately.
+    return snapshot[2], (intent.model_dump_json(), json.dumps(approval, sort_keys=True))
 
 
 def selected_lineage(db, source_key, instrument):
@@ -58,6 +93,16 @@ def selected_lineage(db, source_key, instrument):
 
 def verified_lineage(db, intent, approval):
     """Validate a frozen buy label. Historical unlabeled intents stay unlabeled."""
+    cached = _snapshot_key(db, intent, approval)
+    if cached is not None and cached[1] in cached[0]:
+        return cached[0][cached[1]]
+    result = _verified_lineage(db, intent, approval)
+    if cached is not None and _snapshot_key(db, intent, approval) is not None:
+        cached[0][cached[1]] = result
+    return result
+
+
+def _verified_lineage(db, intent, approval):
     from app.options.scope_arbitration import verify_entry
     from app.options.scope_execution import verify_native_intent
     from app.options.swing_execution import verify_binding

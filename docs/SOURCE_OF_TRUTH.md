@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.92. Adopted product direction and working delivery contract, 2026-10-21 UTC.
+Version 1.93. Adopted product direction and working delivery contract, 2026-10-21 UTC.
 [Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now connects
 choice-only B, matched independent native accounts and portable full-cost export.
 [Continuous Scope runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now connect explicit
@@ -9,8 +9,9 @@ independent protection. [Combined Scope/Swing carry](OPTIONS_SCOPE_CARRY.md) now
 binds explicit native owner, entry/management, runtime and stored export contracts.
 [Continuous Scope session comparison](OPTIONS_SCOPE_SERIES.md) now preserves four
 independent owners, explicit settlement, saved closing evidence, full costs and
-known-only SPY session endpoints. Native repeated-entry attribution enrollment,
-combined carry replay and remaining family/mixed
+known-only SPY session endpoints. [Native repeated-entry attribution](OPTIONS_NATIVE_ENTRY_ATTRIBUTION.md)
+now binds a separately frozen loss policy and post-close flat-account proof.
+Combined carry replay and remaining family/mixed
 plumbing precede final UI and authentic PAPER testing.
 [Shared Scope entry AI](OPTIONS_SCOPE_AI.md) now binds one paid Degen/Swing/Scope
 decision to native approval, fixed Scope terms, fresh post-cost admission and stored

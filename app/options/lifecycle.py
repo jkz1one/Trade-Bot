@@ -35,6 +35,9 @@ class FamilyLossPolicy(OptionRecord):
 
 class NativeLossPolicy(OptionRecord):
     version: Literal["native-position-loss-v1"] = "native-position-loss-v1"
+    entry_cost_attribution: Literal["later-flat-entry-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     max_consecutive_losses: int = Field(strict=True, ge=1, le=2)
     cooldown_seconds: int = Field(strict=True, ge=1800, le=86400)
     families: tuple[FamilyLossPolicy, ...] = Field(
@@ -107,6 +110,12 @@ class OptionExecutionPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def bounded(self):
+        if (
+            self.loss_control is not None
+            and self.loss_control.entry_cost_attribution is not None
+            and self.cost_policy is None
+        ):
+            raise ValueError("Later-entry attribution requires frozen model costs")
         if self.scope_carry is not None and (
             self.swing_carry is None or self.scope_arbitration is None
         ):

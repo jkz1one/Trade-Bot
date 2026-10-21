@@ -76,10 +76,9 @@ and unallocated diagnostics until it gains its own entry attribution. It cannot
 reopen the earlier trade's loss outcome while fresh paid admission is pending.
 Management, overlapping/unproven calls and all legacy cohorts retain their existing
 conservative behavior; unknown usage still blocks account-level completeness.
-The observed second-entry blocker is also relevant to existing continuous native
-Scope owners. A separately frozen native enrollment must adopt and verify this
-post-close proof before that repeated paid-entry path is declared complete; the
-series version does not silently change runtime cohorts.
+The separate [native repeated-entry policy](OPTIONS_NATIVE_ENTRY_ATTRIBUTION.md)
+now adopts this post-close proof for new full-entry owners. Neither enrollment
+silently changes existing runtime cohorts.
 
 SPY comparison requires actual complete real-time tape quotes at both session
 endpoints, using the existing five-second source/receipt rules. Missing/stale endpoint

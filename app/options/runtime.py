@@ -74,6 +74,7 @@ class OptionRuntime:
             sort_keys=True,
         )
         self.task = None
+        self._scope_tick = None
         self.running = False
         self.stop = None
         self.last_at = None
@@ -143,6 +144,24 @@ class OptionRuntime:
                 )
 
     async def tick(self):
+        loss = self.c.engine.policy.loss_control
+        if self.scope is None or loss is None or loss.entry_cost_attribution is None:
+            return await self._tick()
+        if self._scope_tick is not None and not self._scope_tick.done():
+            raise ExecutionBlocked("SCOPE_RUNTIME_TICK_ALREADY_ACTIVE")
+        completed = asyncio.get_running_loop().create_future()
+        self._scope_tick = completed
+        success = False
+        try:
+            result = await self._tick()
+            success = True
+            return result
+        finally:
+            # A canceled/failed protection tick never becomes fresh admission.
+            # Model cancellation must not cancel this independent completion.
+            completed.set_result(success)
+
+    async def _tick(self):
         if not self.running:
             raise ExecutionBlocked("OPTION_RUNTIME_NOT_RUNNING")
         if self.task is not None and self.task.done():

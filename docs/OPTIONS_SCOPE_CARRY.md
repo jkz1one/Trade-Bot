@@ -76,4 +76,8 @@ adapter nor choice-only B can be attached to this new owner. The separate
 accounts for session-close tapes. Combined carry series still requires full model
 enrollment and overnight comparison; this native enrollment does not broaden old tapes.
 Remaining family completion and mixed stock/options ownership also remain open.
+New full-entry carry owners can also enroll the separately frozen
+[native repeated-entry cost policy](OPTIONS_NATIVE_ENTRY_ATTRIBUTION.md). It keeps
+prior closed losses stable while later entry advice is pending and retains every
+account charge; existing carry cohorts are not migrated.
 UI and authentic PAPER acceptance follow the remaining plumbing.

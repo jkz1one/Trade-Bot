@@ -26,6 +26,7 @@ def ai_owner(
     mode="ENTER",
     position_policy=None,
     carry=False,
+    later_entry=False,
 ):
     state = {}
 
@@ -75,6 +76,7 @@ def ai_owner(
         ai=True,
         coordinator_options=options,
         carry=carry,
+        later_entry=later_entry,
     ) as owner:
         state["owner"] = owner
         c, _, times, _ = owner
@@ -134,7 +136,7 @@ def ai_owner(
                 plan=plan,
                 count=1000,
                 usage=UsageEvidence(
-                    request_id="fixture-paid",
+                    request_id="fixture-paid-" + request.packet.cycle_key,
                     model=request.configuration.costs.model,
                     input_tokens=1000,
                     output_tokens=100,

@@ -211,8 +211,7 @@ reasoning and worker, native Swing carry, Scope entry/management/runtime and fro
 comparison regressions. Native workers run serially. Count exact distinct test IDs
 on the final wheel; diagnostic passes and overlapping reruns are not extra checks.
 No dependency changes, deployment, authenticated provider/model calls or LIVE
-permission are part of this procedure. Native repeated-entry enrollment, combined
-carry replay and remaining family/mixed ownership still precede UI and authentic
+permission are part of this procedure. Combined carry replay and remaining family/mixed ownership still precede UI and authentic
 PAPER acceptance.
 
 ## Continuous Scope session comparison
@@ -224,6 +223,18 @@ accounts, explicit settlement, original protection, paid entry/management, cumul
 loss controls, unknown costs, saved boundaries, portable tamper rejection and known-only
 SPY endpoints. Include single-session Scope comparison/model/shortlist, native carry,
 legacy series and tape-boundary regressions. Run native workers serially; count only
-distinct completed case IDs on the final wheel. Native repeated-entry enrollment,
-combined carry replay and remaining family/mixed ownership are still separate
+distinct completed case IDs on the final wheel. Combined carry replay and remaining family/mixed ownership are still separate
 plumbing, before UI/authentic PAPER testing.
+
+## Native repeated-entry attribution
+
+Run `test_option_native_entry_attribution.py` and
+`test_option_native_entry_enrollment.py`, plus `test_option_outcome_snapshot.py`,
+against an isolated noneditable wheel.
+They cover separately frozen [native cost linkage](OPTIONS_NATIVE_ENTRY_ATTRIBUTION.md),
+pending and unknown costs, repeated Scope admission, both directions, combined
+carry, loss continuity, delivered runtime refresh, immutable reopen and tamper rejection.
+Include native outcome/loss, shared Scope AI, runtime and carry compatibility.
+Keep native runs serial and retain exact distinct case IDs; failed diagnostics
+and overlapping focused reruns are not extra proof. Stored series exports can
+also be reconstructed on the new wheel as separate artifact compatibility checks.

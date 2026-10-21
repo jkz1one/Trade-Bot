@@ -90,6 +90,12 @@ source clocks, the original terms, account revision, budgets and approval/model
 deadlines. A fresh packet grants no execution authority on its own. Late, rejected
 or unapplied advice retains every settled charge; missing usage stays unknown.
 
+New owners with `loss_control.entry_cost_attribution="later-flat-entry-v1"`
+also wait for the active protection tick to complete before paid Scope refresh.
+The original fresh-evidence deadline remains in force. Failed/canceled ticks
+cannot supply admission, and canceling the model refresh cannot cancel independent
+protection. Existing runtime cohorts retain their prior behavior and serialization.
+
 `execution_option_scope_runtime_inputs` retains packet hash/content, receipt time,
 action identity/status, exact native step, expected revision and result. The stored
 runtime report exposes bounded receipt summaries without reading the feed. Scope
@@ -104,7 +110,8 @@ See [testing](OPTIONS_TESTING.md) and [latest status](SLICE2_STATUS.md) for meas
 installed-wheel proof. Independent [Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md)
 is implemented for one session and [continuous session replay](OPTIONS_SCOPE_SERIES.md)
 now retains independent accounts across sessions. Its later-flat-entry attribution
-rule is bound to the new series contract; this runtime still needs explicit native
-enrollment and repeated-paid-entry proof. Combined native Scope/Swing carry has
+rule is bound to the new series contract. [Native repeated-entry attribution](OPTIONS_NATIVE_ENTRY_ATTRIBUTION.md)
+now supplies separate opt-in loss enrollment for new full-entry runtime owners.
+Combined native Scope/Swing carry has
 explicit enrollment, while combined carry replay, remaining families and mixed
 stock/options ownership remain ahead of final UI and authentic PAPER testing.

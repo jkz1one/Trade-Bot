@@ -80,6 +80,12 @@ class RuntimeSettings(OptionRecord):
             self.position_policy is not None and self.entry_policy is None
         ):
             raise ValueError("Management requires an explicitly configured full-entry cohort")
+        if (
+            self.execution.loss_control is not None
+            and self.execution.loss_control.entry_cost_attribution is not None
+            and self.entry_policy is None
+        ):
+            raise ValueError("Later-entry attribution requires native full-entry enrollment")
         if self.swing_policy is not None and model and self.entry_policy is None:
             raise ValueError("Shared AI families require full entry reasoning")
         if (self.scope_policy is not None) != (self.runtime.scope_inputs is not None) or (

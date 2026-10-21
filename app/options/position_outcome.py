@@ -8,6 +8,7 @@ from itertools import pairwise
 from app.options.accounting import apply_fill, apply_receipt
 from app.options.attribution import decision_attribution, order_attribution
 from app.options.engine import exact, fingerprint
+from app.options.entry_lineage import outcome_snapshot
 from app.options.lifecycle import (
     TERMINAL,
     OptionExecutionPolicy,
@@ -120,6 +121,7 @@ def _settlement_links(db, rows, receipts, policy):
 
 
 @exact
+@outcome_snapshot
 def native_position_outcome(db, entry_client_id, population_id):
     """Read within the caller's existing journal snapshot; never infer absent exit links.
 
@@ -278,7 +280,8 @@ def native_position_outcome(db, entry_client_id, population_id):
         reasons.append("POSITION_NOT_VERIFIABLY_CLOSED")
     closed_at = max([*exit_times, *(r.occurred_at for r in receipts)]) if closed else None
     if unallocated and (
-        closed_at is None or any(not _later_series_entry(db, c, closed_at) for c in unallocated)
+        closed_at is None
+        or any(not _later_entry_call(db, c, closed_at, policy) for c in unallocated)
     ):
         reasons.append("ACCOUNT_MODEL_COST_LINK_UNPROVEN")
     known_cost = sum((c.model_cost for c in calls if c.model_cost is not None), Decimal(0))
@@ -321,10 +324,10 @@ def native_position_outcome(db, entry_client_id, population_id):
     }
 
 
-def _later_series_entry(db, attribution, closed_at):
+def _later_entry_call(db, attribution, closed_at, policy):
     """A proven later flat-account entry call cannot belong to this closed holding.
 
-    Only the separately frozen series contract opts in. Keep the call visible as
+    Only explicitly frozen native loss or series contracts opt in. Keep the call visible as
     an unallocated account charge; never waive usage, cost or global admission gates.
     Legacy outcomes and uncertain/management/overlapping calls remain unchanged.
     """
@@ -337,10 +340,21 @@ def _later_series_entry(db, attribution, closed_at):
     if strategy is None:
         return False
     config = json.loads(strategy[0])
-    if config.get("scope_replay", {}).get("version") != "scope-native-series-model-v1":
-        return False
-    if type(validate_stored(config)) is not ScopeSeriesEnrollment:
-        return False
+    if policy.loss_control and policy.loss_control.entry_cost_attribution is not None:
+        if config.get("replay_model") is not None or config.get("entry_model") is None:
+            return False
+        enrolled = db.execute(
+            "SELECT policy_json FROM execution_option_loss_control WHERE id=1"
+        ).fetchone()
+        if enrolled is None or json.loads(enrolled[0]) != policy.loss_control.model_dump(
+            mode="json"
+        ):
+            raise ValueError("Frozen later-entry attribution policy mismatch")
+    else:
+        if config.get("scope_replay", {}).get("version") != "scope-native-series-model-v1":
+            return False
+        if type(validate_stored(config)) is not ScopeSeriesEnrollment:
+            return False
     row = db.execute(
         "SELECT result_json FROM execution_option_opportunities WHERE cycle_key=?",
         (attribution.source_key,),

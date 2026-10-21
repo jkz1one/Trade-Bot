@@ -1,5 +1,6 @@
 """Delivered Scope runtime evidence and durable, single-consumption watch instructions."""
 
+import asyncio
 import json
 from types import SimpleNamespace
 
@@ -202,6 +203,13 @@ class ScopeRuntimeInputs:
 
     async def fresh(self, play_key):
         """Only delivered evidence, never a reread that skips a pending watch action."""
+        pending = self.r._scope_tick
+        while pending is not None:
+            if not await asyncio.shield(pending):
+                raise ExecutionBlocked("SCOPE_RUNTIME_PROTECTION_TICK_INCOMPLETE")
+            if self.r._scope_tick is pending:
+                break
+            pending = self.r._scope_tick
         packet = self.latest
         if (
             packet is None

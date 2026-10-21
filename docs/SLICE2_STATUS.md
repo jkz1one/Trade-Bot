@@ -1,5 +1,78 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Native repeated-entry attribution plumbing: 2026-10-21 UTC
+
+The working branch and local HEAD started at
+`f9438f351f15941c3ca9af79ddfb4599601d4a9c`, tree
+`1d86de8eb95d17a4006ab71fdecc2d0e97046275`, with a clean working tree.
+Main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 remained open/draft.
+
+[Native repeated-entry attribution](OPTIONS_NATIVE_ENTRY_ATTRIBUTION.md) now adds
+explicit `later-flat-entry-v1` enrollment to the frozen native loss policy. New
+full-entry owners can keep an already closed trade's exact full-cost loss record
+while a later paid entry is pending. Complete typed request/call binding must
+prove a reconciled flat account captured after that close, with original packet
+and call clocks in order. Native stored loss policy and owner policy must match.
+This does not assign the later charge to the prior holding or omit it from account
+costs. HOLD/rejected advice remains charged; unknown usage remains unknown and
+keeps account-level net results incomplete. Management, overlapping/unproven calls
+and legacy cohorts retain their conservative behavior.
+
+Model-off/selection-only owners and replay adapters cannot acquire this native
+contract. The policy cannot be added or removed on reopen. Historical serialization
+is unchanged when it is omitted. Runtime settings carry the same frozen policy.
+Repeated Scope admission still requires delivered fresh observations, native
+account revision, original source clocks and approval deadlines. Two realized
+losses still produce the original account/family lock; no loss, reservation,
+fee, model charge, data/host allocation or protective deadline is reset.
+
+Validation: **189 distinct installed checks passed on the final wheel**,
+including **22 new cases**. This proof is separate from the preceding series
+wheel's 267 checks and is not added to that overlapping count. Exact case IDs and
+phase timings are in `../native-entry-proof/final-proof.json`. Native runs were
+serial, against a noneditable installed wheel and copied tests outside the checkout,
+with Python `-I`, warnings as errors and plugin autoload disabled. Coverage includes
+successive CALL/PUT Scope entries with/without combined carry, saved pending-call
+evidence, HOLD, unknown usage, corrupted linkage, frozen reopen, old behavior,
+continuous delivered-input runtime and portable native export. Native outcome/loss,
+shared Scope AI, Scope runtime and carry compatibility also passed.
+
+Diagnostics exposed stale nested fixture metadata and a reused fixture provider
+request ID. Fixtures were corrected; freshness and duplicate-charge gates remain
+unchanged. Other diagnostic runs retained explicit rejection/immutable-reopen
+assertions, a nonrepeating SQLite write/fence failure, and a stale runtime feed.
+No authority file was reset or repaired. These runs are excluded from final proof.
+
+The concurrent runtime test exposed repeated validation work that could starve
+protection processing or exhaust the original fresh-evidence deadline. Profiling
+identified eleven validations of the same two entry lineages in one outcome read.
+Successful lineage validation is now reused only for exact arguments inside that
+synchronous call and its existing unchanged transaction. Writes disable reuse;
+changed arguments, separate calls and separate owners are always revalidated.
+New explicitly enrolled Scope runtime owners also wait for protection-tick
+completion before paid refresh. Failed/canceled ticks cannot supply admission,
+and canceled model refresh cannot cancel protection. Legacy runtime cohorts keep
+their prior behavior. The two-entry runtime case passes with concurrent completion,
+original deadlines and complete delivered receipts. Focused cache/cancellation
+boundary checks also passed. All final checks ran again on the final wheel; no
+earlier-wheel diagnostic passes or overlapping cases are added to its count.
+No process, model, approval or protective deadline was extended.
+The prior complete four-account/two-session Scope bundle also reconstructed exactly
+on the new wheel; this artifact check is recorded separately, not counted as pytest.
+
+Environment: `../scope-replay-env`; proof: `../native-entry-proof/`; wheel directory:
+`../native-entry-wheels`; wheel SHA-256: `7bf7767e6361ac852a3c57f256b4550869d30e970cf849b633455780e1ac88fd`.
+All 204 application/template files matched source, wheel and installed
+bytes. Ruff, dependency consistency, local Markdown links and copied-test identity
+passed. Proof retains logs/XML, source, test copies, pending/native journals, export
+receipts and publication metadata.
+
+Next: combined Scope/carry replay, remaining family integration and one mixed
+stock/options owner. Final UI and authentic PAPER testing remain after plumbing.
+No authenticated provider/model/broker call, dependency change, deployment, merge
+or main modification occurred. LIVE remains disabled and the deployed experiment
+frozen. Settled strategy rules and blocked unsupported Scope plans remain unchanged.
+
 ## Continuous Scope session replay/accounting plumbing: 2026-10-21 UTC
 
 Fresh local/GitHub state matched `b7cbd51d27063144cbc5a5f4f7b6b91ead902e49`,

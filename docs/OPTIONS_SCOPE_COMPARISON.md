@@ -84,7 +84,8 @@ An exception preserves completed arm directories and `interrupted.json`, with no
 successful comparison report. Requests and exports retain explicit size bounds.
 
 Continuous Scope runtime and combined native carry are implemented separately.
-Next plumbing: native repeated-entry enrollment, combined carry replay and remaining
+Native repeated-entry attribution now has separate frozen loss enrollment.
+Next plumbing: combined carry replay and remaining
 family/mixed stock-options integration. Complete that plumbing
 before final UI and authentic PAPER testing. Main stays untouched, PR #1 remains
 draft, LIVE stays disabled and the deployed experiment remains frozen.
