@@ -236,8 +236,10 @@ attestation, complete unseen price path or profitability claim follows from a
 supplied seed and fixture replay.
 
 This closes unfilled T1 consumption for explicitly supplied original targets in
-this session-close adaptation. Automatic target derivation, broader Swing families,
-overnight ownership and authentic input/host/economic/visual acceptance remain open.
+this session-close adaptation. [Original target derivation](OPTIONS_SWING_TARGETS.md)
+now prepares a separately enrolled daily-breakout seed with fixed 1R/2R/3R objectives.
+Separate native carry is described below. Broader Swing families and authentic
+input/host/economic/visual acceptance remain open.
 The model's separate held-position targets do not rewrite this seed objective.
 
 ### Population creation

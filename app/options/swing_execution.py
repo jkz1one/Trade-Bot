@@ -89,6 +89,10 @@ def stored_terms(db, source_key):
     if scan is None:
         return None
     policy = SwingPolicy.model_validate(config["swing"])
+    if policy.target_derivation is not None or scan.seed.target_geometry is not None:
+        from app.options.swing_targets import verify_stored_targets
+
+        verify_stored_targets(db, scan, policy)
     if policy.carry is None:
         if scan.carry_terms is not None:
             raise ValueError("SWING_CARRY_NOT_ENROLLED")

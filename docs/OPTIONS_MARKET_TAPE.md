@@ -122,5 +122,16 @@ The [Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now adds explicitly
 enrolled choice-only B and matched independent one-session native replay/export.
 The historical runners and C/D contracts described above retain their original
 versions and rejection boundaries. The separate wrapper preserves unknown costs,
-all native fees/charges and inconclusive economic status. Continuous Scope runtime
-inputs, carry/family/mixed plumbing and authentic acceptance remain open.
+all native fees/charges and inconclusive economic status. Separate
+[continuous runtime inputs](OPTIONS_SCOPE_RUNTIME.md) and
+[combined carry series](OPTIONS_SCOPE_CARRY_SERIES.md) now have explicit native
+contracts. Remaining family/mixed plumbing and authentic acceptance remain open.
+
+## Derived original Swing targets
+
+New Swing tapes may explicitly freeze `target_derivation="original-risk-ladder-v1"`
+in the header's Swing policy. Every supplied seed must carry the matching original
+geometry proof from the [seed builder](OPTIONS_SWING_TARGETS.md). Tape validation
+rederives its fixed 1R/2R/3R objectives from the original inputs and rejects missing,
+altered or unenrolled proof before replay. Existing policies and seeds omit the new
+fields; historical tape serialization and behavior stay frozen.

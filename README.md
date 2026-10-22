@@ -103,6 +103,11 @@ a separate signed local halt/resume/revocation inbox with exact revision checks.
 is now recorded at each runtime start and shown from stored evidence in the observer.
 [Shared Degen/Swing candidate selection](docs/OPTIONS_SHARED_STRATEGIES.md) now lets
 a newly enrolled PAPER population use one AI, cash ledger and execution owner.
+New [original Swing target derivation](docs/OPTIONS_SWING_TARGETS.md) prepares frozen
+1R/2R/3R objectives from completed daily evidence and binds them through native
+admission, runtime retirement, carry and independent replay/export. Broader Swing
+families and mixed stock/options ownership remain open.
+
 The first Swing family uses locked next-session daily structure with current
 catalyst/chase checks and session-close protection. Native overnight carry is a
 separately enrolled adaptation linked above.

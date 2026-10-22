@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.94. Adopted product direction and working delivery contract, 2026-10-21 UTC.
+Version 1.95. Adopted product direction and working delivery contract, 2026-10-22 UTC.
 [Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now connects
 choice-only B, matched independent native accounts and portable full-cost export.
 [Continuous Scope runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now connect explicit
@@ -12,8 +12,10 @@ independent owners, explicit settlement, saved closing evidence, full costs and
 known-only SPY session endpoints. [Native repeated-entry attribution](OPTIONS_NATIVE_ENTRY_ATTRIBUTION.md)
 now binds a separately frozen loss policy and post-close flat-account proof.
 [Combined Scope/carry series](OPTIONS_SCOPE_CARRY_SERIES.md) now binds separate
-frozen replay/export, choice-only B and explicit overnight costs. Remaining family/mixed
-plumbing precedes final UI and authentic PAPER testing.
+frozen replay/export, choice-only B and explicit overnight costs.
+[Original Swing target derivation](OPTIONS_SWING_TARGETS.md) now binds the existing
+daily-breakout seed to fixed 1R/2R/3R objectives, native retirement and portable replay.
+Remaining broader-family/mixed plumbing precedes final UI and authentic PAPER testing.
 [Shared Scope entry AI](OPTIONS_SCOPE_AI.md) now binds one paid Degen/Swing/Scope
 decision to native approval, fixed Scope terms, fresh post-cost admission and stored
 trade-level cost attribution. The original expiry still caps dispatch; scale/final
@@ -111,7 +113,9 @@ A separate frozen observed-quote policy now retains between-bar original-stop
 breaches during supervision and native entry review, including independent replay.
 A separate frozen lifecycle now requires an original first target in the pre-open
 seed and retains unfilled target consumption through native review and replay.
-Automatic target derivation, broader families and authentic overnight acceptance remain open.
+[Original Swing target derivation](OPTIONS_SWING_TARGETS.md) now prepares the existing
+daily-breakout seed and binds its fixed objectives through native execution and replay.
+Broader families and authentic overnight acceptance remain open.
 [Shared-family replay/export](OPTIONS_SHARED_REPLAY.md) now runs frozen Degen/Swing
 tapes through independent A/B/C/D accounts across sessions, preserving every
 entry/management charge and the existing proposal/review/fill attribution.

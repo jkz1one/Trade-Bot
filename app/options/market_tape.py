@@ -102,6 +102,10 @@ def _validate_event(header, event):
         raise ValueError("Duplicate Swing seed identity")
     for item in frame.swing:
         seed, history = item.seed, item.seed.history
+        from app.options.swing_targets import target_issues
+
+        if target_issues(seed, header.swing):
+            raise ValueError("Swing target derivation must match frozen tape enrollment")
         if (
             history.symbol not in header.setup.symbols
             or seed.instrument.contract.underlying != history.symbol

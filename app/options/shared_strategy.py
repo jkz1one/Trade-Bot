@@ -130,6 +130,14 @@ def review_shared_entry(engine, db, key, proposal, quote, underlying, now):
         raise ExecutionBlocked("SWING_SCAN_REQUIRED")
     scan = scans[0]
     seed = scan.seed
+    if policy.target_derivation is not None or seed.target_geometry is not None:
+        from app.options.swing_targets import target_issues
+
+        if target_issues(seed, policy) or (
+            scan.observations[0].reference != seed.target_geometry.reference
+            or scan.observations[0].invalidation != seed.target_geometry.invalidation
+        ):
+            raise ExecutionBlocked("SWING_ORIGINAL_DERIVED_TARGETS_REQUIRED")
     if policy.unfilled_lifecycle is not None:
         from app.options.swing_lifecycle import load_terminal
 

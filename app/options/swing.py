@@ -20,6 +20,7 @@ from app.options.models import (
     UnderlyingQuote,
 )
 from app.options.selection import ContractMetadata, ContractReadPlan, OptionInventory, _plan
+from app.options.swing_target_models import SwingTargetGeometry
 
 
 class SwingPolicy(OptionRecord):
@@ -35,6 +36,9 @@ class SwingPolicy(OptionRecord):
     family_priority: tuple[Literal["DEGEN", "SWING"], Literal["DEGEN", "SWING"]]
     holding_policy: Literal["SESSION_CLOSE", "BOUNDED_CARRY_V1"] = "SESSION_CLOSE"
     carry: SwingCarryPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
+    target_derivation: Literal["original-risk-ladder-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     unfilled_lifecycle: (
         Literal["completed-invalidation-v1", "observed-invalidation-v2", "observed-lifecycle-v3"]
         | None
@@ -42,6 +46,11 @@ class SwingPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def coherent(self):
+        if (
+            self.target_derivation is not None
+            and self.unfilled_lifecycle != "observed-lifecycle-v3"
+        ):
+            raise ValueError("Derived Swing targets require original target retirement")
         if (self.holding_policy == "BOUNDED_CARRY_V1") != (self.carry is not None) or (
             self.carry is not None and self.unfilled_lifecycle != "observed-lifecycle-v3"
         ):
@@ -75,6 +84,9 @@ class SwingSeed(OptionRecord):
     instrument: OptionInstrument
     first_target: Money | None = Field(default=None, gt=0, exclude_if=lambda v: v is None)
     carry_exit_session: date | None = Field(default=None, exclude_if=lambda v: v is None)
+    target_geometry: SwingTargetGeometry | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
 
 
 class CatalystEvidence(Evidence):
@@ -146,7 +158,10 @@ def seed_issues(seed, policy, calendar, symbols):
     """Check actual exchange sessions, immutable past evidence and exact contract lock."""
     from zoneinfo import ZoneInfo
 
+    from app.options.swing_targets import target_issues
+
     issues = []
+    issues.extend(target_issues(seed, policy))
     h, c, cal = seed.history, seed.instrument.contract, calendar.calendar
     target = seed.target_session.isoformat()
     if not cal.is_session(target):

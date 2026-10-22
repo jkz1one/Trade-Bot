@@ -126,3 +126,8 @@ legacy enrollments. Those Scope replay/comparison versions still reject combined
 carry; the new separately frozen carry series binds complete model contracts and
 explicit overnight allocations. Remaining family/mixed plumbing
 precedes final UI and authentic PAPER acceptance.
+
+Separately enrolled [original target derivation](OPTIONS_SWING_TARGETS.md) can now
+prepare the existing daily-breakout seed before carry admission. Carry retains
+original T1, the complete seed hash and original protection deadlines. T2/T3 are
+stored objectives; this does not introduce automatic scale-out or expand families.

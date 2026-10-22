@@ -257,3 +257,14 @@ Use noneditable installed wheels, copied tests, Python `-I`, warnings as errors 
 serial native execution. Count only distinct successful cases on the final wheel;
 retain diagnostic failures separately. No authentic provider/model/broker call,
 dependency update or deployment is part of this procedure.
+
+## Derived Swing seed plumbing
+
+[Original Swing targets](OPTIONS_SWING_TARGETS.md) have dedicated installed checks
+in `test_option_swing_target_derivation.py` and `test_option_swing_target_replay.py`.
+They cover both directions, isolated decimal arithmetic, original source/session
+gates, native proof binding, runtime retirement, paid fresh rejection/unknown usage,
+actual fills/protection, restart and independent carry replay/export with full costs.
+Run with the same copied-test, noneditable-wheel, Python `-I`, warnings-as-errors
+procedure above. Native tests remain serial. Counts and diagnostic history are in
+[Slice 2 status](SLICE2_STATUS.md); repeated case IDs are counted once per final wheel.

@@ -1,5 +1,77 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Original Swing target derivation plumbing: 2026-10-22 UTC
+
+Fresh GitHub and local state matched a clean working branch at
+`76b0d88e8d3e06ef4ec616c1f397a76195bad1da`, tree
+`bb40cce49453478f5ad047009853ca471534cbfd`. PR #1 remained open/draft;
+main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`.
+
+[Original Swing target derivation](OPTIONS_SWING_TARGETS.md) now prepares the
+existing daily-breakout seed from completed pre-open evidence. New explicit
+`original-risk-ladder-v1` enrollment requires the existing original-T1 retirement
+lifecycle and freezes reference, invalidation, risk and all 1R/2R/3R objectives.
+Policy and original seed-input hashes bind the source bars/clocks, target session,
+contract and carry horizon. A bounded offline builder/API and create-only CLI retain
+a portable non-authoritative request/seed envelope. The current native source,
+calendar, contract, catalyst, quote, account, approval and deadline gates remain
+independently required. No target moves with a new quote, paid decision or restart.
+
+The fixed risk ladder follows SignalFlow commit
+`f9eaf2c1b5d13dca287ee7138126883065b00395`, setup engine blob
+`af7912bc06dbf0bee94c148cfe7fb1540842d85b`. This adaptation uses existing native
+daily-breakout geometry and conservative 12-decimal stop rounding with exact Decimal
+target arithmetic. It does not import floating-point rounding or silently expand
+the current three-to-twenty-bar setup into the source's full base detector.
+Nonpositive risk or any nonpositive objective rejects the seed. T2/T3 are retained
+objectives, not a new automatic scale-out policy or replacement full AI entry plan.
+
+Native seed locking/scanning, selected-entry review and common tapes reject missing,
+changed or unenrolled target proof. Native stored reconstruction also compares the
+full seed JSON to the selected scan, verifies its hash and rederives the objectives;
+keeping an old hash cannot conceal changed stored target fields. Original T1
+consumption remains terminal across recovery/restart. Actual entry/protective fills,
+carry deadlines, paid fresh rejection, unknown usage and all costs retain native
+ownership. Independent A/B/C/D carry replay/export preserves four accounts and the
+original seed geometry, full entry/management charges, execution fees and explicit
+session/gap allocations. Old optional fields remain absent and old cohorts stay frozen.
+
+Validation: **296 distinct installed checks passed on the final wheel**,
+including **46 new cases**. Exact case IDs, phase timings and unique totals are in
+`../swing-target-proof/final-proof.json`. Native tests ran serially from copied tests
+outside the checkout using a noneditable wheel, Python `-I`, warnings as errors and
+plugin autoload disabled. Coverage includes CALL/PUT arithmetic under changed
+ambient contexts, source/session/contract failures, original proof tampering,
+runtime T1 retirement, actual fills/protection, paid rejection/unknown costs,
+restart, four-account overnight management/accounting and rehashed detached export
+tampering, including modified seed JSON with an unchanged stored hash. Existing Swing lifecycle/quote/target/owner/execution and common Scope
+and legacy market-tape regressions passed. Retained legacy Scope and combined
+carry-series exports reconstruct exactly; those artifact checks are separate from
+the pytest count.
+
+Candidate-wheel diagnostics remain retained and excluded from the final count.
+They exposed a fixture target below the existing minimum reward-to-risk requirement,
+then an assertion hashing raw JSON instead of the canonical typed seed. Fixtures
+were corrected without relaxing either native contract. The export review also
+added full stored-seed target reconstruction before the final rebuild. Candidate
+and overlapping case counts are not added to final-wheel totals.
+
+Final wheel SHA-256: `371535eea65fe9924c6f1762307b3fa6cc000cb83c0badaa2eda44611aa111bc`.
+All 208 application/template files match source, wheel and installed bytes. Proof,
+source/test snapshots and diagnostic receipts: `../swing-target-proof/`; wheels:
+`../swing-target-wheels/`; environment: `../scope-replay-env/`. Ruff, dependency
+consistency, copied-test identity, diff whitespace and local Markdown links passed.
+
+Next plumbing: remaining supported Swing families (daily MA pullback, full daily
+base breakout/breakdown and higher-timeframe level break/retest), then mixed
+stock/options ownership and remaining family integration. Use the pinned source
+contracts and preserve independent research accounting; do not reopen settled
+strategy decisions. Final UI/visual and authentic provider/model/host/economic/PAPER
+acceptance remain open after plumbing. LIVE is disabled, deployment frozen, PR #1
+draft and main untouched. No dependency changes, authenticated provider/model/broker
+calls, deployment or merge were introduced.
+
+
 ## Combined Scope/Swing carry replay plumbing: 2026-10-21 UTC
 
 The working branch and local HEAD started clean at
