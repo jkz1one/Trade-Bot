@@ -319,3 +319,12 @@ legacy enrollments. Those original replay/comparison adapters still reject combi
 carry; the separate [combined carry series](OPTIONS_SCOPE_CARRY_SERIES.md) now binds
 complete independent replay/export, original deadlines and explicit overnight costs.
 Remaining family/mixed plumbing precedes final UI and authentic PAPER acceptance.
+
+## Daily MA variants
+
+[Daily MA pullbacks](OPTIONS_SWING_MA.md) now add explicitly enrolled 8 EMA,
+21 EMA and 50 SMA variants, each retaining its own native setup identity within
+SWING. Original completed evidence and targets flow through the same selection,
+execution, protection, runtime and independent carry/export paths. This enrollment
+still locks one seed per symbol/session. Concurrent Swing-family enumeration and
+selection, higher-timeframe levels and mixed stock/options ownership remain open.

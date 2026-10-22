@@ -12,21 +12,28 @@ D = Decimal
 
 def input_issues(seed, policy, calendar):
     daily, hourly = seed.history, seed.hourly_history
-    enrolled = policy.daily_base is not None
+    family = policy.ma_pullback or policy.daily_base
+    if policy.ma_pullback is not None:
+        if seed.ma_period not in policy.ma_pullback.periods:
+            return ("SWING_MA_VARIANT_ENROLLMENT_REQUIRED",)
+    elif seed.ma_period is not None or getattr(daily, "version", None) == "swing-ma-daily-v1":
+        return ("SWING_MA_ENROLLMENT_REQUIRED",)
+    enrolled = family is not None
     if not enrolled:
         return (
             ("SWING_BASE_ENROLLMENT_REQUIRED",)
             if (hourly is not None or getattr(daily, "version", None) is not None)
             else ()
         )
-    if getattr(daily, "version", None) != "swing-base-daily-v1" or hourly is None:
+    version = "swing-ma-daily-v1" if policy.ma_pullback is not None else "swing-base-daily-v1"
+    if getattr(daily, "version", None) != version or hourly is None:
         return ("SWING_BASE_COMPLETED_DAILY_AND_HOURLY_REQUIRED",)
     if (
         hourly.symbol != daily.symbol
-        or hourly.source != policy.daily_base.hourly_source
+        or hourly.source != family.hourly_source
         or not hourly.complete
         or hourly.entitlement != "REALTIME"
-        or len(hourly.bars) != policy.daily_base.hourly_lookback
+        or len(hourly.bars) != family.hourly_lookback
         or not daily.bars[-1].closes_at <= hourly.source_at <= hourly.received_at <= seed.created_at
     ):
         return ("SWING_BASE_HOURLY_BINDING_OR_COVERAGE",)

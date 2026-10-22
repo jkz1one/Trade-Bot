@@ -21,6 +21,7 @@ from app.options.models import (
 )
 from app.options.selection import ContractMetadata, ContractReadPlan, OptionInventory, _plan
 from app.options.swing_base_models import SwingBaseEvidence, SwingBasePolicy, SwingFamily
+from app.options.swing_ma_models import MA_FAMILIES, MAPeriod, SwingMAEvidence, SwingMAPolicy
 from app.options.swing_target_models import SwingTargetGeometry
 
 
@@ -30,6 +31,7 @@ class SwingPolicy(OptionRecord):
     catalyst_source: Name
     daily_lookback: int = Field(ge=3, le=260, strict=True)
     daily_base: SwingBasePolicy | None = Field(default=None, exclude_if=lambda v: v is None)
+    ma_pullback: SwingMAPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
     minimum_dte: int = Field(ge=1, le=60, strict=True)
     maximum_dte: int = Field(ge=1, le=90, strict=True)
     maximum_chase_fraction: Money = Field(gt=0, le=Decimal(".1"))
@@ -48,7 +50,14 @@ class SwingPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def coherent(self):
-        if self.daily_base is None:
+        if self.daily_base is not None and self.ma_pullback is not None:
+            raise ValueError("Separate frozen base and MA enrollment required")
+        if self.ma_pullback is not None:
+            if self.daily_lookback < 56 or self.target_derivation != "original-risk-ladder-v1":
+                raise ValueError(
+                    "MA pullback requires original targets and 56 completed daily bars"
+                )
+        elif self.daily_base is None:
             if self.daily_lookback > 20:
                 raise ValueError("Legacy Swing lookback remains bounded to twenty sessions")
         elif self.daily_lookback < 55 or self.target_derivation != "original-risk-ladder-v1":
@@ -88,6 +97,11 @@ class SwingBaseHistory(SwingHistory):
     bars: tuple[SwingDailyBar, ...] = Field(min_length=55, max_length=260)
 
 
+class SwingMAHistory(SwingHistory):
+    version: Literal["swing-ma-daily-v1"]
+    bars: tuple[SwingDailyBar, ...] = Field(min_length=56, max_length=260)
+
+
 class SwingHourlyHistory(Evidence):
     version: Literal["swing-base-hourly-v1"] = "swing-base-hourly-v1"
     symbol: Symbol
@@ -101,7 +115,8 @@ class SwingSeed(OptionRecord):
     version: Literal["swing-locked-seed-v1"] = "swing-locked-seed-v1"
     created_at: datetime
     target_session: date
-    history: SwingBaseHistory | SwingHistory
+    history: SwingMAHistory | SwingBaseHistory | SwingHistory
+    ma_period: MAPeriod | None = Field(default=None, exclude_if=lambda v: v is None)
     hourly_history: SwingHourlyHistory | None = Field(default=None, exclude_if=lambda v: v is None)
     instrument: OptionInstrument
     first_target: Money | None = Field(default=None, gt=0, exclude_if=lambda v: v is None)
@@ -169,6 +184,7 @@ class SwingScan(OptionRecord):
     last_close: Money | None
     seed: SwingSeed
     base_evidence: SwingBaseEvidence | None = Field(default=None, exclude_if=lambda v: v is None)
+    ma_evidence: SwingMAEvidence | None = Field(default=None, exclude_if=lambda v: v is None)
     catalyst: CatalystEvidence
     holding_policy: Literal["SESSION_CLOSE", "BOUNDED_CARRY_V1"] = "SESSION_CLOSE"
     carry_terms: SwingCarryTerms | None = Field(default=None, exclude_if=lambda v: v is None)
@@ -291,8 +307,18 @@ def scan_swing(item, policy, intraday, history, calendar, symbols, *, now, recei
             else daily[-1].high * (1 + policy.stop_buffer_fraction)
         )
         reasons = list(issues)
-        base = None
-        if policy.daily_base is not None:
+        base = ma = None
+        if policy.ma_pullback is not None:
+            from app.options.swing_ma import evaluate_ma
+
+            try:
+                ma = evaluate_ma(seed)
+                reference, stop = ma.reference, ma.invalidation
+                reasons.extend(ma.reasons)
+            except (ValueError, ArithmeticError):
+                issues.append("SWING_MA_EVIDENCE_UNAVAILABLE")
+                reasons.append("SWING_MA_EVIDENCE_UNAVAILABLE")
+        elif policy.daily_base is not None:
             from app.options.swing_base import evaluate_base
 
             try:
@@ -322,12 +348,15 @@ def scan_swing(item, policy, intraday, history, calendar, symbols, *, now, recei
             last_close=intraday.last_close,
             seed=seed,
             base_evidence=base,
+            ma_evidence=ma,
             catalyst=catalyst,
             holding_policy=policy.holding_policy,
             carry_terms=carry_terms,
             observations=(
                 SwingObservation(
-                    family="SWING_DAILY_BASE"
+                    family=MA_FAMILIES[seed.ma_period]
+                    if policy.ma_pullback is not None and seed.ma_period in MA_FAMILIES
+                    else "SWING_DAILY_BASE"
                     if policy.daily_base is not None
                     else "SWING_DAILY_BREAKOUT",
                     right=right,

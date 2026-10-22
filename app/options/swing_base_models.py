@@ -6,8 +6,20 @@ from pydantic import Field
 
 from app.options.models import Money, Name, OptionRecord
 
-SwingFamily = Literal["SWING_DAILY_BREAKOUT", "SWING_DAILY_BASE"]
-SWING_FAMILIES = ("SWING_DAILY_BREAKOUT", "SWING_DAILY_BASE")
+SwingFamily = Literal[
+    "SWING_DAILY_BREAKOUT",
+    "SWING_DAILY_BASE",
+    "SWING_DAILY_8_EMA",
+    "SWING_DAILY_21_EMA",
+    "SWING_DAILY_50_SMA",
+]
+SWING_FAMILIES = (
+    "SWING_DAILY_BREAKOUT",
+    "SWING_DAILY_BASE",
+    "SWING_DAILY_8_EMA",
+    "SWING_DAILY_21_EMA",
+    "SWING_DAILY_50_SMA",
+)
 
 
 class SwingBasePolicy(OptionRecord):

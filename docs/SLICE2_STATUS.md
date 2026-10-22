@@ -1,5 +1,73 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Native daily MA-pullback plumbing: 2026-10-21 America/New_York
+
+Fresh GitHub and local state matched clean branch HEAD
+`3b19be3bbeca5cb2f81909134d373996b116ca32`, tree
+`7dd8d87e9f6655e1f94719214895b14ecacee994`. PR #1 remained open/draft;
+main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`.
+
+[Native daily MA pullbacks](OPTIONS_SWING_MA.md) now enroll all three approved
+variants: 8 EMA, 21 EMA and 50 SMA. Each seed locks its original variant, complete
+daily/hourly source evidence, reference/stop and fixed 1R/2R/3R objectives. Native
+selection retains its exact setup identity within SWING and uses the existing
+account, paid model slot, reservations, approval, fills, management and loss guards.
+Research A/B/C/D accounts remain independent; no balances or budgets are shared.
+
+Rules follow pinned SignalFlow commit
+`f9eaf2c1b5d13dca287ee7138126883065b00395`, setup engine blob
+`af7912bc06dbf0bee94c148cfe7fb1540842d85b` (local source blob reverified).
+Daily regime, prior MA trend/slope, current test/hold and directional confirmation
+are reproduced with exact Decimal arithmetic. Source volume, repeat-test and hourly
+opposition diagnostics remain diagnostics, not new mandatory strategy filters.
+Neutral candle tags alone do not confirm. Original stop geometry uses the signal
+extreme and MA/ATR buffer, with native conservative 12-decimal rounding. No source
+score, fabricated confluence, guessed unavailable regime or current-price target
+replacement grants authority.
+
+New `swing-ma-daily-v1` history requires 56–260 completed consecutive exchange
+sessions. Existing hourly wire evidence is reused with the frozen source and actual
+open-anchored intervals. Explicit MA enrollment, allowed variant, original source
+clocks, original target hash and native post-cost checks remain required. Common
+tapes reject unsupported/foreign/future/missing inputs; native stored reconstruction
+rederives setup/diagnostics and rejects rehashed family or enrollment substitution.
+Original stop/T1 retirement survives runtime delivery/restart. Mandatory native exits,
+paid rejected attempts, unknown usage and independent account accounting remain intact.
+
+Validation: **333 distinct installed checks passed, including 103 new cases**,
+on wheel SHA-256
+`d4ebaff5f39d5d129cf747c626e66a6bf486ef744bb640f1ba2905c5fcad283f`.
+The final wheel passed 84 MA unit/native/runtime cases and 19 common-tape/independent
+carry-export cases, plus 230 existing base, original-target, shared-family,
+quote lifecycle, lineage, Scope arbitration, Degen and frozen-model-contract cases.
+Each MA variant ran through all four independent carry accounts with actual fills,
+paid reopening management, model/management charges, execution fees and explicit
+session/gap allocations. Four retained pre-MA exports reconstruct exactly; artifact
+checks are separate from pytest counts. Native checks ran serially from copied tests
+outside the checkout using a noneditable wheel, Python `-I`, warnings as errors and
+plugin autoload disabled. Exact unique case IDs/times are in
+`../swing-ma-proof/final-proof.json`; overlapping diagnostic runs are excluded.
+
+Diagnostic failures were fixture-only: converting a carry policy temporarily left
+a long lookback without its family enrollment, and an assertion guessed a new hourly
+wire version instead of the deliberately reused original contract. Both fixtures
+were corrected without relaxing production rules. All 212 application/template
+files match source, wheel and installed bytes. Changed-file Ruff/format, dependency
+consistency, copied-test identity, local Markdown links and whitespace checks passed.
+A whole-repository lint probe also reported pre-existing unrelated issues; they were
+not modified or represented as passing. Proof/source/test/publication receipts:
+`../swing-ma-proof/`; wheel: `../swing-ma-wheels/`; environment: `../scope-replay-env/`.
+
+Next plumbing: higher-timeframe level break/retest families, concurrent Swing-family
+enumeration/selection, then mixed stock/options ownership with full runtime/replay/
+export integration. This MA enrollment still locks one original seed per symbol/
+session and is separate from the base enrollment; it does not claim that joint
+family integration is finished. Final UI/visual and authentic provider/model/host/
+economic/PAPER acceptance follow plumbing. LIVE disabled, deployment frozen, PR #1
+draft and main untouched. No dependencies, authenticated provider/model/broker calls,
+deployment or merge were introduced.
+
+
 ## Native daily-base family plumbing: 2026-10-21 America/New_York
 
 Fresh GitHub and local state matched clean branch HEAD

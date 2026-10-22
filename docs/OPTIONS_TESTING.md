@@ -278,3 +278,13 @@ original-stop/T1 retirement, restart and runtime delivery.
 carry accounts, all charges/fees/allocations and rehashed detached export tampering.
 Use the same isolated installed-wheel procedure; counts and diagnostics remain in
 [status](SLICE2_STATUS.md). [Family contract](OPTIONS_SWING_BASE.md).
+
+## Daily MA pullback plumbing
+
+`test_option_swing_ma.py` covers all three [MA variants](OPTIONS_SWING_MA.md),
+independent rational-average/stop checks, source rule blockers, enrollment/clocks,
+CALL/PUT native fills, paid fresh rejections, unknown costs, runtime and restart.
+`test_option_swing_ma_replay.py` checks common-tape rejection and independent
+A/B/C/D carry/export for each variant, including stored evidence substitution.
+Run alongside base, original-target, shared-family and frozen-model-contract
+regressions using the noneditable installed-wheel procedure above.

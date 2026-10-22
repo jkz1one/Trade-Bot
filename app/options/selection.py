@@ -239,6 +239,9 @@ def admit_candidates(scan, plan, quotes, underlying, account, limits, session, *
                     if candidate_type is DegenCandidate
                     else "Swing daily base breakout/breakdown: locked original targets and native protection"
                     if setup.family == "SWING_DAILY_BASE"
+                    else f"Swing {setup.family}: original daily MA pullback, locked targets and native protection"
+                    if setup.family
+                    in {"SWING_DAILY_8_EMA", "SWING_DAILY_21_EMA", "SWING_DAILY_50_SMA"}
                     else "Swing daily breakout: locked next-session contract; session-close protection"
                 ),
             )

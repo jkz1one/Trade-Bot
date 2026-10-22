@@ -105,8 +105,11 @@ is now recorded at each runtime start and shown from stored evidence in the obse
 a newly enrolled PAPER population use one AI, cash ledger and execution owner.
 New [original Swing target derivation](docs/OPTIONS_SWING_TARGETS.md) prepares frozen
 1R/2R/3R objectives from completed daily evidence and binds them through native
-admission, runtime retirement, carry and independent replay/export. Swing MA-pullback,
-higher-timeframe level families and mixed stock/options ownership remain open.
+admission, runtime retirement, carry and independent replay/export.
+[Daily MA pullbacks](docs/OPTIONS_SWING_MA.md) now connect original 8 EMA, 21 EMA
+and 50 SMA evidence to native execution, runtime and independent carry/export.
+Higher-timeframe levels, concurrent Swing-family selection and mixed stock/options
+ownership remain open.
 New [daily base breakout/breakdown](docs/OPTIONS_SWING_BASE.md) connects frozen daily/hourly
 evidence and original targets to the same native owner, carry and independent exports.
 
