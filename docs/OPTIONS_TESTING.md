@@ -309,3 +309,13 @@ tape boundaries, prefix diagnostics, independent A/B/C/D carry and full-cost exp
 with rehashed original-source/child/policy/selection tampering. Preserve serial
 native execution, isolated noneditable wheels, copied tests, Python `-I` and warnings
 as errors. Count distinct completed cases only on the final wheel.
+
+## Mixed cash and admission boundary
+
+Run `test_mixed_accounting.py` and `test_mixed_admission.py` against the isolated
+installed wheel with copied tests. The [mixed contract](MIXED_CASH_HISTORY.md) covers
+one original balance, exact share/option fills, immutable original terms, unknown
+costs, reservations and order-free admission. Its actual native Scope/Swing
+projection tests preserve the original option positions. Run native option
+execution/admission/fill/settlement/Scope/carry regressions alongside it. These
+checks do not establish mixed native execution, runtime or four-arm replay.

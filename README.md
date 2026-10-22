@@ -112,7 +112,10 @@ and 50 SMA evidence to native execution, runtime and independent carry/export.
 week/month evidence and original break/retest geometry through the native owner.
 [Concurrent Swing-family batches](docs/OPTIONS_SWING_BATCH.md) now bind complete original
 sources, exact family selection, runtime and independent native carry/export.
-Mixed stock/options ownership and its runtime/accounting integration remain open.
+[Shared stock/options cash history and admission](docs/MIXED_CASH_HISTORY.md) now
+provide one accounting projection and deterministic stock admission envelope.
+Native mixed ownership, candidate/model integration, runtime and A/B/C/D replay
+remain open; the linked document lists all remaining plumbing.
 New [daily base breakout/breakdown](docs/OPTIONS_SWING_BASE.md) connects frozen daily/hourly
 evidence and original targets to the same native owner, carry and independent exports.
 

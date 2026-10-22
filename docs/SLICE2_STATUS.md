@@ -1,5 +1,80 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Mixed cash history and order-free admission: 2026-10-22 America/New_York
+
+Fresh GitHub/local state began at clean HEAD
+`35ac9d415ce2c5b13619d5074697d85e1a33e4d7`, tree
+`da51f021c2c0f9344cbdaea2e6e34c1720ce3096`. PR #1 was open/draft;
+main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`.
+
+[Shared mixed cash history/admission](MIXED_CASH_HISTORY.md) now supplies the common
+accounting boundary needed by the remaining native owner. One frozen original
+capital, account, population and venue reconstruct stock and option fills and
+settlement in the same cash/settled-cash/fee/P&L sequence. Stock holdings are genuine
+long US-listed equities/ETFs, with exact frozen share increments, original terms,
+source clocks/validity deadlines and FIFO lots. Option holdings retain original
+Scope/Swing target, premium, time, fill-reference and carry terms through existing
+native accounting on the current common balance. No second capital is introduced.
+
+Complete fill identity, attempt/original deadline, sequence, quantity, debit,
+source quote, observed liquidity, tick/slippage and fee checks reject changed or
+unsupported evidence. A held stock blocks options and a held option blocks stocks.
+Partial fills retain original terms; an entry cannot resume after an exit starts.
+Stock proceeds remain unsettled pending explicit receipts. Physical exercise is
+not a stock-entry path. An unresolved order retains a shared reservation even after
+approval expiry, with actual paid debit subtracted once and exit fees reserved.
+A pending sale cannot exceed the owned remainder. Equivalent decimal formatting
+and changed receipt timestamps cannot recycle stock source liquidity.
+
+All supplied model charges, including rejected entry calls, and explicit DATA/HOST/
+OPERATING allocations reduce the common economic envelope. Absent calendar-date
+allocations and unresolved usage remain unknown, suppress net/loss-budget results
+and block entry. Later usage resolution retains the original unknown receipt.
+Immutable prefix validation rejects changed capital/account/venue/policy, rewritten
+fills/costs and silently dropped unresolved reservations. Terminal evidence remains
+a native-owner obligation, not a model-controlled cancellation facility.
+
+Stock admission is deterministic and order-free. It sizes from common settled
+cash, full-loss headroom, fees and exposure, preserving original geometry and
+source/session/freshness deadlines. The existing option governor receives the same
+account and its existing equity-holding discriminator. Both paths default to
+unreconciled. Native reconciliation remains an explicit trusted-owner assertion;
+these pure helpers grant no dispatch rights. Close admission stays independent of
+entry halts, entry cutoff and unknown/exhausted economic budgets while requiring
+fresh exact ownership, quotes, executable size and fee-paying liquidity.
+
+Validation: **454 distinct final-wheel installed checks**, including **119 new
+cases** and **335 native regressions**. Final wheel SHA-256:
+`ccc0cd1df231836333989e3a4fe8183498c94157eef523ff6ca60574bc6d2a61`.
+The new checks include actual native option, Scope and Swing carry projection;
+stock/options/stock cash continuity; partial fills, settlement, reservations,
+source/receipt/deadline tampering, fractional shares, costs and common admission.
+Four independently bound history projections retain separate cash/costs; this is
+not native four-arm mixed replay acceptance. Regressions cover option admission,
+native execution, fill-underlying evidence, settlement outcomes, Scope execution
+and Swing carry, including frozen model-contract identity.
+
+All 219 application/template files match source, wheel and installed bytes; the
+original 215 tracked application/template files are byte-identical to the parent.
+Copied tests ran outside the checkout against a noneditable wheel with Python
+`-I`, warnings as errors, plugin autoload disabled and serial native execution.
+Proof: `../mixed-ledger-proof/`; wheel: `../mixed-ledger-wheels/`; environment:
+`../scope-replay-env/`. Exact final case IDs, timings and file identities are
+retained. Earlier diagnostic/overlapping runs are excluded; an imported fixture
+registration mistake was corrected in the copied-test workflow. Final review
+also explicitly bound the stock source clocks before final-wheel reruns.
+Changed-file Ruff/format, dependency consistency, local links and whitespace pass.
+
+This does **not** finish mixed native ownership. The linked document lists all
+remaining plumbing: one native owner/venue and cross-instrument order lifecycle;
+original stock candidates in shared family selection; complete paid entry/management
+and family-loss binding; mixed runtime/protection/recovery; common tapes and
+independent native A/B/C/D full-cost replay/export. These precede final UI and
+authentic PAPER acceptance. Existing cohorts and deployed experiment stay frozen;
+LIVE disabled, PR #1 open/draft, main untouched. No dependency changes,
+authenticated provider/model/broker calls, deployment or merge occurred.
+
+
 ## Complete concurrent Swing-family plumbing: 2026-10-22 UTC
 
 Fresh GitHub/local state began at clean HEAD
