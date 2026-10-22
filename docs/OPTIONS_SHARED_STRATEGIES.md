@@ -327,4 +327,7 @@ Remaining family/mixed plumbing precedes final UI and authentic PAPER acceptance
 SWING. Original completed evidence and targets flow through the same selection,
 execution, protection, runtime and independent carry/export paths. This enrollment
 still locks one seed per symbol/session. Concurrent Swing-family enumeration and
-selection, higher-timeframe levels and mixed stock/options ownership remain open.
+selection and mixed stock/options ownership remain open.
+[Higher-timeframe level setups](OPTIONS_SWING_LEVELS.md) now retain their source-derived
+week/month prices, confirmation, original risk geometry and native setup identity
+through the same execution, runtime and independent carry/export boundary.

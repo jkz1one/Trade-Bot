@@ -12,6 +12,24 @@ D = Decimal
 
 def input_issues(seed, policy, calendar):
     daily, hourly = seed.history, seed.hourly_history
+    if policy.higher_levels is not None:
+        if seed.level_key not in policy.higher_levels.keys:
+            return ("SWING_LEVEL_KEY_ENROLLMENT_REQUIRED",)
+        if (
+            getattr(daily, "version", None) != "swing-level-daily-v1"
+            or hourly is not None
+            or seed.ma_period is not None
+        ):
+            return ("SWING_LEVEL_ORIGINAL_DAILY_REQUIRED",)
+        from app.options.swing_levels import original_level
+
+        try:
+            original_level(seed, calendar)
+        except (ValueError, ArithmeticError):
+            return ("SWING_LEVEL_COMPLETE_SOURCE_PERIOD_REQUIRED",)
+        return ()
+    if seed.level_key is not None or getattr(daily, "version", None) == "swing-level-daily-v1":
+        return ("SWING_LEVEL_ENROLLMENT_REQUIRED",)
     family = policy.ma_pullback or policy.daily_base
     if policy.ma_pullback is not None:
         if seed.ma_period not in policy.ma_pullback.periods:

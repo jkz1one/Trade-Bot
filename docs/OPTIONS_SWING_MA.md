@@ -67,8 +67,8 @@ Legacy policies/seeds/scans omit every new optional field. Base and MA enrollmen
 are mutually exclusive in this slice; one original Swing seed remains locked per
 symbol/session. Concurrent base/MA/level candidate enumeration and common selection
 are a separate remaining integration task, not implied by support for three MA
-variants. Higher-timeframe level families and mixed stock/options ownership also
-remain open. Authentic data/model/host/economic/PAPER and final visual acceptance
+variants. [Higher-timeframe level families](OPTIONS_SWING_LEVELS.md) now have their
+own native enrollment. Joint selection and mixed stock/options ownership remain open. Authentic data/model/host/economic/PAPER and final visual acceptance
 follow plumbing. LIVE stays disabled and deployment frozen.
 
 See [testing](OPTIONS_TESTING.md) and the newest [status proof](SLICE2_STATUS.md).

@@ -1,5 +1,69 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Native higher-timeframe level plumbing: 2026-10-21 America/New_York
+
+Fresh GitHub/local state began at clean HEAD
+`f0b985022ca58626d6f0ba47e01fa98e3b383ab8`, tree
+`147ce1cdc95047bb0b8fe47193fca5422f60bc06`. PR #1 remained open/draft;
+main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`.
+
+[Higher-timeframe level setups](OPTIONS_SWING_LEVELS.md) now bind previous-week
+high/low, previous-month high/low and aligned weekly-open CALL/PUT variants to the
+shared native owner. Levels derive from complete actual exchange-session histories;
+no caller-supplied level price is accepted. Original source-period endpoints,
+latest completed cross, retest/hold, directional confirmation, reference/stop and
+fixed 1R/2R/3R objectives retain their native family identity through execution,
+runtime, restart, carry and portable independent A/B/C/D export.
+
+The source remains SignalFlow commit
+`f9eaf2c1b5d13dca287ee7138126883065b00395`, setup engine blob
+`af7912bc06dbf0bee94c148cfe7fb1540842d85b`. Fixed rules preserve the twelve-bar
+cross lookback, 0.7% touch tolerance, 0.4% close tolerance, directional candle
+confirmation and 1.5-tolerance original stop. Repeat clusters remain a source
+warning rather than a new gate. Weekly open requires an available aligned completed
+daily 10/50 SMA regime; high/low variants retain their pinned direction. Exact native
+Decimal prices and conservative stop rounding replace source presentation rounding.
+No model score or new quote moves original levels or targets.
+
+The new explicit history/enrollment requires 56–260 completed consecutive daily
+sessions and complete prior calendar periods. Actual holiday, half-day, DST and
+year boundaries are verified. Missing/partial periods, foreign or future source
+clocks, unsupported hourly/MA fields and unenrolled keys fail closed. Native
+next-session break/hold, exact contracts, catalyst/chase, account revisions,
+post-cost admission, original deadlines and mandatory exits remain independent.
+Stored export reconstruction rederives family evidence and rejects rehashed source,
+level, family and enrollment substitution. Original stop/T1 retirement remains
+terminal through runtime delivery and restart; unknown usage is never zero.
+
+Validation: **426 distinct final-wheel installed checks**, including **112 new
+cases**. Wheel SHA-256:
+`a7175e28d29f7e0747278936e339c8a4b07a44b9e57ebfd7d7033966b9a7d978`.
+Final native/source/runtime cases: 78; independent replay/export cases: 34;
+existing MA/base/target/shared/quote/lineage/Scope/Degen/frozen-contract regressions:
+314. Every level/direction variant has its own four-account carry run with
+actual fills, paid reopening management, execution fees and explicit session/gap
+allocations. Five retained pre-level exports reconstruct exactly; artifact checks
+are separate from pytest counts. Copied tests ran outside the checkout against the
+noneditable installed wheel with Python `-I`, warnings as errors, plugin autoload
+disabled and serial native execution. Exact distinct case IDs and times are retained
+in `../swing-level-proof/final-proof.json`; earlier overlapping native checks are
+excluded. All 214 application/template files match source, wheel and installed bytes.
+Changed-file Ruff/format, dependency consistency, copied-test identity, local
+Markdown links and whitespace checks passed. Proof/source/test/publication receipts:
+`../swing-level-proof/`; wheel: `../swing-level-wheels/`; environment: `../scope-replay-env/`.
+
+Next plumbing: concurrent Swing-family candidate enumeration/selection, then mixed
+stock/options ownership, with full runtime/replay/export integration. The current
+base, MA and level enrollments each retain one locked original seed per symbol/
+session; the new detectors do not imply joint candidate enumeration. That boundary
+needs an explicit complete input batch, atomic original locks, bounded unique quote
+requests and exact selected-scan lineage while preserving frozen cohorts and current
+quote/model limits. Final UI and authentic provider/model/host/economic/PAPER
+acceptance follow plumbing. LIVE remains disabled, deployment frozen, PR #1 draft,
+main untouched. No dependency changes, authenticated provider/model/broker calls,
+deployment or merge were introduced.
+
+
 ## Native daily MA-pullback plumbing: 2026-10-21 America/New_York
 
 Fresh GitHub and local state matched clean branch HEAD

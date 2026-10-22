@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.97. Adopted product direction and working delivery contract, 2026-10-21 America/New_York.
+Version 1.98. Adopted product direction and working delivery contract, 2026-10-21 America/New_York.
 [Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now connects
 choice-only B, matched independent native accounts and portable full-cost export.
 [Continuous Scope runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now connect explicit
@@ -20,8 +20,11 @@ daily/hourly source rules, original targets and family identity through shared n
 execution, runtime, carry and independent full-cost export.
 [Native daily MA pullbacks](OPTIONS_SWING_MA.md) now bind 8 EMA, 21 EMA and 50 SMA
 variants to original evidence/targets, native execution, runtime and independent
-carry/export. Higher-timeframe levels, concurrent Swing-family selection and mixed
-stock/options ownership remain before final UI and authentic PAPER testing.
+carry/export. [Higher-timeframe level setups](OPTIONS_SWING_LEVELS.md) now derive
+complete previous-week/month extrema and aligned weekly opens, retaining original
+geometry through native execution, runtime and independent carry/export. Concurrent
+Swing-family selection and mixed stock/options ownership remain before final UI
+and authentic PAPER testing.
 [Shared Scope entry AI](OPTIONS_SCOPE_AI.md) now binds one paid Degen/Swing/Scope
 decision to native approval, fixed Scope terms, fresh post-cost admission and stored
 trade-level cost attribution. The original expiry still caps dispatch; scale/final

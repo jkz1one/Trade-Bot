@@ -108,8 +108,9 @@ New [original Swing target derivation](docs/OPTIONS_SWING_TARGETS.md) prepares f
 admission, runtime retirement, carry and independent replay/export.
 [Daily MA pullbacks](docs/OPTIONS_SWING_MA.md) now connect original 8 EMA, 21 EMA
 and 50 SMA evidence to native execution, runtime and independent carry/export.
-Higher-timeframe levels, concurrent Swing-family selection and mixed stock/options
-ownership remain open.
+[Higher-timeframe level setups](docs/OPTIONS_SWING_LEVELS.md) now connect complete
+week/month evidence and original break/retest geometry through the native owner.
+Concurrent Swing-family selection and mixed stock/options ownership remain open.
 New [daily base breakout/breakdown](docs/OPTIONS_SWING_BASE.md) connects frozen daily/hourly
 evidence and original targets to the same native owner, carry and independent exports.
 

@@ -16,11 +16,13 @@ from app.options.swing import (
     SwingBaseHistory,
     SwingHistory,
     SwingHourlyHistory,
+    SwingLevelHistory,
     SwingMAHistory,
     SwingPolicy,
     SwingSeed,
     seed_issues,
 )
+from app.options.swing_level_models import LEVEL_FAMILIES, LevelKey
 from app.options.swing_ma_models import MA_FAMILIES, MAPeriod
 from app.options.swing_target_models import SwingTargetGeometry
 from app.robinhood.schedule import XNYSCalendar
@@ -34,7 +36,8 @@ class SwingSeedBuildRequest(OptionRecord):
     symbols: tuple[Symbol, ...] = Field(min_length=1, max_length=2)
     created_at: datetime
     target_session: date
-    history: SwingMAHistory | SwingBaseHistory | SwingHistory
+    history: SwingLevelHistory | SwingMAHistory | SwingBaseHistory | SwingHistory
+    level_key: LevelKey | None = Field(default=None, exclude_if=lambda v: v is None)
     ma_period: MAPeriod | None = Field(default=None, exclude_if=lambda v: v is None)
     hourly_history: SwingHourlyHistory | None = Field(default=None, exclude_if=lambda v: v is None)
     instrument: OptionInstrument
@@ -63,7 +66,12 @@ def derive_geometry(seed, policy):
         else bar.high * (1 + policy.stop_buffer_fraction),
         ROUND_CEILING if call else ROUND_FLOOR,
     )
-    if policy.ma_pullback is not None:
+    if policy.higher_levels is not None:
+        from app.options.swing_levels import evaluate_level
+
+        level = evaluate_level(seed)
+        reference, stop = level.reference, level.invalidation
+    elif policy.ma_pullback is not None:
         from app.options.swing_ma import evaluate_ma
 
         ma = evaluate_ma(seed)
@@ -95,7 +103,9 @@ def target_issues(seed, policy):
     issues = input_issues(
         seed,
         policy,
-        XNYSCalendar() if policy.daily_base is not None or policy.ma_pullback is not None else None,
+        XNYSCalendar()
+        if any(p is not None for p in (policy.daily_base, policy.ma_pullback, policy.higher_levels))
+        else None,
     )
     if issues:
         return issues
@@ -131,19 +141,25 @@ def verify_stored_targets(db, scan, policy):
 
 def verify_family_scan(scan, policy):
     from app.options.swing_base import evaluate_base
+    from app.options.swing_levels import evaluate_level
     from app.options.swing_ma import evaluate_ma
 
+    level = evaluate_level(scan.seed) if policy.higher_levels is not None else None
     ma = evaluate_ma(scan.seed) if policy.ma_pullback is not None else None
     base = evaluate_base(scan.seed) if policy.daily_base is not None else None
     family = (
-        MA_FAMILIES[ma.period]
+        LEVEL_FAMILIES[level.level_key]
+        if level is not None
+        else MA_FAMILIES[ma.period]
         if ma is not None
         else "SWING_DAILY_BASE"
         if base is not None
         else "SWING_DAILY_BREAKOUT"
     )
     if (
-        scan.ma_evidence != ma
+        scan.level_evidence != level
+        or (level is not None and level.reasons)
+        or scan.ma_evidence != ma
         or (ma is not None and ma.reasons)
         or scan.base_evidence != base
         or scan.observations[0].family != family

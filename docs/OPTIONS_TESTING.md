@@ -288,3 +288,12 @@ CALL/PUT native fills, paid fresh rejections, unknown costs, runtime and restart
 A/B/C/D carry/export for each variant, including stored evidence substitution.
 Run alongside base, original-target, shared-family and frozen-model-contract
 regressions using the noneditable installed-wheel procedure above.
+
+## Higher-timeframe level plumbing
+
+`test_option_swing_levels.py` covers [higher-timeframe levels](OPTIONS_SWING_LEVELS.md),
+complete actual source periods, holiday/DST/year boundaries, source rule blockers,
+original targets, native CALL/PUT fills, paid rejection/unknown costs and runtime/restart.
+`test_option_swing_level_replay.py` verifies independent A/B/C/D carry/export for
+every level/direction variant, all charges/fees/allocations and rehashed evidence
+substitution. Preserve the installed-wheel isolation and frozen-cohort regressions.

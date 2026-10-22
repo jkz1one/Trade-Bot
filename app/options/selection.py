@@ -242,6 +242,8 @@ def admit_candidates(scan, plan, quotes, underlying, account, limits, session, *
                     else f"Swing {setup.family}: original daily MA pullback, locked targets and native protection"
                     if setup.family
                     in {"SWING_DAILY_8_EMA", "SWING_DAILY_21_EMA", "SWING_DAILY_50_SMA"}
+                    else f"Swing {setup.family}: original higher-timeframe break/retest, locked targets and native protection"
+                    if setup.family in SWING_FAMILIES and setup.family != "SWING_DAILY_BREAKOUT"
                     else "Swing daily breakout: locked next-session contract; session-close protection"
                 ),
             )
