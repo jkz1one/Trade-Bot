@@ -1,5 +1,93 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Native daily-base family plumbing: 2026-10-21 America/New_York
+
+Fresh GitHub and local state matched clean branch HEAD
+`b1888576abfcb9526b852da6b2bf41bea80d5704`, tree
+`e5e76d9d8352e96a53e958023b55bda5d238af6e`. PR #1 remained open/draft;
+main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`.
+
+[Native daily base breakout/breakdown](OPTIONS_SWING_BASE.md) now connects an
+explicit new `swing-daily-base-v1` enrollment to the existing shared PAPER owner.
+`SWING_DAILY_BASE` retains its own setup identity inside the SWING family through
+selection, native approval/dispatch, actual fills, held management, loss attribution,
+runtime delivery, restart and independent carry replay/export. It does not create
+another ledger, reservation, worker or model budget inside an account. Research
+A/B/C/D accounts remain independent. The old small daily-breakout adaptation remains
+frozen and its optional fields stay absent.
+
+The implementation follows SignalFlow commit
+`f9eaf2c1b5d13dca287ee7138126883065b00395`, setup engine blob
+`af7912bc06dbf0bee94c148cfe7fb1540842d85b`: fifteen-session compression, boundary
+close, close location, 1.20x prior-twenty-session volume, 1.25 ATR extension and
+non-opposed daily/hourly 10/50 SMA regimes. Original reference/stop and fixed
+1R/2R/3R objectives bind the original source evidence and frozen policy. Exact
+Decimal arithmetic and native conservative stop rounding remain in force.
+
+This native adaptation explicitly requires 55–260 daily bars and 54–260 hourly bars
+so required prior daily and hourly trend contexts are available. The source's
+35-bar/unavailable-context path does not turn missing evidence into neutral support.
+New daily history has its own version; hourly history has frozen source, identity,
+actual exchange-open-anchored intervals and original source/receipt clocks. Full
+regular and early-close intervals, DST and consecutive sessions are validated.
+Future, unfinished, missing, gapped, interpolated, zero-volume or foreign hourly
+inputs are blocked, including at the common tape boundary. Old cohorts keep their
+twenty-bar bound and do not silently accept new family data.
+
+The original next-session break/hold, current chase, exact contract, catalyst,
+account risk and approval deadlines remain independent native gates. Unfilled
+original stop/T1 observations remain terminal across runtime and restart. Native
+stored reconstruction rederives the family rules and rejects altered source,
+rule diagnostics, family identity or enrollment, even with a rehashed export.
+Held carry retains original terms and deadlines; paid fresh rejections retain
+their charge, unknown usage remains unknown and actual fills remain distinct from
+proposals and attempts. A/B/C/D carry exports retain all model/management charges,
+execution fees and explicit session/gap operating allocations.
+
+Validation: **242 distinct installed checks passed**, including **47 new
+cases**, on wheel SHA-256
+`4970a618bea4c132ae268336c86e63ce533ef4f440b78c0d0ec046449f8d7f5a`.
+Exact case IDs and phase times are in `../swing-base-proof/final-proof.json`.
+The 37-case base phase, nine-case independent carry/export phase and final runtime/
+regression phase plus the focused frozen-model-contract check are counted once by
+distinct case ID. Earlier overlapping focused
+runs are retained but not added. Native tests ran serially using a noneditable
+installed wheel, copied tests outside the checkout, Python `-I`, warnings as errors
+and plugin autoload disabled. The new runtime test was appended after the 37-case
+phase; its unchanged earlier test source snapshot is retained separately.
+
+Coverage includes CALL/PUT geometry under changed ambient Decimal contexts, all
+source rule blockers, unavailable/foreign/future/gapped hourly inputs, actual
+DST/half-day boundaries, deterministic/paid entry and actual protective fills,
+fresh paid rejection, unknown cost, original stop/T1 retirement, restart and runtime
+delivery. Four independent carry owners retain native fills, paid reopening
+management and full accounting. Existing Degen, shared Swing, target derivation,
+quote retirement, native lineage and Scope arbitration/history regressions passed.
+Three retained exports (legacy Scope series, original combined carry and prior
+derived-target carry) reconstruct exactly; those artifact checks are separate
+from the pytest count.
+
+The initial native fixture had already crossed the correctly derived base stop
+before entry, so its expectation of requesting that contract's quote was invalid.
+The valid-entry fixture was corrected; the existing stop rule was preserved and a
+separate test verifies that the original adverse history permanently blocks the
+seed. Diagnostic logs/XML remain retained. No production rule was relaxed to make
+that fixture enter.
+
+All 210 application/template files match source, wheel and installed bytes. Proof,
+source/test snapshots and publication receipt: `../swing-base-proof/`; wheel:
+`../swing-base-wheels/`; environment: `../scope-replay-env/`. Ruff, dependency
+consistency, copied-test identity, local Markdown links and whitespace checks passed.
+
+Next plumbing: remaining Swing daily MA-pullback and higher-timeframe level
+break/retest families, then mixed stock/options ownership and remaining family
+integration. Preserve pinned source contracts and settled strategy decisions.
+Final UI/visual and authentic provider/model/host/economic/PAPER acceptance remain
+open after plumbing. LIVE remains disabled, deployment frozen, PR #1 draft and
+main untouched. No dependencies, authenticated provider/model/broker calls,
+deployment or merge were introduced.
+
+
 ## Original Swing target derivation plumbing: 2026-10-22 UTC
 
 Fresh GitHub and local state matched a clean working branch at

@@ -5,6 +5,7 @@ from datetime import timedelta
 from types import SimpleNamespace
 
 from app.options.carry_models import SwingCarryTerms
+from app.options.swing_base_models import SWING_FAMILIES
 
 
 def scan_carry_terms(seed, policy, catalyst, calendar):
@@ -51,7 +52,7 @@ def selected_scan(db, source_key):
         "candidate_id"
     )
     matches = [c for c in result.get("candidates", []) if c["candidate_id"] == candidate_id]
-    if len(matches) != 1 or matches[0]["family"] != "SWING_DAILY_BREAKOUT":
+    if len(matches) != 1 or matches[0]["family"] not in SWING_FAMILIES:
         return None
     scans = [
         s

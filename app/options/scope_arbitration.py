@@ -11,6 +11,7 @@ from app.options.models import Name, OptionRecord, UnderlyingQuote
 from app.options.scope import ScopePreflightInput
 from app.options.scope_context import ScopeContextInput
 from app.options.scope_watch import ScopeWatchPolicy
+from app.options.swing_base_models import SWING_FAMILIES
 
 VERSION = "shared-scope-selection-v1"
 
@@ -109,7 +110,7 @@ def configuration(db):
 
 
 def family(candidate):
-    return "SWING" if candidate["family"] == "SWING_DAILY_BREAKOUT" else "DEGEN"
+    return "SWING" if candidate["family"] in SWING_FAMILIES else "DEGEN"
 
 
 def selection(policy, key, evidence):

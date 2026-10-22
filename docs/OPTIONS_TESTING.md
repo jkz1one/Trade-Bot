@@ -268,3 +268,13 @@ actual fills/protection, restart and independent carry replay/export with full c
 Run with the same copied-test, noneditable-wheel, Python `-I`, warnings-as-errors
 procedure above. Native tests remain serial. Counts and diagnostic history are in
 [Slice 2 status](SLICE2_STATUS.md); repeated case IDs are counted once per final wheel.
+
+## Native daily-base family
+
+`test_option_swing_base.py` checks original rule geometry, actual daily/hourly calendar
+coverage, invalid/missing inputs, CALL/PUT native and paid entries, actual fills,
+original-stop/T1 retirement, restart and runtime delivery.
+`test_option_swing_base_replay.py` checks frozen tape enrollment and four independent
+carry accounts, all charges/fees/allocations and rehashed detached export tampering.
+Use the same isolated installed-wheel procedure; counts and diagnostics remain in
+[status](SLICE2_STATUS.md). [Family contract](OPTIONS_SWING_BASE.md).

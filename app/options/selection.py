@@ -19,6 +19,7 @@ from app.options.models import (
     OptionRecord,
     Symbol,
 )
+from app.options.swing_base_models import SWING_FAMILIES, SwingFamily
 
 
 class ContractSelectionPolicy(OptionRecord):
@@ -77,11 +78,11 @@ class DegenCandidate(OptionRecord):
 
 
 class SwingCandidate(DegenCandidate):
-    family: Literal["SWING_DAILY_BREAKOUT"]
+    family: SwingFamily
 
 
 def parse_candidate(value):
-    cls = SwingCandidate if value.get("family") == "SWING_DAILY_BREAKOUT" else DegenCandidate
+    cls = SwingCandidate if value.get("family") in SWING_FAMILIES else DegenCandidate
     return cls.model_validate(value)
 
 
@@ -236,6 +237,8 @@ def admit_candidates(scan, plan, quotes, underlying, account, limits, session, *
                 thesis=(
                     f"Degen {setup.family}: completed 5m setup and 15m confirmation"
                     if candidate_type is DegenCandidate
+                    else "Swing daily base breakout/breakdown: locked original targets and native protection"
+                    if setup.family == "SWING_DAILY_BASE"
                     else "Swing daily breakout: locked next-session contract; session-close protection"
                 ),
             )

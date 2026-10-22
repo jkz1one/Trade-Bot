@@ -181,6 +181,9 @@ def quote_terminal(seed, policy, limits, calendar, quote, now):
         else bar.high * (1 + policy.stop_buffer_fraction),
         ROUND_CEILING if call else ROUND_FLOOR,
     )
+    if policy.daily_base is not None:
+        # seed_issues above already reconstructed the original family and target proof.
+        stop = seed.target_geometry.invalidation
     if quote.bid <= stop if call else quote.ask >= stop:
         return SwingTerminal(
             seed_hash=fingerprint(seed),

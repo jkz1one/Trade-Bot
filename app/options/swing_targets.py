@@ -12,7 +12,14 @@ from pydantic import Field, model_validator
 from app.options.degen import _metric
 from app.options.engine import exact, fingerprint
 from app.options.models import OptionInstrument, OptionRecord, Symbol
-from app.options.swing import SwingHistory, SwingPolicy, SwingSeed, seed_issues
+from app.options.swing import (
+    SwingBaseHistory,
+    SwingHistory,
+    SwingHourlyHistory,
+    SwingPolicy,
+    SwingSeed,
+    seed_issues,
+)
 from app.options.swing_target_models import SwingTargetGeometry
 from app.robinhood.schedule import XNYSCalendar
 
@@ -25,7 +32,8 @@ class SwingSeedBuildRequest(OptionRecord):
     symbols: tuple[Symbol, ...] = Field(min_length=1, max_length=2)
     created_at: datetime
     target_session: date
-    history: SwingHistory
+    history: SwingBaseHistory | SwingHistory
+    hourly_history: SwingHourlyHistory | None = Field(default=None, exclude_if=lambda v: v is None)
     instrument: OptionInstrument
     carry_exit_session: date | None = None
 
@@ -52,6 +60,11 @@ def derive_geometry(seed, policy):
         else bar.high * (1 + policy.stop_buffer_fraction),
         ROUND_CEILING if call else ROUND_FLOOR,
     )
+    if policy.daily_base is not None:
+        from app.options.swing_base import evaluate_base
+
+        base = evaluate_base(seed)
+        reference, stop = base.reference, base.invalidation
     sign = 1 if call else -1
     risk = (reference - stop) * sign
     targets = tuple(reference + sign * risk * n for n in (1, 2, 3))
@@ -68,6 +81,12 @@ def derive_geometry(seed, policy):
 
 
 def target_issues(seed, policy):
+    from app.options.swing_base import input_issues
+
+    # Family input is never accepted under an unrelated legacy enrollment.
+    issues = input_issues(seed, policy, XNYSCalendar() if policy.daily_base is not None else None)
+    if issues:
+        return issues
     if policy.target_derivation is None:
         return ("SWING_DERIVED_TARGET_POLICY_REQUIRED",) if seed.target_geometry is not None else ()
     try:
@@ -95,6 +114,20 @@ def verify_stored_targets(db, scan, policy):
         or scan.observations[0].invalidation != seed.target_geometry.invalidation
     ):
         raise ValueError("SWING_STORED_ORIGINAL_TARGETS_CHANGED")
+    verify_family_scan(scan, policy)
+
+
+def verify_family_scan(scan, policy):
+    from app.options.swing_base import evaluate_base
+
+    base = evaluate_base(scan.seed) if policy.daily_base is not None else None
+    family = "SWING_DAILY_BASE" if base is not None else "SWING_DAILY_BREAKOUT"
+    if (
+        scan.base_evidence != base
+        or scan.observations[0].family != family
+        or (base is not None and base.reasons)
+    ):
+        raise ValueError("SWING_ORIGINAL_FAMILY_EVIDENCE_REQUIRED")
 
 
 def build_swing_seed(request):

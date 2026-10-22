@@ -20,6 +20,7 @@ from app.options.models import (
     UnderlyingQuote,
 )
 from app.options.selection import ContractMetadata, ContractReadPlan, OptionInventory, _plan
+from app.options.swing_base_models import SwingBaseEvidence, SwingBasePolicy, SwingFamily
 from app.options.swing_target_models import SwingTargetGeometry
 
 
@@ -27,7 +28,8 @@ class SwingPolicy(OptionRecord):
     version: Literal["swing-next-session-v1"] = "swing-next-session-v1"
     history_source: Name
     catalyst_source: Name
-    daily_lookback: int = Field(ge=3, le=20, strict=True)
+    daily_lookback: int = Field(ge=3, le=260, strict=True)
+    daily_base: SwingBasePolicy | None = Field(default=None, exclude_if=lambda v: v is None)
     minimum_dte: int = Field(ge=1, le=60, strict=True)
     maximum_dte: int = Field(ge=1, le=90, strict=True)
     maximum_chase_fraction: Money = Field(gt=0, le=Decimal(".1"))
@@ -46,6 +48,11 @@ class SwingPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def coherent(self):
+        if self.daily_base is None:
+            if self.daily_lookback > 20:
+                raise ValueError("Legacy Swing lookback remains bounded to twenty sessions")
+        elif self.daily_lookback < 55 or self.target_derivation != "original-risk-ladder-v1":
+            raise ValueError("Daily base requires original targets and available prior daily trend")
         if (
             self.target_derivation is not None
             and self.unfilled_lifecycle != "observed-lifecycle-v3"
@@ -76,11 +83,26 @@ class SwingHistory(Evidence):
     bars: tuple[SwingDailyBar, ...] = Field(min_length=3, max_length=20)
 
 
+class SwingBaseHistory(SwingHistory):
+    version: Literal["swing-base-daily-v1"]
+    bars: tuple[SwingDailyBar, ...] = Field(min_length=55, max_length=260)
+
+
+class SwingHourlyHistory(Evidence):
+    version: Literal["swing-base-hourly-v1"] = "swing-base-hourly-v1"
+    symbol: Symbol
+    timeframe: Literal["1h"] = "1h"
+    bounds: Literal["regular"] = "regular"
+    adjustment: Literal["split"] = "split"
+    bars: tuple[SwingDailyBar, ...] = Field(min_length=54, max_length=260)
+
+
 class SwingSeed(OptionRecord):
     version: Literal["swing-locked-seed-v1"] = "swing-locked-seed-v1"
     created_at: datetime
     target_session: date
-    history: SwingHistory
+    history: SwingBaseHistory | SwingHistory
+    hourly_history: SwingHourlyHistory | None = Field(default=None, exclude_if=lambda v: v is None)
     instrument: OptionInstrument
     first_target: Money | None = Field(default=None, gt=0, exclude_if=lambda v: v is None)
     carry_exit_session: date | None = Field(default=None, exclude_if=lambda v: v is None)
@@ -102,7 +124,7 @@ class SwingInput(OptionRecord):
 
 
 class SwingObservation(OptionRecord):
-    family: Literal["SWING_DAILY_BREAKOUT"] = "SWING_DAILY_BREAKOUT"
+    family: SwingFamily = "SWING_DAILY_BREAKOUT"
     right: Literal["CALL", "PUT"]
     status: Literal["BLOCKED", "WATCHING", "CONFIRMED"]
     reasons: tuple[Name, ...]
@@ -146,6 +168,7 @@ class SwingScan(OptionRecord):
     higher_timeframe_through: datetime | None
     last_close: Money | None
     seed: SwingSeed
+    base_evidence: SwingBaseEvidence | None = Field(default=None, exclude_if=lambda v: v is None)
     catalyst: CatalystEvidence
     holding_policy: Literal["SESSION_CLOSE", "BOUNDED_CARRY_V1"] = "SESSION_CLOSE"
     carry_terms: SwingCarryTerms | None = Field(default=None, exclude_if=lambda v: v is None)
@@ -158,9 +181,10 @@ def seed_issues(seed, policy, calendar, symbols):
     """Check actual exchange sessions, immutable past evidence and exact contract lock."""
     from zoneinfo import ZoneInfo
 
+    from app.options.swing_base import input_issues
     from app.options.swing_targets import target_issues
 
-    issues = []
+    issues = list(input_issues(seed, policy, calendar))
     issues.extend(target_issues(seed, policy))
     h, c, cal = seed.history, seed.instrument.contract, calendar.calendar
     target = seed.target_session.isoformat()
@@ -267,7 +291,18 @@ def scan_swing(item, policy, intraday, history, calendar, symbols, *, now, recei
             else daily[-1].high * (1 + policy.stop_buffer_fraction)
         )
         reasons = list(issues)
-        if any((b.close - a.close) * sign <= 0 for a, b in pairwise(daily)):
+        base = None
+        if policy.daily_base is not None:
+            from app.options.swing_base import evaluate_base
+
+            try:
+                base = evaluate_base(seed)
+                reference, stop = base.reference, base.invalidation
+                reasons.extend(base.reasons)
+            except (ValueError, ArithmeticError):
+                issues.append("SWING_BASE_EVIDENCE_UNAVAILABLE")
+                reasons.append("SWING_BASE_EVIDENCE_UNAVAILABLE")
+        elif any((b.close - a.close) * sign <= 0 for a, b in pairwise(daily)):
             reasons.append("SWING_DAILY_TREND_REQUIRED")
         complete = [
             b for b in history.bars if b.ends_at <= min(now, history.source_at, history.received_at)
@@ -286,11 +321,15 @@ def scan_swing(item, policy, intraday, history, calendar, symbols, *, now, recei
             higher_timeframe_through=daily[-1].closes_at,
             last_close=intraday.last_close,
             seed=seed,
+            base_evidence=base,
             catalyst=catalyst,
             holding_policy=policy.holding_policy,
             carry_terms=carry_terms,
             observations=(
                 SwingObservation(
+                    family="SWING_DAILY_BASE"
+                    if policy.daily_base is not None
+                    else "SWING_DAILY_BREAKOUT",
                     right=right,
                     status="BLOCKED" if issues else "WATCHING" if reasons else "CONFIRMED",
                     reasons=tuple(reasons),

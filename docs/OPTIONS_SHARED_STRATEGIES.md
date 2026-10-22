@@ -26,6 +26,10 @@ Scope paid AI, continuous watch ingestion/common tapes and separately enrolled
 [combined native Scope/carry](OPTIONS_SCOPE_CARRY.md) now have fixture contracts.
 Existing Degen/Swing AI owners remain unchanged.
 
+A separate [daily-base enrollment](OPTIONS_SWING_BASE.md) now supplies
+`SWING_DAILY_BASE` candidates with fixed compression/volume/regime rules and original
+targets to this same owner. The smaller adaptation below remains frozen.
+
 ## Delivered family and evidence
 
 `app.options.swing` defines `swing-next-session-v1`, an explicitly smaller

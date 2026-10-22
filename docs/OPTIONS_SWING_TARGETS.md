@@ -4,8 +4,9 @@ New PAPER cohorts may enroll `SwingPolicy.target_derivation="original-risk-ladde
 together with `unfilled_lifecycle="observed-lifecycle-v3"`. This prepares the existing
 next-session daily-breakout seed with original 1R/2R/3R objectives. It connects seed
 preparation, native admission, runtime retirement, carry and independent replay/export.
-It does not implement the remaining MA-pullback or higher-timeframe break/retest
-families, or replace the existing small daily-breakout adaptation with a full base detector.
+A separate [daily-base enrollment](OPTIONS_SWING_BASE.md) now derives geometry
+from complete daily/hourly base evidence. The existing small daily-breakout
+adaptation stays frozen. MA-pullback and higher-timeframe break/retest families remain open.
 
 ## Frozen geometry and source
 
