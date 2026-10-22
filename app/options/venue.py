@@ -12,8 +12,9 @@ from pathlib import Path
 from urllib.parse import quote as uri_quote
 from uuid import uuid4
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
+from app.mixed.stock_models import StockLimits, StockObservation, StockPosition
 from app.options.accounting import apply_fill, apply_receipt
 from app.options.governor import _fresh, _tick_price
 from app.options.lifecycle import (
@@ -53,21 +54,46 @@ class VenueState(OptionRecord):
     cash: Money
     settled_cash: Money
     position: OptionPosition | None = None
+    stock_position: StockPosition | None = Field(default=None, exclude_if=lambda v: v is None)
+    stock_orders: tuple[StockObservation, ...] = Field(
+        default=(), max_length=1000, exclude_if=lambda v: not v
+    )
     orders: tuple[OptionObservation, ...] = Field(default=(), max_length=1000)
     receipts: tuple[OptionReceipt, ...] = Field(default=(), max_length=1000)
     underlying_exposures: tuple[UnderlyingExposure, ...] = Field(default=(), max_length=32)
     sequence: Count = 0
     submit_count: Count = 0
 
+    @model_validator(mode="after")
+    def exclusive_position(self):
+        if self.position is not None and self.stock_position is not None:
+            raise ValueError("A venue has one position across instrument types")
+        return self
+
 
 class DurableOptionVenue:
-    def __init__(self, path, *, limits: OptionLimits | None = None, capital=None, fault="NONE"):
+    def __init__(
+        self,
+        path,
+        *,
+        limits: OptionLimits | None = None,
+        capital=None,
+        fault="NONE",
+        stock_limits=None,
+    ):
         self.path = Path(path).expanduser().absolute()
         self.fault = fault
+        stock_limits = (
+            StockLimits.model_validate(stock_limits.model_dump(warnings=False))
+            if stock_limits is not None
+            else None
+        )
         if capital is not None:
             if limits is None:
                 raise ValueError("Explicit frozen option policy required")
             limits = OptionLimits.model_validate(limits.model_dump(warnings=False))
+            if stock_limits is not None and stock_limits.provider != limits.provider:
+                raise ValueError("One frozen provider across stock/options required")
             initial = OptionLedger(cash=capital, high_watermark=capital)
             self.path.parent.mkdir(parents=True, exist_ok=True)
             fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
@@ -77,11 +103,15 @@ class DurableOptionVenue:
                     "CREATE TABLE option_fixture_control (id INTEGER PRIMARY KEY CHECK(id=1),meta TEXT NOT NULL,state TEXT NOT NULL)"
                 )
                 meta = {
-                    "schema": "durable-option-fixture-v1",
+                    "schema": "durable-mixed-fixture-v1"
+                    if stock_limits is not None
+                    else "durable-option-fixture-v1",
                     "venue_id": uuid4().hex,
                     "initial_capital": str(initial.cash),
                     "limits": limits.model_dump(mode="json"),
                 }
+                if stock_limits is not None:
+                    meta["stock_limits"] = stock_limits.model_dump(mode="json")
                 state = VenueState(cash=initial.cash, settled_cash=initial.cash)
                 db.execute(
                     "INSERT INTO option_fixture_control VALUES(1,?,?)",
@@ -91,6 +121,11 @@ class DurableOptionVenue:
             meta, _ = self._load(db)
         self.venue_id = meta["venue_id"]
         self.limits = OptionLimits.model_validate(meta["limits"])
+        self.stock_limits = (
+            StockLimits.model_validate(meta["stock_limits"]) if "stock_limits" in meta else None
+        )
+        if stock_limits is not None and stock_limits != self.stock_limits:
+            raise ValueError("Stock fixture policy mismatch")
         self.initial_capital = Decimal(meta["initial_capital"])
         self.account_id, self.population_id = self.limits.account_id, self.limits.population_id
 
@@ -124,9 +159,23 @@ class DurableOptionVenue:
             raise ValueError("Not a dedicated option fixture")
         row = db.execute("SELECT meta,state FROM option_fixture_control WHERE id=1").fetchone()
         meta = json.loads(row[0])
-        if meta["schema"] != "durable-option-fixture-v1":
+        if meta["schema"] != (
+            "durable-mixed-fixture-v1" if "stock_limits" in meta else "durable-option-fixture-v1"
+        ):
             raise ValueError("Wrong option fixture schema")
-        return meta, VenueState.model_validate_json(row[1])
+        state = VenueState.model_validate_json(row[1])
+        if "stock_limits" not in meta and (state.stock_position is not None or state.stock_orders):
+            raise ValueError("Stock fixture inputs not enrolled")
+        if "stock_limits" in meta:
+            from app.mixed.venue import validate_state
+
+            if (
+                StockLimits.model_validate(meta["stock_limits"]).provider
+                != OptionLimits.model_validate(meta["limits"]).provider
+            ):
+                raise ValueError("Mixed fixture provider binding changed")
+            validate_state(state)
+        return meta, state
 
     def _mutate(self, operation, *, deadline=None, parent_pid=None):
         with self._db(write=True) as db:
@@ -134,6 +183,12 @@ class DurableOptionVenue:
             if (
                 meta["venue_id"] != self.venue_id
                 or OptionLimits.model_validate(meta["limits"]) != self.limits
+                or (
+                    StockLimits.model_validate(meta["stock_limits"])
+                    if "stock_limits" in meta
+                    else None
+                )
+                != self.stock_limits
             ):
                 raise ValueError("Option fixture binding changed")
             if deadline is not None and time.monotonic() >= deadline:
@@ -142,6 +197,10 @@ class DurableOptionVenue:
                 raise OSError("Fixture parent lost ownership")
             updated, result = operation(state)
             updated = VenueState.model_validate(updated.model_dump(warnings=False))
+            if self.stock_limits is not None:
+                from app.mixed.venue import validate_state
+
+                validate_state(updated)
             if deadline is not None and time.monotonic() >= deadline:
                 raise TimeoutError("Fixture admission lease expired before commit")
             if parent_pid is not None and os.getppid() != parent_pid:
@@ -155,15 +214,23 @@ class DurableOptionVenue:
         intent = OptionIntent.model_validate(intent.model_dump(warnings=False))
 
         def accept(state):
-            if any(o.client_id == intent.client_id for o in state.orders):
+            if self.stock_limits is not None:
+                from app.mixed.venue import _clock
+
+                _clock(state, now)
+            if any(o.client_id == intent.client_id for o in (*state.orders, *state.stock_orders)):
                 raise ValueError("An attempted option order cannot replay")
-            if any(o.status not in TERMINAL for o in state.orders) or state.underlying_exposures:
+            if (
+                any(o.status not in TERMINAL for o in (*state.orders, *state.stock_orders))
+                or state.underlying_exposures
+            ):
                 raise ValueError("Fixture already has working/unsupported exposure")
             if not intent.prepared_at <= now < intent.approval_expires_at:
                 raise ValueError("Option approval expired")
             if intent.side == "BUY":
                 if (
                     state.position is not None
+                    or state.stock_position is not None
                     or intent.approved_full_premium_loss > state.settled_cash
                 ):
                     raise ValueError("Duplicate position or unfunded premium")
@@ -209,6 +276,10 @@ class DurableOptionVenue:
             validate_underlying(self.limits, intent, quote, underlying, at)
 
         def fill(state):
+            if self.stock_limits is not None:
+                from app.mixed.venue import _clock
+
+                _clock(state, at)
             order = next(o for o in state.orders if o.client_id == intent.client_id)
             if (
                 order.status in TERMINAL
@@ -269,7 +340,9 @@ class DurableOptionVenue:
                 size - consumed, order.quantity - order.filled_quantity
             ):
                 raise ValueError("Whole fill must fit remaining order and unused observed size")
-            if any(f.fill_id == fill_id for o in state.orders for f in o.fills):
+            if any(
+                f.fill_id == fill_id for o in (*state.orders, *state.stock_orders) for f in o.fills
+            ):
                 raise ValueError("Duplicate fixture fill identity")
             per_order, per_contract = (
                 (self.limits.entry_fee_per_order, self.limits.entry_fee_per_contract)
@@ -328,6 +401,10 @@ class DurableOptionVenue:
             raise ValueError("Invalid scripted terminal outcome")
 
         def terminal(state):
+            if self.stock_limits is not None:
+                from app.mixed.venue import _clock
+
+                _clock(state, at)
             old = next(o for o in state.orders if o.client_id == client_id)
             if (
                 old.status in TERMINAL
@@ -350,11 +427,15 @@ class DurableOptionVenue:
         receipt = OptionReceipt.model_validate(receipt.model_dump(warnings=False))
 
         def record(state):
+            if self.stock_limits is not None:
+                from app.mixed.venue import _clock
+
+                _clock(state, receipt.occurred_at)
             if receipt.sequence != state.sequence + 1 or any(
                 r.receipt_id == receipt.receipt_id for r in state.receipts
             ):
                 raise ValueError("Receipt sequence/identity conflict")
-            if any(o.status not in TERMINAL for o in state.orders):
+            if any(o.status not in TERMINAL for o in (*state.orders, *state.stock_orders)):
                 raise ValueError("Contract/funds receipts require complete terminal order history")
             updates = {"sequence": receipt.sequence, "receipts": (*state.receipts, receipt)}
             if receipt.kind == "PHYSICAL_EXERCISE":
@@ -406,8 +487,16 @@ class DurableOptionVenue:
         if (
             meta["venue_id"] != self.venue_id
             or OptionLimits.model_validate(meta["limits"]) != self.limits
+            or (
+                StockLimits.model_validate(meta["stock_limits"]) if "stock_limits" in meta else None
+            )
+            != self.stock_limits
         ):
             raise ValueError("Option venue identity changed")
+        if self.stock_limits is not None:
+            from app.mixed.venue import _clock
+
+            _clock(state, at)
         payload = state.model_dump_json() + at.isoformat()
         return OptionVenueSnapshot(
             venue_id=self.venue_id,
@@ -418,6 +507,9 @@ class DurableOptionVenue:
             cash=state.cash,
             settled_cash=state.settled_cash,
             position=state.position,
+            stock_position=state.stock_position,
+            stock_orders=state.stock_orders,
+            stock_limits=self.stock_limits,
             orders=state.orders,
             receipts=state.receipts,
             underlying_exposures=state.underlying_exposures,
@@ -427,3 +519,18 @@ class DurableOptionVenue:
     def submit_count(self):
         with self._db() as db:
             return self._load(db)[1].submit_count
+
+    def _accept_stock(self, intent, now, deadline, parent_pid):
+        from app.mixed.venue import accept
+
+        return accept(self, intent, now, deadline, parent_pid)
+
+    def fill_stock(self, intent, quantity, quote, at, *, fill_id):
+        from app.mixed.venue import fill
+
+        return fill(self, intent, quantity, quote, at, fill_id=fill_id)
+
+    def record_stock_terminal(self, client_id, status, at):
+        from app.mixed.venue import terminal
+
+        return terminal(self, client_id, status, at)

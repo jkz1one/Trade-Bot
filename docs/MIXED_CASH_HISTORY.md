@@ -97,8 +97,9 @@ protection supervisor.
 
 ## Remaining plumbing in total
 
-1. Connect this common ledger/admission boundary to one explicitly enrolled native
-   owner and durable venue: atomic cross-instrument order locks, preparation,
+1. The [shared durable venue and fixed worker](MIXED_VENUE.md) now implement one
+   fixture balance, cross-instrument order lock and fill/settlement sequence. Connect
+   this common ledger/admission boundary to one explicitly enrolled native owner: atomic cross-instrument order locks, preparation,
    attempted/unknown orders, actual fills, settlement, complete reconciliation,
    independent stock protection, restart and signed recovery. Do not reuse two
    independently funded engines or accept cash projections as native approval.
@@ -117,8 +118,9 @@ protection supervisor.
    isolation tests here are not native four-arm mixed replay acceptance.
 
 Then final UI/visual and authentic provider/model/host/economic/PAPER acceptance.
-LIVE remains disabled and the deployed experiment frozen. This slice changes no
-existing option/stock implementation, dependencies, broker transport or deployment.
+LIVE remains disabled and the deployed experiment frozen. The original cash-history slice changed no existing option/stock implementation.
+The subsequent fixture slice explicitly enrolls mixed transport; dependencies,
+broker transport and deployment remain unchanged.
 
 ## Verification
 

@@ -25,6 +25,8 @@ def main():
             request.population_id,
         ):
             return 1
+        if venue.stock_limits != request.stock_limits:
+            return 1
         if request.operation == "snapshot":
             if request.fault == "STALL_READ":
                 _stall(request.parent_pid)
@@ -32,9 +34,9 @@ def main():
         else:
             if request.fault == "STALL_BEFORE_ACCEPT":
                 _stall(request.parent_pid)
-            order_id = venue._accept(
-                request.intent, request.now, request.deadline_monotonic, request.parent_pid
-            )
+            accept = venue._accept_stock if request.operation == "stock_accept" else venue._accept
+            intent = request.stock_intent if request.operation == "stock_accept" else request.intent
+            order_id = accept(intent, request.now, request.deadline_monotonic, request.parent_pid)
             if request.fault == "IGNORE_TERM_AFTER_ACCEPT":
                 signal.signal(signal.SIGTERM, signal.SIG_IGN)
             if request.fault in {"STALL_AFTER_ACCEPT", "IGNORE_TERM_AFTER_ACCEPT"}:

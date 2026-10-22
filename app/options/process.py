@@ -18,13 +18,14 @@ from app.execution.process import (
     FixtureProcessTimeout,
     _cleanup,
 )
+from app.mixed.stock_models import StockIntent, StockLimits
 from app.options.lifecycle import OptionIntent, OptionVenueSnapshot
 from app.options.models import Name, OptionRecord
 from app.options.venue import DurableOptionVenue
 
 
 class OptionRequest(OptionRecord):
-    operation: Literal["accept", "snapshot"]
+    operation: Literal["accept", "stock_accept", "snapshot"]
     path: str
     venue_id: Name
     account_id: Name
@@ -33,12 +34,18 @@ class OptionRequest(OptionRecord):
     deadline_monotonic: float = Field(gt=0, allow_inf_nan=False)
     parent_pid: int = Field(gt=0, strict=True)
     intent: OptionIntent | None = None
+    stock_limits: StockLimits | None = Field(default=None, exclude_if=lambda v: v is None)
+    stock_intent: StockIntent | None = Field(default=None, exclude_if=lambda v: v is None)
     fault: FixtureFault = "NONE"
 
     @model_validator(mode="after")
     def paired(self):
         if (self.operation == "accept") != (self.intent is not None):
             raise ValueError("Operation and option intent must agree")
+        if (self.operation == "stock_accept") != (self.stock_intent is not None):
+            raise ValueError("Operation and stock intent must agree")
+        if self.stock_intent is not None and self.stock_limits is None:
+            raise ValueError("Stock worker request needs its frozen limits")
         return self
 
 
@@ -47,16 +54,24 @@ class OptionProcessResult(OptionRecord):
     snapshot: OptionVenueSnapshot | None = None
 
 
-async def run_option_process(venue, *, now, timeout_seconds, intent=None, deadline=None):
+async def run_option_process(
+    venue, *, now, timeout_seconds, intent=None, stock_intent=None, deadline=None
+):
     if type(venue) is not DurableOptionVenue or not 0 < timeout_seconds <= 30:
         raise ValueError("Only the bounded built-in option fixture is supported")
+    if stock_intent is not None and (intent is not None or venue.stock_limits is None):
+        raise ValueError("One explicitly enrolled stock request required")
     deadline = (
         min(deadline, time.monotonic() + timeout_seconds)
         if deadline is not None
         else time.monotonic() + timeout_seconds
     )
     request = OptionRequest(
-        operation="accept" if intent else "snapshot",
+        operation="stock_accept"
+        if stock_intent is not None
+        else "accept"
+        if intent
+        else "snapshot",
         path=str(venue.path),
         venue_id=venue.venue_id,
         account_id=venue.account_id,
@@ -65,6 +80,8 @@ async def run_option_process(venue, *, now, timeout_seconds, intent=None, deadli
         deadline_monotonic=deadline,
         parent_pid=os.getpid(),
         intent=intent,
+        stock_intent=stock_intent,
+        stock_limits=venue.stock_limits,
         fault=venue.fault,
     )
     payload = request.model_dump_json().encode()
@@ -103,7 +120,7 @@ async def run_option_process(venue, *, now, timeout_seconds, intent=None, deadli
                 result = OptionProcessResult.model_validate_json(data)
             except ValueError:
                 raise FixtureProcessProtocolError("Invalid option fixture response") from None
-            if intent is not None:
+            if intent is not None or stock_intent is not None:
                 if result.order_id is None or result.snapshot is not None:
                     raise FixtureProcessProtocolError("Invalid option acknowledgment")
             elif (
@@ -112,6 +129,7 @@ async def run_option_process(venue, *, now, timeout_seconds, intent=None, deadli
                 or result.snapshot.venue_id != venue.venue_id
                 or result.snapshot.account_id != venue.account_id
                 or result.snapshot.population_id != venue.population_id
+                or result.snapshot.stock_limits != venue.stock_limits
             ):
                 raise FixtureProcessProtocolError("Invalid option snapshot binding")
             return result

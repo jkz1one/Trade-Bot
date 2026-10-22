@@ -319,3 +319,18 @@ costs, reservations and order-free admission. Its actual native Scope/Swing
 projection tests preserve the original option positions. Run native option
 execution/admission/fill/settlement/Scope/carry regressions alongside it. These
 checks do not establish mixed native execution, runtime or four-arm replay.
+
+
+## Shared mixed fixture transport
+
+Run `test_mixed_venue.py` on the same installed wheel as the mixed accounting and
+admission checks and native option/Scope/Swing regressions above. It exercises
+the actual bounded fixed child, a common stock/options lock and balance, partial
+fills, explicit settlement, immutable original intent, fractional fees, source
+liquidity, uncertainty and legacy enrollment rejection. Four separate fixture
+accounts also retain separate cash/attempts; that is not A/B/C/D strategy replay.
+
+Compare prior/current serialized fixtures and verify source/wheel/installed bytes.
+Count completed final-wheel cases once; exclude overlapping diagnostics. The
+[fixture contract](MIXED_VENUE.md) grants no native mixed owner, runtime, model or
+broker acceptance. See the newest status entry for the retained final receipt.

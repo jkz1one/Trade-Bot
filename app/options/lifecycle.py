@@ -7,6 +7,7 @@ from typing import Literal
 from pydantic import Field, StrictBool, model_validator
 
 from app.execution.economics import CostPolicy
+from app.mixed.stock_models import StockLimits, StockObservation, StockPosition
 from app.options.carry_models import SwingCarryTerms
 from app.options.models import (
     Count,
@@ -669,6 +670,19 @@ class OptionVenueSnapshot(OptionRecord):
     cash: Money
     settled_cash: Money
     position: OptionPosition | None = None
+    stock_limits: StockLimits | None = Field(default=None, exclude_if=lambda v: v is None)
+    stock_position: StockPosition | None = Field(default=None, exclude_if=lambda v: v is None)
+    stock_orders: tuple[StockObservation, ...] = Field(
+        default=(), max_length=1000, exclude_if=lambda v: not v
+    )
     orders: tuple[OptionObservation, ...] = Field(default=(), max_length=1000)
     receipts: tuple[OptionReceipt, ...] = Field(default=(), max_length=1000)
     underlying_exposures: tuple[UnderlyingExposure, ...] = Field(default=(), max_length=32)
+
+    @model_validator(mode="after")
+    def stock_enrollment(self):
+        if self.stock_limits is None and (self.stock_position is not None or self.stock_orders):
+            raise ValueError("Explicit stock snapshot enrollment required")
+        if self.position is not None and self.stock_position is not None:
+            raise ValueError("One stock or option holding required")
+        return self

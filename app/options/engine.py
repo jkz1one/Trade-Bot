@@ -200,6 +200,8 @@ class OptionExecution:
     def __init__(self, path, limits, policy, venue, *, now, create=False, _owner=None):
         if _owner is not OWNER or type(venue) is not DurableOptionVenue:
             raise ValueError("Use owned OptionExecution.open with the built-in fixture")
+        if venue.stock_limits is not None:
+            raise ValueError("Mixed venue requires a separately bound native execution owner")
         self._closed = False
         self.limits = OptionLimits.model_validate(limits.model_dump(warnings=False))
         self.policy = OptionExecutionPolicy.model_validate(policy.model_dump(warnings=False))
@@ -1253,6 +1255,8 @@ class OptionExecution:
             }
 
     def _reconcile(self, db, c, snap, now):
+        if snap.stock_limits is not None or snap.stock_orders or snap.stock_position is not None:
+            raise ValueError("MIXED_STOCK_SNAPSHOT_NOT_ENROLLED")
         if (snap.venue_id, snap.account_id, snap.population_id) != (
             self.venue.venue_id,
             self.limits.account_id,

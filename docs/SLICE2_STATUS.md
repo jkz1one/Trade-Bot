@@ -1,5 +1,70 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+
+## Shared stock/options fixture and fixed child: 2026-10-22 America/New_York
+
+Fresh GitHub/local state began at HEAD
+`8191de7e2bf5dba71f70f99140985cc1abd3e13f`, tree
+`90dab2ba1431f8337001e7802a98f2fb769d4dff`. PR #1 remained open/draft;
+main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`.
+
+The [shared durable mixed fixture](MIXED_VENUE.md) now binds actual long shares and
+options to one private venue, original capital, cash/settled balance, unresolved
+order lock, holding, submit count and chronological event sequence. Mixed creation
+requires explicit frozen share limits and a separate schema. Both asset paths
+check the same working orders and position; concurrent fixed children cannot
+acquire competing stock and option order locks.
+
+Stock observations retain the complete accepted intent, including original thesis,
+source clocks, geometry, family, approval hash, account revision and deadlines.
+Fills reject any rewritten accepted term, stale/nonexecutable/undersized source,
+reused source size, nonconforming fractional quantity, wrong price/fees, overfill
+or changed history. Partial cancellations retain actual holdings. Closes preserve
+original entry terms and cannot open shorts or average another entry. Sale proceeds
+remain unsettled until an explicit receipt. Stock → option → stock fills reconstruct
+one continuous balance through the existing mixed accounting boundary.
+
+The existing bounded isolated fixed child now supports a separately typed stock
+operation, retaining exact policy/venue identity and original deadlines. Lost,
+invalid and oversized acknowledgments, crashes and stalls retain accepted history;
+client identities cannot be resubmitted. Scripted fixture terminal outcomes remain
+distinct from native cancellation/retry authority. Reads/writes check one global
+sequence, order/fill identities, submit count and nonregressing clocks.
+
+Existing option-only fixture state and serialized contracts omit the new optional
+fields. Ten representative prior contracts are byte-identical across separately
+installed parent/current wheels. Legacy native owners reject mixed enrollment,
+including flat mixed snapshots; stock evidence cannot be accepted and ignored.
+Stock primitives were moved below the option lifecycle import boundary with public
+compatibility re-exports. The prior pure accounting implementation is unchanged
+except for extracting its frozen stock-rule helpers for reuse by the fixture.
+
+Validation: **523 distinct final-wheel installed checks**, including **69 new
+fixture cases**, **119 common accounting/admission checks** and **335 native
+option/admission/fill/settlement/Scope/Swing regressions**. The final phases
+completed in 109.16, 7.57 and 137.48 seconds respectively. Exact completed case
+IDs and per-phase receipts are retained without double-counting. Final wheel SHA-256:
+`90e91660f85f2f5bb110ad58e32b97b3d45d73f08bad4b8b43aba7b9b524707e`.
+All 221 application/template files match source, wheel and installed bytes;
+212 pre-existing application/template files are unchanged. Changed-file Ruff/format,
+dependency consistency, local documentation links and whitespace checks pass.
+Proof: `../mixed-venue-proof/`; wheel: `../mixed-venue-wheels/`; environment:
+`../scope-replay-env/`. Tests are copied outside the checkout and run serially
+against the noneditable installed wheel with Python `-I`, warnings as errors and
+plugin autoload disabled. Earlier overlapping/diagnostic runs are excluded. A
+fractional-exit test helper's duplicate keyword was corrected; stock fault tests
+use the existing five-second process bound rather than a shorter startup allowance.
+
+This completes the venue/fixed-worker portion of mixed plumbing, not the native
+mixed owner. Remaining: native journal, preparation, complete reconciliation,
+independent stock protection, loss outcomes, restart/recovery; original stock
+candidate/shared selection and full paid entry/management contracts; continuous
+mixed runtime and independent native A/B/C/D tapes/replay/export with all costs.
+The [remaining list](MIXED_CASH_HISTORY.md#remaining-plumbing-in-total) is retained.
+No dependencies, deployment, provider/model/broker calls, LIVE controls or main
+changes. UI/visual and authentic PAPER acceptance remain later work.
+
+
 ## Mixed cash history and order-free admission: 2026-10-22 America/New_York
 
 Fresh GitHub/local state began at clean HEAD

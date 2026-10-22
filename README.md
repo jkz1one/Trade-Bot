@@ -13,6 +13,9 @@ authentic data/model, host and visual acceptance remain separate gates.
 
 Current work finishes remaining strategy/engine plumbing before the final UI and
 authentic data/model validation pass. Offline test tools remain available during development.
+The [shared mixed fixture](docs/MIXED_VENUE.md) now executes stock and option
+fixtures on one balance and order lock. Native mixed ownership, strategy/model
+contracts, runtime and independent replay/export remain before that acceptance pass.
 New [stop-only target milestones](docs/OPTIONS_TARGET_EXITS.md#stop-only-target-milestones)
 let protection tighten at an objective without selling a contract or inventing proceeds.
 

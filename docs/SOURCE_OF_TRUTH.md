@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.100. Adopted product direction and working delivery contract, 2026-10-22 UTC.
+Version 1.101. Adopted product direction and working delivery contract, 2026-10-22 UTC.
 [Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now connects
 choice-only B, matched independent native accounts and portable full-cost export.
 [Continuous Scope runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now connect explicit
@@ -30,6 +30,11 @@ one stock/options balance, costs, reservations and loss envelope with order-free
 stock admission and an existing option-account projection. Native mixed ownership,
 candidate/model contracts, runtime and independent native replay/export remain
 before final UI and authentic PAPER testing. This boundary is not a mixed trader.
+[Shared durable mixed fixture](MIXED_VENUE.md) now connects actual share and option
+orders to one venue balance, atomic order lock, event sequence and bounded fixed
+child. Original terms, partial fills and explicit settlement persist across restart.
+Legacy owners reject this enrollment; native mixed ownership/protection, selection,
+paid contracts, continuous runtime and independent replay/export remain.
 [Shared Scope entry AI](OPTIONS_SCOPE_AI.md) now binds one paid Degen/Swing/Scope
 decision to native approval, fixed Scope terms, fresh post-cost admission and stored
 trade-level cost attribution. The original expiry still caps dispatch; scale/final

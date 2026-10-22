@@ -71,7 +71,10 @@ def _validate_intent(policy, intent):
             ):
                 raise ValueError("MIXED_OPTION_DEBIT_OR_EXIT_RESERVE")
         return
-    p = policy.stocks
+    _validate_stock_intent(policy.stocks, intent)
+
+
+def _validate_stock_intent(p, intent):
     i = intent.instrument
     if (
         i.provider != p.provider
@@ -101,7 +104,11 @@ def _validate_intent(policy, intent):
 
 
 def _stock_fill(policy, intent, fill, index, used):
-    p, q = policy.stocks, fill.quote
+    _stock_fill_rules(policy.stocks, intent, fill, index, used)
+
+
+def _stock_fill_rules(p, intent, fill, index, used):
+    q = fill.quote
     if (
         q.instrument != intent.instrument
         or q.source != p.quote_source
