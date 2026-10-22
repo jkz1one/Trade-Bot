@@ -65,12 +65,9 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
     config = judgment.configuration(c.engine.policy.cost_policy, c.judgment_limits, c.entry_policy)
     opportunities = []
     for candidate in candidates:
-        matches = [
-            s
-            for s in scans
-            if s.symbol == candidate.symbol
-            and any(o.family == candidate.family for o in s.observations)
-        ]
+        from app.options.swing_batch import scan_matches
+
+        matches = [s for s in scans if scan_matches(s, candidate)]
         if len(matches) != 1:
             raise ValueError("Exactly one family-specific scan required")
         scan = matches[0]

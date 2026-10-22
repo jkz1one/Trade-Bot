@@ -47,7 +47,10 @@ class TapeHeader(OptionRecord):
             != (window.session_date, window.opens_at, window.closes_at)
             or self.declared_at >= self.opens_at
             or not set(self.setup.symbols) <= set(self.limits.allowed_underlyings)
-            or (self.selection.max_quote_contracts + (1 if self.swing else 0))
+            or (
+                self.selection.max_quote_contracts
+                + (2 if self.swing and self.swing.family_batch else 1 if self.swing else 0)
+            )
             * len(self.setup.symbols)
             + (1 if self.scope else 0)
             > 8
@@ -83,7 +86,11 @@ def _validate_event(header, event):
     if event.kind == "CYCLE" and at >= header.closes_at:
         raise ValueError("Cycle outside regular session")
     if event.kind == "MARKET" and (
-        frame.histories or frame.inventories or frame.swing or frame.scope is not None
+        frame.histories
+        or frame.inventories
+        or frame.swing
+        or frame.swing_batches
+        or frame.scope is not None
     ):
         raise ValueError("Market updates contain quotes only")
     if event.kind == "SCOPE" and (
@@ -91,6 +98,7 @@ def _validate_event(header, event):
         or frame.histories
         or frame.inventories
         or frame.swing
+        or frame.swing_batches
         or frame.quotes
         or frame.underlyings
     ):
@@ -100,11 +108,20 @@ def _validate_event(header, event):
         raise ValueError("Swing evidence requires frozen shared-family enrollment")
     if len({s.seed.history.symbol for s in frame.swing}) != len(frame.swing):
         raise ValueError("Duplicate Swing seed identity")
-    for item in frame.swing:
+    from app.options.swing_batch import frame_items
+
+    items = (
+        frame_items(frame, header.swing, XNYSCalendar(), header.setup.symbols, at)
+        if event.kind == "CYCLE"
+        else ()
+    )
+    for item in items:
         seed, history = item.seed, item.seed.history
         from app.options.swing_targets import target_issues
 
-        if target_issues(seed, header.swing):
+        if (header.swing.family_batch is None or seed.batch_hash is None) and target_issues(
+            seed, header.swing
+        ):
             raise ValueError("Swing target derivation must match frozen tape enrollment")
         if (
             history.symbol not in header.setup.symbols
@@ -419,6 +436,10 @@ def replay_shortlist(tape, cycle_key, *, as_of):
 
 def _replay_swing(tape, event, histories, scans):
     """Rebuild first-valid locks only from the visible cycle prefix, without an owner."""
+    if tape.header.swing.family_batch is not None:
+        from app.options.swing_batch import replay_batches
+
+        return replay_batches(tape, event, histories, scans)
     h, calendar = tape.header, XNYSCalendar()
     locks, terminals, locked_seeds = {}, {}, {}
 

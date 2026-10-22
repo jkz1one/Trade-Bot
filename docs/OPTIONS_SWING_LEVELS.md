@@ -60,3 +60,12 @@ remaining plumbing. Authentic provider/model/host/economic/PAPER and final UI
 acceptance follow plumbing. LIVE remains disabled and deployment frozen.
 
 See [testing](OPTIONS_TESTING.md) and the newest [status](SLICE2_STATUS.md).
+
+
+## Complete family batch enrollment
+
+The separately frozen [complete family batch](OPTIONS_SWING_BATCH.md) now permits
+concurrent native family selection from one original source per symbol, with atomic
+locks, exact selected lineage, bounded unique quotes, runtime and independent
+carry/export. The single-seed limits above continue to describe legacy enrollment.
+Mixed stock/options ownership and its runtime/accounting integration remain open.

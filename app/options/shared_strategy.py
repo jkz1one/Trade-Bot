@@ -9,14 +9,16 @@ from app.options.swing import SwingInput, plan_swing_reads, scan_swing, seed_iss
 
 def swing_plans(c, supplied, histories, scans, at):
     items = tuple(SwingInput.model_validate(x.model_dump(warnings=False)) for x in supplied)
+    joint = c.swing_policy.family_batch is not None
     by_symbol = {x.seed.history.symbol: x for x in items}
-    if len(by_symbol) != len(items) or not set(by_symbol) <= set(c.policy.symbols):
+    if (not joint and len(by_symbol) != len(items)) or not set(by_symbol) <= set(c.policy.symbols):
         raise ValueError("Unique scoped Swing seeds required")
+    if set(by_symbol) != set(c.policy.symbols):
+        raise ExecutionBlocked("EXACT_SWING_SEED_COVERAGE_REQUIRED")
+    intradays = {s.symbol: s for s in scans}
     added_scans, added_plans = [], []
-    for intraday in scans:
-        item = by_symbol.get(intraday.symbol)
-        if item is None:
-            raise ExecutionBlocked("EXACT_SWING_SEED_COVERAGE_REQUIRED")
+    for item in items if joint else (by_symbol[s.symbol] for s in scans):
+        intraday = intradays[item.seed.history.symbol]
         scan = scan_swing(
             item,
             c.swing_policy,
@@ -29,10 +31,9 @@ def swing_plans(c, supplied, histories, scans, at):
         )
         with c.engine.journal.read() as db:
             c._bound(db)
-            row = db.execute(
-                "SELECT seed_hash FROM execution_option_swing_seeds WHERE session=? AND symbol=?",
-                (item.seed.target_session.isoformat(), intraday.symbol),
-            ).fetchone()
+            from app.options.swing_batch import seed_lock
+
+            row = seed_lock(db, item.seed)
             if c.swing_policy.unfilled_lifecycle is not None:
                 from app.options.swing_lifecycle import apply_terminal, load_terminal
 
@@ -45,6 +46,8 @@ def swing_plans(c, supplied, histories, scans, at):
 
 
 def lock_seeds(c, items):
+    if c.swing_policy.family_batch is not None:
+        raise ValueError("Complete original batch locking required")
     with c.engine.journal.write() as db:
         c._bound(db)
         for item in items:
@@ -121,10 +124,13 @@ def review_shared_entry(engine, db, key, proposal, quote, underlying, now):
     candidate = matches[0]
     if not isinstance(candidate, SwingCandidate):
         return
+    from app.options.swing_batch import scan_matches, seed_lock
+
     scans = [
-        SwingScan.model_validate(s)
+        scan
         for s in data.get("scans", [])
-        if s.get("version") == "swing-next-session-v1" and s.get("symbol") == candidate.symbol
+        if s.get("version") == "swing-next-session-v1"
+        and scan_matches(scan := SwingScan.model_validate(s), candidate)
     ]
     if len(scans) != 1:
         raise ExecutionBlocked("SWING_SCAN_REQUIRED")
@@ -149,10 +155,7 @@ def review_shared_entry(engine, db, key, proposal, quote, underlying, now):
 
         if scan.terminal is not None or load_terminal(db, seed) is not None:
             raise ExecutionBlocked("SWING_SEED_TERMINAL")
-    row = db.execute(
-        "SELECT seed_hash FROM execution_option_swing_seeds WHERE session=? AND symbol=?",
-        (seed.target_session.isoformat(), seed.history.symbol),
-    ).fetchone()
+    row = seed_lock(db, seed)
     window = engine.calendar.current_window(now)
     if (
         row is None

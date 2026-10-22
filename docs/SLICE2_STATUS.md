@@ -1,5 +1,79 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Complete concurrent Swing-family plumbing: 2026-10-22 UTC
+
+Fresh GitHub/local state began at clean HEAD
+`ee08888b862ab752d50d156d381bac285b1f9421`, tree
+`c4a6d0944199adfb9e5500176c530f93f3db5e2e`. PR #1 was open/draft;
+main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`.
+
+[Complete Swing-family batches](OPTIONS_SWING_BATCH.md) now let daily base,
+8/21 EMA, 50 SMA and higher-timeframe level setups compete inside the same native
+owner. One compact original source per symbol supplies the completed daily/hourly
+history and exact CALL/PUT contract pair. Software enumerates every enrolled
+variant, retaining blocked diagnostics. Complete source/calendar/clock defects
+reject the batch; nonpositive original risk is never repaired with a current price.
+Original stops, fixed 1R/2R/3R objectives, source clocks, target/carry sessions,
+full frozen policy and original batch hashes remain bound.
+
+All roots and children lock atomically. A conflict in a second symbol rolls back
+a new first-symbol root. Current metadata/catalyst refresh does not replace original
+terms. Quote reads deduplicate only identical instruments; conflicting aliases
+reject. Every family retains separate evidence/admission/candidate identity.
+Selection, paid entry, native review and carry reconstruction now join the exact
+family, symbol, right and instrument. Tests select different families sharing the
+same contract. One native owner retains cash, reservations, one position, cost/loss
+controls, mandatory exits and original per-child stop/T1 retirement across runtime
+and restart. Paid rejected entries remain charged; unknown usage remains unknown.
+
+New enrollment leaves legacy seeds/frames/population serialization unchanged.
+Common tapes reject missing/duplicate batches, unsupported legacy fields and
+unenrolled child hashes. Native independent A/B/C/D carry replay and portable export
+retain separate accounts, actual fills, entry/management charges, execution fees
+and explicit session/overnight allocations. Reconstruction rederives complete roots
+and children and rejects rehashed source, child-set, policy and selected-lineage
+substitution. No older Scope replay-model restriction was removed.
+
+Eight unique quotes, 24 candidates, 256 KiB wire/model requests and existing token,
+cost and response limits remain bounded. Oversized requests fail closed. Only the
+new tagged expanded journal contract permits 30 scans/read plans and 4 MiB; legacy
+records retain their prior bound. Observer reads use frozen enrollment and create
+no execution/model/provider activity. Pure original-source derivation has a bounded
+cache keyed by exact serialized inputs; current time, database state, approval,
+account and terminal evidence are never cached.
+
+Validation: **611 distinct final-wheel installed checks**, including
+**58 new cases**. Wheel SHA-256:
+`f90c8895afa7ed32c925f7aaf70e06e34ecc50f6cbb2e686f4bcdcc197a94f29`.
+Final native/boundary/runtime/observer checks: 41; common tape and independent
+carry/export checks: 17; regressions: 553. The regressions cover existing
+level/MA/base/target/shared/quote/lineage/Scope/Degen, legacy model contracts,
+common tapes and both ordinary/Scope continuous runtimes. Six retained pre-batch
+exports reconstruct exactly; artifact checks are separate from pytest counts.
+All 215 application/template files match source, wheel and installed bytes.
+Copied tests ran outside the checkout against a noneditable wheel, with Python
+`-I`, warnings as errors, plugin autoload disabled and serial native execution.
+Exact distinct case IDs/times, test/source identity and publication receipts are in
+`../swing-batch-proof/`; wheel: `../swing-batch-wheels/`; environment:
+`../scope-replay-env/`. Earlier overlapping/diagnostic runs are excluded. They
+exposed the expanded journal boundary and an observer test field-name mistake;
+these were corrected without relaxing quote, model, source or risk controls.
+The final enrollment review also closed an old-tape unbound-child-hash acceptance
+edge. Runtime settings now reserve both original Swing contract slots before
+creating a population. Changed-file Ruff/format, dependency consistency, local Markdown links and
+whitespace checks passed.
+
+Remaining major plumbing is **mixed stock/options ownership**: one common bankroll,
+reservation/exposure/loss/cost ledger and selector across both instrument types;
+instrument-specific native execution, fills, settlement and protection; durable
+reconciliation/restart/recovery; unified runtime inputs and independent A/B/C/D
+full-cost replay/export. Running separate stock and option bankrolls is not this
+completion. Final UI and authentic provider/model/host/economic/PAPER acceptance
+follow that implementation. LIVE stays disabled, deployment frozen, PR #1 draft,
+main untouched. No dependencies, authenticated provider/model/broker calls,
+deployment or merge were changed.
+
+
 ## Native higher-timeframe level plumbing: 2026-10-21 America/New_York
 
 Fresh GitHub/local state began at clean HEAD

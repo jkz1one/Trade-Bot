@@ -72,3 +72,12 @@ own native enrollment. Joint selection and mixed stock/options ownership remain 
 follow plumbing. LIVE stays disabled and deployment frozen.
 
 See [testing](OPTIONS_TESTING.md) and the newest [status proof](SLICE2_STATUS.md).
+
+
+## Complete family batch enrollment
+
+The separately frozen [complete family batch](OPTIONS_SWING_BATCH.md) now permits
+concurrent native family selection from one original source per symbol, with atomic
+locks, exact selected lineage, bounded unique quotes, runtime and independent
+carry/export. The single-seed limits above continue to describe legacy enrollment.
+Mixed stock/options ownership and its runtime/accounting integration remain open.

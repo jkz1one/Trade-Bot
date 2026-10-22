@@ -100,6 +100,30 @@ class SharedCandidatePacket(CandidatePacket):
         return self
 
 
+class JointCandidatePacket(SharedCandidatePacket):
+    """Explicit complete-batch cohort; legacy packet bounds and hashes stay frozen."""
+
+    universe: Literal["DEGEN_SWING_BATCH"] = "DEGEN_SWING_BATCH"
+    scans: tuple[DegenScan | SwingScan, ...] = Field(min_length=1, max_length=30)
+
+    @model_validator(mode="after")
+    def family_evidence(self):
+        from app.options.swing_batch import scan_matches
+
+        keys = [
+            (s.symbol, fingerprint(s.seed)) if isinstance(s, SwingScan) else (s.symbol, "DEGEN")
+            for s in self.scans
+        ]
+        if len(set(keys)) != len(keys) or any(
+            isinstance(s, SwingScan) and s.seed.batch_hash is None for s in self.scans
+        ):
+            raise ValueError("Unique complete-batch family scans required")
+        for candidate in self.candidates:
+            if len([s for s in self.scans if scan_matches(s, candidate)]) != 1:
+                raise ValueError("Exact joint candidate family evidence required")
+        return self
+
+
 def prompt(shared=False):
     return (
         (SHARED_PROMPT_VERSION, SHARED_INSTRUCTIONS) if shared else (PROMPT_VERSION, INSTRUCTIONS)
@@ -129,7 +153,7 @@ def configuration(costs, limits, *, shared=False):
 class CandidateRequest(OptionRecord):
     request_id: str = Field(pattern=r"^[a-f0-9]{32}$")
     model: Name
-    packet: CandidatePacket | SharedCandidatePacket
+    packet: CandidatePacket | SharedCandidatePacket | JointCandidatePacket
     limits: JudgmentLimits
     configuration: dict
     parent_pid: int = Field(gt=0, strict=True)

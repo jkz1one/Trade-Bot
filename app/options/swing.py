@@ -39,6 +39,9 @@ class SwingPolicy(OptionRecord):
     daily_base: SwingBasePolicy | None = Field(default=None, exclude_if=lambda v: v is None)
     ma_pullback: SwingMAPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
     higher_levels: SwingLevelPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
+    family_batch: Literal["complete-family-batch-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     minimum_dte: int = Field(ge=1, le=60, strict=True)
     maximum_dte: int = Field(ge=1, le=90, strict=True)
     maximum_chase_fraction: Money = Field(gt=0, le=Decimal(".1"))
@@ -57,7 +60,26 @@ class SwingPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def coherent(self):
-        if sum(p is not None for p in (self.daily_base, self.ma_pullback, self.higher_levels)) > 1:
+        if self.family_batch is not None:
+            if (
+                not any((self.daily_base, self.ma_pullback, self.higher_levels))
+                or self.daily_lookback < 56
+            ):
+                raise ValueError(
+                    "Joint Swing requires explicit families and complete daily context"
+                )
+            if (
+                self.daily_base
+                and self.ma_pullback
+                and (
+                    self.daily_base.hourly_source != self.ma_pullback.hourly_source
+                    or self.daily_base.hourly_lookback != self.ma_pullback.hourly_lookback
+                )
+            ):
+                raise ValueError("Joint Swing requires one original hourly source and coverage")
+        elif (
+            sum(p is not None for p in (self.daily_base, self.ma_pullback, self.higher_levels)) > 1
+        ):
             raise ValueError("Separate frozen base, MA and level enrollment required")
         if self.higher_levels is not None:
             if self.daily_lookback < 56 or self.target_derivation != "original-risk-ladder-v1":
@@ -139,6 +161,9 @@ class SwingSeed(OptionRecord):
     instrument: OptionInstrument
     first_target: Money | None = Field(default=None, gt=0, exclude_if=lambda v: v is None)
     carry_exit_session: date | None = Field(default=None, exclude_if=lambda v: v is None)
+    batch_hash: str | None = Field(
+        default=None, pattern=r"^[0-9a-f]{64}$", exclude_if=lambda v: v is None
+    )
     target_geometry: SwingTargetGeometry | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -327,7 +352,10 @@ def scan_swing(item, policy, intraday, history, calendar, symbols, *, now, recei
         )
         reasons = list(issues)
         base = ma = level = None
-        if policy.higher_levels is not None:
+        from app.options.swing_batch import family_policy
+
+        family = family_policy(seed, policy)
+        if family.higher_levels is not None:
             from app.options.swing_levels import evaluate_level
 
             try:
@@ -337,7 +365,7 @@ def scan_swing(item, policy, intraday, history, calendar, symbols, *, now, recei
             except (ValueError, ArithmeticError):
                 issues.append("SWING_LEVEL_EVIDENCE_UNAVAILABLE")
                 reasons.append("SWING_LEVEL_EVIDENCE_UNAVAILABLE")
-        elif policy.ma_pullback is not None:
+        elif family.ma_pullback is not None:
             from app.options.swing_ma import evaluate_ma
 
             try:
@@ -347,7 +375,7 @@ def scan_swing(item, policy, intraday, history, calendar, symbols, *, now, recei
             except (ValueError, ArithmeticError):
                 issues.append("SWING_MA_EVIDENCE_UNAVAILABLE")
                 reasons.append("SWING_MA_EVIDENCE_UNAVAILABLE")
-        elif policy.daily_base is not None:
+        elif family.daily_base is not None:
             from app.options.swing_base import evaluate_base
 
             try:
@@ -385,11 +413,11 @@ def scan_swing(item, policy, intraday, history, calendar, symbols, *, now, recei
             observations=(
                 SwingObservation(
                     family=LEVEL_FAMILIES[seed.level_key]
-                    if policy.higher_levels is not None and seed.level_key in LEVEL_FAMILIES
+                    if family.higher_levels is not None and seed.level_key in LEVEL_FAMILIES
                     else MA_FAMILIES[seed.ma_period]
-                    if policy.ma_pullback is not None and seed.ma_period in MA_FAMILIES
+                    if family.ma_pullback is not None and seed.ma_period in MA_FAMILIES
                     else "SWING_DAILY_BASE"
-                    if policy.daily_base is not None
+                    if family.daily_base is not None
                     else "SWING_DAILY_BREAKOUT",
                     right=right,
                     status="BLOCKED" if issues else "WATCHING" if reasons else "CONFIRMED",

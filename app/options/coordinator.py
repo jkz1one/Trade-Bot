@@ -27,6 +27,7 @@ from app.options.selection import (
     plan_contract_reads,
 )
 from app.options.swing import SwingInput, SwingPolicy
+from app.options.swing_batch import SwingBatchInput
 
 
 class DegenFrame(OptionRecord):
@@ -36,6 +37,9 @@ class DegenFrame(OptionRecord):
     underlyings: tuple[UnderlyingQuote, ...] = Field(default=(), max_length=2)
     scope: ScopeCycleInput | None = Field(default=None, exclude_if=lambda v: v is None)
     swing: tuple[SwingInput, ...] = Field(default=(), max_length=2, exclude_if=lambda v: not v)
+    swing_batches: tuple[SwingBatchInput, ...] = Field(
+        default=(), max_length=2, exclude_if=lambda v: not v
+    )
 
 
 class DegenCoordinator:
@@ -190,8 +194,22 @@ class DegenCoordinator:
             raise ValueError("Model requires absolute private key path and frozen cost policy")
         if (
             not set(self.policy.symbols) <= set(engine.limits.allowed_underlyings)
-            or (self.selection.max_quote_contracts + (1 if self.swing_policy else 0))
+            or (
+                self.selection.max_quote_contracts
+                + (
+                    2
+                    if self.swing_policy and self.swing_policy.family_batch
+                    else 1
+                    if self.swing_policy
+                    else 0
+                )
+            )
             * len(self.policy.symbols)
+            + (
+                1
+                if self.swing_policy and self.swing_policy.family_batch and self.scope_policy
+                else 0
+            )
             > 8
         ):
             raise ValueError(
@@ -269,6 +287,10 @@ class DegenCoordinator:
                     "session TEXT NOT NULL,symbol TEXT NOT NULL,seed_hash TEXT NOT NULL,"
                     "seed_json TEXT NOT NULL,PRIMARY KEY(session,symbol))"
                 )
+                if self.swing_policy.family_batch is not None:
+                    from app.options.swing_batch import create_tables
+
+                    create_tables(db)
                 if self.swing_policy.unfilled_lifecycle is not None:
                     db.execute(
                         "CREATE TABLE IF NOT EXISTS execution_option_swing_terminals("
@@ -393,9 +415,13 @@ class DegenCoordinator:
             ).fetchone()
         return OptionIntent.model_validate_json(row[0]).instrument if row else None
 
-    def quote_plan(self, histories, inventories, swing=()):
+    def quote_plan(self, histories, inventories, swing=(), *, swing_batches=()):
         """Local planning performs no provider/model/order operation."""
         at = self.now()
+        if swing_batches and (self.swing_policy is None or self.swing_policy.family_batch is None):
+            raise ValueError("Swing batches require explicit new-population enrollment")
+        if swing and self.swing_policy is not None and self.swing_policy.family_batch is not None:
+            raise ValueError("Complete original Swing batches required")
         if swing and self.swing_policy is None:
             raise ValueError("Swing requires explicit new-population enrollment")
         with self.engine.journal.read() as db:
@@ -462,14 +488,25 @@ class DegenCoordinator:
         if self.swing_policy is not None:
             from app.options.shared_strategy import swing_plans
 
+            if self.swing_policy.family_batch is not None:
+                from app.options.swing_batch import expand_batches
+
+                swing = expand_batches(
+                    swing_batches, self.swing_policy, self.engine.calendar, self.policy.symbols, at
+                )
             additional_scans, additional_plans = swing_plans(self, swing, by_symbol, scans, at)
             if self.swing_policy.family_priority[0] == "SWING":
                 scans, plans = additional_scans + scans, additional_plans + plans
             else:
                 scans, plans = scans + additional_scans, plans + additional_plans
+        instruments = tuple(i for p in plans for i in p.instruments)
+        if self.swing_policy and self.swing_policy.family_batch:
+            from app.options.swing_batch import unique_instruments
+
+            instruments = unique_instruments(plans)
         return {
             "purpose": "CANDIDATE_SHORTLIST",
-            "instruments": tuple(i for p in plans for i in p.instruments),
+            "instruments": instruments,
             "scans": scans,
             "plans": plans,
         }
@@ -528,8 +565,16 @@ class DegenCoordinator:
             evidence["reason"] = "PRIVATE_MODEL_KEY_UNAVAILABLE"
             return None, None, at
         packet_type = (
-            judgment.SharedCandidatePacket if self.swing_policy else judgment.CandidatePacket
+            judgment.JointCandidatePacket
+            if self.swing_policy and self.swing_policy.family_batch
+            else judgment.SharedCandidatePacket
+            if self.swing_policy
+            else judgment.CandidatePacket
         )
+        if self.swing_policy and self.swing_policy.family_batch:
+            from app.options.swing_batch import scan_matches
+
+            scans = tuple(s for s in scans if any(scan_matches(s, c) for c in candidates))
         packet = packet_type(
             cycle_key=key,
             as_of=at,
@@ -642,6 +687,12 @@ class DegenCoordinator:
 
     async def cycle(self, frame):
         frame = DegenFrame.model_validate(frame.model_dump(warnings=False))
+        if frame.swing_batches and (
+            self.swing_policy is None or self.swing_policy.family_batch is None
+        ):
+            raise ValueError("Swing batches require explicit frozen enrollment")
+        if frame.swing and self.swing_policy and self.swing_policy.family_batch:
+            raise ValueError("Joint Swing accepts only complete original batches")
         if frame.scope is not None and self.scope_policy is None:
             raise ValueError("Scope frames require explicit shared enrollment")
         at = self.now()
@@ -715,14 +766,29 @@ class DegenCoordinator:
                     },
                 )
             self.engine.assess(None, None, now=at)
+            if frame.swing_batches and (
+                self.swing_policy is None or self.swing_policy.family_batch is None
+            ):
+                raise ValueError("Swing batches require explicit enrollment")
             if self.swing_policy is not None:
                 from app.options.shared_strategy import lock_seeds
 
-                lock_seeds(self, frame.swing)
+                if self.swing_policy.family_batch is not None:
+                    from app.options.swing_batch import lock_batches
+
+                    if frame.swing:
+                        raise ValueError("Complete original Swing batches required")
+                    lock_batches(self, frame.swing_batches)
+                else:
+                    if frame.swing_batches:
+                        raise ValueError("Swing batches require explicit enrollment")
+                    lock_seeds(self, frame.swing)
                 from app.options.swing_lifecycle import observe_quotes
 
                 observe_quotes(self, frame.underlyings)
-            planned = self.quote_plan(frame.histories, frame.inventories, frame.swing)
+            planned = self.quote_plan(
+                frame.histories, frame.inventories, frame.swing, swing_batches=frame.swing_batches
+            )
             if self.swing_policy and self.swing_policy.unfilled_lifecycle is not None:
                 from app.options.swing_lifecycle import retain_scans
 
@@ -733,6 +799,11 @@ class DegenCoordinator:
             quotes = {q.instrument.instrument_id: q for q in frame.quotes}
             underlyings = {q.symbol: q for q in frame.underlyings}
             evidence = {
+                **(
+                    {"swing_batch_version": self.swing_policy.family_batch}
+                    if self.swing_policy and self.swing_policy.family_batch
+                    else {}
+                ),
                 **self._family_evidence(),
                 "scans": [s.model_dump(mode="json") for s in planned["scans"]],
                 "read_plans": [p.model_dump(mode="json") for p in planned["plans"]],
@@ -778,6 +849,17 @@ class DegenCoordinator:
             evidence.update(
                 candidates=[c.model_dump(mode="json") for c in candidates], rejections=rejections
             )
+            if self.swing_policy and self.swing_policy.family_batch and len(candidates) > 24:
+                return self._finish(
+                    key,
+                    {
+                        **evidence,
+                        "candidates": [],
+                        "candidate_capacity_rejected": len(candidates),
+                        "status": "HOLD",
+                        "reason": "JOINT_CANDIDATE_CAPACITY_EXCEEDED",
+                    },
+                )
             shared_choice = None
             if self.scope_policy is not None:
                 from app.options.scope_arbitration import collect, execute_scope

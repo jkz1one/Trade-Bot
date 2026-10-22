@@ -29,6 +29,8 @@ SCHEMA = {
     "execution_option_opportunities": "cycle_key fingerprint started_at inputs_json status result_json",
     "execution_option_strategy": "id policy_json",
     "execution_option_swing_seeds": "session symbol seed_hash seed_json",
+    "execution_option_swing_batches": "session symbol batch_hash batch_json",
+    "execution_option_swing_batch_seeds": "seed_hash batch_hash seed_json",
     "execution_option_swing_terminals": "seed_hash terminal_json",
     "execution_option_loss_control": "id policy_json state_json",
     "execution_option_loss_outcomes": "entry_client_id outcome_hash record_json",
@@ -69,6 +71,9 @@ def _report(db, now, data_cost, host_cost):
     if policy.scope_execution != "scope-native-v1":
         raise ValueError("Native Scope export requires frozen enrollment")
     tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    from app.options.swing_batch import verify_batch_tables
+
+    verify_batch_tables(db)
     scope = stored_scope(db, tables, limits, now, json.loads, owner_policy=policy)
     runtime = {}
     if "execution_option_scope_runtime_inputs" in tables:
@@ -240,10 +245,16 @@ def verify_scope_execution_export(value, expected_export_hash):
             cols = [
                 n
                 + (" INTEGER" if n in {"id", "sequence", "active_lock", "halted"} else " TEXT")
-                + (" PRIMARY KEY" if i == 0 and table != "execution_option_swing_seeds" else "")
+                + (
+                    " PRIMARY KEY"
+                    if i == 0
+                    and table
+                    not in {"execution_option_swing_seeds", "execution_option_swing_batches"}
+                    else ""
+                )
                 for i, n in enumerate(names)
             ]
-            if table == "execution_option_swing_seeds":
+            if table in {"execution_option_swing_seeds", "execution_option_swing_batches"}:
                 cols.append("PRIMARY KEY(session,symbol)")
             db.execute(f"CREATE TABLE {table} ({','.join(cols)})")
             if (

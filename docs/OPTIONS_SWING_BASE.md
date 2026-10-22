@@ -83,3 +83,12 @@ silently add MA-pullback or higher-timeframe-level candidates. Those remaining S
 families and mixed stock/options ownership are still open. LIVE stays disabled and
 deployment frozen. Authentic provider/model/host/economic/PAPER and final UI acceptance
 follow plumbing. Installed proof is recorded in [Slice 2 status](SLICE2_STATUS.md).
+
+
+## Complete family batch enrollment
+
+The separately frozen [complete family batch](OPTIONS_SWING_BATCH.md) now permits
+concurrent native family selection from one original source per symbol, with atomic
+locks, exact selected lineage, bounded unique quotes, runtime and independent
+carry/export. The single-seed limits above continue to describe legacy enrollment.
+Mixed stock/options ownership and its runtime/accounting integration remain open.

@@ -297,3 +297,15 @@ original targets, native CALL/PUT fills, paid rejection/unknown costs and runtim
 `test_option_swing_level_replay.py` verifies independent A/B/C/D carry/export for
 every level/direction variant, all charges/fees/allocations and rehashed evidence
 substitution. Preserve the installed-wheel isolation and frozen-cohort regressions.
+
+
+## Concurrent Swing-family batches
+
+`test_option_swing_batch.py` covers complete original enumeration, whole-batch source
+rejection, immutable roots/children, exact same-contract family selection, unique
+quote reads, native CALL/PUT fills and exits, paid rejection, unknown usage, runtime,
+restart and stored observer bounds. `test_option_swing_batch_replay.py` covers common
+tape boundaries, prefix diagnostics, independent A/B/C/D carry and full-cost export
+with rehashed original-source/child/policy/selection tampering. Preserve serial
+native execution, isolated noneditable wheels, copied tests, Python `-I` and warnings
+as errors. Count distinct completed cases only on the final wheel.

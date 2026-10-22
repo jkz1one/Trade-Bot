@@ -11,6 +11,11 @@ D = Decimal
 
 
 def input_issues(seed, policy, calendar):
+    from app.options.swing_batch import family_policy
+
+    if (policy.family_batch is not None) != (seed.batch_hash is not None):
+        return ("SWING_BATCH_ENROLLMENT_REQUIRED",)
+    policy = family_policy(seed, policy)
     daily, hourly = seed.history, seed.hourly_history
     if policy.higher_levels is not None:
         if seed.level_key not in policy.higher_levels.keys:

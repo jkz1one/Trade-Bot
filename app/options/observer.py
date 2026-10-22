@@ -50,8 +50,12 @@ REQUIRED = frozenset(
 
 
 def _json(raw):
-    if not isinstance(raw, str) or len(raw.encode()) > MAX_RECORD_BYTES:
-        raise ValueError("Bounded stored JSON required")
+    if isinstance(raw, str) and len(raw.encode()) > MAX_RECORD_BYTES:
+        from app.options.swing_batch import stored_result
+
+        return stored_result(raw)
+    if not isinstance(raw, str):
+        raise ValueError("Bounded stored JSON required")  # noqa: TRY004 -- retained stored-record contract
     return json.loads(raw)
 
 
@@ -576,7 +580,13 @@ class OptionObserver:
             raw_scans = data.get("scans", [])
             if (
                 not isinstance(raw_scans, list)
-                or len(raw_scans) > 4
+                or len(raw_scans)
+                > (
+                    30
+                    if strategy
+                    and strategy.get("swing", {}).get("family_batch") == "complete-family-batch-v1"
+                    else 4
+                )
                 or any(not isinstance(s, dict) for s in raw_scans)
             ):
                 raise ValueError("Stored scan bound exceeded")

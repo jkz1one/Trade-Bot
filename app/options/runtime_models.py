@@ -135,7 +135,16 @@ class RuntimeSettings(OptionRecord):
         ):
             raise ValueError("Supervisor process/tick budget must fit all freshness bounds")
         if not set(self.setup.symbols) <= set(self.limits.allowed_underlyings) or (
-            (self.selection.max_quote_contracts + (1 if self.swing_policy else 0))
+            (
+                self.selection.max_quote_contracts
+                + (
+                    2
+                    if self.swing_policy and self.swing_policy.family_batch
+                    else 1
+                    if self.swing_policy
+                    else 0
+                )
+            )
             * len(self.setup.symbols)
             + (1 if self.scope_policy else 0)
             > 8
@@ -194,7 +203,10 @@ class ScopeRuntimePacket(_RuntimeEnvelope):
             elif self.action.play_key != self.frame.scope.play_key:
                 raise ValueError("Exact watch play identity required")
         if self.kind != "CYCLE" and (
-            self.frame.histories or self.frame.inventories or self.frame.swing
+            self.frame.histories
+            or self.frame.inventories
+            or self.frame.swing
+            or self.frame.swing_batches
         ):
             raise ValueError("Only CYCLE packets carry ordinary strategy inputs")
         return self

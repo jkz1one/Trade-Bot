@@ -54,14 +54,19 @@ def selected_scan(db, source_key):
     matches = [c for c in result.get("candidates", []) if c["candidate_id"] == candidate_id]
     if len(matches) != 1 or matches[0]["family"] not in SWING_FAMILIES:
         return None
+    from app.options.selection import parse_candidate
+    from app.options.swing_batch import scan_matches
+
+    candidate = parse_candidate(matches[0])
     scans = [
-        s
+        scan
         for s in result.get("scans", [])
-        if s.get("version") == "swing-next-session-v1" and s["symbol"] == matches[0]["symbol"]
+        if s.get("version") == "swing-next-session-v1"
+        and scan_matches(scan := SwingScan.model_validate(s), candidate)
     ]
     if len(scans) != 1:
         raise ValueError("SWING_CARRY_SELECTED_SCAN_REQUIRED")
-    return SwingScan.model_validate(scans[0])
+    return scans[0]
 
 
 def stored_terms(db, source_key):
@@ -99,10 +104,9 @@ def stored_terms(db, source_key):
             raise ValueError("SWING_CARRY_NOT_ENROLLED")
         return None
     terms, reasons = scan_carry_terms(scan.seed, policy, scan.catalyst, XNYSCalendar())
-    lock = db.execute(
-        "SELECT seed_hash FROM execution_option_swing_seeds WHERE session=? AND symbol=?",
-        (scan.seed.target_session.isoformat(), scan.symbol),
-    ).fetchone()
+    from app.options.swing_batch import seed_lock
+
+    lock = seed_lock(db, scan.seed)
     if (
         reasons
         or terms is None

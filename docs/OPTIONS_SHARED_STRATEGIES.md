@@ -331,3 +331,12 @@ selection and mixed stock/options ownership remain open.
 [Higher-timeframe level setups](OPTIONS_SWING_LEVELS.md) now retain their source-derived
 week/month prices, confirmation, original risk geometry and native setup identity
 through the same execution, runtime and independent carry/export boundary.
+
+
+## Complete family batch enrollment
+
+The separately frozen [complete family batch](OPTIONS_SWING_BATCH.md) now permits
+concurrent native family selection from one original source per symbol, with atomic
+locks, exact selected lineage, bounded unique quotes, runtime and independent
+carry/export. The single-seed limits above continue to describe legacy enrollment.
+Mixed stock/options ownership and its runtime/accounting integration remain open.

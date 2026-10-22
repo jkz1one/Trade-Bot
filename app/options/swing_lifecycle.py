@@ -91,10 +91,9 @@ def retain_owned_terminal(engine, db, seed, terminal, now):
     if terminal is None or load_terminal(db, seed) is not None:
         return
     digest = fingerprint(seed)
-    row = db.execute(
-        "SELECT seed_hash FROM execution_option_swing_seeds WHERE session=? AND symbol=?",
-        (seed.target_session.isoformat(), seed.history.symbol),
-    ).fetchone()
+    from app.options.swing_batch import seed_lock
+
+    row = seed_lock(db, seed)
     if row is None or row[0] != digest or terminal.seed_hash != digest:
         raise ExecutionBlocked("SWING_TERMINAL_SEED_LOCK_REQUIRED")
     db.execute(
@@ -226,10 +225,16 @@ def observe_quotes(c, underlyings):
             ).fetchone()
         ):
             return
-        for row in db.execute(
+        rows = db.execute(
             "SELECT seed_json FROM execution_option_swing_seeds WHERE session=?",
             (window.session_date,),
-        ).fetchall():
+        ).fetchall()
+        if c.swing_policy.family_batch is not None:
+            rows += db.execute(
+                "SELECT s.seed_json FROM execution_option_swing_batch_seeds s JOIN execution_option_swing_batches b ON s.batch_hash=b.batch_hash WHERE b.session=?",
+                (window.session_date,),
+            ).fetchall()
+        for row in rows:
             seed = SwingSeed.model_validate_json(row[0])
             quotes = [q for q in underlyings if q.symbol == seed.history.symbol]
             if len(quotes) == 1:

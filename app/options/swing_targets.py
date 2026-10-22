@@ -45,6 +45,8 @@ class SwingSeedBuildRequest(OptionRecord):
 
     @model_validator(mode="after")
     def enrollment(self):
+        if self.policy.family_batch is not None:
+            raise ValueError("Joint Swing requires the complete original batch builder")
         if self.policy.target_derivation is None or len(set(self.symbols)) != len(self.symbols):
             raise ValueError("Explicit target derivation and unique allowed symbols required")
         return self
@@ -66,17 +68,20 @@ def derive_geometry(seed, policy):
         else bar.high * (1 + policy.stop_buffer_fraction),
         ROUND_CEILING if call else ROUND_FLOOR,
     )
-    if policy.higher_levels is not None:
+    from app.options.swing_batch import family_policy
+
+    family = family_policy(seed, policy)
+    if family.higher_levels is not None:
         from app.options.swing_levels import evaluate_level
 
         level = evaluate_level(seed)
         reference, stop = level.reference, level.invalidation
-    elif policy.ma_pullback is not None:
+    elif family.ma_pullback is not None:
         from app.options.swing_ma import evaluate_ma
 
         ma = evaluate_ma(seed)
         reference, stop = ma.reference, ma.invalidation
-    elif policy.daily_base is not None:
+    elif family.daily_base is not None:
         from app.options.swing_base import evaluate_base
 
         base = evaluate_base(seed)
@@ -122,10 +127,9 @@ def target_issues(seed, policy):
 
 def verify_stored_targets(db, scan, policy):
     """Rebuild new-enrollment objectives from the retained native seed and selected scan."""
-    row = db.execute(
-        "SELECT seed_hash,seed_json FROM execution_option_swing_seeds WHERE session=? AND symbol=?",
-        (scan.seed.target_session.isoformat(), scan.symbol),
-    ).fetchone()
+    from app.options.swing_batch import seed_lock
+
+    row = seed_lock(db, scan.seed)
     seed = SwingSeed.model_validate_json(row[1]) if row else None
     if (
         seed is None
@@ -141,9 +145,11 @@ def verify_stored_targets(db, scan, policy):
 
 def verify_family_scan(scan, policy):
     from app.options.swing_base import evaluate_base
+    from app.options.swing_batch import family_policy
     from app.options.swing_levels import evaluate_level
     from app.options.swing_ma import evaluate_ma
 
+    policy = family_policy(scan.seed, policy)
     level = evaluate_level(scan.seed) if policy.higher_levels is not None else None
     ma = evaluate_ma(scan.seed) if policy.ma_pullback is not None else None
     base = evaluate_base(scan.seed) if policy.daily_base is not None else None
