@@ -1,5 +1,14 @@
 # Offline options development checks
 
+`test_mixed_runtime.py` verifies [continuous mixed delivery](MIXED_RUNTIME.md):
+real native stock fills and fast protection, slow management, exact delivered
+paid refresh, retained Scope freshness rejection, immutable stock source retirement,
+private input/enrollment failures, interrupted/tampered receipts, explicit settlement
+and installed CLI restart. Run it with legacy runtime/Scope, mixed paid/native,
+recovery/operator and shared source regressions. Preserve the noneditable wheel,
+copied tests, Python `-I`, warnings-as-errors and serial native-run requirements.
+Common mixed tapes and independent A/B/C/D replay/export remain separate acceptance.
+
 `test_mixed_entry.py`, `test_mixed_position.py` and `test_mixed_paid_carry.py` verify the [paid mixed contract](MIXED_AI.md):
 complete original stock/option/Scope alternatives, tool-less mock worker transport,
 known/unknown charges, fresh post-cost native admission, mandatory exits,

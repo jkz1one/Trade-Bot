@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 from app.execution.engine import ExecutionBlocked
 from app.options.engine import fingerprint
-from app.options.runtime_models import ScopeRuntimePacket
+from app.options.runtime_models import MixedRuntimePacket, ScopeRuntimePacket
 from app.options.scope_market_tape import ScopeTapePolicy, validate_scope_event
 from app.options.scope_replay import ScopeReplayStep, _perform
 
@@ -252,11 +252,19 @@ def stored_inputs(db, now):
     )
     limits = OptionLimits.model_validate(config["limits"])
     c = SimpleNamespace(scope_policy=configuration(db), engine=SimpleNamespace(limits=limits))
+    packet_type = ScopeRuntimePacket
+    if config["policy"].get("mixed_owner") is not None:
+        runtime = json.loads(
+            db.execute("SELECT config_json FROM execution_option_runtime WHERE id=1").fetchone()[0]
+        )
+        if runtime["runtime"].get("mixed_inputs") != "mixed-runtime-inputs-v1":
+            raise ValueError("Stored mixed Scope runtime enrollment required")
+        packet_type = MixedRuntimePacket
     statuses, actions, previous_at = {}, [], None
     for sequence, row in enumerate(
         db.execute("SELECT * FROM execution_option_scope_runtime_inputs ORDER BY sequence"), 1
     ):
-        packet = ScopeRuntimePacket.model_validate_json(row["packet_json"])
+        packet = packet_type.model_validate_json(row["packet_json"])
         validate_packet(c, packet)
         accepted = datetime.fromisoformat(row["accepted_at"])
         if (

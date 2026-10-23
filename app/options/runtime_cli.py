@@ -34,6 +34,10 @@ async def _unbound_scope_refresh(_play):
     raise ValueError("Scope runtime must bind its delivered input reader before use")
 
 
+async def _unbound_stock_refresh(_instrument):
+    raise ValueError("Mixed runtime must bind its delivered stock reader before use")
+
+
 def _coordinator(engine, settings, create, clock):
     return DegenCoordinator(
         engine,
@@ -46,6 +50,10 @@ def _coordinator(engine, settings, create, clock):
         position_policy=settings.position_policy,
         swing_policy=settings.swing_policy,
         scope_policy=settings.scope_policy,
+        stock_policy=settings.stock_policy,
+        stock_refresh=_unbound_stock_refresh
+        if settings.stock_policy and settings.stock_policy.paid_selection
+        else None,
         scope_refresh=(
             _unbound_scope_refresh
             if settings.scope_policy is not None
@@ -77,6 +85,11 @@ def initialize(directory, settings, *, clock=utc_now):
         directory / "venue.db",
         limits=settings.limits,
         capital=settings.execution.capital,
+        **(
+            {"stock_limits": settings.execution.mixed_owner.stocks}
+            if settings.execution.mixed_owner
+            else {}
+        ),
     )
     at = clock()
     with OptionExecution.open(
@@ -100,7 +113,7 @@ def initialize(directory, settings, *, clock=utc_now):
         OptionRuntime(coordinator, settings.runtime, create=True)
     return {
         "status": "ENROLLED",
-        "mode": "OPTIONS_PAPER_FIXTURE",
+        "mode": "MIXED_PAPER_FIXTURE" if settings.stock_policy else "OPTIONS_PAPER_FIXTURE",
         "live_enabled": False,
         "network_calls": False,
     }
@@ -124,7 +137,7 @@ async def run(directory, stop, *, clock=utc_now):
         await runtime.run(stop)
     return {
         "status": "STOPPED",
-        "mode": "OPTIONS_PAPER_FIXTURE",
+        "mode": "MIXED_PAPER_FIXTURE" if settings.stock_policy else "OPTIONS_PAPER_FIXTURE",
         "live_enabled": False,
         "model_enabled": settings.key_file is not None,
     }

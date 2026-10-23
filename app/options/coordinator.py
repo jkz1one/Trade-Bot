@@ -756,17 +756,33 @@ class DegenCoordinator:
         )
         return selected, proposal, completed
 
-    async def supervise(self, quotes=(), underlyings=()):
+    async def supervise(self, quotes=(), underlyings=(), *, stocks=()):
         """Fast owned-position management, independent of the five-minute entry claim."""
-        frame = DegenFrame(quotes=quotes, underlyings=underlyings)
+        scope_underlying = ()
+        if self.scope_policy is not None and len(underlyings) > 2:
+            scope_underlying = tuple(u for u in underlyings if u.symbol == "SPX")
+            if len(scope_underlying) != 1:
+                raise ValueError("One nested Scope underlying required for shared protection")
+            scope_underlying = DegenFrame(underlyings=scope_underlying).underlyings
+            underlyings = tuple(u for u in underlyings if u.symbol != "SPX")
+        frame = DegenFrame(quotes=quotes, underlyings=underlyings, stocks=stocks)
+        protected_underlyings = (*frame.underlyings, *scope_underlying)
+        if stocks and self.stock_policy is None:
+            raise ValueError("Stock protection inputs require frozen stock enrollment")
+        if self.stock_policy is not None:
+            from app.mixed.runtime import observe_quotes
+
+            observe_quotes(self, tuple(x.quote for x in frame.stocks))
         from app.options.swing_lifecycle import observe_quotes
 
-        observe_quotes(self, frame.underlyings)
+        observe_quotes(self, protected_underlyings)
         with self.engine.journal.read() as db:
             ledger = self._bound(db)
             held = self._held_instrument(db, ledger)
         matched = [q for q in frame.quotes if q.instrument == held]
-        underlying = [q for q in frame.underlyings if held and q.symbol == held.contract.underlying]
+        underlying = [
+            q for q in protected_underlyings if held and q.symbol == held.contract.underlying
+        ]
         if self.position_policy is not None:
             self._position_quotes = tuple(matched) if len(matched) == 1 else ()
             self._position_underlyings = tuple(underlying) if len(underlying) == 1 else ()
@@ -774,6 +790,7 @@ class DegenCoordinator:
             matched[0] if len(matched) == 1 else None,
             underlying[0] if len(underlying) == 1 else None,
             now=self.now(),
+            **({"stock_quotes": tuple(x.quote for x in frame.stocks)} if self.stock_policy else {}),
         )
 
     async def cycle(self, frame):

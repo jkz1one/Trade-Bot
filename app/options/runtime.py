@@ -12,7 +12,12 @@ from pydantic import Field, TypeAdapter
 from app.execution.engine import ExecutionBlocked
 from app.options.coordinator import DegenCoordinator, DegenFrame
 from app.options.engine import fingerprint
-from app.options.runtime_models import RuntimePacket, RuntimePolicy, ScopeRuntimePacket
+from app.options.runtime_models import (
+    MixedRuntimePacket,
+    RuntimePacket,
+    RuntimePolicy,
+    ScopeRuntimePacket,
+)
 from app.options.scope_runtime import ScopeRuntimeInputs, enrollment, protection
 
 MAX_PACKET_BYTES = 256 * 1024
@@ -45,7 +50,9 @@ def read_packet(path):
     if isinstance(value, dict) and "version" not in value:
         return RuntimePacket.model_validate_json(raw)
     return TypeAdapter(
-        Annotated[RuntimePacket | ScopeRuntimePacket, Field(discriminator="version")]
+        Annotated[
+            RuntimePacket | ScopeRuntimePacket | MixedRuntimePacket, Field(discriminator="version")
+        ]
     ).validate_json(raw)
 
 
@@ -53,8 +60,9 @@ class OptionRuntime:
     def __init__(self, coordinator, policy, *, create=False):
         if type(coordinator) is not DegenCoordinator or coordinator.replay_model is not None:
             raise ValueError("A native built-in Degen owner is required")
-        if coordinator.engine.policy.mixed_owner is not None:
-            raise ValueError("Mixed runtime inputs are not enrolled")
+        from app.mixed.runtime import enrollment as mixed_enrollment
+
+        mixed_enrollment(coordinator, policy)
         if getattr(coordinator.engine, "_option_runtime", None) is not None:
             raise ValueError("One runtime per active owner")
         self.c = coordinator
@@ -114,6 +122,11 @@ class OptionRuntime:
                 )
         self.c.engine._option_runtime = self
         self.scope = ScopeRuntimeInputs(self) if self.policy.scope_inputs else None
+        from app.mixed.runtime import MixedRuntimeInputs
+
+        self.mixed = MixedRuntimeInputs(self) if self.policy.mixed_inputs else None
+        if self.mixed is not None and self.c.stock_policy.paid_selection is not None:
+            self.c.stock_refresh = self.mixed.fresh
         if self.scope is not None and self.c.scope_policy.version == "shared-scope-entry-v1":
             self.c.scope_refresh = self.scope.fresh
         if self.policy.operator_key_file is not None:
@@ -147,7 +160,9 @@ class OptionRuntime:
 
     async def tick(self):
         loss = self.c.engine.policy.loss_control
-        if self.scope is None or loss is None or loss.entry_cost_attribution is None:
+        if self.mixed is None and (
+            self.scope is None or loss is None or loss.entry_cost_attribution is None
+        ):
             return await self._tick()
         if self._scope_tick is not None and not self._scope_tick.done():
             raise ExecutionBlocked("SCOPE_RUNTIME_TICK_ALREADY_ACTIVE")
@@ -183,8 +198,15 @@ class OptionRuntime:
         packet, issue = None, None
         try:
             packet = read_packet(self.policy.feed_file)
-            if isinstance(packet, ScopeRuntimePacket) != (self.scope is not None):
+            if isinstance(packet, MixedRuntimePacket) != (self.mixed is not None) or (
+                self.mixed is None
+                and isinstance(packet, ScopeRuntimePacket) != (self.scope is not None)
+            ):
                 raise ValueError("Packet and frozen runtime enrollment mismatch")
+            if self.mixed is not None:
+                from app.mixed.runtime import validate_packet
+
+                validate_packet(self.c, packet)
             with self.c.engine.journal.read() as db:
                 row = self._bound(db)
                 if (
@@ -205,6 +227,8 @@ class OptionRuntime:
                     raise ValueError("Fixture feed identity, time or sequence mismatch")
             if self.scope is not None:
                 self.scope.accept(packet, at)
+            if self.mixed is not None:
+                self.mixed.accept(packet, at)
         except (OSError, ValueError):
             packet, issue = None, "OPTION_RUNTIME_FEED_UNAVAILABLE"
         issue = issue or operator_issue
@@ -223,7 +247,9 @@ class OptionRuntime:
             self.scope.expire()
         frame = packet.frame if packet else DegenFrame()
         # Feed failure never skips reconciliation/protection or invents market quotes.
-        result = await self.c.supervise(*protection(frame))
+        result = await self.c.supervise(
+            *protection(frame), **({"stocks": frame.stocks} if self.mixed is not None else {})
+        )
         if result.get("reconciled") is False and result.get("issues") not in (
             ["OPTION_READ_SUPERSEDED"],
             ["OPTION_SUBMISSION_IN_PROGRESS"],
@@ -267,8 +293,14 @@ class OptionRuntime:
                 )
         if self.scope is not None and packet is not None:
             self.scope.apply(packet, issue)
-            if packet.kind != "CYCLE":
-                return result
+        if self.mixed is not None and packet is not None:
+            self.mixed.complete(packet, issue)
+        if (
+            (self.scope is not None or self.mixed is not None)
+            and packet is not None
+            and packet.kind != "CYCLE"
+        ):
+            return result
         with self.c.engine.journal.write() as db:
             self._bound(db)
             if window is None:

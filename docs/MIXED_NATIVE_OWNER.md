@@ -95,11 +95,11 @@ source retirement and source-bound carry are now connected through the separate
 [Paid mixed entry/management](MIXED_AI.md) now bind full requests/results, every
 usage charge, original deadlines, fresh native admission and full-cost attribution.
 
-1. Connect explicit continuous mixed inputs, source collection, held protection,
-   settlement and recovery across sessions.
-2. Connect common mixed tapes to independent native A/B/C/D owners and portable
-   full-cost replay/export. Keep their cash, reservations, attempts and loss states
-   separate, including operating/overnight costs and unknown charges.
+[Continuous mixed runtime](MIXED_RUNTIME.md) now connects explicit delivered inputs,
+source collection, held protection, settlement and recovery across sessions.
+Common mixed tapes and independent native A/B/C/D replay/export remain. Keep their
+cash, reservations, attempts and loss states separate, including operating/overnight
+costs and unknown charges.
 
 Option-only runtime, old replay adapters and option/Scope comparison exports
 reject mixed enrollment until their complete contracts exist. The basic
@@ -117,6 +117,6 @@ partial supersession, restore fencing, signed recovery and original Scope/Swing
 terms. The [testing procedure](OPTIONS_TESTING.md) and latest [status entry](SLICE2_STATUS.md)
 record exact completed final-wheel cases, including legacy regressions.
 
-Continue with explicit continuous mixed runtime and independent A/B/C/D replay/export.
+Continue with common mixed tapes and independent A/B/C/D replay/export.
 Do not remove legacy input guards to make old adapters accept mixed evidence.
 Preserve one native owner and its complete original admission evidence throughout.

@@ -7,6 +7,7 @@ from typing import Literal
 from pydantic import Field, field_validator, model_validator
 
 from app.execution.judgment import JudgmentLimits
+from app.mixed.sources import StockSelectionPolicy
 from app.options.coordinator import DegenFrame
 from app.options.degen import DegenPolicy
 from app.options.entry_reasoning import EntryReasoningPolicy
@@ -22,6 +23,9 @@ from app.options.swing import SwingPolicy
 class RuntimePolicy(OptionRecord):
     version: Literal["option-local-runtime-v1"] = "option-local-runtime-v1"
     scope_inputs: Literal["scope-runtime-inputs-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    mixed_inputs: Literal["mixed-runtime-inputs-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
     feed_file: str = Field(min_length=1, max_length=4096)
@@ -53,6 +57,7 @@ class RuntimeSettings(OptionRecord):
     execution: OptionExecutionPolicy
     swing_policy: SwingPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
     scope_policy: SharedScopePolicy | None = Field(default=None, exclude_if=lambda v: v is None)
+    stock_policy: StockSelectionPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
     setup: DegenPolicy
     selection: ContractSelectionPolicy
     runtime: RuntimePolicy
@@ -63,6 +68,26 @@ class RuntimeSettings(OptionRecord):
 
     @model_validator(mode="after")
     def bounded(self):
+        mixed = self.execution.mixed_owner
+        if (mixed is not None) != (self.stock_policy is not None) or (
+            (mixed is not None) != (self.runtime.mixed_inputs is not None)
+        ):
+            raise ValueError("Explicit matching mixed runtime, stock strategy and owner required")
+        if mixed is not None and (
+            tuple(i.symbol for i in self.stock_policy.instruments) != self.setup.symbols
+            or self.stock_policy.paid_selection != mixed.reasoning
+            or (self.entry_policy.mixed_selection if self.entry_policy else None) != mixed.reasoning
+            or (self.position_policy is not None and self.position_policy.mixed_management is None)
+        ):
+            raise ValueError("Complete frozen mixed runtime strategy required")
+        if mixed is None and (
+            (self.entry_policy is not None and self.entry_policy.mixed_selection is not None)
+            or (
+                self.position_policy is not None
+                and self.position_policy.mixed_management is not None
+            )
+        ):
+            raise ValueError("Mixed reasoning requires its complete native runtime owner")
         if self.key_file is not None and self.key_file == self.runtime.operator_key_file:
             raise ValueError("Operator and model credentials must be separate")
         model = self.key_file is not None
@@ -215,4 +240,16 @@ class ScopeRuntimePacket(_RuntimeEnvelope):
             or self.frame.swing_batches
         ):
             raise ValueError("Only CYCLE packets carry ordinary strategy inputs")
+        return self
+
+
+class MixedRuntimePacket(ScopeRuntimePacket):
+    version: Literal["mixed-normalized-fixture-v1"] = "mixed-normalized-fixture-v1"
+
+    @model_validator(mode="after")
+    def no_unenrolled_stocks(self):
+        # Only this explicit envelope accepts shares. Legacy envelopes retain
+        # their rejection, and the runtime checks the frozen native enrollment.
+        if self.kind != "CYCLE" and any(x.swing or x.catalyst for x in self.frame.stocks):
+            raise ValueError("Only mixed CYCLE packets carry original stock sources")
         return self

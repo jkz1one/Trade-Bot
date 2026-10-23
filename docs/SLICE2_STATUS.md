@@ -1,5 +1,68 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Continuous mixed runtime and native recovery: 2026-10-23 America/New_York
+
+Fresh GitHub/local state began at HEAD
+`9064af89063212e33fa3c0ec66943c13a90ac46d`, tree
+`717de1061b32d609842836b3ee886842480b5a96`. PR #1 remained open/draft;
+main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`.
+
+The [explicit mixed runtime](MIXED_RUNTIME.md) now binds the existing continuous
+PAPER runner to one native stock/options/Scope owner. Frozen settings retain the
+original stock source policy, paid entry/management and any Scope/option carry
+terms. A separate versioned envelope requires complete CYCLE stock coverage,
+original available clocks and exact identity. MARKET/WATCH packets cannot replace
+original stock source bundles. Old envelopes and unenrolled owners still reject
+shares. No old frozen runtime serialization is changed.
+
+Every delivery retains its exact packet/hash, acceptance clock and completion.
+Paid refresh waits for completed native protection and uses only delivered evidence;
+unread files, rejected actions, interrupted prefixes and halted owners cannot
+approve an entry. Scope still requires new post-cost source observations. Full
+read-only prefix reconstruction rejects changed receipts without granting authority.
+
+One native snapshot routes protection to the actual held asset. Stock stop/target/
+time exits run between decision slots and during slow paid management. Fresh
+executable quote observations retire original stock Swing families permanently;
+delayed quotes cannot manufacture retirement. The installed initializer binds one
+venue balance and exact stock limits; restart does not refund capital or resume
+admission. Explicit native receipts settle proceeds across the weekend.
+
+Validation: **673 distinct final-wheel installed checks**, including **23 new
+mixed runtime cases**. Completed runs: 23 runtime (152.41s), 179 control/recovery
+(150.08s), 205 native execution/loss/source selection (305.26s), 131 paid/shared
+entry/management (644.95s), and 135 original source/carry (654.80s). Earlier
+and focused diagnostics are excluded; overlapping cases are not double-counted.
+All runs use copied tests outside the checkout, a noneditable installed wheel,
+Python `-I`, warnings as errors and disabled plugin autoload. Native runs are serial.
+
+Final wheel SHA-256:
+`574863de60a30e402d340b4366c2f301c80deba182892edec136c95141e6d16b`.
+All 233 application/template files match source, wheel and installed bytes; 224
+parent files remain unchanged. Twenty-three representative legacy contracts,
+including old runtime settings and envelopes, serialize byte-for-byte identically
+to the parent wheel. Changed-scope lint, repository fatal lint, document links,
+dependency consistency and whitespace checks pass. Full repository style lint
+retains 306 findings in 52 byte-identical parent files.
+
+Retained proof: `../mixed-runtime-proof/` (`final-proof.json`, five completed
+XML/log pairs and wheel receipts, identity/legacy serialization and lint evidence).
+Final wheel: `../mixed-runtime-wheels/`; test interpreter:
+`../scope-replay-env/bin/python`. Nested Scope index protection also accepts its
+original quote beside two ordinary underlying quotes without changing the frozen
+frame capacity or old serialization.
+
+Dependencies are unchanged. LIVE remains disabled and deployment frozen; no
+authenticated provider/model/broker calls were made. Final UI/visual and authentic
+data/model/host/economic/PAPER acceptance remain after plumbing.
+
+Remaining plumbing in total: common mixed market tapes, complete matched B/C/D
+response contracts, four independent native A/B/C/D accounts and portable full-cost
+replay/export. Preserve all original leases/source terms, every entry/management
+charge, execution fee, explicit operating/overnight allocation and unknown cost.
+Old adapters/exports must continue rejecting mixed inputs until the complete new
+contracts exist. Do not reopen settled strategy rules.
+
 ## Paid mixed entry and native management: 2026-10-23 America/New_York
 
 Fresh GitHub/local state began at HEAD

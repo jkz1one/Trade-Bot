@@ -140,6 +140,12 @@ async def tick(engine, quote, *, now):
     result = await engine.reconcile_fixture(now=now)
     if not result["reconciled"]:
         return result
+    return await after_reconciliation(engine, quote, now=now)
+
+
+async def after_reconciliation(engine, quote, *, now):
+    """Continue one already completed common native snapshot without a second read."""
+    enrolled(engine)
     result = assess(engine, quote, now=now)
     if result["status"] != "EXIT_REQUIRED":
         return result

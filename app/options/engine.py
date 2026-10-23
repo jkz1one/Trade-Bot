@@ -129,6 +129,7 @@ class OptionJournal(ExecutionJournal):
             "execution_option_runtime",
             "execution_option_runtime_slots",
             "execution_option_scope_runtime_inputs",
+            "execution_mixed_runtime_inputs",
             "execution_option_swing_seeds",
             "execution_option_swing_batches",
             "execution_option_swing_batch_seeds",
@@ -1767,10 +1768,23 @@ class OptionExecution:
             self.journal.event(db, now, "POSITION_SUPERVISED", payload)
             return payload
 
-    async def protective_tick(self, quote, underlying, *, now):
+    async def protective_tick(self, quote, underlying, *, now, stock_quotes=()):
+        if stock_quotes and self.policy.mixed_owner is None:
+            raise ValueError("Stock protection requires explicit native mixed ownership")
         result = await self.reconcile_fixture(now=now)
         if not result["reconciled"]:
             return result
+        if self.policy.mixed_owner is not None:
+            from app.mixed.native_protection import after_reconciliation
+            from app.mixed.native_store import position
+
+            with self.journal.read() as db:
+                held = position(self, db)
+            if held is not None:
+                quotes = [q for q in stock_quotes if q.instrument == held.instrument]
+                return await after_reconciliation(
+                    self, quotes[0] if len(quotes) == 1 else None, now=now
+                )
         assessed = self.assess(quote, underlying, now=now)
         if assessed["status"] == "HEALTHY" and self.policy.target_exits is not None:
             if assessed.get("health_management", {}).get("status") == "INCOMPLETE":

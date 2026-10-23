@@ -84,8 +84,9 @@ Enrollment is create-only on an untraded native mixed owner. Existing stock orde
 or decisions prevent later strategy adoption. Old coordinator populations reject
 stock frames, and existing option/Scope market tapes and runtime packets explicitly
 reject stock inputs. A separate [paid mixed contract](MIXED_AI.md) now connects full
-entry/management receipts, original terms and native cost accounting. Continuous
-mixed runtime and A/B/C/D replay/export remain guarded until their contracts exist.
+entry/management receipts, original terms and native cost accounting. The separate
+[mixed runtime](MIXED_RUNTIME.md) now binds delivered inputs, protection and recovery.
+Common mixed tapes and A/B/C/D replay/export remain guarded until their contracts exist.
 Absent stock fields are omitted, preserving old frame serialization.
 
 `test_mixed_selection.py` covers native stock/option/Scope competition, actual fills,
@@ -94,7 +95,7 @@ source-bound carry, original deadlines, tampering, outcome attribution and old
 consumer rejection. See [status](SLICE2_STATUS.md) for the final installed-wheel
 proof and [testing](OPTIONS_TESTING.md) for isolation requirements.
 
-Continue with explicit continuous mixed inputs/session recovery and common tapes
-with four independent native A/B/C/D replay/export owners. Final UI/visual and
+Continue with common mixed tapes and four independent native A/B/C/D replay/export
+owners. Final UI/visual and
 authentic provider/model/host/PAPER acceptance follow that plumbing. LIVE stays
 disabled; deployment remains frozen.

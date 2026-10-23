@@ -105,15 +105,15 @@ partial exits, restart, signed recovery and full-cost global/family loss history
 [Original stock source derivation and shared selection](MIXED_STOCK_SELECTION.md)
 now bind native candidates, sticky retirement, carry and attribution.
 [Paid mixed entry/management](MIXED_AI.md) now connect complete worker receipts,
-fresh native approval, original terms and all paid charges. Remaining:
+fresh native approval, original terms and all paid charges.
+[Continuous mixed runtime](MIXED_RUNTIME.md) now connects delivered source inputs,
+independent protection, session/restart recovery and explicit settlement.
 
-1. Connect explicit mixed runtime inputs, source collection, continuous sessions,
-   held protection, settlement and recovery. Unsupported inputs must reject at the
-   enrollment boundary; old frozen populations remain unchanged.
-2. Connect common mixed market tapes to four independent native A/B/C/D accounts and
-   portable full-cost replay/export, including all entry/management charges,
-   execution fees, operating/overnight allocations and unknown costs. Pure account
-   isolation tests here are not native four-arm mixed replay acceptance.
+The final plumbing track connects common mixed market tapes to four independent
+native A/B/C/D accounts and portable full-cost replay/export, including all
+entry/management charges, execution fees, operating/overnight allocations and
+unknown costs. Pure account isolation tests here are not native four-arm mixed
+replay acceptance.
 
 Then final UI/visual and authentic provider/model/host/economic/PAPER acceptance.
 LIVE remains disabled and the deployed experiment frozen. The original cash-history slice changed no existing option/stock implementation.
