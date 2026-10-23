@@ -1,5 +1,35 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Mixed desk recovery checkpoint: 2026-10-23 America/New_York
+
+User requested immediate Git preservation after the workspace disconnected.
+Parent: `abdc220cb8755ba6674d7098a5ed17b38c495fb4`, tree
+`101683dd1e52a1a5aa2b2af03b19f5b0bb04fcde`. This commit is an **unfinished
+checkpoint**, not UI acceptance or deployment approval.
+
+Draft adds explicit `--mixed` observer selection, authenticated `/api/mixed`,
+unified stock/options trade cards, native original terms, stored costs, flat-only
+balance boundaries with gaps, and a SignalFlow-inspired underlying-price rail.
+The existing options-only guard remains intact. Page reads attach no executable
+owner and perform no trading, provider or model work. No dependencies changed.
+
+Initial isolated wheel `6a64c7a7687285e068099241718b219d31dcb06b03130717386f379541c4608b`
+ran 16 new cases: 14 passed, two failed in 52.97 seconds. The failed expectations
+were revised to preserve whole-report Unavailable for an invalid ledger and
+unknown fill coverage before a post-attempt snapshot. Subsequent changes retain
+costs during incomplete reconciliation, include stored frames, strengthen historical
+prefix checks and add the target rail plus four tests. These latest changes have
+**not yet passed an installed-wheel run**. A failed text replacement in the
+historical prefix function was repaired before this checkpoint. Lint/format and
+whitespace checks are not a substitute for the pending runtime tests.
+
+Next: verify the latest noneditable wheel against copied tests, resolve failures,
+review actual desktop/mobile browser screenshots, update durable proof and final
+continuation docs, then publish the verified follow-up. Main stays
+`b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 open/draft, LIVE disabled and
+deployment frozen. Authentic acceptance remains unauthorized.
+
+
 ## Persistent desk, trade card and local tabs: 2026-10-23 UTC
 
 Parent `b22eb1d183627cec64a15e5cb9cb295b915fff3f`, tree

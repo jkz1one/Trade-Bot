@@ -14,9 +14,11 @@ from fastapi.templating import Jinja2Templates
 
 from app.domain.models import utc_now
 from app.options.observer import OptionObserver
+from app.web.trade_rail import trade_rail
 
 basic = HTTPBasic(auto_error=False)
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+templates.env.globals["trade_rail"] = trade_rail
 templates.env.filters["dollars"] = lambda value: format(Decimal(value), ",.2f")
 
 
@@ -40,12 +42,17 @@ def password(path):
 
 
 def create_options_app(
-    journal, population_id, password_file, *, clock=utc_now, comparison_file=None
+    journal, population_id, password_file, *, clock=utc_now, comparison_file=None, mixed=False
 ):
     if not Path(password_file).is_absolute():
         raise ValueError("Absolute private observer password path required")
     password(password_file)
-    observer = OptionObserver(journal, population_id, clock=clock, comparison_file=comparison_file)
+    if mixed and comparison_file is not None:
+        raise ValueError("Legacy comparison files cannot label mixed-account returns")
+    from app.mixed.observer import MixedObserver
+
+    observer_class = MixedObserver if mixed else OptionObserver
+    observer = observer_class(journal, population_id, clock=clock, comparison_file=comparison_file)
     app = FastAPI(title="Options PAPER observer", docs_url=None, redoc_url=None, openapi_url=None)
 
     @app.middleware("http")
@@ -88,12 +95,14 @@ def create_options_app(
             media_type="application/javascript",
         )
 
-    @app.get("/api/options", dependencies=[Depends(authenticate)])
+    @app.get("/api/mixed" if mixed else "/api/options", dependencies=[Depends(authenticate)])
     def api(
         limit: int = Query(25, ge=1, le=100),
         before: int | None = Query(None, ge=1),
         family: Literal["ALL", "DEGEN", "SWING", "SCOPE"] = "ALL",
     ):
+        if mixed and family != "ALL":
+            raise HTTPException(422, "Mixed desk shows the common account; use ALL")
         data = observer.report(limit=limit, before=before, family=family)
         return JSONResponse(data, status_code=503 if data["status"] == "UNAVAILABLE" else 200)
 
@@ -105,12 +114,14 @@ def create_options_app(
         family: Literal["ALL", "DEGEN", "SWING", "SCOPE"] = "ALL",
         refresh: bool = False,
     ):
+        if mixed and family != "ALL":
+            raise HTTPException(422, "Mixed desk shows the common account; use ALL")
         data = observer.report(limit=limit, before=before, family=family)
         from app.options.comparison_view import chart_data
 
         return templates.TemplateResponse(
             request,
-            "options.html",
+            "mixed_desk.html" if mixed else "options.html",
             {
                 "data": data,
                 "auto_refresh": refresh and before is None,
