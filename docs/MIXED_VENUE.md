@@ -48,10 +48,10 @@ no arbitrary adapter, credential, provider or model call is added.
 Lost/invalid/oversized acknowledgments, crashes and stalls do not erase an accepted
 stock order. A repeated client identity is rejected. Fixture terminal operations
 are explicit scripted outcomes, not authenticated cancellation or retry authority.
-A native journal still has to distinguish PREPARED, SUBMITTING, UNKNOWN, native
-approval and actual fills before this transport can power a mixed trader.
+The separately enrolled native owner distinguishes PREPARED, SUBMITTING, UNKNOWN,
+native approval and actual fills. The transport alone cannot prove those states.
 
-Legacy `OptionExecution` rejects mixed venue enrollment even when flat, and rejects
+Unenrolled `OptionExecution` rejects mixed venue enrollment even when flat, and rejects
 mixed snapshots during reconciliation. A mixed schema cannot be grafted onto an
 old fixture merely by adding stock limits. Mixed source clocks and stored event
 sequence/identities are validated on reads and writes. Unsupported stock inputs
@@ -63,41 +63,19 @@ frozen execution limits are not a replacement for those owner checks. Costs rema
 with the common cash-history/native economics boundary: no absent model or operating
 charge is manufactured as zero by this transport.
 
-## Remaining integration
+## Native owner integration
 
-The venue and fixed worker portion of item 1 in the [remaining plumbing
-list](MIXED_CASH_HISTORY.md#remaining-plumbing-in-total) is implemented. Still required:
+The [explicit native mixed owner](MIXED_NATIVE_OWNER.md) now binds stock preparation,
+common journal/restore, attempted/unknown state, complete reconciliation, independent
+stop/target/time protection, partial-close supersession, restart, signed recovery and
+full-cost global/family loss outcomes. The transport itself still grants none of
+that authority; only exact native enrollment can use both paths.
 
-1. Bind stock preparation, common journal/restore fence, attempted/unknown state,
-   complete reconciliation, independent stop/target/time protection, partial-close
-   supersession, restart and signed recovery to the native owner.
-2. Connect original stock candidates to shared family selection, complete mixed
-   entry/management model contracts, fresh post-cost native admission and one
-   global/family loss-control history.
-3. Connect explicit mixed continuous runtime inputs and common market tapes to
-   four independent native A/B/C/D replay/export accounts with all costs.
-
-Final UI/visual and authentic provider/model/host/PAPER acceptance follow those
-steps. LIVE remains disabled and the deployed experiment remains frozen.
-
-## Next owner boundary
-
-Continue in `app/options/engine.py` and `app/options/loss_control.py`, using the
-common accounting/admission helpers and this fixture. Do not simply remove the
-mixed enrollment rejection: `_account`, `_epoch`, submission guards, `_reconcile`,
-position supervision, recovery and loss consumption currently enumerate native
-option orders. They must bind stock attempts and stock holdings to the same durable
-owner, original capital, revision, restore fence and economic envelope. A stock
-holding must appear in the existing `EquityHolding` account discriminator while
-option/Scope/Swing positions retain their full original native terms.
-
-Stock and option fills must reconcile in one global event sequence from the original
-capital. Stock observations now include the exact accepted intent, but the native
-journal must independently prove its approval, attempt time and immutable prefix.
-Paid entry/management proposals remain separate from preparation, attempts and fills.
-Mandatory stock exits must survive partial fills, unknown attempts, restart and
-entry/model halts. Unsupported mixed coordinator/runtime/export enrollment must
-continue to reject until those complete contracts are connected.
+Remaining: original stock candidates/shared selection, complete paid mixed
+entry/management contracts, continuous runtime and independent native A/B/C/D
+replay/export. The [full remaining list](MIXED_CASH_HISTORY.md#remaining-plumbing-in-total)
+is current. Final UI/visual and authentic PAPER acceptance follow the plumbing.
+LIVE remains disabled and the deployed experiment remains frozen.
 
 ## Verification
 

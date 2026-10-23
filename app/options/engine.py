@@ -112,6 +112,10 @@ class OptionJournal(ExecutionJournal):
     ledger_type = OptionLedger
     extra_tables = frozenset(
         {
+            "execution_mixed_control",
+            "execution_stock_orders",
+            "execution_stock_fills",
+            "execution_stock_decisions",
             "execution_option_loss_control",
             "execution_option_loss_outcomes",
             "execution_option_decisions",
@@ -143,7 +147,7 @@ class OptionJournal(ExecutionJournal):
     def report(self, *, now=None):
         with self.read() as db:
             c = db.execute("SELECT * FROM execution_control WHERE id=1").fetchone()
-            return {
+            result = {
                 "mode": "OPTIONS_PAPER_FIXTURE",
                 "live_enabled": False,
                 "network_calls": False,
@@ -177,6 +181,22 @@ class OptionJournal(ExecutionJournal):
                 ],
             }
 
+            if result["config"]["policy"].get("mixed_owner") is not None:
+                mixed = db.execute("SELECT * FROM execution_mixed_control WHERE id=1").fetchone()
+                result.update(
+                    mode="MIXED_PAPER_FIXTURE",
+                    stock_position=json.loads(mixed["position_json"] or "null"),
+                    stock_protection=json.loads(mixed["protection_json"] or "null"),
+                    mixed_policy=json.loads(mixed["policy_json"]),
+                    stock_orders=[
+                        dict(r)
+                        for r in db.execute(
+                            "SELECT * FROM execution_stock_orders ORDER BY rowid DESC LIMIT 100"
+                        )
+                    ],
+                )
+            return result
+
 
 class OptionExecution:
     @classmethod
@@ -200,11 +220,13 @@ class OptionExecution:
     def __init__(self, path, limits, policy, venue, *, now, create=False, _owner=None):
         if _owner is not OWNER or type(venue) is not DurableOptionVenue:
             raise ValueError("Use owned OptionExecution.open with the built-in fixture")
-        if venue.stock_limits is not None:
-            raise ValueError("Mixed venue requires a separately bound native execution owner")
         self._closed = False
         self.limits = OptionLimits.model_validate(limits.model_dump(warnings=False))
         self.policy = OptionExecutionPolicy.model_validate(policy.model_dump(warnings=False))
+        if venue.stock_limits != (
+            self.policy.mixed_owner.stocks if self.policy.mixed_owner else None
+        ):
+            raise ValueError("Mixed venue requires a separately bound native execution owner")
         if (
             self.limits.session_source != CALENDAR_SOURCE
             or venue.limits != self.limits
@@ -253,6 +275,9 @@ class OptionExecution:
                 )
                 self._halt(db, "INTERRUPTED_OPTION_ATTEMPT", now)
                 self.journal.event(db, now, "INTERRUPTED_ATTEMPT", {}, row[0])
+            from app.mixed.native_store import enroll as enroll_mixed
+
+            enroll_mixed(self, db, now, create=create)
         if create:
             self.journal.enable_restore_fence(now=now)
 
@@ -269,6 +294,10 @@ class OptionExecution:
         c = db.execute("SELECT * FROM execution_control WHERE id=1").fetchone()
         if c["config_json"] != self._config:
             raise ExecutionBlocked("FROZEN_OPTION_CONFIGURATION_CHANGED")
+        if self.policy.mixed_owner is not None:
+            from app.mixed.native_store import verify
+
+            verify(self, db)
         return c
 
     def _halt(self, db, reason, now):
@@ -364,7 +393,7 @@ class OptionExecution:
             or daily_cost >= self.policy.cost_policy.daily_budget
         ):
             blockers.append("MODEL_COST_BUDGET_EXHAUSTED")
-        return OptionAccount(
+        account = OptionAccount(
             account_id=self.limits.account_id,
             population_id=self.limits.population_id,
             snapshot_id=snap.snapshot_id,
@@ -396,6 +425,11 @@ class OptionExecution:
             entry_halted=bool(c["halted"]),
             entry_blockers=tuple(blockers),
         )
+        if self.policy.mixed_owner is not None:
+            from app.mixed.native_store import project_account
+
+            return project_account(self, db, account, now, exclude=exclude, closing=closing)
+        return account
 
     @exact
     def prepare(
@@ -424,6 +458,8 @@ class OptionExecution:
             if underlying
             else None
         )
+        if self.policy.mixed_owner is not None and origin == "MODEL":
+            raise ExecutionBlocked("MIXED_PAID_CONTRACT_NOT_ENROLLED")
         if (
             not isinstance(source_key, str)
             or not source_key.strip()
@@ -506,6 +542,13 @@ class OptionExecution:
                 if old["fingerprint"] != digest:
                     raise ExecutionBlocked("OPTION_SOURCE_IDENTITY_CONFLICT")
                 return json.loads(old["result_json"])
+            if (
+                self.policy.mixed_owner is not None
+                and db.execute(
+                    "SELECT 1 FROM execution_stock_decisions WHERE source_key=?", (source_key,)
+                ).fetchone()
+            ):
+                raise ExecutionBlocked("MIXED_SOURCE_IDENTITY_CONFLICT")
             reason = None
             entry_review = None
             lineage = None
@@ -1149,8 +1192,15 @@ class OptionExecution:
             return "UNKNOWN"
 
     def _epoch(self, db):
+        extra = []
+        if self.policy.mixed_owner is not None:
+            extra = [
+                dict(r)
+                for r in db.execute("SELECT * FROM execution_stock_orders ORDER BY client_id")
+            ]
         return fingerprint(
-            [dict(r) for r in db.execute("SELECT * FROM execution_orders ORDER BY client_id")]
+            extra
+            + [dict(r) for r in db.execute("SELECT * FROM execution_orders ORDER BY client_id")]
             + [dict(self._control(db))]
         )
 
@@ -1158,7 +1208,9 @@ class OptionExecution:
         now = clock(now)
         with self.journal.read() as db:
             self._control(db)
-            if db.execute("SELECT 1 FROM execution_orders WHERE status='SUBMITTING'").fetchone():
+            if db.execute(
+                "SELECT 1 FROM execution_orders WHERE status='SUBMITTING'"
+            ).fetchone() or self._mixed_submitting(db):
                 return {"reconciled": False, "issues": ["OPTION_SUBMISSION_IN_PROGRESS"]}
             epoch = self._epoch(db)
         try:
@@ -1177,14 +1229,18 @@ class OptionExecution:
         now = clock(now)
         with self.journal.write() as db:
             c = self._control(db)
-            if db.execute("SELECT 1 FROM execution_orders WHERE status='SUBMITTING'").fetchone():
+            if db.execute(
+                "SELECT 1 FROM execution_orders WHERE status='SUBMITTING'"
+            ).fetchone() or self._mixed_submitting(db):
                 return {"reconciled": False, "issues": ["OPTION_SUBMISSION_IN_PROGRESS"]}
             if _epoch is not None and self._epoch(db) != _epoch:
                 self.journal.event(db, now, "OPTION_READ_SUPERSEDED", {})
                 return {"reconciled": False, "issues": ["OPTION_READ_SUPERSEDED"]}
             try:
                 snap = OptionVenueSnapshot.model_validate(snapshot.model_dump(warnings=False))
-                state, observations, new_fills, new_receipts = self._reconcile(db, c, snap, now)
+                state, observations, new_fills, new_receipts, mixed = self._reconcile(
+                    db, c, snap, now
+                )
             except (ValueError, ArithmeticError) as exc:
                 reason = str(exc)
                 db.execute(
@@ -1222,6 +1278,10 @@ class OptionExecution:
                     "INSERT INTO execution_option_receipts VALUES(?,?)",
                     (receipt.receipt_id, receipt.model_dump_json()),
                 )
+            if mixed is not None:
+                from app.mixed.native_store import persist
+
+                persist(self, db, *mixed)
             db.execute(
                 "INSERT OR IGNORE INTO execution_snapshots VALUES(?,?)",
                 (snap.snapshot_id, snap.model_dump_json()),
@@ -1236,27 +1296,38 @@ class OptionExecution:
                 "OPTION_RECONCILED",
                 {
                     "snapshot_id": snap.snapshot_id,
-                    "new_fills": len(new_fills),
+                    "new_fills": len(new_fills) + (len(mixed[2]) if mixed else 0),
                     "new_receipts": len(new_receipts),
                 },
             )
             from app.options.scope_execution import sync
 
             sync(self, db, now)
-            if self.policy.scope_execution is not None or self.policy.swing_carry is not None:
+            if (
+                self.policy.scope_execution is not None
+                or self.policy.swing_carry is not None
+                or self.policy.mixed_owner is not None
+            ):
                 from app.options.loss_control import refresh
 
                 refresh(self, db, now)
             return {
                 "reconciled": True,
-                "new_fills": len(new_fills),
+                "new_fills": len(new_fills) + (len(mixed[2]) if mixed else 0),
                 "new_receipts": len(new_receipts),
                 "issues": [],
             }
 
     def _reconcile(self, db, c, snap, now):
-        if snap.stock_limits is not None or snap.stock_orders or snap.stock_position is not None:
-            raise ValueError("MIXED_STOCK_SNAPSHOT_NOT_ENROLLED")
+        if self.policy.mixed_owner is None:
+            if (
+                snap.stock_limits is not None
+                or snap.stock_orders
+                or snap.stock_position is not None
+            ):
+                raise ValueError("MIXED_STOCK_SNAPSHOT_NOT_ENROLLED")
+        elif snap.stock_limits != self.policy.mixed_owner.stocks:
+            raise ValueError("MIXED_STOCK_SNAPSHOT_POLICY_MISMATCH")
         if (snap.venue_id, snap.account_id, snap.population_id) != (
             self.venue.venue_id,
             self.limits.account_id,
@@ -1380,6 +1451,14 @@ class OptionExecution:
             events.append((receipt.sequence, receipt.occurred_at, "RECEIPT", receipt))
         if set(known_receipts) - seen_receipts:
             raise ValueError("OPTION_SETTLEMENT_HISTORY_MISSING")
+        mixed = None
+        if self.policy.mixed_owner is not None:
+            from app.mixed.native_store import stock_evidence
+
+            stock_events, stock_observations, stock_fills = stock_evidence(
+                self, db, snap, now, rows
+            )
+            events.extend(stock_events)
         ordered = sorted(events, key=lambda e: e[0])
         if [e[0] for e in ordered] != list(range(1, len(ordered) + 1)) or any(
             a[1] > b[1] for a, b in pairwise(ordered)
@@ -1388,14 +1467,62 @@ class OptionExecution:
         # Replay all complete immutable venue receipts from the frozen original
         # capital, then preserve independent management of the same owned lineage.
         state = OptionLedger(cash=self.policy.capital, high_watermark=self.policy.capital)
+        if self.policy.mixed_owner is not None:
+            from app.mixed.accounting import _apply_stock, _merge, _option_part
+            from app.mixed.models import MixedLedger
+
+            state = MixedLedger.model_validate(state.model_dump())
+        retired = set()
         for _, _, kind, event in ordered:
+            if self.policy.mixed_owner is not None:
+                owned_id = (
+                    state.stock_position.entry.client_id
+                    if state.stock_position
+                    else state.position.entry_client_id
+                    if state.position
+                    else None
+                )
+                trade = (
+                    OptionIntent.model_validate_json(rows[event[0]]["intent_json"])
+                    if kind == "FILL"
+                    else event[0]
+                    if kind == "STOCK_FILL"
+                    else None
+                )
+                if trade is not None and trade.side == "BUY" and trade.client_id in retired:
+                    raise ValueError("MIXED_ENTRY_CANNOT_RESUME_AFTER_EXIT")
+                if owned_id and (
+                    (trade is not None and trade.side == "SELL")
+                    or (kind == "RECEIPT" and event.kind != "FUNDS_SETTLED")
+                ):
+                    retired.add(owned_id)
             if kind == "FILL":
                 client_id, fill = event
-                state = apply_fill(
-                    state, OptionIntent.model_validate_json(rows[client_id]["intent_json"]), fill
-                )
+                if self.policy.mixed_owner is not None:
+                    if state.stock_position is not None:
+                        raise ValueError("MIXED_EXISTING_STOCK_POSITION")
+                    state = _merge(
+                        state,
+                        apply_fill(
+                            _option_part(state),
+                            OptionIntent.model_validate_json(rows[client_id]["intent_json"]),
+                            fill,
+                        ),
+                    )
+                else:
+                    state = apply_fill(
+                        state,
+                        OptionIntent.model_validate_json(rows[client_id]["intent_json"]),
+                        fill,
+                    )
+            elif kind == "STOCK_FILL":
+                state = _apply_stock(state, *event)
             else:
-                state = apply_receipt(state, event)
+                state = (
+                    _merge(state, apply_receipt(_option_part(state), event))
+                    if self.policy.mixed_owner is not None
+                    else apply_receipt(state, event)
+                )
         if (
             state.cash != snap.cash
             or state.settled_cash != snap.settled_cash
@@ -1468,7 +1595,12 @@ class OptionExecution:
                     )
                 }
             )
-        return state, observations, new_fills, new_receipts
+        if self.policy.mixed_owner is not None:
+            if state.stock_position != snap.stock_position:
+                raise ValueError("MIXED_STOCK_POSITION_MISMATCH")
+            mixed = (state.stock_position, stock_observations, stock_fills)
+            state = _option_part(state)
+        return state, observations, new_fills, new_receipts, mixed
 
     def _validate_fill(self, intent, fill, index, used):
         from app.options.fill_evidence import validate_fill
@@ -1543,6 +1675,13 @@ class OptionExecution:
 
     @exact
     def assess(self, quote, underlying, *, now):
+        if self.policy.mixed_owner is not None:
+            from app.mixed.native_store import position
+
+            with self.journal.read() as db:
+                stock = position(self, db)
+            if stock is not None:
+                return self.assess_stock(None, now=now)
         now = clock(now)
         quote = OptionQuote.model_validate(quote.model_dump(warnings=False)) if quote else None
         underlying = (
@@ -1765,6 +1904,8 @@ class OptionExecution:
 
     @exact
     def begin_model_attempt(self, source_key, input_hash, *, now, position_request=None):
+        if self.policy.mixed_owner is not None:
+            raise ExecutionBlocked("MIXED_PAID_CONTRACT_NOT_ENROLLED")
         now = clock(now)
         policy = self.policy.cost_policy
         if (
@@ -1806,6 +1947,8 @@ class OptionExecution:
             raise EntryModelBlocked(blocked)
 
     def _admit_model_attempt(self, db, source_key, input_hash, now, position_request):
+        if self.policy.mixed_owner is not None:
+            raise ExecutionBlocked("MIXED_PAID_CONTRACT_NOT_ENROLLED")
         policy = self.policy.cost_policy
         if position_request is not None:
             from app.options.position_coordination import validate_admission
@@ -1937,3 +2080,46 @@ class OptionExecution:
             if cost > policy.max_call_cost:
                 self._halt(db, "MODEL_COST_BOUND_EXCEEDED", clock(now))
             return cost
+
+    def _mixed_submitting(self, db):
+        if self.policy.mixed_owner is None:
+            return False
+        from app.mixed.native_store import unresolved
+
+        return unresolved(db, submitting=True)
+
+    def prepare_stock(
+        self, source_key, proposal, quote=None, *, now, origin="DETERMINISTIC", close_quantity=None
+    ):
+        from app.mixed.native_execution import prepare
+
+        return prepare(
+            self, source_key, proposal, quote, now=now, origin=origin, close_quantity=close_quantity
+        )
+
+    async def dispatch_stock(self, client_id, quote, *, now):
+        from app.mixed.native_execution import dispatch
+
+        return await dispatch(self, client_id, quote, now=now)
+
+    def assess_stock(self, quote, *, now):
+        from app.mixed.native_protection import assess
+
+        return assess(self, quote, now=now)
+
+    def tighten_stock_invalidation(self, price, quote, *, now):
+        from app.mixed.native_protection import tighten
+
+        return tighten(self, price, quote, now=now)
+
+    async def protective_stock_tick(self, quote, *, now):
+        from app.mixed.native_protection import tick
+
+        return await tick(self, quote, now=now)
+
+    @exact
+    def mixed_account(self, *, now):
+        if self.policy.mixed_owner is None:
+            raise ExecutionBlocked("MIXED_NATIVE_OWNER_REQUIRED")
+        with self.journal.read() as db:
+            return self._account(db, clock(now))

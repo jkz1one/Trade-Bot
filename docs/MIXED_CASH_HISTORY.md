@@ -97,22 +97,25 @@ protection supervisor.
 
 ## Remaining plumbing in total
 
-1. The [shared durable venue and fixed worker](MIXED_VENUE.md) now implement one
-   fixture balance, cross-instrument order lock and fill/settlement sequence. Connect
-   this common ledger/admission boundary to one explicitly enrolled native owner: atomic cross-instrument order locks, preparation,
-   attempted/unknown orders, actual fills, settlement, complete reconciliation,
-   independent stock protection, restart and signed recovery. Do not reuse two
-   independently funded engines or accept cash projections as native approval.
-2. Derive native stock candidates from original Degen/Swing sources and join the
+The [native mixed owner](MIXED_NATIVE_OWNER.md) now connects the common ledger and
+[shared fixture](MIXED_VENUE.md) to one journal, restore fence, cross-instrument order
+lock, preparation/attempts, complete reconciliation, independent stock protection,
+partial exits, restart, signed recovery and full-cost global/family loss history.
+Remaining:
+
+1. Derive native stock candidates from original Degen/Swing sources and join the
    existing option/Scope selector. Retain exact family/instrument lineage, fixed
-   original geometry and source clocks. No fake option contracts or bearish shorts.
-3. Bind complete mixed entry/management model contracts, fresh post-cost native
-   admission and global/family loss outcomes. Preserve original deadlines and every
+   original geometry and source clocks. Bind original stock carry horizons and
+   overnight protection/costs where required; current native stock enrollment rejects
+   carry. No fake option contracts or bearish shorts.
+2. Bind complete mixed entry/management model contracts, fresh post-cost native
+   admission and paid attribution into the common global/family loss history.
+   Preserve original deadlines and every
    usage charge, rejected decision, partial close and mandatory exit.
-4. Connect explicit mixed runtime inputs, source collection, continuous sessions,
+3. Connect explicit mixed runtime inputs, source collection, continuous sessions,
    held protection, settlement and recovery. Unsupported inputs must reject at the
    enrollment boundary; old frozen populations remain unchanged.
-5. Connect common mixed market tapes to four independent native A/B/C/D accounts and
+4. Connect common mixed market tapes to four independent native A/B/C/D accounts and
    portable full-cost replay/export, including all entry/management charges,
    execution fees, operating/overnight allocations and unknown costs. Pure account
    isolation tests here are not native four-arm mixed replay acceptance.

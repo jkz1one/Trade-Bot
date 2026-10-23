@@ -110,6 +110,15 @@ def refresh(engine, db, now, *, exclude=None):
     if len(rows) > 2000:
         raise ExecutionBlocked("NATIVE_LOSS_CAPACITY_EXCEEDED")
     buys = [(r, OptionIntent.model_validate_json(r["intent_json"])) for r in rows]
+    if engine.policy.mixed_owner is not None:
+        from app.mixed.native_outcome import costed, stock_outcome
+        from app.mixed.native_store import verify_order
+        from app.mixed.stock_models import StockIntent, StockObservation
+
+        stock_rows = db.execute("SELECT * FROM execution_stock_orders LIMIT 2001").fetchall()
+        if len(stock_rows) + len(rows) > 2000:
+            raise ExecutionBlocked("NATIVE_LOSS_CAPACITY_EXCEEDED")
+        buys.extend((r, verify_order(db, r)) for r in stock_rows)
     buys = [(r, i) for r, i in buys if i.side == "BUY"]
     if len(buys) > 200:
         raise ExecutionBlocked("NATIVE_LOSS_CAPACITY_EXCEEDED")
@@ -125,9 +134,13 @@ def refresh(engine, db, now, *, exclude=None):
             if row["status"] != "PREPARED" or row["attempted_at"] is not None:
                 raise ExecutionBlocked("NATIVE_LOSS_EXCLUSION_INVALID")
             continue
-        order_attribution(db, row)
+        is_stock = engine.policy.mixed_owner is not None and isinstance(intent, StockIntent)
+        if not is_stock:
+            order_attribution(db, row)
         observation = (
-            OptionObservation.model_validate_json(row["observation_json"])
+            (StockObservation if is_stock else OptionObservation).model_validate_json(
+                row["observation_json"]
+            )
             if row["observation_json"]
             else None
         )
@@ -136,7 +149,19 @@ def refresh(engine, db, now, *, exclude=None):
             if intent.client_id in saved:
                 raise ExecutionBlocked("NATIVE_LOSS_HISTORY_CHANGED")
             continue
-        outcome = native_position_outcome(db, intent.client_id, engine.limits.population_id)
+        if (
+            engine.policy.mixed_owner is not None
+            and db.execute("SELECT 1 FROM execution_model_calls LIMIT 1").fetchone()
+        ):
+            reasons.append("MIXED_PAID_CONTRACT_NOT_ENROLLED")
+            continue
+        outcome = (
+            stock_outcome(engine, db, intent.client_id)
+            if is_stock
+            else native_position_outcome(db, intent.client_id, engine.limits.population_id)
+        )
+        if engine.policy.mixed_owner is not None and not is_stock:
+            outcome = costed(db, engine.policy, outcome)
         if outcome["status"] != "COMPLETE":
             reasons.append("NATIVE_LOSS_OUTCOME_PENDING")
             continue
@@ -399,6 +424,10 @@ def reset_reviewed(engine, db, command, now):
 
 def outcome_record(outcome, policy):
     """Canonical economic record shared by owned consumption and read-only export."""
+    if outcome.get("entry_kind") == "STOCK":
+        from app.mixed.native_outcome import record
+
+        return record(outcome)
     record = {
         key: outcome[key]
         for key in (
@@ -420,6 +449,13 @@ def outcome_record(outcome, policy):
             "settlements",
         )
     }
+    if "operating_allocations" in outcome:
+        record.update(
+            {
+                k: outcome[k]
+                for k in ("operating_allocations", "known_operating_cost", "net_after_all_costs")
+            }
+        )
     if policy.families:
         from app.options.lifecycle import EntryLineage
 

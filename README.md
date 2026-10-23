@@ -13,9 +13,10 @@ authentic data/model, host and visual acceptance remain separate gates.
 
 Current work finishes remaining strategy/engine plumbing before the final UI and
 authentic data/model validation pass. Offline test tools remain available during development.
-The [shared mixed fixture](docs/MIXED_VENUE.md) now executes stock and option
-fixtures on one balance and order lock. Native mixed ownership, strategy/model
-contracts, runtime and independent replay/export remain before that acceptance pass.
+The [native mixed owner](docs/MIXED_NATIVE_OWNER.md) now binds stock and option
+fixtures to one journal, cash balance, order lock, protection and full-cost loss
+history. Stock candidate/carry/model contracts, runtime and independent replay/export
+remain before that acceptance pass.
 New [stop-only target milestones](docs/OPTIONS_TARGET_EXITS.md#stop-only-target-milestones)
 let protection tighten at an objective without selling a contract or inventing proceeds.
 
@@ -117,7 +118,7 @@ week/month evidence and original break/retest geometry through the native owner.
 sources, exact family selection, runtime and independent native carry/export.
 [Shared stock/options cash history and admission](docs/MIXED_CASH_HISTORY.md) now
 provide one accounting projection and deterministic stock admission envelope.
-Native mixed ownership, candidate/model integration, runtime and A/B/C/D replay
+Native mixed ownership is now connected; candidate/model integration, runtime and A/B/C/D replay
 remain open; the linked document lists all remaining plumbing.
 New [daily base breakout/breakdown](docs/OPTIONS_SWING_BASE.md) connects frozen daily/hourly
 evidence and original targets to the same native owner, carry and independent exports.

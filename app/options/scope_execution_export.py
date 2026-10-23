@@ -63,6 +63,8 @@ def _report(db, now, data_cost, host_cost):
     )
     limits = OptionLimits.model_validate(config["limits"])
     policy = OptionExecutionPolicy.model_validate(config["policy"])
+    if policy.mixed_owner is not None:
+        raise ValueError("Mixed Scope export requires explicit enrollment")
     if (
         config["schema"] != "option-paper-execution-v1"
         or Decimal(config["capital"]) != policy.capital

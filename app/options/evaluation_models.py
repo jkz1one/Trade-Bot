@@ -28,6 +28,12 @@ class ArmDefinition(OptionRecord):
     policy: OptionExecutionPolicy
     strategy_hash: Digest
 
+    @model_validator(mode="after")
+    def supported_owner(self):
+        if self.policy.mixed_owner is not None:
+            raise ValueError("Mixed replay/export requires explicit enrollment")
+        return self
+
 
 class EvaluationSession(OptionRecord):
     key: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")

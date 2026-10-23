@@ -211,7 +211,7 @@ reasoning and worker, native Swing carry, Scope entry/management/runtime and fro
 comparison regressions. Native workers run serially. Count exact distinct test IDs
 on the final wheel; diagnostic passes and overlapping reruns are not extra checks.
 No dependency changes, deployment, authenticated provider/model calls or LIVE
-permission are part of this procedure. Remaining family/mixed ownership still precedes UI and authentic
+permission are part of this procedure. Remaining mixed integration still precedes UI and authentic
 PAPER acceptance.
 
 ## Continuous Scope session comparison
@@ -223,7 +223,7 @@ accounts, explicit settlement, original protection, paid entry/management, cumul
 loss controls, unknown costs, saved boundaries, portable tamper rejection and known-only
 SPY endpoints. Include single-session Scope comparison/model/shortlist, native carry,
 legacy series and tape-boundary regressions. Run native workers serially; count only
-distinct completed case IDs on the final wheel. Remaining family/mixed ownership is still separate
+distinct completed case IDs on the final wheel. Remaining mixed integration is still separate
 plumbing, before UI/authentic PAPER testing.
 
 ## Native repeated-entry attribution
@@ -334,3 +334,17 @@ Compare prior/current serialized fixtures and verify source/wheel/installed byte
 Count completed final-wheel cases once; exclude overlapping diagnostics. The
 [fixture contract](MIXED_VENUE.md) grants no native mixed owner, runtime, model or
 broker acceptance. See the newest status entry for the retained final receipt.
+
+
+## Native mixed owner checks
+
+`test_mixed_native_owner.py` exercises the [explicit common owner](MIXED_NATIVE_OWNER.md)
+with installed fixed children: original admission binding and fresh dispatch,
+stock/option cash continuity, independent protection, partial supersession,
+unknown attempts, full operating costs, global/family losses, signed recovery and
+original Scope/Swing terms. Run serially with common accounting/venue tests and
+native option execution, loss, observer/operator/runtime and Scope/Swing regressions.
+Keep final-wheel case IDs distinct from overlapping diagnostic runs. Option-only
+runtime, paid adapters and comparison exports must still reject mixed enrollment.
+These checks do not establish stock source selection, paid mixed contracts,
+continuous mixed runtime, independent mixed replay or authentic PAPER acceptance.

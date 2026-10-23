@@ -63,6 +63,18 @@ class DegenCoordinator:
     ):
         if type(engine) is not OptionExecution or getattr(engine, "_degen_owner", None) is not None:
             raise ValueError("One active built-in options owner is required")
+        if engine.policy.mixed_owner is not None and any(
+            x is not None
+            for x in (
+                judgment_limits,
+                key_file,
+                entry_policy,
+                replay_model,
+                position_policy,
+                scope_replay,
+            )
+        ):
+            raise ValueError("Mixed paid/replay contracts are not enrolled")
         self.engine, self.clock = engine, clock
         self.scope_policy = (
             SharedScopePolicy.model_validate(scope_policy.model_dump(warnings=False))

@@ -186,6 +186,8 @@ class OptionObserver:
             raise ValueError("Separate options population required")
         limits = OptionLimits.model_validate(config["limits"])
         policy = OptionExecutionPolicy.model_validate(config["policy"])
+        if policy.mixed_owner is not None:
+            raise ValueError("Mixed observer/export requires explicit enrollment")
         if limits.population_id != self.population_id:
             raise ValueError("Frozen population identity mismatch")
         scope = stored_scope(db, tables, limits, now, _json, owner_policy=policy)

@@ -76,6 +76,10 @@ def _settlement_links(db, rows, receipts, policy):
         raise ValueError("Settlement snapshot fill coverage mismatch")
     for receipt in receipts:
         events.append((receipt.sequence, receipt.occurred_at, "RECEIPT", receipt))
+    if policy.mixed_owner is not None:
+        from app.mixed.native_outcome import stock_events
+
+        events.extend(stock_events(db, snapshot))
     ordered = sorted(events, key=lambda event: event[0])
     if (
         [e[0] for e in ordered] != list(range(1, len(ordered) + 1))
@@ -84,6 +88,11 @@ def _settlement_links(db, rows, receipts, policy):
     ):
         raise ValueError("Settlement event sequence or time mismatch")
     state = OptionLedger(cash=policy.capital, high_watermark=policy.capital)
+    if policy.mixed_owner is not None:
+        from app.mixed.accounting import _apply_stock, _merge, _option_part
+        from app.mixed.models import MixedLedger
+
+        state = MixedLedger.model_validate(state.model_dump())
     links = {}
     for _, _, kind, event in ordered:
         if kind == "FILL":
@@ -97,10 +106,21 @@ def _settlement_links(db, rows, receipts, policy):
                 )
             ):
                 raise ValueError("Settlement replay closing entry mismatch")
-            state = apply_fill(state, intent, fill)
+            if policy.mixed_owner is not None:
+                if state.stock_position is not None:
+                    raise ValueError("MIXED_EXISTING_STOCK_POSITION")
+                state = _merge(state, apply_fill(_option_part(state), intent, fill))
+            else:
+                state = apply_fill(state, intent, fill)
+        elif kind == "STOCK_FILL":
+            state = _apply_stock(state, *event)
         else:
             entry_id = state.position.entry_client_id if state.position else None
-            state = apply_receipt(state, event)
+            state = (
+                _merge(state, apply_receipt(_option_part(state), event))
+                if policy.mixed_owner is not None
+                else apply_receipt(state, event)
+            )
             if event.kind != "FUNDS_SETTLED":
                 links[event.receipt_id] = entry_id
     fields = ("cash", "settled_cash", "realized_pnl", "fees_paid", "daily_net_pnl")
@@ -117,6 +137,15 @@ def _settlement_links(db, rows, receipts, policy):
             )
         ):
             raise ValueError("Settlement replay owned position mismatch")
+    if policy.mixed_owner is not None:
+        from app.mixed.stock_models import StockPosition
+
+        saved = db.execute(
+            "SELECT position_json FROM execution_mixed_control WHERE id=1"
+        ).fetchone()[0]
+        held = StockPosition.model_validate_json(saved) if saved else None
+        if state.stock_position != snapshot.stock_position or state.stock_position != held:
+            raise ValueError("MIXED_STOCK_OUTCOME_POSITION_MISMATCH")
     return links
 
 

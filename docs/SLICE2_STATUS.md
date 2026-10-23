@@ -1,6 +1,84 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
 
+## One native stock/options owner and independent protection: 2026-10-22 America/New_York
+
+Fresh GitHub/local state began at HEAD
+`bf7a4b97d2e356b343a173bcda79c7c82635dc14`, tree
+`1ad1a2354d537d7f64a16da990ce7bbacb758751`. PR #1 remained open/draft;
+main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`.
+
+The [native mixed owner](MIXED_NATIVE_OWNER.md) now binds actual shares and native
+options to one exact `OptionExecution`, journal, original capital, revision, restore
+fence and bounded fixture child. Create-only mixed policy freezes share limits and
+explicit nullable daily data/host/operating allocations. SQLite cross-table locks,
+read epochs and submission guards cover both asset paths. Stock approvals store
+and recompute their original proposal, quote, complete common cash history,
+session, account snapshot, revision and admission. Fresh dispatch cannot extend the
+original approval, increase its price or resize its approved quantity.
+
+One chronological stock/option fill and settlement sequence reconstructs common
+cash, settled balances, lots, fees and realized outcomes from original capital.
+Native reconciliation checks exact approved intent, original attempt, immutable
+fill prefixes and terminal history; missing/unowned/rewritten evidence fails closed.
+Stock holdings use the existing `EquityHolding` account discriminator. Native Scope
+fixed targets and Swing carry horizons remain attached to their original entries.
+Stock → option → stock continuity uses one owner and one balance.
+
+Independent stock stop/target/time protection latches across rebound, partial fills
+and restart. Missing quotes do not erase time exits; entry halts or unknown model
+costs do not suppress owned close admission. Partial-close preparation and dispatch
+freshly assess mandatory protection. Unattempted partial closes can be superseded;
+attempted/uncertain closes cannot be replayed. Native uncertainty/restart, lifetime
+ownership, paired restore fencing, signed resume and global/family resets retain
+original evidence and exact revisions. Original stock carry requests are rejected
+rather than silently shortened into a session-close plan.
+
+Explicit daily calendar allocations reduce common loss headroom, including idle
+charges, and attach once to the held/next actually filled entry. Closed stock and
+option results feed one global/family loss history with fees and full operating
+allocations; a gross stock win can become a net loss. Unknown costs remain unknown.
+Mixed paid contracts remain unenrolled: unexpected retained usage blocks entry and
+loss consumption, while independent held exits remain available. Option-only paid
+coordinator/model, runtime and comparison/export paths explicitly reject mixed
+inputs. The basic owner report labels mixed fixture state; it does not claim final
+observer/UI or portable mixed replay acceptance.
+
+Validation: **907 distinct final-wheel installed checks**, including **47 new
+native mixed-owner cases**. The completed phases were 47 owner cases (118.36s),
+335 native admission/execution/fill/settlement/Scope/Swing regressions (136.60s),
+75 focused loss/family/reset/model-admission checks (58.88s), 62 paid Scope and
+stored-outcome checks (270.63s), 140 operator/observer/runtime checks (86.93s),
+188 common accounting/admission/fixture checks (131.53s), and 60 evaluation/Scope
+native export checks (64.69s). Exact completed IDs are retained and counted once.
+The targeted risk run excludes the full two-session/four-arm fixture; stored-outcome
+checks select direct owned-position cases rather than the full managed replay
+fixture. Interrupted wide runs and all overlapping diagnostics are excluded.
+No unfinished long replay is counted as a pass.
+
+Final wheel SHA-256:
+`82ac2d2793213f3dae5f2aae348a9076eff00d020b604137dbf9b8a75a8b832c`.
+All 226 application/template files match source, wheel and installed bytes; 212
+pre-existing application/template files are unchanged. Ten representative frozen
+contracts serialize byte-for-byte identically across separately installed parent
+and current wheels. Changed-source Ruff/format, dependency consistency, local
+Markdown links and whitespace checks pass. Tests are copied outside the checkout
+and run serially against a noneditable wheel with Python `-I`, warnings as errors
+and plugin autoload disabled. Proof: `../mixed-owner-proof/`; wheel:
+`../mixed-owner-wheels/`; environment: `../scope-replay-env/`. The parent is
+`bf7a4b97d2e356b343a173bcda79c7c82635dc14`. Source of truth is v1.102.
+
+Continuation: original stock candidates/shared family selection and required stock
+carry contracts; full paid mixed
+entry/management contracts and fresh post-cost native attribution; continuous
+mixed runtime/source inputs; independent native A/B/C/D mixed tape/replay/export.
+The [remaining list](MIXED_CASH_HISTORY.md#remaining-plumbing-in-total) now removes
+the completed native owner/protection/recovery portion. See the new owner document
+for the next implementation boundary. Final UI/visual and authentic PAPER acceptance
+remain after plumbing. No dependency, deployment, authenticated provider/model/broker,
+LIVE or main changes. PR #1 stays open/draft and the deployed experiment stays frozen.
+
+
 ## Shared stock/options fixture and fixed child: 2026-10-22 America/New_York
 
 Fresh GitHub/local state began at HEAD

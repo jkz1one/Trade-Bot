@@ -53,6 +53,8 @@ class OptionRuntime:
     def __init__(self, coordinator, policy, *, create=False):
         if type(coordinator) is not DegenCoordinator or coordinator.replay_model is not None:
             raise ValueError("A native built-in Degen owner is required")
+        if coordinator.engine.policy.mixed_owner is not None:
+            raise ValueError("Mixed runtime inputs are not enrolled")
         if getattr(coordinator.engine, "_option_runtime", None) is not None:
             raise ValueError("One runtime per active owner")
         self.c = coordinator

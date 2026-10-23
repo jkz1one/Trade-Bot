@@ -7,6 +7,7 @@ from typing import Literal
 from pydantic import Field, StrictBool, model_validator
 
 from app.execution.economics import CostPolicy
+from app.mixed.native_models import MixedOwnerPolicy
 from app.mixed.stock_models import StockLimits, StockObservation, StockPosition
 from app.options.carry_models import SwingCarryTerms
 from app.options.models import (
@@ -53,6 +54,7 @@ class NativeLossPolicy(OptionRecord):
 
 
 class OptionExecutionPolicy(OptionRecord):
+    mixed_owner: MixedOwnerPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
     version: Literal["option-paper-lifecycle-v1"] = "option-paper-lifecycle-v1"
     capital: Money = Field(gt=0)
     daily_loss_limit: Money = Field(gt=0)
@@ -111,6 +113,14 @@ class OptionExecutionPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def bounded(self):
+        if self.mixed_owner is not None and (
+            self.cost_policy is not None
+            or self.loss_control is None
+            or not {"DEGEN", "SWING"} <= {p.family for p in self.loss_control.families}
+        ):
+            raise ValueError(
+                "Mixed native ownership requires common family loss controls and model-off enrollment"
+            )
         if (
             self.loss_control is not None
             and self.loss_control.entry_cost_attribution is not None
