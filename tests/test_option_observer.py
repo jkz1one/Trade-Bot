@@ -524,7 +524,7 @@ def test_html_escapes_untrusted_thesis_and_explains_empty_family(tmp_path, monke
         client, _ = app_for(c, tmp_path)
         html = client.get("/").text
         assert "<script>" not in html and "&lt;script&gt;" in html
-        assert "Historical comparison" in html and "Unknown model usage" in html
+        assert "Balance history" in html and "Unknown model usage" in html
         assert "Swing is not enrolled" in client.get("/?family=SWING").text
         assert "Scope is not enrolled" in client.get("/?family=SCOPE").text
 

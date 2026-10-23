@@ -332,8 +332,8 @@ def test_server_rendered_comparison_states_preserve_truthful_labels(tmp_path, mo
         response = client.get("/")
         assert response.status_code == 200
         text = response.text
-        assert 'href="#content"' in text and 'aria-label="Sections"' in text
-        assert "Historical comparison" in text
+        assert 'href="#content"' in text and 'aria-label="Desk details"' in text
+        assert "Balance history" in text
         assert "<script>" not in text
         if state in {"AVAILABLE", "LONG_TEXT"}:
             assert 'role="img"' in text and "Entry / management model" in text

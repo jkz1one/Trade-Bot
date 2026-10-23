@@ -92,3 +92,18 @@ nav[aria-label="History pages"] a{padding:10px 14px;min-height:44px;border:1px s
   .account-cards .card:nth-last-child(2){border-bottom:1px solid var(--line)}
   .account-cards .card:last-child{border-bottom:0}
 }
+
+/* Persistent desk: restrained HUD, no animation or implied live telemetry. */
+:root{--mint:#b8e985;--blue:#b8d8e8;--panel:#131c22;--raised:#1b2931;--line:#33434d;--bg:#0c1217}
+body{background:var(--bg)}
+main{max-width:1540px}header{padding-bottom:14px;border-bottom:1px solid var(--line)}
+h1{font-size:24px;letter-spacing:-.5px}.brand-mark{background:var(--mint);box-shadow:none}section{border-radius:10px;box-shadow:none}
+.hud-overview{padding:18px 20px}.hud-overview>.head h2{font-size:14px}.hud-overview .card{padding:12px;background:transparent;border:0;border-left:2px solid var(--line);border-radius:0}.hud-overview .value{font-size:27px}.hud-overview .status-strip{margin-bottom:0}
+.desk-stage{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(320px,1fr);gap:16px;align-items:start}.desk-stage>section{min-width:0;margin-top:0}.desk-stage .cards{grid-template-columns:repeat(2,minmax(0,1fr))}.desk-stage .card{padding:10px;background:transparent;border:0}.desk-stage .value{font-size:23px}.desk-stage .comparison-chart{margin-top:8px}.desk-stage .comparison-note{font-size:12px}.desk-stage .comparison-chart svg{min-width:0}
+.trade-symbol{font-size:30px;font-weight:650;letter-spacing:-1px;margin:20px 0 4px}.trade-symbol span{font-size:21px}.trade-metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:18px 0;border-bottom:1px solid var(--line)}.trade-metrics strong{display:block;font-size:23px;font-variant-numeric:tabular-nums}.trade-checkpoints{display:grid;gap:16px;border-left:2px solid var(--line);padding-left:18px;margin:24px 0}.trade-checkpoints>div{position:relative}.trade-checkpoints>div:before{content:'';position:absolute;width:7px;height:7px;background:var(--mint);left:-23px;top:7px;border:1px solid var(--bg)}.trade-checkpoints strong{display:block;font-size:13px;overflow-wrap:anywhere}
+.desk-tabs{display:none;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding:8px 0;margin-top:8px}.desk-ready .desk-tabs{display:flex}.desk-tabs button{font:inherit;font-size:13px;min-height:44px;padding:10px 18px;background:transparent;color:var(--muted);border:1px solid transparent;border-radius:6px;cursor:pointer}.desk-tabs button[aria-selected=true]{color:var(--mint);background:#223127;border-color:#587144}.desk-tabs button:hover{background:var(--raised)}button:focus-visible,[role=tabpanel]:focus-visible{outline:2px solid var(--mint);outline-offset:3px}[hidden]{display:none!important}[role=tabpanel]{scroll-margin-top:16px}
+@media(min-width:1100px){.desk-ready .desk-tabs{position:sticky;top:0;z-index:2;background:var(--bg)}}
+@media(max-width:900px){.desk-stage{grid-template-columns:1fr}.desk-stage>section{margin-bottom:0}.hud-overview .value{font-size:23px}.desk-tabs button{padding:10px 12px}}
+@media print{[hidden]{display:block!important}.desk-tabs{display:none!important}.desk-stage{display:block}}
+
+.chart-controls{display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px;margin:16px 0}.desk-ready .chart-controls{display:flex}.chart-controls button{color:var(--muted);background:var(--bg);border:1px solid var(--line);padding:8px 12px;min-width:44px;min-height:44px;border-radius:5px;cursor:pointer}.chart-controls button[aria-pressed=true]{color:var(--mint);border-color:var(--mint)}.chart-controls label{display:inline-flex;align-items:center;min-height:44px;gap:4px}.chart-controls input{accent-color:var(--mint)}

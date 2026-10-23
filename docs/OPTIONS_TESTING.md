@@ -406,3 +406,17 @@ Keep final-wheel case IDs distinct from overlapping diagnostic runs. Option-only
 runtime, paid adapters and comparison exports must still reject mixed enrollment.
 These checks do not establish stock source selection, paid mixed contracts,
 continuous mixed runtime, independent mixed replay or authentic PAPER acceptance.
+
+## Persistent desk installed-wheel check (2026-10-23)
+
+See [HUD proof](DASHBOARD_HUD_PROOF.json) for 129 deduplicated Python passes and
+seven separate JavaScript unit cases. Run `tests/test_options_desk.cjs` with
+`node --test` and `DESK_SCRIPT` set to the installed wheel's
+`app/web/templates/options_desk_script.html`; it exercises presentation logic with
+a small DOM fixture, not a browser. The four Python suites are dashboard,
+observer, comparison view and Scope observer. Tests are copied outside the
+checkout; the wheel is noneditable, Python isolated, warnings errors, plugin
+autoload disabled and anyio explicit. Native tests run serially. Five obsolete
+heading/navigation assertions were resolved with a focused rerun on the same
+wheel. Browser and screenshot acceptance remains pending; no native or authentic
+acceptance can be inferred from presentation tests.

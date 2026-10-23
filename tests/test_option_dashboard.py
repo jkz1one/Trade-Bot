@@ -43,7 +43,7 @@ def test_rendering_drill_retains_truth_and_accessible_navigation(states, state):
     outline = Outline(html)
     assert len(outline.ids) == len(set(outline.ids))
     assert set(outline.links) <= set(outline.ids)
-    assert not {"script", "form", "button", "iframe"} & set(outline.tags)
+    assert not {"form", "iframe"} & set(outline.tags)
     assert "LIVE DISABLED" in html and "Read-only stored evidence" in html
     if state in {"empty", "unavailable"}:
         assert "Current equity estimate" not in html
@@ -182,3 +182,45 @@ def test_mixed_owner_remains_unavailable_without_changing_native_evidence(tmp_pa
         assert "Stored evidence unavailable" in html
         assert 'id="briefing"' not in html
         assert digest(paths) == before
+
+
+@pytest.mark.parametrize("state", ["populated", "stale", "unknown", "hold"])
+def test_desk_keeps_trade_and_history_outside_detail_panels(states, state):
+    html = render(states[state])
+    assert html.index('id="comparison"') < html.index('data-tabs="desk"')
+    assert html.index('id="trade-card"') < html.index('data-tabs="desk"')
+    assert html.count('data-panel-group="desk"') == 5
+    assert '<script src="/desk.js" defer></script>' in html
+    assert 'data-panel="execution"' in html
+    assert ' hidden' not in html  # No-JavaScript fallback exposes all evidence.
+    card = html.split('id="trade-card"', 1)[1].split('</section>', 1)[0]
+    if states[state]["position"]:
+        assert "Target touches are not fills" in card
+        if states[state]["position"]["gross_bid_mark"] is None:
+            assert 'Gross bid value</span><strong>Unavailable' in card
+
+
+def test_desk_asset_is_authenticated_and_does_not_read_execution(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    from test_degen_options import owned_strategy
+    from test_option_observer import app_for
+
+    with owned_strategy(tmp_path) as (coordinator, *_):
+        client, key = app_for(coordinator, tmp_path)
+        paths = [coordinator.engine.journal.path]
+        before = digest(paths)
+
+        def forbidden(*args, **kwargs):
+            pytest.fail("Presentation asset read account evidence")
+
+        monkeypatch.setattr(OptionObserver, "report", forbidden)
+        assert TestClient(client.app).get('/desk.js').status_code == 401
+        response = client.get('/desk.js')
+        assert response.status_code == 200
+        assert response.headers['content-type'].startswith('application/javascript')
+        assert "script-src 'self'" in response.headers['content-security-policy']
+        assert response.headers['x-content-type-options'] == 'nosniff'
+        assert 'fetch(' not in response.text and 'XMLHttpRequest' not in response.text
+        assert digest(paths) == before
+        key.unlink()
+        assert client.get('/desk.js').status_code == 503

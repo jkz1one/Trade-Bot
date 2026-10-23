@@ -103,6 +103,7 @@ def main():
     if not args.output.is_absolute():
         parser.error("Absolute new output directory required")
     args.output.mkdir(mode=0o700)
+    (args.output / "desk.js").write_text(templates.env.get_template("options_desk_script.html").render())
     source = args.output / "fixture-state"
     source.mkdir(mode=0o700)
     states = examples(source)

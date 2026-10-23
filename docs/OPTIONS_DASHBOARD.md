@@ -5,6 +5,63 @@ stored-only options observer. It changes no execution rule, collector, account,
 cost arithmetic, authentication, API response or deployment. Main stays untouched,
 PR #1 draft, LIVE disabled and the deployed experiment frozen.
 
+## Persistent desk follow-up — 2026-10-23
+
+The requested direction is one persistent page with a restrained game-HUD palette,
+no candle chart, balance history and an active trade card above the detail tabs.
+The implemented options desk keeps those two panels outside the tab content.
+Summary, Trade details, Decisions, Scope and Fills & costs switch locally. The
+original thesis, native invalidations, exit deadline, bid-mark availability and
+pending/unknown ownership remain explicit. This is not yet unified mixed-account
+presentation; the boundary below remains in force.
+
+The balance graph uses the existing independently bound historical comparison.
+5-session, 20-session and All controls crop its recorded path without rebasing
+returns, changing the dollar scale, extending incomplete paths or fetching prices.
+Model-off A, SPY and cash can be hidden independently. These settings and the
+selected tab persist in sessionStorage under the population identity. Denied or
+malformed storage does not break the page. Refresh still means an explicitly
+requested stored read; historical pagination disables automatic refresh.
+
+Tabs expose tablist/tab/tabpanel semantics, Arrow/Home/End navigation and focus.
+Anchor links reveal their containing panel, including the card's protection link.
+Without JavaScript all evidence remains visible; print exposes all panels.
+The authenticated `/desk.js` endpoint serves only the packaged presentation asset
+and does not read a journal. CSP allows same-origin scripts, disallows inline
+scripts, keeps default-src none and nosniff; script code has no fetch, timers,
+provider SDK, model call or trading action. No dependencies were added.
+
+SignalFlow references remain pinned to
+`f9eaf2c1b5d13dca287ee7138126883065b00395` in the
+[source manifest](research/signalflow_options_sources.json). The inspected
+`PlayProgressRail.tsx` and `DynamicManagementPanel.tsx` informed compact retained
+protection checkpoints and expandable diagnostics. **No React component or
+numeric progress-rail algorithm was ported in this slice.** The observer does not
+expose enough bound original target/current-underlying evidence to honestly port
+that rail wholesale; a decorative progression must not imply target attainment.
+SignalFlow midpoint/last fallbacks and proposed-stop/native-stop merging were not
+adopted. Native premium floors and original thesis stay in retained detail panels.
+External comparison research: [FreqUI](https://www.freqtrade.io/en/stable/freq-ui/)
+uses trade/performance/wallet views; [QuantConnect live results](https://www.quantconnect.com/docs/v2/cloud-platform/live-trading/results)
+separate equity, holdings, orders and logs. This desk adopts the information
+hierarchy, not their trading controls or best-effort historical balance backfills.
+
+Validation: **129 distinct Python cases and 7 JavaScript unit cases** on wheel
+`bbbcba357fffd726fdc5fe70eea3562d6902ebeaeed7df5a3d819f48a3fe6a3b`.
+The initial run passed 124 cases and failed five assertions tied to replaced
+navigation/heading text; the five-case focused rerun passed after updating those
+assertions. No application change or reinstall intervened. Five Python cases and
+seven JavaScript cases are new. All 244 app/template files match source, wheel and
+installed bytes; 239 match the parent. See [exact proof](DASHBOARD_HUD_PROOF.json).
+
+Eight fixture states at desktop/mobile sizes were generated and checked for
+balanced markup. **Actual browser review and screenshots remain blocked**: the
+cloud browser returned `ERR_CONNECTION_REFUSED` for the running local fixture
+preview. JavaScript unit checks are not browser acceptance. Mobile layout,
+keyboard/screen-reader behavior and visual polish remain subject to that review.
+Mixed stock/options observer and original target rail remain open UI work. No
+authentic provider/model/broker acceptance was attempted or authorized.
+
 ## What is visible
 
 The October 23 pass adds an **At a glance** briefing with retained entry blockers,
@@ -25,7 +82,8 @@ historical result. No accounting or stored/API contract changes accompany this p
 The responsive briefing uses three/two/one columns. Long desktop briefing text has
 an explicitly labeled, keyboard-focusable scroll region and remains fully visible
 on mobile; full decisions retain the complete escaped thesis and uncertainty.
-Native disclosures and links require no scripts or external resources. These are
+Native disclosures and links remain readable without scripts. The desk enhancement
+uses one authenticated same-origin script, with no external resources. These are
 implemented layout/interaction contracts, pending actual browser acceptance.
 
 ### Mixed-owner boundary

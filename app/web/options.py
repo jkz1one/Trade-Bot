@@ -8,7 +8,7 @@ from secrets import compare_digest
 from typing import Annotated, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.templating import Jinja2Templates
 
@@ -57,7 +57,7 @@ def create_options_app(
                 "X-Content-Type-Options": "nosniff",
                 "X-Frame-Options": "DENY",
                 "Referrer-Policy": "no-referrer",
-                "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+                "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
             }
         )
         return response
@@ -80,6 +80,13 @@ def create_options_app(
     @app.get("/healthz")
     def health():
         return {"status": "OK", "service": "options-observer", "trader_health": "NOT_CHECKED"}
+
+    @app.get("/desk.js", dependencies=[Depends(authenticate)])
+    def desk_script():
+        return Response(
+            templates.env.get_template("options_desk_script.html").render(),
+            media_type="application/javascript",
+        )
 
     @app.get("/api/options", dependencies=[Depends(authenticate)])
     def api(

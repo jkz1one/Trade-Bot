@@ -1,5 +1,34 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Persistent desk, trade card and local tabs: 2026-10-23 UTC
+
+Parent `b22eb1d183627cec64a15e5cb9cb295b915fff3f`, tree
+`f24641eb543f228c5ff55a1a899e69bff7729aae`, verified locally and on GitHub.
+Main remains `b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 remains open/draft.
+
+The [options desk](OPTIONS_DASHBOARD.md) now keeps balance history and an active
+native trade card outside locally switched Summary/Trade details/Decisions/Scope/
+Fills & costs tabs. The restrained HUD palette uses original thesis, native stops,
+exit deadline and stored gross bid value without inventing current marks or net
+returns. Chart ranges and benchmark toggles operate only on already rendered
+stored values. Tab and chart preferences survive refresh; no-JavaScript and print
+fallbacks expose evidence. The same-origin authenticated script has no network or
+execution operations. No candle chart, engine change or dependency change.
+
+Installed-wheel proof: 129 distinct passing Python cases (124 initial passes plus
+five resolved presentation-label assertions), seven passing JavaScript unit cases,
+244 source/wheel/installed identities, 239 unchanged parent files. Changed-scope
+lint, fatal lint, dependency lock, pip consistency and whitespace checks pass.
+Wheel SHA-256: `bbbcba357fffd726fdc5fe70eea3562d6902ebeaeed7df5a3d819f48a3fe6a3b`.
+[Proof manifest](DASHBOARD_HUD_PROOF.json) retains IDs and run boundaries. Prior
+proof is preserved separately; these counts do not add overlapping prior cases.
+
+Remaining: actual browser review/screenshots (local preview connection refused),
+explicit mixed-account observer and bound original target rail. SignalFlow code
+was inspected as a reference, not ported wholesale. Authentic acceptance remains
+open and unauthorized. LIVE remains disabled; deployed experiment frozen.
+
+
 
 ## Dashboard research desk and stored-evidence hierarchy: 2026-10-23 America/New_York
 
