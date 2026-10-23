@@ -150,6 +150,12 @@ def allocations(engine, db, at):
     )
 
 
+def model_costs(engine, db):
+    from app.mixed.paid_costs import records
+
+    return records(db, engine.policy)
+
+
 def history(engine, db, *, as_of=None, exclude=None):
     c = engine._control(db)
     if not c["snapshot_json"] or json.loads(c["issues_json"]):
@@ -196,7 +202,7 @@ def history(engine, db, *, as_of=None, exclude=None):
         captured_at=captured,
         events=tuple(events),
         reservations=tuple(reservations),
-        costs=allocations(engine, db, captured),
+        costs=allocations(engine, db, captured) + model_costs(engine, db),
     )
 
 
@@ -209,7 +215,7 @@ def project_account(engine, db, account, now, *, exclude=None, closing=False):
     if (projected.cash, projected.settled_cash) != (original.cash, original.settled_cash):
         raise ExecutionBlocked("MIXED_COMMON_CASH_MISMATCH")
     unbound = db.execute("SELECT 1 FROM execution_model_calls LIMIT 1").fetchone() is not None
-    if unbound:
+    if unbound and engine.policy.mixed_owner.reasoning is None:
         projected = projected.model_copy(
             update={
                 "budgets_known": False,
@@ -298,7 +304,12 @@ def verify_order(db, row):
         )
         or (h.account_id, h.population_id) != (account.account_id, account.population_id)
         or h.captured_at != intent.prepared_at
-        or approval["inputs"]["origin"] not in {"DETERMINISTIC", "PROTECTIVE"}
+        or approval["inputs"]["origin"]
+        not in (
+            {"DETERMINISTIC", "PROTECTIVE", "MODEL", "POSITION_MODEL"}
+            if policy.mixed_owner.reasoning is not None
+            else {"DETERMINISTIC", "PROTECTIVE"}
+        )
     ):
         raise ValueError("STOCK_NATIVE_CONTRACT_CHANGED")
     reviewed = admit_stock(
@@ -324,6 +335,8 @@ def verify_order(db, row):
         else reviewed
     )
     if intent.side == "BUY":
+        if policy.mixed_owner.reasoning is not None and approval["inputs"]["origin"] != "MODEL":
+            raise ValueError("MIXED_PAID_STOCK_ORIGIN_REQUIRED")
         from app.mixed.selection import guard_stock
 
         ceiling = guard_stock(
@@ -341,6 +354,23 @@ def verify_order(db, row):
                         clock(datetime.fromisoformat(ceiling["approval_expires_at"])),
                     )
                 }
+            )
+    if approval["inputs"]["origin"] == "POSITION_MODEL":
+        from app.mixed.position import close_guard, stored
+
+        request, result, _, _ = stored(db, intent.source_key, usable=True)
+        if (
+            approval["inputs"].get("position_request") != request.model_dump(mode="json")
+            or approval["inputs"].get("position_result") != result.model_dump(mode="json")
+            or intent.closing_entry_client_id != request.packet.entry.client_id
+        ):
+            raise ValueError("STOCK_ORIGINAL_MANAGEMENT_APPROVAL_CHANGED")
+        deadline = close_guard(
+            None, db, intent.source_key, proposal, quote, intent.prepared_at, original=True
+        )
+        if reviewed.outcome == "APPROVED":
+            reviewed = reviewed.model_copy(
+                update={"approval_expires_at": min(reviewed.approval_expires_at, deadline)}
             )
     if (
         reviewed.outcome != "APPROVED"

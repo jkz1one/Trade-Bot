@@ -460,7 +460,11 @@ class OptionExecution:
             if underlying
             else None
         )
-        if self.policy.mixed_owner is not None and origin == "MODEL":
+        if (
+            self.policy.mixed_owner is not None
+            and self.policy.mixed_owner.reasoning is None
+            and origin == "MODEL"
+        ):
             raise ExecutionBlocked("MIXED_PAID_CONTRACT_NOT_ENROLLED")
         if (
             not isinstance(source_key, str)
@@ -1906,7 +1910,7 @@ class OptionExecution:
 
     @exact
     def begin_model_attempt(self, source_key, input_hash, *, now, position_request=None):
-        if self.policy.mixed_owner is not None:
+        if self.policy.mixed_owner is not None and (self.policy.mixed_owner.reasoning is None):
             raise ExecutionBlocked("MIXED_PAID_CONTRACT_NOT_ENROLLED")
         now = clock(now)
         policy = self.policy.cost_policy
@@ -1949,7 +1953,15 @@ class OptionExecution:
             raise EntryModelBlocked(blocked)
 
     def _admit_model_attempt(self, db, source_key, input_hash, now, position_request):
-        if self.policy.mixed_owner is not None:
+        if (
+            self.policy.mixed_owner is not None
+            and self.policy.mixed_owner.reasoning is not None
+            and position_request is None
+        ):
+            from app.mixed.entry import validate_admission
+
+            validate_admission(self, db, source_key, input_hash, now)
+        if self.policy.mixed_owner is not None and (self.policy.mixed_owner.reasoning is None):
             raise ExecutionBlocked("MIXED_PAID_CONTRACT_NOT_ENROLLED")
         policy = self.policy.cost_policy
         if position_request is not None:
@@ -2016,6 +2028,7 @@ class OptionExecution:
         from app.options.entry_reasoning import (
             CarryEntryPlan,
             EntryPlan,
+            MixedEntryPlan,
             ScopeCarryShortlistPlan,
             ScopeShortlistPlan,
             SharedScopeCarryEntryPlan,
@@ -2023,7 +2036,8 @@ class OptionExecution:
         )
 
         plan = TypeAdapter(
-            EntryPlan
+            MixedEntryPlan
+            | EntryPlan
             | CarryEntryPlan
             | SharedScopeEntryPlan
             | ScopeShortlistPlan

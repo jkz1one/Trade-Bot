@@ -12,6 +12,9 @@ from app.options.models import Money, Name, OptionRecord
 
 class MixedOwnerPolicy(OptionRecord):
     version: Literal["mixed-native-owner-v1"] = "mixed-native-owner-v1"
+    reasoning: Literal["mixed-paid-entry-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     stocks: StockLimits
     stock_carry: StockCarryPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
     allocation: Literal["daily-calendar-fixture-v1"] = "daily-calendar-fixture-v1"

@@ -19,8 +19,10 @@ history. Explicit [original stock carry](docs/MIXED_STOCK_CARRY.md) now retains
 calendar horizons, catalyst evidence, protection and full daily costs.
 [Original stock sources and shared selection](docs/MIXED_STOCK_SELECTION.md) now
 connect Degen/Swing shares to one native stock/options/Scope choice, original
-source retirement and attribution. Paid mixed model contracts, runtime and
-independent replay/export remain before that acceptance pass.
+source retirement and attribution. [Paid mixed entry and management](docs/MIXED_AI.md)
+now bind full worker receipts, fresh native admission, original stock/option/Scope
+terms and all paid costs. Continuous mixed runtime and independent replay/export
+remain before that acceptance pass.
 New [stop-only target milestones](docs/OPTIONS_TARGET_EXITS.md#stop-only-target-milestones)
 let protection tighten at an objective without selling a contract or inventing proceeds.
 
@@ -122,8 +124,9 @@ week/month evidence and original break/retest geometry through the native owner.
 sources, exact family selection, runtime and independent native carry/export.
 [Shared stock/options cash history and admission](docs/MIXED_CASH_HISTORY.md) now
 provide one accounting projection and deterministic stock admission envelope.
-Native mixed ownership is now connected; candidate/model integration, runtime and A/B/C/D replay
-remain open; the linked document lists all remaining plumbing.
+Native mixed ownership, candidate selection and paid entry/management are connected.
+Continuous mixed runtime and A/B/C/D replay/export remain open; the linked document
+lists all remaining plumbing.
 New [daily base breakout/breakdown](docs/OPTIONS_SWING_BASE.md) connects frozen daily/hourly
 evidence and original targets to the same native owner, carry and independent exports.
 

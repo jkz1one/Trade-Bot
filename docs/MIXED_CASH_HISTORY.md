@@ -103,16 +103,14 @@ lock, preparation/attempts, complete reconciliation, independent stock protectio
 partial exits, restart, signed recovery and full-cost global/family loss history.
 
 [Original stock source derivation and shared selection](MIXED_STOCK_SELECTION.md)
-now bind native candidates, sticky retirement, carry and attribution. Remaining:
+now bind native candidates, sticky retirement, carry and attribution.
+[Paid mixed entry/management](MIXED_AI.md) now connect complete worker receipts,
+fresh native approval, original terms and all paid charges. Remaining:
 
-1. Bind complete mixed entry/management model contracts, fresh post-cost native
-   admission and paid attribution into the common global/family loss history.
-   Preserve original deadlines and every
-   usage charge, rejected decision, partial close and mandatory exit.
-2. Connect explicit mixed runtime inputs, source collection, continuous sessions,
+1. Connect explicit mixed runtime inputs, source collection, continuous sessions,
    held protection, settlement and recovery. Unsupported inputs must reject at the
    enrollment boundary; old frozen populations remain unchanged.
-3. Connect common mixed market tapes to four independent native A/B/C/D accounts and
+2. Connect common mixed market tapes to four independent native A/B/C/D accounts and
    portable full-cost replay/export, including all entry/management charges,
    execution fees, operating/overnight allocations and unknown costs. Pure account
    isolation tests here are not native four-arm mixed replay acceptance.

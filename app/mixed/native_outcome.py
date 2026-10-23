@@ -101,9 +101,16 @@ def _intervals(db, policy):
 def costed(db, policy, outcome):
     if policy.mixed_owner is None:
         return outcome
-    if db.execute("SELECT 1 FROM execution_model_calls LIMIT 1").fetchone():
+    if (
+        policy.mixed_owner.reasoning is None
+        and db.execute("SELECT 1 FROM execution_model_calls LIMIT 1").fetchone()
+    ):
         raise ValueError("MIXED_PAID_CONTRACT_NOT_ENROLLED")
     intervals, at = _intervals(db, policy)
+    if policy.mixed_owner.reasoning is not None:
+        from app.mixed.paid_costs import apply
+
+        outcome = apply(db, policy, outcome, intervals)
     opened = clock(
         datetime.fromisoformat(
             db.execute("SELECT opened_at FROM execution_mixed_control WHERE id=1").fetchone()[0]

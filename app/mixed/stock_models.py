@@ -184,6 +184,10 @@ class StockPosition(OptionRecord):
         return self
 
     @property
+    def entry_client_id(self):
+        return self.entry.client_id
+
+    @property
     def basis(self):
         with localcontext(Context(prec=192)):
             return sum((lot.quantity * lot.price for lot in self.lots), ZERO)

@@ -156,7 +156,7 @@ def selection(policy, key, evidence):
     if policy.version != VERSION:
         selected = None
         plan = evidence.get("entry_result", {}).get("plan", {})
-        if plan.get("action") == "ENTER":
+        if plan.get("action") == "ENTER" and not plan.get("stock", False):
             matches = [
                 x
                 for x in choices

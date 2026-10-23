@@ -1,5 +1,78 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Paid mixed entry and native management: 2026-10-23 America/New_York
+
+Fresh GitHub/local state began at HEAD
+`1b7069afe14f536d2a3191e3361885b03d06acf1`, tree
+`aa064acc300ea639481975df4485db15d18a7c5c`. PR #1 remained open/draft;
+main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`.
+
+The [paid mixed contract](MIXED_AI.md) now connects one full stock/option/Scope
+entry request to durable attempt/usage, native post-cost approval and actual fills.
+Stock choices retain complete original source, account/revision, admission,
+quantity/price ceilings, fixed objectives, source clocks and carry/deadline terms.
+Scope still requires its full fresh owned post-cost admission and original approval
+ceiling. Model thesis, native approval, attempt and actual fill remain separate.
+Old paid/replay adapters cannot bypass the new frozen enrollment.
+
+Held shares now use the bounded position worker for MAINTAIN, TIGHTEN and EXIT_ALL.
+The packet retains original source and paid thesis, current completed context,
+remaining native shares, protection, full cash history and account revision.
+Fresh review rejects late advice, widening, changed quantities or unavailable
+quotes. Stop/target/time protection runs independently before and after reasoning.
+Tightening and decision consumption are atomic; full closes retain native execution
+and the original management lease. Partial-close races invalidate obsolete advice.
+Restart retains completed and interrupted attempts without another model call.
+Ordinary option and Scope management retain original targets, premium/time
+protection and native partial-close behavior under the same paid owner.
+
+Every admitted entry/management charge is reconstructed from complete stored
+receipts. Unknown remains unknown. One allocator covers both asset types, paid
+HOLD/rejections and all management calls without double subtraction. A flat-account
+entry charge at the exact prior close clock belongs to the following actual entry;
+management still binds its exact original holding. Pending management cannot freeze
+a premature closed-trade loss result. Native option outcome reads and common loss
+controls use the same execution/model/operating allocation as stock outcomes.
+
+Validation: **1,239 distinct final-wheel installed checks**, including **37 new
+mixed cases**. Completed runs: 37 mixed entry/management/carry (367.96s), 245 entry/position contracts (12.39s), 107 paid native coordination (323.33s), 313 mixed owner/accounting/source (374.82s), 304 execution/loss/outcomes (410.84s), 233 runtime/shared/replay boundaries (215.97s).
+Earlier diagnostic runs are excluded; overlapping cases are never double-counted.
+All runs use copied tests outside the checkout, a noneditable installed wheel,
+Python `-I`, warnings as errors and disabled plugin autoload. Native runs are serial.
+
+Final wheel SHA-256:
+`03452fe60ab3c517e8f55a9c4ff21c8e6f5c536aeef4a9fb259eab8f73c67bca`.
+All 232 application/template files match source, wheel and installed bytes; 208
+parent application/template files remain unchanged. Nineteen representative legacy
+contracts, including entry/position packets and absent mixed fields, serialize
+byte-for-byte identically to the parent wheel. Changed-scope lint, repository fatal
+lint, document links and whitespace checks pass. Full repository style lint reports
+306 findings in 52 byte-identical parent files; that retained baseline is unchanged.
+
+Retained proof: `../mixed-entry-proof/` (`final-proof.json`, six completed XML/log
+pairs and wheel receipts, `identity.json`, `legacy-identity.json`, parent/current
+serialization and lint evidence). Final wheel: `../mixed-entry-wheels/`.
+Tests ran from `../scope-replay-env/bin/python`; no editable install was used.
+
+Dependencies are unchanged; deployment remains frozen and LIVE stays disabled.
+No authenticated provider/model/broker calls were made. Final UI/visual and
+authentic data/model/host/economic/PAPER acceptance
+remain open. Legacy tape/runtime/export consumers continue rejecting mixed inputs.
+
+Remaining plumbing in total:
+
+1. Explicit continuous mixed inputs and source collection, independent stock/option
+   protection, settlement and session/restart recovery.
+2. Common mixed tapes and four independent native A/B/C/D replay/export accounts,
+   including every entry/management charge, execution fee, operating/overnight
+   allocation and unknown cost.
+
+Continue with the runtime boundary in `app/options/runtime_models.py`, `runtime.py`,
+`scope_runtime.py` and the coordinator, then explicit mixed replay/export. Preserve
+all old frozen contracts and bind complete new enrollment before accepting inputs.
+The current paid worker rejects old replay adapters. Do not reopen settled strategy
+rules or treat fixture proof as authentic PAPER acceptance.
+
 ## Original stock sources and shared native selection: 2026-10-22 America/New_York
 
 Fresh GitHub/local state began at HEAD

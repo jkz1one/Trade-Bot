@@ -31,6 +31,9 @@ from app.options.swing import SwingScan
 
 
 class PositionReasoningPolicy(OptionRecord):
+    mixed_management: Literal["mixed-stock-position-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     version: Literal["option-position-reasoning-v1"] = "option-position-reasoning-v1"
     scope_carry: Literal["shared-scope-carry-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
@@ -271,6 +274,10 @@ def review_position_plan(
     An ELIGIBLE result cannot act, settle costs or clear a protection latch. Repeated
     pure calls do not consume anything. No model call or provider read occurs here.
     """
+    if getattr(packet, "version", None) == "mixed-stock-position-packet-v1":
+        from app.mixed.position import review
+
+        return review(packet, plan, position=position, account=account, quote=quote, now=now)
     now = clock(now)
     packet = PositionPacket.model_validate(packet.model_dump(warnings=False))
     plan = PositionPlan.model_validate(plan.model_dump(warnings=False))

@@ -83,8 +83,9 @@ costs and unknowns. The stored coordinator report identifies mixed fixture mode.
 Enrollment is create-only on an untraded native mixed owner. Existing stock orders
 or decisions prevent later strategy adoption. Old coordinator populations reject
 stock frames, and existing option/Scope market tapes and runtime packets explicitly
-reject stock inputs. Paid mixed entry/management, continuous mixed runtime and
-mixed A/B/C/D replay/export remain guarded until their full contracts exist.
+reject stock inputs. A separate [paid mixed contract](MIXED_AI.md) now connects full
+entry/management receipts, original terms and native cost accounting. Continuous
+mixed runtime and A/B/C/D replay/export remain guarded until their contracts exist.
 Absent stock fields are omitted, preserving old frame serialization.
 
 `test_mixed_selection.py` covers native stock/option/Scope competition, actual fills,
@@ -93,8 +94,7 @@ source-bound carry, original deadlines, tampering, outcome attribution and old
 consumer rejection. See [status](SLICE2_STATUS.md) for the final installed-wheel
 proof and [testing](OPTIONS_TESTING.md) for isolation requirements.
 
-Continue with complete mixed paid entry/management requests/results, usage charges,
-fresh post-cost native admission and attribution. Then bind explicit continuous
-mixed inputs/session recovery and common tapes with four independent native
-A/B/C/D replay/export owners. Final UI/visual and authentic provider/model/host/PAPER
-acceptance follow that plumbing. LIVE stays disabled; deployment remains frozen.
+Continue with explicit continuous mixed inputs/session recovery and common tapes
+with four independent native A/B/C/D replay/export owners. Final UI/visual and
+authentic provider/model/host/PAPER acceptance follow that plumbing. LIVE stays
+disabled; deployment remains frozen.

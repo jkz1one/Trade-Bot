@@ -2,6 +2,7 @@
 
 import json
 import time
+from contextlib import nullcontext
 from datetime import datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
@@ -91,7 +92,7 @@ def review(engine, db, proposal, quote, now, *, exclude=None):
 
 
 @exact
-def prepare(engine, source_key, proposal, quote, *, now, origin, close_quantity):
+def prepare(engine, source_key, proposal, quote, *, now, origin, close_quantity, _db=None):
     enrolled(engine)
     now = clock(now)
     proposal = StockProposal.model_validate(proposal.model_dump(warnings=False))
@@ -100,7 +101,12 @@ def prepare(engine, source_key, proposal, quote, *, now, origin, close_quantity)
         not isinstance(source_key, str)
         or not source_key.strip()
         or len(source_key) > 128
-        or origin not in {"DETERMINISTIC", "PROTECTIVE"}
+        or origin
+        not in (
+            {"DETERMINISTIC", "PROTECTIVE", "MODEL", "POSITION_MODEL"}
+            if engine.policy.mixed_owner.reasoning is not None
+            else {"DETERMINISTIC", "PROTECTIVE"}
+        )
     ):
         raise ValueError("Bounded native stock source and model-off origin required")
     if close_quantity is not None:
@@ -119,8 +125,25 @@ def prepare(engine, source_key, proposal, quote, *, now, origin, close_quantity)
         "origin": origin,
         "close_quantity": str(close_quantity) if close_quantity is not None else None,
     }
+    if (
+        proposal.action == "OPEN_LONG"
+        and engine.policy.mixed_owner.reasoning is not None
+        and origin != "MODEL"
+    ):
+        raise ExecutionBlocked("MIXED_PAID_STOCK_ORIGIN_REQUIRED")
+    if origin == "POSITION_MODEL":
+        if proposal.action != "CLOSE" or close_quantity is not None:
+            raise ValueError("Management closes only the full native position")
+        from app.mixed.position import stored
+
+        with nullcontext(_db) if _db is not None else engine.journal.read() as db:
+            request, result, _, _ = stored(db, source_key, usable=True)
+        inputs.update(
+            position_request=request.model_dump(mode="json"),
+            position_result=result.model_dump(mode="json"),
+        )
     digest = fingerprint(inputs)
-    with engine.journal.write() as db:
+    with nullcontext(_db) if _db is not None else engine.journal.write() as db:
         engine._control(db)
         old = db.execute(
             "SELECT * FROM execution_stock_decisions WHERE source_key=?", (source_key,)
@@ -139,7 +162,16 @@ def prepare(engine, source_key, proposal, quote, *, now, origin, close_quantity)
             from app.mixed.selection import guard_stock
 
             ceiling = guard_stock(engine, db, source_key, proposal, quote, now)
+            deadline = None
+            if origin == "POSITION_MODEL":
+                from app.mixed.position import close_guard
+
+                deadline = close_guard(engine, db, source_key, proposal, quote, now)
             result, account, w = review(engine, db, proposal, quote, now)
+            if deadline is not None and result.outcome == "APPROVED":
+                result = result.model_copy(
+                    update={"approval_expires_at": min(result.approval_expires_at, deadline)}
+                )
             if (
                 ceiling is not None
                 and result.outcome == "APPROVED"
@@ -276,6 +308,10 @@ def begin(engine, client_id, quote, now):
             from app.mixed.selection import guard_stock
 
             guard_stock(engine, db, intent.source_key, proposal, quote, now)
+            if approval["inputs"]["origin"] == "POSITION_MODEL":
+                from app.mixed.position import close_guard
+
+                close_guard(engine, db, intent.source_key, proposal, quote, now, exclude=client_id)
             result, account, _ = review(engine, db, proposal, quote, now, exclude=client_id)
             if result.outcome != "APPROVED" or result.quantity < intent.quantity:
                 raise ExecutionBlocked("STOCK_FRESH_ADMISSION_REQUIRED")

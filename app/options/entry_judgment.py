@@ -21,6 +21,7 @@ from app.options.entry_reasoning import (
     EntryPacket,
     EntryPlan,
     EntryReasoningPolicy,
+    MixedEntryPlan,
     ScopeCarryShortlistPlan,
     ScopeShortlistPlan,
     SharedScopeCarryEntryPlan,
@@ -54,6 +55,21 @@ fresh evidence and may reject any proposal. Never issue management or exit order
 
 
 def instructions(policy):
+    if policy.mixed_selection is not None:
+        plain = policy.model_copy(update={"mixed_selection": None})
+        return (
+            instructions(plain)
+            + """
+This owner also supplies original long-share stock opportunities. For a stock
+ENTER set stock=true, scope=false, select its exact candidate_id and cite the
+supplied stock_evidence_id. Leave all geometry and horizon fields null. Retain its
+original source, invalidation, three targets and any carry exit. For option/Scope
+plans and HOLD set stock=false; set scope=false for ordinary options and HOLD.
+There is one account and one choice across all supplied assets and families.
+Charges are paid even for HOLD or rejected advice; software freshly admits after
+cost settlement. Your thesis is separate from the immutable source plan.
+"""
+        )
     if policy.scope_carry is not None and policy.scope_selection == "scope-fixed-shortlist-v1":
         plain = policy.model_copy(update={"scope_carry": None, "max_carry_horizon_seconds": None})
         return (
@@ -104,6 +120,8 @@ assurance of overnight liquidity, continuous observations or stop execution.
 
 
 def prompt_version(policy):
+    if policy.mixed_selection is not None:
+        return "mixed-entry-thesis-v1"
     if policy.scope_carry is not None and policy.scope_selection == "scope-fixed-shortlist-v1":
         return "shared-scope-carry-shortlist-v1"
     if policy.scope_carry is not None:
@@ -121,6 +139,7 @@ class EntryModelConfiguration(OptionRecord):
     limits: JudgmentLimits
     entry_policy: EntryReasoningPolicy
     prompt_version: Literal[
+        "mixed-entry-thesis-v1",
         "option-entry-thesis-v1",
         "option-entry-carry-v1",
         "shared-scope-entry-v1",
@@ -208,14 +227,22 @@ def create_request(packet, config, *, request_id, now):
 
 def hold(packet):
     return plan_class(packet.policy)(
-        **({"scope": False} if packet.policy.scope_selection is not None else {}),
+        **(
+            {"scope": False}
+            if packet.policy.scope_selection is not None
+            or packet.policy.mixed_selection is not None
+            else {}
+        ),
+        **({"stock": False} if packet.policy.mixed_selection is not None else {}),
         decision_id=packet.decision_id,
         packet_hash=fingerprint(packet),
         action="HOLD",
         evidence_ids=(
             packet.opportunities[0].evidence_ids[0]
             if packet.opportunities
-            else fingerprint(packet.scope.model_dump(mode="json")),
+            else fingerprint(packet.scope.model_dump(mode="json"))
+            if packet.scope is not None
+            else fingerprint(packet.stocks[0]),
         ),
         thesis="Preserve cash; entry reasoning unavailable or rejected",
         uncertainty="No usable entry judgment; retain usage and failure evidence",
@@ -228,7 +255,8 @@ class EntryResult(OptionRecord):
     packet_hash: Digest
     configuration_hash: Digest
     plan: (
-        EntryPlan
+        MixedEntryPlan
+        | EntryPlan
         | CarryEntryPlan
         | SharedScopeEntryPlan
         | ScopeShortlistPlan
@@ -272,6 +300,16 @@ def request_content(request):
                 "binding": {
                     "decision_id": request.packet.decision_id,
                     "packet_hash": fingerprint(request.packet),
+                    **(
+                        {
+                            "stock_evidence_ids": {
+                                o.candidate.candidate_id: fingerprint(o)
+                                for o in request.packet.stocks
+                            }
+                        }
+                        if request.packet.stocks
+                        else {}
+                    ),
                     **(
                         {
                             "scope_candidate_id": fingerprint(
@@ -321,6 +359,25 @@ def validate_result(request, result):
             or usage.output_tokens > limits.max_output_tokens
         ):
             raise ValueError("Entry child usage mismatch")
+        if getattr(result.plan, "stock", False):
+            from app.mixed.entry import review_original
+
+            review_original(request.packet, result.plan)
+            return result
+        if not request.packet.opportunities and request.packet.scope is None:
+            if result.plan.action != "HOLD":
+                raise ValueError("Stock-only packet requires stock choice or HOLD")
+            review = review_entry_plan(
+                request.packet,
+                result.plan,
+                quote=None,
+                underlying=None,
+                account=request.packet.account,
+                now=request.packet.as_of,
+            )
+            if review.outcome != "HOLD":
+                raise ValueError("Invalid mixed HOLD")
+            return result
         o = next(
             (
                 o

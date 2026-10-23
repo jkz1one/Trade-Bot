@@ -45,6 +45,9 @@ class StockSwingPolicy(OptionRecord):
 
 class StockSelectionPolicy(OptionRecord):
     version: Literal["native-stock-selection-v1"] = "native-stock-selection-v1"
+    paid_selection: Literal["mixed-paid-entry-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     instruments: tuple[StockInstrument, ...] = Field(min_length=1, max_length=2)
     family_priority: tuple[Literal["DEGEN", "SWING", "SCOPE"], ...] = Field(
         min_length=1, max_length=3

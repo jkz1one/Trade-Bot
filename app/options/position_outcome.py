@@ -202,11 +202,13 @@ def native_position_outcome(db, entry_client_id, population_id):
             attribution_cache[key] = decision_attribution(db, key, outcome(key), policy)
         return attribution_cache[key]
 
+    from app.mixed.paid_costs import enrolled as mixed_paid
+
     # Paid advice can exist without an order (MAINTAIN/TIGHTEN/rejected plans).
     # Check retained results even when a damaged journal has lost the call row.
     for key in sorted(set(decisions) | set(cycles)):
         evidence = outcome(key)
-        if "entry_result" in evidence or "position_result" in evidence:
+        if not mixed_paid(policy) and ("entry_result" in evidence or "position_result" in evidence):
             attribute(key)
     reasons, linked, buy_keys = [], [], set()
     for candidate in sorted(rows, key=lambda r: r["client_id"]):
@@ -239,7 +241,11 @@ def native_position_outcome(db, entry_client_id, population_id):
     settlement_links = _settlement_links(db, rows, native_receipts, policy)
     receipts = [r for r in native_receipts if settlement_links.get(r.receipt_id) == entry_client_id]
     calls, unallocated = [], []
-    for call in sorted(_bounded(db, "execution_model_calls"), key=lambda r: r["source_key"]):
+    for call in (
+        []
+        if mixed_paid(policy)
+        else sorted(_bounded(db, "execution_model_calls"), key=lambda r: r["source_key"])
+    ):
         key = call["source_key"]
         attr = attribute(key)
         if key == entry.source_key or attr.entry_client_id == entry_client_id:
@@ -319,7 +325,7 @@ def native_position_outcome(db, entry_client_id, population_id):
     from app.options.entry_lineage import entry_lineage
 
     lineage = entry_lineage(db, entry_client_id)
-    return {
+    result = {
         **({"entry_lineage": lineage.model_dump(mode="json")} if lineage is not None else {}),
         "population_id": limits.population_id,
         "entry_client_id": entry_client_id,
@@ -351,6 +357,11 @@ def native_position_outcome(db, entry_client_id, population_id):
         "live_enabled": False,
         "data_host_costs_included": False,
     }
+    if mixed_paid(policy):
+        from app.mixed.native_outcome import costed
+
+        return costed(db, policy, result)
+    return result
 
 
 def _later_entry_call(db, attribution, closed_at, policy):

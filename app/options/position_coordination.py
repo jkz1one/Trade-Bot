@@ -50,6 +50,10 @@ def _bound_request(engine, db, key, request):
 
 
 def validate_admission(engine, db, key, request, input_hash, now):
+    if request.packet.version == "mixed-stock-position-packet-v1":
+        from app.mixed.position import validate_admission as validate_stock
+
+        return validate_stock(engine, db, key, request, input_hash, now)
     ledger, _ = _bound_request(engine, db, key, request)
     packet = request.packet
     if (

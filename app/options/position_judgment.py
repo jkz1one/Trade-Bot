@@ -14,6 +14,7 @@ from pydantic import Field, model_validator
 from app.execution.economics import CostPolicy, UsageEvidence
 from app.execution.judgment import JudgmentDiagnostics, JudgmentLimits
 from app.execution.process import _cleanup
+from app.mixed.position import StockPositionPacket
 from app.options.engine import clock, fingerprint
 from app.options.models import OptionRecord
 from app.options.position_reasoning import (
@@ -48,6 +49,19 @@ fresh position/account/market evidence after cost settlement before any action.
 
 
 def instructions(policy):
+    if policy.mixed_management is not None:
+        plain = policy.model_copy(update={"mixed_management": None})
+        return (
+            instructions(plain)
+            + """
+This owner also manages long shares. For a stock packet, retain original_source,
+entry_thesis, all fixed objectives, carry terms and the original exit deadline.
+TIGHTEN may only raise the share invalidation below the current bid. EXIT_ALL
+requests the exact owned remaining shares; no quantity or partial exit is available.
+The completed scan supplies current context, not permission to replace the source.
+Stock and option positions share one account and every paid management charge.
+"""
+        )
     if policy.scope_carry is not None:
         scope = policy.model_copy(update={"scope_carry": None, "swing_carry": None})
         carry = policy.model_copy(update={"scope_carry": None, "scope_management": None})
@@ -79,6 +93,8 @@ be widened or postponed; this remains the same owned position and cost ledger.
 
 
 def prompt_version(policy):
+    if policy.mixed_management is not None:
+        return "mixed-position-thesis-v1"
     if policy.scope_carry is not None:
         return "option-position-scope-carry-v1"
     if policy.scope_management is not None:
@@ -92,6 +108,7 @@ class PositionModelConfiguration(OptionRecord):
     limits: JudgmentLimits
     position_policy: PositionReasoningPolicy
     prompt_version: Literal[
+        "mixed-position-thesis-v1",
         "option-position-thesis-v1",
         "option-position-carry-v1",
         "option-position-scope-v1",
@@ -133,7 +150,7 @@ def configuration(costs, limits, position_policy):
 
 class PositionRequest(OptionRecord):
     request_id: str = Field(pattern=r"^[a-f0-9]{32}$")
-    packet: PositionPacket
+    packet: PositionPacket | StockPositionPacket
     configuration: PositionModelConfiguration
     parent_pid: int = Field(gt=0, strict=True)
     started_monotonic: float = Field(gt=0)

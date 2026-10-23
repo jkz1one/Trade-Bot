@@ -151,6 +151,7 @@ def refresh(engine, db, now, *, exclude=None):
             continue
         if (
             engine.policy.mixed_owner is not None
+            and engine.policy.mixed_owner.reasoning is None
             and db.execute("SELECT 1 FROM execution_model_calls LIMIT 1").fetchone()
         ):
             reasons.append("MIXED_PAID_CONTRACT_NOT_ENROLLED")
@@ -160,7 +161,11 @@ def refresh(engine, db, now, *, exclude=None):
             if is_stock
             else native_position_outcome(db, intent.client_id, engine.limits.population_id)
         )
-        if engine.policy.mixed_owner is not None and not is_stock:
+        if (
+            engine.policy.mixed_owner is not None
+            and engine.policy.mixed_owner.reasoning is None
+            and not is_stock
+        ):
             outcome = costed(db, engine.policy, outcome)
         if outcome["status"] != "COMPLETE":
             reasons.append("NATIVE_LOSS_OUTCOME_PENDING")
@@ -321,6 +326,16 @@ def model_family_reasons(engine, db, source_key, state):
 
             verify_scope_candidate(db, data, configuration(db))
             families.add("SCOPE")
+        if (
+            engine.policy.mixed_owner is not None
+            and engine.policy.mixed_owner.reasoning is not None
+        ):
+            from app.mixed.sources import StockSourceCandidate
+
+            families.update(
+                StockSourceCandidate.model_validate(x["candidate"]).proposal.family
+                for x in data.get("stock_candidates", [])
+            )
         if not families:
             return ["NATIVE_FAMILY_MODEL_CANDIDATES_REQUIRED"]
     except (ValueError, TypeError, KeyError):

@@ -65,27 +65,55 @@ class DegenCoordinator:
         scope_replay=None,
         scope_refresh=None,
         stock_policy=None,
+        stock_refresh=None,
     ):
         if type(engine) is not OptionExecution or getattr(engine, "_degen_owner", None) is not None:
             raise ValueError("One active built-in options owner is required")
-        if engine.policy.mixed_owner is not None and any(
-            x is not None
-            for x in (
-                judgment_limits,
-                key_file,
-                entry_policy,
-                replay_model,
-                position_policy,
-                scope_replay,
-            )
+        self.stock_refresh = stock_refresh
+        mixed_paid = (
+            engine.policy.mixed_owner is not None
+            and engine.policy.mixed_owner.reasoning is not None
+        )
+        if engine.policy.mixed_owner is not None:
+            if not mixed_paid and any(
+                x is not None
+                for x in (
+                    judgment_limits,
+                    key_file,
+                    entry_policy,
+                    replay_model,
+                    position_policy,
+                    scope_replay,
+                    stock_refresh,
+                )
+            ):
+                raise ValueError("Mixed paid/replay contracts are not enrolled")
+            if mixed_paid and (
+                stock_policy is None
+                or stock_policy.paid_selection != engine.policy.mixed_owner.reasoning
+                or entry_policy is None
+                or entry_policy.mixed_selection != engine.policy.mixed_owner.reasoning
+                or judgment_limits is None
+                or key_file is None
+                or not callable(stock_refresh)
+                or any(x is not None for x in (replay_model, scope_replay))
+                or (position_policy is not None and position_policy.mixed_management is None)
+            ):
+                raise ValueError(
+                    "Mixed paid entry requires full frozen contracts and fresh stock reader; replay not enrolled"
+                )
+        elif stock_refresh is not None or (
+            entry_policy is not None and entry_policy.mixed_selection is not None
         ):
-            raise ValueError("Mixed paid/replay contracts are not enrolled")
+            raise ValueError("Mixed reasoning requires native mixed ownership")
         self.stock_policy = (
             StockSelectionPolicy.model_validate(stock_policy.model_dump(warnings=False))
             if stock_policy is not None
             else None
         )
         if self.stock_policy is not None:
+            if (self.stock_policy.paid_selection is not None) != mixed_paid:
+                raise ValueError("Matching frozen stock paid selection required")
             if engine.policy.mixed_owner is None or tuple(
                 i.symbol for i in self.stock_policy.instruments
             ) != tuple(policy.symbols):
@@ -217,6 +245,11 @@ class DegenCoordinator:
             if position_policy is not None
             else None
         )
+        if (
+            self.position_policy is not None
+            and (self.position_policy.mixed_management is not None) != mixed_paid
+        ):
+            raise ValueError("Matching mixed management enrollment required")
         if self.position_policy is not None and (
             (self.scope_policy is not None) != (self.position_policy.scope_management is not None)
         ):
@@ -810,6 +843,10 @@ class DegenCoordinator:
                     ]
                     quote = supplied[0] if len(supplied) == 1 else None
                     managed = await self.engine.protective_stock_tick(quote, now=at)
+                    if self.position_policy is not None and managed.get("status") == "HEALTHY":
+                        from app.mixed.position import run
+
+                        return await run(self, key, frame)
                     return self._finish(
                         key,
                         {
@@ -953,8 +990,10 @@ class DegenCoordinator:
                 from app.options.scope_arbitration import collect, execute_scope
 
                 shared_choice = collect(self, key, frame, evidence)
-                if self.scope_policy.version == "shared-scope-entry-v1" and (
-                    candidates or evidence.get("scope_candidate")
+                if (
+                    self.stock_policy is None
+                    and self.scope_policy.version == "shared-scope-entry-v1"
+                    and (candidates or evidence.get("scope_candidate"))
                 ):
                     from app.options.entry_coordination import run_entry_cycle
 
@@ -978,6 +1017,23 @@ class DegenCoordinator:
                 from app.mixed.selection import execute_stock, select
 
                 shared_choice = select(self, key, evidence)
+                if self.stock_policy.paid_selection is not None and (
+                    candidates
+                    or evidence.get("stock_candidates")
+                    or evidence.get("scope_candidate")
+                ):
+                    from app.options.entry_coordination import run_entry_cycle
+
+                    return await run_entry_cycle(
+                        self,
+                        key,
+                        candidates,
+                        planned["scans"],
+                        account,
+                        quotes,
+                        underlyings,
+                        evidence,
+                    )
                 if shared_choice and shared_choice["asset"] == "STOCK":
                     return await execute_stock(self, key, frame, evidence, shared_choice)
                 if shared_choice and shared_choice["family"] == "SCOPE":

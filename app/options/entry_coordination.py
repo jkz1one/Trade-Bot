@@ -85,6 +85,9 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
                 evidence_ids=tuple(fingerprint(x) for x in (scan, quote, underlying)),
             )
         )
+    from app.mixed.entry import evidence_for
+
+    stocks = evidence_for(c, key, evidence) if c.entry_policy.mixed_selection is not None else ()
     as_of = scans[0].evaluated_at
     scope = evidence.get("scope_candidate") if c.entry_policy.scope_selection is not None else None
     packet = EntryPacket(
@@ -96,6 +99,7 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
         as_of=as_of,
         valid_until=min(
             *(o.candidate.admission.valid_until for o in opportunities),
+            *(o.admission.approval_expires_at for o in stocks),
             *([datetime.fromisoformat(scope["binding"]["valid_until"])] if scope else []),
             datetime.fromtimestamp((int(as_of.timestamp()) // 300 + 1) * 300, tz=as_of.tzinfo),
         ),
@@ -103,6 +107,7 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
         limits=c.engine._effective_limits(),
         policy=c.entry_policy,
         opportunities=tuple(opportunities),
+        stocks=stocks,
         scope=scope,
     )
     request = judgment.create_request(packet, config, request_id=uuid4().hex, now=at)
@@ -167,6 +172,14 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
         return c._finish(
             key, {**evidence, "status": "HOLD", "reason": "ENTRY_MODEL_HOLD_OR_REJECTED"}
         )
+    if c.entry_policy.mixed_selection is not None:
+        if getattr(result.plan, "stock", False):
+            from app.mixed.entry import execute
+
+            return await execute(c, key, evidence, request, result)
+        from app.mixed.selection import select
+
+        select(c, key, evidence)
     if c.entry_policy.scope_selection is not None:
         from app.options.scope_ai import choose_after_usage
 

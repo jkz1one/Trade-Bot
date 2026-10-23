@@ -6,6 +6,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
 
+from app.mixed.entry import StockEntryEvidence
 from app.options.degen import DegenScan
 from app.options.engine import clock, fingerprint
 from app.options.governor import admit_option
@@ -30,6 +31,9 @@ MAX_PACKET_BYTES = 256 * 1024
 
 
 class EntryReasoningPolicy(OptionRecord):
+    mixed_selection: Literal["mixed-paid-entry-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     version: Literal["option-entry-reasoning-v1"] = "option-entry-reasoning-v1"
     scope_carry: Literal["shared-scope-carry-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
@@ -50,6 +54,8 @@ class EntryReasoningPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def combined(self):
+        if self.mixed_selection is not None and self.scope_selection == "scope-fixed-shortlist-v1":
+            raise ValueError("Mixed full reasoning cannot use the old shortlist adapter")
         paired = self.scope_selection is not None and self.max_carry_horizon_seconds is not None
         shortlist = paired and self.scope_selection == "scope-fixed-shortlist-v1"
         if paired != (self.scope_carry is not None) or shortlist != (
@@ -89,6 +95,9 @@ class EntryPacket(OptionRecord):
     account: OptionAccount
     limits: OptionLimits
     policy: EntryReasoningPolicy
+    stocks: tuple[StockEntryEvidence, ...] = Field(
+        default=(), max_length=24, exclude_if=lambda v: not v
+    )
     opportunities: tuple[EntryOpportunity, ...] = Field(max_length=24)
     scope: ScopeReasoningEvidence | None = Field(default=None, exclude_if=lambda v: v is None)
 
@@ -100,7 +109,27 @@ class EntryPacket(OptionRecord):
             or self.valid_until.timestamp() > (int(self.as_of.timestamp()) // 300 + 1) * 300
         ):
             raise ValueError("Packet must expire within its original five-minute opportunity")
-        if not self.opportunities and self.scope is None:
+        if self.stocks and self.policy.mixed_selection is None:
+            raise ValueError("Stock reasoning requires explicit mixed enrollment")
+        if len({o.candidate.candidate_id for o in self.stocks}) != len(self.stocks):
+            raise ValueError("Unique stock reasoning candidates required")
+        for o in self.stocks:
+            if (
+                o.as_of != self.as_of
+                or o.account.account_id != self.account.account_id
+                or o.history.population_id != self.limits.population_id
+                or o.history.policy.options.model_copy(
+                    update={
+                        "exit_fee_per_order": Decimal(0),
+                        "exit_fee_per_contract": o.history.policy.options.exit_fee_per_contract
+                        + o.history.policy.options.exit_fee_per_order,
+                    }
+                )
+                != self.limits
+                or self.valid_until > o.admission.approval_expires_at
+            ):
+                raise ValueError("Original stock packet owner and deadline required")
+        if not self.opportunities and self.scope is None and not self.stocks:
             raise ValueError("At least one entry opportunity required")
         if self.scope is not None:
             p = self.scope
@@ -289,7 +318,27 @@ class ScopeCarryShortlistPlan(ScopeShortlistPlan):
     )
 
 
+class MixedEntryPlan(SharedScopeCarryEntryPlan):
+    version: Literal["mixed-entry-plan-v1"] = "mixed-entry-plan-v1"
+    stock: bool = Field(strict=True)
+
+    @model_validator(mode="after")
+    def coherent(self):
+        if not self.stock:
+            return super().coherent()
+        if self.scope:
+            raise ValueError("Choose one asset and family")
+        # Shares retain their full original source plan, as Scope does.
+        values = self.model_dump()
+        values.pop("stock")
+        values.update(version="shared-scope-carry-plan-v1", scope=True)
+        SharedScopeCarryEntryPlan.model_validate(values)
+        return self
+
+
 def plan_class(policy):
+    if policy.mixed_selection is not None:
+        return MixedEntryPlan
     if policy.scope_carry is not None and policy.scope_selection == "scope-fixed-shortlist-v1":
         return ScopeCarryShortlistPlan
     if policy.scope_carry is not None:
@@ -307,7 +356,8 @@ class EntryReview(OptionRecord):
     reasons: tuple[Name, ...]
     packet_hash: Digest
     plan: (
-        EntryPlan
+        MixedEntryPlan
+        | EntryPlan
         | CarryEntryPlan
         | SharedScopeEntryPlan
         | ScopeShortlistPlan
@@ -341,6 +391,7 @@ def review_entry_plan(packet, plan, *, quote, underlying, account, now):
     known = {fingerprint(packet.account)}
     for o in packet.opportunities:
         known.update(o.evidence_ids)
+    known.update(fingerprint(o) for o in packet.stocks)
     if packet.scope is not None:
         known.add(fingerprint(packet.scope.model_dump(mode="json")))
     if not set(plan.evidence_ids) <= known:
@@ -349,6 +400,14 @@ def review_entry_plan(packet, plan, *, quote, underlying, account, now):
         return result("REJECTED", "ORIGINAL_PLAN_DEADLINE_EXPIRED")
     if plan.action == "HOLD":
         return result("HOLD", "MODEL_HOLD")
+    if getattr(plan, "stock", False):
+        from app.mixed.entry import review_original
+
+        try:
+            review_original(packet, plan)
+        except ValueError:
+            return result("REJECTED", "ORIGINAL_STOCK_PLAN_REQUIRED")
+        return result("ELIGIBLE", "FIXED_STOCK_PLAN_SELECTED")
     if getattr(plan, "scope", False):
         p = packet.scope
         if (

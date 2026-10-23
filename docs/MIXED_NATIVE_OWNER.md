@@ -90,18 +90,19 @@ execution/model costs separately; complete mixed portable export is not yet enab
 
 Original stock source derivation, shared stock/options/Scope selection, immutable
 source retirement and source-bound carry are now connected through the separate
-[selection contract](MIXED_STOCK_SELECTION.md). Remaining:
+[selection contract](MIXED_STOCK_SELECTION.md).
 
-1. Bind full mixed entry and management model requests/results, every usage charge,
-   original deadlines, fresh post-cost native admission and full-cost attribution.
-2. Connect explicit continuous mixed inputs, source collection, held protection,
+[Paid mixed entry/management](MIXED_AI.md) now bind full requests/results, every
+usage charge, original deadlines, fresh native admission and full-cost attribution.
+
+1. Connect explicit continuous mixed inputs, source collection, held protection,
    settlement and recovery across sessions.
-3. Connect common mixed tapes to independent native A/B/C/D owners and portable
+2. Connect common mixed tapes to independent native A/B/C/D owners and portable
    full-cost replay/export. Keep their cash, reservations, attempts and loss states
    separate, including operating/overnight costs and unknown charges.
 
-Option-only runtime, paid coordinator/model paths and option/Scope comparison
-exports reject mixed enrollment until those complete contracts exist. The basic
+Option-only runtime, old replay adapters and option/Scope comparison exports
+reject mixed enrollment until their complete contracts exist. The basic
 owned journal report labels `MIXED_PAPER_FIXTURE` and includes stock state; it is not
 final dashboard or observer acceptance. See the [complete remaining list](MIXED_CASH_HISTORY.md#remaining-plumbing-in-total).
 Final UI/visual and authentic provider/model/host/PAPER acceptance remain after the
@@ -116,8 +117,6 @@ partial supersession, restore fencing, signed recovery and original Scope/Swing
 terms. The [testing procedure](OPTIONS_TESTING.md) and latest [status entry](SLICE2_STATUS.md)
 record exact completed final-wheel cases, including legacy regressions.
 
-Continue with full mixed paid entry/management contracts; do not remove the paid,
-runtime or export guards to make old adapters accept mixed inputs. Start with
-`app/mixed/native_execution.py`, `native_store.py`, `native_protection.py`,
-`native_outcome.py` and the existing Degen/Swing selection/source contracts. Preserve
-one native owner and its complete original admission evidence throughout.
+Continue with explicit continuous mixed runtime and independent A/B/C/D replay/export.
+Do not remove legacy input guards to make old adapters accept mixed evidence.
+Preserve one native owner and its complete original admission evidence throughout.

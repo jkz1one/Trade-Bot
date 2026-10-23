@@ -1,5 +1,14 @@
 # Offline options development checks
 
+`test_mixed_entry.py`, `test_mixed_position.py` and `test_mixed_paid_carry.py` verify the [paid mixed contract](MIXED_AI.md):
+complete original stock/option/Scope alternatives, tool-less mock worker transport,
+known/unknown charges, fresh post-cost native admission, mandatory exits,
+MAINTAIN/TIGHTEN/EXIT_ALL, partial-close invalidation, restart and full-cost outcomes.
+Run these alongside legacy entry/position, Scope, native mixed, loss/accounting and
+runtime/replay rejection suites. Use copied tests, a noneditable installed wheel,
+Python `-I`, warnings as errors and serial native processes. Keep diagnostic reruns
+separate and count only distinct completed cases against the final wheel.
+
 `test_mixed_selection.py` verifies [original stock sources and shared selection](MIXED_STOCK_SELECTION.md),
 including native stock/option/Scope choices, all source families, retirement/restart,
 carry binding, stored attribution and original admission deadlines. Run with the

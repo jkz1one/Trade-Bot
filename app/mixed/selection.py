@@ -138,12 +138,51 @@ def receipt(policy, key, evidence):
             policy.asset_priority.index(x["asset"]),
         )
     )
+    chosen = choices[0] if choices else None
+    if policy.paid_selection is not None:
+        chosen = None
+        plan = evidence.get("entry_result", {}).get("plan", {})
+        if plan.get("action") == "ENTER":
+            matches = [
+                x
+                for x in choices
+                if (
+                    (
+                        x["asset"] == "STOCK"
+                        and plan.get("stock") is True
+                        and x["candidate_id"] == plan.get("candidate_id")
+                    )
+                    or (
+                        x["asset"] == "OPTION"
+                        and plan.get("stock") is False
+                        and (
+                            (
+                                x["family"] == "SCOPE"
+                                and plan.get("scope") is True
+                                and x["candidate_hash"] == plan.get("candidate_id")
+                            )
+                            or (
+                                x["family"] != "SCOPE"
+                                and plan.get("scope") is False
+                                and x["candidate_id"] == plan.get("candidate_id")
+                            )
+                        )
+                    )
+                )
+            ]
+            if len(matches) != 1:
+                raise ValueError("MIXED_EXACT_MODEL_SELECTION_REQUIRED")
+            chosen = dict(matches[0])
+            if chosen["family"] == "SCOPE" and evidence.get("scope_fresh_candidate"):
+                from app.options.scope_execution import lineage
+
+                chosen["source_key"] = lineage(evidence["scope_fresh_candidate"]).opportunity_key
     return {
         "version": policy.version,
         "cycle_key": key,
         "policy_hash": fingerprint(policy),
         "choices": choices,
-        "selected": choices[0] if choices else None,
+        "selected": chosen,
     }
 
 
@@ -257,14 +296,22 @@ def guard_option(db, source_key, proposal, quote):
     result = selected(db, source_key)
     if result is None:
         return
-    _, _, data, choice = result
+    policy, row, data, choice = result
+    if policy.paid_selection is not None:
+        from app.mixed.entry import validate_stored
+
+        validate_stored(db, row["cycle_key"], data)
     if choice["asset"] != "OPTION":
         raise ExecutionBlocked("MIXED_SELECTED_STOCK_REQUIRED")
     if choice["family"] != "SCOPE":
         raw = next(x for x in data["candidates"] if x["candidate_id"] == choice["candidate_id"])
         candidate = parse_candidate(raw)
         if (
-            candidate.proposal != proposal
+            (
+                candidate.proposal != proposal
+                if policy.paid_selection is None
+                else candidate.proposal.contract != proposal.contract
+            )
             or quote is None
             or quote.instrument != candidate.instrument
         ):
@@ -408,7 +455,13 @@ def guard_stock(engine, db, source_key, proposal, quote, now, *, original=False)
                 raise ExecutionBlocked("STOCK_CURRENT_BREAK_OR_CHASE_REQUIRED")
     if not original and now >= datetime.fromisoformat(raw["admission"]["approval_expires_at"]):
         raise ExecutionBlocked("STOCK_SELECTION_EXPIRED")
-    return raw["admission"]
+    ceiling = dict(raw["admission"])
+    if policy.paid_selection is not None:
+        from app.mixed.entry import stock_ceiling
+
+        deadline = stock_ceiling(db, row["cycle_key"], data, candidate, now=now, original=original)
+        ceiling["approval_expires_at"] = deadline.isoformat()
+    return ceiling
 
 
 async def execute_stock(c, key, frame, evidence, choice):
@@ -460,6 +513,11 @@ def entry_lineage(db, entry):
     )
     candidate = StockSourceCandidate.model_validate(raw["candidate"])
     return {
+        **(
+            {"paid_entry": data["entry_result"]["plan"], "paid_source_key": entry.source_key}
+            if "entry_result" in data
+            else {}
+        ),
         "setup_family": candidate.setup_family,
         "candidate_id": candidate.candidate_id,
         "selection_hash": fingerprint(data["mixed_selection"]),

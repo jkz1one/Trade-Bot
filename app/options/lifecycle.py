@@ -114,12 +114,12 @@ class OptionExecutionPolicy(OptionRecord):
     @model_validator(mode="after")
     def bounded(self):
         if self.mixed_owner is not None and (
-            self.cost_policy is not None
+            (self.cost_policy is not None) != (self.mixed_owner.reasoning is not None)
             or self.loss_control is None
             or not {"DEGEN", "SWING"} <= {p.family for p in self.loss_control.families}
         ):
             raise ValueError(
-                "Mixed native ownership requires common family loss controls and model-off enrollment"
+                "Mixed native ownership requires common loss controls and explicit paid enrollment"
             )
         if (
             self.loss_control is not None
