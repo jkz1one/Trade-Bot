@@ -5,8 +5,8 @@ options to the **same `OptionExecution` owner**, journal, original capital, revi
 restore fence and bounded fixture child. This is offline native execution plumbing.
 A separate [stock selection enrollment](MIXED_STOCK_SELECTION.md) now binds
 original source candidates and one shared stock/options/Scope choice. Paid mixed
-models, continuous runtime and A/B/C/D replay remain unenrolled.
-Those remaining contracts must be connected before authentic PAPER acceptance.
+models, continuous runtime and A/B/C/D replay now have separate complete
+enrollments linked below. Authentic PAPER acceptance remains open.
 
 ## Create-only enrollment and common evidence
 
@@ -14,7 +14,8 @@ Those remaining contracts must be connected before authentic PAPER acceptance.
 daily data, host and operating allocations. The owner requires the separately
 [enrolled mixed venue](MIXED_VENUE.md), one provider and global plus Degen/Swing loss
 policies. Native Scope enrollment also retains its required Scope family policy.
-Mixed paid calls remain disabled. Existing option-only policies omit the new field;
+The base owner is model-off; paid calls require [explicit enrollment](MIXED_AI.md).
+Existing option-only policies omit the new field;
 old journals, venue schemas and serialized contracts are unchanged.
 
 The original journal retains its cash/settled ledger and native option position.
@@ -81,10 +82,11 @@ Stock and option outcomes feed the existing global/family loss history once, in
 close order, with all execution fees and attributed operating allocations. A gross
 win can therefore be a net loss. Original stock entry and allocation records remain
 in the consumed outcome digest. Unknown costs keep budgets/outcomes incomplete.
-Paid mixed contracts are not enrolled; an unexpected retained usage row blocks new
-entries and loss consumption without suppressing independent owned exits. It is
-never treated as a free call. Direct native option outcome fields continue to label
-execution/model costs separately; complete mixed portable export is not yet enabled.
+A model-off mixed owner still rejects unexpected retained paid usage without
+suppressing independent exits. Separate [paid enrollment](MIXED_AI.md) binds every
+entry/management receipt and complete native allocation. The explicit
+[mixed portable export](MIXED_REPLAY.md) reconstructs both asset types with the same
+full costs; an unknown charge is never treated as a free call.
 
 ## Remaining plumbing
 
@@ -97,12 +99,12 @@ usage charge, original deadlines, fresh native admission and full-cost attributi
 
 [Continuous mixed runtime](MIXED_RUNTIME.md) now connects explicit delivered inputs,
 source collection, held protection, settlement and recovery across sessions.
-Common mixed tapes and independent native A/B/C/D replay/export remain. Keep their
-cash, reservations, attempts and loss states separate, including operating/overnight
-costs and unknown charges.
+[Common mixed tapes and independent native A/B/C/D replay/export](MIXED_REPLAY.md)
+now retain separate cash, reservations, attempts and loss states, including
+operating/overnight costs and unknown charges.
 
 Option-only runtime, old replay adapters and option/Scope comparison exports
-reject mixed enrollment until their complete contracts exist. The basic
+retain their original guards; separate complete mixed contracts are now available. The basic
 owned journal report labels `MIXED_PAPER_FIXTURE` and includes stock state; it is not
 final dashboard or observer acceptance. See the [complete remaining list](MIXED_CASH_HISTORY.md#remaining-plumbing-in-total).
 Final UI/visual and authentic provider/model/host/PAPER acceptance remain after the
@@ -117,6 +119,6 @@ partial supersession, restore fencing, signed recovery and original Scope/Swing
 terms. The [testing procedure](OPTIONS_TESTING.md) and latest [status entry](SLICE2_STATUS.md)
 record exact completed final-wheel cases, including legacy regressions.
 
-Continue with common mixed tapes and independent A/B/C/D replay/export.
-Do not remove legacy input guards to make old adapters accept mixed evidence.
+The settled plumbing is connected. Continue with final UI/visual and authentic
+acceptance when authorized. Do not remove legacy input guards to make old adapters accept mixed evidence.
 Preserve one native owner and its complete original admission evidence throughout.

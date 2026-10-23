@@ -31,6 +31,9 @@ MAX_PACKET_BYTES = 256 * 1024
 
 
 class EntryReasoningPolicy(OptionRecord):
+    mixed_shortlist: Literal["mixed-choice-only-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     mixed_selection: Literal["mixed-paid-entry-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -54,6 +57,8 @@ class EntryReasoningPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def combined(self):
+        if self.mixed_shortlist is not None and self.mixed_selection is None:
+            raise ValueError("Mixed shortlist requires complete mixed entry evidence")
         if self.mixed_selection is not None and self.scope_selection == "scope-fixed-shortlist-v1":
             raise ValueError("Mixed full reasoning cannot use the old shortlist adapter")
         paired = self.scope_selection is not None and self.max_carry_horizon_seconds is not None
@@ -336,7 +341,20 @@ class MixedEntryPlan(SharedScopeCarryEntryPlan):
         return self
 
 
+class MixedShortlistPlan(ScopeShortlistPlan):
+    version: Literal["mixed-shortlist-plan-v1"] = "mixed-shortlist-plan-v1"
+    stock: bool = Field(strict=True)
+
+    @model_validator(mode="after")
+    def one_asset(self):
+        if self.stock and (self.scope or self.action != "ENTER"):
+            raise ValueError("Only one supplied stock, option or Scope choice required")
+        return self
+
+
 def plan_class(policy):
+    if policy.mixed_shortlist is not None:
+        return MixedShortlistPlan
     if policy.mixed_selection is not None:
         return MixedEntryPlan
     if policy.scope_carry is not None and policy.scope_selection == "scope-fixed-shortlist-v1":
@@ -356,7 +374,8 @@ class EntryReview(OptionRecord):
     reasons: tuple[Name, ...]
     packet_hash: Digest
     plan: (
-        MixedEntryPlan
+        MixedShortlistPlan
+        | MixedEntryPlan
         | EntryPlan
         | CarryEntryPlan
         | SharedScopeEntryPlan
@@ -453,7 +472,7 @@ def review_entry_plan(packet, plan, *, quote, underlying, account, now):
 
 def _review(packet, plan, o, quote, underlying, account, now, result):
     c, p = o.candidate, packet.policy
-    if p.scope_selection == "scope-fixed-shortlist-v1":
+    if p.scope_selection == "scope-fixed-shortlist-v1" or p.mixed_shortlist is not None:
         ceiling = c.admission
         limits = packet.limits.model_copy(
             update={

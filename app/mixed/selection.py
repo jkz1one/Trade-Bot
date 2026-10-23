@@ -21,6 +21,12 @@ def configuration(db):
         return None
     row = db.execute("SELECT policy_json FROM execution_option_strategy WHERE id=1").fetchone()
     cfg = json.loads(row[0]) if row else {}
+    if "mixed_replay" in cfg:
+        from app.mixed.replay_enrollment import validate_stored
+
+        validate_stored(cfg)
+    elif "stocks" in cfg and "replay_model" in cfg:
+        raise ExecutionBlocked("MIXED_REPLAY_CONFIGURATION_REQUIRED")
     return StockSelectionPolicy.model_validate(cfg["stocks"]) if "stocks" in cfg else None
 
 

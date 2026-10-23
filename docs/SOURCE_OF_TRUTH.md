@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.106. Adopted product direction and working delivery contract, 2026-10-23 UTC.
+Version 1.107. Adopted product direction and working delivery contract, 2026-10-23 UTC.
 [Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now connects
 choice-only B, matched independent native accounts and portable full-cost export.
 [Continuous Scope runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now connect explicit
@@ -38,13 +38,17 @@ stock/options/Scope competition and full-cost attribution. [Paid mixed entry and
 management](MIXED_AI.md) now bind full worker receipts, original native terms, fresh
 post-cost admission and all entry/management charges. [Continuous mixed runtime](MIXED_RUNTIME.md)
 now binds complete delivered inputs, native protection, source retirement, restart
-and explicit cash settlement. Common mixed tapes and independent replay/export
-remain before final UI and authentic PAPER testing.
+and explicit cash settlement. [Common mixed tapes and independent native A/B/C/D
+replay/export](MIXED_REPLAY.md) now retain full response contracts, actual later
+fills, original carry/session terms, independent loss controls and every known or
+unknown cost. This connects the settled strategy/engine plumbing; final UI/visual
+and authentic provider/normalization/model/host/economic/PAPER acceptance remain.
 [Shared durable mixed fixture](MIXED_VENUE.md) now connects actual share and option
 orders to one venue balance, atomic order lock, event sequence and bounded fixed
 child. Original terms, partial fills and explicit settlement persist across restart.
 Legacy owners still reject this enrollment. The new native mixed owner binds both
-asset paths explicitly; common mixed tapes and independent replay/export remain.
+asset paths explicitly. Mixed tapes and independent replay/export require their
+separate complete enrollment; legacy consumers keep their original input guards.
 [Shared Scope entry AI](OPTIONS_SCOPE_AI.md) now binds one paid Degen/Swing/Scope
 decision to native approval, fixed Scope terms, fresh post-cost admission and stored
 trade-level cost attribution. The original expiry still caps dispatch; scale/final
@@ -64,8 +68,8 @@ watch/runtime inputs now have explicit native enrollment. Legacy comparison cons
 Scope entry/management receipts and matched declared entry scripts. A separate frozen
 [native C/D tape enrollment](OPTIONS_SCOPE_MODEL_REPLAY.md) now connects that contract
 to delivered fresh observations, native paid admission, later fills and full-cost export.
-Remaining family/mixed stock-options plumbing
-precedes final UI and authentic PAPER testing.
+The settled family/mixed stock-options plumbing is connected through its explicit
+native fixture contracts. Final UI and authentic PAPER acceptance are still open.
 M1/M2 and the first M3 Degen execution path are fixture verified. M3 provider acceptance is open.
 The broader AI role is an extension of M3/M4. Its contract, bounded model worker and
 durable full-plan PAPER execution are fixture verified; authentic model/feed
@@ -463,8 +467,8 @@ A/B/C/D trading replay/export and continuous watch/runtime inputs now have fixtu
 proof. Combined Scope/Swing carry now has explicit native entry/management/runtime
 and stored export contracts. Session-close Scope series now preserve independent
 accounts, frozen scripts, closing evidence and full costs. Combined carry replay/export now has a separate frozen series contract;
-remaining mixed model/runtime/replay plumbing remains open; existing
-cohorts stay frozen.
+mixed model/runtime/replay now has complete separate enrollment and native fixture
+integration. Existing cohorts stay frozen.
 
 Swing retains completed higher-timeframe bars, exact contract locking, next actual
 exchange session, catalyst/earnings clearance, chase and invalidation geometry.
@@ -514,10 +518,10 @@ The [headless options schema/sample acquisition](OPTIONS_READ_CAPTURE.md) is fix
 The [optional candidate model selector](OPTIONS_MODEL_SELECTION.md) also has fixture/native
 proof. The [first M4 stored options observer](OPTIONS_OBSERVER.md) has fixture/native
 proof; browser visual acceptance and matched cost/benchmark/cohort evaluation remain open.
-**Current engineering priority is the remaining P7 strategy/engine work. P1 actual
-bounded market samples and exact normalized collection remain required for the final
-integration validation pass; P2 full-plan entry now has local durable integration
-proof. P3 has a supplied-evidence
+**The settled P7 strategy/engine plumbing is connected with native fixture proof.
+P1 actual bounded market samples and exact normalized collection remain required
+for the final integration validation pass; P2 full-plan entry has local durable
+integration proof. P3 has a supplied-evidence
 accounting evaluator, sealed shared tape, native first-session journal export and
 scripted A/B/C replay scheduling with multi-session state/export and explicit
 settlement. Position reasoning now has opt-in durable attempts/costs and atomic
@@ -694,8 +698,9 @@ Native bounded Swing carry and deterministic shared Scope selection now have
 fixture integration. Shared Scope paid entry/management, single-session A/B/C/D
 tape comparison, continuous runtime inputs and combined native Scope/Swing carry
 now have fixture integration. Session-close Scope series now retain independent
-accounts, closing evidence and full costs. Combined carry replay/export is separately implemented. Remaining families
-and mixed stock/options remain open. Scope
+accounts, closing evidence and full costs. Combined carry replay/export,
+original Swing families and the mixed stock/options native owner, paid contracts,
+continuous runtime and independent common-tape replay/export are fixture integrated. Scope
 native execution/loss integration is fixture implemented within its explicit profile/quantity
 boundaries; authentic provider and prospective performance acceptance remain open. Existing
 runtime services still execute equities only; local M2 is not an options deployment.

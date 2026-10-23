@@ -70,9 +70,10 @@ model or broker call during verification. No dependency or deployment change is
 required. Final UI/visual and authentic data/model/host/economic/PAPER acceptance
 remain separate, and LIVE remains disabled.
 
-Common mixed tapes and independent native A/B/C/D replay/export remain the final
-plumbing track. Old market-tape and comparison consumers still reject mixed inputs;
-they must receive complete new contracts before those guards can be changed.
+[Common mixed tapes and independent native A/B/C/D replay/export](MIXED_REPLAY.md)
+now bind separate complete contracts and native full-cost evidence. Old market-tape
+and comparison consumers continue rejecting mixed inputs. The settled plumbing is
+connected; final UI/visual and authentic acceptance remain separate.
 
 `test_mixed_runtime.py` covers native stock entry/fills and fast protection, held
 management during independent ticks, delivered refresh, explicit Scope/option/stock

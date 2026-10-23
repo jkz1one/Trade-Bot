@@ -5,16 +5,26 @@ def validate_enrollment(
     owner, scope, swing, entry=None, position=None, *, replay=False, replay_enrollment=None
 ):
     """Used before owner creation and again when reconstructing stored evidence."""
+    from app.mixed.replay_enrollment import MixedReplayEnrollment
     from app.options.scope_replay_enrollment import ScopeCarrySeriesEnrollment
 
     replay_carry = type(replay_enrollment) is ScopeCarrySeriesEnrollment
+    mixed = type(replay_enrollment) is MixedReplayEnrollment
+    if mixed and (
+        not replay
+        or owner.mixed_owner is None
+        or owner.mixed_owner.reasoning != "mixed-paid-entry-v1"
+        or entry is None
+        or entry.mixed_selection != "mixed-paid-entry-v1"
+    ):
+        raise ValueError("Complete mixed carry replay enrollment required")
     if replay_carry and (not replay or owner.scope_carry is None):
         raise ValueError("Combined carry replay requires its exact owner enrollment")
     combined = scope is not None and owner.swing_carry is not None
     marked = any(
         p is not None and p.scope_carry is not None for p in (owner, scope, entry, position)
     )
-    if replay and (combined or marked) and not replay_carry:
+    if replay and (combined or marked) and not (replay_carry or mixed):
         raise ValueError("Complete matching shared Scope carry enrollment required")
     validate_policy(owner, scope, swing, entry, position, shortlist=replay_carry)
 

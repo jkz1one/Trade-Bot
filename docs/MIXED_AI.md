@@ -4,7 +4,8 @@ The create-only `mixed-paid-entry-v1` owner connects paid entry and management t
 one native stock/options cash history. Its complete request, original evidence,
 usage, native approval, attempt and actual fills remain separate durable records.
 This is offline fixture implementation; provider/model acceptance, continuous
-[mixed runtime](MIXED_RUNTIME.md) is separately enrolled; independent mixed A/B/C/D replay/export remains.
+[mixed runtime](MIXED_RUNTIME.md) and [independent mixed A/B/C/D replay/export](MIXED_REPLAY.md)
+now have separate complete enrollment.
 
 ## Enrollment and original entry evidence
 
@@ -97,12 +98,12 @@ full-cost outcome and common global/family loss controls. Unknown allocations or
 usage suppress net results. Native option outcome reads in this explicit paid mixed
 cohort include the same full allocation as stock outcomes.
 
-## Remaining plumbing and proof
+## Connected plumbing and proof
 
 [Continuous mixed runtime](MIXED_RUNTIME.md) now connects delivered sources,
-independent protection, explicit settlement and session/restart recovery. The final
-plumbing track is common mixed tapes, matched independent A/B/C/D native accounts
-and portable replay/export, including every charge, fee, operating/overnight
+independent protection, explicit settlement and session/restart recovery.
+[Common mixed tapes and independent A/B/C/D replay/export](MIXED_REPLAY.md) now
+retain complete native response contracts, every charge, fee, operating/overnight
 allocation and unknown cost.
 
 Legacy runtime envelopes, tape consumers and option-only exports still reject mixed

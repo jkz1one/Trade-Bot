@@ -43,12 +43,13 @@ fees and settled proceeds retain the existing common accounting rules.
 Existing policies, proposals and intents omit absent carry fields, preserving
 frozen serialization. A stock owner without explicit carry enrollment rejects
 carry terms. Even an enrolled owner rejects a later exit without original terms;
-no inference turns an ordinary session-close proposal into carry. Paid model,
-continuous mixed runtime and mixed A/B/C/D export guards remain in place until
-those full contracts are implemented.
+no inference turns an ordinary session-close proposal into carry. Separate
+[paid](MIXED_AI.md), [runtime](MIXED_RUNTIME.md) and [mixed replay/export](MIXED_REPLAY.md)
+contracts now retain those originals. Legacy input guards remain in place.
 
 `test_mixed_stock_carry.py` verifies native fixed-child entry/exit, original
 calendar/catalyst/deadline rejection, weekend restart, full daily costs, original
 protection and partial closes. See the latest [status](SLICE2_STATUS.md) for the
-completed isolated-wheel proof. Original stock source selection is now connected; continue with complete paid
-contracts, runtime and independent replay/export.
+completed isolated-wheel proof. Original stock source selection, complete paid
+contracts, runtime and independent replay/export are now connected. Authentic
+provider/model/host/PAPER and final UI/visual acceptance remain separate.

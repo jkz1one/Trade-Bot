@@ -11,8 +11,9 @@ authentic data/model, host and visual acceptance remain separate gates.
 
 ## Current product direction
 
-Current work finishes remaining strategy/engine plumbing before the final UI and
-authentic data/model validation pass. Offline test tools remain available during development.
+The settled strategy/engine plumbing is connected through native offline fixtures.
+Final UI/visual and authentic data/model/PAPER acceptance remain separate gates.
+Offline test tools remain available during development.
 The [native mixed owner](docs/MIXED_NATIVE_OWNER.md) now binds stock and option
 fixtures to one journal, cash balance, order lock, protection and full-cost loss
 history. Explicit [original stock carry](docs/MIXED_STOCK_CARRY.md) now retains
@@ -23,7 +24,9 @@ source retirement and attribution. [Paid mixed entry and management](docs/MIXED_
 now bind full worker receipts, fresh native admission, original stock/option/Scope
 terms and all paid costs. [Continuous mixed runtime](docs/MIXED_RUNTIME.md) now
 binds delivered inputs, independent protection, restart and explicit settlement.
-Common mixed tapes and independent replay/export remain before that acceptance pass.
+[Common mixed tapes and independent A/B/C/D replay/export](docs/MIXED_REPLAY.md)
+now retain separate native accounts, full response contracts, actual later fills,
+original carry/session terms and every known or unknown cost.
 New [stop-only target milestones](docs/OPTIONS_TARGET_EXITS.md#stop-only-target-milestones)
 let protection tighten at an objective without selling a contract or inventing proceeds.
 
@@ -73,9 +76,9 @@ owner, entry/management, continuous runtime and stored export contracts.
 four independent owners, explicit settlement, saved closing evidence and full costs
 across frozen session-close tapes. [Native repeat-entry attribution](docs/OPTIONS_NATIVE_ENTRY_ATTRIBUTION.md)
 now has separate frozen enrollment. [Combined carry series](docs/OPTIONS_SCOPE_CARRY_SERIES.md)
-now binds separate replay/export and explicit overnight allocations. Remaining
-family/mixed plumbing precede final UI and
-authentic PAPER testing.
+now binds separate replay/export and explicit overnight allocations. The mixed
+contract completes the settled family/owner/runtime/replay plumbing before final
+UI and authentic PAPER acceptance.
 
 Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
 rules, implementation milestones, acceptance gates and continuation discipline.
@@ -126,8 +129,9 @@ sources, exact family selection, runtime and independent native carry/export.
 [Shared stock/options cash history and admission](docs/MIXED_CASH_HISTORY.md) now
 provide one accounting projection and deterministic stock admission envelope.
 Native mixed ownership, candidate selection and paid entry/management are connected.
-Continuous mixed runtime is connected. Common mixed tapes and independent A/B/C/D
-replay/export remain; the linked document lists the final plumbing track.
+Continuous mixed runtime and common tapes now connect four independent native
+A/B/C/D replay/export accounts. The linked documents retain the full fixture proof
+and remaining authentic acceptance gates.
 New [daily base breakout/breakdown](docs/OPTIONS_SWING_BASE.md) connects frozen daily/hourly
 evidence and original targets to the same native owner, carry and independent exports.
 

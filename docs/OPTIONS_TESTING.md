@@ -1,5 +1,14 @@
 # Offline options development checks
 
+The `test_mixed_market_tape.py` and `test_mixed_replay*.py` suites verify common
+original sources, exact B/C/D response contracts, four independent native accounts,
+actual later fills, full known/unknown costs, management, carry/session continuity,
+portable tamper rejection and the installed private CLI. Run alongside legacy
+market tape, Scope/Swing replay, paid/native accounting and continuous runtime
+regressions. Retain complete logs/XML, case IDs and exact wheel digests. Label
+broad and final-wheel coverage separately, record the intervening application
+delta, and count overlapping passing cases once. Failed diagnostics do not count.
+
 `test_mixed_runtime.py` verifies [continuous mixed delivery](MIXED_RUNTIME.md):
 real native stock fills and fast protection, slow management, exact delivered
 paid refresh, retained Scope freshness rejection, immutable stock source retirement,
@@ -7,7 +16,8 @@ private input/enrollment failures, interrupted/tampered receipts, explicit settl
 and installed CLI restart. Run it with legacy runtime/Scope, mixed paid/native,
 recovery/operator and shared source regressions. Preserve the noneditable wheel,
 copied tests, Python `-I`, warnings-as-errors and serial native-run requirements.
-Common mixed tapes and independent A/B/C/D replay/export remain separate acceptance.
+Common mixed tapes and independent A/B/C/D replay/export use the separate
+[MIXED_REPLAY.md](MIXED_REPLAY.md) enrollment and suites below.
 
 `test_mixed_entry.py`, `test_mixed_position.py` and `test_mixed_paid_carry.py` verify the [paid mixed contract](MIXED_AI.md):
 complete original stock/option/Scope alternatives, tool-less mock worker transport,
@@ -57,8 +67,8 @@ cancellation, matched scripts and rejection without explicit execution enrollmen
 paid fresh admission, original deadline enforcement, actual fills, management,
 known/unknown charges and rejected contracts.
 
-Offline fixture checks continue while plumbing is built. Finish the remaining
-strategy/engine plumbing before final UI work and authentic PAPER testing.
+The settled strategy/engine plumbing is connected through explicit native fixture
+contracts. Final UI work and authentic PAPER acceptance follow this plumbing.
 Real market/model testing still requires authenticated samples and normalization;
 the current runtime consumes normalized fixtures. This procedure does not convert
 fixture success into provider, host, visual or LIVE acceptance.
@@ -216,7 +226,7 @@ transport; they do not authorize an authenticated call, deployment or LIVE mode.
 Run `test_option_scope_position.py` with position reasoning/worker/coordination,
 Scope entry, native outcome, lineage and observer regressions for the separately
 enrolled [Scope management path](OPTIONS_SCOPE_POSITION.md). Common A/B/C/D
-Scope tapes remain separate work.
+Scope tapes use the separate [comparison contract](OPTIONS_SCOPE_COMPARISON.md).
 
 ## Common Scope observation fixtures
 
@@ -237,11 +247,11 @@ entry families, both rights, full-plan schema/SDK mock transport, per-position
 management, original horizons, paid rejection, full-cost export, runtime restart
 and independent deadline/watch expiry. Include the existing entry/position
 reasoning and worker, native Swing carry, Scope entry/management/runtime and frozen
-comparison regressions. Native workers run serially. Count exact distinct test IDs
-on the final wheel; diagnostic passes and overlapping reruns are not extra checks.
+comparison regressions. Native workers run serially. Record exact wheel digests and
+distinct completed test IDs; diagnostic passes and overlapping reruns are not extra checks.
 No dependency changes, deployment, authenticated provider/model calls or LIVE
-permission are part of this procedure. Remaining mixed integration still precedes UI and authentic
-PAPER acceptance.
+permission are part of this procedure. Mixed integration now has its separate
+[complete contract](MIXED_REPLAY.md); UI and authentic PAPER acceptance remain open.
 
 ## Continuous Scope session comparison
 
@@ -251,9 +261,9 @@ The [series contract](OPTIONS_SCOPE_SERIES.md) covers independent continuous nat
 accounts, explicit settlement, original protection, paid entry/management, cumulative
 loss controls, unknown costs, saved boundaries, portable tamper rejection and known-only
 SPY endpoints. Include single-session Scope comparison/model/shortlist, native carry,
-legacy series and tape-boundary regressions. Run native workers serially; count only
-distinct completed case IDs on the final wheel. Remaining mixed integration is still separate
-plumbing, before UI/authentic PAPER testing.
+legacy series and tape-boundary regressions. Run native workers serially; retain
+wheel-specific completed case IDs and count overlaps once. The separate mixed
+plumbing is connected; UI/authentic PAPER acceptance remains open.
 
 ## Native repeated-entry attribution
 

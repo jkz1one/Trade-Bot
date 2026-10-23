@@ -66,7 +66,14 @@ def configuration(db):
         raise ExecutionBlocked("SHARED_SCOPE_WATCH_POLICY_CHANGED")
     if policy.version == VERSION and any(
         k in config
-        for k in ("entry_model", "model", "replay_model", "position_model", "scope_replay")
+        for k in (
+            "entry_model",
+            "model",
+            "replay_model",
+            "position_model",
+            "scope_replay",
+            "mixed_replay",
+        )
     ):
         raise ExecutionBlocked("SHARED_SCOPE_DETERMINISTIC_ONLY")
     if policy.version != VERSION:
@@ -75,7 +82,11 @@ def configuration(db):
         model = EntryModelConfiguration.model_validate(config.get("entry_model"))
         if model.entry_policy.scope_selection is None:
             raise ExecutionBlocked("SHARED_SCOPE_AI_CONFIGURATION_REQUIRED")
-        if "scope_replay" in config:
+        if "mixed_replay" in config:
+            from app.mixed.replay_enrollment import validate_stored
+
+            replay_enrollment = validate_stored(config)
+        elif "scope_replay" in config:
             from app.options.scope_replay_enrollment import validate_stored
 
             replay_enrollment = validate_stored(config)
@@ -104,7 +115,9 @@ def configuration(db):
         model.entry_policy if policy.version != VERSION else None,
         management.position_policy if "position_model" in config else None,
         replay="scope_replay" in config or "replay_model" in config,
-        replay_enrollment=replay_enrollment if "scope_replay" in config else None,
+        replay_enrollment=replay_enrollment
+        if "scope_replay" in config or "mixed_replay" in config
+        else None,
     )
     return policy
 

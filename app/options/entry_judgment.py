@@ -22,6 +22,7 @@ from app.options.entry_reasoning import (
     EntryPlan,
     EntryReasoningPolicy,
     MixedEntryPlan,
+    MixedShortlistPlan,
     ScopeCarryShortlistPlan,
     ScopeShortlistPlan,
     SharedScopeCarryEntryPlan,
@@ -55,6 +56,15 @@ fresh evidence and may reject any proposal. Never issue management or exit order
 
 
 def instructions(policy):
+    if policy.mixed_shortlist is not None:
+        return """Choose one supplied admitted stock, option or Scope candidate, or HOLD.
+For ENTER copy its exact candidate ID and evidence IDs. Set stock=true only for
+shares, scope=true only for Scope, and both false for ordinary options or HOLD.
+Leave every geometry and horizon field null. Original source, proposal, quantity,
+price ceilings, targets and deadlines remain fixed. Software settles the charge
+then requires fresh native admission before any attempt. No tools, credentials,
+account mutations or execution authority. This is a local scripted comparator.
+"""
     if policy.mixed_selection is not None:
         plain = policy.model_copy(update={"mixed_selection": None})
         return (
@@ -120,6 +130,8 @@ assurance of overnight liquidity, continuous observations or stop execution.
 
 
 def prompt_version(policy):
+    if policy.mixed_shortlist is not None:
+        return "mixed-choice-only-v1"
     if policy.mixed_selection is not None:
         return "mixed-entry-thesis-v1"
     if policy.scope_carry is not None and policy.scope_selection == "scope-fixed-shortlist-v1":
@@ -139,6 +151,7 @@ class EntryModelConfiguration(OptionRecord):
     limits: JudgmentLimits
     entry_policy: EntryReasoningPolicy
     prompt_version: Literal[
+        "mixed-choice-only-v1",
         "mixed-entry-thesis-v1",
         "option-entry-thesis-v1",
         "option-entry-carry-v1",
@@ -255,7 +268,8 @@ class EntryResult(OptionRecord):
     packet_hash: Digest
     configuration_hash: Digest
     plan: (
-        MixedEntryPlan
+        MixedShortlistPlan
+        | MixedEntryPlan
         | EntryPlan
         | CarryEntryPlan
         | SharedScopeEntryPlan

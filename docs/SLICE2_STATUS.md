@@ -1,5 +1,117 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Common mixed tapes and independent native replay/export: 2026-10-23 UTC
+
+Fresh GitHub/local state began at HEAD
+`1cc4430cdfbca47ac294063c5857a1d51a589981`, tree
+`de0c034ef16c35d882186743c4bf4f52ffb778a1`. PR #1 remained open/draft;
+main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`.
+
+The [complete mixed replay contract](MIXED_REPLAY.md) now binds common original
+stock/options/Scope tapes to four independent native A/B/C/D owners. Frozen source
+identity, declaration, family/asset policies and every available source clock are
+validated before use. MARKET and Scope-only records cannot hide replacement stock
+sources. Old tapes, replay adapters and exports retain their original guards and
+serialization.
+
+B has an explicit choice-only full-request contract. C/D share original declared
+entry scripts; D adds native position management. Exact mixed enrollment binds the
+adapter type, complete request, ordered tapes and script. Original request duration,
+account/revision and approval deadlines still govern admission. Every known charge
+survives a rejected/late plan; missing usage remains unknown. Native cost recording
+recognizes the new B receipt without changing old plan contracts. Option dispatch
+recognizes the same choice-only contract while retaining original native exits.
+
+Delivered post-cost reads, original Scope watch actions and actual later source
+quotes drive native approvals, attempts and fills. Independent stop/target/time
+protection retains original terms. Stock source size cannot be replenished by a new
+receive clock. Partial fills and missing exits retain actual exposure. Four native
+accounts keep separate capital, cash, reservations, fills and loss history across
+sessions; only explicit native receipts settle funds. Carry retains its original
+enumerated sessions and deadlines, with overnight coverage left unknown.
+
+Portable fixed-schema export reconstructs original approvals, cash/fills, every
+entry/management charge, execution fee, explicit calendar allocation and consumed
+full-cost loss outcome. Comparison additionally binds original cycle clocks,
+scripted receipts, delivered refreshes, watch revisions, settlement and immutable
+session prefixes. Unknown costs and open exposure suppress net results. The
+private installed run/verify commands are bounded and create-only; interrupted
+runs retain partial evidence without resume or execution authority.
+
+Validation: **676 distinct installed checks**, including **102 new mixed
+tape/replay/export cases**. The broad wheel passed 441 cases; the final wheel passed
+660, including 86 new cases. Their 425 overlapping cases are counted once.
+Only the read-only mixed exporter changed between these wheels; all other 240
+application/template files are identical. The final exporter additionally verified
+29 retained native comparison bundles, without counting those verifications as
+additional test cases. Native execution results from the broad wheel are not
+claimed as final-wheel native runs.
+
+| Wheel | Completed phase | Passing cases | Seconds |
+| --- | --- | ---: | ---: |
+| broad | `native-stock-initial` | 3 | 543.49 |
+| broad | `native-operating-final` | 1 | 2.91 |
+| broad | `native-option-initial` | 1 | 378.02 |
+| broad | `native-option-partial-final` | 1 | 228.01 |
+| broad | `pure-final` | 81 | 7.30 |
+| broad | `contracts-final` | 342 | 27.52 |
+| broad | `native-assets-final` | 3 | 586.25 |
+| broad | `native-carry-fixed` | 2 | 765.47 |
+| broad | `native-scope-final` | 1 | 449.17 |
+| broad | `native-stock-final` | 6 | 1232.55 |
+| final | `pure-hardened` | 81 | 7.67 |
+| final | `contracts-hardened` | 342 | 29.98 |
+| final | `export-hardened` | 2 | 376.64 |
+| final | `native-series-final` | 3 | 1034.88 |
+| final | `paid-final` | 131 | 634.58 |
+| final | `runtime-final` | 92 | 259.03 |
+| final | `legacy-replay-final` | 9 | 423.10 |
+
+Earlier diagnostic runs and failed cases are excluded. The initial option run
+contributed one passing case; its insufficient-liquidity partial-fill fixture was
+corrected and passed in a focused rerun. The initial stock run contributed three
+passing cases; a focused passing case verifies the original healthy-owner rejection
+for unknown initial operating allocations and retained unknown-cost evidence.
+All retained failures have a passing resolution. Tests use copied sources outside
+the checkout, noneditable installed wheels, Python `-I`, warnings as errors and
+disabled plugin autoload. Native runs are serial.
+
+Final wheel SHA-256:
+`398bf595409ecb6feeccbf95a12a91cd472e01297699f9df30a793f49839d0a7`.
+Broad wheel SHA-256:
+`7cefa44bd040cc27328a209324ab259e1f76870b3835d0e9d2a79564a030a969`.
+All 241 application/template files match source, final wheel and installed bytes;
+223 parent files remain unchanged. Twenty-nine representative legacy contracts,
+including old tape headers, Scope frames and choice-only receipts, serialize
+byte-for-byte identically to the parent wheel. Changed-scope lint, repository
+fatal lint, document links, dependency consistency and whitespace checks pass.
+Full repository style lint retains 306 findings in 52 byte-identical parent files.
+
+The [committed proof manifest](MIXED_REPLAY_PROOF.json) retains exact case IDs,
+wheel digests, application-file identities and overlap accounting.
+Retained raw proof: `../mixed-replay-proof/` (`final-proof.json` with exact phase/case
+lists and durations, completed XML/log pairs and wheel receipts, export-only delta,
+retained bundle verification, identity/legacy serialization and lint evidence).
+Final wheel: `../mixed-replay-wheels/`; test interpreter:
+`../scope-replay-env/bin/python`.
+Focused diagnostics fixed B receipt usage/dispatch binding and the serialized
+Scope candidate digest. JSON-roundtrip attribution, complete cycle/paid-overlap
+coverage, and complete snapshot/order/fill coverage are checked at the new portable
+boundary. Tamper tests recompute every enclosing hash and summary export reference;
+unowned fills still fail. No original native admission guard was removed.
+
+The settled strategy/engine plumbing is connected: original family sources and
+retirement, one mixed native owner, paid entry/management, continuous delivered
+runtime and independent common-tape replay/export. No additional settled plumbing
+track remains on the continuation list. Final UI/visual and authentic provider
+samples, exact normalization, model/host/economic/PAPER acceptance remain open;
+fixture proof does not establish those gates or prospective profitability.
+
+Dependencies and main are unchanged. PR #1 remains open/draft, LIVE remains disabled
+and deployment frozen. No authenticated provider/model/broker calls were made.
+Continue from the acceptance gates when authorized; do not reopen settled strategy
+decisions or weaken legacy enrollment to accept new inputs.
+
 ## Continuous mixed runtime and native recovery: 2026-10-23 America/New_York
 
 Fresh GitHub/local state began at HEAD

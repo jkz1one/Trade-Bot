@@ -558,7 +558,11 @@ async def run(c, key, frame):
     except ExecutionBlocked as exc:
         return c._finish(key, {**evidence, "status": "HELD", "reason": str(exc)})
     try:
-        result = await j.run_position_process(request, secret)
+        result = (
+            await c.replay_model.run(request)
+            if c.mixed_replay is not None
+            else await j.run_position_process(request, secret)
+        )
         result = j.PositionResult.model_validate(result.model_dump(warnings=False))
         completed = c.now()
         evidence.update(

@@ -974,12 +974,10 @@ class OptionExecution:
                     raise ExecutionBlocked("OPTION_APPROVAL_EXPIRED")
                 if quote.instrument != intent.instrument:
                     raise ExecutionBlocked("OPTION_INSTRUMENT_MAPPING_CHANGED")
+                entry_policy = approval.get("entry_request", {}).get("packet", {}).get("policy", {})
                 shortlist = (
-                    approval.get("entry_request", {})
-                    .get("packet", {})
-                    .get("policy", {})
-                    .get("scope_selection")
-                    == "scope-fixed-shortlist-v1"
+                    entry_policy.get("scope_selection") == "scope-fixed-shortlist-v1"
+                    or entry_policy.get("mixed_shortlist") == "mixed-choice-only-v1"
                 )
                 if (intent.entry_protection is not None) != (
                     "entry_request" in approval and not shortlist
@@ -2043,6 +2041,7 @@ class OptionExecution:
             CarryEntryPlan,
             EntryPlan,
             MixedEntryPlan,
+            MixedShortlistPlan,
             ScopeCarryShortlistPlan,
             ScopeShortlistPlan,
             SharedScopeCarryEntryPlan,
@@ -2050,7 +2049,8 @@ class OptionExecution:
         )
 
         plan = TypeAdapter(
-            MixedEntryPlan
+            MixedShortlistPlan
+            | MixedEntryPlan
             | EntryPlan
             | CarryEntryPlan
             | SharedScopeEntryPlan

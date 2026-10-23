@@ -66,6 +66,7 @@ class DegenCoordinator:
         scope_refresh=None,
         stock_policy=None,
         stock_refresh=None,
+        mixed_replay=None,
     ):
         if type(engine) is not OptionExecution or getattr(engine, "_degen_owner", None) is not None:
             raise ValueError("One active built-in options owner is required")
@@ -74,6 +75,13 @@ class DegenCoordinator:
             engine.policy.mixed_owner is not None
             and engine.policy.mixed_owner.reasoning is not None
         )
+        self.mixed_replay = None
+        if mixed_replay is not None:
+            from app.mixed.replay_enrollment import validate_adapter
+
+            self.mixed_replay = validate_adapter(mixed_replay, replay_model)
+            if not mixed_paid or key_file is not None or scope_replay is not None:
+                raise ValueError("Separate complete mixed replay owner required")
         if engine.policy.mixed_owner is not None:
             if not mixed_paid and any(
                 x is not None
@@ -94,9 +102,10 @@ class DegenCoordinator:
                 or entry_policy is None
                 or entry_policy.mixed_selection != engine.policy.mixed_owner.reasoning
                 or judgment_limits is None
-                or key_file is None
+                or (key_file is None if self.mixed_replay is None else key_file is not None)
                 or not callable(stock_refresh)
-                or any(x is not None for x in (replay_model, scope_replay))
+                or scope_replay is not None
+                or (replay_model is not None and self.mixed_replay is None)
                 or (position_policy is not None and position_policy.mixed_management is None)
             ):
                 raise ValueError(
@@ -162,10 +171,18 @@ class DegenCoordinator:
                 raise ValueError("Shared Scope v1 is deterministic only")
             if self.scope_policy.version == "shared-scope-entry-v1" and (
                 judgment_limits is None
-                or (key_file is None if self.scope_replay is None else key_file is not None)
+                or (
+                    key_file is None
+                    if self.scope_replay is None and self.mixed_replay is None
+                    else key_file is not None
+                )
                 or entry_policy is None
                 or entry_policy.scope_selection is None
-                or (replay_model is not None and self.scope_replay is None)
+                or (
+                    replay_model is not None
+                    and self.scope_replay is None
+                    and self.mixed_replay is None
+                )
                 or not callable(scope_refresh)
             ):
                 raise ValueError(
@@ -184,11 +201,19 @@ class DegenCoordinator:
         from app.options.replay_model import ReplayModel
 
         if replay_model is not None and (
-            (type(replay_model) is not ReplayModel and self.scope_replay is None)
+            (
+                type(replay_model) is not ReplayModel
+                and self.scope_replay is None
+                and self.mixed_replay is None
+            )
             or key_file is not None
             or judgment_limits is None
             or engine.policy.cost_policy is None
-            or (replay_model.script.arm in {"C", "D"} or self.scope_replay is not None)
+            or (
+                replay_model.script.arm in {"C", "D"}
+                or self.scope_replay is not None
+                or self.mixed_replay is not None
+            )
             != (entry_policy is not None)
         ):
             raise ValueError("Explicit isolated scripted model configuration required")
@@ -221,13 +246,21 @@ class DegenCoordinator:
         if (
             engine.policy.loss_control is not None
             and engine.policy.loss_control.entry_cost_attribution is not None
-            and (self.entry_policy is None or replay_model is not None)
+            and (
+                self.entry_policy is None
+                or (replay_model is not None and self.mixed_replay is None)
+            )
         ):
             raise ValueError("Later-entry attribution requires native full-entry enrollment")
         if self.entry_policy is not None and (
             self.entry_policy.scope_selection == "scope-fixed-shortlist-v1"
         ) != (self.scope_replay is not None and replay_model.script.arm == "B"):
             raise ValueError("Scope shortlist requires its exact isolated B enrollment")
+        if self.entry_policy is not None and (
+            (self.entry_policy.mixed_shortlist is not None)
+            != (self.mixed_replay is not None and replay_model.script.arm == "B")
+        ):
+            raise ValueError("Mixed shortlist requires its exact isolated B enrollment")
         if (
             self.entry_policy is not None
             and self.entry_policy.scope_selection is not None
@@ -317,7 +350,7 @@ class DegenCoordinator:
             self.entry_policy,
             self.position_policy,
             replay=replay_model is not None or scope_replay is not None,
-            replay_enrollment=self.scope_replay,
+            replay_enrollment=self.mixed_replay or self.scope_replay,
         )
         frozen = self._configuration()
         self._frozen = frozen
@@ -434,6 +467,8 @@ class DegenCoordinator:
             config["replay_model"] = self.replay_model.configuration()
         if self.scope_replay is not None:
             config["scope_replay"] = self.scope_replay.model_dump(mode="json")
+        if self.mixed_replay is not None:
+            config["mixed_replay"] = self.mixed_replay.model_dump(mode="json")
         if self.entry_policy is not None:
             from app.options.entry_judgment import configuration
 
@@ -467,7 +502,7 @@ class DegenCoordinator:
         return await judgment.run_candidate_process(request, secret)
 
     def _model_timely(self, request, started, completed):
-        if self.scope_replay is not None:
+        if self.scope_replay is not None or self.mixed_replay is not None:
             # Only explicitly enrolled, tool-less tape responses use virtual elapsed
             # time. Keep the original request duration and native packet deadline.
             elapsed = (completed - started).total_seconds()

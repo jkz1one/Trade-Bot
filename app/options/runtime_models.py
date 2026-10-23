@@ -68,6 +68,8 @@ class RuntimeSettings(OptionRecord):
 
     @model_validator(mode="after")
     def bounded(self):
+        if self.entry_policy is not None and self.entry_policy.mixed_shortlist is not None:
+            raise ValueError("Mixed choice-only B is isolated replay only")
         mixed = self.execution.mixed_owner
         if (mixed is not None) != (self.stock_policy is not None) or (
             (mixed is not None) != (self.runtime.mixed_inputs is not None)

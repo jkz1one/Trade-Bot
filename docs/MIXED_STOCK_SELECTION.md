@@ -86,7 +86,8 @@ stock frames, and existing option/Scope market tapes and runtime packets explici
 reject stock inputs. A separate [paid mixed contract](MIXED_AI.md) now connects full
 entry/management receipts, original terms and native cost accounting. The separate
 [mixed runtime](MIXED_RUNTIME.md) now binds delivered inputs, protection and recovery.
-Common mixed tapes and A/B/C/D replay/export remain guarded until their contracts exist.
+[Common mixed tapes and A/B/C/D replay/export](MIXED_REPLAY.md) now bind their
+separate complete contracts; old consumers retain their original guards.
 Absent stock fields are omitted, preserving old frame serialization.
 
 `test_mixed_selection.py` covers native stock/option/Scope competition, actual fills,
@@ -95,7 +96,6 @@ source-bound carry, original deadlines, tampering, outcome attribution and old
 consumer rejection. See [status](SLICE2_STATUS.md) for the final installed-wheel
 proof and [testing](OPTIONS_TESTING.md) for isolation requirements.
 
-Continue with common mixed tapes and four independent native A/B/C/D replay/export
-owners. Final UI/visual and
-authentic provider/model/host/PAPER acceptance follow that plumbing. LIVE stays
+The settled plumbing is connected. Final UI/visual and authentic
+provider/normalization/model/host/PAPER acceptance remain separate. LIVE stays
 disabled; deployment remains frozen.

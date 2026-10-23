@@ -197,13 +197,16 @@ class RecordedTape(OptionRecord):
     events: tuple[TapeEvent, ...] = Field(max_length=MAX_EVENTS)
     seal: TapeSeal
 
+    def _validate_event(self, event):
+        _validate_event(self.header, event)
+
     @model_validator(mode="after")
     def verified(self):
         previous, at, keys = fingerprint(self.header), self.header.opens_at, set()
         for n, event in enumerate(self.events, 1):
             if event.sequence != n or event.previous_hash != previous or event.recorded_at < at:
                 raise ValueError("Broken market sequence, hash chain or clock")
-            _validate_event(self.header, event)
+            self._validate_event(event)
             if event.kind == "CYCLE":
                 if event.cycle_key in keys:
                     raise ValueError("Duplicate recorded cycle")
@@ -244,8 +247,11 @@ class TapeRecorder:
     acquisition. No reopen/append, automatic resume, pruning or overwrite API exists.
     """
 
+    header_type = TapeHeader
+    validate_event = staticmethod(_validate_event)
+
     def __init__(self, path, header):
-        self.header = TapeHeader.model_validate(header.model_dump(warnings=False))
+        self.header = self.header_type.model_validate(header.model_dump(warnings=False))
         self._fd = None
         self._size = self._count = 0
         self._previous = fingerprint(self.header)
@@ -301,7 +307,7 @@ class TapeRecorder:
             frame=frame,
         )
         event = TapeEvent.model_validate(event.model_dump(warnings=False))
-        _validate_event(self.header, event)
+        self.validate_event(self.header, event)
         if event.recorded_at < self._at or (kind == "CYCLE" and event.cycle_key in self._keys):
             raise ValueError("Regressing clock or duplicate cycle")
         self._write("EVENT", event)
@@ -334,8 +340,8 @@ class TapeRecorder:
         self.close()
 
 
-def load_tape(path):
-    """Read a sealed artifact without any source journal, credentials or writable handle."""
+def _read_records(path):
+    """Read bounded sealed records without selecting or broadening their contract."""
     fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     with os.fdopen(fd, "rb") as stream:
         before = os.fstat(stream.fileno())
@@ -374,6 +380,12 @@ def load_tape(path):
         or any(r["kind"] != "EVENT" for r in records[1:-1])
     ):
         raise ValueError("Sealed tape required; interrupted prefixes cannot be resumed")
+    return records
+
+
+def load_tape(path):
+    """Read a sealed artifact without any source journal, credentials or writable handle."""
+    records = _read_records(path)
     return RecordedTape(
         header=records[0]["value"],
         events=tuple(r["value"] for r in records[1:-1]),

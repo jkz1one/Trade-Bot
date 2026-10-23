@@ -71,10 +71,10 @@ stop/target/time protection, partial-close supersession, restart, signed recover
 full-cost global/family loss outcomes. The transport itself still grants none of
 that authority; only exact native enrollment can use both paths.
 
-Remaining: original stock candidates/shared selection, complete paid mixed
-entry/management contracts, continuous runtime and independent native A/B/C/D
-replay/export. The [full remaining list](MIXED_CASH_HISTORY.md#remaining-plumbing-in-total)
-is current. Final UI/visual and authentic PAPER acceptance follow the plumbing.
+Original stock candidates/shared selection, paid mixed entry/management,
+continuous runtime and [independent native A/B/C/D replay/export](MIXED_REPLAY.md)
+now have separate complete contracts. The [plumbing status](MIXED_CASH_HISTORY.md#remaining-plumbing-in-total)
+is current. Final UI/visual and authentic PAPER acceptance remain separate.
 LIVE remains disabled and the deployed experiment remains frozen.
 
 ## Verification

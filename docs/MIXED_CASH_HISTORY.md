@@ -109,11 +109,12 @@ fresh native approval, original terms and all paid charges.
 [Continuous mixed runtime](MIXED_RUNTIME.md) now connects delivered source inputs,
 independent protection, session/restart recovery and explicit settlement.
 
-The final plumbing track connects common mixed market tapes to four independent
-native A/B/C/D accounts and portable full-cost replay/export, including all
-entry/management charges, execution fees, operating/overnight allocations and
-unknown costs. Pure account isolation tests here are not native four-arm mixed
-replay acceptance.
+No settled strategy/engine plumbing track remains unconnected.
+[Common mixed tapes and independent native replay/export](MIXED_REPLAY.md) now
+bind four separate A/B/C/D accounts, complete response contracts, original native
+admission and actual fills, including all entry/management charges, execution
+fees, operating/overnight allocations and unknown costs. That separate native
+proof supplements the pure account isolation tests in this document.
 
 Then final UI/visual and authentic provider/model/host/economic/PAPER acceptance.
 LIVE remains disabled and the deployed experiment frozen. The original cash-history slice changed no existing option/stock implementation.
