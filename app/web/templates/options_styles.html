@@ -6,3 +6,89 @@
 @media(max-width:540px){main{padding:18px 12px}h1{font-size:26px}h2{font-size:18px}header{gap:12px}.card,section,.decision{padding:14px}.cards{gap:10px}.value{font-size:22px}.facts{grid-template-columns:120px minmax(0,1fr);gap:10px}.status-strip{grid-template-columns:1fr}.status-cell{padding-top:8px}.decision-stages{grid-template-columns:repeat(2,minmax(0,1fr))}.entry-state{display:block}.entry-state .tag{margin-bottom:8px}nav.top{gap:2px}nav.top a{padding:7px 10px}.filters a{padding:8px 12px}.comparison-chart{margin-left:0;margin-right:0}.comparison-chart svg{min-width:520px}.comparison-chart{overflow-x:auto}.comparison-chart figcaption{min-width:0}.comparison-note{font-size:12px}}
 @media(max-width:360px){.cards{grid-template-columns:1fr}.facts{grid-template-columns:105px minmax(0,1fr)}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* Research desk: current evidence first, historical decisions second. */
+:root{--bg:#0b1117;--panel:#111c26;--raised:#192938;--line:#34495c;--muted:#b1c1cf}
+body{background:radial-gradient(ellipse at 15% 0,#172a36 0,transparent 48rem),var(--bg)}
+main{max-width:1480px;padding:32px 40px 56px}
+header{padding:8px 0 24px;align-items:flex-start}
+h1{font-size:34px;letter-spacing:-1.1px}
+.header-evidence{text-align:right;max-width:38rem}
+.header-evidence small{display:block;margin-top:7px}
+nav.top{border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:24px;gap:4px}
+nav.top a{font-size:12px;letter-spacing:.15px;color:var(--text)}
+section{padding:26px;border-radius:12px;margin-top:24px}
+section>.head{padding-bottom:16px;border-bottom:1px solid var(--line)}
+#overview{background:linear-gradient(125deg,#192d39,var(--panel) 60%)}
+.account-cards{gap:0;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.account-cards .card{border:0;border-right:1px solid var(--line);border-radius:0;padding:20px;background:transparent}
+.account-cards .card:last-child{border-right:0}
+.account-cards .equity-card{background:#1c3440}
+.account-cards .value{font-size:32px;line-height:1.2;margin:12px 0}
+.account-cards .equity-card .value{color:var(--mint)}
+.account-cards .equity-unavailable .value{color:var(--amber)}
+.status-strip{margin-bottom:4px}
+.status-cell{border:0;padding:8px 0}
+.status-cell strong{font-weight:650}
+.briefing-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-top:20px}
+.briefing-item{min-width:0;padding:0 24px;border-right:1px solid var(--line)}
+.briefing-item:first-child{padding-left:0}
+.briefing-item:last-child{padding-right:0;border-right:0}
+.briefing-item h3{margin:0 0 12px;color:var(--muted);font-size:12px;font-weight:600}
+.briefing-item p,.briefing-item a{font-size:12px}
+.briefing-item .signal{font-size:20px;line-height:1.3;font-weight:600;margin:10px 0}
+.briefing-item a{display:inline-flex;align-items:center;min-height:44px;margin-top:8px}
+.compact-facts{grid-template-columns:minmax(95px,1fr) minmax(0,1.4fr);gap:10px;font-size:12px}
+.blocker-list{list-style:none;margin:12px 0;padding:0;display:flex;gap:6px;flex-wrap:wrap}
+.blocker-list li{background:#29291f;border:1px solid #827454;border-radius:4px;padding:4px 7px;color:var(--amber);font-size:10px;max-width:100%;overflow-wrap:anywhere}
+.brief-thesis{max-height:8.5em;overflow:auto;scrollbar-width:thin}
+.comparison-chart{margin:22px 0 14px}
+.comparison-chart svg{max-height:320px;border:1px solid var(--line)}
+.chart-legend{padding-top:12px}
+#comparison>.cards{margin-bottom:8px}
+#comparison .card{background:transparent;border:0;border-left:2px solid var(--line);border-radius:0;padding:6px 14px}
+#comparison .value{font-size:24px}
+.split>section{height:calc(100% - 24px)}
+.decision-list{gap:20px;padding-left:20px;border-left:1px solid var(--line)}
+.decision{position:relative;background:var(--bg);padding:24px}
+.decision::before{content:"";position:absolute;left:-26px;top:29px;width:9px;height:9px;border:2px solid var(--muted);background:var(--panel);border-radius:50%}
+.decision-warning::before{border-color:var(--amber)}
+.decision .head{align-items:flex-start}
+.decision .thesis{padding-left:14px;border-left:2px solid var(--blue);font-size:16px}
+.decision-stages{margin:20px 0 14px}
+.decision-stages li{padding:16px}
+.decision-cost{border-bottom:1px solid var(--line);padding-bottom:12px}
+summary{font-weight:550;line-height:1.6}
+.empty-state{padding:36px 10px;min-height:220px}
+caption{text-align:left;padding:12px 10px}
+nav[aria-label="History pages"]{justify-content:flex-start;margin-top:18px}
+nav[aria-label="History pages"] a{padding:10px 14px;min-height:44px;border:1px solid var(--line);border-radius:6px}
+@media(max-width:1050px){
+  main{padding:24px}.briefing-grid{grid-template-columns:1fr 1fr}
+  .briefing-item{padding:0 20px}.briefing-item:nth-child(2){border:0;padding-right:0}
+  .briefing-item:last-child{grid-column:1/-1;border-top:1px solid var(--line);padding:18px 0 0;margin-top:18px}
+}
+@media(max-width:900px){
+  .account-cards .card{border-bottom:1px solid var(--line)}
+  .account-cards .card:nth-child(2n){border-right:0}
+  .account-cards .card:nth-last-child(-n+2){border-bottom:0}
+  .split>section{height:auto}
+}
+@media(max-width:600px){
+  main{padding:20px 14px 36px}h1{font-size:28px}
+  .header-evidence{text-align:left}.header-evidence small{font-size:11px}
+  section{padding:18px;margin-top:18px}.account-cards .card{padding:14px}
+  .account-cards .value{font-size:25px}.briefing-grid{grid-template-columns:1fr}
+  .briefing-item,.briefing-item:first-child,.briefing-item:nth-child(2),.briefing-item:last-child{padding:18px 0;border:0;border-bottom:1px solid var(--line);margin:0}
+  .briefing-item:first-child{padding-top:0}.briefing-item:last-child{border-bottom:0;padding-bottom:0}
+  .brief-thesis{max-height:none;overflow:visible}
+  .decision-list{padding-left:12px}.decision{padding:16px}.decision::before{left:-18px}
+  .decision-stages li{padding:12px}.decision .thesis{font-size:14px}
+  .comparison-chart svg{max-height:none}.status-strip{gap:12px}
+  .filters a{min-height:44px}nav.top a{padding:8px 10px;min-height:44px}
+}
+@media(max-width:360px){
+  .account-cards .card{border-right:0;border-bottom:1px solid var(--line)}
+  .account-cards .card:nth-last-child(2){border-bottom:1px solid var(--line)}
+  .account-cards .card:last-child{border-bottom:0}
+}

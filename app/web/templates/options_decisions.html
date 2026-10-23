@@ -2,7 +2,7 @@
 <div class="decision-list" aria-label="Stored decision history">
 {% for item in items %}
 {% set a = item.attribution %}
-<article class="decision" aria-labelledby="decision-{{ item.id }}">
+<article class="decision {{ 'decision-warning' if item.status in ['HOLD', 'IN_PROGRESS'] else '' }}" aria-labelledby="decision-{{ item.id }}">
   <div class="head">
     <h3 id="decision-{{ item.id }}">{{ item.family }} <span class="muted">/</span> {{ a.role|title if a else 'Recorded cycle' }}</h3>
     <span class="tag {{ 'warn' if item.status in ['HOLD', 'IN_PROGRESS'] else '' }}">{{ item.status }}</span>
@@ -19,7 +19,7 @@
     <li><span class="stage-label">03 · Order</span><strong>{{ a.order_status or 'Not recorded' if a and a.client_id else 'No linked order' }}</strong><small>{{ 'Attempt recorded' if a and a.attempted else 'No attempt recorded' }}</small></li>
     <li><span class="stage-label">04 · Fills</span><strong>{% if a and a.client_id %}{{ a.filled_quantity }} / {{ a.approved_quantity if a.approved_quantity is not none else '?' }}{% else %}No linked fills{% endif %}</strong><small>Verified recorded quantity</small></li>
   </ol>
-  <div class="decision-cost"><span>Model cost</span><strong>{% if a %}{{ '$' ~ a.model_cost if a.model_cost is not none else a.cost_status }}{% else %}Not attributed{% endif %}</strong>{% if a %}<small>{{ a.cost_status }}</small>{% endif %}</div>
+  <div class="decision-cost"><span>Model cost · this decision</span><strong>{% if a %}{{ '$' ~ a.model_cost if a.model_cost is not none else a.cost_status }}{% else %}Not attributed{% endif %}</strong>{% if a %}<small>{{ a.cost_status }}</small>{% endif %}</div>
   {% if a and a.review_reasons %}<p class="warn">Review: {{ a.review_reasons|join(' · ') }}</p>{% endif %}
   {% if item.error_class %}<p class="bad">{{ item.error_class }}</p>{% endif %}
   <details class="evidence-detail"><summary>Candidate and decision details</summary>

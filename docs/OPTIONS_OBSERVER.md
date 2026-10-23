@@ -8,7 +8,10 @@ SHADOW observer remain separate. LIVE stays disabled.
 
 The [dedicated dashboard pass](OPTIONS_DASHBOARD.md) now presents compact account
 evidence, separate proposal/review/order/fill history and saved health/floor details.
-It includes an offline rendering drill; browser visual acceptance remains open.
+The research-desk pass adds stored blockers/ages and selected-page decision context,
+with current protection before the historical timeline. Its offline rendering drill
+is available; browser visual acceptance remains open. Mixed-owner enrollment is
+explicitly rejected by this observer and still needs a separately bound UI contract.
 
 ## Local interface
 

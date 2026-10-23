@@ -125,3 +125,60 @@ def test_unestablished_floors_and_unknown_pressure_are_not_zero_or_healthy():
     assert html.count("Not established") == 2
     assert html.count("Unknown") == 3
     assert "$0" not in html and "CURRENT_GREEKS_MISSING" in html
+
+
+@pytest.mark.parametrize("state", ["populated", "stale", "halted", "unknown", "hold"])
+def test_briefing_preserves_clock_blockers_and_original_protection(states, state):
+    data = states[state]
+    html = render(data)
+    briefing = html.split('<section id="briefing"', 1)[1].split("</section>", 1)[0]
+    assert "Newest in this selected family/page. May be historical." in briefing
+    assert "This snapshot grants no approval" in briefing
+    assert str(data["account"]["age_seconds"]) in briefing
+    for blocker in data["entry"]["recorded_blockers"]:
+        assert blocker in briefing
+    if data["position"]:
+        assert data["position"]["exit_at"] in briefing
+        assert str(data["position"]["tightened_invalidation"]) in briefing
+        assert data["position"]["quote_status"] in briefing
+    else:
+        assert "Missing or unresolved evidence does not establish a flat account" in briefing
+    assert html.index('id="position"') < html.index('id="opportunities"')
+
+
+def test_scope_selection_does_not_link_hidden_option_decisions(states):
+    html = templates.env.get_template("options.html").render(
+        data=states["populated"], auto_refresh=False, family="SCOPE", comparison_chart=None
+    )
+    outline = Outline(html)
+    assert set(outline.links) <= set(outline.ids)
+    assert "No decision shown" in html
+    assert "No model action or order is inferred" in html
+
+
+def test_missing_ages_are_unknown_while_zero_age_remains_zero(states):
+    import copy
+
+    data = copy.deepcopy(states["populated"])
+    data["account"]["age_seconds"] = None
+    data["supervision"]["age_seconds"] = 0
+    html = render(data)
+    assert "Account age</dt><dd>Unknown</dd>" in html
+    assert "Supervision age</dt><dd>0 seconds</dd>" in html
+
+
+def test_mixed_owner_remains_unavailable_without_changing_native_evidence(tmp_path):
+    from test_mixed_native_owner import NOW, owned_mixed
+
+    with owned_mixed(tmp_path) as (engine, venue):
+        paths = [engine.journal.path, venue.path]
+        before = digest(paths)
+        report = OptionObserver(
+            engine.journal.path, engine.limits.population_id, clock=lambda: NOW
+        ).report()
+        assert report["status"] == "UNAVAILABLE"
+        assert "account" not in report and "position" not in report
+        html = render(report)
+        assert "Stored evidence unavailable" in html
+        assert 'id="briefing"' not in html
+        assert digest(paths) == before

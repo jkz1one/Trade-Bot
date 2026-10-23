@@ -1,11 +1,41 @@
 # Options dashboard: decision and protection view
 
-This is the first dedicated M8 presentation pass over the existing authenticated,
+This is the M8 research-desk presentation over the existing authenticated,
 stored-only options observer. It changes no execution rule, collector, account,
 cost arithmetic, authentication, API response or deployment. Main stays untouched,
 PR #1 draft, LIVE disabled and the deployed experiment frozen.
 
 ## What is visible
+
+The October 23 pass adds an **At a glance** briefing with retained entry blockers,
+account/supervision ages, exact owned contract and original exit deadline, plus the
+newest decision **on the selected family/page**. It explicitly allows that decision
+to be historical; it is not a new signal. Missing ages remain Unknown and a recorded
+zero-second age remains zero. Scope selections never link an option decision hidden
+by that selection. The header carries the observation timestamp and fixture mode.
+
+Current ownership and deterministic protection now precede the potentially long
+decision timeline. Four stages still separate proposal, native review, order and
+fills; applying a TIGHTEN still cannot invent an order. The historical chart keeps
+its own dated net-equity/benchmark cards, with exact session values and all cost
+roles in a native disclosure. Order/fill tables have separate disclosures, open by
+default. Current unavailable equity uses warning emphasis, never a substituted
+historical result. No accounting or stored/API contract changes accompany this pass.
+
+The responsive briefing uses three/two/one columns. Long desktop briefing text has
+an explicitly labeled, keyboard-focusable scroll region and remains fully visible
+on mobile; full decisions retain the complete escaped thesis and uncertainty.
+Native disclosures and links require no scripts or external resources. These are
+implemented layout/interaction contracts, pending actual browser acceptance.
+
+### Mixed-owner boundary
+
+The existing `OptionObserver` explicitly rejects `mixed_owner` enrollment. This
+pass preserves that guard and tests that reading such a journal leaves both native
+journal and venue bytes unchanged and shows Unavailable without account metrics.
+It does **not** present this options surface as an accepted unified stock/options
+dashboard. A separately bound mixed observer/comparison presentation remains UI
+work; the settled native mixed engine/runtime/replay is not reopened.
 
 The dark research desk uses a compact overview, restrained mint/blue accents and
 separate panels for historical comparisons, decisions, position and evidence.
@@ -97,12 +127,14 @@ routes still require the authenticated observer and are not emulated by the dril
 ## Acceptance still open
 
 Native rendered-state, cost/uncertainty, escaping, read-only and installed-package
-regressions are recorded in [continuation status](SLICE2_STATUS.md). The cloud browser
-rejected the local preview URL because its URL policy permits only HTTP/HTTPS;
-no workaround or alternate browser surface was attempted. No screenshots were
-captured and no desktop/mobile visual or keyboard acceptance is claimed.
+regressions are recorded in [continuation status](SLICE2_STATUS.md). On October 23,
+the actual browser could not connect to the isolated localhost fixture server
+(`ERR_CONNECTION_REFUSED`); its workspace-host URL was then rejected with
+`ERR_BLOCKED_BY_CLIENT`. No attempt was made to bypass that policy. No screenshots
+were captured and no desktop/mobile visual or keyboard acceptance is claimed.
+The earlier file-URL rejection remains historical evidence, not a successful review.
 
 Actual rendering/clipping, expanded states, keyboard traversal, chart-label and
 contrast review, plus user visual acceptance, remain M8 gates. This pass does not
-close Scope execution, authentic provider/host acceptance or prospective economics.
+close unified mixed presentation, authentic provider/host acceptance or prospective economics.
 See [observer contract](OPTIONS_OBSERVER.md) and [source of truth](SOURCE_OF_TRUTH.md).

@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.107. Adopted product direction and working delivery contract, 2026-10-23 UTC.
+Version 1.108. Adopted product direction and working delivery contract, 2026-10-23 UTC.
 [Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now connects
 choice-only B, matched independent native accounts and portable full-cost export.
 [Continuous Scope runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now connect explicit
@@ -76,10 +76,13 @@ durable full-plan PAPER execution are fixture verified; authentic model/feed
 acceptance remains open. P3 position reasoning now has durable opt-in management
 integration with atomic consumption, tighter stops and full PAPER exits. M8 adds the
 user-requested dedicated dashboard design and visual acceptance.
-The first [dashboard presentation pass](OPTIONS_DASHBOARD.md) now exposes compact
-account evidence, attributed decision stages and stored protection diagnostics.
+The [dashboard presentation](OPTIONS_DASHBOARD.md) now adds a research-desk briefing,
+visible stored blockers/ages, selected-page decision context, current protection
+before historical decisions, and expandable exact cost/order/fill evidence.
 Eight offline display states and native read-only regressions are available; actual
-desktop/mobile rendering, keyboard and user visual acceptance remain open.
+desktop/mobile rendering, keyboard and user visual acceptance remain open. The
+browser rejected the workspace fixture URL. The option observer's mixed-owner guard
+remains intact; a separately bound unified mixed presentation remains UI work.
 The [isolated options test procedure](OPTIONS_TESTING.md) now joins installed-file
 identity, native runtime/recovery, shared entry, observer and full-cost replay
 checks with those display files. Its retained receipt requires completed test
@@ -455,7 +458,7 @@ contract plans. Its research watches remain order-free unless enrolled under the
 native contract. Convexity and missing-T3 four-contract plans remain blocked. Mixed
 stock/options ownership now has a separately enrolled [native fixture owner](MIXED_NATIVE_OWNER.md);
 paid mixed contracts, continuous runtime and independent mixed
-replay/export remain open. New
+replay/export now have separate complete native fixture enrollment. New
 [deterministic Scope/Degen/Swing arbitration](OPTIONS_SCOPE_ARBITRATION.md) now selects
 from bound native candidates in one owner,
 with immutable alternatives/selection, fresh dispatch gates and full-cost portable

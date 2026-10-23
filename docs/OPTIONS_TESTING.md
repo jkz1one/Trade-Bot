@@ -73,6 +73,25 @@ Real market/model testing still requires authenticated samples and normalization
 the current runtime consumes normalized fixtures. This procedure does not convert
 fixture success into provider, host, visual or LIVE acceptance.
 
+## Focused research-desk presentation checks
+
+For a template-only slice, run `test_option_dashboard.py`,
+`test_option_observer.py`, `test_option_comparison_view.py` and
+`test_option_scope_observer.py` against the noneditable installed wheel. Copy the
+whole tests directory outside the checkout and set pytest's `pythonpath` to that
+copied root and its tests directory (some fixtures import `tests.*`, others import
+modules directly). Use `python -I -W error -m pytest -p anyio.pytest_plugin` with
+`PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`, a fresh basetemp and retained JUnit/log files.
+Run native tests serially. The latest [UI proof](DASHBOARD_REVIEW_PROOF.json) records
+124 distinct final-wheel cases; an earlier collection failure counts as no tests.
+
+Generate the eight-state drill only after native tests finish. HTML generation and
+static source inspection do not meet browser acceptance. The October 23 browser
+returned `ERR_CONNECTION_REFUSED` for loopback, then `ERR_BLOCKED_BY_CLIENT` for the
+workspace host. Do not bypass that restriction or claim screenshots. Keep M8 open
+until an allowed browser can inspect the actual desktop/mobile rendering, keyboard
+interaction, long text, comparison labels and empty/stale/unknown states.
+
 ## One isolated test procedure
 
 Use Python 3.12 on Linux, with Git and the ability to install the existing pinned

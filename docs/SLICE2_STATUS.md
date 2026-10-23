@@ -1,5 +1,77 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+
+## Dashboard research desk and stored-evidence hierarchy: 2026-10-23 America/New_York
+
+Fresh GitHub and local state matched HEAD
+`5d5700db52bde439d364a953aff15d963030e059`, tree
+`b194119274fc28579c21a61c5b3626f63c921379`; working tree was clean.
+Main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 open/draft.
+The settled engine plumbing was not reopened. This is a presentation-only slice.
+
+The [research desk](OPTIONS_DASHBOARD.md) now leads with observed time, fixture mode,
+account metrics and saved health. A responsive briefing exposes recorded entry
+blockers, source ages, exact owned contract/protection and the newest decision on
+this selected family/page. The last item is explicitly historical when applicable,
+never current advice. Missing ages stay Unknown, zero age stays zero and unknown
+current equity gets warning emphasis. No historical result replaces a missing mark.
+
+Current position and independent deterministic protection now appear before the
+long historical decision timeline. Proposal, native review, order attempt and
+actual fill stages retain their separate evidence. Model charges retain exact
+precision; uncertainty and original thesis remain escaped and available. Exact
+historical session costs are in a native disclosure; separate order and fill tables
+are open by default. Scope selections do not link hidden option decisions. The
+layout adds responsive briefing columns, deliberate metric hierarchy, a timeline,
+focusable long-text regions and larger navigation targets without JavaScript.
+
+Validation: **124 distinct final-wheel installed tests**, including **8 new cases**,
+passed in 30.82 seconds across dashboard, observer, historical comparison and Scope
+observer suites. Native fixture tests ran serially from copied sources outside the
+checkout, with Python `-I`, warnings as errors, disabled plugin autoload and explicit
+anyio. Existing tests verify authenticated GET-only reads, no trading/provider work,
+source byte preservation, unknown/stale accounting, comparison gaps and escaping.
+The new mixed-owner guard case reads a real native fixture without changing its
+journal or venue and confirms Unavailable without invented account/position values.
+An initial runner collection failure omitted the copied test root from pythonpath;
+it ran no tests and is excluded. The final runner includes only copied root/tests.
+
+Wheel SHA-256:
+`5b0c0f64f3867b09292d0862dc2d20f286b140a882c7e3dc2a42e513fb5ecf79`.
+All **242 application/template files** match source, wheel and installed bytes.
+Only four templates differ from the parent (three modified, one added); all **238
+other application files are byte-identical**, including the settled engines,
+observers, exports, authentication and routes. Dependency consistency (60 runtime,
+3 build and 6 dev packages), pip check, changed-test lint, fatal repository lint,
+document links and whitespace checks passed. No dependency was changed.
+
+The [durable proof manifest](DASHBOARD_REVIEW_PROOF.json) records every final-wheel
+case ID, source/wheel/installed identity, copied test hashes, generated-page hashes,
+excluded diagnostic and browser failure. Retained raw proof and review pages:
+`/workspace/scratch/c75087a760c3/ui-proof/`; wheel:
+`/workspace/scratch/c75087a760c3/ui-wheels/final/`. Eight fixture states generated
+successfully, with desktop 1360px and mobile 390px wrappers. The portable review
+pack includes only those fixed pages, a review index and limited proof, not fixture
+databases or credentials.
+
+**Browser/visual acceptance is blocked, not passed.** Actual browser navigation to
+local loopback returned `ERR_CONNECTION_REFUSED`; the workspace-host URL then
+returned `ERR_BLOCKED_BY_CLIENT`. No policy bypass was attempted. No screenshots,
+actual rendering/clipping review, keyboard traversal or browser contrast acceptance
+are claimed. The static review pack is for review, not evidence of visual success.
+
+**Remaining UI work:** actual desktop/mobile and user visual acceptance, plus a
+separately bound unified mixed-owner observer/comparison presentation. Inspection
+confirmed that `OptionObserver` deliberately rejects mixed-owner enrollment; that
+guard is preserved rather than relabeling an options report as a mixed account.
+This is a UI boundary, not unfinished native mixed engine plumbing.
+
+Authentic provider/normalization/model/host/economic/PAPER acceptance remains open
+and was not run or authorized here. LIVE remains disabled, deployment frozen,
+main unchanged and PR #1 draft. No provider/model/broker calls, deployment, merge
+or strategy/authority changes occurred. Continue the UI gates without reopening
+settled strategy decisions.
+
 ## Common mixed tapes and independent native replay/export: 2026-10-23 UTC
 
 Fresh GitHub/local state began at HEAD
