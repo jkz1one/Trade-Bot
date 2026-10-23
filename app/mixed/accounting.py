@@ -198,6 +198,7 @@ def _apply_stock(state, intent, fill):
                     "original_invalidation",
                     "original_target",
                     "exit_at",
+                    "carry",
                 )
             )
         ):

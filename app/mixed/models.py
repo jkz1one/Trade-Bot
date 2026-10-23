@@ -6,6 +6,8 @@ from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
 
+from app.mixed.carry import StockCarryTerms
+
 # Public compatibility re-exports; primitives live below the lifecycle boundary.
 from app.mixed.stock_models import (  # noqa: F401
     Shares,
@@ -159,12 +161,20 @@ class StockProposal(OptionRecord):
     source_at: datetime | None = None
     valid_until: datetime | None = None
     exit_at: datetime | None = None
+    carry: StockCarryTerms | None = Field(default=None, exclude_if=lambda v: v is None)
     original_invalidation: Money | None = Field(default=None, gt=0)
     original_target: Money | None = Field(default=None, gt=0)
     thesis: str = Field(min_length=1, max_length=500)
 
     @model_validator(mode="after")
     def terms(self):
+        if self.carry is not None and (
+            self.action != "OPEN_LONG"
+            or self.family != "SWING"
+            or self.exit_at != self.carry.exit_at
+            or self.source_hash != self.carry.source_hash
+        ):
+            raise ValueError("Original Swing stock carry terms required")
         if self.action != "HOLD" and self.instrument is None:
             raise ValueError("An exact stock instrument is required")
         if self.action == "OPEN_LONG" and (

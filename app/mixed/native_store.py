@@ -338,6 +338,19 @@ def verify_order(db, row):
     if intent.quantity != quantity:
         raise ValueError("STOCK_NATIVE_QUANTITY_CHANGED")
     if intent.side == "BUY":
+        if proposal.carry is not None:
+            from app.mixed.carry import review_entry
+            from app.robinhood.schedule import XNYSCalendar
+
+            review_entry(
+                policy.mixed_owner.stock_carry,
+                XNYSCalendar(),
+                proposal,
+                intent.prepared_at,
+                policy.mixed_owner.stocks.max_receive_lag_seconds,
+            )
+        elif proposal.exit_at > window.closes_at - timedelta(minutes=policy.exit_cutoff_minutes):
+            raise ValueError("STOCK_CARRY_NOT_ENROLLED")
         expected = {
             "instrument": proposal.instrument,
             "family": proposal.family,
@@ -345,6 +358,7 @@ def verify_order(db, row):
             "source_at": proposal.source_at,
             "source_valid_until": proposal.valid_until,
             "exit_at": proposal.exit_at,
+            "carry": proposal.carry,
             "original_invalidation": proposal.original_invalidation,
             "original_target": proposal.original_target,
             "thesis": proposal.thesis,
@@ -371,6 +385,7 @@ def verify_order(db, row):
                 "source_at",
                 "source_valid_until",
                 "exit_at",
+                "carry",
                 "original_invalidation",
                 "original_target",
                 "thesis",

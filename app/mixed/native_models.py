@@ -5,6 +5,7 @@ from typing import Literal
 
 from pydantic import Field, model_validator
 
+from app.mixed.carry import StockCarryPolicy
 from app.mixed.stock_models import StockLimits
 from app.options.models import Money, Name, OptionRecord
 
@@ -12,6 +13,7 @@ from app.options.models import Money, Name, OptionRecord
 class MixedOwnerPolicy(OptionRecord):
     version: Literal["mixed-native-owner-v1"] = "mixed-native-owner-v1"
     stocks: StockLimits
+    stock_carry: StockCarryPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
     allocation: Literal["daily-calendar-fixture-v1"] = "daily-calendar-fixture-v1"
     daily_data_cost: Money | None = Field(ge=0)
     daily_host_cost: Money | None = Field(ge=0)

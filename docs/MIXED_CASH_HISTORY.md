@@ -105,9 +105,9 @@ Remaining:
 
 1. Derive native stock candidates from original Degen/Swing sources and join the
    existing option/Scope selector. Retain exact family/instrument lineage, fixed
-   original geometry and source clocks. Bind original stock carry horizons and
-   overnight protection/costs where required; current native stock enrollment rejects
-   carry. No fake option contracts or bearish shorts.
+   original geometry and source clocks. Bind the [explicit stock carry](MIXED_STOCK_CARRY.md)
+   terms to those sources; native calendar/catalyst/protection and daily-cost
+   contracts are now implemented. No fake option contracts or bearish shorts.
 2. Bind complete mixed entry/management model contracts, fresh post-cost native
    admission and paid attribution into the common global/family loss history.
    Preserve original deadlines and every

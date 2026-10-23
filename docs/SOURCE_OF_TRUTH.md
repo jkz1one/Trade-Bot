@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.102. Adopted product direction and working delivery contract, 2026-10-23 UTC.
+Version 1.103. Adopted product direction and working delivery contract, 2026-10-23 UTC.
 [Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now connects
 choice-only B, matched independent native accounts and portable full-cost export.
 [Continuous Scope runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now connect explicit
@@ -30,7 +30,9 @@ one stock/options balance, costs, reservations and loss envelope with order-free
 stock admission and an existing option-account projection. The separately enrolled
 [native mixed owner](MIXED_NATIVE_OWNER.md) now connects common journal/restore,
 stock preparation/attempts, complete reconciliation, independent protection and
-full-cost global/family outcomes. Stock candidate/carry/model contracts, continuous
+full-cost global/family outcomes. [Original stock carry](MIXED_STOCK_CARRY.md) now binds explicit calendar
+horizons, original catalyst coverage, DAY entry orders, retained protection and
+full daily allocations. Stock candidate/model contracts, continuous
 runtime and independent replay/export remain before final UI and authentic PAPER testing.
 [Shared durable mixed fixture](MIXED_VENUE.md) now connects actual share and option
 orders to one venue balance, atomic order lock, event sequence and bounded fixed

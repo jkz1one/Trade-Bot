@@ -6,6 +6,7 @@ from typing import Annotated, Literal
 
 from pydantic import BeforeValidator, Field, StrictBool, model_validator
 
+from app.mixed.carry import StockCarryTerms
 from app.options.models import Count, Evidence, Money, Name, OptionRecord, PositiveCount, Symbol
 
 ZERO = Decimal(0)
@@ -99,6 +100,7 @@ class StockIntent(OptionRecord):
     approval_expires_at: datetime
     order_expires_at: datetime
     exit_at: datetime
+    carry: StockCarryTerms | None = Field(default=None, exclude_if=lambda v: v is None)
     original_invalidation: Money = Field(gt=0)
     original_target: Money = Field(gt=0)
     family: Literal["DEGEN", "SWING"]
@@ -113,6 +115,12 @@ class StockIntent(OptionRecord):
 
     @model_validator(mode="after")
     def bounded(self):
+        if self.carry is not None and (
+            self.family != "SWING"
+            or self.exit_at != self.carry.exit_at
+            or self.source_hash != self.carry.source_hash
+        ):
+            raise ValueError("Original Swing stock carry terms required")
         if (
             not self.source_at <= self.prepared_at
             or not self.source_at < self.source_valid_until <= self.exit_at

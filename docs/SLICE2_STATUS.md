@@ -1,5 +1,59 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Original native stock carry: 2026-10-22 America/New_York
+
+Fresh GitHub/local state began at HEAD
+`ee327cce075e55d4f16f6a33eb99f44e2a07c407`, tree
+`845aad4f344b2aee7ce13c09bf088c248c0c422a`. PR #1 remained open/draft;
+main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`.
+
+The [original stock carry contract](MIXED_STOCK_CARRY.md) now binds separately
+frozen long-share carry policy to the existing native mixed owner. Original
+calendar sessions, exact final exit, source/policy hashes and full catalyst
+coverage are retained in the proposal, approved intent, held position and closes.
+Preparation, dispatch and stored approval verification reconstruct the actual XNYS
+path. Catalyst freshness is checked again at attempt without replacing the
+original evidence or extending source/approval deadlines. Entry orders remain DAY.
+
+Intermediate session cutoffs no longer shorten explicitly enrolled stock carry.
+Original stop, target and time protection persist through partial closes, weekends
+and restart. Missing quotes retain mandatory final exits. Closed markets block
+execution and keep an explicit supervision issue; no unobserved fill is invented.
+Native approval, fixture close acceptance and common fill reconstruction preserve
+the complete original carry terms. Owners without enrollment, and later exits
+without original carry terms, still reject carry.
+
+Daily declared data/host/operating allocations include nontrading days. A native
+Friday-to-Monday roundtrip demonstrates an execution profit becoming a full-cost
+loss after four calendar allocations. Unknown costs retain existing blocking and
+incomplete-outcome semantics. No extra account or synthetic option contract is used.
+
+Validation: **744 distinct final-wheel installed checks**, including **34 new
+stock-carry cases**. Completed runs: 34 carry checks (38.24s), 47 owner checks (124.41s), 335 native checks (141.02s), 140 control checks (80.21s), 188 mixed checks (117.01s).
+The 29-case diagnostic run is excluded; no overlapping cases are double-counted.
+All tests use copied sources outside the checkout, noneditable wheel installation,
+Python `-I`, warnings as errors and disabled plugin autoload; native runs are serial.
+
+Final wheel SHA-256:
+`83fc9fb58eb3656fe55aeeed662ce09933be747e7b7b1d464ff3369f9805d0af`.
+All 227 application/template files match source, wheel and installed bytes; 218
+parent application/template files are unchanged. Twelve representative contracts,
+including mixed policy and stock proposal, serialize byte-for-byte identically
+against the separately installed parent wheel. Ruff/format, dependency consistency,
+local documentation links and whitespace checks pass. Proof is retained in
+`../stock-carry-proof/`; the wheel is in `../stock-carry-wheels/`.
+
+
+Continuation: derive original Degen/Swing stock candidates and connect the shared
+stock/options/Scope selector, binding these carry terms to original source rules.
+Then finish mixed paid entry/management contracts and attribution, explicit
+continuous runtime/source/session recovery, and common mixed tapes with four
+independent native A/B/C/D replay/export owners. Those guards remain intact; no
+claim of completed mixed strategy, runtime or replay acceptance is made here.
+Final UI/visual and authentic provider/model/host/PAPER acceptance follow plumbing.
+Dependencies, main and the deployed experiment are unchanged; LIVE remains disabled.
+
+
 
 ## One native stock/options owner and independent protection: 2026-10-22 America/New_York
 

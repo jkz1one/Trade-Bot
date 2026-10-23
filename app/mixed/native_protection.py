@@ -38,14 +38,27 @@ def assess_owned(engine, db, quote, now):
         limits = engine.policy.mixed_owner.stocks
         w = session(engine, p.instrument, now)
         deadline = p.entry.exit_at
-        if w:
+        if w and p.entry.carry is None:
             deadline = min(
                 deadline, w.closes_at - timedelta(minutes=engine.policy.exit_cutoff_minutes)
             )
         reason = guard.exit_reason
-        if now >= deadline or w is None:
+        if now >= deadline or (w is None and p.entry.carry is None):
             reason = reason or "STOCK_TIME_EXIT"
-        if (
+        if p.entry.carry is not None:
+            from app.mixed.carry import verify_terms
+
+            verify_terms(
+                engine.policy.mixed_owner.stock_carry,
+                engine.calendar,
+                p.entry.carry,
+                source_hash=p.entry.source_hash,
+                symbol=p.instrument.symbol,
+                exit_at=deadline,
+            )
+        if w is None and p.entry.carry is not None:
+            issue = "STOCK_CARRY_MARKET_CLOSED"
+        elif (
             quote is None
             or quote.instrument != p.instrument
             or quote.source != limits.quote_source

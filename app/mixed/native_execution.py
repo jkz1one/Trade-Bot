@@ -52,7 +52,20 @@ def review(engine, db, proposal, quote, now, *, exclude=None):
     if proposal.action == "OPEN_LONG":
         if account.entry_blockers:
             raise ExecutionBlocked(";".join(account.entry_blockers))
-        if window is not None and proposal.exit_at > window.closes_at - timedelta(
+        if proposal.carry is not None:
+            from app.mixed.carry import review_entry
+
+            try:
+                review_entry(
+                    engine.policy.mixed_owner.stock_carry,
+                    engine.calendar,
+                    proposal,
+                    now,
+                    engine.policy.mixed_owner.stocks.max_receive_lag_seconds,
+                )
+            except ValueError as exc:
+                raise ExecutionBlocked(str(exc)) from exc
+        elif window is not None and proposal.exit_at > window.closes_at - timedelta(
             minutes=engine.policy.exit_cutoff_minutes
         ):
             raise ExecutionBlocked("STOCK_CARRY_NOT_ENROLLED")
@@ -153,6 +166,7 @@ def prepare(engine, source_key, proposal, quote, *, now, origin, close_quantity)
                         "approved_entry_debit": result.entry_debit,
                         "reserved_exit_fee": result.reserved_exit_fee,
                         "exit_at": proposal.exit_at,
+                        "carry": proposal.carry,
                         "original_invalidation": proposal.original_invalidation,
                         "original_target": proposal.original_target,
                         "family": proposal.family,

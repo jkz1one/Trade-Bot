@@ -54,6 +54,7 @@ def accept(venue, intent, now, deadline, parent_pid):
                     "original_invalidation",
                     "original_target",
                     "exit_at",
+                    "carry",
                     "thesis",
                 )
             )

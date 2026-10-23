@@ -1,5 +1,11 @@
 # Offline options development checks
 
+`test_mixed_stock_carry.py` verifies [original stock carry](MIXED_STOCK_CARRY.md)
+with native fixed children, exact calendar/catalyst/deadline binding, weekend
+restart, partial closes, independent protection and full daily costs. Run it with
+the mixed-owner/accounting/venue and native options regressions using the isolated
+noneditable-wheel procedure below.
+
 `test_option_scope_runtime.py` exercises the [continuous Scope runtime](OPTIONS_SCOPE_RUNTIME.md),
 including explicit packet/enrollment boundaries, native watch arming, decision slots,
 actual fills, independent nested-quote protection, paid fresh admission and retained

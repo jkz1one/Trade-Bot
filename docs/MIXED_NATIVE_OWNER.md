@@ -41,8 +41,9 @@ after native admission. Verification recomputes the original admission and binds
 its quantity, price, debit, close fees, source clocks, thesis, family, geometry and
 original deadlines. Dispatch requires fresh admission within the **original**
 approval window; refreshed inputs cannot extend it, increase the approved price or
-silently resize the order. Stock carry is not enrolled: an original exit beyond the
-owner's session protection cutoff is rejected rather than shortened.
+silently resize the order. Stock carry requires a separate [explicit enrollment](MIXED_STOCK_CARRY.md) and
+original calendar/catalyst terms. Without them, an exit beyond the owner's session
+protection cutoff is rejected rather than shortened.
 
 `assess_stock` and `protective_stock_tick` preserve original invalidation, target
 and time protection independently of entry halts or unknown model costs. A triggered
@@ -87,8 +88,8 @@ execution/model costs separately; complete mixed portable export is not yet enab
 
 1. Derive original Degen/Swing stock candidates and connect shared stock/options/
    Scope selection, retaining family, instrument, clocks and geometry. Bind original
-   stock carry horizons, overnight protection and costs wherever the settled source
-   requires them; this owner currently rejects stock carry.
+   stock carry terms to these source candidates; explicit native calendar horizons,
+   catalyst coverage, overnight protection and daily costs are now implemented.
 2. Bind full mixed entry and management model requests/results, every usage charge,
    original deadlines, fresh post-cost native admission and full-cost attribution.
 3. Connect explicit continuous mixed inputs, source collection, held protection,
