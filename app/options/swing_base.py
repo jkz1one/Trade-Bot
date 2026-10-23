@@ -100,7 +100,7 @@ def direction(bars):
 
 
 @exact
-def evaluate_base(seed):
+def evaluate_base(seed, *, bullish=None):
     """SignalFlow f9eaf2c: 15-session base, SMA ATR14, prior-volume20 and regime gates."""
     daily, hourly = seed.history.bars, seed.hourly_history
     if len(daily) < 55 or hourly is None:
@@ -119,7 +119,9 @@ def evaluate_base(seed):
     atr, average_atr = atrs[-2], sum(atrs[-16:-1]) / 15
     if atr <= 0 or average_atr <= 0 or any(b.volume <= 0 for b in daily[-21:]):
         raise ValueError("Observed positive ATR and volume required")
-    call = seed.instrument.contract.right == "CALL"
+    if bullish is not None and type(bullish) is not bool:
+        raise ValueError("Explicit source direction must be boolean")
+    call = seed.instrument.contract.right == "CALL" if bullish is None else bullish
     boundary = high if call else low
     width = (high - low) / ((high + low) / 2)
     compression = (high - low) / average_atr

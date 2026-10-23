@@ -1,5 +1,60 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Original stock sources and shared native selection: 2026-10-22 America/New_York
+
+Fresh GitHub/local state began at HEAD
+`8bf4c567e1a0855328f57eaf26ad1f0d68e91666`, tree
+`45fcb67a58189a5d36ac725010e08bcaead6a7ea`. PR #1 remained open/draft;
+main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`.
+
+The [stock source/selection contract](MIXED_STOCK_SELECTION.md) now derives native
+long-share Degen and Swing candidates, then selects once across stocks, native
+options and Scope using one create-only family/asset order. It uses the existing
+owner, cash, journal, account revision, admission, order lock and independent exits.
+Degen stock targets use the original completed signal close and scanner stop.
+Swing daily/base/MA/level families share complete original exchange-session sources
+without fabricating option identity. Original fixed targets and source-bound carry
+survive approval, actual fill, restart and full-cost outcome attribution.
+
+Original Swing roots lock by session/symbol. Completed invalidation/T1 consumption
+and fresh executable bid observations retire a family permanently for that root;
+rebound, restart or stale current entry evidence cannot erase observed retirement.
+Ask-only targets do not retire it. Selection retains the full original admission,
+source frame, cash history, account and revision. Native preparation and stored
+verification rebuild the selected candidate; dispatch rechecks fresh entitlement,
+break/chase and native admission. Selected price/quantity and approval expiry are
+ceilings, so delayed preparation cannot extend the original decision window.
+
+Held stock cycles use independent native protection without new candidate inputs.
+Missing quotes and pending orders keep explicit blockers. New source/terminal tables
+participate in the existing journal restore fence. Old coordinators, tapes and
+runtime envelopes reject stock inputs they cannot consume. Mixed paid/runtime/replay
+guards stay intact. Old absent-field serialization and option source arithmetic are
+preserved.
+
+Validation: **730 distinct final-wheel installed checks**, including **44 new
+selection cases**. Completed runs: 44 selection (96.36s), 102 coordinator (86.19s), 81 owner/carry (156.53s), 335 native execution (140.58s), 140 control/runtime (77.38s), 28 source arithmetic (3.42s).
+Earlier diagnostic runs are excluded; no overlapping cases are double-counted.
+All tests use copied sources outside the checkout, a noneditable installed wheel,
+Python `-I`, warnings as errors and disabled plugin autoload; native runs are serial.
+
+Final wheel SHA-256:
+`0f8bfac6a435a61494d21540202bea6b9ad83200c064160ef27083f57b5633b6`.
+All 229 application/template files match source, wheel and installed bytes;
+216 parent application/template files remain unchanged. Thirteen representative
+contracts, including the old frame without stock inputs, serialize byte-for-byte
+identically against the separately installed parent wheel. Ruff/format, dependency
+consistency, local documentation links and whitespace checks pass. Proof is retained
+in `../stock-selection-proof/`; the wheel is in `../stock-selection-wheels/`.
+
+
+Continuation: finish complete mixed paid entry/management requests/results,
+usage charges, fresh post-cost native admission and attribution; then explicit
+continuous mixed source/session/recovery inputs; then common tapes with four
+independent native A/B/C/D replay/export owners. These are the three remaining
+plumbing tracks. Final UI/visual and authentic provider/model/host/PAPER acceptance
+follow plumbing. Dependencies, main and deployment are unchanged; LIVE stays disabled.
+
 ## Original native stock carry: 2026-10-22 America/New_York
 
 Fresh GitHub/local state began at HEAD

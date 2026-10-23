@@ -160,6 +160,12 @@ class _RuntimeEnvelope(OptionRecord):
     recorded_at: datetime
     frame: DegenFrame
 
+    @model_validator(mode="after")
+    def no_unenrolled_stocks(self):
+        if self.frame.stocks:
+            raise ValueError("Stock inputs require separate mixed runtime enrollment")
+        return self
+
 
 class RuntimePacket(_RuntimeEnvelope):
     version: Literal["option-normalized-fixture-v1"] = "option-normalized-fixture-v1"

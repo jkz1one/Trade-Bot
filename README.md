@@ -16,9 +16,11 @@ authentic data/model validation pass. Offline test tools remain available during
 The [native mixed owner](docs/MIXED_NATIVE_OWNER.md) now binds stock and option
 fixtures to one journal, cash balance, order lock, protection and full-cost loss
 history. Explicit [original stock carry](docs/MIXED_STOCK_CARRY.md) now retains
-calendar horizons, catalyst evidence, protection and full daily costs. Stock
-candidate/model contracts, runtime and independent replay/export
-remain before that acceptance pass.
+calendar horizons, catalyst evidence, protection and full daily costs.
+[Original stock sources and shared selection](docs/MIXED_STOCK_SELECTION.md) now
+connect Degen/Swing shares to one native stock/options/Scope choice, original
+source retirement and attribution. Paid mixed model contracts, runtime and
+independent replay/export remain before that acceptance pass.
 New [stop-only target milestones](docs/OPTIONS_TARGET_EXITS.md#stop-only-target-milestones)
 let protection tighten at an objective without selling a contract or inventing proceeds.
 

@@ -81,6 +81,8 @@ class TapeSeal(OptionRecord):
 
 def _validate_event(header, event):
     at, frame = event.recorded_at, event.frame
+    if frame.stocks:
+        raise ValueError("Stock frames require separate mixed tape enrollment")
     if not header.opens_at <= at <= header.closes_at + timedelta(seconds=5):
         raise ValueError("Observation outside recorded session")
     if event.kind == "CYCLE" and at >= header.closes_at:

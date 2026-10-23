@@ -12,6 +12,7 @@ from app.domain.models import utc_now
 from app.execution.engine import ExecutionBlocked
 from app.execution.judgment import JudgmentLimits
 from app.execution.runtime import model_key
+from app.mixed.sources import StockCycleInput, StockSelectionPolicy
 from app.options import judgment
 from app.options.degen import DegenHistory, DegenPolicy, scan_degen
 from app.options.engine import EntryModelBlocked, OptionExecution, clock, fingerprint
@@ -31,6 +32,9 @@ from app.options.swing_batch import SwingBatchInput
 
 
 class DegenFrame(OptionRecord):
+    stocks: tuple[StockCycleInput, ...] = Field(
+        default=(), max_length=2, exclude_if=lambda v: not v
+    )
     histories: tuple[DegenHistory, ...] = Field(default=(), max_length=2)
     inventories: tuple[OptionInventory, ...] = Field(default=(), max_length=2)
     quotes: tuple[OptionQuote, ...] = Field(default=(), max_length=8)
@@ -60,6 +64,7 @@ class DegenCoordinator:
         scope_policy=None,
         scope_replay=None,
         scope_refresh=None,
+        stock_policy=None,
     ):
         if type(engine) is not OptionExecution or getattr(engine, "_degen_owner", None) is not None:
             raise ValueError("One active built-in options owner is required")
@@ -75,6 +80,34 @@ class DegenCoordinator:
             )
         ):
             raise ValueError("Mixed paid/replay contracts are not enrolled")
+        self.stock_policy = (
+            StockSelectionPolicy.model_validate(stock_policy.model_dump(warnings=False))
+            if stock_policy is not None
+            else None
+        )
+        if self.stock_policy is not None:
+            if engine.policy.mixed_owner is None or tuple(
+                i.symbol for i in self.stock_policy.instruments
+            ) != tuple(policy.symbols):
+                raise ValueError("Matching native mixed owner and exact stock universe required")
+            if any(
+                i.provider != engine.policy.mixed_owner.stocks.provider
+                for i in self.stock_policy.instruments
+            ):
+                raise ValueError("Stock instrument provider must match the native owner")
+            if (
+                scope_policy is not None
+                and self.stock_policy.family_priority != scope_policy.family_priority
+            ):
+                raise ValueError(
+                    "One original family priority across stocks/options/Scope required"
+                )
+            if (
+                swing_policy is not None
+                and tuple(f for f in self.stock_policy.family_priority if f != "SCOPE")
+                != swing_policy.family_priority
+            ):
+                raise ValueError("One original Degen/Swing family priority required")
         self.engine, self.clock = engine, clock
         self.scope_policy = (
             SharedScopePolicy.model_validate(scope_policy.model_dump(warnings=False))
@@ -274,6 +307,13 @@ class DegenCoordinator:
                     ).fetchone()
                 ):
                     raise ExecutionBlocked("NEW_UNTRADED_STRATEGY_POPULATION_REQUIRED")
+                if (
+                    engine.policy.mixed_owner is not None
+                    and db.execute(
+                        "SELECT 1 FROM execution_stock_orders UNION ALL SELECT 1 FROM execution_stock_decisions LIMIT 1"
+                    ).fetchone()
+                ):
+                    raise ExecutionBlocked("NEW_UNTRADED_STOCK_STRATEGY_REQUIRED")
                 account = engine._account(db, self.now())
                 if (
                     account.position is not None
@@ -293,6 +333,10 @@ class DegenCoordinator:
                 engine.journal.event(db, self.now(), "DEGEN_STRATEGY_ENROLLED", json.loads(frozen))
             elif create or row[0] != frozen:
                 raise ExecutionBlocked("FROZEN_DEGEN_STRATEGY_CANNOT_CHANGE_OR_REENROLL")
+            if self.stock_policy is not None:
+                from app.mixed.selection import tables
+
+                tables(db, create=create)
             if self.swing_policy is not None:
                 db.execute(
                     "CREATE TABLE IF NOT EXISTS execution_option_swing_seeds("
@@ -338,6 +382,8 @@ class DegenCoordinator:
             "setup": self.policy.model_dump(mode="json"),
             "selection": self.selection.model_dump(mode="json"),
         }
+        if self.stock_policy is not None:
+            config["stocks"] = self.stock_policy.model_dump(mode="json")
         if self.scope_policy is not None:
             config["scope"] = self.scope_policy.model_dump(mode="json")
         if self.swing_policy is not None:
@@ -699,6 +745,8 @@ class DegenCoordinator:
 
     async def cycle(self, frame):
         frame = DegenFrame.model_validate(frame.model_dump(warnings=False))
+        if frame.stocks and self.stock_policy is None:
+            raise ValueError("Stock frames require explicit mixed selection enrollment")
         if frame.swing_batches and (
             self.swing_policy is None or self.swing_policy.family_batch is None
         ):
@@ -749,6 +797,30 @@ class DegenCoordinator:
             with self.engine.journal.read() as db:
                 ledger = self._bound(db)
                 held = self._held_instrument(db, ledger)
+            if self.stock_policy is not None:
+                from app.mixed.native_store import position as stock_position
+                from app.mixed.native_store import unresolved as stock_unresolved
+
+                with self.engine.journal.read() as db:
+                    stock = stock_position(self.engine, db)
+                    pending_stock = stock_unresolved(db)
+                if stock is not None:
+                    supplied = [
+                        x.quote for x in frame.stocks if x.quote.instrument == stock.instrument
+                    ]
+                    quote = supplied[0] if len(supplied) == 1 else None
+                    managed = await self.engine.protective_stock_tick(quote, now=at)
+                    return self._finish(
+                        key,
+                        {
+                            "status": "HELD",
+                            "selected_asset": "STOCK",
+                            "management": managed,
+                            "entry_allowed": False,
+                        },
+                    )
+                if pending_stock:
+                    return self._finish(key, {"status": "HOLD", "reason": "STOCK_ORDER_UNRESOLVED"})
             if ledger.position:
                 # Exact owned identity comes from the journal, never a current chain.
                 if (
@@ -873,6 +945,10 @@ class DegenCoordinator:
                     },
                 )
             shared_choice = None
+            if self.stock_policy is not None:
+                from app.mixed.selection import collect as collect_stocks
+
+                collect_stocks(self, key, frame, evidence)
             if self.scope_policy is not None:
                 from app.options.scope_arbitration import collect, execute_scope
 
@@ -892,6 +968,18 @@ class DegenCoordinator:
                         underlyings,
                         evidence,
                     )
+                if (
+                    self.stock_policy is None
+                    and shared_choice
+                    and shared_choice["family"] == "SCOPE"
+                ):
+                    return await execute_scope(self, key, frame, evidence)
+            if self.stock_policy is not None:
+                from app.mixed.selection import execute_stock, select
+
+                shared_choice = select(self, key, evidence)
+                if shared_choice and shared_choice["asset"] == "STOCK":
+                    return await execute_stock(self, key, frame, evidence, shared_choice)
                 if shared_choice and shared_choice["family"] == "SCOPE":
                     return await execute_scope(self, key, frame, evidence)
             if not candidates:
@@ -1002,7 +1090,9 @@ class DegenCoordinator:
         with self.engine.journal.read() as db:
             self._bound(db)
             return {
-                "mode": "OPTIONS_PAPER_FIXTURE",
+                "mode": "MIXED_PAPER_FIXTURE"
+                if self.stock_policy is not None
+                else "OPTIONS_PAPER_FIXTURE",
                 "live_enabled": False,
                 "strategy": json.loads(self._frozen),
                 "cycles": [

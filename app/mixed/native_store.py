@@ -51,7 +51,7 @@ for own, other in (("stock", "orders"), ("option", "stock_orders")):
 def enroll(engine, db, now, *, create):
     if engine.policy.mixed_owner is None:
         if db.execute(
-            "SELECT 1 FROM sqlite_master WHERE name='execution_mixed_control'"
+            "SELECT 1 FROM sqlite_master WHERE name IN ('execution_mixed_control','execution_mixed_stock_sources','execution_mixed_stock_terminals')"
         ).fetchone():
             raise ExecutionBlocked("MIXED_OWNER_NOT_ENROLLED")
         return
@@ -323,6 +323,25 @@ def verify_order(db, row):
         if reviewed.outcome == "APPROVED"
         else reviewed
     )
+    if intent.side == "BUY":
+        from app.mixed.selection import guard_stock
+
+        ceiling = guard_stock(
+            None, db, intent.source_key, proposal, quote, intent.prepared_at, original=True
+        )
+        if ceiling is not None and reviewed.outcome == "APPROVED":
+            if reviewed.quantity > Decimal(ceiling["quantity"]) or reviewed.limit_price > Decimal(
+                ceiling["limit_price"]
+            ):
+                raise ValueError("STOCK_ORIGINAL_SELECTION_CEILING_EXCEEDED")
+            reviewed = reviewed.model_copy(
+                update={
+                    "approval_expires_at": min(
+                        reviewed.approval_expires_at,
+                        clock(datetime.fromisoformat(ceiling["approval_expires_at"])),
+                    )
+                }
+            )
     if (
         reviewed.outcome != "APPROVED"
         or reviewed.model_dump(mode="json") != approval["admission"]

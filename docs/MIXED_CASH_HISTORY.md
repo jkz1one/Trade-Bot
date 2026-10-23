@@ -101,21 +101,18 @@ The [native mixed owner](MIXED_NATIVE_OWNER.md) now connects the common ledger a
 [shared fixture](MIXED_VENUE.md) to one journal, restore fence, cross-instrument order
 lock, preparation/attempts, complete reconciliation, independent stock protection,
 partial exits, restart, signed recovery and full-cost global/family loss history.
-Remaining:
 
-1. Derive native stock candidates from original Degen/Swing sources and join the
-   existing option/Scope selector. Retain exact family/instrument lineage, fixed
-   original geometry and source clocks. Bind the [explicit stock carry](MIXED_STOCK_CARRY.md)
-   terms to those sources; native calendar/catalyst/protection and daily-cost
-   contracts are now implemented. No fake option contracts or bearish shorts.
-2. Bind complete mixed entry/management model contracts, fresh post-cost native
+[Original stock source derivation and shared selection](MIXED_STOCK_SELECTION.md)
+now bind native candidates, sticky retirement, carry and attribution. Remaining:
+
+1. Bind complete mixed entry/management model contracts, fresh post-cost native
    admission and paid attribution into the common global/family loss history.
    Preserve original deadlines and every
    usage charge, rejected decision, partial close and mandatory exit.
-3. Connect explicit mixed runtime inputs, source collection, continuous sessions,
+2. Connect explicit mixed runtime inputs, source collection, continuous sessions,
    held protection, settlement and recovery. Unsupported inputs must reject at the
    enrollment boundary; old frozen populations remain unchanged.
-4. Connect common mixed market tapes to four independent native A/B/C/D accounts and
+3. Connect common mixed market tapes to four independent native A/B/C/D accounts and
    portable full-cost replay/export, including all entry/management charges,
    execution fees, operating/overnight allocations and unknown costs. Pure account
    isolation tests here are not native four-arm mixed replay acceptance.

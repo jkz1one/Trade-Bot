@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.103. Adopted product direction and working delivery contract, 2026-10-23 UTC.
+Version 1.104. Adopted product direction and working delivery contract, 2026-10-23 UTC.
 [Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now connects
 choice-only B, matched independent native accounts and portable full-cost export.
 [Continuous Scope runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now connect explicit
@@ -32,13 +32,16 @@ stock admission and an existing option-account projection. The separately enroll
 stock preparation/attempts, complete reconciliation, independent protection and
 full-cost global/family outcomes. [Original stock carry](MIXED_STOCK_CARRY.md) now binds explicit calendar
 horizons, original catalyst coverage, DAY entry orders, retained protection and
-full daily allocations. Stock candidate/model contracts, continuous
-runtime and independent replay/export remain before final UI and authentic PAPER testing.
+full daily allocations. [Original stock sources and shared selection](MIXED_STOCK_SELECTION.md)
+now bind completed Degen/Swing evidence, original source locks/retirement, native
+stock/options/Scope competition and full-cost attribution. Paid mixed model
+contracts, continuous runtime and independent replay/export remain before final
+UI and authentic PAPER testing.
 [Shared durable mixed fixture](MIXED_VENUE.md) now connects actual share and option
 orders to one venue balance, atomic order lock, event sequence and bounded fixed
 child. Original terms, partial fills and explicit settlement persist across restart.
 Legacy owners still reject this enrollment. The new native mixed owner binds both
-asset paths explicitly; mixed selection, paid contracts, continuous runtime and
+asset paths explicitly; paid mixed contracts, continuous runtime and
 independent replay/export remain.
 [Shared Scope entry AI](OPTIONS_SCOPE_AI.md) now binds one paid Degen/Swing/Scope
 decision to native approval, fixed Scope terms, fresh post-cost admission and stored
@@ -445,7 +448,7 @@ enrolled native PAPER execution/loss integration for responsive/balanced one-to-
 contract plans. Its research watches remain order-free unless enrolled under the
 native contract. Convexity and missing-T3 four-contract plans remain blocked. Mixed
 stock/options ownership now has a separately enrolled [native fixture owner](MIXED_NATIVE_OWNER.md);
-stock selection, paid mixed contracts, continuous runtime and independent mixed
+paid mixed contracts, continuous runtime and independent mixed
 replay/export remain open. New
 [deterministic Scope/Degen/Swing arbitration](OPTIONS_SCOPE_ARBITRATION.md) now selects
 from bound native candidates in one owner,
@@ -458,7 +461,7 @@ A/B/C/D trading replay/export and continuous watch/runtime inputs now have fixtu
 proof. Combined Scope/Swing carry now has explicit native entry/management/runtime
 and stored export contracts. Session-close Scope series now preserve independent
 accounts, frozen scripts, closing evidence and full costs. Combined carry replay/export now has a separate frozen series contract;
-remaining mixed selection/model/runtime/replay plumbing remains open; existing
+remaining mixed model/runtime/replay plumbing remains open; existing
 cohorts stay frozen.
 
 Swing retains completed higher-timeframe bars, exact contract locking, next actual

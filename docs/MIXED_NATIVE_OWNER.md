@@ -3,7 +3,9 @@
 The explicit `mixed-native-owner-v1` policy now binds actual long shares and native
 options to the **same `OptionExecution` owner**, journal, original capital, revision,
 restore fence and bounded fixture child. This is offline native execution plumbing.
-It does not enroll a mixed strategy, paid model, continuous runtime or A/B/C/D replay.
+A separate [stock selection enrollment](MIXED_STOCK_SELECTION.md) now binds
+original source candidates and one shared stock/options/Scope choice. Paid mixed
+models, continuous runtime and A/B/C/D replay remain unenrolled.
 Those remaining contracts must be connected before authentic PAPER acceptance.
 
 ## Create-only enrollment and common evidence
@@ -86,15 +88,15 @@ execution/model costs separately; complete mixed portable export is not yet enab
 
 ## Remaining plumbing
 
-1. Derive original Degen/Swing stock candidates and connect shared stock/options/
-   Scope selection, retaining family, instrument, clocks and geometry. Bind original
-   stock carry terms to these source candidates; explicit native calendar horizons,
-   catalyst coverage, overnight protection and daily costs are now implemented.
-2. Bind full mixed entry and management model requests/results, every usage charge,
+Original stock source derivation, shared stock/options/Scope selection, immutable
+source retirement and source-bound carry are now connected through the separate
+[selection contract](MIXED_STOCK_SELECTION.md). Remaining:
+
+1. Bind full mixed entry and management model requests/results, every usage charge,
    original deadlines, fresh post-cost native admission and full-cost attribution.
-3. Connect explicit continuous mixed inputs, source collection, held protection,
+2. Connect explicit continuous mixed inputs, source collection, held protection,
    settlement and recovery across sessions.
-4. Connect common mixed tapes to independent native A/B/C/D owners and portable
+3. Connect common mixed tapes to independent native A/B/C/D owners and portable
    full-cost replay/export. Keep their cash, reservations, attempts and loss states
    separate, including operating/overnight costs and unknown charges.
 
@@ -114,7 +116,7 @@ partial supersession, restore fencing, signed recovery and original Scope/Swing
 terms. The [testing procedure](OPTIONS_TESTING.md) and latest [status entry](SLICE2_STATUS.md)
 record exact completed final-wheel cases, including legacy regressions.
 
-Continue with stock candidate/shared selection contracts; do not remove the paid,
+Continue with full mixed paid entry/management contracts; do not remove the paid,
 runtime or export guards to make old adapters accept mixed inputs. Start with
 `app/mixed/native_execution.py`, `native_store.py`, `native_protection.py`,
 `native_outcome.py` and the existing Degen/Swing selection/source contracts. Preserve

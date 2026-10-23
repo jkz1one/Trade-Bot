@@ -50,12 +50,14 @@ def confirmations(bars, call):
 
 
 @exact
-def evaluate_ma(seed):
+def evaluate_ma(seed, *, bullish=None):
     bars, hourly, period = seed.history.bars, seed.hourly_history, seed.ma_period
     if len(bars) < 56 or hourly is None or period not in (8, 21, 50):
         raise ValueError("Complete daily/hourly evidence and locked MA variant required")
     previous, current = bars[-2:]
-    call = seed.instrument.contract.right == "CALL"
+    if bullish is not None and type(bullish) is not bool:
+        raise ValueError("Explicit source direction must be boolean")
+    call = seed.instrument.contract.right == "CALL" if bullish is None else bullish
     expected, opposed = ("bullish", "bearish") if call else ("bearish", "bullish")
     values = average_series(bars, period)
     ma = values[-1]

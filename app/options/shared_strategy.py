@@ -84,6 +84,9 @@ def lock_seeds(c, items):
 
 def review_shared_entry(engine, db, key, proposal, quote, underlying, now):
     """Recheck joint-family membership and Swing conditions at preparation and dispatch."""
+    from app.mixed.selection import guard_option
+
+    guard_option(db, key, proposal, quote)
     from app.options.governor import _fresh
     from app.options.selection import SwingCandidate, parse_candidate
     from app.options.swing import SwingPolicy, SwingScan

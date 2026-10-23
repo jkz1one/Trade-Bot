@@ -192,6 +192,8 @@ def stock_outcome(engine, db, entry_id):
                 times.append(f.occurred_at)
     closed = terminal and bought > 0 and bought == sold
     net = proceeds - cost - fees if closed else None
+    from app.mixed.selection import entry_lineage
+
     return costed(
         db,
         engine.policy,
@@ -204,6 +206,7 @@ def stock_outcome(engine, db, entry_id):
                 "source_hash": entry.source_hash,
                 "source_at": entry.source_at.isoformat(),
                 "source_valid_until": entry.source_valid_until.isoformat(),
+                **entry_lineage(db, entry),
             },
             "original_entry": entry.model_dump(mode="json"),
             "closed_at": max(times).isoformat() if closed else None,

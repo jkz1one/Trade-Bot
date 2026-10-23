@@ -51,12 +51,14 @@ def original_level(seed, calendar):
 
 
 @exact
-def evaluate_level(seed):
+def evaluate_level(seed, *, bullish=None):
     if len(seed.history.bars) < 56:
         raise ValueError("Complete daily regime and source periods required")
     price, start, end = original_level(seed, XNYSCalendar())
     bars, key = seed.history.bars, seed.level_key
-    call = seed.instrument.contract.right == "CALL"
+    if bullish is not None and type(bullish) is not bool:
+        raise ValueError("Explicit source direction must be boolean")
+    call = seed.instrument.contract.right == "CALL" if bullish is None else bullish
     expected = "bullish" if call else "bearish"
     dd = direction(bars)
     direction_ok = dd == expected if key == "weekly_open" else key.endswith("high") == call

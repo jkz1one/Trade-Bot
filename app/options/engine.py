@@ -113,6 +113,8 @@ class OptionJournal(ExecutionJournal):
     extra_tables = frozenset(
         {
             "execution_mixed_control",
+            "execution_mixed_stock_sources",
+            "execution_mixed_stock_terminals",
             "execution_stock_orders",
             "execution_stock_fills",
             "execution_stock_decisions",

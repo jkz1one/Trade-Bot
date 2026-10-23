@@ -1,5 +1,10 @@
 # Offline options development checks
 
+`test_mixed_selection.py` verifies [original stock sources and shared selection](MIXED_STOCK_SELECTION.md),
+including native stock/option/Scope choices, all source families, retirement/restart,
+carry binding, stored attribution and original admission deadlines. Run with the
+source arithmetic, coordinator, native mixed owner and option regressions below.
+
 `test_mixed_stock_carry.py` verifies [original stock carry](MIXED_STOCK_CARRY.md)
 with native fixed children, exact calendar/catalyst/deadline binding, weekend
 restart, partial closes, independent protection and full daily costs. Run it with

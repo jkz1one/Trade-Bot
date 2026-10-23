@@ -3,7 +3,8 @@
 An explicit `MixedOwnerPolicy.stock_carry` enrollment now permits original bounded
 Swing long-share horizons on the [same native owner](MIXED_NATIVE_OWNER.md). It
 adds no account, option contract, short stock, provider call or LIVE authority.
-Source-derived stock candidates and shared selection remain the next plumbing step.
+[Source-derived stock candidates and shared selection](MIXED_STOCK_SELECTION.md)
+now bind these terms to original completed evidence and one native choice.
 
 `mixed-stock-carry-v1` freezes maximum trading sessions, maximum calendar days,
 final exit minutes before the actual close, catalyst source and catalyst freshness.
@@ -49,5 +50,5 @@ those full contracts are implemented.
 `test_mixed_stock_carry.py` verifies native fixed-child entry/exit, original
 calendar/catalyst/deadline rejection, weekend restart, full daily costs, original
 protection and partial closes. See the latest [status](SLICE2_STATUS.md) for the
-completed isolated-wheel proof. Continue with original stock candidate/shared
-selection contracts, then paid contracts, runtime and independent replay/export.
+completed isolated-wheel proof. Original stock source selection is now connected; continue with complete paid
+contracts, runtime and independent replay/export.

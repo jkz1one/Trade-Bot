@@ -2,7 +2,7 @@
 
 import json
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -136,7 +136,28 @@ def prepare(engine, source_key, proposal, quote, *, now, origin, close_quantity)
         output = {"status": "REJECTED", "client_id": None}
         result = None
         try:
+            from app.mixed.selection import guard_stock
+
+            ceiling = guard_stock(engine, db, source_key, proposal, quote, now)
             result, account, w = review(engine, db, proposal, quote, now)
+            if (
+                ceiling is not None
+                and result.outcome == "APPROVED"
+                and (
+                    result.quantity > Decimal(ceiling["quantity"])
+                    or result.limit_price > Decimal(ceiling["limit_price"])
+                )
+            ):
+                raise ExecutionBlocked("STOCK_ORIGINAL_SELECTION_CEILING_EXCEEDED")
+            if ceiling is not None and result.outcome == "APPROVED":
+                result = result.model_copy(
+                    update={
+                        "approval_expires_at": min(
+                            result.approval_expires_at,
+                            clock(datetime.fromisoformat(ceiling["approval_expires_at"])),
+                        )
+                    }
+                )
             output["admission"] = result.model_dump(mode="json")
             if result.outcome == "HOLD":
                 output["status"] = "HOLD"
@@ -252,6 +273,9 @@ def begin(engine, client_id, quote, now):
             if not intent.prepared_at <= now < intent.approval_expires_at:
                 raise ExecutionBlocked("STOCK_ORIGINAL_APPROVAL_EXPIRED")
             proposal = StockProposal.model_validate(approval["inputs"]["proposal"])
+            from app.mixed.selection import guard_stock
+
+            guard_stock(engine, db, intent.source_key, proposal, quote, now)
             result, account, _ = review(engine, db, proposal, quote, now, exclude=client_id)
             if result.outcome != "APPROVED" or result.quantity < intent.quantity:
                 raise ExecutionBlocked("STOCK_FRESH_ADMISSION_REQUIRED")
