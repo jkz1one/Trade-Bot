@@ -15,12 +15,17 @@ from fastapi.templating import Jinja2Templates
 
 from app.domain.models import utc_now
 from app.options.observer import OptionObserver
+from app.web.mixed_view import display_time, evidence_id, family_of, mixed_view
 from app.web.trade_rail import trade_rail
 
 basic = HTTPBasic(auto_error=False)
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 templates.env.globals["trade_rail"] = trade_rail
 templates.env.filters["dollars"] = lambda value: format(Decimal(value), ",.2f")
+templates.env.filters["display_time"] = display_time
+templates.env.filters["evidence_id"] = evidence_id
+templates.env.globals["family_of"] = family_of
+templates.env.globals["mixed_view"] = mixed_view
 
 
 def password(path):
@@ -108,7 +113,8 @@ def create_options_app(
     @app.get("/desk.js", dependencies=[Depends(authenticate)])
     def desk_script():
         return Response(
-            templates.env.get_template("options_desk_script.html").render(),
+            templates.env.get_template("options_desk_script.html").render()
+            + (templates.env.get_template("mixed_desk_script.html").render() if mixed else ""),
             media_type="application/javascript",
         )
 
@@ -145,7 +151,8 @@ def create_options_app(
             "mixed_desk.html" if mixed else "options.html",
             {
                 "data": data,
-                "auto_refresh": refresh and before is None,
+                "view": mixed_view(data) if mixed else None,
+                "auto_refresh": refresh and before is None and review_at is None,
                 "family": family,
                 "comparison_chart": chart_data(
                     data.get("comparison", {"status": "NOT_CONFIGURED"})

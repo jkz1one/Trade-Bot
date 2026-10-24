@@ -16,6 +16,11 @@ state. A [paused offline review account](docs/MIXED_DASHBOARD_REVIEW.md) now has
 installed verification and a guarded host helper; populated visual review and
 authentic acceptance remain open.
 
+The [hybrid layout and host incident](docs/MIXED_HYBRID_DASHBOARD.md) now retain
+persistent equity/trade inspection and a read-only diagnostic for the failed
+77e69c6 host fixture. Preserve its partial directory; do not rerun preparation.
+The updated UI is not yet deployed or browser accepted.
+
 ## Current product direction
 
 The settled strategy/engine plumbing is connected through native offline fixtures.

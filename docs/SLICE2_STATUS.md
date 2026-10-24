@@ -1,6 +1,54 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
 
+## Hybrid stored desk and retained host timeout: 2026-10-24 America/New_York
+
+Fresh GitHub/local HEAD and tree matched `77e69c60d87336e608d17bf6427eddb00a575a33`
+and `0e81ffded0d18fc25b468c2374447edb0df0dece`; local checkout was clean.
+Main remained `b5359aaf396e692d2142d7e02908f1544e045ee6`, PR #1 open/draft.
+The supplied hybrid plan is now the presentation direction; its repeated attachment
+is byte-identical. [Contract and mapping](MIXED_HYBRID_DASHBOARD.md).
+
+The mixed UI now keeps equity and trade above five workspace tabs, with local
+trade tabs, visible native protection/deadline, record-based chart ranges and
+exact-value inspection, family order filters, exact-identity stage links and a
+bounded stored activity list. No strategy/engine/dependency change. Missing watch,
+continuous equity, mixed benchmark and performance cohort contracts remain explicit.
+Only nine application files differ from the parent, all under `app/web`.
+
+Final wheel SHA-256:
+`fa2ac508b0abcb24f5c2dc2cfb633862555458d7591f5391f3a55defb9fb500c`.
+**163 distinct installed Python cases passed in 90.31 seconds; 14 JavaScript
+unit cases passed.** Native tests ran serially from copied tests outside checkout,
+noneditable wheel, Python `-I`, warnings as errors, disabled plugin autoload and
+explicit anyio. All **254 application/template files** match source, wheel and
+installed bytes. Initial collection failed because copied test roots were missing
+from pythonpath; no cases ran and it is not included in the pass count. New tests
+verify selected-cycle isolation, chart gaps, incomplete-fill withholding, escaped
+text, empty-state layout, exact links and diagnostic population isolation.
+[Durable proof](MIXED_HYBRID_PROOF.json) retains exact test IDs and hashes.
+
+The operator's previous host preparation failed after native approval and one
+accepted simulated venue order. The parent recorded `FixtureProcessTimeout`,
+UNKNOWN and `UNCERTAIN_STOCK_ATTEMPT`; venue evidence retained OPEN, zero fills,
+submit_count 1 and $1,000 cash. Activation never ran. Worker-only import probes
+of 0.818/1.318 seconds do not isolate the original overrun. The partial
+`/var/lib/trade-bot-dashboard/ui-review-v1` remains preserved; no preparation retry,
+resume, timeout extension or approval change was made.
+
+A new snapshot-only diagnostic copies retained SQLite evidence into private
+temporary storage, measures full imports/first stdout/EOF/exit, and verifies source
+hashes unchanged. Its installed local probe passed with zero dispatches/fills;
+this is not host evidence. The old 77e69c6 image can run the diagnostic from the
+updated separate checkout without rebuilding, activating or changing services.
+
+Nine native/synthetic display states generated successfully; these are not browser
+screenshots. Actual browser review, populated host activation and the timeout's
+underlying cause remain pending. Original SHADOW deployment and password/Caddy
+configuration are untouched. LIVE, authenticated provider/model/broker calls and
+prospective PAPER activation remain disabled. Main stays unchanged and PR #1 draft.
+
+
 ## Paused native UI fixture and operator deployment receipt: 2026-10-24 UTC
 
 Fresh GitHub/local HEAD matched `cc990cf5dd1b29f14449b3e4b59b98a13b5ead4c`,

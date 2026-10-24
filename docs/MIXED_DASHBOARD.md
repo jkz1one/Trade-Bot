@@ -1,5 +1,8 @@
 # Stored mixed-account research desk
 
+See the [hybrid presentation contract](MIXED_HYBRID_DASHBOARD.md) for the current
+layout, stored-field mapping, retained host failure and pending browser acceptance.
+
 The explicit `--mixed` observer serves one native stock/options/Scope PAPER
 journal. It keeps balance history and the active trade card on one page, with
 local Protection, Decisions, Orders & fills, Costs and Diagnostics tabs. The

@@ -49,6 +49,16 @@ The operator then supplied a 2048×1152 authenticated desktop screenshot showing
 state was viewed; it does not establish populated, mobile, keyboard, contrast or
 interaction acceptance. No password was supplied to this workspace.
 
+## Preparation failure: inspect before any further activation
+
+The operator's 77e69c6 preparation failed on its first native dispatch. Retained
+journal and venue evidence show an accepted OPEN simulated order, zero fills,
+UNKNOWN parent status and `FixtureProcessTimeout`. The old reader still runs;
+activation never executed. **Do not rerun the commands below on the partial
+`ui-review-v1` directory.** Preserve it unchanged. See the
+[incident and snapshot-only diagnostic](MIXED_HYBRID_DASHBOARD.md#retained-host-failure).
+No engine deadline or approval safeguard has been weakened.
+
 ## Prepare and activate the populated fixture
 
 After fetching and checking out the published release in the separate dashboard

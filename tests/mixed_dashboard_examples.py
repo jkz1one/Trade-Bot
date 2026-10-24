@@ -73,6 +73,7 @@ def main():
     state.mkdir(mode=0o700)
     (args.output / "desk.js").write_text(
         templates.env.get_template("options_desk_script.html").render()
+        + templates.env.get_template("mixed_desk_script.html").render()
     )
     states = examples(state)
     for name, data in states.items():
