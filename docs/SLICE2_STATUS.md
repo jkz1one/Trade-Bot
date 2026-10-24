@@ -1,6 +1,52 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
 
+## Native fixture child import correction: 2026-10-24 UTC
+
+Fresh GitHub/local HEAD matched `b9b5134d9e525e619893dd37afb4a51d7868c2a8`,
+tree `89e2b5fe6224628f4eeb4d963b649fa45c9ccd6f`; main remained
+`b5359aaf396e692d2142d7e02908f1544e045ee6` and PR #1 was open/draft.
+
+The operator's snapshot-only diagnostic against the old 77e69c6 image preserved
+both source databases and confirmed exactly one OPEN venue order, zero fills and
+submit_count 1. Full worker/engine imports took 4.831 seconds, with Agents SDK
+imports accounting for 3.132 cumulative seconds. The snapshot child returned first
+stdout at 3.839 seconds, EOF at 4.440 seconds and completed at 4.540 seconds.
+This identifies avoidable import overhead close to the five-second native budget;
+the exact timing of the original failed attempt was not instrumented.
+
+Only one application file changes: the existing `runtime_lease` import moves from
+module initialization to `OptionExecution.open`. The owner still acquires the
+same lease before any enrollment/open. Fixed venue children now avoid loading
+`app.execution.runtime`/judgment/Agents while using existing engine helpers.
+No deadlines, approval/source clocks, intent terms, native admissions, fills,
+independent exits, uncertainty halts or full-cost evidence change. No dependency
+or strategy change. A fresh-interpreter regression fails on the old installed
+wheel and exercises actual snapshot, stock and option acceptance with model/runtime
+imports denied on the corrected wheel.
+
+The host helper accepts an explicit `ui-review-v2` destination. It requires the
+retained v1 directory and mounts it read-only during recovery preparation; it
+refuses any existing output directory. Activation still requires completed native
+fixture evidence, installed-source identity, private authentication and the same
+old dashboard image/rollback checks. No old attempt is resumed or replayed.
+[Recovery runbook](MIXED_DASHBOARD_REVIEW.md).
+
+**373 distinct installed Python cases passed in 188.54 seconds**, serially from
+copied tests outside checkout with noneditable wheel, Python `-I`, warnings as
+errors, plugin autoload disabled and explicit anyio. All **254 application/template
+files** match source, wheel and installed bytes. Wheel SHA-256:
+`bea1355ad9c06ee5541883491593c18d9bba6687182c95614bb4e4d48e59c414`.
+The local new historical fixture completed with three native simulated fill
+receipts; the corrected local snapshot probe completed in 0.624 seconds and
+preserved source bytes. This is not a host timing comparison or Docker acceptance.
+Exact test identities and hashes are retained in
+[correction proof](MIXED_CHILD_IMPORT_PROOF.json). Corrected Docker preparation,
+activation and populated browser/screenshots remain pending operator results.
+The original de5dd1c SHADOW worker/observer and running cc990cf dashboard remain
+unchanged by this workspace work. LIVE, authenticated provider/model/broker calls
+and prospective PAPER runtime remain disabled.
+
 ## Hybrid stored desk and retained host timeout: 2026-10-24 America/New_York
 
 Fresh GitHub/local HEAD and tree matched `77e69c60d87336e608d17bf6427eddb00a575a33`

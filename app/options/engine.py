@@ -16,7 +16,6 @@ from app.execution import economics, restore
 from app.execution.economics import UsageEvidence
 from app.execution.engine import ExecutionBlocked
 from app.execution.journal import ExecutionJournal
-from app.execution.runtime import runtime_lease
 from app.options.accounting import apply_fill, apply_receipt
 from app.options.governor import admit_option
 from app.options.lifecycle import (
@@ -205,6 +204,10 @@ class OptionExecution:
     @classmethod
     @contextmanager
     def open(cls, path, limits, policy, venue, *, now, create=False):
+        # Only the owner needs the runtime lease. Fixture children import clock
+        # and accounting helpers here; they must not load the model runtime.
+        from app.execution.runtime import runtime_lease
+
         path = Path(path).expanduser().absolute()
         path.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
         with runtime_lease(path):

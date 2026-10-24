@@ -9,12 +9,23 @@ review_release="$(git rev-parse HEAD)"
 review_image="trade-bot-dashboard:$review_release"
 review_data=/var/lib/trade-bot-dashboard
 review_backup=trade-bot-dashboard-before-review
+review_name="${2:-ui-review-v1}"
+case "$review_name" in
+  ui-review-v1|ui-review-v2) ;;
+  *) echo 'Review name must be ui-review-v1 or ui-review-v2.' >&2; exit 2 ;;
+esac
+review_preserved_mount=()
+if [[ "$review_name" == ui-review-v2 ]]; then
+  [[ -d "$review_data/ui-review-v1" && ! -L "$review_data/ui-review-v1" ]] || exit 1
+  # The failed first fixture remains inaccessible for writes, even during prepare.
+  review_preserved_mount=(--mount "type=bind,src=$review_data/ui-review-v1,dst=/data/ui-review-v1,readonly")
+fi
 [[ -d "$review_data" && ! -L "$review_data" ]] || exit 1
 [[ "$(stat -c '%u:%g:%a' "$review_data")" == 10001:10001:700 ]] || exit 1
 
 case "${1:-}" in
   prepare)
-    [[ ! -e "$review_data/ui-review-v1" ]] || {
+    [[ ! -e "$review_data/$review_name" ]] || {
       echo 'Review directory already exists. Do not overwrite or rerun it.' >&2; exit 1;
     }
     docker build -f Dockerfile.shadow --build-arg "TRADE_BOT_RELEASE=$review_release" \
@@ -23,13 +34,14 @@ case "${1:-}" in
       --cap-drop ALL --security-opt no-new-privileges:true --memory 512m --pids-limit 64 \
       --tmpfs /tmp:size=64m,mode=1777 \
       --mount "type=bind,src=$review_data,dst=/data" \
+      "${review_preserved_mount[@]}" \
       --mount "type=bind,src=$review_root,dst=/review-source,readonly" \
       -e TRADER_LIVE_ENABLED=false "$review_image" \
       python -I -W error /review-source/scripts/mixed-dashboard-review.py \
-      --output /data/ui-review-v1
+      --output "/data/$review_name"
     ;;
   activate)
-    [[ -f "$review_data/ui-review-v1/review.json" ]] || {
+    [[ -f "$review_data/$review_name/review.json" ]] || {
       echo 'Prepare must complete before activation.' >&2; exit 1;
     }
     # Verify installed application identity, native evidence and password locally.
@@ -40,8 +52,8 @@ case "${1:-}" in
       --mount "type=bind,src=$review_data,dst=/data,readonly" \
       --mount "type=bind,src=$review_root,dst=/review-source,readonly" \
       --mount type=bind,src=/etc/trade-bot/dashboard_password,dst=/run/secrets/dashboard_password,readonly \
-      "$review_image" python -I -W error - <<'PY'
-import hashlib, json
+      -e "REVIEW_NAME=$review_name" "$review_image" python -I -W error - <<'PY'
+import hashlib, json, os
 from datetime import datetime
 from pathlib import Path
 import app
@@ -54,8 +66,9 @@ for path in source.rglob('*'):
     if path.is_file() and '__pycache__' not in path.parts:
         assert path.read_bytes() == (installed / path.relative_to(source)).read_bytes(), path.name
         count += 1
-manifest = json.loads(Path('/data/ui-review-v1/review.json').read_text())
-journal = Path('/data/ui-review-v1/options.db')
+review = Path('/data') / os.environ['REVIEW_NAME']
+manifest = json.loads((review / 'review.json').read_text())
+journal = review / 'options.db'
 assert hashlib.sha256(journal.read_bytes()).hexdigest() == manifest['journal_sha256']
 assert hashlib.sha256(Path('/review-source/examples/mixed-dashboard-review.json').read_bytes()).hexdigest() == manifest['seed_sha256']
 assert manifest['population_id'] == 'ui-review-stock-20261009'
@@ -92,7 +105,7 @@ PY
       --tmpfs /tmp:size=32m,mode=1777 \
       --log-opt max-size=10m --log-opt max-file=3 \
       -p 127.0.0.1:8790:8790 \
-      --mount "type=bind,src=$review_data/ui-review-v1,dst=/data,readonly" \
+      --mount "type=bind,src=$review_data/$review_name,dst=/data,readonly" \
       --mount type=bind,src=/etc/trade-bot/dashboard_password,dst=/run/secrets/dashboard_password,readonly \
       -e TRADER_LIVE_ENABLED=false "$review_image" \
       python -I -c 'import uvicorn; from app.web.options import create_options_app; app=create_options_app("/data/options.db", "ui-review-stock-20261009", "/run/secrets/dashboard_password", mixed=True, review_at="2026-10-09T15:00:06+00:00"); uvicorn.run(app, host="0.0.0.0", port=8790, access_log=False, log_level="warning")'
@@ -120,5 +133,5 @@ PY
     echo 'Review active at https://signalflow.duckdns.org/ with the existing login.'
     echo 'No PAPER runtime, collector or model worker was started for this review.'
     ;;
-  *) echo 'Usage: bash scripts/dashboard-review-host.sh prepare|activate' >&2; exit 2 ;;
+  *) echo 'Usage: bash scripts/dashboard-review-host.sh prepare|activate [ui-review-v1|ui-review-v2]' >&2; exit 2 ;;
 esac

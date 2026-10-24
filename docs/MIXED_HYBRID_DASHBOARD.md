@@ -94,9 +94,30 @@ docker run --rm -i --network none --init --read-only \
   python -I -W error /review-source/scripts/dashboard-review-diagnose.py --source /evidence
 ```
 
-Fetch the diagnostic revision into the separate dashboard checkout before running
-this command. It does not build, activate, restart or modify any service. Further
-host evidence is required before choosing a correction. The original deployed
+The operator ran this command from b9b5134 against the old installed image.
+The full import completed in **4.831 seconds**; importing `agents` alone accounted
+for 3.132 seconds cumulatively. The read-only child produced first stdout at
+3.839 seconds, EOF at 4.440 seconds and completed at 4.540 seconds. It confirmed
+one accepted OPEN order with zero fills, and original bytes remained unchanged.
+No dispatch or fill was performed. These measurements identify a substantial
+avoidable import cost close to the five-second budget. They do not recover the
+exact duration or scheduling of the original failed dispatch.
+
+The import path is `app.options.engine` → `app.execution.runtime` →
+`app.execution.judgment` → `agents`. Only `OptionExecution.open` needs the runtime
+lease, so that import now occurs inside the owner context entry. Fixture children
+can use the existing clock/accounting helpers without initializing the model
+runtime. The owner still takes the identical lease before enrollment or opening
+state; process cleanup, timeouts, source/approval clocks, admissions, accounting
+and uncertain-attempt halts are unchanged. A fresh-interpreter regression denies
+model/runtime imports while exercising real snapshot, stock acceptance and option
+acceptance protocols. It failed on the previous installed wheel.
+
+Recovery uses a new explicit `ui-review-v2` directory, never a resume or replay of
+the failed account. See [operator steps](MIXED_DASHBOARD_REVIEW.md#prepare-and-activate-the-populated-fixture).
+The helper refuses existing output and additionally mounts the retained v1
+read-only during v2 preparation. A successful new native fixture on the host is
+still required before activation; local tests are not Docker host acceptance. The original deployed
 experiment, existing dashboard/password/Caddy route, main and draft PR remain
 unchanged by this work. LIVE and authenticated provider/model/broker calls remain
 disabled; no prospective PAPER runtime is authorized.

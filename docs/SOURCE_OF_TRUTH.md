@@ -1,14 +1,18 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.112. Adopted product direction and working delivery contract, 2026-10-24 UTC.
+Version 1.113. Adopted product direction and working delivery contract, 2026-10-24 UTC.
 The [hybrid dashboard](MIXED_HYBRID_DASHBOARD.md) now implements the supplied
 layout with stored-only equity/trade panels, local inspection tabs, record ranges,
 exact-identity stage links and bounded activity. Its installed verification and
 remaining projections/browser acceptance are separate from host deployment.
 The operator's 77e69c6 preparation failed after one simulated venue acceptance with
 zero fills; the journal retained UNKNOWN and FixtureProcessTimeout. Preserve the
-partial fixture. Native deadlines/approvals are unchanged; host timing diagnosis
-and populated activation remain open.
+partial fixture. Subsequent host probes exposed an avoidable Agents SDK import
+near the native deadline (4.831-second imports; 4.540-second snapshot child).
+The identical runtime lease is now imported only on owner entry. Native deadlines,
+approvals and uncertainty handling are unchanged. Explicit v2 recovery preserves
+v1 read-only; corrected Docker preparation, activation and browser review remain
+operator acceptance steps. See [correction proof](MIXED_CHILD_IMPORT_PROOF.json).
 The [explicit mixed research desk](MIXED_DASHBOARD.md) now presents stored common
 cash, full-cost flat balance boundaries, stock/options/Scope trade cards, original
 protection and separate proposal/approval/attempt/fill evidence. Its installed

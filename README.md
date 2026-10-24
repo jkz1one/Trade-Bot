@@ -18,8 +18,11 @@ authentic acceptance remain open.
 
 The [hybrid layout and host incident](docs/MIXED_HYBRID_DASHBOARD.md) now retain
 persistent equity/trade inspection and a read-only diagnostic for the failed
-77e69c6 host fixture. Preserve its partial directory; do not rerun preparation.
-The updated UI is not yet deployed or browser accepted.
+77e69c6 host fixture. Host evidence identified unnecessary model-runtime imports
+near the five-second deadline; the owner lease is now imported only on owner entry.
+Preserve the failed v1 directory. The [recovery runbook](docs/MIXED_DASHBOARD_REVIEW.md)
+uses a separate create-only v2 fixture with v1 mounted read-only. The updated UI
+is not yet deployed or browser accepted.
 
 ## Current product direction
 

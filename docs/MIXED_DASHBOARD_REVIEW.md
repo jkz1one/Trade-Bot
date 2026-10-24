@@ -57,7 +57,11 @@ UNKNOWN parent status and `FixtureProcessTimeout`. The old reader still runs;
 activation never executed. **Do not rerun the commands below on the partial
 `ui-review-v1` directory.** Preserve it unchanged. See the
 [incident and snapshot-only diagnostic](MIXED_HYBRID_DASHBOARD.md#retained-host-failure).
-No engine deadline or approval safeguard has been weakened.
+The operator subsequently measured full imports at 4.831 seconds and a read-only
+snapshot child at 4.540 seconds, including an unnecessary Agents SDK import.
+The correction defers the unchanged owner lease import until owner entry; native
+children no longer initialize that model runtime. No engine deadline or approval
+safeguard has been weakened. [Correction proof](MIXED_CHILD_IMPORT_PROOF.json).
 
 ## Prepare and activate the populated fixture
 
@@ -65,14 +69,20 @@ After fetching and checking out the published release in the separate dashboard
 worktree, run as root:
 
 ```bash
-bash scripts/dashboard-review-host.sh prepare
-bash scripts/dashboard-review-host.sh activate
+bash scripts/dashboard-review-host.sh prepare ui-review-v2 &&
+bash scripts/dashboard-review-host.sh activate ui-review-v2
 ```
 
 [The host helper](../scripts/dashboard-review-host.sh) requires a clean checkout
 and the existing mode-0700 UID/GID-10001 data directory. Prepare builds an image
 tagged with the full commit SHA, then runs the native fixture once with no network,
-no secrets and a new `/var/lib/trade-bot-dashboard/ui-review-v1` directory. The
+no secrets and a new `/var/lib/trade-bot-dashboard/ui-review-v2` directory.
+For this recovery, the explicit second argument is required: the default v1 target
+continues to reject the retained partial directory. The helper requires v1 to
+exist for v2 recovery and mounts v1 read-only inside the preparation container.
+V2 is a separate historical fixture with the same fixed scenario, not a resumed
+owner or new live account. Existing v2 output is also refused; inspect any failure
+without retrying or deleting it. The
 default SHADOW image command is always overridden. Activation preflights installed
 application bytes, seed/journal identity, native accounting and private password
 permissions without network or writable data.
