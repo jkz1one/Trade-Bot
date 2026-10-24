@@ -1,5 +1,56 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+
+## Mixed dashboard verification and deployment handoff: 2026-10-23 America/New_York
+
+Fresh GitHub/local HEAD matched `21fb5917bea055826e27b0b686d7c75bc3ee8e18`,
+tree `fd51593ad8bf7a5c660b7d0f5ccec7d0646d775d`, with a clean working tree.
+The checkpoint's explicit mixed observer now has installed verification. The
+[desk contract](MIXED_DASHBOARD.md) documents persistent balance/trade panels,
+local tabs, exact original protection and the pinned SignalFlow price-rail adaptation.
+This follow-up fixes option order-origin labels, makes an absent original option
+revision explicit and requires historical attempted-order coverage even without
+fills. Settled engine modules remain unchanged.
+
+Final wheel: `eddd8789e4d5d4cae5389dcb49c187816f7a37cef75ed48d9c926161e832572d`.
+**150 distinct passing installed Python cases**, including **21 mixed desk cases**,
+and **7 JavaScript unit cases**. The full run passed 149 and failed one new test
+because its harness used `e.read()` instead of `e.journal.read()`. The corrected
+one-case rerun passed; no application change or reinstall intervened. Durations:
+73.86 seconds and 2.52 seconds. An earlier intermediate wheel passed 149 cases;
+all overlap the final count and are not added again. The initial checkpoint's
+14 passes/two failures are also excluded from final-wheel proof.
+
+All **247 application/template files** match source, final wheel and installed
+bytes. **241 are unchanged** from the pre-mixed-UI parent `abdc220`; only the six
+mixed observer/CLI/route/template/style/rail files differ. Native tests ran serially
+from copied tests outside the checkout, Python `-I`, warnings as errors, plugin
+autoload disabled and explicit anyio. Changed-scope lint/format, fatal repository
+lint, locked dependency consistency, pip check, documentation links and whitespace
+checks pass. No dependencies changed. [Proof manifest](MIXED_DASHBOARD_PROOF.json)
+retains exact IDs, wheel-specific runs, file/test/page hashes and limitations.
+
+Nine native/synthetic display states generated desktop/mobile wrappers, with
+balanced markup and the installed script. Generation is not browser review.
+**No screenshots or visual acceptance**: prior local previews were unreachable and
+workspace/file URLs were security-blocked. No bypass was attempted. Mixed SPY/A/B/C/D
+comparison presentation and authentic provider/normalization/model/host/economic/
+PAPER acceptance remain open; the legacy comparison guard remains intact.
+
+The user's latest instruction now authorizes dashboard deployment. It does not
+authorize LIVE or authenticated provider/model/broker calls. Deployment was **not
+performed**: no SSH configuration, known-host record, SSH agent or connected host
+execution tool is available. The documented existing `signalflow.duckdns.org`
+service reads the older SHADOW/virtual-v1 schema, not a native mixed journal.
+The [separate observer handoff](MIXED_DASHBOARD.md#authorized-deployment-handoff)
+identifies required host access, compatible journal/population/owner and private
+route, with verification and rollback steps. Do not run the SHADOW start/build
+helper as a mixed dashboard upgrade. Existing worker and deployment remain unchanged.
+Main remains `b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 stays open/draft.
+
+Retained proof: `/workspace/scratch/c75087a760c3/mixed-ui-proof/release/`;
+wheel: `/workspace/scratch/c75087a760c3/mixed-ui-wheels/release/`.
+
 ## Mixed desk recovery checkpoint: 2026-10-23 America/New_York
 
 User requested immediate Git preservation after the workspace disconnected.

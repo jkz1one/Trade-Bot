@@ -1,6 +1,15 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.109. Adopted product direction and working delivery contract, 2026-10-23 UTC.
+Version 1.110. Adopted product direction and working delivery contract, 2026-10-23 UTC.
+The [explicit mixed research desk](MIXED_DASHBOARD.md) now presents stored common
+cash, full-cost flat balance boundaries, stock/options/Scope trade cards, original
+protection and separate proposal/approval/attempt/fill evidence. Its installed
+verification is retained in [proof](MIXED_DASHBOARD_PROOF.json). Browser visual
+acceptance and separately bound mixed benchmark presentation remain open. The user
+has now requested dashboard deployment; host access and a compatible journal/route
+are still missing, and no server was changed. This does not authorize LIVE or
+provider/model/broker calls, re-enrollment or changing the frozen worker.
+
 [Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now connects
 choice-only B, matched independent native accounts and portable full-cost export.
 [Continuous Scope runtime inputs](OPTIONS_SCOPE_RUNTIME.md) now connect explicit
@@ -82,7 +91,7 @@ before historical decisions, and expandable exact cost/order/fill evidence.
 Eight offline display states and native read-only regressions are available; actual
 desktop/mobile rendering, keyboard and user visual acceptance remain open. The
 browser rejected the workspace fixture URL. The option observer's mixed-owner guard
-remains intact; a separately bound unified mixed presentation remains UI work.
+remains intact; the separately bound mixed presentation is documented above, with visual acceptance open.
 The [isolated options test procedure](OPTIONS_TESTING.md) now joins installed-file
 identity, native runtime/recovery, shared entry, observer and full-cost replay
 checks with those display files. Its retained receipt requires completed test

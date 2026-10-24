@@ -192,6 +192,9 @@ def test_mixed_option_card_preserves_exact_contract_floors_and_original_targets(
         )
         assert data["fill_count"] == 1
         assert "Original protection and terms" in render(data)
+        assert "Not retained in original option intent" in render(data)
+        assert data["orders"][0]["origin"] != "UNKNOWN"
+        assert data["orders"][0]["origin"] != "NATIVE"
 
 
 def test_http_mixed_opt_in_keeps_auth_and_get_only_reads(tmp_path):
@@ -281,3 +284,26 @@ def test_stock_stale_rail_labels_last_bid_and_never_marks_target_filled(tmp_path
         p = view(e, at + timedelta(minutes=5))["position"]
         labels = " ".join(label for group in trade_rail(p) for label in group["labels"])
         assert "Last bid" in labels and "T1" in labels and "filled" not in labels
+
+
+def test_historical_coverage_requires_attempts_even_without_fills(tmp_path):
+    from types import SimpleNamespace
+
+    from app.mixed.observer import snapshot_prefix
+    from app.options.lifecycle import OptionVenueSnapshot
+
+    with owned_mixed(tmp_path) as (e, _):
+        with e.journal.read() as db:
+            raw = db.execute("SELECT snapshot_json FROM execution_control").fetchone()[0]
+        snap = OptionVenueSnapshot.model_validate_json(raw)
+        captured = SimpleNamespace(events=())
+        # A retained attempt before this clock cannot disappear merely because it
+        # has no fill yet. Omitting it must create a chart gap, not flat equity.
+        orders = [
+            {
+                "intent": {"client_id": "pending"},
+                "attempted_at": (snap.captured_at - timedelta(seconds=1)).isoformat(),
+            }
+        ]
+        assert snapshot_prefix(snap, captured, [])
+        assert not snapshot_prefix(snap, captured, orders)

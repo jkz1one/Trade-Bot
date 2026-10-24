@@ -106,6 +106,7 @@ class MixedObserver(OptionObserver):
                 if kind == "OPTION":
                     order_attribution(db, row)
                 instrument = intent.instrument
+                approval = _json(row["approval_json"])
                 orders.append(
                     {
                         "asset": kind,
@@ -116,9 +117,9 @@ class MixedObserver(OptionObserver):
                         "status": row["status"],
                         "attempted_at": row["attempted_at"],
                         "unresolved": row["active_lock"] == 1,
-                        "origin": _json(row["approval_json"])
-                        .get("inputs", {})
-                        .get("origin", "NATIVE"),
+                        "origin": (approval.get("inputs", {}) if kind == "STOCK" else approval).get(
+                            "origin", "UNKNOWN"
+                        ),
                         "observation": _json(row["observation_json"])
                         if row["observation_json"]
                         else None,
@@ -414,9 +415,23 @@ def stock_position(db, p, mixed, policy, now, frames):
 def snapshot_prefix(snap, captured, orders):
     """Historical fills must be exact native prefixes; missing coverage creates a gap."""
     native = {o["intent"]["client_id"]: o for o in orders}
+    observed_ids = [o.client_id for o in (*snap.orders, *snap.stock_orders)]
+    required_orders = {
+        key
+        for key, order in native.items()
+        if order["attempted_at"] is not None
+        and datetime.fromisoformat(order["attempted_at"]) < snap.captured_at
+    }
+    if len(set(observed_ids)) != len(observed_ids) or not required_orders <= set(observed_ids):
+        return False
     for observed in (*snap.orders, *snap.stock_orders):
         order = native.get(observed.client_id)
-        if order is None or order["attempted_at"] is None or observed.updated_at > snap.captured_at:
+        if (
+            order is None
+            or order["attempted_at"] is None
+            or datetime.fromisoformat(order["attempted_at"]) > snap.captured_at
+            or observed.updated_at > snap.captured_at
+        ):
             return False
         intent = order["intent"]
         if any(

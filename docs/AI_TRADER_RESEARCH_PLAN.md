@@ -1,5 +1,13 @@
 # Reasoning trader: research decisions and completion plan
 
+
+UI continuation: the [explicit mixed desk](MIXED_DASHBOARD.md) now has installed
+verification for common-account balances, original trade cards/price rails and
+separate proposal/approval/attempt/fill evidence. Browser screenshots, mixed
+benchmark presentation and authentic acceptance remain open. The latest user
+request authorizes dashboard deployment; host access and compatible source/route
+selection still block execution. The frozen worker and LIVE state remain unchanged.
+
 Reviewed 2026-10-10. This is the design and acceptance specification supporting
 [source of truth v1.19](SOURCE_OF_TRUTH.md), not a second roadmap or implemented
 capability. The user requested a stronger research foundation before more coding.

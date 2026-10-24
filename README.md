@@ -9,6 +9,11 @@ installed wheel, run native runtime/recovery and full-cost replay checks, and
 generate desktop/mobile dashboard review files plus a portable review ZIP. This is offline fixture testing;
 authentic data/model, host and visual acceptance remain separate gates.
 
+The [mixed-account dashboard](docs/MIXED_DASHBOARD.md) now adds an explicit stored
+stock/options/Scope desk, persistent balance history, trade cards and local detail
+tabs. Installed proof and a separate deployment handoff are retained; browser
+screenshots and target-host deployment remain open.
+
 ## Current product direction
 
 The settled strategy/engine plumbing is connected through native offline fixtures.
@@ -156,7 +161,7 @@ The [dashboard research desk](docs/OPTIONS_DASHBOARD.md) now adds stored blocker
 evidence ages, a selected-page decision briefing, current position/protection before
 the historical timeline, and expandable exact cost/order/fill evidence.
 An eight-state local rendering drill is available; browser visual acceptance and
-the separately bound mixed-owner presentation remain open.
+mixed benchmark presentation remain open.
 [Scope evidence preflight](docs/OPTIONS_SCOPE_PREFLIGHT.md) now checks required
 coverage and exact SPXW identity without granting setup or trade authority.
 [Scope completed structure](docs/OPTIONS_SCOPE_STRUCTURE.md) adds nine price-derived

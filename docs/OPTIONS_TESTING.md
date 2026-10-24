@@ -420,3 +420,21 @@ autoload disabled and anyio explicit. Native tests run serially. Five obsolete
 heading/navigation assertions were resolved with a focused rerun on the same
 wheel. Browser and screenshot acceptance remains pending; no native or authentic
 acceptance can be inferred from presentation tests.
+
+## Explicit mixed dashboard verification
+
+Add `test_mixed_observer.py` to the four existing observer/dashboard suites, using
+the same isolated noneditable installed-wheel procedure and copied tests. Keep
+native execution serial and never reinstall during a run. Coverage includes
+stock partial fills, option/Scope original terms, stale/unknown accounting, costs
+during incomplete reconciliation, missing current/historical coverage, native exit
+latches, rail units/collisions and authenticated GET-only reads.
+
+The [mixed desk proof](MIXED_DASHBOARD_PROOF.json) retains wheel-specific runs and
+deduplicates overlaps; earlier wheel passes are not added to final-wheel totals.
+Run `mixed_dashboard_examples.py` from the copied test directory after native tests
+finish, with that directory on the harness import path and the application still
+loaded from the installed wheel under Python `-I`. Nine offline display states
+include desktop/mobile wrappers. Static rendering and JS unit checks do not close
+browser acceptance. See the [deployment handoff](MIXED_DASHBOARD.md) for current
+access/schema blockers and the newly authorized read-only dashboard deployment.

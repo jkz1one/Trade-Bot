@@ -5,6 +5,16 @@ stored-only options observer. It changes no execution rule, collector, account,
 cost arithmetic, authentication, API response or deployment. Main stays untouched,
 PR #1 draft, LIVE disabled and the deployed experiment frozen.
 
+## Mixed desk follow-up — 2026-10-23
+
+The [explicit mixed observer](MIXED_DASHBOARD.md) now implements the separate
+stock/options/Scope presentation and original target rail. Its dedicated contract
+supersedes the historical mixed-work statements below. The legacy options observer
+and comparison remain separate. See [installed proof](MIXED_DASHBOARD_PROOF.json).
+Actual browser acceptance is still pending. Deployment is now user-authorized,
+but target-host access and compatible journal/route selection remain outstanding;
+no server, worker, provider or LIVE state has been changed.
+
 ## Persistent desk follow-up — 2026-10-23
 
 The requested direction is one persistent page with a restrained game-HUD palette,
@@ -135,8 +145,9 @@ progress/contract diagnostics retain coverage blockers and the theta heuristic l
 
 ## Interaction and bounds
 
-All controls are ordinary links or native HTML disclosures. There is no JavaScript,
-trading form, new endpoint, action button, model/provider call or background work.
+The original review used links and native disclosures. The persistent desk now
+adds the authenticated packaged script and local tab/chart buttons described above.
+It has no trading form, model/provider call or background execution work.
 The existing private authentication, no-store policy and restrictive CSP remain.
 The API and all source journal/venue contents are unchanged by viewing the page.
 
