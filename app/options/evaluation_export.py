@@ -1,0 +1,594 @@
+"""Read-only session-boundary exports from native PAPER journals, without authority attachment."""
+
+from datetime import datetime, timedelta
+from decimal import Decimal
+from itertools import pairwise
+
+from app.execution.economics import UsageEvidence
+from app.options.attribution import decision_attribution, order_attribution
+from app.options.coordinator import DegenFrame
+from app.options.engine import clock, exact, fingerprint
+from app.options.evaluation import MAX_BUNDLE_BYTES, evaluate
+from app.options.evaluation_models import (
+    ArmDefinition,
+    ArmSession,
+    BenchmarkSession,
+    EvaluationBundle,
+    EvaluationManifest,
+    ReplayCall,
+    ReplayCycle,
+    ReplayOrder,
+)
+from app.options.lifecycle import (
+    OptionExecutionPolicy,
+    OptionFill,
+    OptionIntent,
+    OptionLedger,
+    OptionObservation,
+    OptionReceipt,
+    OptionVenueSnapshot,
+)
+from app.options.market_tape import RecordedTape, validate_tape_series
+from app.options.models import OptionLimits
+from app.options.observer import REQUIRED, OptionObserver, _json
+
+MAX_EVENTS = 10000
+
+
+def strategy_hash(strategy):
+    """Bind strategy configuration without exporting the private model-key path."""
+    content = {k: v for k, v in strategy.items() if k != "model"}
+    if "model" in strategy:
+        content["model"] = {"configuration": strategy["model"]["configuration"]}
+    return fingerprint(content)
+
+
+def _rows(db, table, bound):
+    # Table names are fixed at the call sites, never supplied by source data.
+    rows = db.execute(f"SELECT * FROM {table} LIMIT ?", (bound + 1,)).fetchall()
+    if len(rows) > bound:
+        raise ValueError("Native export record capacity exceeded")
+    return rows
+
+
+def _at(value):
+    return clock(datetime.fromisoformat(value))
+
+
+def _event_map(events, kind, key):
+    result = {}
+    for e in events:
+        if e["kind"] != kind:
+            continue
+        payload = _json(e["payload"])
+        identity = e["client_id"] if key == "client_id" else payload[key]
+        if identity in result:
+            raise ValueError("Duplicate native evidence event")
+        result[identity] = (e, payload)
+    return result
+
+
+@exact
+def export_arm(journal, definition, session, tape, *, data_cost=None, host_cost=None, _history=()):
+    """Export a native boundary; prior boundaries are supplied only by export_series.
+
+    Missing scheduler slots/unknown attempts stay incomplete. Structural conflicts
+    fail export. There is no write, venue read, recovery or authority-file attachment.
+    """
+    definition = ArmDefinition.model_validate(definition.model_dump(warnings=False))
+    tape = RecordedTape.model_validate(tape.model_dump(warnings=False))
+    from app.options.scope_market_tape import require_legacy_comparison
+
+    require_legacy_comparison((tape,))
+    from app.options.evaluation_models import EvaluationSession
+
+    session = EvaluationSession.model_validate(session.model_dump(warnings=False))
+    history = tuple(
+        (
+            EvaluationSession.model_validate(s.model_dump()),
+            ArmSession.model_validate(r.model_dump()),
+            p,
+        )
+        for s, r, p in _history
+    )
+    windows = (*(s for s, _, _ in history), session)
+    if any(a.closes_at >= b.opens_at for a, b in pairwise(windows)) or any(
+        r.arm != definition.arm
+        or r.session_key != s.key
+        or r.definition_hash != fingerprint(definition)
+        or r.tape_hash != s.tape_hash
+        or p["export_hash"] != fingerprint(r)
+        for s, r, p in history
+    ):
+        raise ValueError("Exact ordered prior boundary evidence required")
+    in_session = lambda at: any(w.opens_at <= at < w.closes_at for w in windows)
+    h = tape.header
+    if (session.key, session.opens_at, session.closes_at, session.tape_hash) != (
+        h.session_key,
+        h.opens_at,
+        h.closes_at,
+        tape.digest,
+    ):
+        raise ValueError("Exact session tape required")
+    if definition.limits.model_dump(exclude={"account_id", "population_id"}) != h.limits.model_dump(
+        exclude={"account_id", "population_id"}
+    ):
+        raise ValueError("Native limits and tape mismatch")
+    observer = OptionObserver(journal, definition.limits.population_id)
+    with observer.read() as db:
+        tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        if not REQUIRED | {"execution_option_strategy", "execution_option_opportunities"} <= tables:
+            raise ValueError("Existing native options strategy journal required")
+        control = db.execute("SELECT * FROM execution_control WHERE id=1").fetchone()
+        config = _json(control["config_json"])
+        if (
+            config["schema"] != "option-paper-execution-v1"
+            or OptionLimits.model_validate(config["limits"]) != definition.limits
+            or OptionExecutionPolicy.model_validate(config["policy"]) != definition.policy
+        ):
+            raise ValueError("Frozen native population definition mismatch")
+        strategy = _json(
+            db.execute("SELECT policy_json FROM execution_option_strategy WHERE id=1").fetchone()[0]
+        )
+        if (
+            strategy_hash(strategy) != definition.strategy_hash
+            or strategy["setup"] != h.setup.model_dump(mode="json")
+            or strategy["selection"] != h.selection.model_dump(mode="json")
+            or strategy.get("swing") != (h.swing.model_dump(mode="json") if h.swing else None)
+            or ("model" in strategy) != (definition.arm != "A")
+            or ("entry_model" in strategy) != (definition.arm in {"C", "D"})
+            or ("position_model" in strategy) != (definition.arm == "D")
+        ):
+            raise ValueError("Native A/B/C/D strategy binding mismatch")
+        events = sorted(_rows(db, "execution_events", MAX_EVENTS), key=lambda e: e["sequence"])
+        if any(e["sequence"] != n for n, e in enumerate(events, 1)):
+            raise ValueError("Native event sequence incomplete")
+        if history:
+            prior = history[-1][2]
+            if (
+                prior["configuration_hash"] != fingerprint(config)
+                or len(events) < prior["revision"]
+                or fingerprint([dict(e) for e in events[: prior["revision"]]])
+                != prior["event_hash"]
+            ):
+                raise ValueError("Native boundary history or owner changed")
+        usage_events = _event_map(events, "OPTION_MODEL_USAGE_RECORDED", "source_key")
+        admitted = _event_map(events, "OPTION_MODEL_ATTEMPT_ADMITTED", "source_key")
+        attempts = _event_map(events, "OPTION_ATTEMPT_STARTED", "client_id")
+        starts = _event_map(events, "DEGEN_CYCLE_STARTED", "cycle_key")
+        finishes = _event_map(events, "DEGEN_CYCLE_COMPLETED", "cycle_key")
+        calls = []
+        model_rows = _rows(db, "execution_model_calls", 100 * len(windows))
+        if {r["source_key"] for r in model_rows} != set(admitted) or not set(usage_events) <= set(
+            admitted
+        ):
+            raise ValueError("Native model attempt coverage mismatch")
+        for r in model_rows:
+            key = r["source_key"]
+            e, p = admitted[key]
+            if e["occurred_at"] != r["started_at"] or p["input_hash"] != r["packet_hash"]:
+                raise ValueError("Native model admission mismatch")
+            usage, completed = None, None
+            if key in usage_events:
+                e, p = usage_events[key]
+                usage = UsageEvidence.model_validate(_json(r["usage_json"]))
+                policy = definition.policy.cost_policy
+                if policy is None:
+                    raise ValueError("Unexpected model cost")
+                cost = (
+                    usage.input_tokens * policy.input_per_million
+                    + usage.output_tokens * policy.output_per_million
+                ) / 1000000
+                if (
+                    usage.model_dump(mode="json") != p["usage"]
+                    or usage.request_id != r["request_id"]
+                    or usage.model != policy.model
+                    or Decimal(r["cost"]) != cost
+                    or Decimal(p["cost"]) != cost
+                ):
+                    raise ValueError("Native model receipt/cost mismatch")
+                completed = _at(e["occurred_at"])
+            elif any(
+                r[k] is not None for k in ("usage_json", "request_id", "decision_hash", "cost")
+            ):
+                raise ValueError("Native model completion event missing")
+            source = db.execute(
+                "SELECT result_json FROM execution_option_opportunities WHERE cycle_key=?", (key,)
+            ).fetchone()
+            if source is None or source[0] is None:
+                raise ValueError("Native model call has no retained input cycle")
+            source_outcome = _json(source[0])
+            if definition.arm in {"C", "D"} and not any(
+                k in source_outcome for k in ("entry_request", "position_request")
+            ):
+                raise ValueError("Full stored model request required for role attribution")
+            role = "MANAGEMENT" if "position_request" in source_outcome else "ENTRY"
+            if role == "MANAGEMENT" and definition.arm != "D":
+                raise ValueError("Management call outside enrolled arm D")
+            calls.append(
+                ReplayCall(
+                    source_key=key,
+                    role=role,
+                    started_at=_at(r["started_at"]),
+                    completed_at=completed,
+                    usage=usage,
+                )
+            )
+        orders, observed_fills = [], {}
+        order_rows = _rows(db, "execution_orders", min(1000, 200 * len(windows)))
+        if {r["client_id"] for r in order_rows if r["attempted_at"] is not None} != set(attempts):
+            raise ValueError("Native order attempt coverage mismatch")
+        for r in order_rows:
+            intent = OptionIntent.model_validate(_json(r["intent_json"]))
+            obs = (
+                OptionObservation.model_validate(_json(r["observation_json"]))
+                if r["observation_json"]
+                else None
+            )
+            if intent.client_id != r["client_id"] or intent.source_key != r["source_key"]:
+                raise ValueError("Native order identity mismatch")
+            if (
+                r["attempted_at"] is not None
+                and attempts[intent.client_id][0]["occurred_at"] != r["attempted_at"]
+            ):
+                raise ValueError("Native attempt time mismatch")
+            decision = intent.prepared_at
+            if (
+                intent.side == "BUY" and definition.arm != "A"
+            ) or intent.position_protection is not None:
+                call = next((c for c in calls if c.source_key == intent.source_key), None)
+                if call is None or call.completed_at is None:
+                    raise ValueError("Native entry completion missing")
+                decision = call.completed_at
+            if obs:
+                if r["order_id"] != obs.order_id or r["status"] != obs.status:
+                    raise ValueError("Native order observation mismatch")
+                for f in obs.fills:
+                    if f.fill_id in observed_fills:
+                        raise ValueError("Duplicate native fill")
+                    observed_fills[f.fill_id] = (intent.client_id, f)
+            attribution = order_attribution(db, r)
+            orders.append(
+                ReplayOrder(
+                    origin=attribution["origin"],
+                    entry_client_id=attribution["entry_client_id"],
+                    intent=intent,
+                    decision_completed_at=decision,
+                    attempted_at=_at(r["attempted_at"]) if r["attempted_at"] else None,
+                    observation=obs,
+                )
+            )
+        stored_fills = {
+            r["fill_id"]: (r["client_id"], OptionFill.model_validate(_json(r["payload"])))
+            for r in _rows(db, "execution_fills", 1000)
+        }
+        if stored_fills != observed_fills:
+            raise ValueError("Native fill-table coverage mismatch")
+        receipt_rows = _rows(db, "execution_option_receipts", min(1000, 200 * len(windows)))
+        receipts = tuple(OptionReceipt.model_validate(_json(r["payload"])) for r in receipt_rows)
+        if any(
+            r["receipt_id"] != receipt.receipt_id
+            for r, receipt in zip(receipt_rows, receipts, strict=True)
+        ):
+            raise ValueError("Native receipt identity mismatch")
+        cycle_rows = _rows(db, "execution_option_opportunities", 100 * len(windows))
+        if {r["cycle_key"] for r in cycle_rows} != set(starts) or not set(finishes) <= set(starts):
+            raise ValueError("Native scheduler event coverage mismatch")
+        management_sources = {
+            r["source_key"]
+            for r in _rows(db, "execution_option_decisions", min(1000, 200 * len(windows)))
+            if "position_request" in _json(r["inputs_json"])
+        }
+        consumed = _event_map(events, "OPTION_POSITION_PLAN_CONSUMED", "source_key")
+        if set(consumed) != management_sources or not management_sources <= {
+            r["cycle_key"] for r in cycle_rows
+        }:
+            raise ValueError("Native management consumption coverage mismatch")
+        revisions = [p["position_revision"] for _, p in consumed.values()]
+        if len(set(revisions)) != len(revisions):
+            raise ValueError("Native position revision consumed more than once")
+        cycles = []
+        call_keys = {c.source_key for c in calls}
+        for r in cycle_rows:
+            key, at = r["cycle_key"], _at(r["started_at"])
+            frame = DegenFrame.model_validate(_json(r["inputs_json"]))
+            if (
+                key != "degen:" + str(int(at.timestamp()) // 300)
+                or not in_session(at)
+                or r["fingerprint"] != fingerprint(frame)
+                or starts[key][1]["input_hash"] != fingerprint(frame)
+                or starts[key][0]["occurred_at"] != r["started_at"]
+            ):
+                raise ValueError("Native cycle binding or first-session scope mismatch")
+            outcome = _json(r["result_json"]) if r["result_json"] else {}
+            if (
+                any(k in outcome for k in ("model_result", "entry_result", "position_result"))
+                and key not in call_keys
+            ):
+                raise ValueError("Retained native model result has no charged or unknown attempt")
+            if r["status"] == "COMPLETE":
+                if key not in finishes or finishes[key][1] != outcome:
+                    raise ValueError("Native cycle completion mismatch")
+                status = outcome.get("status")
+                status = (
+                    status
+                    if status
+                    in {
+                        "HOLD",
+                        "REJECTED",
+                        "ERROR",
+                        "OPEN",
+                        "HELD",
+                        "SKIPPED",
+                        "MAINTAIN",
+                        "TIGHTENED",
+                        "MANDATORY_EXIT",
+                    }
+                    else "UNKNOWN"
+                )
+            else:
+                status = "UNKNOWN"
+            call = next((c for c in calls if c.source_key == key), None)
+            missed = bool(
+                call
+                and call.completed_at
+                and int(call.completed_at.timestamp()) // 300 != int(at.timestamp()) // 300
+            )
+            cycles.append(
+                ReplayCycle(
+                    key=key,
+                    frame_hash=fingerprint(frame),
+                    status=status,
+                    model_called=key in call_keys,
+                    deadline_missed=missed,
+                    attribution=decision_attribution(db, key, outcome, definition.policy),
+                )
+            )
+        if not call_keys <= {c.key for c in cycles}:
+            raise ValueError("Native model call has no retained cycle")
+        if (
+            any(not in_session(o.intent.prepared_at) for o in orders)
+            or any(not in_session(c.started_at) for c in calls)
+            or any(
+                not any(w.opens_at <= r.occurred_at <= w.closes_at for w in windows)
+                and not (
+                    r.kind == "FUNDS_SETTLED"
+                    and any(a.closes_at < r.occurred_at < b.opens_at for a, b in pairwise(windows))
+                )
+                for r in receipts
+            )
+        ):
+            raise ValueError("Export requires first-session history without a capital reset")
+        closing = OptionLedger.model_validate(_json(control["ledger_json"]))
+        snapshot = (
+            OptionVenueSnapshot.model_validate(_json(control["snapshot_json"]))
+            if control["snapshot_json"]
+            else None
+        )
+        complete = bool(
+            snapshot
+            and snapshot.complete
+            and session.closes_at
+            <= snapshot.captured_at
+            <= session.closes_at + timedelta(seconds=5)
+            and not snapshot.underlying_exposures
+            and not _json(control["issues_json"])
+        )
+        if snapshot and (
+            snapshot.population_id != definition.limits.population_id
+            or snapshot.account_id != definition.limits.account_id
+            or snapshot.venue_id != config["venue_id"]
+            or snapshot.cash != closing.cash
+            or snapshot.settled_cash != closing.settled_cash
+        ):
+            raise ValueError("Native closing snapshot mismatch")
+        if snapshot:
+            observed = {o.intent.client_id: o.observation for o in orders if o.observation}
+            if {o.client_id: o for o in snapshot.orders} != observed or {
+                r.receipt_id: r for r in snapshot.receipts
+            } != {r.receipt_id: r for r in receipts}:
+                complete = False
+            excluded = {
+                "tightened_underlying_invalidation",
+                "exit_reason",
+                "exit_required_at",
+                "supervision_issue",
+                "target_exit_stage",
+            }
+            from app.options.premium_trail import accounting_position
+
+            position = lambda p: accounting_position(p, excluded)
+            if position(snapshot.position) != position(closing.position):
+                raise ValueError("Native closing ownership mismatch")
+
+        # Native sources are cumulative. Every old economic row must remain exact;
+        # changed late history is unavailable, never silently reassigned to a new day.
+        def delta(values, field, identity):
+            earlier = {identity(v): v for _, row, _ in history for v in getattr(row, field)}
+            current = {identity(v): v for v in values}
+            if len(current) != len(values) or any(current.get(k) != v for k, v in earlier.items()):
+                raise ValueError("Retained native session history changed")
+            return tuple(v for v in values if identity(v) not in earlier)
+
+        current_orders = delta(orders, "orders", lambda o: o.intent.client_id)
+        current_calls = delta(calls, "calls", lambda c: c.source_key)
+        current_cycles = delta(cycles, "cycles", lambda c: c.key)
+        current_receipts = delta(receipts, "receipts", lambda r: r.receipt_id)
+        lower = history[-1][0].closes_at if history else session.opens_at
+        if (
+            any(
+                not session.opens_at <= o.intent.prepared_at < session.closes_at
+                for o in current_orders
+            )
+            or any(not session.opens_at <= c.started_at < session.closes_at for c in current_calls)
+            or any(
+                not int(session.opens_at.timestamp()) // 300
+                <= int(c.key.split(":")[1])
+                < int(session.closes_at.timestamp()) // 300
+                for c in current_cycles
+            )
+            or any(not lower <= r.occurred_at <= session.closes_at for r in current_receipts)
+        ):
+            raise ValueError("Prior native rows missing from retained boundaries")
+        from app.options.loss_evidence import export_loss_control, validate_loss_boundary
+
+        loss = export_loss_control(
+            db,
+            definition.policy.loss_control,
+            definition.limits.population_id,
+            events,
+            boundary=session.closes_at + timedelta(seconds=5),
+        )
+        if loss is not None:
+            pauses = {}
+            for pause in loss.entry_pauses:
+                pauses.setdefault(pause.source_key, []).append(pause)
+            if not set(pauses) <= set(starts):
+                raise ValueError("Native risk pause cycle missing")
+            for cycle in cycle_rows:
+                if cycle["status"] != "COMPLETE":
+                    continue
+                outcome = _json(cycle["result_json"])
+                retained = pauses.get(cycle["cycle_key"], [])
+                if outcome.get("reason") == "ENTRY_MODEL_RISK_PAUSE":
+                    if (
+                        len(retained) != 1
+                        or outcome.get("status") != "HOLD"
+                        or outcome.get("blocker") != ";".join(retained[0].reasons)
+                        or retained[0].revision >= finishes[cycle["cycle_key"]][0]["sequence"]
+                        or cycle["cycle_key"] in call_keys
+                    ):
+                        raise ValueError("Native risk pause completion mismatch")
+                elif retained:
+                    raise ValueError("Native risk pause completion missing")
+        validate_loss_boundary(
+            loss,
+            definition.policy.loss_control,
+            session.closes_at + timedelta(seconds=5),
+            history[-1][1].loss_control if history else None,
+        )
+        row = ArmSession(
+            loss_control=loss,
+            arm=definition.arm,
+            session_key=session.key,
+            definition_hash=fingerprint(definition),
+            tape_hash=tape.digest,
+            initial=history[-1][1].closing
+            if history
+            else OptionLedger(
+                cash=definition.policy.capital, high_watermark=definition.policy.capital
+            ),
+            closing=closing,
+            closing_complete=complete,
+            orders=current_orders,
+            receipts=current_receipts,
+            calls=current_calls,
+            cycles=current_cycles,
+            data_cost=data_cost,
+            host_cost=host_cost,
+        )
+        proof = {
+            "arm": definition.arm,
+            "revision": events[-1]["sequence"] if events else 0,
+            "strategy_hash": strategy_hash(strategy),
+            "export_hash": fingerprint(row),
+            "execution_authority": False,
+            "source_kind": "READ_ONLY_NATIVE_FIXTURE_JOURNAL",
+            "session_key": session.key,
+            "configuration_hash": fingerprint(config),
+            "entry_model_hash": fingerprint(strategy["entry_model"])
+            if "entry_model" in strategy
+            else None,
+            "entry_script_hash": fingerprint(
+                [
+                    d
+                    for d in strategy["replay_model"]["decisions"]
+                    if d["cycle_key"].startswith("degen:")
+                ]
+            )
+            if "replay_model" in strategy and "entry_model" in strategy
+            else None,
+            "event_hash": fingerprint([dict(e) for e in events]),
+            "previous_export_hash": history[-1][2]["export_hash"] if history else None,
+        }
+    return row, proof
+
+
+def export_comparison(manifest, tape, sources, *, underlying_settlements=()):
+    """Read three independent first-session sources and return an evaluator-ready bundle.
+
+    sources maps A/B/C to {journal, data_cost, host_cost}; costs never default to zero.
+    """
+    manifest = EvaluationManifest.model_validate(manifest.model_dump(warnings=False))
+    tape = RecordedTape.model_validate(tape.model_dump(warnings=False))
+    if len(manifest.sessions) != 1 or set(sources) != {d.arm for d in manifest.arms}:
+        raise ValueError("Exactly one first session and three independent sources required")
+    return export_series(
+        manifest,
+        (tape,),
+        {manifest.sessions[0].key: sources},
+        underlying_settlements=underlying_settlements,
+    )
+
+
+def export_series(manifest, tapes, sources, *, underlying_settlements=()):
+    """Read ordered, private cumulative journal snapshots saved at every session close.
+
+    sources maps each session key to A/B/C {journal, data_cost, host_cost}. Each
+    boundary is read independently; these snapshots contain no restoration authority.
+    """
+    manifest = EvaluationManifest.model_validate(manifest.model_dump(warnings=False))
+    tapes = validate_tape_series(tapes)
+    if len(tapes) != len(manifest.sessions) or set(sources) != {s.key for s in manifest.sessions}:
+        raise ValueError("Exact ordered session tapes and boundary sources required")
+    rows, proofs, benchmarks = [], [], []
+    history = {d.arm: [] for d in manifest.arms}
+    for session, tape in zip(manifest.sessions, tapes, strict=True):
+        if set(sources[session.key]) != {d.arm for d in manifest.arms}:
+            raise ValueError("Every boundary requires three independent sources")
+        for definition in manifest.arms:
+            source = sources[session.key][definition.arm]
+            row, proof = export_arm(
+                source["journal"],
+                definition,
+                session,
+                tape,
+                data_cost=source.get("data_cost"),
+                host_cost=source.get("host_cost"),
+                _history=history[definition.arm],
+            )
+            rows.append(row)
+            proofs.append(proof)
+            history[definition.arm].append((session, row, proof))
+        if "D" in history:
+            c, d = history["C"][-1][2], history["D"][-1][2]
+            if any(c[k] != d[k] for k in ("entry_model_hash", "entry_script_hash")):
+                raise ValueError("C/D entry model and scripted entry policy must match")
+        h = tape.header
+        spy = [q for e in tape.events for q in e.frame.underlyings if q.symbol == "SPY"]
+        starts = [q for q in spy if 0 <= (q.source_at - h.opens_at).total_seconds() <= 5]
+        ends = [q for q in spy if 0 <= (h.closes_at - q.source_at).total_seconds() <= 5]
+        if starts and ends:
+            benchmarks.append(
+                BenchmarkSession(
+                    session_key=h.session_key,
+                    start=min(starts, key=lambda q: q.source_at),
+                    end=max(ends, key=lambda q: q.source_at),
+                )
+            )
+    bundle = EvaluationBundle(
+        manifest=manifest,
+        evidence=tuple(rows),
+        benchmarks=tuple(benchmarks),
+        underlying_settlements=underlying_settlements,
+    )
+    if len(bundle.model_dump_json().encode()) > MAX_BUNDLE_BYTES:
+        raise ValueError("Native export capacity exceeded")
+    result = {"bundle": bundle, "source_proof": proofs, "report": evaluate(bundle, tapes=tapes)}
+    if tapes and tapes[0].header.swing is not None:
+        result["strategy_universe"] = {
+            "families": ["DEGEN", "SWING"],
+            "swing_policy_hash": fingerprint(tapes[0].header.swing),
+            "holding_policy": tapes[0].header.swing.holding_policy,
+        }
+    return result

@@ -1,8 +1,315 @@
-# Autonomous Compounding Trader — Slice 1
+# Autonomous Compounding Trader
 
-Deterministic paper-trading core for testing whether a reasoning trader has alpha. Live brokerage writes are intentionally absent.
+Small, auditable experiment for testing whether an autonomous reasoning trader can add value while deterministic software owns authority and risk.
 
-## Run
+## Offline development checks
+
+Use the [isolated options test procedure](docs/OPTIONS_TESTING.md) to verify an
+installed wheel, run native runtime/recovery and full-cost replay checks, and
+generate desktop/mobile dashboard review files plus a portable review ZIP. This is offline fixture testing;
+authentic data/model, host and visual acceptance remain separate gates.
+
+The [mixed-account dashboard](docs/MIXED_DASHBOARD.md) now adds an explicit stored
+stock/options/Scope desk, persistent balance history, trade cards and local detail
+tabs. The operator deployed the separate reader and reviewed its empty desktop
+state. A [paused offline review account](docs/MIXED_DASHBOARD_REVIEW.md) now has
+installed verification and a guarded host helper; populated visual review and
+authentic acceptance remain open.
+
+The [hybrid layout and host incident](docs/MIXED_HYBRID_DASHBOARD.md) now retain
+persistent equity/trade inspection and a read-only diagnostic for the failed
+77e69c6 host fixture. Host evidence identified unnecessary model-runtime imports
+near the five-second deadline; the owner lease is now imported only on owner entry.
+Preserve the failed v1 directory. The [recovery runbook](docs/MIXED_DASHBOARD_REVIEW.md)
+uses a separate create-only v2 fixture with v1 mounted read-only. The updated UI
+is not yet deployed or browser accepted.
+
+## Current product direction
+
+The settled strategy/engine plumbing is connected through native offline fixtures.
+Final UI/visual and authentic data/model/PAPER acceptance remain separate gates.
+Offline test tools remain available during development.
+The [native mixed owner](docs/MIXED_NATIVE_OWNER.md) now binds stock and option
+fixtures to one journal, cash balance, order lock, protection and full-cost loss
+history. Explicit [original stock carry](docs/MIXED_STOCK_CARRY.md) now retains
+calendar horizons, catalyst evidence, protection and full daily costs.
+[Original stock sources and shared selection](docs/MIXED_STOCK_SELECTION.md) now
+connect Degen/Swing shares to one native stock/options/Scope choice, original
+source retirement and attribution. [Paid mixed entry and management](docs/MIXED_AI.md)
+now bind full worker receipts, fresh native admission, original stock/option/Scope
+terms and all paid costs. [Continuous mixed runtime](docs/MIXED_RUNTIME.md) now
+binds delivered inputs, independent protection, restart and explicit settlement.
+[Common mixed tapes and independent A/B/C/D replay/export](docs/MIXED_REPLAY.md)
+now retain separate native accounts, full response contracts, actual later fills,
+original carry/session terms and every known or unknown cost.
+New [stop-only target milestones](docs/OPTIONS_TARGET_EXITS.md#stop-only-target-milestones)
+let protection tighten at an objective without selling a contract or inventing proceeds.
+
+New [fill-bound underlying observations](docs/OPTIONS_FILL_UNDERLYING.md) retain
+the exact available quote per option fill through reconciliation, attribution and
+replay, keeping missing evidence separate from earlier setup/approval prices.
+
+New [fill-bound target protection](docs/OPTIONS_ENTRY_REFERENCE.md) now resolves
+entry stops from verified fills and preserves them through scales and restart.
+Scope management v2 retains both original milestones.
+New [Scope entry evidence binding](docs/OPTIONS_SCOPE_ENTRY_BINDING.md) links the
+original watch to an exact account, admission and management receipt. Revision-bound
+selection remains read-only; a separately enrolled native owner consumes it.
+New [deterministic entry deadlines](docs/OPTIONS_ENTRY_TIME_PROTECTION.md) retain
+earlier exit times through fills, runners and restart. Scope selections now carry
+their original session protection time.
+New [native Scope execution and loss integration](docs/OPTIONS_SCOPE_EXECUTION.md)
+connects responsive/balanced one-to-three-contract plans to native fills, target and
+time exits, full-cost loss cooldown/lock and signed resets. Create-only fixture
+replay and portable accounting are available; convexity and missing-T3 four-contract
+plans remain rejected. Existing research cohorts stay order-free.
+
+New [native bounded Swing carry](docs/OPTIONS_SWING_EXECUTION.md) connects frozen
+carry horizons to DAY entry orders, retained protection, rollover/restart, original
+held context and four-account full-cost replay. Existing session-close cohorts stay
+frozen; open daily boundaries remain unvalued and inconclusive.
+
+New [shared Scope/Degen/Swing selection](docs/OPTIONS_SCOPE_ARBITRATION.md) adds a
+frozen deterministic candidate boundary, original-plan attribution and portable
+whole-account accounting. A new [post-cost Scope review](docs/OPTIONS_SCOPE_POST_COST.md)
+checks a fresh owned admission against the original plan and settled model charge.
+[Shared Scope entry AI](docs/OPTIONS_SCOPE_AI.md) now connects the paid decision,
+fresh owned approval, native entry and full-cost attribution for a new frozen owner.
+[Shared Scope position reasoning](docs/OPTIONS_SCOPE_POSITION.md) now binds held
+management to the original native plan and current Scope context. Common Scope
+tapes now have [sealed observations and independent native watch replay](docs/OPTIONS_SCOPE_MARKET_TAPE.md).
+Tape-linked calls, arming, admission, invalidation and expiry run through each owner's
+actual revision and retain portable native receipts. The [deterministic Scope A
+baseline](docs/OPTIONS_SCOPE_TRADING_REPLAY.md) now connects those watches to native
+selection, later fills, protective exits and full-cost export. The [independent A/B/C/D comparison](docs/OPTIONS_SCOPE_COMPARISON.md) now adds
+choice-only B and matched full-cost native export. [Continuous Scope runtime inputs](docs/OPTIONS_SCOPE_RUNTIME.md) now connect explicit watch packets, delivered post-cost refreshes and independent protection. The [C/D response contract](docs/OPTIONS_SCOPE_REPLAY_MODEL.md)
+now connects to explicitly enrolled [native C/D tape replay](docs/OPTIONS_SCOPE_MODEL_REPLAY.md),
+with delivered fresh observations, paid admission, original deadlines and full-cost export.
+[Combined Scope/Swing carry](docs/OPTIONS_SCOPE_CARRY.md) now binds explicit native
+owner, entry/management, continuous runtime and stored export contracts.
+[Continuous Scope session comparison](docs/OPTIONS_SCOPE_SERIES.md) now preserves
+four independent owners, explicit settlement, saved closing evidence and full costs
+across frozen session-close tapes. [Native repeat-entry attribution](docs/OPTIONS_NATIVE_ENTRY_ATTRIBUTION.md)
+now has separate frozen enrollment. [Combined carry series](docs/OPTIONS_SCOPE_CARRY_SERIES.md)
+now binds separate replay/export and explicit overnight allocations. The mixed
+contract completes the settled family/owner/runtime/replay plumbing before final
+UI and authentic PAPER acceptance.
+
+Read [SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) first for the authoritative goal,
+rules, implementation milestones, acceptance gates and continuation discipline.
+The [October 10 reasoning-trader plan](docs/AI_TRADER_RESEARCH_PLAN.md) defines the
+requested broader AI role, pinned external comparisons, evaluation and delivery
+packages, including the user-requested dedicated dashboard design/visual finish.
+The [broader entry-plan path](docs/OPTIONS_ENTRY_REASONING.md) connects the bounded
+model worker to durable PAPER coordination, paid usage, fresh dispatch review and
+independent target/horizon exits. It is opt-in for a new frozen cohort; existing
+SELECT/HOLD cohorts are unchanged. Authentic provider acceptance and deployment remain open.
+The [first paired performance ledger](docs/OPTIONS_EVALUATION.md) reconstructs
+independent A/B/C session accounting and compares supplied costs and SPY evidence.
+The [sealed common market tape](docs/OPTIONS_MARKET_TAPE.md) now binds cycles,
+subsequent fill quotes and SPY endpoints to recorded inputs and replays setup/contract
+planning. [Native first-session export](docs/OPTIONS_EVALUATION_EXPORT.md) now builds
+comparisons directly from independent PAPER journals. The [first-session A/B/C
+replay scheduler](docs/OPTIONS_REPLAY.md) runs independent virtual clocks, scripted
+model delays, later-quote fills and protective exits through those owners.
+[Multi-session replay/export](docs/OPTIONS_REPLAY_SERIES.md) now preserves the
+same accounts, explicit settlement and saved closing evidence across sessions.
+The [position-management path](docs/OPTIONS_POSITION_REASONING.md) now connects
+MAINTAIN/EXIT_ALL/TIGHTEN proposals to durable model costs, atomic decision
+consumption, tighter stops and freshly reviewed full PAPER exits. It is opt-in for
+a separate frozen cohort. [Arm D replay/export and stored attribution](docs/OPTIONS_MANAGED_REPLAY.md)
+now compare independent A/B/C/D accounts with every entry and management charge.
+The [eligible long-underlying comparison](docs/OPTIONS_UNDERLYING_BASELINE.md)
+adds an independent share account with later sized quotes, explicit settlement
+and all execution/data/host costs. Optional [whole-session analysis](docs/OPTIONS_SESSION_ANALYSIS.md)
+adds a frozen primary comparison, paired block uncertainty and time/regime
+concentration. The [continuous local options PAPER runner](docs/OPTIONS_LOCAL_RUNTIME.md)
+now drives independent protection and five-minute decisions with explicit normalized
+fixture inputs, durable runtime/slot evidence and stored observer integration.
+Optional [reviewed operator recovery](docs/OPTIONS_OPERATOR_RECOVERY.md) now adds
+a separate signed local halt/resume/revocation inbox with exact revision checks.
+[Installed-file identity](docs/OPTIONS_LOCAL_RUNTIME.md#installed-release-identity)
+is now recorded at each runtime start and shown from stored evidence in the observer.
+[Shared Degen/Swing candidate selection](docs/OPTIONS_SHARED_STRATEGIES.md) now lets
+a newly enrolled PAPER population use one AI, cash ledger and execution owner.
+New [original Swing target derivation](docs/OPTIONS_SWING_TARGETS.md) prepares frozen
+1R/2R/3R objectives from completed daily evidence and binds them through native
+admission, runtime retirement, carry and independent replay/export.
+[Daily MA pullbacks](docs/OPTIONS_SWING_MA.md) now connect original 8 EMA, 21 EMA
+and 50 SMA evidence to native execution, runtime and independent carry/export.
+[Higher-timeframe level setups](docs/OPTIONS_SWING_LEVELS.md) now connect complete
+week/month evidence and original break/retest geometry through the native owner.
+[Concurrent Swing-family batches](docs/OPTIONS_SWING_BATCH.md) now bind complete original
+sources, exact family selection, runtime and independent native carry/export.
+[Shared stock/options cash history and admission](docs/MIXED_CASH_HISTORY.md) now
+provide one accounting projection and deterministic stock admission envelope.
+Native mixed ownership, candidate selection and paid entry/management are connected.
+Continuous mixed runtime and common tapes now connect four independent native
+A/B/C/D replay/export accounts. The linked documents retain the full fixture proof
+and remaining authentic acceptance gates.
+New [daily base breakout/breakdown](docs/OPTIONS_SWING_BASE.md) connects frozen daily/hourly
+evidence and original targets to the same native owner, carry and independent exports.
+
+The first Swing family uses locked next-session daily structure with current
+catalyst/chase checks and session-close protection. Native overnight carry is a
+separately enrolled adaptation linked above.
+New [overnight Swing preflight](docs/OPTIONS_SWING_CARRY.md) reconstructs actual
+exchange-session horizons, expiry buffers, catalyst coverage and fee-inclusive
+admission in portable offline evidence. It does not extend native holding authority.
+New frozen cohorts can retain completed-bar Swing invalidation across recovery,
+revised histories and restart, with native entry guards and stored observer evidence.
+A separate frozen quote policy now retains fresh stop breaches between completed bars,
+through existing supervision, native entry review and independent replay.
+New v3 cohorts also lock an explicit original first target before the session
+and permanently retire unfilled setups that reach it before entry.
+[Shared-family replay/export](docs/OPTIONS_SHARED_REPLAY.md) now runs that universe
+through independent A/B/C/D accounts with frozen tapes and all entry/management costs.
+[Historical dashboard comparison](docs/OPTIONS_COMPARISON_VIEW.md) now links a
+separately generated full-cost report to its population and stored audit prefix,
+with net-equity/SPY/cash charts and explicit incomplete paths.
+The [dashboard research desk](docs/OPTIONS_DASHBOARD.md) now adds stored blockers and
+evidence ages, a selected-page decision briefing, current position/protection before
+the historical timeline, and expandable exact cost/order/fill evidence.
+An eight-state local rendering drill is available; browser visual acceptance and
+mixed benchmark presentation remain open.
+[Scope evidence preflight](docs/OPTIONS_SCOPE_PREFLIGHT.md) now checks required
+coverage and exact SPXW identity without granting setup or trade authority.
+[Scope completed structure](docs/OPTIONS_SCOPE_STRUCTURE.md) adds nine price-derived
+patterns, SPY/QQQ confirmation and exact-strike reachability diagnostics; Scope
+scanners remain evidence components; native enrollment is described above.
+[Scope context review](docs/OPTIONS_SCOPE_CONTEXT.md) adds the six level-anchored
+variants and bound flow/news/event/expected-move risk checks without execution authority.
+[Durable Scope watches](docs/OPTIONS_SCOPE_WATCHES.md) now preserve unfilled call
+counts, locked evidence and deterministic invalidation/expiry in the existing
+journal, with opt-in neutral resets and fresh reversal/cooldown checks. Scope
+native execution and full-cost loss/cooldown linkage now require explicit new-cohort enrollment.
+[Scope quality review](docs/OPTIONS_SCOPE_QUALITY.md) now records the pinned point
+schedule and conservative known-level path checks, with optional frozen watch
+integration. A high score does not prove a clear path or grant execution authority.
+[Scope contract profiles](docs/OPTIONS_SCOPE_CONTRACTS.md) now gate exact supplied
+contracts and enrolled watches, while convexity stays blocked without complete path evidence.
+[Scope owned admission review](docs/OPTIONS_SCOPE_OWNED_ADMISSION.md) now records
+common-governor sizing against the original setup and owned account, without dispatch.
+Fresh reviews also enforce remaining reward/risk and known-level obstructions from
+the current directional quote while retaining the original stop and targets.
+The engine enforces this boundary at entry preparation and dispatch; enrolled Scope
+research books cannot bypass it through the generic PAPER entry API.
+[Stored native position outcomes](docs/OPTIONS_POSITION_OUTCOME.md) now reconstruct
+linked fills, execution fees and entry/management charges without granting authority.
+New native closes bind the exact held entry through preparation, dispatch and stored attribution.
+Cash settlement and worthless expiry now use complete native accounting replay to
+attribute receipts to the correct entry, retaining all recorded fees and model charges.
+An opt-in [native loss guard](docs/OPTIONS_NATIVE_LOSS_CONTROL.md) now enforces
+outcome-based cooldown and persistent loss lock at entry preparation and dispatch.
+A separately signed, revision-bound reset now clears an eligible expired lock
+while retaining loss history, costs, global limits and any separate global halt.
+Entry-model admission now checks that guard before starting a paid call; expected
+loss pauses become HOLD without creating a global halt. Owned management remains separate.
+Scope's stored sizing review now applies the approved ask-price quantity tiers
+through the common governor, retaining stricter account limits and all fees.
+New [Scope quote lifecycle](docs/OPTIONS_SCOPE_WATCHES.md#optional-observed-quote-lifecycle)
+cohorts permanently retain observed original-stop/second-objective breaches through
+admission, restart, stored reads and portable research replay.
+Opt-in Scope path review now adds completed SPX opening-range levels, confirmed
+pivots and exact session VWAP. A separate frozen extension adds confirmed equal-high/low
+plateaus to quality, arming and current-price admission; full path proof remains open.
+The stored observer now displays Scope research watches, arming and sizing, with
+explicit expired-evidence labels and no order authority.
+Collapsed decision details now expose saved quality, contract profiles and path
+blockers, with original/latest reviews and recorded action/receipt consistency.
+[Scope research replay](docs/OPTIONS_SCOPE_REPLAY.md) now drives frozen watch, arming,
+admission and reset fixtures through a new isolated owner and exports native receipts.
+A separate verifier now reproduces exported JSON in temporary independent state,
+checking every receipt and final report against an independently retained request hash.
+It does not submit trades or report Scope performance.
+Optional new-cohort Degen/Swing loss controls now add independent family streaks,
+cooldowns and signed targeted resets while retaining account-wide guards and costs.
+Enrolled replay/export now retains cumulative loss state, consumed-entry evidence
+and unpaid entry pauses across independent A/B/C/D session boundaries.
+Native Degen/Swing entries now freeze selected-family identity through dispatch,
+closing attribution and entry/management costs; historical orders remain unchanged.
+[Native whole-contract partial closes](docs/OPTIONS_PARTIAL_CLOSE.md) now provide
+a frozen opt-in scale/runner execution primitive with exact entry attribution,
+full costs and independent protective-exit precedence.
+[Frozen target schedules](docs/OPTIONS_TARGET_EXITS.md) now drive automatic native
+scales from latched underlying targets and verified fills, retaining protected runners.
+Optional frozen target stops tighten protection after a touch and retain the tighter
+stop through rebounds, partial exits and restart, with all costs unchanged.
+Native export and portable replay retain open target-managed holdings and costs as
+inconclusive evidence, distinguishing saved target progress from actual fill accounting.
+[Executable premium trails](docs/OPTIONS_PREMIUM_TRAIL.md) now add frozen-owner
+bid-based protection using original completed entry cost, retained through scales
+and restart without discounting fees or model charges.
+[Native whole-trade floors](docs/OPTIONS_TRADE_FLOOR.md) now add opt-in automatic
+protection after frozen targets, using verified partial sales, original premium,
+every execution fee and attributable entry/management charge. Saved floors never
+loosen across scales or restart; unknown costs preserve protection and block scales.
+[Observed Greek pressure](docs/OPTIONS_GREEK_HEALTH.md) now retains exact timestamped
+Greek evidence through quotes, fills and replay, with stored theta/IV/delta diagnostics.
+Missing, stale or estimated observations remain incomplete; no health-driven order
+authority is enabled.
+[Durable progress diagnostics](docs/OPTIONS_PROGRESS_HEALTH.md) now preserve original
+underlying risk geometry, actual entry premium, peaks and stall coverage through
+partial exits and restart. Stored divergence/giveback signals retain explicit
+missing-data states and do not authorize health-driven orders.
+[Observed daytrade health](docs/OPTIONS_HEALTH_MANAGEMENT.md) now adds an explicitly
+frozen PAPER policy for pre-target stop tightening and mandatory health exits.
+It requires complete observed inputs, preserves stricter protection and attempted
+order reservations, and retains every entry/management cost in independent accounts.
+[Scope management plans](docs/OPTIONS_SCOPE_MANAGEMENT.md) now derive balanced
+whole-contract allocations from owned sizing and bind explicit profile premium
+limits beneath the owner cap. Four-contract Scope plans remain blocked by their
+missing third objective; native v2 watch linkage is now connected.
+Authentic provider, host and prospective evidence remain open.
+M1 option identity and deterministic admission is **fixture verified**. Read
+[OPTIONS_ADMISSION.md](docs/OPTIONS_ADMISSION.md) for its delivered API and boundaries.
+The M2 local options PAPER lifecycle is implemented. Read
+[OPTIONS_EXECUTION.md](docs/OPTIONS_EXECUTION.md) for durable attempts, fills,
+reconciliation and independent exits. The first **M3 Degen path is fixture verified**:
+[completed setups, bounded exact contract selection and durable PAPER coordination](docs/DEGEN_PAPER.md).
+The [headless options schema/sample capture](docs/OPTIONS_READ_CAPTURE.md) now has
+fixture and native-process proof. The next gate is authenticated samples and exact
+normalized collection. The [optional tool-less candidate model selector](docs/OPTIONS_MODEL_SELECTION.md)
+also has fixture/native proof, with durable costs and original admission ceilings;
+authenticated model acceptance remains open.
+The [separate private stored options observer](docs/OPTIONS_OBSERVER.md) now shows
+opportunities, exact positions, orders versus fills, management and cost uncertainty.
+It is read-only local fixture proof; browser visual acceptance and matched economic
+evaluation remain open.
+The [second operator report](docs/SHADOW2_EVIDENCE.md) records the October 8 frozen
+synthetic results separately from new-engine acceptance.
+[Scope sampled arming](docs/OPTIONS_SCOPE_ARMING.md) now persists bounded fresh-evidence
+holds against the original locked setup, with durable resets and no execution authority.
+
+The user clarified the goal on 2026-10-09: **stocks and options, with eventual
+governed LIVE trading**, adapting SignalFlow's Degen/0DTE, Swing, Scope Wizard and UI.
+The [source-backed pivot research](docs/OPTIONS_LIVE_PIVOT_RESEARCH.md) records reuse,
+current broker capabilities, profitability evidence limits and the ordered delivery
+queue. Exact option contracts and deterministic whole-contract admission now exist
+as an offline PAPER module, with a separate durable local options fixture engine.
+Existing deployed/runtime service support remains equities PAPER/SHADOW;
+authenticated options integration remains open and LIVE stays disabled. The deployed $10
+synthetic experiment remains frozen and separate.
+
+The operator-provided Ubuntu installed-release validation now passed all 1,815 tests
+for `618d464f1cbde622d7c05170a99d50cca97c8ca2`, exit 0.
+[Current proof and next host/data gates](docs/SLICE2_STATUS.md) retain its exact release
+and host wheel identity; no options trading service was started.
+The subsequent operator sandbox run passed all eight credential-isolation cases,
+including peers created after startup. This closes the disposable namespace probe
+gate; installed application lifecycle, authentic data and full host acceptance
+remain open. Authenticated discovery has since returned all six read-tool schemas;
+the supplied schema digest was verified locally. Zero market reads were completed.
+Next are bounded actual samples and exact normalization, alongside the new proposal
+contract. [Read evidence and procedures](docs/OPTIONS_READ_CAPTURE.md) retain the
+separate managed authorization boundary.
+
+Progress is reported as delivered capabilities, evidence and remaining acceptance
+gates. Local tests do not close target-host/provider/recovery or LIVE gates.
+
+## PAPER
+
+`main` is the known-good deterministic PAPER core.
 
 ```bash
 python -m venv .venv
@@ -11,10 +318,233 @@ pip install -e '.[dev]'
 uvicorn app.main:app --reload
 ```
 
-Open http://127.0.0.1:8000.
-
-The default database is `./trader.db` and default starting paper capital is `$10.00`.
+The default PAPER database is `./trader.db` and starting capital is `$10.00`.
 
 ## Safety boundary
 
-The agent returns a structured proposal. It never receives an execution tool. The deterministic governor independently calculates executable notional and may approve, clip, or reject the proposal. Only the paper broker can execute in Slice 1.
+The Trader Agent returns only a structured proposal. It has no brokerage write tools. The deterministic governor independently approves, clips, or rejects size.
+
+An offline [execution lifecycle rehearsal](docs/EXECUTION_REHEARSAL.md) now tests durable
+approved intents, partial fills, uncertain acknowledgments, restart recovery,
+deterministic stop/session exits and a persistent dispatch halt using a local fake
+venue. Frozen account/dollar limits and fresh-market dispatch reapproval also pass
+offline verification. A separate durable fake venue now verifies killable submission/read
+deadlines and cancellation/crash recovery. It has no broker write adapter and
+does not change the deployed SHADOW experiment.
+Signed local operator commands now test atomic halt/recovery, revision checks,
+replay receipts and persistent alert acknowledgment. Deployed notification and
+recovery integration remain pending.
+Credential rotation/revocation retain a dispatch halt and reject retired keys.
+An opt-in separate authority file blocks journal-only rollback before any write.
+Rolling back both files together remains outside this local safeguard.
+Opt-in model-cost receipts now freeze configured rates/budgets, block entries on
+unknown costs, and include reasoning charges in economic loss limits. Broker cash
+stays separate and deterministic protective exits remain available.
+The optional fixture-engine judgment coordinator now counts the exact Responses
+request before one tool-less generation, caps output, and atomically records response
+identity/usage with the decision. It has no broker capability or deployed-worker wiring.
+Existing model events now retain measured count/generation and parent child-reaping
+evidence. [Bounded model acceptance](docs/PAPER_MODEL_ACCEPTANCE.md) keeps provider
+and billing verification separate from local process fixtures.
+An opt-in independent fixture supervisor now reconciles complete account history,
+checks a durable quote feed and dispatches only governed protective SELL intents.
+Fresh completed supervision is required for new model calls and BUY admission;
+stale reads, duplicate runners and interrupted recovery cannot renew entry authority.
+This remains offline infrastructure, with no deployed service or broker writes.
+An isolated native-TLS control API now exposes bounded operator review and signed
+recovery actions, including reviewed interruption resolution without replay. Separate read/signing credentials, reviewed revisions,
+restore fencing and durable replay receipts remain mandatory. It is not deployed and
+adds no routes to the current SHADOW observer or PAPER app.
+Opt-in HTTPS alert delivery now freezes a dedicated sink, persists attempts before sending,
+requires an exact acceptance receipt and retries the same alert ID within a bounded batch.
+Overdue/exhausted delivery blocks new entries and model calls; governed protective exits
+retain their existing checks. Delivery never acknowledges an alert or resumes execution.
+The independent `app.execution.alert_cli` now attaches without trader recovery and
+retains its own lifetime lease, delivering halt alerts even after the trader stops.
+New populations may explicitly enroll with `init --alert-origin --alert-token-file`;
+its run/once/report commands retain existing receipt, retry and backlog gates.
+This is verified with a local TLS sink; no external notifications or server changes were made.
+Private [execution evidence checkpoints](docs/EXECUTION_CHECKPOINTS.md) now capture the
+journal/authority pair consistently, support explicit verified-TLS archive retention/retrieval,
+and require an independently retained hash before recovery staging. Recovery preserves
+unresolved evidence and supplies no usable execution authority. Archive provisioning and
+actual off-host/host-failure verification remain pending; deployed SHADOW backups are unchanged.
+The standalone [native TLS archive receiver](docs/CHECKPOINT_ARCHIVE.md) provides
+private bounded append-only storage, durable receipts and original-byte retrieval.
+It is opt-in, independently provisioned and not installed on the trader host.
+Its separate [archive host service](docs/CHECKPOINT_ARCHIVE_HOST.md) supplies reviewed
+UID/storage/credential boundaries and bounded restart/shutdown without trader coupling.
+Inspection/staging bind the exact extracted envelope bytes to the independent pin
+before SQLite validation, rejecting in-place changes between scanning and extraction.
+An opt-in private capture catalog now freezes source identity and capacity, preserves
+incomplete attempts after crashes, and verifies local artifacts without restoring
+authority. Its optional isolated nightly systemd timer has no network or credentials;
+local captures do not provide off-host protection or automatic retention deletion.
+
+A separate [isolated PAPER host layout](docs/PAPER_HOST.md) now provides independent
+systemd units for runtime, operator control and alerts, with frozen paths and separate
+credential namespaces. Runtime failure does not automatically restart trading or
+terminate the companions. Native fixture lifecycle tests and parser validation are
+separate from actual target-host installation and sandbox verification.
+The installed read-only `app.execution.host_audit` collects reviewed unit/process/
+credential-mount metadata for those three services. Matching snapshots retain
+`host_acceptance=UNVERIFIED`; boot, lifecycle, provider and recovery gates remain open.
+An opt-in [disposable sandbox harness](docs/PAPER_SANDBOX_ACCEPTANCE.md) now tests
+the four reviewed role credential patterns on a systemd host with harmless files,
+including peers created after startup. The operator's target-host run observed all
+eight cases; dummy probe results remain separate from full application acceptance.
+
+## Slice 2 — Robinhood read / SHADOW
+
+Development lives on `slice2/robinhood-read-shadow`.
+
+Robinhood OAuth state is stored outside the repository at `~/.trade-bot/robinhood-oauth.json` by default. Never commit or share that file.
+
+Schema discovery:
+
+```bash
+python -m app.robinhood.cli discover
+```
+
+Safe authenticated read/reconciliation probe:
+
+```bash
+python -m app.robinhood.cli probe
+```
+
+One SHADOW cycle, no model cost:
+
+```bash
+python -m app.robinhood.cli shadow-cycle --agent stub
+```
+
+One SHADOW cycle using the reasoning agent:
+
+```bash
+python -m app.robinhood.cli shadow-cycle --agent openai
+```
+
+SHADOW uses real Robinhood account/market data and may call `review_equity_order` to preview a hypothetical order. It cannot place or cancel an order. Robinhood-backed state is stored separately in `./robinhood.db` by default.
+
+New isolated PAPER populations can explicitly bind their quote feed to the bounded
+Robinhood market-only collector. Its headless child returns no real account values;
+the engine supplies virtual ledger authority. Existing fixture populations and the
+deployed worker remain separate. Add `--continuous-market` at initialization to
+compose repeated bounded refreshes into that population's PAPER runtime. Cold flat
+accounts have bounded warmup; failed refreshes halt and revoke entry/model admission.
+Authenticated timing and deployment remain pending; see `docs/PAPER_RUNTIME.md`.
+The isolated collector rejects ambiguous symbol rows and malformed historical
+indicator inputs before publication. Its full 20-symbol native-child fixtures
+remain local contract proof; authenticated market timing is still a separate gate.
+Successful isolated collection now returns measured read/reaping/publication time,
+observed safe-tool counts and saved sample lineage. The
+[full-universe procedure](docs/PAPER_MARKET_ACCEPTANCE.md) preserves explicit
+one-shot ownership and keeps provider acceptance unverified until actual evidence.
+
+The isolated PAPER operator API now has a native TLS entry point:
+`python -m app.execution.control_cli`. It attaches to existing verified state
+without running trader startup recovery, so starting the companion cannot convert
+an active submission to UNKNOWN. New populations can explicitly enroll their signing
+capability with `init --operator-key-file`; credentials and TLS must be provisioned
+separately. This companion is not deployed to the current SHADOW server.
+
+Quote freshness conservatively uses the oldest bid, ask and selected trade clock.
+A fresh component cannot hide stale executable prices; missing, naive or future
+required timestamps fail collection closed. The governor retains its configured
+age limit. This adapter change is locally verified, not deployed or authenticated
+against the current account; see `docs/SLICE2_STATUS.md`.
+
+Inspect persisted evidence without network calls:
+
+```bash
+python -m app.robinhood.cli shadow-audit
+python -m app.robinhood.cli shadow-history --limit 100
+python -m app.robinhood.cli shadow-outcomes --limit 100
+```
+
+New SHADOW cycles save their decision, exact model usage, account/benchmark snapshots and
+reconciliation evidence atomically. Older cycles remain available, with unlinked usage explicitly
+marked. Stub cycles use model identity `stub`. Model failures save HOLD and exit 8;
+broker-review failures save their evidence and exit 9. Neither failure submits an order.
+
+History shows action/failure/review counts, known model cost and raw SPY price observations.
+It does not infer fills, strategy P&L or alpha. The authenticated model-to-SHADOW core
+is verified; see `docs/SLICE2_STATUS.md` for evidence and remaining experiment work.
+
+Regular-session scheduling (install the updated dependencies with `pip install -e '.[dev]'`):
+
+```bash
+python -m app.robinhood.cli shadow-run --agent openai --once
+python -m app.robinhood.cli shadow-schedule-status
+python -m app.robinhood.cli shadow-run --agent openai
+```
+
+For continuous operation on a Linux server, use the detached SHADOW service in
+[docs/SHADOW_SERVER.md](docs/SHADOW_SERVER.md). It keeps state outside the code checkout,
+restarts with Docker and uses private credential files. A separate password-protected
+SHADOW observer reads saved history on a localhost-only port through an SSH tunnel.
+The Mac can be shut down after migration and server verification.
+
+The observer shows worker heartbeat/halt state, account snapshot age, model proposals,
+deterministic risk results, review completion, linked model cost and forward quote
+outcomes. Opening or refreshing it never runs a cycle or calls a broker/model.
+It has no trading or recovery controls. The existing `app.main` remains PAPER-only.
+See the server guide for access and the separate `app.web.shadow:create_shadow_app`
+application; it refuses startup without SHADOW mode, LIVE disabled and a private
+password file.
+
+The foreground runner remains useful for local checks. Both runners poll every
+30 seconds and attempt the current 15-minute XNYS regular-session slot, handling
+holidays, early closes and daylight saving. Closed sessions skip broker/model calls.
+Run only one runner against the brokerage account, including across different machines.
+
+Persistent SQLite claims prevent duplicate scheduled cycles across restarts/workers
+using the same database; missed slots are not replayed. An interrupted active claim
+blocks new scheduled cycles until inspected and resolved, with no automatic expiry.
+Session closure prevents model judgment or broker review as appropriate. Daily entry
+review limits and exit cooldown persist. History distinguishes actual model HOLDs
+from deterministic guards, stub decisions and unattributed legacy HOLDs.
+
+New scheduled cycles also collect fixed 15/60-minute forward quote outcomes for
+approved reviewed entries and model cash HOLDs, using already-read quotes. Outcomes
+require fresh paired quotes from the same regular session and persist their source
+and measurement cycle IDs. Missing observations expire without next-session backfill.
+The local `shadow-outcomes` report compares quote changes with SPY after linked source
+model cost. Initial output is EMPTY until new cycles are collected. These overlapping
+proposal samples are separate from portfolio fills, profit and compounding returns.
+
+## Isolated PAPER engine service
+
+The opt-in [fixture PAPER service](docs/PAPER_RUNTIME.md) now connects independent
+supervision, durable XNYS cycle claims, bounded judgment, deterministic admission and
+fake dispatch. Default is audited stub HOLD. Restarts never replay an attempted slot;
+shutdown revokes entry health and retains interrupted claims for signed review.
+Resolution requires fresh reconciled truth, settled model evidence and terminal
+orders, preserves the original cycle and retains the halt until separate RESUME. It requires
+separate fixture stores and does not upgrade the deployed SHADOW worker or enable LIVE.
+
+## Sequential virtual bankroll
+
+The opt-in [synthetic portfolio experiment](docs/SYNTHETIC_EXPERIMENT.md) adds persistent
+virtual cash/one position, later-quote fills, deterministic stops/session exits,
+model-cost-adjusted returns, a paired SPY portfolio and observed drawdown. The sole
+model sees that virtual account, so its decisions and costs form a separately named
+population. This profile uses Robinhood READ only, including rejecting order review.
+Initialize an immutable experiment ID, select it for the existing scheduled worker
+and inspect its own report/private dashboard section. The default SHADOW profile
+continues to use real-account context.
+
+Linux server dependencies are pinned in `requirements-runtime.lock` and
+`requirements-build.lock`; the worker image installs them without resolving newer
+versions. For a matching Linux Python 3.12 development environment:
+
+```bash
+pip install --no-deps -r requirements-build.lock -r requirements-dev.lock
+pip install --no-deps --no-build-isolation -e .
+pytest -q
+```
+
+`scripts/lock-dependencies.py --check` verifies those pins against an installed,
+tested Linux Python 3.12 environment. Refreshing pins requires a clean install and
+full verification. OS/image artifacts and authenticated host operation remain
+separate deployment checks.
