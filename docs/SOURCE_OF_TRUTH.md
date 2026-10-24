@@ -1,18 +1,17 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.113. Adopted product direction and working delivery contract, 2026-10-24 UTC.
-The [hybrid dashboard](MIXED_HYBRID_DASHBOARD.md) now implements the supplied
-layout with stored-only equity/trade panels, local inspection tabs, record ranges,
-exact-identity stage links and bounded activity. Its installed verification and
-remaining projections/browser acceptance are separate from host deployment.
-The operator's 77e69c6 preparation failed after one simulated venue acceptance with
-zero fills; the journal retained UNKNOWN and FixtureProcessTimeout. Preserve the
-partial fixture. Subsequent host probes exposed an avoidable Agents SDK import
-near the native deadline (4.831-second imports; 4.540-second snapshot child).
-The identical runtime lease is now imported only on owner entry. Native deadlines,
-approvals and uncertainty handling are unchanged. Explicit v2 recovery preserves
-v1 read-only; corrected Docker preparation, activation and browser review remain
-operator acceptance steps. See [correction proof](MIXED_CHILD_IMPORT_PROOF.json).
+Version 1.114. Adopted product direction and working delivery contract, 2026-10-24 UTC.
+The operator successfully prepared and activated the paused historical dashboard
+at `c2ad7ca22a1902dde9365eed475d004737bdbda7` using the separate v2 fixture.
+All 254 host-installed files matched and three simulated fill receipts were verified;
+authenticated health/content checks passed after startup retries. The original
+SHADOW worker/observer remained unchanged. Two operator desktop screenshots now
+show the populated page; mobile and interaction acceptance remain open.
+The [visual balance revision](MIXED_DASHBOARD_BALANCE.md) aligns the account/trade
+cards and the decisions/activity panels, defaults activity to three expandable
+rows and simplifies visible copy. Technical details remain inspectable. Its new
+layout requires browser review after the operator refreshes the existing reader;
+no fixture preparation or native engine change is part of this revision.
 The [explicit mixed research desk](MIXED_DASHBOARD.md) now presents stored common
 cash, full-cost flat balance boundaries, stock/options/Scope trade cards, original
 protection and separate proposal/approval/attempt/fill evidence. Its installed

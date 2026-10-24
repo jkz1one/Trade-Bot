@@ -64,10 +64,11 @@
     const allowed = ['ALL', 'DECISION', 'REVIEW', 'ATTEMPT', 'FILL', 'COST'];
     if (!allowed.includes(select.value)) select.value = 'ALL';
     const matches = events.filter(event => select.value === 'ALL' || event.dataset.eventKind === select.value);
-    events.forEach(event => { event.hidden = !matches.includes(event) || (!expanded && matches.indexOf(event) >= 8); });
+    events.forEach(event => { event.hidden = !matches.includes(event) || (!expanded && matches.indexOf(event) >= 3); });
     empty.hidden = matches.length !== 0;
-    more.hidden = matches.length <= 8;
-    more.textContent = expanded ? 'Show recent eight' : 'View retained history (' + matches.length + ')';
+    more.hidden = matches.length <= 3;
+    more.setAttribute('aria-expanded', String(expanded));
+    more.textContent = expanded ? 'Show recent three' : 'View more activity (' + matches.length + ')';
     saved.activity = select.value; save();
   }
   if (select) { select.value = saved.activity || 'ALL'; select.addEventListener('change', () => { expanded = false; filterActivity(); }); }

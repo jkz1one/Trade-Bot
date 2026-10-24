@@ -38,7 +38,7 @@ test('family filter applies only to attributed order cards',()=>{
  const d=desk();d.filters[2].events.click();
  assert.deepEqual(d.orders.map(o=>o.hidden),[true,false,true]);
  assert.equal(d.saved().family,'SWING');assert.equal(d.label.textContent,'SWING');
- assert.equal(d.events.filter(e=>!e.hidden).length,8);
+ assert.equal(d.events.filter(e=>!e.hidden).length,3);
 });
 test('missing family selection resets to All instead of hiding all evidence',()=>{
  const d=desk({stored:'{"family":"SCOPE"}'});
@@ -48,11 +48,15 @@ test('deep-linked order clears conflicting family filter',()=>{
  const d=desk({stored:'{"family":"SWING"}',hash:'#order-0'});
  assert.equal(d.saved().family,'ALL');assert.equal(d.orders[0].scrolled,true);
 });
-test('activity shows eight rows, expands on request, and filters real rows',()=>{
- const d=desk();assert.equal(d.events.filter(e=>!e.hidden).length,8);
+test('activity shows three rows, expands on request, and filters real rows',()=>{
+ const d=desk();assert.equal(d.events.filter(e=>!e.hidden).length,3);
  d.more.events.click();assert.equal(d.events.filter(e=>!e.hidden).length,12);
  d.select.value='FILL';d.select.events.change();
- assert.equal(d.events.filter(e=>!e.hidden).length,6);assert.equal(d.more.hidden,true);
+ assert.equal(d.events.filter(e=>!e.hidden).length,3);assert.equal(d.more.hidden,false);
+ assert.equal(d.more.attrs['aria-expanded'],'false');
+ d.more.events.click();assert.equal(d.events.filter(e=>!e.hidden).length,6);
+ assert.equal(d.more.attrs['aria-expanded'],'true');
+ d.more.events.click();assert.equal(d.events.filter(e=>!e.hidden).length,3);
  assert.ok(d.events.filter(e=>!e.hidden).every(e=>e.dataset.eventKind==='FILL'));
 });
 test('point inspection works by focus and tap with exact saved values',()=>{

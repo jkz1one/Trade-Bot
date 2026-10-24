@@ -74,7 +74,7 @@ def test_stale_owned_mark_is_withheld_without_losing_thesis(tmp_path):
         assert data["health"] == "STALE" and data["equity"] is None
         assert data["position"]["mark"] is None and data["position"]["gross_unrealized"] is None
         assert data["position"]["thesis"] == entry.thesis
-        assert "STALE_OR_MISSING" in render(data)
+        assert "stale or missing" in render(data)
 
 
 def test_roundtrip_history_has_open_gap_and_exact_full_cost_close(tmp_path):
@@ -154,7 +154,9 @@ def test_paid_proposal_cost_and_actual_attempt_are_separate(tmp_path, monkeypatc
             assert data["decisions"][0]["proposal"]["action"] == "HOLD"
         if mode == "UNKNOWN":
             assert data["equity"] is None and data["unknown_costs"]
-        assert "Proposals, native approvals, attempts and actual fills are distinct" in render(data)
+        html = render(data)
+        for label in ("01 Proposal", "02 Approval", "03 Attempt", "04 Fills"):
+            assert label in html
 
 
 @pytest.mark.parametrize("choice", ["OPTION", "SCOPE"])

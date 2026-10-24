@@ -50,7 +50,7 @@ def mixed_view(data):
             "label": "Proposal",
             "value": (selected.get("proposal") or {}).get("action", "No model proposal recorded")
             if selected
-            else "Native plan retained"
+            else "Recorded plan"
             if first
             else "No record",
             "at": selected["started_at"]
@@ -61,8 +61,8 @@ def mixed_view(data):
             "href": destination,
         },
         {
-            "label": "Native review",
-            "value": "Approved terms retained"
+            "label": "Approval",
+            "value": "Approved terms"
             if first
             else "See saved review"
             if selected
@@ -101,14 +101,14 @@ def mixed_view(data):
         }
         activity.append(
             base
-            | {"kind": "REVIEW", "label": "Native approval retained", "at": intent["prepared_at"]}
+            | {"kind": "REVIEW", "label": "Order approved", "at": intent["prepared_at"]}
         )
         if order["attempted_at"]:
             activity.append(
                 base
                 | {
                     "kind": "ATTEMPT",
-                    "label": "Attempt recorded · " + order["status"],
+                    "label": "Order attempt · " + order["status"],
                     "at": order["attempted_at"],
                 }
             )

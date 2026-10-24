@@ -23,7 +23,25 @@ fi
 [[ -d "$review_data" && ! -L "$review_data" ]] || exit 1
 [[ "$(stat -c '%u:%g:%a' "$review_data")" == 10001:10001:700 ]] || exit 1
 
-case "${1:-}" in
+review_action="${1:-}"
+review_previous_image=trade-bot-dashboard:cc990cf
+if [[ "$review_action" == refresh ]]; then
+  [[ "$review_name" == ui-review-v2 ]] || exit 1
+  review_previous_image=trade-bot-dashboard:c2ad7ca22a1902dde9365eed475d004737bdbda7
+  review_backup=trade-bot-dashboard-before-layout
+  [[ "$(docker inspect --format '{{.Config.Image}}' trade-bot-dashboard)" == "$review_previous_image" ]] || {
+    echo 'Unexpected dashboard release; inspect before refresh.' >&2; exit 1;
+  }
+  if docker container inspect "$review_backup" >/dev/null 2>&1; then
+    echo 'Layout rollback container already exists; inspect before refresh.' >&2; exit 1
+  fi
+  [[ -f "$review_data/$review_name/review.json" ]] || exit 1
+  docker build -f Dockerfile.shadow --build-arg "TRADE_BOT_RELEASE=$review_release" \
+    -t "$review_image" .
+  review_action=activate
+fi
+
+case "$review_action" in
   prepare)
     [[ ! -e "$review_data/$review_name" ]] || {
       echo 'Review directory already exists. Do not overwrite or rerun it.' >&2; exit 1;
@@ -80,7 +98,7 @@ assert data['cash'] == manifest['cash'] and data['equity'] == manifest['equity_a
 create_options_app(journal, manifest['population_id'], '/run/secrets/dashboard_password', mixed=True, review_at=manifest['as_of'])
 print(json.dumps({'installed_files_match': count, 'native_fixture_verified': True}))
 PY
-    [[ "$(docker inspect --format '{{.Config.Image}}' trade-bot-dashboard)" == trade-bot-dashboard:cc990cf ]] || {
+    [[ "$(docker inspect --format '{{.Config.Image}}' trade-bot-dashboard)" == "$review_previous_image" ]] || {
       echo 'Unexpected current dashboard release; inspect before replacement.' >&2; exit 1;
     }
     if docker container inspect "$review_backup" >/dev/null 2>&1; then
@@ -125,7 +143,7 @@ assert data['review']['mode'] == 'FROZEN_OFFLINE_UI_FIXTURE' and data['fill_coun
 assert not data['live_enabled'] and not data['execution_authority']
 request = urllib.request.Request('http://127.0.0.1:8790/', headers=header)
 with urllib.request.urlopen(request, timeout=10) as response:
-    assert b'Paused historical UI fixture' in response.read()
+    assert b'Paused historical simulation' in response.read()
 print(json.dumps({'authenticated': True, 'mode': data['review']['mode'], 'native_fill_receipts': 3}))
 PY
     [[ "$(docker inspect --format '{{.Id}} {{.Image}} {{.State.StartedAt}}' trade-bot-shadow-shadow-1 trade-bot-shadow-observer-1)" == "$review_worker_before" ]]
@@ -133,5 +151,5 @@ PY
     echo 'Review active at https://signalflow.duckdns.org/ with the existing login.'
     echo 'No PAPER runtime, collector or model worker was started for this review.'
     ;;
-  *) echo 'Usage: bash scripts/dashboard-review-host.sh prepare|activate [ui-review-v1|ui-review-v2]' >&2; exit 2 ;;
+  *) echo 'Usage: bash scripts/dashboard-review-host.sh prepare|activate|refresh [ui-review-v1|ui-review-v2]' >&2; exit 2 ;;
 esac

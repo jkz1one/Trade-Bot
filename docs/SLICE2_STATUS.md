@@ -1,6 +1,33 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
 
+## Dashboard visual balance and successful v2 host receipt: 2026-10-24 America/New_York
+
+Fresh local/GitHub HEAD matched `c2ad7ca22a1902dde9365eed475d004737bdbda7`,
+tree `3da19862e364d1fa5d75b34c0f08e0f543a557f6`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 remains open/draft.
+
+The operator completed v2 preparation and dashboard activation: 254 matching
+installed application files, three native simulated fills, $803.64 cash and
+$1,001.87 historical equity. Startup curl resets resolved within retries;
+health, private authentication, frozen mode and unchanged SHADOW service checks
+passed. Two populated desktop screenshots are now baseline visual evidence.
+V1 is preserved; cc990cf remains as the first rollback container.
+
+At the user's request, the top cards now share a row height; lower navigation
+sits above the decisions/activity cards, which share top/default bottom edges.
+Activity shows three rows and expands independently. Developer-oriented prose is
+trimmed, identifiers/JSON moved under System and simulation/protection/cost/stale
+meaning preserved. Only presentation code changes. The guarded refresh reuses v2
+read-only, preserving both existing journals and a separate c2ad7ca rollback reader.
+No fixture replay, new trader, provider/model/broker call, dependency or engine change.
+
+163 distinct installed Python cases and 14 JavaScript cases passed. All 254
+application/template files match source, wheel and installed bytes. Four original
+wording assertions were updated and rechecked; no data assertions were removed.
+[Contract and installed proof](MIXED_DASHBOARD_BALANCE.md). Updated browser review
+of this revision, including mobile and expansion behavior, remains pending.
+
 ## Native fixture child import correction: 2026-10-24 UTC
 
 Fresh GitHub/local HEAD matched `b9b5134d9e525e619893dd37afb4a51d7868c2a8`,

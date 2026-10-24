@@ -16,13 +16,11 @@ state. A [paused offline review account](docs/MIXED_DASHBOARD_REVIEW.md) now has
 installed verification and a guarded host helper; populated visual review and
 authentic acceptance remain open.
 
-The [hybrid layout and host incident](docs/MIXED_HYBRID_DASHBOARD.md) now retain
-persistent equity/trade inspection and a read-only diagnostic for the failed
-77e69c6 host fixture. Host evidence identified unnecessary model-runtime imports
-near the five-second deadline; the owner lease is now imported only on owner entry.
-Preserve the failed v1 directory. The [recovery runbook](docs/MIXED_DASHBOARD_REVIEW.md)
-uses a separate create-only v2 fixture with v1 mounted read-only. The updated UI
-is not yet deployed or browser accepted.
+The [hybrid dashboard](docs/MIXED_HYBRID_DASHBOARD.md) is now active as a paused
+historical simulation with three verified simulated fills. The original failed
+fixture remains preserved. [Visual balance and simpler copy](docs/MIXED_DASHBOARD_BALANCE.md)
+now align the dashboard cards and shorten recent activity. The refresh command
+reuses the existing frozen account; updated desktop/mobile visual review remains open.
 
 ## Current product direction
 

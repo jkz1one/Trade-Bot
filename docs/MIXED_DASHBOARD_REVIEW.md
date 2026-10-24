@@ -63,6 +63,31 @@ The correction defers the unchanged owner lease import until owner entry; native
 children no longer initialize that model runtime. No engine deadline or approval
 safeguard has been weakened. [Correction proof](MIXED_CHILD_IMPORT_PROOF.json).
 
+## Activated v2 and layout refresh
+
+The operator completed v2 preparation and activation at `c2ad7ca` on October 24.
+The host verified all 254 installed application files and three simulated fills.
+Cash was $803.64 and historical equity $1,001.87. Journal SHA-256:
+`141c3a6ef3d8aeaa47c7919f0bb053810ce6930f3102e639cb22c33b3451b705`.
+Health/authentication checks passed after startup connection resets, and the
+original SHADOW service identity/start-time checks passed. The old cc990cf reader
+remains retained as `trade-bot-dashboard-before-review`. The two operator desktop
+screenshots show the populated account and activity; they precede the layout fix.
+
+After fetching and checking out the new layout revision, update only the reader:
+
+```bash
+bash scripts/dashboard-review-host.sh refresh ui-review-v2
+```
+
+This builds the new image and reuses the existing frozen v2 journal read-only.
+It does not prepare or replay a fixture. It requires the running c2ad7ca reader,
+preflights the same seed/journal/native evidence, retains that reader separately
+as `trade-bot-dashboard-before-layout` and uses the existing activation/rollback
+and authentication checks. V1 and the first rollback container remain untouched.
+Do not run preparation again. Review the refreshed desktop/mobile layout and
+activity expansion before accepting this visual revision.
+
 ## Prepare and activate the populated fixture
 
 After fetching and checking out the published release in the separate dashboard
