@@ -69,57 +69,32 @@ native verification has finished. No real account or credentials are involved.
 The helper creates desktop/mobile wrappers and the packaged local script in a new
 absolute output directory. It starts no HTTP server and performs no deployment.
 
-Actual desktop/mobile review, expanded states, keyboard use, clipping/contrast and
-screenshots remain **pending**. Earlier loopback previews were unreachable and
+The operator supplied an authenticated desktop screenshot of the deployed empty
+state on October 24. Populated desktop/mobile review, expanded states, keyboard
+use, clipping/contrast and screenshots remain **pending**. Earlier loopback previews were unreachable and
 workspace/file URLs were blocked by browser policy. Do not bypass those restrictions
 or represent generated HTML as screenshots. A reachable authorized review endpoint
 or operator browser evidence is still required before visual acceptance.
 
 ## Authorized deployment handoff
 
-The October 23 continuation explicitly requested deployment. That supersedes the
-earlier no-deployment instruction for this dashboard, not the LIVE/provider/model/
-broker restrictions. Main remains unchanged and PR #1 remains open/draft.
-No server change has been performed: this workspace has no configured SSH access,
-SSH agent or connected host execution tool. The documented existing endpoint
-`signalflow.duckdns.org` serves the frozen SHADOW/virtual-v1 observer, whose journal
-schema is different. A mixed observer cannot adopt that journal or replace its
-worker by changing a command-line flag.
+The October 23 continuation authorized dashboard deployment, superseding the
+original no-deployment constraint for this separate reader. On October 24 the
+operator deployed `cc990cf`, verified local health and HTTP 401, and switched the
+existing HTTPS route to the new reader on port 8790. The original SHADOW worker
+and observer remain at `de5dd1c`; their journal is incompatible with the native
+mixed reader and is not adopted. The new data directory was initially empty.
 
-Deploy this reader separately, against an explicitly selected existing native
-mixed journal, using its owner UID and a verified noneditable installed release.
-Keep all execution/provider credentials unavailable to the reader. Its password
-must be an absolute owned regular mode-0600 file containing 24–512 visible ASCII
-characters. The journal must also satisfy the reader's private ownership checks.
-Neither source file is created, migrated or repaired by the observer.
+See the [offline review runbook](MIXED_DASHBOARD_REVIEW.md) for the operator receipt,
+explicit historical fixture, installed proof, guarded preparation/activation and
+rollback. The populated fixture release has not yet been activated on the host.
+Its one-shot native creation is separate from HTTP reads; the observer retains a
+read-only mount and no execution or provider/model credentials. The existing
+password remains private and is never printed by the helper.
 
-After provisioning those explicit paths on the target host, the installed entry
-point is:
-
-```bash
-/absolute/verified/venv/bin/python -I -m app.options.observer_cli \
-  --mixed \
-  --journal /absolute/private/native-mixed/journal.db \
-  --population-id EXACT_EXISTING_POPULATION \
-  --password-file /absolute/private/observer.password \
-  --port 8790
-```
-
-This binds loopback only with access logs disabled. Retain authentication through
-an existing approved SSH tunnel or separately configured HTTPS endpoint. Do not
-publish plain HTTP, change the existing SHADOW proxy/worker, initialize a trader,
-or run `shadow-server.sh start` as a dashboard upgrade. Reusing the old synthetic
-data requires a separately scoped SHADOW presentation adapter, not invented mixed
-state. A demonstration journal must be labeled fixture data, never live account data.
-
-Before activation, retain the prior observer command/release for rollback and
-confirm the selected journal/population and isolated dependency inventory. Verify
-unauthenticated requests receive 401, authenticated stored reads work, mutation
-requests are rejected, no source bytes change, and actual desktop/mobile screenshots
-are reviewed. `/healthz` only proves process response, not worker or market health.
-Rollback stops only the new reader and restores its prior route/release; it does
-not alter the journal or worker. Host execution and rollback remain unexercised.
-
-Outstanding deployment inputs: authorized host access, selected existing mixed
-journal/population and its owner, and the separate private route. Authentic
-provider/normalization/model/host/economic/PAPER acceptance remains open. LIVE is disabled.
+This workspace has no direct host execution access. Operator commands and browser
+evidence establish only the specifically observed steps. The old deployment proof
+is a historical record; it is not retroactively changed. `/healthz` proves process
+response only. Populated browser and authentic provider/normalization/model/host/
+economic/PAPER acceptance remain open. LIVE remains disabled, main unchanged and
+PR #1 open/draft. No continuous PAPER runtime or paid call is authorized here.

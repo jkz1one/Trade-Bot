@@ -1,6 +1,49 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
 
+## Paused native UI fixture and operator deployment receipt: 2026-10-24 UTC
+
+Fresh GitHub/local HEAD matched `cc990cf5dd1b29f14449b3e4b59b98a13b5ead4c`,
+tree `efe4afeaadd56e031c2952d4a9b7fe45a762991b`; PR #1 was open/draft and main
+remained `b5359aaf396e692d2142d7e02908f1544e045ee6`.
+
+The operator deployed the separate `cc990cf` reader on loopback 8790, verified
+health and authentication, and switched Caddy's existing HTTPS route from 8787 to
+8790 after validation. The frozen original worker/observer stayed at `de5dd1c`.
+An authenticated 2048×1152 desktop screenshot shows the truthful empty mixed desk
+(`DATABASE_NOT_CREATED`). This is actual empty-state browser evidence, not
+populated/mobile/keyboard visual acceptance. The [runbook](MIXED_DASHBOARD_REVIEW.md)
+retains the exact operator deployment and route-backup details.
+
+The authorized next step now provides a create-only offline native UI fixture:
+$1,000 virtual capital, three actual simulated fill receipts, a closed trade,
+an open share position and tightened native stop. All source clocks and original
+terms remain historical. The explicit observer review clock displays a prominent
+paused-fixture banner; ordinary current-clock reads remain stale and withhold
+equity. No real feed, paid model, broker, continuous PAPER runtime or collector
+runs. Fixture risk settings are not operating recommendations.
+
+Final wheel SHA-256:
+`b1549e4cc284d347465f8371aad10d9787d99f5408ffb7d3bb11aaa504d1f682`.
+**156 distinct installed Python checks passed in 82.30 seconds**, including six
+new cases; **7 JavaScript unit cases passed**. Serial native tests used copied
+tests outside the checkout, noneditable wheel, Python `-I`, warnings as errors,
+disabled plugin autoload and explicit anyio. All **247 application/template files**
+match source, wheel and installed bytes; **245 are unchanged** from `cc990cf`.
+Only the web factory and mixed template changed. Lint/format, fatal lint, locked
+dependencies, pip consistency, documentation links, shell syntax and whitespace
+checks pass. [New proof](MIXED_DASHBOARD_REVIEW_PROOF.json) retains exact case IDs
+and identities; prior wheel counts are not added again.
+
+The guarded host helper builds the exact release, creates the fixture with network
+disabled, checks native accounting and installed bytes, and retains the old reader
+for rollback. It verifies private authentication without printing the password and
+checks original SHADOW container identity/start times. Actual populated activation
+and host rollback are pending operator execution; no direct host access exists in
+this workspace. No dependency, engine or strategy change. Main and PR status remain
+unchanged. Authentic acceptance and mixed benchmark presentation remain open.
+
+
 ## Mixed dashboard verification and deployment handoff: 2026-10-23 America/New_York
 
 Fresh GitHub/local HEAD matched `21fb5917bea055826e27b0b686d7c75bc3ee8e18`,

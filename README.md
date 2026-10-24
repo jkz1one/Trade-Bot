@@ -11,8 +11,10 @@ authentic data/model, host and visual acceptance remain separate gates.
 
 The [mixed-account dashboard](docs/MIXED_DASHBOARD.md) now adds an explicit stored
 stock/options/Scope desk, persistent balance history, trade cards and local detail
-tabs. Installed proof and a separate deployment handoff are retained; browser
-screenshots and target-host deployment remain open.
+tabs. The operator deployed the separate reader and reviewed its empty desktop
+state. A [paused offline review account](docs/MIXED_DASHBOARD_REVIEW.md) now has
+installed verification and a guarded host helper; populated visual review and
+authentic acceptance remain open.
 
 ## Current product direction
 

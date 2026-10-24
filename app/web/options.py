@@ -2,6 +2,7 @@
 
 import os
 import stat
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from secrets import compare_digest
@@ -42,8 +43,24 @@ def password(path):
 
 
 def create_options_app(
-    journal, population_id, password_file, *, clock=utc_now, comparison_file=None, mixed=False
+    journal,
+    population_id,
+    password_file,
+    *,
+    clock=utc_now,
+    comparison_file=None,
+    mixed=False,
+    review_at=None,
 ):
+    if review_at is not None:
+        from app.options.engine import clock as checked_clock
+
+        if not mixed or not population_id.startswith("ui-review-") or clock is not utc_now:
+            raise ValueError("Frozen review requires an explicit isolated mixed UI population")
+        review_at = checked_clock(datetime.fromisoformat(review_at))
+        if review_at > utc_now():
+            raise ValueError("Review timestamp must be historical")
+        clock = lambda: review_at
     if not Path(password_file).is_absolute():
         raise ValueError("Absolute private observer password path required")
     password(password_file)
@@ -104,6 +121,8 @@ def create_options_app(
         if mixed and family != "ALL":
             raise HTTPException(422, "Mixed desk shows the common account; use ALL")
         data = observer.report(limit=limit, before=before, family=family)
+        if review_at is not None:
+            data["review"] = {"mode": "FROZEN_OFFLINE_UI_FIXTURE", "as_of": review_at.isoformat()}
         return JSONResponse(data, status_code=503 if data["status"] == "UNAVAILABLE" else 200)
 
     @app.get("/", response_class=HTMLResponse, dependencies=[Depends(authenticate)])
@@ -117,6 +136,8 @@ def create_options_app(
         if mixed and family != "ALL":
             raise HTTPException(422, "Mixed desk shows the common account; use ALL")
         data = observer.report(limit=limit, before=before, family=family)
+        if review_at is not None:
+            data["review"] = {"mode": "FROZEN_OFFLINE_UI_FIXTURE", "as_of": review_at.isoformat()}
         from app.options.comparison_view import chart_data
 
         return templates.TemplateResponse(

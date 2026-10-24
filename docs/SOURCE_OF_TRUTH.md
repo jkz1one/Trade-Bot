@@ -1,14 +1,17 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.110. Adopted product direction and working delivery contract, 2026-10-23 UTC.
+Version 1.111. Adopted product direction and working delivery contract, 2026-10-24 UTC.
 The [explicit mixed research desk](MIXED_DASHBOARD.md) now presents stored common
 cash, full-cost flat balance boundaries, stock/options/Scope trade cards, original
 protection and separate proposal/approval/attempt/fill evidence. Its installed
 verification is retained in [proof](MIXED_DASHBOARD_PROOF.json). Browser visual
-acceptance and separately bound mixed benchmark presentation remain open. The user
-has now requested dashboard deployment; host access and a compatible journal/route
-are still missing, and no server was changed. This does not authorize LIVE or
-provider/model/broker calls, re-enrollment or changing the frozen worker.
+acceptance and separately bound mixed benchmark presentation remain open. The
+operator deployed the separate reader at `cc990cf` through the existing HTTPS
+route and supplied an authenticated empty-state desktop screenshot. A separately
+labeled [paused offline UI fixture](MIXED_DASHBOARD_REVIEW.md) now has 156 installed
+Python checks and 7 JavaScript checks; its populated host activation remains pending.
+This creates no prospective PAPER enrollment or running trader. LIVE and authenticated
+provider/model/broker calls remain unauthorized; the frozen worker is unchanged.
 
 [Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now connects
 choice-only B, matched independent native accounts and portable full-cost export.
