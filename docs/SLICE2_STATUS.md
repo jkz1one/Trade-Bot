@@ -1,5 +1,25 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Two-play audit and isolated admission constraints: 2026-10-25 America/New_York
+
+Verified local/remote starting HEAD d2092f16cc99a3749be04fb2bd5a5d26fa0e30bc,
+clean working tree, unchanged main b5359aaf396e692d2142d7e02908f1544e045ee6
+and open/draft PR #1. No applicable AGENTS.md found.
+
+[File map and invariants](TWO_PLAY_IMPLEMENTATION.md) cover native journal locks,
+scalar ledgers, reservation accounting, protection/model/runtime/observer assumptions
+and missing continuous delivery. The new order-free portfolio_capacity constraints
+use one bankroll, pending-entry capacity, disjoint invested/reserved funds, original
+entry identities and a shared SPY/QQQ/SPX index exposure cap. Lowering the supported
+0/1/2 limit never removes existing plays. No admin endpoint is exposed.
+
+[Installed evidence](TWO_PLAY_CAPACITY_PROOF.json): 11 tests; all 260 application files
+match source/wheel/installed bytes. These are constraint tests, not native two-play
+or concurrency acceptance. Native preparation, accounting/recovery, independent
+protection, selection, model schema, feed and dashboard integration remain unfinished.
+No deployment, database migration, provider/model call, hosted CI or PAPER/LIVE
+activation. d2092f1 dashboard deployment remains unconfirmed.
+
 ## Detail-panel balance and navigation cleanup: 2026-10-25 America/New_York
 
 Starting local/remote HEAD `a51a3133f2da2196dac45f59598916a57b95b694`, tree

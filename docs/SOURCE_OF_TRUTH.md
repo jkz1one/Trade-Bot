@@ -1,6 +1,15 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.124. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
+Version 1.125. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
+
+The user now requires up to two simultaneous PAPER plays before the first connected
+PAPER test. The [two-play implementation map](TWO_PLAY_IMPLEMENTATION.md) records
+the audited single-position assumptions, accounting invariants and remaining work.
+Only an order-free capacity/funding constraint module is implemented at this
+checkpoint, with 11 installed cases. It is not wired into native admission.
+Atomic reservation, multi-play accounting/protection/recovery, selection, feed and
+dashboard integration remain incomplete. No two-play deployment or PAPER activation
+is authorized by this evidence. Existing databases and runtime behavior are unchanged.
 
 The [Data Stream/dashboard release](MIXED_DATA_STREAM.md) adds retained quote/event
 records inside the existing detail tabs, clearer average-entry/bid/ask/P&L display,
