@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.119. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
+Version 1.120. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
 
 The operator restored interactive authorization, then supplied successful headless
 schema discovery with the unchanged pin and a completed four-read capture at
@@ -13,12 +13,16 @@ raw receipts remain untouched. No engine/dependency/strategy/authority change.
 119 installed Python cases and all 256 source/wheel/installed file matches pass.
 The earlier failed attempts remain preserved. No authenticated workspace calls.
 
-A prepared two-read contract plan uses observed SPY/QQQ chain IDs, October 26 expiry
-and exact sample strikes 760/705. It is validated offline; contract/option quote and
-option historical reads have not occurred. The existing diagnostic image can capture
-these raw responses without a dashboard refresh; the mapper update is locally tested
-but not yet deployed to that image. Full contract metadata, entitlement, stock sizes,
-ongoing feed integration and connected PAPER acceptance remain incomplete. No new
+The operator then executed the two-read contract plan using observed SPY/QQQ chain
+IDs, October 26 expiry and exact sample strikes 760/705. Both calls completed with
+empty instrument lists and no cursor; no option UUID was returned. The cause is
+not established. The [next two-call diagnostic](ROBINHOOD_SAMPLE_ACCEPTANCE.md#exact-strike-lookups-returned-no-contracts)
+changes only the string strikes to 760.0000/705.0000, matching the schema's example
+format. Both forms are schema-valid; this is a hypothesis check, not a proven fix.
+No application changes or additional workspace provider calls. The existing capture
+image is sufficient and no dashboard refresh is needed. Prior artifacts stay intact.
+Option quotes/history, full contract metadata, entitlement, stock sizes, ongoing
+feed integration and connected PAPER acceptance remain incomplete. No new
 PAPER/model/LIVE activation, paid call, account read or broker order is included.
 
 The operator successfully refreshed the separate dashboard to

@@ -36,7 +36,28 @@ mapped observations still have UNKNOWN entitlement. This has not started a feed,
 trader, model worker or prospective PAPER owner. The six-tool contract is not fully
 accepted: actual instrument, option quote and option historical samples remain open.
 
-## Next bounded contract sample
+## Exact-strike lookups returned no contracts
+
+The operator ran the two-call plan below and supplied capture
+`dc802a20006f48beb3cab49177b34596`, completed October 25 at 00:56:10 EDT.
+Both calls passed the pinned output schemas and returned `instruments: []`, with
+no `next` cursor. The retained plan exactly matches the requested chain/expiry/
+strike/state/tradability filters. This is a successful read with empty results,
+not contract discovery success. There are no returned UUIDs for quote requests.
+The reason is not established: do not infer absent Monday contracts, authorization
+failure or unsupported symbols from this filtered result. [Evidence receipt](ROBINHOOD_EMPTY_CONTRACTS_PROOF.json).
+
+The next [two-call formatting diagnostic](../examples/robinhood-contract-format-read-plan.json)
+changes only string strikes from `760`/`705` to `760.0000`/`705.0000`, following the
+pinned input schema's example `150.0000`. Both old and new representations are
+schema-valid. Numeric strikes, chain IDs, expiry and all other filters remain
+identical. This tests representation sensitivity; it is not a proven fix or a
+new contract assumption. No code, dependency or engine change is needed. No
+additional reads have been executed from this workspace. Keep the empty result
+and inspect the next output before choosing another diagnostic; no retry loop or
+automatic pagination is introduced.
+
+## Original bounded contract sample (completed with empty results)
 
 [Prepared plan](../examples/robinhood-contract-read-plan.json), SHA-256
 `d99b811e760fa8e766f4e4894e5a0bf3bcb5655688997a40ce67c7595de7ad93`, requests two
@@ -48,8 +69,8 @@ exist. Empty results, alternate metadata or pagination must be inspected. There 
 no automatic pagination, retry, quote call, account read, broker action or model call.
 Returned exact UUIDs will determine the next quote/history requests after review.
 
-The operator executes the next step. This plan extends the previous four-read batch;
-no additional authenticated calls have been executed by this workspace. Fetch and
+The operator executes the next formatting diagnostic. It extends the prior sample work;
+no authenticated calls have been executed by this workspace. Fetch and
 check out the published revision supplied in chat first. The existing diagnostic
 image already has the unchanged capture CLI; no image rebuild/dashboard refresh is
 needed to capture these raw responses. The new mapper is tested locally and is not
@@ -64,9 +85,9 @@ cd /opt/trade-bot-dashboard
 git fetch origin slice2/robinhood-read-shadow
 test -z "$(git status --porcelain)"
 # Check out the published revision supplied with this command before continuing.
-printf 'd99b811e760fa8e766f4e4894e5a0bf3bcb5655688997a40ce67c7595de7ad93  examples/robinhood-contract-read-plan.json\n' | sha256sum --check --status
-contract_dir=$(mktemp -d /root/trade-bot-contract-samples-XXXXXX)
-install -m 600 examples/robinhood-contract-read-plan.json "$contract_dir/plan.json"
+printf 'fb395c123226d5d0369e0c3bb846138ad57572c8e31e252e3804463b30a2f208  examples/robinhood-contract-format-read-plan.json\n' | sha256sum --check --status
+contract_dir=$(mktemp -d /root/trade-bot-contract-format-XXXXXX)
+install -m 600 examples/robinhood-contract-format-read-plan.json "$contract_dir/plan.json"
 contract_status=0
 docker run --rm --network bridge --init --read-only \
   --user 0:0 --cap-drop ALL --security-opt no-new-privileges:true \

@@ -1,5 +1,33 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Empty exact-strike contract responses: 2026-10-25 America/New_York
+
+Fresh local/GitHub HEAD is `d19d4ee395081c2094d78cdc7425ce938099d326`, tree
+`94b3da289dc058e1a7c706752fd53d3e8eada578`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 is open/draft.
+
+The operator supplied capture dc802a20006f48beb3cab49177b34596 at 00:56:10 EDT.
+Both exact planned instrument calls completed and validated against the pinned
+schemas, but returned empty lists with no pagination cursor. No instrument UUID
+or quote target is available. The reason is unproven; this does not establish
+absent Monday contracts or an authentication problem. [Hashes and receipt](ROBINHOOD_EMPTY_CONTRACTS_PROOF.json).
+
+The next [two-call diagnostic](ROBINHOOD_SAMPLE_ACCEPTANCE.md#exact-strike-lookups-returned-no-contracts)
+changes only strike strings 760/705 to 760.0000/705.0000, following the exact-strike
+schema example. Numeric strikes and every other parameter stay the same. Both
+representations validate; format sensitivity is a hypothesis, not a claimed fix.
+The plan is prepared/schema-validated only, with no workspace authenticated calls.
+The operator runs a fresh create-only capture with the existing diagnostic image;
+no image/dashboard rebuild or auto-pagination/retry. Preserve the empty artifacts.
+
+Documentation and diagnostic plan only; no application/dependency/engine/strategy
+changes. The uploaded result validates with the installed package, all 256 app
+files still match the prior source/wheel/installed proof, and both plans differ in
+exactly the two string fields. The 119 installed tests are prior verification,
+not a newly run suite. Connected PAPER and latest UI browser acceptance remain open.
+Original SHADOW, frozen v1/v2 and the a3216b6 reader stay unchanged.
+
+
 ## First authentic market samples and interpolation mapping: 2026-10-25 America/New_York
 
 Fresh local/GitHub HEAD is `9890bb9d50578abcc4bc785139fb70e1369a611f`, tree

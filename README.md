@@ -31,7 +31,8 @@ active-trade labels below the price rail. Updated browser review is pending.
 
 After operator login, headless discovery and the first four market reads succeeded.
 [Authentic sample acceptance](docs/ROBINHOOD_SAMPLE_ACCEPTANCE.md) verifies SPY/QQQ
-quote/history mapping and prepares two bounded option-contract lookups. A small
+quote/history mapping. The two option-contract lookups returned empty lists; a
+controlled strike-format check is prepared. A small
 mapper correction handles omitted interpolation flags only where positive volume
 rules out interpolation under the pinned schema. Quotes remain stale, sizes missing
 and entitlement unknown. Connected PAPER acceptance is still incomplete.
