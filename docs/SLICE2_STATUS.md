@@ -1,5 +1,41 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## First authorized capture failed before market reads: 2026-10-24 America/New_York
+
+Fresh GitHub/local HEAD is `2eb36cadff13b616a903b60969124c2b8a2ab01d`, tree
+`105bd53e79739e66f3c25a5ab857a7f50779b10e`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 is open/draft.
+
+The user explicitly authorized the prepared one-time read capture, then supplied
+its plan, exit code, summary and sample artifact. Capture
+`7318468dc2a74b61b90e64b6ced61234` returned exit 1 with `ExceptionGroup`, no schemas,
+no market observations and 1.223 seconds of child time. The plan exactly matches
+the reviewed four-read hash. Schema discovery did not complete; connection or
+initialization/discovery may have been attempted. The nested cause is absent from
+the retained result. Do not infer expired OAuth, schema drift or deadline exhaustion.
+Original artifacts are unchanged; private raw evidence is not committed.
+
+The worker now retains a bounded class/status diagnostic with the failing phase,
+HTTP status and only recognized OAuth error codes. Messages, URLs, headers,
+response descriptions/bodies and credentials are excluded. Cause/context cycles,
+depth and count are bounded. Headless-login refusal gets a distinct safe class.
+Legacy artifacts remain readable. No authentication, timeout, provider capability,
+engine, strategy or dependency behavior changes; no auto-retry or market feed is
+added. [Schema-only operator diagnostic and evidence](OPTIONS_READ_DIAGNOSTICS.md).
+No authenticated calls were executed from this workspace during the correction.
+The next proposed diagnostic stops at schema discovery, before any market reads;
+actual root cause and authentic response acceptance remain pending. No PAPER/model
+worker or LIVE activation occurred; the a3216b6 dashboard and SHADOW remain frozen.
+
+111 installed Python cases passed, serially from copied tests outside checkout,
+with Python `-I`, warnings as errors, disabled plugin autoload and explicit anyio.
+All 256 application/template files match source/wheel/installed bytes.
+Wheel SHA-256: `12bcb15211827d50eaea3e90ee96ce6ddf7483d6081c048d089ca52a29e291f5`.
+[Exact proof and supplied-artifact hashes](OPTIONS_READ_DIAGNOSTICS_PROOF.json).
+Tests include nested HTTP/OAuth errors, poisoned private text, bounds, phases,
+headless-login refusal, actual native-child serialization and compatibility.
+
+
 ## Reviewed Robinhood schemas and offline response mapping: 2026-10-24 America/New_York
 
 Fresh GitHub/local HEAD is `a3216b6d3953d1291643830b20ac4ef69fd8b37b`, tree

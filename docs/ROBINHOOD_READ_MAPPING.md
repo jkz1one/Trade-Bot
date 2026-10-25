@@ -1,5 +1,10 @@
 # Reviewed Robinhood mapping and first response capture
 
+The user subsequently authorized this capture. It failed before schema discovery
+completed and returned no market observations. Preserve that failed attempt; use
+the [schema-only diagnostic](OPTIONS_READ_DIAGNOSTICS.md) before another market
+capture. The command below records the original reviewed plan, not a blind retry.
+
 The operator supplied `schemas.json` on October 24, 2026 America/New_York.
 Its file SHA-256 is `d370d0a27b371e581b881fabc7a4d3e2fffc31e08e11dbf6deb6474b433dce1f`.
 Recomputing the six-tool metadata digest matches the original authenticated pin:
@@ -50,10 +55,9 @@ No option quote or instrument ID is invented: returned chain metadata and exact
 reviewed expiry/strike subjects will determine the later bounded contract sample.
 These four reads alone do not establish all six tools' response acceptance.
 
-The user originally prohibited authenticated provider calls. **This proposed
-four-read capture, including the preceding tool-list request and any necessary
-OAuth refresh, needs an explicit exception before execution.** Preparation and
-synthetic tests do not grant it. The operator executes host commands. A separate
+The user originally prohibited authenticated provider calls, then explicitly
+authorized this four-read capture, its preceding tool-list request and necessary
+OAuth refresh. That failed attempt is now retained for diagnosis. The operator executes host commands. A separate
 PAPER service, model calls, orders, account reads and LIVE remain outside this step.
 
 The command below is ready for review, not an instruction to bypass that boundary.

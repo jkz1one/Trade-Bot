@@ -9,7 +9,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from app.execution.market_reads import private_oauth
-from app.options.read_capture import CapturePolicy, CaptureResult, collect
+from app.options.read_capture import CapturePolicy, CaptureResult, collect, failure_evidence
 from app.options.read_gateway import CapturePlan, ReadSchemas, encoded
 
 
@@ -173,12 +173,25 @@ def main(argv=None):
                     else [],
                     "execution_authority": False,
                     "normalized_data_verified": False,
+                    **(
+                        {
+                            "error_class": result.error_class,
+                            "failure": result.failure.model_dump(mode="json"),
+                        }
+                        if result.failure is not None
+                        else {}
+                    ),
                 }
             )
         )
         return 0 if result.status == "COMPLETE" else 1
     except Exception as exc:  # noqa: BLE001 -- never print OAuth, arguments or provider errors
-        failure = {**admission, "status": "FAILED", "error_class": type(exc).__name__}
+        failure = {
+            **admission,
+            "status": "FAILED",
+            "error_class": type(exc).__name__,
+            "failure": failure_evidence(exc, "PARENT").model_dump(mode="json"),
+        }
         if fd is not None:
             try:
                 _save(fd, failure)

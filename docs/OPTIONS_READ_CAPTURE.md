@@ -263,3 +263,8 @@ The operator subsequently supplied the schema export, and the original pin match
 [Reviewed mappings, precise missing fields and a concrete four-read plan](ROBINHOOD_READ_MAPPING.md)
 now replace the earlier unknown-schema blocker. Actual sample acquisition is still
 pending an explicit exception to the user's no-authenticated-calls instruction.
+
+The user authorized the first bounded capture, which failed before discovery
+completed with no market observations and an opaque ExceptionGroup. See the
+[retained failure and safe schema-only diagnostic](OPTIONS_READ_DIAGNOSTICS.md)
+before another capture. No automatic retries or deadline/authentication changes.

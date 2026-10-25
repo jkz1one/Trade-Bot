@@ -1,6 +1,16 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.116. Adopted product direction and working delivery contract, 2026-10-24 America/New_York.
+Version 1.117. Adopted product direction and working delivery contract, 2026-10-24 America/New_York.
+
+The user authorized the prepared one-time market-read capture. Its retained result
+failed with `ExceptionGroup`, no schemas and zero market observations; schema
+discovery did not complete. The actual nested cause was not retained, so OAuth,
+transport and protocol causes remain unresolved. [Safe diagnostics and the next
+schema-only inspection](OPTIONS_READ_DIAGNOSTICS.md) now retain bounded classes,
+phases, HTTP status and allowlisted OAuth codes without messages or credentials.
+111 installed Python checks pass; deadlines/authentication/capabilities are unchanged.
+No automatic retry or authenticated workspace call occurred. The market capture
+remains incomplete; prospective PAPER/model/LIVE activation is still excluded.
 
 The operator successfully refreshed the separate dashboard to
 `a3216b6d3953d1291643830b20ac4ef69fd8b37b`: all 255 application files matched,
@@ -10,7 +20,7 @@ as `trade-bot-dashboard-before-chart`; v1/v2 and earlier rollback readers are
 preserved. The running original de5dd1c SHADOW services remain unchanged.
 The chart uses dashed missing-value connectors, and trade labels flow beneath
 numbered markers. Browser review/screenshots of those changes remain pending.
-No additional dashboard refresh is needed for the current mapping-only revision.
+No additional dashboard refresh is needed for these read-evidence changes.
 
 The operator supplied the actual six-tool Robinhood schema export. Its recomputed
 digest matches `d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15`.
@@ -33,8 +43,8 @@ collector and authentic acceptance remain incomplete.
 A concrete first plan contains four market reads: SPY/QQQ equity quotes, six
 five-minute bars each from October 23 09:30–10:00 EDT, and SPY/QQQ chain metadata.
 One schema rediscovery precedes those reads. No account/model/order/PAPER work is
-included. The user's original no-authenticated-call instruction still requires
-an explicit exception before this prepared capture runs. No such call occurred.
+included. The user explicitly authorized that bounded capture, which failed before any
+market read. No prospective activation or model call was authorized.
 The operator executes host commands; credentials remain private. Main is unchanged,
 PR #1 remains open/draft, the original experiment is frozen, and LIVE is disabled.
 

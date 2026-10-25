@@ -29,6 +29,10 @@ metadata/entitlement and an ongoing read feed remain outstanding; this is not ye
 connected PAPER service. The same update fixes the chart's missing-value connectors and moves
 active-trade labels below the price rail. Updated browser review is pending.
 
+The first authorized read capture failed before market reads. [Credential-safe
+diagnostics](docs/OPTIONS_READ_DIAGNOSTICS.md) now expose nested error classes and
+phases; the underlying host failure remains unresolved pending a schema-only check.
+
 ## Current product direction
 
 The settled strategy/engine plumbing is connected through native offline fixtures.

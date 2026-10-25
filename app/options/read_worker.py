@@ -7,29 +7,51 @@ import threading
 import time
 
 from app.domain.models import utc_now
-from app.execution.market_read_worker import _watch, connection
+from app.execution.market_read_worker import _watch
+from app.execution.market_read_worker import connection as native_connection
 from app.execution.market_reads import private_oauth
 from app.options.read_capture import (
     MAX_REQUEST_BYTES,
     MAX_RESPONSE_BYTES,
     CaptureRequest,
     CaptureResult,
+    failure_evidence,
     policy_digest,
 )
 from app.options.read_gateway import OptionReadGateway, encoded
 
 
+class ReadAuthorizationRequired(RuntimeError):
+    """Existing headless authorization cannot complete; never open a login flow."""
+
+
+async def authorization_required(*args):
+    raise ReadAuthorizationRequired
+
+
+def connection(policy):
+    result = native_connection(policy)
+    result.redirect_handler = authorization_required
+    result.callback_handler = authorization_required
+    return result
+
+
 async def collect(request):
     started = time.monotonic()
-    gateway, observations, error = None, [], None
+    gateway, observations, error, failure = None, [], None, None
+    stage = "PRIVATE_AUTH"
     try:
         private_oauth(request.policy.oauth_file)
+        stage = "CONNECT"
         async with connection(request.policy).client() as client:
             gateway = OptionReadGateway(client)
+            stage = "DISCOVER"
             await gateway.discover()
             if request.operation == "CAPTURE":
+                stage = "VALIDATE_PLAN"
                 plan = gateway.validate_plan(request.plan, request.schemas)
                 for call in plan.calls:
+                    stage = "MARKET_READ"
                     at, tick = utc_now(), time.monotonic()
                     row = {
                         "label": call.label,
@@ -50,8 +72,10 @@ async def collect(request):
                         )
                     finally:
                         row["elapsed_seconds"] = time.monotonic() - tick
+            stage = "CLOSE"
     except Exception as exc:  # noqa: BLE001 -- sanitized failure evidence, never provider text
         error = type(exc).__name__
+        failure = failure_evidence(exc, stage)
     return CaptureResult(
         request_id=request.request_id,
         policy_sha256=policy_digest(request.policy),
@@ -64,6 +88,7 @@ async def collect(request):
         plan=request.plan,
         observations=observations,
         error_class=error,
+        failure=failure,
     )
 
 

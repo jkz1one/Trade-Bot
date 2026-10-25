@@ -1,6 +1,7 @@
 """Bounded fixed-process schema/sample acquisition; no feed or execution authority."""
 
 import asyncio
+import json
 import os
 import sys
 import time
@@ -20,6 +21,76 @@ from app.options.read_gateway import ENDPOINT, CapturePlan, ReadSchemas, encoded
 
 MAX_REQUEST_BYTES = 256 * 1024
 MAX_RESPONSE_BYTES = 1024 * 1024
+
+OAuthFailure = Literal[
+    "invalid_request",
+    "invalid_client",
+    "invalid_grant",
+    "unauthorized_client",
+    "unsupported_grant_type",
+    "invalid_scope",
+    "access_denied",
+    "server_error",
+    "temporarily_unavailable",
+]
+
+
+class FailureCause(OptionRecord):
+    error_class: str = Field(pattern=r"^[A-Za-z_][A-Za-z0-9_]{0,127}$")
+    http_status: int | None = Field(
+        default=None, ge=100, le=599, strict=True, exclude_if=lambda v: v is None
+    )
+    oauth_error: OAuthFailure | None = Field(default=None, exclude_if=lambda v: v is None)
+
+
+class CaptureFailure(OptionRecord):
+    stage: Literal[
+        "PRIVATE_AUTH", "CONNECT", "DISCOVER", "VALIDATE_PLAN", "MARKET_READ", "CLOSE", "PARENT"
+    ]
+    causes: tuple[FailureCause, ...] = Field(min_length=1, max_length=16)
+    truncated: bool = Field(default=False, strict=True)
+
+
+def failure_evidence(exc, stage):
+    """Bounded class/status codes only; never serialize messages, URLs or headers."""
+    import httpx2
+
+    pending, seen, causes, truncated = [(exc, 0)], set(), [], False
+    while pending and len(causes) < 16:
+        current, depth = pending.pop(0)
+        if id(current) in seen:
+            continue
+        seen.add(id(current))
+        status, oauth_error = None, None
+        if isinstance(current, httpx2.HTTPStatusError):
+            candidate = current.response.status_code
+            if type(candidate) is int and 100 <= candidate <= 599:
+                status = candidate
+            try:
+                body = current.response.content
+                value = json.loads(body) if len(body) <= 8192 else None
+                code = value.get("error") if isinstance(value, dict) else None
+                if isinstance(code, str) and code in OAuthFailure.__args__:
+                    oauth_error = code
+            except (ValueError, RuntimeError):
+                pass
+        causes.append(
+            FailureCause(
+                error_class=type(current).__name__, http_status=status, oauth_error=oauth_error
+            )
+        )
+        children = list(current.exceptions[:17]) if isinstance(current, BaseExceptionGroup) else []
+        linked = current.__cause__ or current.__context__
+        if linked is not None:
+            children.append(linked)
+        if depth >= 4:
+            truncated |= bool(children)
+        else:
+            pending.extend((child, depth + 1) for child in children)
+            if len(pending) > 16:
+                truncated = True
+                pending = pending[:16]
+    return CaptureFailure(stage=stage, causes=tuple(causes), truncated=truncated or bool(pending))
 
 
 class CapturePolicy(OptionRecord):
@@ -69,11 +140,16 @@ class CaptureResult(OptionRecord):
     plan: CapturePlan | None = None
     observations: list[dict[str, JsonValue]] = Field(default_factory=list, max_length=8)
     error_class: str | None = Field(default=None, pattern=r"^[A-Za-z_][A-Za-z0-9_]{0,127}$")
+    failure: CaptureFailure | None = Field(default=None, exclude_if=lambda v: v is None)
 
     @model_validator(mode="after")
     def coherence(self):
         if (self.status == "FAILED") != (self.error_class is not None):
             raise ValueError("Capture status and failure evidence must agree")
+        if self.failure is not None and (
+            self.status != "FAILED" or self.failure.causes[0].error_class != self.error_class
+        ):
+            raise ValueError("Failure diagnostics must match the failed result")
         if self.operation == "DISCOVER" and (self.plan is not None or self.observations):
             raise ValueError("Discovery cannot report tool calls")
         if self.operation == "CAPTURE" and self.plan is None:
