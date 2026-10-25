@@ -1,5 +1,32 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Option quote/history response acceptance: 2026-10-25 America/New_York
+
+Fresh local/GitHub HEAD is `a0b7592d7722cec8df1342cd26864c3093103b1d`, tree
+`325ec0f172c6a01846c2083b0d2f049f167ccf25`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 is open/draft.
+
+Operator capture `778715467a4a4b3ea503ceff1b5b285a` completed both planned reads at
+01:16:47 EDT. Plan, pinned schemas, identities and clocks validate offline. Both
+observed SPY760/QQQ705 October26 calls returned bid/ask sizes, Greeks, volume and
+open interest; source clocks remain Friday16:14:59 EDT, about33 hours stale. Each
+history returned six regular five-minute bars. Option volume is not supplied and
+interpolation is omitted/unknown; no equity positive-volume inference is applied.
+[Artifact hashes and acceptance proof](ROBINHOOD_OPTION_RESPONSE_PROOF.json).
+
+All six read tools have successful authentic response samples. No more sample
+capture commands are required now. Complete reviewed native contract metadata,
+entitlement, equity sizes, ongoing normalized delivery and fresh market-session
+host acceptance remain unresolved. Native option normalization and PAPER readiness
+are not claimed. No fabricated metadata or weakened admission/fill safeguards.
+
+Documentation/evidence only: all256 application/template files remain unchanged
+from the prior installed proof; its119 cases are prior verification, not a fresh
+suite run. No workspace authenticated calls, model/broker-order calls, dependency
+changes, service activation or dashboard refresh. Original SHADOW and paused UI
+remain unchanged by this work. Latest chart/label browser acceptance remains open.
+The current private auth directory remains `/var/lib/trade-bot-read-auth`.
+
 ## Broader contract listing and recovered credential directory: 2026-10-25 America/New_York
 
 Fresh local/GitHub HEAD is `681c43b66ac88353e9f465f8cdfe013952e0dad9`, tree

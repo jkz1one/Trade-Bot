@@ -24,7 +24,7 @@ reuses the existing frozen account; updated desktop/mobile visual review remains
 
 The [quote-driven simulated-fill update](docs/MIXED_QUOTE_FILLS.md) connects later
 normalized quotes to existing native fill receipts. The [reviewed Robinhood mapper](docs/ROBINHOOD_READ_MAPPING.md)
-now handles supplied quote/history evidence offline. Actual option samples, missing
+now handles supplied quote/history evidence offline. All six read tools now have authentic response samples. Reviewed
 metadata/entitlement and an ongoing read feed remain outstanding; this is not yet a
 connected PAPER service. The same update fixes the chart's missing-value connectors and moves
 active-trade labels below the price rail. Updated browser review is pending.
@@ -33,10 +33,12 @@ After operator login, headless discovery and the first four market reads succeed
 [Authentic sample acceptance](docs/ROBINHOOD_SAMPLE_ACCEPTANCE.md) verifies SPY/QQQ
 quote/history mapping. [Broader contract discovery](docs/ROBINHOOD_OPTION_SAMPLES.md)
 now supplies exact option IDs after the filtered lookups returned empty results.
-The next quote/history sample is prepared. A small
+[Option quote/history responses](docs/ROBINHOOD_OPTION_RESPONSE_PROOF.json) now
+validate too, including executable-side sizes and Greeks. A small
 mapper correction handles omitted interpolation flags only where positive volume
-rules out interpolation under the pinned schema. Quotes remain stale, sizes missing
-and entitlement unknown. Connected PAPER acceptance is still incomplete.
+rules out interpolation under the pinned schema. Quotes remain stale, equity sizes are missing
+and entitlement remains unknown. Option histories supply no volume and omit
+interpolation flags; those fields are not invented. Connected PAPER acceptance is still incomplete.
 
 ## Current product direction
 

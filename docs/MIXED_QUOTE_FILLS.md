@@ -39,10 +39,12 @@ be inferred or relabeled to make admission pass.
 
 The operator has now supplied that schema export and its original digest matches.
 [The reviewed mapper and concrete four-read plan](ROBINHOOD_READ_MAPPING.md)
-record the next step and actual schema limitations. Equity sizes remain missing;
+record the mapper and actual schema limitations. Equity sizes remain missing;
 option metadata needs independent authoritative binding; entitlement remains
-UNKNOWN. The exported schema content is no longer a blocker, but authenticated
-market samples, the ongoing read feed and acceptance remain outstanding.
+UNKNOWN. [All six read tools now have authentic samples](ROBINHOOD_OPTION_SAMPLES.md).
+The ongoing normalized feed, full metadata/entitlement binding and fresh host
+acceptance remain outstanding. Weekend quotes are stale; no PAPER activation is
+claimed. Option sizes are present; equity sizes remain unavailable.
 
 ## Dashboard changes
 

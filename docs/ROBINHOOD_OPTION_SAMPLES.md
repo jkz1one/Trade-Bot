@@ -1,4 +1,4 @@
-# Observed option IDs and next quote/history sample
+# Observed option IDs and accepted quote/history samples
 
 The four-decimal strike attempt completed with the same two empty results. It did
 not fix the observed issue. A later broader listing initially failed with Docker
@@ -35,24 +35,58 @@ OptionInstrument is synthesized from these partial terms. Deliverables, exercise
 settlement, adjusted status and required exchange timestamps still need reviewed
 binding. These are fixed schema samples, not trade recommendations.
 
-## Next two reads
+## Completed quote and history reads
 
-[Prepared plan](../examples/robinhood-option-sample-plan.json), SHA-256
-`4f189991fa7b57b79c43304fc9ab5bfe86f02af423c0d9d154fbc63506f49d4e`, contains exactly:
+The [two-read plan](../examples/robinhood-option-sample-plan.json), SHA-256
+`4f189991fa7b57b79c43304fc9ab5bfe86f02af423c0d9d154fbc63506f49d4e`, completed as
+capture `778715467a4a4b3ea503ceff1b5b285a` at October 25 01:16:47 EDT.
+Both calls validate against the pinned schemas, original plan, identities and
+receipt clocks. [Response acceptance proof](ROBINHOOD_OPTION_RESPONSE_PROOF.json)
+retains artifact hashes and the observed fields without credentials or account data.
 
-1. One `get_option_quotes` call for the two observed UUIDs.
-2. One `get_option_historicals` call for the same UUIDs, October 23 09:30–10:00 EDT,
-   regular session, five-minute bars.
+| October 26 call | Bid / ask | Bid / ask size | Delta | Volume / open interest |
+| --- | --- | --- | --- | --- |
+| SPY 760 | 3.34 / 3.35 | 29 / 10 | 0.541653 | 46010 / 276 |
+| QQQ 705 | 5.03 / 5.10 | 8 / 4 | 0.519612 | 47893 / 693 |
 
-This finishes gathering samples for the two remaining tool types if responses
-succeed. It does not itself establish complete metadata, fresh real-time
-entitlement, a continuous feed or PAPER readiness. Weekend quotes retain their old
-source clocks. Empty history is preserved as unavailable, not filled with invented
-bars. No pagination, retries, account/model/order calls or service activation.
-The plan validates offline against the unchanged pinned six-tool schemas.
-No workspace authenticated call occurred; the operator runs the next command.
+Both source timestamps are October 23 about 16:14:59 EDT, approximately 33 hours
+before receipt. These are stale weekend observations, not executable current
+quotes. Original nanosecond source strings remain in the proof. Theta and implied
+volatility are also present; mark/adjusted-mark/fill-rate prices are not simulated
+fills. Entitlement remains UNKNOWN. Native option mapping is not claimed because
+complete reviewed OptionInstrument metadata has not been supplied.
 
-Fetch/check out the published revision supplied in chat first. The already-built
+Each history contains six coherent regular-session five-minute OHLC bars from
+October 23 09:30–10:00 EDT. UUIDs and OCC symbols match the selected contracts.
+The option-history tool supplies no volume, and these responses omit interpolation
+flags. Both remain unavailable/unknown; the equity mapper's positive-volume
+inference does not apply. No synthetic bars, volume, flags or execution liquidity
+are added. Option history is not an executable quote source.
+
+All six read tools now have successful authentic response samples. No additional
+sample capture is required now. This completes wire-response evidence collection,
+not a connected PAPER service. Remaining integration work is:
+
+- Bind complete reviewed contract terms and real-time entitlement evidence without
+  treating broker sellout as exchange expiration or settlement.
+- Connect bounded read capture and the existing mapper to continuous normalized
+  packet delivery, retaining original source/receipt clocks, stale/unknown blockers
+  and independent protection. Supply sufficient underlying history for each strategy.
+- Verify fresh market-session inputs and native simulated fills on the host before
+  prospective PAPER activation. Equity sizes are still missing from this endpoint,
+  so stock fills remain blocked by existing rules.
+
+No model/PAPER/LIVE activation or new provider calls were performed by this review.
+The existing 119 installed cases and 256-file identity proof remain prior code
+verification; this is a documentation/evidence update, not a new test-suite run.
+Dashboard chart/label browser acceptance remains pending.
+
+## Historical command for the completed capture
+
+Do not rerun this command merely to finish the sample review. It is retained to
+explain how the accepted artifacts were produced; no refresh or rebuild is needed.
+
+The operator fetched the published revision supplied in chat first. The already-built
 30e4eba diagnostic image has the unchanged capture CLI; no rebuild or dashboard
 refresh is required. The local mapper correction remains separate from that host
 image. Capture rediscovers/pins schemas before either read, retains normal OAuth

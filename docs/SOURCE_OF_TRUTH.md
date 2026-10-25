@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.121. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
+Version 1.122. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
 
 The operator restored interactive authorization, then supplied successful headless
 schema discovery with the unchanged pin and a completed four-read capture at
@@ -22,14 +22,22 @@ returned 100 calls per symbol with pagination, including observed active/tradabl
 SPY760 and QQQ705 October 26 call UUIDs. No more pagination is needed for this sample;
 complete chain coverage is not established. Earlier empty-filter cause is unproven.
 
-A schema-validated two-read plan now requests quotes and six regular five-minute
-historical bars for those exact UUIDs. It has not run. No application/engine/
-strategy/dependency changes; existing 119 installed cases and 256-file identity
-proof remain prior verification. Full native contract metadata, entitlement, stock
-sizes, ongoing feed integration and connected PAPER acceptance remain incomplete.
-Broker sellout time is not exchange expiry/settlement proof. The existing capture
-image is sufficient; no dashboard refresh, new PAPER/model/LIVE activation, paid
-call, account read or broker order is included. No authenticated workspace calls.
+The two-read option plan completed at October 25 01:16:47 EDT. Both exact observed
+UUIDs returned bid/ask prices and sizes, Greeks, volume and open interest; each
+history returned six regular five-minute bars. [Accepted response evidence](ROBINHOOD_OPTION_RESPONSE_PROOF.json)
+verifies the plan, schemas, identities and clocks. Quotes retain Friday 16:14:59 EDT
+source times and are about 33 hours stale. Option history has no volume and omits
+interpolation flags; neither is fabricated. All six tools now have successful real
+response samples; no further sample capture is required at this stage.
+
+This is wire-response acceptance, not native option normalization or PAPER
+activation. Complete reviewed contract metadata and entitlement are still absent;
+stock sizes remain missing. Continuous normalized capture/delivery and fresh
+market-session host acceptance remain incomplete. Broker sellout is not exchange
+expiry/settlement proof. No application/engine/strategy/dependency changes; prior
+119 installed cases and 256-file identity verification remain unchanged. No new
+suite run, dashboard refresh, model/PAPER/LIVE activation, paid call, account read
+or broker order. No authenticated workspace calls.
 
 The operator successfully refreshed the separate dashboard to
 `a3216b6d3953d1291643830b20ac4ef69fd8b37b`: all 255 application files matched,
