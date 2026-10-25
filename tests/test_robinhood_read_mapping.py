@@ -352,6 +352,7 @@ def test_history_gaps_remain_incomplete(schemas, damage):
     bars = raw["structuredContent"]["data"]["results"][0]["bars"]
     if damage == "interpolated":
         bars[2]["interpolated"] = True
+        bars[2]["volume"] = 0
     else:
         bars.pop(0 if damage == "leading_gap" else 2)
     (h,) = mapping.equity_history(schemas, c, raw, received_at=AT + timedelta(minutes=30))
@@ -391,6 +392,7 @@ def test_invalid_history_never_becomes_complete(schemas, damage):
         bars[0]["session"] = "pre"
     elif damage == "missing_interpolation":
         del bars[0]["interpolated"]
+        bars[0]["volume"] = 0
     elif damage == "bad_ohlc":
         bars[0]["high_price"] = "590"
     elif damage == "future":
@@ -423,3 +425,52 @@ def test_schema_drift_is_not_accepted_even_with_rehashed_metadata(schemas):
             envelope([{"quote": equity()}]),
             received_at=AT + timedelta(seconds=2),
         )
+
+
+def test_omitted_interpolation_uses_positive_volume_without_mutating_receipt(schemas):
+    c, raw = history()
+    bars = raw["structuredContent"]["data"]["results"][0]["bars"]
+    for bar in bars:
+        del bar["interpolated"]
+    before = copy.deepcopy(raw)
+    received = AT + timedelta(days=2)
+    (h,) = mapping.equity_history(schemas, c, raw, received_at=received)
+    assert h.complete and h.entitlement == "UNKNOWN"
+    assert h.received_at == received and h.source_at == AT + timedelta(minutes=30)
+    assert len(h.bars) == 6 and all(not b.interpolated for b in h.bars)
+    assert [b.volume for b in h.bars] == [b["volume"] for b in bars]
+    assert raw == before and all("interpolated" not in b for b in bars)
+
+
+@pytest.mark.parametrize("volume", [0, -1])
+def test_omitted_interpolation_without_positive_volume_is_unknown(schemas, volume):
+    c, raw = history()
+    bar = raw["structuredContent"]["data"]["results"][0]["bars"][0]
+    del bar["interpolated"]
+    bar["volume"] = volume
+    with pytest.raises(ValueError, match="Unknown bar interpolation"):
+        mapping.equity_history(schemas, c, raw, received_at=AT + timedelta(minutes=30))
+
+
+@pytest.mark.parametrize("volume", [1, -1])
+def test_explicit_interpolation_cannot_contradict_volume(schemas, volume):
+    c, raw = history()
+    bar = raw["structuredContent"]["data"]["results"][0]["bars"][0]
+    bar.update(interpolated=True, volume=volume)
+    with pytest.raises(ValueError, match="contradicts"):
+        mapping.equity_history(schemas, c, raw, received_at=AT + timedelta(minutes=30))
+
+
+def test_zero_volume_with_explicit_false_is_not_changed_to_interpolated(schemas):
+    c, raw = history()
+    raw["structuredContent"]["data"]["results"][0]["bars"][0]["volume"] = 0
+    (h,) = mapping.equity_history(schemas, c, raw, received_at=AT + timedelta(minutes=30))
+    assert h.complete and not h.bars[0].interpolated and h.bars[0].volume == 0
+
+
+@pytest.mark.parametrize("flag", [None, "false"])
+def test_invalid_explicit_interpolation_is_not_treated_as_omitted(schemas, flag):
+    c, raw = history()
+    raw["structuredContent"]["data"]["results"][0]["bars"][0]["interpolated"] = flag
+    with pytest.raises(SchemaError):
+        mapping.equity_history(schemas, c, raw, received_at=AT + timedelta(minutes=30))

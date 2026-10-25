@@ -24,16 +24,17 @@ reuses the existing frozen account; updated desktop/mobile visual review remains
 
 The [quote-driven simulated-fill update](docs/MIXED_QUOTE_FILLS.md) connects later
 normalized quotes to existing native fill receipts. The [reviewed Robinhood mapper](docs/ROBINHOOD_READ_MAPPING.md)
-now handles supplied quote/history schemas offline. Actual market samples, missing
+now handles supplied quote/history evidence offline. Actual option samples, missing
 metadata/entitlement and an ongoing read feed remain outstanding; this is not yet a
 connected PAPER service. The same update fixes the chart's missing-value connectors and moves
 active-trade labels below the price rail. Updated browser review is pending.
 
-The first authorized read capture failed before market reads. [Credential-safe
-diagnostics](docs/OPTIONS_READ_DIAGNOSTICS.md) now expose nested error classes and
-phases. The follow-up identified an interactive authorization request during connection,
-with zero market reads. [Existing operator login and schema discovery](docs/OPTIONS_READ_DIAGNOSTICS.md#operator-login-and-schema-discovery)
-is the next step; no engine or dependency change is required for this blocker.
+After operator login, headless discovery and the first four market reads succeeded.
+[Authentic sample acceptance](docs/ROBINHOOD_SAMPLE_ACCEPTANCE.md) verifies SPY/QQQ
+quote/history mapping and prepares two bounded option-contract lookups. A small
+mapper correction handles omitted interpolation flags only where positive volume
+rules out interpolation under the pinned schema. Quotes remain stale, sizes missing
+and entitlement unknown. Connected PAPER acceptance is still incomplete.
 
 ## Current product direction
 

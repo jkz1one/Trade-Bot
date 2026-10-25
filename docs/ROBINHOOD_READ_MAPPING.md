@@ -1,9 +1,10 @@
 # Reviewed Robinhood mapping and first response capture
 
-The user subsequently authorized this capture. It failed before schema discovery
-completed and returned no market observations. Preserve that failed attempt; use
-the [schema-only diagnostic](OPTIONS_READ_DIAGNOSTICS.md) before another market
-capture. The command below records the original reviewed plan, not a blind retry.
+The first attempt failed before market reads and remains preserved. After operator
+login and successful headless schema discovery, the four-read capture completed.
+[Authentic sample review and the next two contract lookups](ROBINHOOD_SAMPLE_ACCEPTANCE.md)
+record the actual results. The original command below is historical; do not repeat
+that successful batch automatically.
 
 The operator supplied `schemas.json` on October 24, 2026 America/New_York.
 Its file SHA-256 is `d370d0a27b371e581b881fabc7a4d3e2fffc31e08e11dbf6deb6474b433dce1f`.
@@ -22,13 +23,12 @@ and provider guide text never become executable instructions or trading advice.
 | --- | --- |
 | Equity bid/ask | Uses each side's original timestamp and the older timestamp for conservative combined freshness; preserves receipt time. No last trade, close or mark fallback. Inactive/never-traded symbols are incomplete; zero/crossed books are unavailable. |
 | Shares | Requires an independently reviewed `StockInstrument`; sizes remain `None` because this schema supplies neither side's size. Existing quote-fill rules therefore cannot simulate stock fills from this endpoint alone. |
-| Five-minute history | Explicit regular/split request and echoed interval, ascending unique aligned bars, original OHLCV and interpolation/session flags. Forming bars are excluded. Missing/interpolated intervals remain incomplete. No synthetic gap filling. |
+| Five-minute history | Explicit regular/split request and echoed interval, ascending unique aligned bars, original OHLCV/session flags; omitted interpolation is inferred false only from positive volume under the pinned zero-volume interpolation contract. Forming bars are excluded. Missing/interpolated intervals remain incomplete. No synthetic gap filling. |
 | Option quotes/Greeks | Exact option UUID coverage and caller-supplied reviewed `OptionInstrument` metadata; preserves actual bid/ask sizes and source timestamp. Null Greeks remain unavailable. Zero books never become mark-price fills. |
 | Option liquidity | Retains observed volume/open interest and delta provenance in existing `ContractMetadata`. |
 
 Entitlement remains `UNKNOWN`: this schema advertises real-time tools but has no
-per-observation entitlement field, and actual market response acceptance has not
-occurred. The mapper supplies no override that silently promotes it to REALTIME.
+per-observation entitlement field, and successful weekend response capture does not establish real-time entitlement. The mapper supplies no override that silently promotes it to REALTIME.
 It does not create a complete option contract from partial provider metadata.
 In particular, `sellout_datetime` is the broker's force-close timestamp, not proof
 of exchange last trading, expiration or settlement times. Deliverable details,

@@ -251,12 +251,17 @@ def equity_history(schemas, call, raw, *, received_at):
             raise ValueError("Bounded nonempty history required")
         bars, previous = [], None
         for value in row["bars"]:
-            if (
-                not isinstance(value, dict)
-                or value.get("session") != "reg"
-                or "interpolated" not in value
-            ):
-                raise ValueError("Explicit original session/interpolation evidence required")
+            if not isinstance(value, dict) or value.get("session") != "reg":
+                raise ValueError("Explicit original session evidence required")
+            interpolated = value.get("interpolated")
+            if interpolated is None:
+                # The pinned schema says interpolated bars have zero volume.
+                # Positive observed volume rules that out; absence alone does not.
+                if value["volume"] <= 0:
+                    raise ValueError("Unknown bar interpolation without positive volume")
+                interpolated = False
+            elif interpolated and value["volume"] != 0:
+                raise ValueError("Interpolated bar contradicts documented zero volume")
             bar = DegenBar(
                 begins_at=instant(value["begins_at"]),
                 open=value["open_price"],
@@ -264,7 +269,7 @@ def equity_history(schemas, call, raw, *, received_at):
                 low=value["low_price"],
                 close=value["close_price"],
                 volume=value["volume"],
-                interpolated=value["interpolated"],
+                interpolated=interpolated,
             )
             if (
                 not start <= bar.begins_at < end

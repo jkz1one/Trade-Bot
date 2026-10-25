@@ -1,20 +1,25 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.118. Adopted product direction and working delivery contract, 2026-10-24 America/New_York.
+Version 1.119. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
 
-The operator's schema-only diagnostic now identifies `ReadAuthorizationRequired`
-at `CONNECT`: the existing headless connection requested interactive authorization
-and refused it. No schemas or market observations were collected. No HTTP/OAuth
-code was retained, so token expiry/revocation and the exact reason for login remain
-unproven. This does not establish the cause of the earlier generic failure.
-[Retained evidence and the existing operator login path](OPTIONS_READ_DIAGNOSTICS.md)
-preserve both attempts. The next command uses the built diagnostic image and the
-separate credential under its existing lease, backs up that credential privately,
-and performs interactive authorization plus schema discovery only. No engine,
-dependency or timeout changes; no headless retry or market batch starts automatically.
-Application bytes and the prior 111-case installed proof are unchanged. This update
-records supplied host evidence and operator instructions only. Login completion and
-connected PAPER acceptance remain pending; no prospective PAPER/model/LIVE activation.
+The operator restored interactive authorization, then supplied successful headless
+schema discovery with the unchanged pin and a completed four-read capture at
+October 25 00:49 EDT. The [actual quote/history/chain evidence](ROBINHOOD_SAMPLE_ACCEPTANCE.md)
+validates against the installed package. Two quotes keep their Friday source times,
+missing sizes and UNKNOWN entitlement. Twelve completed bars omit interpolation
+flags but have positive volume; the mapper now derives non-interpolation only from
+that schema-backed evidence. Unknown zero-volume and contradictory bars still fail;
+raw receipts remain untouched. No engine/dependency/strategy/authority change.
+119 installed Python cases and all 256 source/wheel/installed file matches pass.
+The earlier failed attempts remain preserved. No authenticated workspace calls.
+
+A prepared two-read contract plan uses observed SPY/QQQ chain IDs, October 26 expiry
+and exact sample strikes 760/705. It is validated offline; contract/option quote and
+option historical reads have not occurred. The existing diagnostic image can capture
+these raw responses without a dashboard refresh; the mapper update is locally tested
+but not yet deployed to that image. Full contract metadata, entitlement, stock sizes,
+ongoing feed integration and connected PAPER acceptance remain incomplete. No new
+PAPER/model/LIVE activation, paid call, account read or broker order is included.
 
 The operator successfully refreshed the separate dashboard to
 `a3216b6d3953d1291643830b20ac4ef69fd8b37b`: all 255 application files matched,
@@ -32,8 +37,8 @@ All input/output schemas are present. The [offline mapper and reviewed sample pl
 now bind the known wire shapes to existing equity/stock/option/Greek/liquidity and
 completed five-minute history models, with exact identities and original clocks.
 No provider calls, engine changes, strategy changes or dependencies are introduced.
-97 installed Python cases pass; the proof distinguishes synthetic responses from
-actual provider acceptance. Authenticated market samples are still absent.
+The earlier 97-case proof used synthetic responses; the newer authentic-sample
+proof above separately records the first supplied market response acceptance.
 
 Important actual schema limits remain explicit: equity quotes omit executable
 sizes; option metadata omits several mandatory contract terms/times; there is no
@@ -47,8 +52,9 @@ collector and authentic acceptance remain incomplete.
 A concrete first plan contains four market reads: SPY/QQQ equity quotes, six
 five-minute bars each from October 23 09:30–10:00 EDT, and SPY/QQQ chain metadata.
 One schema rediscovery precedes those reads. No account/model/order/PAPER work is
-included. The user explicitly authorized that bounded capture, which failed before any
-market read. No prospective activation or model call was authorized.
+included. The user explicitly authorized that bounded capture. Its first attempt failed
+before reads; the later post-login attempt completed all four reads. No prospective
+activation or model call was authorized.
 The operator executes host commands; credentials remain private. Main is unchanged,
 PR #1 remains open/draft, the original experiment is frozen, and LIVE is disabled.
 

@@ -1,5 +1,44 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## First authentic market samples and interpolation mapping: 2026-10-25 America/New_York
+
+Fresh local/GitHub HEAD is `9890bb9d50578abcc4bc785139fb70e1369a611f`, tree
+`eacc90ab0003cce9ce9c3d8d5fb8b14fc0bdf519`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 is open/draft.
+
+After reported interactive login exit 0, the user supplied successful headless
+schema summary ec65abd4d0374732b52c882a3dbe2c19 with the exact reviewed pin. Capture
+e813525b3aa04dd98a3c7e0083910296 then completed all four authorized market reads at
+00:49:09 EDT. Plan, output schemas, policy and original observation clocks validate
+offline. No authenticated call was made from this workspace; failed attempts stay
+preserved. [Authentic receipt and next contract plan](ROBINHOOD_SAMPLE_ACCEPTANCE.md).
+
+The installed mapper accepts both equity quotes and twelve regular five-minute
+bars. Quotes retain Friday 20:00 EDT source times (about 28h49m old), absent sizes
+and UNKNOWN entitlement. The real bars omit optional interpolation flags; positive
+volume rules out interpolation under the exact pinned schema's zero-volume rule.
+The small mapper correction uses only that proof, rejects omitted flags without
+positive volume and explicit interpolation contradicting volume, and never changes
+raw receipts. Existing clocks, complete-window/gap checks, native engine, fill,
+strategy, cost and dependency behavior remain settled. No trading authority follows.
+
+A two-call instrument plan uses observed chain IDs, Monday expiry and exact sample
+strikes SPY760/QQQ705, both call/put, with no auto-pagination or invented contract
+UUIDs. It is schema-validated, not executed. The existing 30e4eba capture image is
+sufficient; no dashboard rebuild/replay is needed. Instruments, option quote/history
+acceptance, missing terms/entitlement/sizes, ongoing feed integration and prospective
+PAPER acceptance remain open. The original SHADOW and a3216b6 UI fixture stay frozen.
+Latest chart/label browser acceptance still awaits actual screenshots/review.
+
+119 installed Python cases pass, including eight new interpolation cases; copied
+tests, noneditable wheel, Python -I, warnings as errors, disabled plugin autoload,
+explicit anyio and serial native tests. All 256 application/template files match
+source/wheel/installed bytes. Actual uploaded responses separately pass offline
+mapping. Wheel SHA-256:
+`2a6944d68e2fe051c848384bca553f040646e1ea8e0fc663f28bcbc487792d1d`.
+[Exact installed proof and supplied artifact hashes](ROBINHOOD_SAMPLE_ACCEPTANCE_PROOF.json).
+
+
 ## Read-only connection requires operator authorization: 2026-10-24 America/New_York
 
 Fresh local/GitHub HEAD is `30e4eba7591b0c6741a9495ad92b9fdc21fd8fd3`, tree
