@@ -1,5 +1,50 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Reviewed Robinhood schemas and offline response mapping: 2026-10-24 America/New_York
+
+Fresh GitHub/local HEAD is `a3216b6d3953d1291643830b20ac4ef69fd8b37b`, tree
+`ecc22fd825d519b06f139314ecb4d7a3f6645ee5`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 remains open/draft.
+The operator successfully refreshed the dashboard to this release, verifying 255
+installed matches, three historical fills, health and private authenticated frozen
+content after startup retries. e6fd353 is retained as the third rollback reader.
+No PAPER runtime, collector or model worker started. Browser screenshots of the
+chart/label corrections remain pending; Docker host acceptance is now observed.
+
+The supplied six-tool schema export hashes to
+`d370d0a27b371e581b881fabc7a4d3e2fffc31e08e11dbf6deb6474b433dce1f`;
+its recomputed metadata pin exactly matches the original authenticated discovery.
+All input/output schemas are present. The actual retained discovery filename is
+`/root/trade-bot-options-auth-BqLFmz/discovery.json`; credentials remain private.
+
+The new pure offline mapper binds the reviewed shapes to existing equity/stock/
+option quotes, observed Greeks/liquidity and completed five-minute OHLCV evidence.
+Exact coverage, original side/source/receipt clocks, schema drift, zero/crossed
+books, null Greeks, forming bars and missing/interpolated intervals are checked.
+This schema has no executable stock sizes or per-observation entitlement; those
+remain absent/UNKNOWN. Option contracts require independent reviewed metadata;
+broker sellout time is not exchange expiration/settlement proof. No market values,
+contract fields or fill capacity are invented. No engine, strategy or dependency
+changes. No dashboard refresh is needed for this mapping-only revision.
+
+A concrete four-read SPY/QQQ plan is validated against the actual schemas. It
+requests equity quotes, six completed five-minute bars each from October 23
+09:30–10:00 EDT, and both chain metadata records. Exact option UUID requests follow
+only after actual chain/contract evidence. The proposed one-time authenticated
+capture, preceding schema rediscovery and any necessary OAuth refresh need an
+explicit exception to the user's original no-authenticated-call restriction.
+No authenticated provider/model/broker call, feed publication or prospective PAPER
+activation occurred. Connected PAPER readiness remains incomplete.
+[Mapping, precise limitations and reviewed capture command](ROBINHOOD_READ_MAPPING.md).
+
+97 installed Python cases passed serially with copied tests outside checkout,
+Python `-I`, warnings as errors, disabled plugin autoload and explicit anyio.
+All 256 application/template files match source, wheel and installed bytes.
+Wheel SHA-256: `d00dcb64cd3908ba7ec0901ce1098528d9aecd05575abc9c499fab9b5c34a7e1`.
+[Exact installed proof](ROBINHOOD_READ_MAPPING_PROOF.json). Synthetic schema-valid
+responses are explicitly not authentic response or provider-entitlement acceptance.
+
+
 ## Quote-driven simulated fills and dashboard correction: 2026-10-25 UTC
 
 Fresh GitHub and local state matched e6fd3536f1c615542c0fdefd972b21c8651c73f4,

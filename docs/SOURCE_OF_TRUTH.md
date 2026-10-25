@@ -1,37 +1,42 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.115. Adopted product direction and working delivery contract, 2026-10-25 UTC.
+Version 1.116. Adopted product direction and working delivery contract, 2026-10-24 America/New_York.
 
-The separate dashboard is deployed at `e6fd3536f1c615542c0fdefd972b21c8651c73f4`.
-The operator's refresh verified 254 installed files, authentication and three
-historical simulated fills. The new screenshot confirms the populated balanced
-layout and identifies disconnected equity endpoints and overlapping trade labels.
-The current revision connects known endpoints with explicitly dashed missing-value
-links and moves exact price labels into normal flow beneath numbered rail markers.
-[Current work and acceptance](MIXED_QUOTE_FILLS.md). Browser review of these fixes
-remains pending; unknown valuations remain unknown.
+The operator successfully refreshed the separate dashboard to
+`a3216b6d3953d1291643830b20ac4ef69fd8b37b`: all 255 application files matched,
+health/private authentication passed, and three frozen historical fills remained.
+Startup resets cleared within retries. The e6fd353 reader is retained separately
+as `trade-bot-dashboard-before-chart`; v1/v2 and earlier rollback readers are
+preserved. The running original de5dd1c SHADOW services remain unchanged.
+The chart uses dashed missing-value connectors, and trade labels flow beneath
+numbered markers. Browser review/screenshots of those changes remain pending.
+No additional dashboard refresh is needed for the current mapping-only revision.
 
-The continuous mixed runtime now has explicit, frozen opt-in quote-driven simulated
-fills using its existing native venue and replay rules. Later executable normalized
-quotes can produce native entry/exit fill receipts; repeated source quotes cannot
-replenish observed size. Existing runtime policies retain their serialized identity
-and behavior. This is tested offline plumbing, **not a connected Robinhood PAPER
-service**. Actual captured schema content and market response samples are still
-needed for exact provider normalization, collection and end-to-end acceptance.
-Prior references to settled plumbing describe native fixture paths, not this missing
-provider connection. The existing six-tool schema digest is retained; the schema
-export itself was not found in this workspace. A private offline export command
-extracts only schemas from the retained discovery artifact without credentials or
-network work. No authenticated provider/model/broker call or prospective PAPER
-activation occurred. No dependency or strategy change was made.
+The operator supplied the actual six-tool Robinhood schema export. Its recomputed
+digest matches `d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15`.
+All input/output schemas are present. The [offline mapper and reviewed sample plan](ROBINHOOD_READ_MAPPING.md)
+now bind the known wire shapes to existing equity/stock/option/Greek/liquidity and
+completed five-minute history models, with exact identities and original clocks.
+No provider calls, engine changes, strategy changes or dependencies are introduced.
+97 installed Python cases pass; the proof distinguishes synthetic responses from
+actual provider acceptance. Authenticated market samples are still absent.
 
-The paused v2 historical UI account retains three simulated fills and original
-journal SHA-256 `141c3a6ef3d8aeaa47c7919f0bb053810ce6930f3102e639cb22c33b3451b705`.
-The failed v1 evidence and all earlier rollback readers remain preserved. The next
-guarded reader-only refresh requires e6fd353 and retains it separately; it does not
-prepare, replay or start a trader. Main and the original de5dd1c SHADOW deployment
-remain frozen. PR #1 remains open/draft. LIVE remains disabled. Authentic data/model,
-Docker host acceptance and browser screenshots remain separate evidence.
+Important actual schema limits remain explicit: equity quotes omit executable
+sizes; option metadata omits several mandatory contract terms/times; there is no
+per-observation entitlement field. The mapper keeps sizes missing, entitlement
+UNKNOWN and requires independently reviewed instrument metadata. It cannot make
+native admission pass by inventing those values or treating broker sellout time
+as exchange expiration. The existing opt-in native quote-fill integration is
+unchanged. **This is not yet a connected Robinhood PAPER service.** The normalized
+collector and authentic acceptance remain incomplete.
+
+A concrete first plan contains four market reads: SPY/QQQ equity quotes, six
+five-minute bars each from October 23 09:30–10:00 EDT, and SPY/QQQ chain metadata.
+One schema rediscovery precedes those reads. No account/model/order/PAPER work is
+included. The user's original no-authenticated-call instruction still requires
+an explicit exception before this prepared capture runs. No such call occurred.
+The operator executes host commands; credentials remain private. Main is unchanged,
+PR #1 remains open/draft, the original experiment is frozen, and LIVE is disabled.
 
 [Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now connects
 choice-only B, matched independent native accounts and portable full-cost export.

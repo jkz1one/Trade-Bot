@@ -31,21 +31,18 @@ This change is tested with normalized offline packets. It is not a Robinhood fee
 or a claim that Monday's connected test is ready. The repository has a legacy stock
 reader and a bounded six-tool schema/sample capture command; the mixed owner still
 needs exact provider response mapping and an ongoing normalized delivery loop.
-The current workspace contains the retained discovery digest and receipt, but not
-the actual six-tool schema export or authenticated market samples. Old stock quote
+At this revision's initial audit the workspace lacked both the actual six-tool
+schema export and authenticated market samples; the schema export has since arrived. Old stock quote
 conversion is not proof of the metadata, size, timestamps, entitlement, completed
 history and options coverage required by the mixed engine. Those fields must not
 be inferred or relabeled to make admission pass.
 
-The next concrete input is the schemas-only export from the existing discovery
-artifact in `/root/trade-bot-options-auth-BqLFmz`. The actual filename is not known
-here. [Offline export instructions](OPTIONS_READ_CAPTURE.md#export-retained-schemas-without-a-provider-call)
-extract only the reviewed schema object, with no OAuth access or network calls.
-Review that export, prepare an exact bounded read plan, and retain actual response
-samples before implementing and verifying the provider mapper. Authentic reads and
-prospective PAPER activation remain separate from this authorized offline work;
-no such call or activation occurred in this revision. The old SHADOW deployment
-and its credentials are not a shortcut for this missing acceptance.
+The operator has now supplied that schema export and its original digest matches.
+[The reviewed mapper and concrete four-read plan](ROBINHOOD_READ_MAPPING.md)
+record the next step and actual schema limitations. Equity sizes remain missing;
+option metadata needs independent authoritative binding; entitlement remains
+UNKNOWN. The exported schema content is no longer a blocker, but authenticated
+market samples, the ongoing read feed and acceptance remain outstanding.
 
 ## Dashboard changes
 

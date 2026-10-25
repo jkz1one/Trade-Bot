@@ -258,3 +258,8 @@ Do not send credentials or the entire authorization directory. This schema-only
 export supports mapping review; the `capture --schemas` argument still takes the
 original completed discovery artifact. Market response samples and authorization
 for their acquisition remain outstanding; schema discovery alone is not feed proof.
+
+The operator subsequently supplied the schema export, and the original pin matches.
+[Reviewed mappings, precise missing fields and a concrete four-read plan](ROBINHOOD_READ_MAPPING.md)
+now replace the earlier unknown-schema blocker. Actual sample acquisition is still
+pending an explicit exception to the user's no-authenticated-calls instruction.

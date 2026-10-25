@@ -91,6 +91,14 @@ and authentication checks. V1 and both prior rollback containers remain untouche
 Do not run preparation again. Review the refreshed desktop/mobile layout and
 activity expansion before accepting this visual revision.
 
+## Successful chart-label refresh
+
+The operator completed the a3216b6 refresh: 255 installed matches, three historical
+fills, authenticated frozen content and successful health checks after startup
+retries. e6fd353 remains as `trade-bot-dashboard-before-chart`. This establishes
+Docker host acceptance for a3216b6; browser/screenshots remain pending. Do not rerun
+refresh or preparation. The subsequent Robinhood mapping work changes no UI.
+
 ## Prepare and activate the populated fixture
 
 After fetching and checking out the published release in the separate dashboard
