@@ -1,5 +1,9 @@
 # First authentic quote/history/chain samples
 
+**Current continuation:** [broader contract discovery succeeded](ROBINHOOD_OPTION_SAMPLES.md).
+Use `/var/lib/trade-bot-read-auth` for new captures; the original credential directory
+was deleted. Earlier commands below are historical and must not be rerun blindly.
+
 The operator reported interactive login exit 0, then supplied a COMPLETE headless
 schema summary (`ec65abd4d0374732b52c882a3dbe2c19`) with the exact reviewed pin and
 no missing tool/input/output schemas. A subsequent four-read capture

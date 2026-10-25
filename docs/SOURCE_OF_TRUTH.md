@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.120. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
+Version 1.121. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
 
 The operator restored interactive authorization, then supplied successful headless
 schema discovery with the unchanged pin and a completed four-read capture at
@@ -13,17 +13,23 @@ raw receipts remain untouched. No engine/dependency/strategy/authority change.
 119 installed Python cases and all 256 source/wheel/installed file matches pass.
 The earlier failed attempts remain preserved. No authenticated workspace calls.
 
-The operator then executed the two-read contract plan using observed SPY/QQQ chain
-IDs, October 26 expiry and exact sample strikes 760/705. Both calls completed with
-empty instrument lists and no cursor; no option UUID was returned. The cause is
-not established. The [next two-call diagnostic](ROBINHOOD_SAMPLE_ACCEPTANCE.md#exact-strike-lookups-returned-no-contracts)
-changes only the string strikes to 760.0000/705.0000, matching the schema's example
-format. Both forms are schema-valid; this is a hypothesis check, not a proven fix.
-No application changes or additional workspace provider calls. The existing capture
-image is sufficient and no dashboard refresh is needed. Prior artifacts stay intact.
-Option quotes/history, full contract metadata, entitlement, stock sizes, ongoing
-feed integration and connected PAPER acceptance remain incomplete. No new
-PAPER/model/LIVE activation, paid call, account read or broker order is included.
+The exact-strike and four-decimal-format instrument calls both returned empty
+results. A broader listing initially failed before container startup because the
+user had deleted the credential directory. Fresh login/headless discovery succeeded
+with the dedicated **`/var/lib/trade-bot-read-auth`** directory; old auth-path commands
+are historical. The [successful broader listing and next option sample](ROBINHOOD_OPTION_SAMPLES.md)
+returned 100 calls per symbol with pagination, including observed active/tradable
+SPY760 and QQQ705 October 26 call UUIDs. No more pagination is needed for this sample;
+complete chain coverage is not established. Earlier empty-filter cause is unproven.
+
+A schema-validated two-read plan now requests quotes and six regular five-minute
+historical bars for those exact UUIDs. It has not run. No application/engine/
+strategy/dependency changes; existing 119 installed cases and 256-file identity
+proof remain prior verification. Full native contract metadata, entitlement, stock
+sizes, ongoing feed integration and connected PAPER acceptance remain incomplete.
+Broker sellout time is not exchange expiry/settlement proof. The existing capture
+image is sufficient; no dashboard refresh, new PAPER/model/LIVE activation, paid
+call, account read or broker order is included. No authenticated workspace calls.
 
 The operator successfully refreshed the separate dashboard to
 `a3216b6d3953d1291643830b20ac4ef69fd8b37b`: all 255 application files matched,

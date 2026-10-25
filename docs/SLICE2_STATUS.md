@@ -1,5 +1,37 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Broader contract listing and recovered credential directory: 2026-10-25 America/New_York
+
+Fresh local/GitHub HEAD is `681c43b66ac88353e9f465f8cdfe013952e0dad9`, tree
+`7cfafb0415ffed725d6dafd80d004136f3f02150`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 is open/draft.
+
+The four-decimal strike attempt also returned empty lists. The subsequent broader
+lookup failed before startup with Docker exit125/missing bind source; the user had
+started deleting files and neither original credential nor login-backup copy was
+found by the supplied glob. Fresh interactive login/headless discovery returned
+exit0 at `/var/lib/trade-bot-read-auth`. This is the current dedicated credential
+directory; do not reuse historical root auth paths or upload credential files.
+
+Broader capture f15f524e90ff4a75b941f04e0f5100cf at 01:11:55 EDT returned 100 calls
+per chain, each with pagination. All returned subject identities and unique UUIDs
+validate against the original calls and pinned schemas. Observed SPY760/QQQ705
+October26 calls are present, active/tradable, so this sample needs no further page.
+Neither complete chain coverage nor the exact cause of old empty queries is claimed.
+[Hashes, selected records and recovery chronology](ROBINHOOD_CONTRACT_LISTING_PROOF.json).
+
+The [next two-read plan](ROBINHOOD_OPTION_SAMPLES.md) uses only those observed UUIDs
+for option quotes and October23 09:30–10:00 EDT regular five-minute history. It is
+schema-validated, not executed. Native metadata remains incomplete; broker sellout
+is not exchange expiration. No code/engine/dependency/strategy/authority changes,
+workspace authenticated calls, paid calls, service activation or dashboard refresh.
+The prior 119 installed cases and 256 matching application files remain prior proof, not a
+new suite run. All original deployed services and paused UI data are unchanged by
+this workspace work. Connected PAPER and latest chart/label browser acceptance
+remain pending. Credentials/earlier host artifacts lost through user deletion are
+not falsely claimed preserved; uploaded copies and committed evidence hashes remain.
+
+
 ## Empty exact-strike contract responses: 2026-10-25 America/New_York
 
 Fresh local/GitHub HEAD is `d19d4ee395081c2094d78cdc7425ce938099d326`, tree
