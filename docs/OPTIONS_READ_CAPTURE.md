@@ -236,3 +236,25 @@ artifact for schema review; do not paste its neighboring OAuth file. Completed
 discovery can still report missing metadata and grants no execution authority.
 Sample acquisition needs a reviewed plan built from those actual schemas; no
 guessed argument template or automatic next batch is included.
+
+## Export retained schemas without a provider call
+
+`export-schemas` reads an existing completed private discovery artifact and writes
+only its `ReadSchemas` object. It does not read OAuth, rediscover tools or acquire
+market data. Source must be an owned mode-0600 regular file; output must be a new
+absolute path in an owned mode-0700 directory. Existing output and symlinks are
+refused, and the reviewed schema digest must match exactly.
+
+```bash
+python -I -W error -m app.options.read_cli export-schemas \
+  --source /actual/private/discovery-artifact.json \
+  --output /actual/private/new-schemas-only.json \
+  --schema-sha256 d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15
+```
+
+Use actual paths, not those placeholders. The retained operator directory is
+`/root/trade-bot-options-auth-BqLFmz`; its actual discovery filename must be checked.
+Do not send credentials or the entire authorization directory. This schema-only
+export supports mapping review; the `capture --schemas` argument still takes the
+original completed discovery artifact. Market response samples and authorization
+for their acquisition remain outstanding; schema discovery alone is not feed proof.

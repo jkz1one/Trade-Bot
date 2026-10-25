@@ -55,9 +55,41 @@ def _save(fd, payload):
     os.fsync(fd)
 
 
+def export_schemas(source, output, expected_sha):
+    """Export only previously captured tool schemas, without opening credentials."""
+    artifact = private_json(source)
+    if artifact.get("status") != "COMPLETE":
+        raise ValueError("Completed discovery required")
+    result = CaptureResult.model_validate(artifact["result"])
+    if result.operation != "DISCOVER" or result.status != "COMPLETE" or result.schemas is None:
+        raise ValueError("Completed discovery schemas required")
+    schemas = result.schemas
+    if schemas.sha256 != expected_sha:
+        raise ValueError("Reviewed schema pin mismatch")
+    destination = Path(output)
+    info = destination.parent.stat()
+    if (
+        not destination.is_absolute()
+        or not stat.S_ISDIR(info.st_mode)
+        or info.st_uid != os.geteuid()
+        or stat.S_IMODE(info.st_mode) != 0o700
+    ):
+        raise ValueError("Existing private export directory required")
+    fd = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    try:
+        _save(fd, schemas.model_dump(mode="json"))
+    finally:
+        os.close(fd)
+    return {"status": "EXPORTED", "schema_sha256": schemas.sha256, "network_calls": False}
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="operation", required=True)
+    export = sub.add_parser("export-schemas")
+    export.add_argument("--source", required=True)
+    export.add_argument("--output", required=True)
+    export.add_argument("--schema-sha256", required=True)
     for name in ("discover", "capture"):
         cmd = sub.add_parser(name)
         cmd.add_argument("--oauth-file", required=True)
@@ -68,6 +100,19 @@ def main(argv=None):
             cmd.add_argument("--schema-sha256", required=True)
             cmd.add_argument("--plan", required=True)
     args = parser.parse_args(argv)
+    if args.operation == "export-schemas":
+        try:
+            result = export_schemas(args.source, args.output, args.schema_sha256)
+        except (OSError, ValueError, KeyError, TypeError):
+            result = {
+                "status": "UNAVAILABLE",
+                "reason": "SCHEMA_EXPORT_UNAVAILABLE",
+                "network_calls": False,
+            }
+            print(json.dumps(result))
+            return 1
+        print(json.dumps(result))
+        return 0
     fd = None
     admission = {
         "capture_id": uuid4().hex,

@@ -27,8 +27,8 @@ review_action="${1:-}"
 review_previous_image=trade-bot-dashboard:cc990cf
 if [[ "$review_action" == refresh ]]; then
   [[ "$review_name" == ui-review-v2 ]] || exit 1
-  review_previous_image=trade-bot-dashboard:c2ad7ca22a1902dde9365eed475d004737bdbda7
-  review_backup=trade-bot-dashboard-before-layout
+  review_previous_image=trade-bot-dashboard:e6fd3536f1c615542c0fdefd972b21c8651c73f4
+  review_backup=trade-bot-dashboard-before-chart
   [[ "$(docker inspect --format '{{.Config.Image}}' trade-bot-dashboard)" == "$review_previous_image" ]] || {
     echo 'Unexpected dashboard release; inspect before refresh.' >&2; exit 1;
   }

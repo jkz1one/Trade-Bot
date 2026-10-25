@@ -24,6 +24,21 @@ def family_of(intent):
     return intent.get("family") or (intent.get("entry_lineage") or {}).get("family") or "UNKNOWN"
 
 
+def chart_with_gaps(points):
+    chart = history_chart(points)
+    if chart is None:
+        return None
+    # Connect only observed endpoints, with a distinct unavailable-interval style.
+    # No value is calculated for missing snapshots, and solid segments stay broken.
+    known = [i for i, point in enumerate(points) if point["equity"] is not None]
+    chart["gaps"] = [
+        f"{left['x']},{left['y']} {right['x']},{right['y']}"
+        for index, (left, right) in enumerate(zip(chart["dots"], chart["dots"][1:]))
+        if known[index + 1] > known[index] + 1
+    ]
+    return chart
+
+
 def mixed_view(data):
     """Never infer cycle joins from timestamps or join a paged cycle to latest orders."""
     orders = data.get("orders", [])
@@ -100,8 +115,7 @@ def mixed_view(data):
             "href": "#" + evidence_id(intent["client_id"]),
         }
         activity.append(
-            base
-            | {"kind": "REVIEW", "label": "Order approved", "at": intent["prepared_at"]}
+            base | {"kind": "REVIEW", "label": "Order approved", "at": intent["prepared_at"]}
         )
         if order["attempted_at"]:
             activity.append(
@@ -155,7 +169,7 @@ def mixed_view(data):
             :40
         ],
         "ranges": [
-            {"name": name, "points": subset, "chart": history_chart(subset)}
+            {"name": name, "points": subset, "chart": chart_with_gaps(subset)}
             for name, subset in (("20", points[-20:]), ("50", points[-50:]), ("all", points))
         ],
     }

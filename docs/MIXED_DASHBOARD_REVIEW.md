@@ -74,17 +74,20 @@ original SHADOW service identity/start-time checks passed. The old cc990cf reade
 remains retained as `trade-bot-dashboard-before-review`. The two operator desktop
 screenshots show the populated account and activity; they precede the layout fix.
 
-After fetching and checking out the new layout revision, update only the reader:
+The operator subsequently refreshed successfully to e6fd353, verifying all 254
+installed application files, three fills and private authenticated frozen content.
+The next refresh addresses the chart and trade labels shown in the new screenshot.
+After fetching and checking out the new revision, update only the reader:
 
 ```bash
 bash scripts/dashboard-review-host.sh refresh ui-review-v2
 ```
 
 This builds the new image and reuses the existing frozen v2 journal read-only.
-It does not prepare or replay a fixture. It requires the running c2ad7ca reader,
+It does not prepare or replay a fixture. It requires the running e6fd353 reader,
 preflights the same seed/journal/native evidence, retains that reader separately
-as `trade-bot-dashboard-before-layout` and uses the existing activation/rollback
-and authentication checks. V1 and the first rollback container remain untouched.
+as `trade-bot-dashboard-before-chart` and uses the existing activation/rollback
+and authentication checks. V1 and both prior rollback containers remain untouched.
 Do not run preparation again. Review the refreshed desktop/mobile layout and
 activity expansion before accepting this visual revision.
 

@@ -1,28 +1,37 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.114. Adopted product direction and working delivery contract, 2026-10-24 UTC.
-The operator successfully prepared and activated the paused historical dashboard
-at `c2ad7ca22a1902dde9365eed475d004737bdbda7` using the separate v2 fixture.
-All 254 host-installed files matched and three simulated fill receipts were verified;
-authenticated health/content checks passed after startup retries. The original
-SHADOW worker/observer remained unchanged. Two operator desktop screenshots now
-show the populated page; mobile and interaction acceptance remain open.
-The [visual balance revision](MIXED_DASHBOARD_BALANCE.md) aligns the account/trade
-cards and the decisions/activity panels, defaults activity to three expandable
-rows and simplifies visible copy. Technical details remain inspectable. Its new
-layout requires browser review after the operator refreshes the existing reader;
-no fixture preparation or native engine change is part of this revision.
-The [explicit mixed research desk](MIXED_DASHBOARD.md) now presents stored common
-cash, full-cost flat balance boundaries, stock/options/Scope trade cards, original
-protection and separate proposal/approval/attempt/fill evidence. Its installed
-verification is retained in [proof](MIXED_DASHBOARD_PROOF.json). Browser visual
-acceptance and separately bound mixed benchmark presentation remain open. The
-operator deployed the separate reader at `cc990cf` through the existing HTTPS
-route and supplied an authenticated empty-state desktop screenshot. A separately
-labeled [paused offline UI fixture](MIXED_DASHBOARD_REVIEW.md) now has 156 installed
-Python checks and 7 JavaScript checks; its populated host activation remains pending.
-This creates no prospective PAPER enrollment or running trader. LIVE and authenticated
-provider/model/broker calls remain unauthorized; the frozen worker is unchanged.
+Version 1.115. Adopted product direction and working delivery contract, 2026-10-25 UTC.
+
+The separate dashboard is deployed at `e6fd3536f1c615542c0fdefd972b21c8651c73f4`.
+The operator's refresh verified 254 installed files, authentication and three
+historical simulated fills. The new screenshot confirms the populated balanced
+layout and identifies disconnected equity endpoints and overlapping trade labels.
+The current revision connects known endpoints with explicitly dashed missing-value
+links and moves exact price labels into normal flow beneath numbered rail markers.
+[Current work and acceptance](MIXED_QUOTE_FILLS.md). Browser review of these fixes
+remains pending; unknown valuations remain unknown.
+
+The continuous mixed runtime now has explicit, frozen opt-in quote-driven simulated
+fills using its existing native venue and replay rules. Later executable normalized
+quotes can produce native entry/exit fill receipts; repeated source quotes cannot
+replenish observed size. Existing runtime policies retain their serialized identity
+and behavior. This is tested offline plumbing, **not a connected Robinhood PAPER
+service**. Actual captured schema content and market response samples are still
+needed for exact provider normalization, collection and end-to-end acceptance.
+Prior references to settled plumbing describe native fixture paths, not this missing
+provider connection. The existing six-tool schema digest is retained; the schema
+export itself was not found in this workspace. A private offline export command
+extracts only schemas from the retained discovery artifact without credentials or
+network work. No authenticated provider/model/broker call or prospective PAPER
+activation occurred. No dependency or strategy change was made.
+
+The paused v2 historical UI account retains three simulated fills and original
+journal SHA-256 `141c3a6ef3d8aeaa47c7919f0bb053810ce6930f3102e639cb22c33b3451b705`.
+The failed v1 evidence and all earlier rollback readers remain preserved. The next
+guarded reader-only refresh requires e6fd353 and retains it separately; it does not
+prepare, replay or start a trader. Main and the original de5dd1c SHADOW deployment
+remain frozen. PR #1 remains open/draft. LIVE remains disabled. Authentic data/model,
+Docker host acceptance and browser screenshots remain separate evidence.
 
 [Independent Scope A/B/C/D comparison](OPTIONS_SCOPE_COMPARISON.md) now connects
 choice-only B, matched independent native accounts and portable full-cost export.

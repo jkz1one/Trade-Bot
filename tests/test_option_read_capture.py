@@ -590,3 +590,61 @@ def test_cli_capture_uses_reviewed_discovery_pin_and_keeps_raw_private(
     args[args.index("--output") + 1] = str(tmp_path / "bad-pin.json")
     assert read_cli.main(args) == 1 and len(calls) == 1
     assert not (tmp_path / "bad-pin.json").exists()
+
+
+@pytest.mark.parametrize("damage", [None, "pin", "existing", "symlink", "incomplete"])
+def test_offline_schema_export_has_no_credentials_or_network(tmp_path, monkeypatch, capsys, damage):
+    tmp_path.chmod(0o700)
+    schemas = asyncio.run(OptionReadGateway(Client()).discover())
+    result = CaptureResult(
+        request_id="a" * 32,
+        policy_sha256="b" * 64,
+        operation="DISCOVER",
+        started_at=utc_now(),
+        collected_at=utc_now(),
+        elapsed_seconds=0.0,
+        status="COMPLETE",
+        schemas=schemas,
+    )
+    source = tmp_path / "discovery.json"
+    source.write_text(
+        json.dumps(
+            {
+                "status": "INCOMPLETE" if damage == "incomplete" else "COMPLETE",
+                "private_note": "DO_NOT_EXPORT_PRIVATE",
+                "result": result.model_dump(mode="json"),
+            }
+        )
+    )
+    source.chmod(0o600)
+    before = source.read_bytes()
+    output = tmp_path / "export.json"
+    if damage == "existing":
+        output.write_text("retain")
+    elif damage == "symlink":
+        output.symlink_to(source)
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Offline export attempted provider/credential work")
+
+    monkeypatch.setattr(read_cli, "private_oauth", forbidden)
+    monkeypatch.setattr(read_cli, "collect", forbidden)
+    status = read_cli.main(
+        [
+            "export-schemas",
+            "--source",
+            str(source),
+            "--output",
+            str(output),
+            "--schema-sha256",
+            "0" * 64 if damage == "pin" else schemas.sha256,
+        ]
+    )
+    assert status == (1 if damage else 0)
+    assert source.read_bytes() == before
+    assert "PRIVATE" not in capsys.readouterr().out
+    if damage is None:
+        assert json.loads(output.read_text()) == schemas.model_dump(mode="json")
+        assert output.stat().st_mode & 0o777 == 0o600
+    elif damage == "existing":
+        assert output.read_text() == "retain"

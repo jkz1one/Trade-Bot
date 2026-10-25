@@ -28,6 +28,9 @@ class RuntimePolicy(OptionRecord):
     mixed_inputs: Literal["mixed-runtime-inputs-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
+    simulated_fills: Literal["mixed-quote-fills-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     feed_file: str = Field(min_length=1, max_length=4096)
     operator_key_file: str | None = Field(
         default=None, min_length=1, max_length=4096, exclude_if=lambda v: v is None
@@ -47,6 +50,8 @@ class RuntimePolicy(OptionRecord):
 
     @model_validator(mode="after")
     def separate(self):
+        if self.simulated_fills is not None and self.mixed_inputs is None:
+            raise ValueError("Quote-driven fills require explicit mixed runtime enrollment")
         if self.operator_key_file == self.feed_file:
             raise ValueError("Operator key must be separate from the feed")
         return self

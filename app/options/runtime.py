@@ -232,6 +232,15 @@ class OptionRuntime:
         except (OSError, ValueError):
             packet, issue = None, "OPTION_RUNTIME_FEED_UNAVAILABLE"
         issue = issue or operator_issue
+        if packet is not None and issue is None and self.policy.simulated_fills is not None:
+            from app.mixed.quote_fills import apply_quote_fills
+
+            try:
+                apply_quote_fills(self, packet, at)
+            except (OSError, ValueError):
+                # An ambiguous venue update must halt entry, while the existing
+                # reconciliation and independent protection still run below.
+                issue = "MIXED_QUOTE_FILL_UNAVAILABLE"
         if issue:
             # Fence a pending model/entry before the next native snapshot can suspend.
             with self.c.engine.journal.write() as db:

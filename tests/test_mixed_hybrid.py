@@ -75,6 +75,7 @@ def test_each_record_range_preserves_null_boundaries_and_isolated_points():
         assert len(item["points"]) == length
         assert item["points"][-2]["equity"] is None
         assert len(item["chart"]["segments"]) == 2
+        assert len(item["chart"]["gaps"]) == 1
         assert len(item["chart"]["dots"]) == length - 1
     assert data == before
 

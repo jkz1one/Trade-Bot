@@ -80,3 +80,13 @@ management during independent ticks, delivered refresh, explicit Scope/option/st
 choices, source retirement, private packet/enrollment failures, restart and actual
 funds settlement. Use the [isolated installed-wheel procedure](OPTIONS_TESTING.md).
 The latest [status entry](SLICE2_STATUS.md) records completed final-wheel evidence.
+
+## Opt-in quote-driven simulated fills
+
+A newly enrolled mixed runtime may explicitly set
+`"simulated_fills": "mixed-quote-fills-v1"`. The default is absent and preserves
+existing frozen policies. The runtime applies validated delivered quote evidence
+before reconciliation/protection, using the existing native simulated venue;
+settlement remains explicit. [Behavior, limits and current provider blocker](MIXED_QUOTE_FILLS.md).
+This flag does not acquire market data or make an offline fixture a connected
+Robinhood PAPER service.

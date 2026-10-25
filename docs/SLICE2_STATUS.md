@@ -1,5 +1,53 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Quote-driven simulated fills and dashboard correction: 2026-10-25 UTC
+
+Fresh GitHub and local state matched e6fd3536f1c615542c0fdefd972b21c8651c73f4,
+tree `3dd647b87e6059ddb876aed4f3e7b8a78eac5684`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 remains open/draft.
+The operator successfully refreshed the separate reader to e6fd353, with 254
+installed matches, three historical fills and authenticated frozen-content checks.
+The latest populated screenshot identifies disconnected chart endpoints and
+colliding active-trade labels. Current presentation changes use explicit dashed
+missing-value connectors and a flowing numbered price legend. Missing valuations,
+original price terms and source clocks remain unchanged. Updated desktop/mobile
+browser review and current-revision Docker acceptance remain pending.
+
+The user requested plumbing for Monday testing. Audit found that continuous native
+runtime tests still injected fills manually. An explicit frozen
+`mixed-quote-fills-v1` policy now connects validated later delivered quotes to the
+existing native simulated venue, reconciliation and independent protection. Tests
+cover stock/option entry and exit, size-limited partial fills, receipt aliases,
+stale/delayed/unknown-size data, conflicts, expiration, unresolved attempts and
+unchanged default policy behavior. No strategy, dependency, deadline, approval,
+source retirement or settlement rule changes. The read-only dashboard never calls
+this fill path. Reader refresh preserves v1/v2 and both prior rollback containers.
+
+**This is not a connected Robinhood PAPER service.** Exact schema content and market
+samples remain unavailable in this workspace; provider normalization, an ongoing
+read feed and authentic acceptance remain incomplete. The retained six-tool digest
+is `d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15`.
+An offline `export-schemas` command safely extracts only that object from the
+existing private discovery artifact; no OAuth or provider call is needed to export.
+The operator must identify the actual discovery file in the retained private
+directory. No authenticated provider/model/broker call, prospective PAPER activation,
+new host trader, dependency change or SHADOW deployment change occurred. LIVE is
+disabled. [Behavior and remaining connection work](MIXED_QUOTE_FILLS.md).
+
+379 distinct installed Python cases and 14 JavaScript cases passed. All 255
+application/template files match source, wheel and installed bytes. Wheel SHA-256:
+`2cb437f56ae9dfe230c35496654a02cc118f8865d57d572e14bdadb4376ed14f`.
+Source/wheel/installed byte identities,
+exact test identities and screenshot hashes are retained in
+[MIXED_QUOTE_FILLS_PROOF.json](MIXED_QUOTE_FILLS_PROOF.json). Native tests run serially
+from copied tests outside checkout with Python `-I`, warnings as errors, plugin
+autoload disabled and explicit anyio. The first focused run exposed a test's wrong
+expectation: native reconciliation legitimately resolved UNKNOWN to OPEN while
+retaining its halt. Only that assertion was corrected; no engine safeguard changed.
+One initial broad-run collection referenced a nonexistent test filename and ran no
+cases; it is not counted as a pass.
+
+
 
 ## Dashboard visual balance and successful v2 host receipt: 2026-10-24 America/New_York
 

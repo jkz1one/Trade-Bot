@@ -22,6 +22,12 @@ fixture remains preserved. [Visual balance and simpler copy](docs/MIXED_DASHBOAR
 now align the dashboard cards and shorten recent activity. The refresh command
 reuses the existing frozen account; updated desktop/mobile visual review remains open.
 
+The [quote-driven simulated-fill update](docs/MIXED_QUOTE_FILLS.md) connects later
+normalized quotes to existing native fill receipts. Robinhood response mapping and
+an ongoing read feed are still outstanding; this is not yet a connected PAPER
+service. The same update fixes the chart's missing-value connectors and moves
+active-trade labels below the price rail. Updated browser review is pending.
+
 ## Current product direction
 
 The settled strategy/engine plumbing is connected through native offline fixtures.
