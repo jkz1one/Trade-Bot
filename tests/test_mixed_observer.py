@@ -43,7 +43,7 @@ def test_explicit_mixed_flat_read_is_complete_and_does_not_attach_owner(tmp_path
         )
         assert digest(paths) == before
         html = render(data)
-        assert "LIVE DISABLED" in html and "No owned trade recorded" in html
+        assert "LIVE DISABLED" in html and "No open position recorded" in html
         assert 'role="img"' in html
 
 
@@ -63,7 +63,7 @@ def test_stock_partial_and_complete_fills_retain_original_protection(tmp_path, q
         assert data["points"][-1]["equity"] is None
         assert data["equity"] is None if quantity == "1" else data["equity"] is not None
         assert digest([e.journal.path, v.path]) == before
-        assert "Target milestones are not fills" in render(data)
+        assert "Reaching a target does not confirm a sale" in render(data)
 
 
 def test_stale_owned_mark_is_withheld_without_losing_thesis(tmp_path):
@@ -131,7 +131,7 @@ def test_incomplete_native_coverage_withholds_balances_and_authoritative_fills(t
         assert data["accounting"] == "UNAVAILABLE", data
         assert data["cash"] is None and data["equity"] is None and data["fill_count"] is None
         assert data["position"] is None and data["orders"]
-        assert "Balances, position and authoritative fill totals are withheld" in render(data)
+        assert "Balances, positions and fill totals are unavailable until checked" in render(data)
 
 
 @pytest.mark.parametrize("mode", ["HOLD", "UNKNOWN", "ENTER"])
@@ -194,7 +194,7 @@ def test_mixed_option_card_preserves_exact_contract_floors_and_original_targets(
         )
         assert data["fill_count"] == 1
         assert "Original protection and terms" in render(data)
-        assert "Not retained in original option intent" in render(data)
+        assert "Not recorded" in render(data)
         assert data["orders"][0]["origin"] != "UNKNOWN"
         assert data["orders"][0]["origin"] != "NATIVE"
 

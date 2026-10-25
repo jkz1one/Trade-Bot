@@ -43,8 +43,11 @@ interpolation flags; those fields are not invented. Connected PAPER acceptance i
 The [Data Stream and automatic-update release](docs/MIXED_DATA_STREAM.md) adds a
 recorded quote/event tab, clearer per-unit trade prices and five-second in-page
 updates for active accounts. Frozen reviews remain paused. Darker surfaces and a
-greener accent retain the existing layout. Installed checks pass; deployment and
-browser visual acceptance remain pending. This does not connect the market feed.
+greener accent retain the existing layout. The operator deployed this release with verified frozen evidence.
+[Panel balance and simpler navigation](docs/MIXED_PANEL_BALANCE.md) now add Trades
+expansion, correct Data Stream sizing, combine the active-trade dropdowns and remove
+scroll-jump links. Installed checks pass; this correction awaits deployment and
+browser visual acceptance. These changes do not connect the market feed.
 
 ## Current product direction
 

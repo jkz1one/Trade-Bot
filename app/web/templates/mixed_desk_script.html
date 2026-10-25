@@ -10,6 +10,20 @@
   try { saved = JSON.parse(sessionStorage.getItem(key) || '{}') || {}; } catch (_) {}
   if (typeof saved !== 'object' || Array.isArray(saved)) saved = {};
   const save = () => { try { sessionStorage.setItem(key, JSON.stringify(saved)); } catch (_) {} };
+  const trades = document.getElementById('trades');
+  const tradesMore = document.getElementById('trades-more');
+  function expandTrades(expanded) {
+    if (!trades || !tradesMore) return;
+    trades.dataset.expanded = String(expanded);
+    tradesMore.setAttribute('aria-expanded', String(expanded));
+    tradesMore.textContent = expanded ? 'Collapse trades' : 'Expand trades';
+    saved.tradesExpanded = expanded; save();
+  }
+  if (tradesMore) {
+    tradesMore.hidden = false;
+    expandTrades(saved.tradesExpanded === true);
+    tradesMore.addEventListener('click', () => expandTrades(trades.dataset.expanded !== 'true'));
+  }
   const orders = Array.from(document.querySelectorAll('[data-order-family]'));
   const choices = Array.from(document.querySelectorAll('[data-family-choice]'));
   const filters = Array.from(document.querySelectorAll('[data-filter-family]'));
@@ -33,6 +47,7 @@
     if (!target) return;
     const order = target.closest('[data-order-family]');
     if (order && order.hidden) filterFamily('ALL');
+    if (order) expandTrades(true);
     let detail = target.closest('details');
     while (detail) { detail.open = true; detail = detail.parentElement.closest('details'); }
     target.scrollIntoView({block: 'nearest'});

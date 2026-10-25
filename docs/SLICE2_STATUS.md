@@ -1,5 +1,34 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Detail-panel balance and navigation cleanup: 2026-10-25 America/New_York
+
+Starting local/remote HEAD `a51a3133f2da2196dac45f59598916a57b95b694`, tree
+`6a2cbc01ca8921554910782795551aa3c257f5bd`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 stays open/draft.
+
+Host deployment initially stopped before replacement because read_cli.py was mode 600
+root:root. Supplied namei/stat/container evidence confirmed the cause and old a3216b6
+reader remained running. Tracked-source read permissions fixed it; the subsequent
+host run verified 259 installed files, frozen evidence, authentication and three
+fills. a3216b6 remains before-stream. No prospective worker started.
+
+User reported long Trades and a shorter Data Stream. [Correction and proof](MIXED_PANEL_BALANCE.md)
+remove the independent stream maximum height and constrain collapsed Trades to the
+shared row, with internal scrolling and an explicit expand/collapse control. Trade
+expansion survives updates and record links; the right activity panel does not grow
+with expanded Trades. Active-trade tabs stay. Summary uses one Exact levels and
+original targets disclosure including quote details. Extra scroll-jump links are
+removed; family filters no longer navigate. No multi-position engine change. Visible explanations are simpler; negative
+amounts use amber, with stale/unknown and simulation labels preserved.
+
+33 final installed Python cases, 19 JavaScript cases and 259 byte-identical app/
+template files pass. The CSS/Jinja delimiter fault found by the first run was fixed
+before final verification. Browser visual acceptance remains pending; the generated
+image is illustrative and is not release proof. The helper expects a51a313 and
+preserves it as before-panel-balance; the operator executes deployment. Original
+SHADOW, frozen V1/V2 and credentials remain preserved. No dependency, strategy,
+engine, provider/model-call or prospective PAPER/LIVE changes.
+
 ## Data Stream, price clarity and in-page updates: 2026-10-25 America/New_York
 
 Starting local/remote HEAD `108aab7acc513e1ae9e9fe1632982ae9507dbe28`, tree

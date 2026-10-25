@@ -95,7 +95,7 @@ def test_snapshot_authentication_and_native_changes_without_trading_reads(tmp_pa
             client.auth = ("trader", PASSWORD)
             before = digest([e.journal.path, v.path])
             first = client.get("/desk/snapshot")
-            assert first.status_code == 200 and "Verified flat" in first.json()["html"]
+            assert first.status_code == 200 and "No open trade" in first.json()["html"]
             assert 'data-update-mode="auto"' in first.json()["html"]
             assert "connect-src 'self'" in first.headers["content-security-policy"]
             assert digest([e.journal.path, v.path]) == before

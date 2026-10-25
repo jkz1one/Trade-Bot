@@ -21,7 +21,8 @@ function desk({stored='{}', denied=false, hash='', population='one'}={}) {
   const detail=element('detail');detail.parentElement={closest(){return null;}};
   const point=element('point',{pointDetail:'Oct 09, 2026 11:00:00 EDT · $1000.01'});
   const pointLabel=element('point-label');point.closest=()=>({querySelector:()=>pointLabel});
-  const ids=[...orders,select,more,empty,detail];
+  const trades=element('trades');const tradesMore=element('trades-more');
+  const ids=[...orders,select,more,empty,detail,trades,tradesMore];
   const groups={'[data-order-family]':orders,'[data-family-choice]':choices,'[data-filter-family]':filters,
     '[data-family-label]':[label],'a[href^="#"]':[],'details[id]':[detail],
     '[data-point-detail]':[point],'[data-event-kind]':events};
@@ -31,7 +32,7 @@ function desk({stored='{}', denied=false, hash='', population='one'}={}) {
     sessionStorage:{getItem(k){keys.push(k);if(denied)throw Error('denied');return stored;},
       setItem(k,v){keys.push(k);if(denied)throw Error('denied');stored=v;}},
     addEventListener:(k,fn)=>{listeners[k]=fn;}});
-  return {orders,choices,filters,label,events,select,more,empty,detail,point,pointLabel,keys,listeners,
+  return {orders,choices,filters,label,events,select,more,empty,detail,point,pointLabel,keys,listeners,trades,tradesMore,
     saved:()=>JSON.parse(stored)};
 }
 test('family filter applies only to attributed order cards',()=>{
@@ -72,4 +73,17 @@ test('state is population scoped and storage denial leaves interactions usable',
 test('disclosures persist their own state without executing a refresh',()=>{
  const d=desk({stored:'{"details":{"detail":true}}'});assert.equal(d.detail.open,true);
  d.detail.open=false;d.detail.events.toggle();assert.equal(d.saved().details.detail,false);
+});
+
+test('Trades starts collapsed and toggles independently of activity',()=>{
+ const d=desk();assert.equal(d.trades.dataset.expanded,'false');assert.equal(d.tradesMore.hidden,false);
+ d.tradesMore.events.click();assert.equal(d.trades.dataset.expanded,'true');
+ assert.equal(d.saved().tradesExpanded,true);assert.equal(d.tradesMore.textContent,'Collapse trades');
+ assert.equal(d.more.attrs['aria-expanded'],'false');
+ d.tradesMore.events.click();assert.equal(d.trades.dataset.expanded,'false');
+});
+test('Trades restores expansion and expands to reveal a linked order',()=>{
+ assert.equal(desk({stored:'{"tradesExpanded":true}'}).trades.dataset.expanded,'true');
+ assert.equal(desk({hash:'#order-0'}).trades.dataset.expanded,'true');
+ const d=desk({denied:true});d.tradesMore.events.click();assert.equal(d.trades.dataset.expanded,'true');
 });

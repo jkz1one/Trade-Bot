@@ -74,3 +74,12 @@ test('snapshot replacement preserves selected tabs, disclosure state, focus and 
  assert.equal(clicked,1);assert.ok(focused);assert.ok(detail.open);
  assert.equal(stream.scrollTop,125);assert.equal(stream.scrollLeft,12);
 });
+
+test('Trades expansion survives snapshot replacement even without storage',async()=>{
+ const h=harness();let toggles=0;
+ const panel={dataset:{expanded:'true'}};
+ const button={getAttribute(){return 'false';},click(){toggles++;}};
+ const original=h.document.getElementById;
+ h.document.getElementById=id=>id==='trades'?panel:id==='trades-more'?button:original(id);
+ await h.tick();assert.equal(toggles,1);
+});

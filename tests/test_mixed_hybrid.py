@@ -91,11 +91,11 @@ def test_unavailable_page_retains_layout_without_fabricated_values(reason):
         }
     )
     assert 'id="balance"' in html and 'id="trade-card"' in html
-    assert "No complete equity path" in html and "No verified decision evidence" in html
+    assert "No equity history yet" in html and "No decisions available yet" in html
     assert (
         "No PAPER account connected" in html
         if reason == "DATABASE_NOT_CREATED"
-        else "Ownership unavailable" in html
+        else "Position unavailable" in html
     )
     assert "<polyline" not in html
     page = Page(html)

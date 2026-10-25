@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.123. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
+Version 1.124. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
 
 The [Data Stream/dashboard release](MIXED_DATA_STREAM.md) adds retained quote/event
 records inside the existing detail tabs, clearer average-entry/bid/ask/P&L display,
@@ -9,11 +9,21 @@ Active mixed accounts now poll authenticated stored snapshots every five seconds
 without reloading the page; UI selections, disclosures, focus and scrolling persist.
 Frozen reviews/history stay paused, failures remain visible and quote source times
 stay separate from page synchronization. No page-triggered provider/trading work.
-63 installed Python cases, 23 JavaScript cases and all259 file byte identities pass.
-Host deployment and actual browser visual acceptance remain pending; the local
-preview was inaccessible to this cloud browser. The helper requires the reported
-a3216b6 reader, preserves it as before-stream and reuses frozen ui-review-v2.
-No engine, strategy, dependency, original SHADOW or prospective activation changes.
+63 installed Python cases, 23 JavaScript cases and all 259 file byte identities pass.
+The operator deployed a51a313 successfully after correcting root-only source-file
+permissions: all 259 file matches, frozen native verification and authentication
+passed, with three fills retained. The a3216b6 rollback is before-stream.
+
+The [detail-panel balance correction](MIXED_PANEL_BALANCE.md) gives Trades a compact
+scrolling view and expand/collapse control, and removes Data Stream's independent
+maximum-height cap so it follows the shared grid row. The active-trade tabs stay;
+its Summary has one Exact levels and original targets disclosure. Extra scroll-jump
+links are removed. Plain-language explanations and amber negative amounts keep
+the same simulation, freshness and cost distinctions. No portfolio, engine, strategy or dependency changes. One open
+position across families remains the contract. 33 installed Python and 19 JavaScript
+checks pass with 259 matching files. This correction is not yet deployed or visually
+accepted; the generated image is illustrative only. The guarded refresh expects
+a51a313 and preserves it as before-panel-balance, reusing the frozen v2 account.
 
 The operator restored interactive authorization, then supplied successful headless
 schema discovery with the unchanged pin and a completed four-read capture at
