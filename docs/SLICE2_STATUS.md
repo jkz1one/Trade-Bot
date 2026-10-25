@@ -1,5 +1,29 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Equal default detail-tab heights: 2026-10-25 America/New_York
+
+Starting feature HEAD 2a5dae877e3116b03eb9c291abdec0bb638ab159. Main remains
+b5359aaf396e692d2142d7e02908f1544e045ee6; PR #1 stays open/draft.
+
+User reported Trades and Data Stream were still too tall. The lower detail tabs
+now share a 420px default viewport, preventing long content from enlarging the
+row. Trades and stream content scroll inside it; Trades expands only on request.
+Recent activity matches that default, expands independently, and has a stable ID
+for scroll restoration during polling. Upper cards remain unchanged. Active trade
+still renders one native position, with no two-play selector; multiple order rows
+do not establish multiple-play handling.
+
+[Proof](MIXED_PANEL_HEIGHT_PROOF.json): 27 isolated installed Python cases, 19
+JavaScript cases and all 262 source/wheel/installed file identities pass. Final
+wheel SHA256 a4ed09c8f54dad1f7fa6eef16e2ae1165f796e462043b4c518b015a8ff0a43a1.
+Shell syntax and whitespace checks pass. Browser visual acceptance is pending
+because no Chromium executable is available; no browser or dependency was installed.
+
+The host refresh helper now expects confirmed d2092f1 and a new unused rollback
+name, before-panel-height, while preserving before-panel-balance and frozen V1/V2.
+No host command, provider/model call, PAPER activation or LIVE change occurred.
+The correction is not deployed. See [panel status](MIXED_PANEL_BALANCE.md).
+
 ## Versioned portfolio accounting and admission: 2026-10-25 America/New_York
 
 Starting local/remote HEAD b901ded7a5b733075cfd643699d50543f3f3daae, tree

@@ -1,6 +1,13 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.126. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
+Version 1.127. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
+
+The latest [panel-height correction](MIXED_PANEL_BALANCE.md) gives every lower
+detail tab the same 420px default viewport, with internal scrolling and explicit
+Trades expansion. Active trade still renders one native position; multiple order
+rows are not multiple active-play cards. 27 installed Python and 19 JavaScript
+checks pass with 262 matching application files. Browser acceptance and deployment
+of this correction remain pending. The host still runs confirmed d2092f1.
 
 The user now requires up to two simultaneous PAPER plays before the first connected
 PAPER test. The [two-play implementation map](TWO_PLAY_IMPLEMENTATION.md) records

@@ -1,5 +1,34 @@
 # Balanced detail panels and simpler navigation
 
+## Default-height correction: 2026-10-25
+
+The previous grid-stretch correction still let long content enlarge the lower row.
+All six detail tabs now use the same explicit 420px default viewport. Trades and
+Data Stream scroll their content inside that viewport; other detail tabs scroll
+inside their tab container. Recent activity uses the same default height. Manual
+Trades/activity expansion remains independent and persists during polling. The
+activity container now has a stable ID so its scroll position also survives polling.
+Print and no-JavaScript views retain readable full content. Upper account/trade-card
+sizes and colors are unchanged.
+
+The Active trade card still accepts one native `data.position`. Trades can list
+multiple orders, but neither that list nor this sizing correction provides a selector
+for simultaneous active plays. Native two-play UI integration remains unfinished.
+
+[Installed validation](MIXED_PANEL_HEIGHT_PROOF.json): 27 Python cases, 19 JavaScript
+cases and 262 matching source/wheel/installed application files. Browser visual
+acceptance is pending: the local Playwright package has no Chromium executable.
+No browser/dependency installation or host change occurred. This is not deployed.
+
+The refreshed host helper now requires the confirmed d2092f1 image and preserves
+it as `trade-bot-dashboard-before-panel-height`. It refuses an existing container
+with that name. The already-consumed before-panel-balance rollback is preserved.
+The operator executes deployment; the current frozen V2 review and historical V1
+are reused/preserved through the existing checks, never regenerated. Shell syntax
+was checked locally; the host procedure has not been executed in this session.
+
+## Earlier panel-balance release
+
 The operator deployed a51a313 after its source-byte check initially failed because
 `app/options/read_cli.py` was root-owned mode 600. The supplied path inspection
 confirmed traversable directories, a readable sibling template and the original
