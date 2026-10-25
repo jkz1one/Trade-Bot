@@ -72,7 +72,9 @@ def test_create_native_review_and_authenticated_frozen_reads_without_rewriting_c
         assert any(p["equity"] is None for p in data["points"])
         html = client.get("/").text
         assert "Paused historical simulation" in html and "SIMULATED ACCOUNT" in html
-        assert "No trading, live prices or paid model activity" in html
+        assert "Prices and trades are not updating." in html
+        assert 'data-update-mode="frozen"' in html
+        assert "Live trading disabled" in html
         assert client.post("/api/mixed").status_code == 405
     stale = MixedObserver(journal, manifest["population_id"]).report()
     assert stale["health"] == "STALE" and stale["equity"] is None

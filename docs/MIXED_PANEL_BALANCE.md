@@ -46,7 +46,23 @@ illustrative mockup, not a browser screenshot or release evidence. Inspect the
 actual desktop/mobile collapsed/expanded panels and the single active-trade
 disclosure after deploying; no visual pass is inferred from unit tests.
 
-The guarded refresh now expects the deployed a51a313 image and preserves it as
-`trade-bot-dashboard-before-panel-balance`. It reuses frozen ui-review-v2. Do not
-rerun prepare. Original SHADOW, V1/V2 data, older rollback readers and credentials
-remain untouched. No dependencies, engine changes or prospective activation.
+The operator subsequently confirmed deployment of
+`d2092f16cc99a3749be04fb2bd5a5d26fa0e30bc`. The running image matches that revision;
+259 installed files matched source, native_fixture_verified was true, health was
+OK (options-observer), authentication passed, and three native simulated fills
+remained in FROZEN_OFFLINE_UI_FIXTURE mode. trader_health was NOT_CHECKED.
+Startup resets cleared within retries. No PAPER runtime, collector or model worker
+started. This evidence was supplied in the continuation handoff, not independently
+rechecked on the host in this session.
+
+Container: `fc18be25a6da731c05841484a87a9d182f02eee2ab8caccb133bd37682957a1a`.
+Manifest: `sha256:cf537ab0521b3ca5e948d9b6456067820037cb6f75c226b94adfb9ab8d05674a`.
+Config: `sha256:edca13d3c4a190ae2481d5339f9f3dd7c1620e95b0ea26a31c718d01ab31f8b2`.
+Manifest list: `sha256:fea17d2705e013da56e050a3c17018554014cae116d462e2071806974ef2536b`.
+
+The a51a313 reader already exists as `trade-bot-dashboard-before-panel-balance`.
+Do not rerun the old refresh blindly: both its expected prior image and rollback
+name have been consumed. Frozen ui-review-v2, historical failed v1, previous
+rollback readers and original SHADOW services remain preserved. Actual desktop/
+mobile browser acceptance remains pending. No additional deployment is authorized
+or required by this accounting checkpoint.

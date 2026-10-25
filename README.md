@@ -46,8 +46,14 @@ updates for active accounts. Frozen reviews remain paused. Darker surfaces and a
 greener accent retain the existing layout. The operator deployed this release with verified frozen evidence.
 [Panel balance and simpler navigation](docs/MIXED_PANEL_BALANCE.md) now add Trades
 expansion, correct Data Stream sizing, combine the active-trade dropdowns and remove
-scroll-jump links. Installed checks pass; this correction awaits deployment and
-browser visual acceptance. These changes do not connect the market feed.
+scroll-jump links. The operator confirmed deployment of d2092f1, including 259
+matching installed files and the three frozen fills. Browser visual acceptance remains pending. These changes do not connect the market feed.
+
+The [two-play accounting update](docs/TWO_PLAY_ACCOUNTING.md) adds versioned keyed
+stock/option positions, shared reservations and candidate-specific admission.
+Existing native mixed reconciliation now uses the common cash reducer. Native
+two-play preparation/dispatch, protection/recovery, feed and UI remain incomplete;
+this is not a two-play runtime release.
 
 ## Current product direction
 

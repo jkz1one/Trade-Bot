@@ -247,12 +247,17 @@ def _record(event):
 
 def reconstruct(history: CashHistory) -> CashProjection:
     """Revalidate a complete immutable cash prefix without granting order authority."""
-    history = CashHistory.model_validate(history.model_dump(warnings=False))
+    from app.mixed.portfolio_accounting import parse_history
+
+    history = parse_history(history)
     with localcontext(Context(prec=192)):
         return _reconstruct(history)
 
 
 def _reconstruct(history):
+    from app.mixed import portfolio_accounting as portfolio
+
+    multiple = isinstance(history, portfolio.PortfolioHistory)
     policy = history.policy
     ordered = sorted(history.events, key=lambda e: _record(e).sequence)
     if (
@@ -263,9 +268,11 @@ def _reconstruct(history):
         )
     ):
         raise ValueError("MIXED_EVENT_SEQUENCE_OR_TIME_CONFLICT")
-    state = MixedLedger(cash=policy.capital, high_watermark=policy.capital)
+    ledger_type = portfolio.PortfolioLedger if multiple else MixedLedger
+    state = ledger_type(cash=policy.capital, high_watermark=policy.capital)
     seen, intents, quantities, debits, indices, orders = set(), {}, {}, {}, {}, {}
     option_usage, stock_usage, retired = {}, {}, set()
+    portfolio_option_usage = {}
     for event in ordered:
         record = _record(event)
         key = (
@@ -276,6 +283,13 @@ def _reconstruct(history):
             raise ValueError("MIXED_DUPLICATE_RECEIPT_OR_FILL")
         seen.add(key)
         if isinstance(event, Settlement):
+            if multiple:
+                if event.play_id is not None:
+                    retired.add(event.play_id)
+                state = portfolio.apply_settlement(state, event)
+                continue
+            if event.play_id is not None:
+                raise ValueError("Portfolio settlement identity requires v2 enrollment")
             if record.kind != "FUNDS_SETTLED" and state.position is not None:
                 retired.add(state.position.entry_client_id)
             state = _merge(state, apply_receipt(_option_part(state), record))
@@ -305,24 +319,36 @@ def _reconstruct(history):
         index = indices.get(client_id, 0)
         if intent.side == "BUY" and client_id in retired:
             raise ValueError("MIXED_ENTRY_CANNOT_RESUME_AFTER_EXIT")
+        if multiple and intent.side == "SELL":
+            retired.add(portfolio.play_id(intent))
         if isinstance(event, OptionTrade):
             from app.options.fill_evidence import validate_fill
 
-            if state.stock_position is not None:
+            if not multiple and state.stock_position is not None:
                 raise ValueError("MIXED_EXISTING_STOCK_POSITION")
             if intent.side == "SELL" and state.position is not None:
                 if intent.closing_entry_client_id not in (None, state.position.entry_client_id):
                     raise ValueError("MIXED_OPTION_CLOSE_LINEAGE")
                 retired.add(state.position.entry_client_id)
             validate_fill(policy.options, intent, fill, index, option_usage)
+            if multiple:
+                portfolio.check_option_source_size(intent, fill, portfolio_option_usage)
             value = fill.price * fill.quantity * intent.instrument.contract.multiplier
-            updated = _merge(state, apply_fill(_option_part(state), intent, fill))
+            updated = (
+                portfolio.apply_trade(state, intent, fill)
+                if multiple
+                else _merge(state, apply_fill(_option_part(state), intent, fill))
+            )
         else:
             _stock_fill(policy, intent, fill, index, stock_usage)
             if intent.side == "SELL" and state.stock_position is not None:
                 retired.add(state.stock_position.entry.client_id)
             value = fill.price * fill.quantity
-            updated = _apply_stock(state, intent, fill)
+            updated = (
+                portfolio.apply_trade(state, intent, fill)
+                if multiple
+                else _apply_stock(state, intent, fill)
+            )
         if intent.side == "BUY":
             paid = debits.get(client_id, ZERO) + value + fill.fee
             if paid > intent.approved_entry_debit:
@@ -378,7 +404,17 @@ def _reconstruct(history):
             raise ValueError("MIXED_TERMINAL_FILL_CONFLICT")
         intents[intent.client_id] = intent
         terminal_ids.add(intent.client_id)
-    reserved, blockers = _reservations(history, state, intents, quantities, debits)
+    commitments = ()
+    if multiple:
+        if any(
+            r.intent.side == "BUY" and r.intent.client_id in retired for r in history.reservations
+        ):
+            raise ValueError("MIXED_ENTRY_CANNOT_RESUME_AFTER_EXIT")
+        reserved, blockers, commitments = portfolio.reservations(
+            history, state, intents, quantities, debits
+        )
+    else:
+        reserved, blockers = _reservations(history, state, intents, quantities, debits)
     cost, daily, unknown, cost_ids, allocations = ZERO, {}, [], set(), set()
     resolutions = {}
     for item in history.cost_resolutions:
@@ -440,7 +476,9 @@ def _reconstruct(history):
     total_loss = max(ZERO, policy.total_loss_limit + state.realized_pnl - state.fees_paid - cost)
     if not daily_loss or not total_loss:
         blockers.append("MIXED_LOSS_BUDGET_EXHAUSTED")
-    return CashProjection(
+    projection_type = portfolio.PortfolioProjection if multiple else CashProjection
+    return projection_type(
+        **({"commitments": commitments} if multiple else {}),
         ledger=state,
         reserved_cash=reserved,
         available_settled_cash=max(ZERO, state.settled_cash - reserved),
@@ -519,8 +557,10 @@ def verify_extension(previous: CashHistory, current: CashHistory) -> CashProject
     This verifies supplied native evidence. It does not authenticate a terminal
     receipt, authorize cancellation or resolve an ambiguous attempt by itself.
     """
-    previous = CashHistory.model_validate(previous.model_dump(warnings=False))
-    current = CashHistory.model_validate(current.model_dump(warnings=False))
+    from app.mixed.portfolio_accounting import parse_history
+
+    previous = parse_history(previous)
+    current = parse_history(current)
     reconstruct(previous)
     result = reconstruct(current)
     for key in ("version", "account_id", "population_id", "venue_id", "policy", "opened_at"):

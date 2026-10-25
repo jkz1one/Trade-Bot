@@ -156,6 +156,51 @@ def model_costs(engine, db):
     return records(db, engine.policy)
 
 
+def reconstruct_snapshot(engine, db, snapshot, option_rows):
+    """Replay already authenticated native observations through common accounting.
+
+    Order/source/attempt evidence is verified by the owner's reconciliation before
+    this call. The common reducer also validates exact fill economics, sequence,
+    original terms and retirement. No per-asset cash balance is initialized.
+    """
+    from app.mixed.accounting import reconstruct
+
+    events = []
+    for observation in snapshot.orders:
+        row = option_rows[observation.client_id]
+        intent = OptionIntent.model_validate_json(row["intent_json"])
+        attempted = clock(datetime.fromisoformat(row["attempted_at"]))
+        events.extend(
+            OptionTrade(intent=intent, attempted_at=attempted, fill=f) for f in observation.fills
+        )
+    for observation in snapshot.stock_orders:
+        row = db.execute(
+            "SELECT * FROM execution_stock_orders WHERE client_id=?", (observation.client_id,)
+        ).fetchone()
+        intent = StockIntent.model_validate_json(row["intent_json"])
+        attempted = clock(datetime.fromisoformat(row["attempted_at"]))
+        events.extend(
+            StockTrade(intent=intent, attempted_at=attempted, fill=f) for f in observation.fills
+        )
+    events.extend(Settlement(receipt=r) for r in snapshot.receipts)
+    h = CashHistory(
+        account_id=engine.limits.account_id,
+        population_id=engine.limits.population_id,
+        venue_id=engine.venue.venue_id,
+        policy=MixedPolicy(
+            capital=engine.policy.capital,
+            daily_loss_limit=engine.policy.daily_loss_limit,
+            total_loss_limit=engine.policy.total_loss_limit,
+            options=engine.limits,
+            stocks=engine.policy.mixed_owner.stocks,
+        ),
+        opened_at=datetime.fromisoformat(verify(engine, db)["opened_at"]),
+        captured_at=snapshot.captured_at,
+        events=tuple(events),
+    )
+    return reconstruct(h).ledger
+
+
 def history(engine, db, *, as_of=None, exclude=None):
     c = engine._control(db)
     if not c["snapshot_json"] or json.loads(c["issues_json"]):

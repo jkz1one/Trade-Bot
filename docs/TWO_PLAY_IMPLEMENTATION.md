@@ -1,6 +1,12 @@
 # Two-play implementation map
 
-Status: incomplete. Audited from d2092f16cc99a3749be04fb2bd5a5d26fa0e30bc on
+Status: incomplete. The [accounting/admission continuation](TWO_PLAY_ACCOUNTING.md)
+adds v2 keyed projections and moves existing native mixed replay onto the common
+reducer. It does not enable native two-play execution. The remaining lifecycle
+work below is still required. d2092f1 host deployment is confirmed by supplied
+operator output; browser visual acceptance remains pending.
+
+Original audit from d2092f16cc99a3749be04fb2bd5a5d26fa0e30bc on
 2026-10-25. This is not authorization or evidence for a connected PAPER launch.
 Local and remote branch matched; main b5359aaf396e692d2142d7e02908f1544e045ee6
 and open/draft PR #1 verified. No applicable AGENTS.md found. SOURCE_OF_TRUTH
@@ -30,8 +36,8 @@ requires up to two plays before the first connected PAPER test.
 
 | Boundary | Existing files | Required work |
 | --- | --- | --- |
-| Contracts and ledger | mixed/models.py, stock_models.py; options/lifecycle.py, models.py | Version keyed positions/reservations; preserve old scalar serialization and old fixtures |
-| Replay/accounting | mixed/accounting.py, native_store.py; options/accounting.py | Replay globally ordered receipts on one balance, select the exact play for each reducer, sum reservations and preserve settlement/fee/cost attribution |
+| Contracts and ledger | mixed/portfolio_accounting.py, models.py, stock_models.py; options/lifecycle.py, models.py | V2 keyed cash projections implemented; native durable enrollment and migration still required |
+| Replay/accounting | mixed/accounting.py, portfolio_accounting.py, native_store.py; options/accounting.py | V2 ordered cash replay and reservations implemented; existing native single-play reconciliation uses the common reducer; multi-play native persistence remains required |
 | Atomic preparation | mixed/native_execution.py, native_store.py; options/engine.py; execution/journal.py | Use existing journal write transaction; replace UNIQUE active_lock and cross-asset global locks with per-play exclusivity and atomic capacity/funds checks |
 | Reconciliation/venue | mixed/venue.py, quote_fills.py; options/venue.py, engine.py, process.py, worker.py | Snapshot multiple holdings, independently match receipts, prevent cross-play fills and duplicate liquidity use |
 | Shared selection | mixed/selection.py, entry.py; options/coordinator.py, entry_coordination.py, entry_reasoning.py | Reassess post-reservation portfolio; same selector, HOLD valid, no extra paid calls to fill slots |
@@ -51,7 +57,7 @@ SPXW share an explicit index-exposure cap no greater than the account cap; diffe
 symbols do not grant independent risk budgets. Two different underlyings may fit
 that shared cap. Existing no-scale-in rules remain unchanged.
 
-The new order-free portfolio_capacity module validates capacity/funding constraints
+The order-free portfolio_capacity module validates capacity/funding constraints
 and reports distinct reasons. It is NOT connected to native preparation and supplies
 no execution authorization. Its revision must ultimately come from the owner and
 be revalidated while holding the write transaction, with reservation persisted in

@@ -1,5 +1,44 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Versioned portfolio accounting and admission: 2026-10-25 America/New_York
+
+Starting local/remote HEAD b901ded7a5b733075cfd643699d50543f3f3daae, tree
+0456a1b03d2b61661e3f44a09ccc00c082f941f3. Main remains
+b5359aaf396e692d2142d7e02908f1544e045ee6; PR #1 stays open/draft.
+No applicable AGENTS.md found. Work used a separate clean worktree.
+
+[Implementation scope](TWO_PLAY_ACCOUNTING.md): explicit v2 cash histories and keyed
+holdings support up to two stock/option plays, independent partial exits and
+settlements, and disjoint held basis/unfilled debit/exit reserves. Candidate stock
+and option admission uses remaining shared risk, funds and index exposure. Legacy
+admission consumers reject v2 receipts. Existing native **single-play** mixed
+reconciliation now uses the common cash-history reducer after validating native
+order, attempt and fill evidence. Existing native execution remains single-play.
+
+[Installed proof](TWO_PLAY_ACCOUNTING_PROOF.json): 401 deduplicated passing cases;
+all 262 application files match source/wheel/installed bytes. Final wheel SHA256:
+680c96f3e972d18033a8ae7feeb19aaf9a6bc44d46f8679eac2c0dc4cef03a5e.
+Ruff, dependency consistency and whitespace checks pass. The first final-wheel run
+passed 400/401 cases; one pre-existing frozen-dashboard assertion expected obsolete
+copy. The parent and current template are byte-identical. Updating that assertion
+and rerunning frozen-review/hybrid suites passed all 13 cases on the same wheel.
+Earlier fixture/import diagnostics and an interrupted older-wheel broad run are
+recorded separately and receive no acceptance credit.
+
+Native atomic two-play reservation, execution, independent protection/recovery,
+selection/model schemas, continuous feed, migration, dashboard selector and admin
+controls remain incomplete. These tests do not establish native concurrency or
+native two-play acceptance. Contract metadata, entitlement and executable stock
+sizes remain blocking. No deployment, provider/model calls, hosted CI, dependencies,
+credentials, production services or PAPER/LIVE activation changed.
+
+Supplied operator evidence now confirms the d2092f1 frozen dashboard deployment:
+259 installed files match, native fixture/authentication verified, three fills.
+Browser visual acceptance remains pending. The existing before-panel-balance
+rollback name is consumed; do not rerun the old refresh blindly. See
+[deployment evidence](MIXED_PANEL_BALANCE.md). This supersedes the deployment-pending
+wording in older entries below; the portfolio changes are not deployed.
+
 ## Two-play audit and isolated admission constraints: 2026-10-25 America/New_York
 
 Verified local/remote starting HEAD d2092f16cc99a3749be04fb2bd5a5d26fa0e30bc,

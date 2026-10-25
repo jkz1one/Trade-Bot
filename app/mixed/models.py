@@ -77,6 +77,7 @@ class OptionTrade(OptionRecord):
 class Settlement(OptionRecord):
     kind: Literal["SETTLEMENT"] = "SETTLEMENT"
     receipt: OptionReceipt
+    play_id: Name | None = Field(default=None, exclude_if=lambda v: v is None)
 
 
 CashEvent = Annotated[StockTrade | OptionTrade | Settlement, Field(discriminator="kind")]

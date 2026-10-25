@@ -1476,61 +1476,21 @@ class OptionExecution:
         # capital, then preserve independent management of the same owned lineage.
         state = OptionLedger(cash=self.policy.capital, high_watermark=self.policy.capital)
         if self.policy.mixed_owner is not None:
-            from app.mixed.accounting import _apply_stock, _merge, _option_part
-            from app.mixed.models import MixedLedger
+            from app.mixed.accounting import _option_part
+            from app.mixed.native_store import reconstruct_snapshot
 
-            state = MixedLedger.model_validate(state.model_dump())
-        retired = set()
-        for _, _, kind, event in ordered:
-            if self.policy.mixed_owner is not None:
-                owned_id = (
-                    state.stock_position.entry.client_id
-                    if state.stock_position
-                    else state.position.entry_client_id
-                    if state.position
-                    else None
-                )
-                trade = (
-                    OptionIntent.model_validate_json(rows[event[0]]["intent_json"])
-                    if kind == "FILL"
-                    else event[0]
-                    if kind == "STOCK_FILL"
-                    else None
-                )
-                if trade is not None and trade.side == "BUY" and trade.client_id in retired:
-                    raise ValueError("MIXED_ENTRY_CANNOT_RESUME_AFTER_EXIT")
-                if owned_id and (
-                    (trade is not None and trade.side == "SELL")
-                    or (kind == "RECEIPT" and event.kind != "FUNDS_SETTLED")
-                ):
-                    retired.add(owned_id)
-            if kind == "FILL":
-                client_id, fill = event
-                if self.policy.mixed_owner is not None:
-                    if state.stock_position is not None:
-                        raise ValueError("MIXED_EXISTING_STOCK_POSITION")
-                    state = _merge(
-                        state,
-                        apply_fill(
-                            _option_part(state),
-                            OptionIntent.model_validate_json(rows[client_id]["intent_json"]),
-                            fill,
-                        ),
-                    )
-                else:
+            state = reconstruct_snapshot(self, db, snap, rows)
+        else:
+            for _, _, kind, event in ordered:
+                if kind == "FILL":
+                    client_id, fill = event
                     state = apply_fill(
                         state,
                         OptionIntent.model_validate_json(rows[client_id]["intent_json"]),
                         fill,
                     )
-            elif kind == "STOCK_FILL":
-                state = _apply_stock(state, *event)
-            else:
-                state = (
-                    _merge(state, apply_receipt(_option_part(state), event))
-                    if self.policy.mixed_owner is not None
-                    else apply_receipt(state, event)
-                )
+                else:
+                    state = apply_receipt(state, event)
         if (
             state.cash != snap.cash
             or state.settled_cash != snap.settled_cash

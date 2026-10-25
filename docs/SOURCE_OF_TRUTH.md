@@ -1,15 +1,20 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.125. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
+Version 1.126. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
 
 The user now requires up to two simultaneous PAPER plays before the first connected
 PAPER test. The [two-play implementation map](TWO_PLAY_IMPLEMENTATION.md) records
 the audited single-position assumptions, accounting invariants and remaining work.
-Only an order-free capacity/funding constraint module is implemented at this
-checkpoint, with 11 installed cases. It is not wired into native admission.
-Atomic reservation, multi-play accounting/protection/recovery, selection, feed and
-dashboard integration remain incomplete. No two-play deployment or PAPER activation
-is authorized by this evidence. Existing databases and runtime behavior are unchanged.
+[Versioned accounting and admission](TWO_PLAY_ACCOUNTING.md) now reconstruct up to
+two explicitly identified stock/option holdings on one cash balance, preserve
+partial-entry reservations and independent exits/settlements, and size candidates
+against the remaining shared risk. Existing native mixed reconciliation uses the
+same cash reducer. These are accounting/admission contracts, not native two-play
+execution. Atomic native reservation, multi-play venue/preparation/dispatch,
+protection/recovery, selection/model binding, feed, migration, dashboard and admin
+integration remain incomplete. No database enrollment, migration, two-play
+deployment or PAPER activation occurred. Existing native owners remain single-play. The installed-wheel proof records 401
+deduplicated passing cases and 262 byte-identical application files.
 
 The [Data Stream/dashboard release](MIXED_DATA_STREAM.md) adds retained quote/event
 records inside the existing detail tabs, clearer average-entry/bid/ask/P&L display,
@@ -28,11 +33,13 @@ scrolling view and expand/collapse control, and removes Data Stream's independen
 maximum-height cap so it follows the shared grid row. The active-trade tabs stay;
 its Summary has one Exact levels and original targets disclosure. Extra scroll-jump
 links are removed. Plain-language explanations and amber negative amounts keep
-the same simulation, freshness and cost distinctions. No portfolio, engine, strategy or dependency changes. One open
-position across families remains the contract. 33 installed Python and 19 JavaScript
-checks pass with 259 matching files. This correction is not yet deployed or visually
-accepted; the generated image is illustrative only. The guarded refresh expects
-a51a313 and preserves it as before-panel-balance, reusing the frozen v2 account.
+the same simulation, freshness and cost distinctions. No portfolio, engine, strategy or dependency changes. The deployed native implementation still supports one open
+position across families; the required two-play integration remains unfinished. 33 installed Python and 19 JavaScript
+checks pass with 259 matching files. Supplied operator output confirms d2092f1
+is deployed: matching image, 259 installed files, native frozen verification,
+authentication and three fills. Browser visual acceptance remains pending.
+The a51a313 rollback already exists as before-panel-balance. Do not rerun the old
+refresh blindly; its prior-image guard and rollback name have been consumed.
 
 The operator restored interactive authorization, then supplied successful headless
 schema discovery with the unchanged pin and a completed four-read capture at
