@@ -1,16 +1,20 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.117. Adopted product direction and working delivery contract, 2026-10-24 America/New_York.
+Version 1.118. Adopted product direction and working delivery contract, 2026-10-24 America/New_York.
 
-The user authorized the prepared one-time market-read capture. Its retained result
-failed with `ExceptionGroup`, no schemas and zero market observations; schema
-discovery did not complete. The actual nested cause was not retained, so OAuth,
-transport and protocol causes remain unresolved. [Safe diagnostics and the next
-schema-only inspection](OPTIONS_READ_DIAGNOSTICS.md) now retain bounded classes,
-phases, HTTP status and allowlisted OAuth codes without messages or credentials.
-111 installed Python checks pass; deadlines/authentication/capabilities are unchanged.
-No automatic retry or authenticated workspace call occurred. The market capture
-remains incomplete; prospective PAPER/model/LIVE activation is still excluded.
+The operator's schema-only diagnostic now identifies `ReadAuthorizationRequired`
+at `CONNECT`: the existing headless connection requested interactive authorization
+and refused it. No schemas or market observations were collected. No HTTP/OAuth
+code was retained, so token expiry/revocation and the exact reason for login remain
+unproven. This does not establish the cause of the earlier generic failure.
+[Retained evidence and the existing operator login path](OPTIONS_READ_DIAGNOSTICS.md)
+preserve both attempts. The next command uses the built diagnostic image and the
+separate credential under its existing lease, backs up that credential privately,
+and performs interactive authorization plus schema discovery only. No engine,
+dependency or timeout changes; no headless retry or market batch starts automatically.
+Application bytes and the prior 111-case installed proof are unchanged. This update
+records supplied host evidence and operator instructions only. Login completion and
+connected PAPER acceptance remain pending; no prospective PAPER/model/LIVE activation.
 
 The operator successfully refreshed the separate dashboard to
 `a3216b6d3953d1291643830b20ac4ef69fd8b37b`: all 255 application files matched,

@@ -31,7 +31,9 @@ active-trade labels below the price rail. Updated browser review is pending.
 
 The first authorized read capture failed before market reads. [Credential-safe
 diagnostics](docs/OPTIONS_READ_DIAGNOSTICS.md) now expose nested error classes and
-phases; the underlying host failure remains unresolved pending a schema-only check.
+phases. The follow-up identified an interactive authorization request during connection,
+with zero market reads. [Existing operator login and schema discovery](docs/OPTIONS_READ_DIAGNOSTICS.md#operator-login-and-schema-discovery)
+is the next step; no engine or dependency change is required for this blocker.
 
 ## Current product direction
 

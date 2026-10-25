@@ -1,5 +1,37 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Read-only connection requires operator authorization: 2026-10-24 America/New_York
+
+Fresh local/GitHub HEAD is `30e4eba7591b0c6741a9495ad92b9fdc21fd8fd3`, tree
+`f395653335110ada0e1163b39f6edf5eeb81ef1c`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 is open/draft.
+
+The operator supplied schema-only diagnostic `81dcba97bca8427c8cce5b555dfe1020`,
+exit 1, collected at 23:46:22 EDT. Its phase is CONNECT and its nested class is
+ReadAuthorizationRequired, with cancellation/stream context. The headless login
+handlers refused an interactive authorization request; no schemas or market reads
+were reached. No HTTP status/OAuth code was retained, so the specific token issue
+and the earlier generic failure's cause are not established. Both attempts remain
+preserved. [Evidence receipt and hashes](OPTIONS_READ_AUTH_REQUIRED_PROOF.json).
+
+The [next operator command](OPTIONS_READ_DIAGNOSTICS.md#operator-login-and-schema-discovery)
+reuses the already-built 30e4eba diagnostic image and existing interactive discovery
+CLI. It holds the normal validated OAuth lease, retains a private local credential
+backup, restores the separate authorization through the operator's own browser,
+and calls list_tools only. Callback/authorization URLs and credentials stay private.
+No account/market/order/model call, automatic retry or runtime activation is included.
+Login completion remains pending; then headless discovery/schema comparison precedes
+resuming the already-authorized sample batch. No dashboard refresh is needed.
+
+Documentation/evidence only: source application bytes match the prior 256-file
+installed proof; the uploaded result validates with that installed CaptureResult.
+Runbook shell syntax and whitespace checks pass. No application/test/dependency
+changes or authenticated workspace calls; the existing 111 passing installed cases
+are prior verification, not a newly run suite. Connected PAPER and latest chart/label
+browser acceptance remain open. Original SHADOW, frozen v1/v2 and a3216b6 reader
+remain unchanged by this workspace work.
+
+
 ## First authorized capture failed before market reads: 2026-10-24 America/New_York
 
 Fresh GitHub/local HEAD is `2eb36cadff13b616a903b60969124c2b8a2ab01d`, tree
