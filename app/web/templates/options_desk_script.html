@@ -1,6 +1,10 @@
 /* Local presentation only. No fetch, timers, provider SDKs or execution actions. */
 (() => {
   'use strict';
+  let bindings;
+  function setup(event) {
+  if (bindings) bindings.abort();
+  bindings = new AbortController();
   const root = document.body;
   const key = 'trade-bot:desk:' + root.dataset.population;
   let saved = {};
@@ -55,11 +59,11 @@
     });
     target.scrollIntoView({block: 'nearest'});
   }
-  addEventListener('hashchange', revealHash);
+  addEventListener('hashchange', revealHash, {signal: bindings.signal});
   document.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', () => {
     if (link.hash === location.hash) revealHash();
   }));
-  revealHash();
+  if (!event) revealHash();
   const chart = document.querySelector('svg[data-sessions]');
   if (chart) {
     const sessions = JSON.parse(chart.dataset.sessions);
@@ -95,4 +99,7 @@
     });
   }
   root.classList.add('desk-ready');
+  }
+  setup();
+  document.addEventListener('desk:updated', setup);
 })();

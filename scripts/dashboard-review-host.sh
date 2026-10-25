@@ -27,13 +27,13 @@ review_action="${1:-}"
 review_previous_image=trade-bot-dashboard:cc990cf
 if [[ "$review_action" == refresh ]]; then
   [[ "$review_name" == ui-review-v2 ]] || exit 1
-  review_previous_image=trade-bot-dashboard:e6fd3536f1c615542c0fdefd972b21c8651c73f4
-  review_backup=trade-bot-dashboard-before-chart
+  review_previous_image=trade-bot-dashboard:a3216b6d3953d1291643830b20ac4ef69fd8b37b
+  review_backup=trade-bot-dashboard-before-stream
   [[ "$(docker inspect --format '{{.Config.Image}}' trade-bot-dashboard)" == "$review_previous_image" ]] || {
     echo 'Unexpected dashboard release; inspect before refresh.' >&2; exit 1;
   }
   if docker container inspect "$review_backup" >/dev/null 2>&1; then
-    echo 'Layout rollback container already exists; inspect before refresh.' >&2; exit 1
+    echo 'Stream rollback container already exists; inspect before refresh.' >&2; exit 1
   fi
   [[ -f "$review_data/$review_name/review.json" ]] || exit 1
   docker build -f Dockerfile.shadow --build-arg "TRADE_BOT_RELEASE=$review_release" \

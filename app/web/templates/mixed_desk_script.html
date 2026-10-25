@@ -1,6 +1,10 @@
 /* Mixed desk presentation. All inputs are already rendered stored records. */
 (() => {
   'use strict';
+  let bindings;
+  function setup(event) {
+  if (bindings) bindings.abort();
+  bindings = new AbortController();
   const key = 'trade-bot:mixed-view:' + document.body.dataset.population;
   let saved = {};
   try { saved = JSON.parse(sessionStorage.getItem(key) || '{}') || {}; } catch (_) {}
@@ -33,7 +37,7 @@
     while (detail) { detail.open = true; detail = detail.parentElement.closest('details'); }
     target.scrollIntoView({block: 'nearest'});
   }
-  addEventListener('hashchange', revealRecord);
+  addEventListener('hashchange', revealRecord, {signal: bindings.signal});
   document.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', () => {
     if (link.hash === location.hash) revealRecord();
   }));
@@ -58,7 +62,7 @@
   const select = document.getElementById('activity-filter');
   const more = document.getElementById('activity-more');
   const empty = document.getElementById('activity-empty');
-  let expanded = false;
+  let expanded = saved.activityExpanded === true;
   function filterActivity() {
     if (!select || !more || !empty) return;
     const allowed = ['ALL', 'DECISION', 'REVIEW', 'ATTEMPT', 'FILL', 'COST'];
@@ -69,10 +73,24 @@
     more.hidden = matches.length <= 3;
     more.setAttribute('aria-expanded', String(expanded));
     more.textContent = expanded ? 'Show recent three' : 'View more activity (' + matches.length + ')';
-    saved.activity = select.value; save();
+    saved.activity = select.value; saved.activityExpanded = expanded; save();
   }
   if (select) { select.value = saved.activity || 'ALL'; select.addEventListener('change', () => { expanded = false; filterActivity(); }); }
   if (more) more.addEventListener('click', () => { expanded = !expanded; filterActivity(); });
   filterActivity();
-  revealRecord();
+  const stream = document.getElementById('stream-filter');
+  const streamRows = Array.from(document.querySelectorAll('[data-stream-kind]'));
+  function filterStream() {
+    if (!stream) return;
+    if (!['ALL', 'QUOTE', 'EVENT'].includes(stream.value)) stream.value = 'ALL';
+    streamRows.forEach(row => { row.hidden = stream.value !== 'ALL' && row.dataset.streamKind !== stream.value; });
+    const noRows = document.getElementById('stream-empty');
+    if (noRows) noRows.hidden = !streamRows.length || streamRows.some(row => !row.hidden);
+    saved.stream = stream.value; save();
+  }
+  if (stream) { stream.value = saved.stream || 'ALL'; stream.addEventListener('change', filterStream); filterStream(); }
+  if (!event) revealRecord();
+  }
+  setup();
+  document.addEventListener('desk:updated', setup);
 })();

@@ -1,5 +1,36 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Data Stream, price clarity and in-page updates: 2026-10-25 America/New_York
+
+Starting local/remote HEAD `108aab7acc513e1ae9e9fe1632982ae9507dbe28`, tree
+`2b4d383c64a28c0e135e7c9919d01984bc1e3e78`. Main remains
+`b5359aaf396e692d2142d7e02908f1544e045ee6`; PR #1 remains open/draft.
+
+User requested a terminal-style Data Stream tab inspired by the X reference,
+useful SignalFlow trade-card handling, unchanged box sizing, darker surfaces and
+less seafoam green. [Implementation and proof](MIXED_DATA_STREAM.md) retain existing
+columns/alignment, add a bounded internally scrolling quote/event panel and place
+per-unit bid, average entry, bid/ask, position value and P&L prominently. Option
+premium/underlying remain separate. Last-known prices never revive withheld P&L.
+
+Active mixed desks poll stored snapshots every five seconds with no page reload.
+Tabs, filters, expansion, disclosures, focus and scroll persist; hidden tabs pause,
+requests do not overlap, failures back off and authentication rejection stops them.
+Frozen UI review/history stay paused. No page-triggered collector/provider/model/
+order/fill work. Quote age remains independent of a successful page synchronization.
+
+Final isolated installed wheel passed63 Python and23 JavaScript cases; all259 app/
+template files match source/wheel/installed bytes. Native tests ran serially. Actual
+browser acceptance remains pending: local HTTP was unreachable and local HTML was
+blocked by browser URL policy. No workaround or claimed visual pass. The user's
+supplied current screenshot and inspected X/SignalFlow references are not release
+acceptance. No dependency, engine or strategy changes, authenticated market calls,
+paid calls or PAPER activation. Continuous Robinhood delivery remains unfinished.
+
+The guarded host refresh expects a3216b6, keeps it as before-stream, and reuses the
+same frozen v2. V1/V2, old rollback readers and original de5dd1c SHADOW remain
+preserved. Deployment is prepared, not executed; the operator runs host commands.
+
 ## Option quote/history response acceptance: 2026-10-25 America/New_York
 
 Fresh local/GitHub HEAD is `a0b7592d7722cec8df1342cd26864c3093103b1d`, tree

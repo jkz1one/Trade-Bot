@@ -1,6 +1,19 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.122. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
+Version 1.123. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
+
+The [Data Stream/dashboard release](MIXED_DATA_STREAM.md) adds retained quote/event
+records inside the existing detail tabs, clearer average-entry/bid/ask/P&L display,
+darker charcoal surfaces and a greener accent. Original grid proportions remain.
+Active mixed accounts now poll authenticated stored snapshots every five seconds
+without reloading the page; UI selections, disclosures, focus and scrolling persist.
+Frozen reviews/history stay paused, failures remain visible and quote source times
+stay separate from page synchronization. No page-triggered provider/trading work.
+63 installed Python cases, 23 JavaScript cases and all259 file byte identities pass.
+Host deployment and actual browser visual acceptance remain pending; the local
+preview was inaccessible to this cloud browser. The helper requires the reported
+a3216b6 reader, preserves it as before-stream and reuses frozen ui-review-v2.
+No engine, strategy, dependency, original SHADOW or prospective activation changes.
 
 The operator restored interactive authorization, then supplied successful headless
 schema discovery with the unchanged pin and a completed four-read capture at

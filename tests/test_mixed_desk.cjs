@@ -26,7 +26,7 @@ function desk({stored='{}', denied=false, hash='', population='one'}={}) {
     '[data-family-label]':[label],'a[href^="#"]':[],'details[id]':[detail],
     '[data-point-detail]':[point],'[data-event-kind]':events};
   const keys=[];const listeners={};
-  vm.runInNewContext(source,{document:{body:{dataset:{population}},getElementById:id=>ids.find(e=>e.id===id),
+  vm.runInNewContext(source,{AbortController,document:{addEventListener(){},body:{dataset:{population}},getElementById:id=>ids.find(e=>e.id===id),
     querySelectorAll:s=>groups[s]||[]},location:{hash},matchMedia:()=>({matches:false}),
     sessionStorage:{getItem(k){keys.push(k);if(denied)throw Error('denied');return stored;},
       setItem(k,v){keys.push(k);if(denied)throw Error('denied');stored=v;}},

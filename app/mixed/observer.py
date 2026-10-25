@@ -270,6 +270,7 @@ class MixedObserver(OptionObserver):
         )
         return {
             "status": "OK",
+            "stream": stored_stream(db, frames, position, now),
             "accounting": accounting,
             "account_id": limits.account_id,
             "captured_at": snap.captured_at.isoformat() if snap else None,
@@ -548,3 +549,66 @@ def history_chart(points):
         "dots": dots,
         "ticks": [{"label": format(v, ".2f"), "y": y(v)} for v in (low, (low + high) / 2, high)],
     }
+
+
+def stored_stream(db, frames, position, now):
+    """Bounded display receipts from persisted evidence, never a provider read."""
+    quotes = []
+    for frame in frames:
+        quotes.extend(q.model_dump(mode="json") for q in frame.quotes)
+        quotes.extend(u.model_dump(mode="json") for u in frame.underlyings)
+        quotes.extend(item.quote.model_dump(mode="json") for item in frame.stocks)
+        if frame.scope:
+            quotes.extend(
+                q.model_dump(mode="json") for q in (frame.scope.frame.quote, frame.scope.underlying)
+            )
+    if position:
+        quotes.extend(
+            q
+            for q in (position["details"].get("quote"), position["details"].get("underlying"))
+            if q
+        )
+    unique = {}
+    for q in quotes:
+        instrument = q.get("instrument") or {}
+        contract = instrument.get("contract") or {}
+        symbol = instrument.get("symbol") or contract.get("underlying") or q.get("symbol")
+        at = q.get("source_at")
+        received = q.get("received_at")
+        if not at or not received or datetime.fromisoformat(received) > now:
+            continue
+        label = symbol or "Unknown symbol"
+        if contract:
+            label += f" {contract['expiration']} {contract['strike']} {contract['right']}"
+        row = {
+            "kind": "QUOTE",
+            "label": label,
+            "at": at,
+            "received_at": received,
+            "source": q.get("source", "Unknown"),
+            "entitlement": q.get("entitlement", "UNKNOWN"),
+            "bid": q.get("bid"),
+            "ask": q.get("ask"),
+            "bid_size": q.get("bid_size"),
+            "ask_size": q.get("ask_size"),
+        }
+        unique[fingerprint(row)] = row
+    records = list(unique.values())
+    for event in db.execute(
+        "SELECT sequence,occurred_at,kind FROM execution_events ORDER BY sequence DESC LIMIT 60"
+    ):
+        if datetime.fromisoformat(event["occurred_at"]) > now:
+            raise ValueError("Future stream event")
+        records.append(
+            {
+                "kind": "EVENT",
+                "label": event["kind"].replace("_", " ").capitalize(),
+                "at": event["occurred_at"],
+                "sequence": event["sequence"],
+            }
+        )
+    return sorted(
+        records,
+        key=lambda row: (datetime.fromisoformat(row["at"]), row.get("sequence", 0)),
+        reverse=True,
+    )[:80]

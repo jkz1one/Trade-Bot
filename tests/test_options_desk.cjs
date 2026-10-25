@@ -28,13 +28,13 @@ function desk({stored = '{}', denied = false, hash = '', gap = false} = {}) {
   chart.querySelectorAll = selector => selector === 'polyline' ? [line] : [element(selector)];
   chart.querySelector = selector => axis[selector.includes('start') ? 'start' : 'first'];
   const body = {dataset: {population: 'fixture'}, classList: {add() {}}};
-  const document = {body,
+  const document = {body, addEventListener(){},
     getElementById: id => [...panels, target].find(e => e.id === id),
     querySelector: () => chart,
     querySelectorAll: selector => ({'[data-tabs]': [nav], '[data-range]': ranges,
       '[data-series]': checks, 'a[href^="#"]': []})[selector]};
   const events = {};
-  const context = {document, location: {hash}, sessionStorage: {
+  const context = {AbortController, document, location: {hash}, sessionStorage: {
     getItem() { if (denied) throw Error('denied'); return stored; },
     setItem(key, value) { if (denied) throw Error('denied'); stored = value; }
   }, addEventListener: (key, fn) => {events[key] = fn;}};

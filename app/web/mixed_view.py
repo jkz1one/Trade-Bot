@@ -2,6 +2,7 @@
 
 import hashlib
 from datetime import datetime
+from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 from app.mixed.observer import history_chart
@@ -162,6 +163,7 @@ def mixed_view(data):
         )
     points = data.get("points", [])
     return {
+        "trade": trade_summary(data.get("position")),
         "key": key,
         "stages": stages,
         "families": families,
@@ -172,4 +174,44 @@ def mixed_view(data):
             {"name": name, "points": subset, "chart": chart_with_gaps(subset)}
             for name, subset in (("20", points[-20:]), ("50", points[-50:]), ("all", points))
         ],
+    }
+
+
+def trade_summary(position):
+    """Display original prices; never turn a last-known quote into usable P&L."""
+    if not position:
+        return None
+    p = position
+    details = p["details"]
+    quote = details.get("quote") or {}
+    conflict = p["mark_status"] == "CONFLICTING" or quote.get("instrument") != p["entry"].get(
+        "instrument"
+    )
+    multiplier = (
+        Decimal(str(details["contract"]["multiplier"])) if p["asset"] == "OPTION" else Decimal(1)
+    )
+    units = Decimal(str(p["quantity"])) * multiplier
+    basis = Decimal(p["basis"])
+    pnl = p.get("gross_unrealized")
+    underlying = details.get("underlying") or {}
+    return {
+        "bid": quote.get("bid") if not conflict else None,
+        "ask": quote.get("ask") if not conflict else None,
+        "bid_size": quote.get("bid_size") if not conflict else None,
+        "ask_size": quote.get("ask_size") if not conflict else None,
+        "average_entry": str(basis / units) if units else None,
+        "return_percent": str(Decimal(pnl) / basis * 100) if pnl is not None and basis else None,
+        "tone": "gain"
+        if pnl is not None and Decimal(pnl) >= 0
+        else "loss"
+        if pnl is not None
+        else "",
+        "usable": p["mark_status"] == "USABLE_STORED_BID",
+        "received_at": quote.get("received_at"),
+        "entitlement": quote.get("entitlement", "UNKNOWN"),
+        "source": quote.get("source"),
+        "underlying_bid": underlying.get("bid"),
+        "underlying_ask": underlying.get("ask"),
+        "underlying_at": underlying.get("source_at"),
+        "greeks": quote.get("greeks") or {},
     }

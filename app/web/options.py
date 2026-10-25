@@ -86,7 +86,7 @@ def create_options_app(
                 "X-Content-Type-Options": "nosniff",
                 "X-Frame-Options": "DENY",
                 "Referrer-Policy": "no-referrer",
-                "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+                "Content-Security-Policy": "default-src 'none'; script-src 'self'; connect-src 'self'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
             }
         )
         return response
@@ -118,6 +118,56 @@ def create_options_app(
             media_type="application/javascript",
         )
 
+    if mixed:
+
+        @app.get("/desk-live.js", dependencies=[Depends(authenticate)])
+        def live_script():
+            return Response(
+                templates.env.get_template("mixed_live_script.html").render(),
+                media_type="application/javascript",
+            )
+
+        @app.get("/desk/snapshot", dependencies=[Depends(authenticate)])
+        def desk_snapshot(
+            limit: int = Query(25, ge=1, le=100),
+            before: int | None = Query(None, ge=1),
+            family: Literal["ALL", "DEGEN", "SWING", "SCOPE"] = "ALL",
+            refresh: bool = True,
+        ):
+            if family != "ALL":
+                raise HTTPException(422, "Mixed desk shows the common account; use ALL")
+            data = observer.report(limit=limit, before=before, family=family)
+            if review_at is not None:
+                data["review"] = {
+                    "mode": "FROZEN_OFFLINE_UI_FIXTURE",
+                    "as_of": review_at.isoformat(),
+                }
+            context = {
+                "data": data,
+                "view": mixed_view(data),
+                "update_mode": update_mode(before, refresh),
+            }
+            return JSONResponse(
+                {
+                    "version": "mixed-desk-snapshot-v1",
+                    "population": "mixed:" + population_id,
+                    "status": data["status"],
+                    "html": templates.env.get_template("mixed_content.html").render(**context),
+                },
+                status_code=503 if data["status"] == "UNAVAILABLE" else 200,
+            )
+
+    def update_mode(before, refresh):
+        return (
+            "frozen"
+            if review_at is not None
+            else "history"
+            if before is not None
+            else "auto"
+            if refresh
+            else "paused"
+        )
+
     @app.get("/api/mixed" if mixed else "/api/options", dependencies=[Depends(authenticate)])
     def api(
         limit: int = Query(25, ge=1, le=100),
@@ -137,7 +187,7 @@ def create_options_app(
         limit: int = Query(25, ge=1, le=100),
         before: int | None = Query(None, ge=1),
         family: Literal["ALL", "DEGEN", "SWING", "SCOPE"] = "ALL",
-        refresh: bool = False,
+        refresh: bool | None = None,
     ):
         if mixed and family != "ALL":
             raise HTTPException(422, "Mixed desk shows the common account; use ALL")
@@ -152,7 +202,8 @@ def create_options_app(
             {
                 "data": data,
                 "view": mixed_view(data) if mixed else None,
-                "auto_refresh": refresh and before is None and review_at is None,
+                "auto_refresh": bool(refresh) and before is None and review_at is None,
+                "update_mode": update_mode(before, mixed if refresh is None else refresh),
                 "family": family,
                 "comparison_chart": chart_data(
                     data.get("comparison", {"status": "NOT_CONFIGURED"})

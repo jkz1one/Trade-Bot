@@ -1,0 +1,89 @@
+/* Same-origin stored snapshots only. The collector and trader are independent. */
+(() => {
+  'use strict';
+  const interval = 5000;
+  let timer, busy = false, failures = 0, stopped = false, lastSync = null;
+  const main = () => document.getElementById('content');
+  const mode = () => main().dataset.updateMode;
+  const status = text => { const el = document.getElementById('sync-status'); if (el) el.textContent = text; };
+  const stamp = () => new Date().toLocaleTimeString('en-US', {timeZone: 'America/New_York', hour12: false});
+  function schedule() {
+    clearTimeout(timer);
+    if (!stopped && mode() === 'auto' && !document.hidden)
+      timer = setTimeout(() => sync(), Math.min(interval * 2 ** failures, 30000));
+  }
+  async function sync(manual = false) {
+    if (busy || (!manual && (stopped || mode() !== 'auto' || document.hidden))) return;
+    busy = true;
+    clearTimeout(timer);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    try {
+      const params = new URLSearchParams(location.search);
+      const url = '/desk/snapshot?' + params.toString();
+      const response = await fetch(url, {credentials: 'same-origin', cache: 'no-store', signal: controller.signal});
+      if (response.status === 401 || response.status === 403) {
+        stopped = true;
+        throw new Error('Authentication required. Reload to sign in.');
+      }
+      if (![200, 503].includes(response.status)) throw new Error('Connection lost');
+      const text = await response.text();
+      if (text.length > 4 * 1024 * 1024) throw new Error('Snapshot too large');
+      const data = JSON.parse(text);
+      if (data.version !== 'mixed-desk-snapshot-v1' || data.population !== document.body.dataset.population || typeof data.html !== 'string')
+        throw new Error('Snapshot identity unavailable');
+      const next = new DOMParser().parseFromString(data.html, 'text/html').getElementById('content');
+      if (!next || next.dataset.population !== data.population || next.querySelector('script')) throw new Error('Snapshot invalid');
+      // Avoid interrupting copying or keyboard interaction with an open select.
+      if (!(window.getSelection() && window.getSelection().toString()) && document.activeElement?.tagName !== 'SELECT') {
+        const active = document.activeElement;
+        const focusId = active && active.id;
+        const tabs = Array.from(document.querySelectorAll('[data-tabs] button[aria-selected="true"]')).map(el => el.id);
+        const family = document.querySelector('[data-filter-family][aria-pressed="true"]')?.dataset.filterFamily;
+        const activity = document.getElementById('activity-filter')?.value;
+        const expanded = document.getElementById('activity-more')?.getAttribute('aria-expanded') === 'true';
+        const stream = document.getElementById('stream-filter')?.value;
+        const details = Array.from(document.querySelectorAll('details[id]')).map(el => [el.id, el.open]);
+        const scrolls = Array.from(document.querySelectorAll('[id]')).filter(el => el.scrollTop || el.scrollLeft).map(el => [el.id, el.scrollTop, el.scrollLeft]);
+        const x = window.scrollX, y = window.scrollY;
+        main().replaceWith(next);
+        document.dispatchEvent(new CustomEvent('desk:updated'));
+        tabs.forEach(id => document.getElementById(id)?.click());
+        if (family) Array.from(document.querySelectorAll('[data-filter-family]')).find(el => el.dataset.filterFamily === family)?.click();
+        for (const [id, value] of [['activity-filter', activity], ['stream-filter', stream]]) {
+          const el = document.getElementById(id);
+          if (el && value) { el.value = value; el.dispatchEvent(new Event('change')); }
+        }
+        const more = document.getElementById('activity-more');
+        if (more && (more.getAttribute('aria-expanded') === 'true') !== expanded) more.click();
+        details.forEach(([id, open]) => { const el = document.getElementById(id); if (el) el.open = open; });
+        scrolls.forEach(([id, top, left]) => { const el = document.getElementById(id); if (el) { el.scrollTop = top; el.scrollLeft = left; } });
+        if (focusId) document.getElementById(focusId)?.focus({preventScroll: true});
+        window.scrollTo(x, y);
+        lastSync = stamp();
+        status(data.status === 'OK'
+          ? (mode() === 'auto' ? 'Synced ' + lastSync + ' ET · every 5s · quote time is separate' : 'Synced ' + lastSync + ' ET · ' + (mode() === 'frozen' ? 'frozen review' : 'automatic updates paused'))
+          : 'Account evidence unavailable · checked ' + lastSync + ' ET');
+      } else {
+        status('Update waiting while you inspect · last sync ' + (lastSync || 'page load'));
+      }
+      failures = 0;
+    } catch (error) {
+      failures = Math.min(failures + 1, 3);
+      status((stopped ? 'Authentication required. Reload to sign in.' : 'Sync interrupted · retrying') + ' · displayed records may be old');
+    } finally {
+      clearTimeout(timeout);
+      busy = false;
+      schedule();
+    }
+  }
+  document.addEventListener('click', event => {
+    if (event.target.closest('#sync-now')) { stopped = false; sync(true); }
+  });
+  document.addEventListener('visibilitychange', () => {
+    clearTimeout(timer);
+    if (!document.hidden) sync();
+  });
+  addEventListener('online', () => sync());
+  schedule();
+})();

@@ -40,6 +40,12 @@ rules out interpolation under the pinned schema. Quotes remain stale, equity siz
 and entitlement remains unknown. Option histories supply no volume and omit
 interpolation flags; those fields are not invented. Connected PAPER acceptance is still incomplete.
 
+The [Data Stream and automatic-update release](docs/MIXED_DATA_STREAM.md) adds a
+recorded quote/event tab, clearer per-unit trade prices and five-second in-page
+updates for active accounts. Frozen reviews remain paused. Darker surfaces and a
+greener accent retain the existing layout. Installed checks pass; deployment and
+browser visual acceptance remain pending. This does not connect the market feed.
+
 ## Current product direction
 
 The settled strategy/engine plumbing is connected through native offline fixtures.
