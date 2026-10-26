@@ -48,6 +48,10 @@ routing](SWING_RUNTIME_DELIVERY.md) now join originals with explicit current
 evidence, while missing inputs retain protection quotes and block entry cycles.
 The catalyst provider/provenance path and Scope SPX/context inputs remain absent. Connection checks
 expose these omissions; do not silently disable a family or call its feed complete.
+[Continuous delivery fixes](CONTINUOUS_STRATEGY_DELIVERY.md) now preserve quote-only
+polls after source preparation, retain books after optional intraday failure, and
+explicitly block cycles with missing enrolled Scope input. The catalyst adapter
+requires a reviewed source/schema beyond the current six tools.
 
 Complete reviewed contract and data-eligibility binding, appropriate dynamic
 candidate updates, missing strategy inputs, operational enrollment/deployment,

@@ -49,6 +49,14 @@ still required before that path can assemble complete eligible Swing cycles.
 Current raw-normalized UNKNOWN history produces its retained source blockers
 before the catalyst stage. Those blockers survive delivery and collector restart.
 
+## Continuous delivery follow-up
+
+[Continuous delivery fixes](CONTINUOUS_STRATEGY_DELIVERY.md) remove every
+CYCLE-only attachment from ordinary MARKET polls and failed-history deliveries.
+Prepared sources remain available for the next complete cycle. Optional intraday
+history failure preserves completed books and its original failed raw receipt.
+Enrolled Scope without current input now produces an explicit entry-cycle blocker.
+
 ## Delivery bounds and compatibility
 
 Packets retain their existing version and hashes for unchanged payloads. The

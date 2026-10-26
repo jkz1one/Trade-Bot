@@ -1,5 +1,32 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Continuous strategy/protection delivery: 2026-10-26 EDT
+
+Starting feature HEAD bb9cdb5007652a094ff23178e046465536301c94. Fixed prepared Swing
+attachments leaking into MARKET packets and invalidating intervening quote polls.
+A shared MARKET projection preserves books and removes cycle-only context; stored
+originals are unchanged and reused in later complete cycles. Planned intraday
+history failures now retain completed quotes, explicit reasons and original failed
+raw receipts. Required quote-call failures still fail delivery. Missing enrolled
+Scope input now explicitly blocks entry cycles while available protection books
+continue. Native runtime validation and eligibility gates remain unchanged.
+
+Final validation: 180 installed Python cases passed; all 288 application files
+match source, wheel and installation. Ruff and diff checks pass.
+CONTINUOUS_STRATEGY_DELIVERY_PROOF.json records installed-wheel validation. Tests
+cover all four stock/single/batch enrollment combinations, collector publication
+and restart, failed/missing/malformed history, failed capture completion and valid
+native Scope enrollment. The positive collector test injects an independently
+native-validated synthetic original at the loader boundary; actual mapped UNKNOWN
+history still cannot prepare. No claim of connected acceptance.
+
+The reviewed six-tool gateway has no catalyst/news source. That specific adapter
+is blocked by missing reviewed source/schema evidence. This publication stops at
+**slice end**, with other offline coding still possible. Host setup, carry intent,
+Scope adapters, eligibility and candidates remain work. No provider/model calls,
+credentials, dependencies, subagents, hosted CI or server changes. The a653cc7
+frozen dashboard remains active and connected simulation remains inactive.
+
 ## Swing runtime assembly and expiry routing: 2026-10-26 EDT
 
 Starting feature HEAD 76b1be0136e470f109a3ac8e39879bdded3de456. Collector normalization

@@ -21,6 +21,9 @@ daily/hourly bars across collector restart. [Native original source/seed prepara
 now preserves exact inputs and blocked results. [Runtime assembly and expiry routing](docs/SWING_RUNTIME_DELIVERY.md)
 now combine originals with explicit current evidence and retain quotes when inputs
 are missing. The catalyst provider is still absent; entitlement stays unknown.
+[Continuous delivery fixes](docs/CONTINUOUS_STRATEGY_DELIVERY.md) preserve protection
+quotes between Swing cycles and after optional history failures. Missing enrolled
+Scope input explicitly blocks entry cycles.
 
 ## Offline development checks
 

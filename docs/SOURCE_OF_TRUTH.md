@@ -1,6 +1,21 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.136. Swing runtime assembly and contract routing, 2026-10-26 EDT.
+Version 1.137. Continuous strategy/protection delivery, 2026-10-26 EDT.
+
+[Continuous delivery fixes](CONTINUOUS_STRATEGY_DELIVERY.md) preserve quotes between
+prepared Swing cycles and after optional intraday-history failures. MARKET
+conversion strips all cycle-only sources/catalysts while retaining original
+bindings for the next complete cycle. Failed raw receipts remain retained. Missing
+Scope input now explicitly blocks an entry cycle without discarding available
+SPY/QQQ protection quotes. See CONTINUOUS_STRATEGY_DELIVERY_PROOF.json for installed
+validation. No runtime schema was weakened or data eligibility promoted.
+
+The catalyst provider adapter is blocked by a missing reviewed source/schema:
+none of the six fixed read tools supplies catalyst/news clearance. No fictional
+provider or CLEAR override was added. This publication is a slice end; other
+offline implementation remains possible. Host setup, carry intent, Scope inputs,
+eligibility and candidate replacement remain unfinished. Server unchanged;
+connected simulation inactive.
 
 [Runtime assembly](SWING_RUNTIME_DELIVERY.md) now joins verified original Swing
 sources with exact current metadata/quotes and explicit typed catalysts. Degen

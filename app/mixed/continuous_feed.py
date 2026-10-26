@@ -135,10 +135,15 @@ def normalize(
     optional = tuple(
         c
         for c in captured.plan.calls
-        if policy.swing_history is not None
-        and c.label.startswith("swing-")
-        and c.tool == "get_equity_historicals"
-        and c.arguments.get("interval") in {"day", "hour"}
+        if c.tool == "get_equity_historicals"
+        and (
+            (c.label == "history" and c.arguments.get("interval") == "5minute")
+            or (
+                policy.swing_history is not None
+                and c.label.startswith("swing-")
+                and c.arguments.get("interval") in {"day", "hour"}
+            )
+        )
     )
     if (
         len(captured.observations) > len(captured.plan.calls)
@@ -148,11 +153,22 @@ def normalize(
         or (captured.status == "FAILED" and not optional)
     ):
         raise ValueError("Complete required market-read coverage required")
-    if captured.status == "FAILED" and "SWING_HISTORY_UNAVAILABLE" not in issues:
-        issues.append("SWING_HISTORY_UNAVAILABLE")
+    optional_failed = False
+
+    def unavailable(call):
+        issue = (
+            "INTRADAY_HISTORY_UNAVAILABLE"
+            if call.label == "history"
+            else "SWING_HISTORY_UNAVAILABLE"
+        )
+        if issue not in issues:
+            issues.append(issue)
+
     for index, call in enumerate(captured.plan.calls):
         receipt = captured.observations[index] if index < len(captured.observations) else None
         if receipt is None and captured.status == "FAILED" and call in optional:
+            optional_failed = True
+            unavailable(call)
             continue
         if (
             receipt is None
@@ -162,6 +178,8 @@ def normalize(
             raise ValueError("Original read receipt coverage changed")
         if receipt.get("completed") is not True:
             if captured.status == "FAILED" and call in optional:
+                optional_failed = True
+                unavailable(call)
                 continue
             raise ValueError("Required original market read incomplete")
         args = (schemas, call, receipt["raw"])
@@ -203,9 +221,16 @@ def normalize(
                 # This original capture is separately normalized into the durable
                 # pre-open cache. It is not a current intraday strategy frame.
                 continue
-            histories = equity_history(*args, received_at=captured.collected_at)
+            try:
+                histories = equity_history(*args, received_at=captured.collected_at)
+            except (ValueError, TypeError, ArithmeticError, SchemaError):
+                if call not in optional:
+                    raise
+                unavailable(call)
         else:
             raise ValueError("Only reviewed normalized mappings may deliver runtime inputs")
+    if captured.status == "FAILED" and not optional_failed:
+        issues.append("CAPTURE_INCOMPLETE")
     held_ids = {i.instrument_id for i in held}
     candidate_ids = {i.instrument_id for i in policy.candidates}
     candidate_quotes = tuple(q for q in quotes if q.instrument.instrument_id in candidate_ids)
@@ -271,11 +296,13 @@ def normalize(
                 now=now,
             )
             issues.extend(missing)
+        if source_settings.scope_policy is not None and frame.scope is None:
+            issues.append("SCOPE_CURRENT_INPUT_UNAVAILABLE")
     elif swing_sources is not None or swing_evidence is not None:
         raise ValueError("Swing delivery requires enrolled runtime settings")
     cycle = bool(histories) and len(stocks) == len(policy.stocks) and not issues
     if not cycle:
-        frame = DegenFrame.model_validate(frame.model_dump() | {"histories": (), "inventories": ()})
+        frame = market_frame(frame)
     packet = PortfolioRuntimePacket(
         population_id=policy.population_id,
         sequence=sequence,
@@ -293,24 +320,31 @@ def normalize(
     return bounded_delivery(packet)
 
 
+def market_frame(frame):
+    """Keep all protection books while removing CYCLE-only strategy context."""
+    return DegenFrame.model_validate(
+        frame.model_dump()
+        | {
+            "histories": (),
+            "inventories": (),
+            "swing": (),
+            "swing_batches": (),
+            "stocks": tuple(StockCycleInput(quote=s.quote) for s in frame.stocks),
+        }
+    )
+
+
 def bounded_delivery(packet):
     """Oversized strategy context must not make held-market delivery unreadable."""
     from app.options.runtime import MAX_PACKET_BYTES
 
     if len(packet.model_dump_json().encode()) <= MAX_PACKET_BYTES:
         return packet
-    frame = packet.frame.model_dump() | {
-        "histories": (),
-        "inventories": (),
-        "swing": (),
-        "swing_batches": (),
-        "stocks": tuple(StockCycleInput(quote=s.quote) for s in packet.frame.stocks),
-    }
     packet = PortfolioRuntimePacket.model_validate(
         packet.model_dump()
         | {
             "kind": "MARKET",
-            "frame": frame,
+            "frame": market_frame(packet.frame),
             "coverage_issues": (*packet.coverage_issues, "RUNTIME_STRATEGY_PACKET_CAPACITY"),
         }
     )
