@@ -68,10 +68,12 @@ review container changes are part of this command. Preserve all review fixtures
 and consumed rollback names.
 
 Still required: reviewed operational enrollment/configuration, full contract/data
-eligibility, replacement option candidates, Swing daily/hourly/catalyst inputs,
+eligibility, replacement option candidates, Swing source/seed/catalyst binding,
 Scope SPX/context, and a reviewed host deployment/dashboard switch. Then the
 operator can verify ongoing operation on the server. The accepted October 26
 regular-session quote sample does not need to be recollected to continue coding.
+Optional daily/hourly capture and persistence now has its own
+[offline implementation](SWING_HISTORY_FEED.md); it does not yet supply Swing signals.
 
 Offline evidence is recorded in CONNECTED_RUNTIME_PROOF.json. The synthetic native
 two-play tests exercise empty and held restarts, including durable fills awaiting

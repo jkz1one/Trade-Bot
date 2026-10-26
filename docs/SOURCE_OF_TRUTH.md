@@ -1,6 +1,18 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.133. Coordinated simulation startup and restart, 2026-10-26 EDT.
+Version 1.134. Pre-open Swing history transport, 2026-10-26 EDT.
+
+The [Swing history collector](SWING_HISTORY_FEED.md) now has explicit opt-in daily/
+hourly capture, exact exchange-calendar normalization and durable raw-bound native
+history snapshots. It preserves clocks and UNKNOWN entitlement, reserves quote
+read capacity, retains usable required quotes when optional history fails, and
+reuses history across restart. Legacy collector hashes remain unchanged. Installed
+offline evidence is in SWING_HISTORY_FEED_PROOF.json. This is history transport,
+not completed Swing signal delivery: source/seed/catalyst binding, Scope inputs,
+contract/data eligibility, candidate replacement and host setup still need work.
+Actual daily/hourly responses are unverified. More offline coding remains possible;
+publication is a slice end, not a stop forced by missing collection. No server or
+provider/model/credential access occurred.
 
 The [coordinated runner](CONNECTED_RUNTIME.md) now reopens the enrolled native
 owner and continuous collector under their existing leases. The first runtime
@@ -16,8 +28,9 @@ provider, model, credentials, dependencies or CI changes occurred.
 [Connected simulation work](CONNECTED_SIMULATION.md) now checks collector/owner
 configuration together before opening state or credentials. Expired unheld
 candidates are retired from reads; held identities remain covered. This is not
-activation. The current collector lacks Swing daily/hourly/catalyst inputs and
-Scope SPX/context inputs; the earlier statement that feed integration was complete
+activation. Runtime delivery still lacks bound Swing sources/catalysts and
+Scope SPX/context inputs; the optional history cache above does not close those
+gaps. The earlier statement that feed integration was complete
 applied only to the implemented SPY/QQQ quote/intraday transport. Complete strategy
 feed coverage and guarded operational launch remain work, alongside explicit
 contract/entitlement/stock-size evidence. The operator is unavailable on the host

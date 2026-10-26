@@ -16,6 +16,10 @@ startup/shutdown and restart of an enrolled native owner and collector. Offline
 checks preserve two held plays and one bankroll through recovery. Operational
 configuration, complete strategy feeds and host activation remain pending.
 
+Optional [pre-open Swing history transport](docs/SWING_HISTORY_FEED.md) now retains
+daily/hourly bars across collector restart. Binding those original histories and
+catalyst evidence into Swing signals remains unfinished; entitlement stays unknown.
+
 ## Offline development checks
 
 Use the [isolated options test procedure](docs/OPTIONS_TESTING.md) to verify an

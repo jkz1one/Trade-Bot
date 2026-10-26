@@ -17,6 +17,7 @@ from pydantic import Field
 
 from app.mixed.sources import StockCycleInput
 from app.mixed.stock_models import StockInstrument
+from app.mixed.swing_feed import SwingHistoryPolicy
 from app.options.coordinator import DegenFrame
 from app.options.engine import clock, fingerprint
 from app.options.models import Name, OptionInstrument, OptionRecord
@@ -42,6 +43,7 @@ class FeedPolicy(OptionRecord):
     poll_seconds: int = Field(default=10, strict=True, ge=5, le=30)
     calls_per_minute: int = Field(default=24, strict=True, ge=1, le=120)
     capture: CapturePolicy
+    swing_history: SwingHistoryPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
 
 
 def planned(policy, held, now, window, *, cycle):
@@ -52,9 +54,7 @@ def planned(policy, held, now, window, *, cycle):
     if any(i.provider != "robinhood" for i in (*policy.stocks, *policy.candidates, *held)):
         raise ValueError("Reviewed Robinhood instrument identities required")
     stock_ids = {i.instrument_id: i for i in policy.stocks}
-    options = {
-        i.instrument_id: i for i in policy.candidates if now < i.contract.last_trading_at
-    }
+    options = {i.instrument_id: i for i in policy.candidates if now < i.contract.last_trading_at}
     for i in held:
         if isinstance(i, StockInstrument):
             if stock_ids.get(i.instrument_id) != i:
@@ -105,27 +105,51 @@ def planned(policy, held, now, window, *, cycle):
     ), tuple(options.values())
 
 
-def normalize(policy, schemas, captured, catalog, held, *, sequence, now):
+def normalize(policy, schemas, captured, catalog, held, *, sequence, now, history_issues=()):
     """A successful transport never upgrades unknown data into execution authority."""
     captured = CaptureResult.model_validate(captured.model_dump())
     if (
-        captured.status != "COMPLETE"
-        or captured.schemas is None
+        captured.schemas is None
         or captured.schemas.sha256 != schemas.sha256
         or captured.plan is None
     ):
-        raise ValueError("Complete original schema-bound capture required")
+        raise ValueError("Original schema-bound capture required")
     if not captured.started_at <= captured.collected_at <= now:
         raise ValueError("Original capture clocks required")
     quotes, underlyings, stocks, histories, metadata = (), (), (), (), ()
-    issues = []
-    for call, receipt in zip(captured.plan.calls, captured.observations, strict=True):
+    issues = list(history_issues)
+    optional = tuple(
+        c
+        for c in captured.plan.calls
+        if policy.swing_history is not None
+        and c.label.startswith("swing-")
+        and c.tool == "get_equity_historicals"
+        and c.arguments.get("interval") in {"day", "hour"}
+    )
+    if (
+        len(captured.observations) > len(captured.plan.calls)
+        or (
+            captured.status == "COMPLETE" and len(captured.observations) != len(captured.plan.calls)
+        )
+        or (captured.status == "FAILED" and not optional)
+    ):
+        raise ValueError("Complete required market-read coverage required")
+    if captured.status == "FAILED" and "SWING_HISTORY_UNAVAILABLE" not in issues:
+        issues.append("SWING_HISTORY_UNAVAILABLE")
+    for index, call in enumerate(captured.plan.calls):
+        receipt = captured.observations[index] if index < len(captured.observations) else None
+        if receipt is None and captured.status == "FAILED" and call in optional:
+            continue
         if (
-            receipt.get("label") != call.label
+            receipt is None
+            or receipt.get("label") != call.label
             or receipt.get("tool") != call.tool
-            or receipt.get("completed") is not True
         ):
             raise ValueError("Original read receipt coverage changed")
+        if receipt.get("completed") is not True:
+            if captured.status == "FAILED" and call in optional:
+                continue
+            raise ValueError("Required original market read incomplete")
         args = (schemas, call, receipt["raw"])
         if call.tool == "get_equity_quotes":
             for one, raw in available_quotes(*args, issues=issues):
@@ -161,6 +185,10 @@ def normalize(policy, schemas, captured, catalog, held, *, sequence, now):
                 except (ValueError, TypeError, ArithmeticError):
                     issues.append("UNUSABLE_OPTION:" + one.arguments["instrument_ids"][0])
         elif call.tool == "get_equity_historicals":
+            if call.label.startswith("swing-") and policy.swing_history is not None:
+                # This original capture is separately normalized into the durable
+                # pre-open cache. It is not a current intraday strategy frame.
+                continue
             histories = equity_history(*args, received_at=captured.collected_at)
         else:
             raise ValueError("Only reviewed normalized mappings may deliver runtime inputs")
@@ -296,6 +324,13 @@ class ContinuousFeed:
                     "CREATE TABLE control(id INTEGER PRIMARY KEY,configuration TEXT NOT NULL); CREATE TABLE attempts(sequence INTEGER PRIMARY KEY,started_at TEXT NOT NULL,calls INTEGER NOT NULL,status TEXT NOT NULL,request_hash TEXT NOT NULL,raw_json TEXT,packet_json TEXT,packet_hash TEXT);"
                 )
                 self.db.execute("INSERT INTO control VALUES(1,?)", (frozen,))
+                if self.policy.swing_history is not None:
+                    self.db.execute(
+                        "CREATE TABLE swing_history(target_session TEXT PRIMARY KEY,attempt_sequence INTEGER NOT NULL,payload_json TEXT NOT NULL,payload_hash TEXT NOT NULL)"
+                    )
+                    self.db.execute(
+                        "CREATE TABLE swing_read_budget(sequence INTEGER PRIMARY KEY,calls INTEGER NOT NULL)"
+                    )
             if (
                 self.db.execute("SELECT configuration FROM control WHERE id=1").fetchone()[0]
                 != frozen
@@ -313,6 +348,43 @@ class ContinuousFeed:
     def close(self):
         self.db.close()
         os.close(self.lock)
+
+    def swing_snapshot(self, target):
+        """Revalidate cached native histories against the retained original capture."""
+        if self.policy.swing_history is None:
+            raise ValueError("Swing history collection not enrolled")
+        row = self.db.execute(
+            "SELECT * FROM swing_history WHERE target_session=?", (target.isoformat(),)
+        ).fetchone()
+        if row is None:
+            return None
+        from app.mixed.swing_feed import SwingHistorySnapshot, snapshot
+        from app.options.read_capture import policy_digest
+
+        value = SwingHistorySnapshot.model_validate_json(row["payload_json"])
+        attempt = self.db.execute(
+            "SELECT * FROM attempts WHERE sequence=?", (row["attempt_sequence"],)
+        ).fetchone()
+        if attempt is None or attempt["raw_json"] is None:
+            raise ValueError("Original Swing capture missing")
+        captured = CaptureResult.model_validate_json(attempt["raw_json"])
+        if (
+            value.target_session != target
+            or fingerprint(value) != row["payload_hash"]
+            or captured.policy_sha256 != policy_digest(self.policy.capture)
+            or captured.schemas != self.schemas
+            or captured.plan is None
+            or fingerprint(captured.plan) != attempt["request_hash"]
+            or value
+            != snapshot(
+                self.policy.swing_history,
+                tuple(i.symbol for i in self.policy.stocks),
+                self.schemas,
+                captured,
+            )
+        ):
+            raise ValueError("Stored Swing history binding changed")
+        return value
 
     def recover(self):
         row = self.db.execute(
@@ -377,11 +449,42 @@ class ContinuousFeed:
         ).fetchone()[0]
         if used + len(plan.calls) > self.policy.calls_per_minute:
             return {"status": "RATE_LIMITED"}
+        history_calls = ()
+        if self.policy.swing_history is not None:
+            from app.mixed.swing_feed import planned_history
+
+            target, proposed = planned_history(
+                self.policy.swing_history, tuple(i.symbol for i in self.policy.stocks), now
+            )
+            history_used = self.db.execute(
+                "SELECT COALESCE(SUM(b.calls),0) FROM swing_read_budget b JOIN attempts a USING(sequence) WHERE a.started_at>?",
+                ((now - timedelta(minutes=1)).isoformat(),),
+            ).fetchone()[0]
+            # Reserve equity + held-option books at every poll, plus one intraday
+            # history cycle at the open. Failed backfills spend their budget too,
+            # including after restart, and cannot consume the quote reserve.
+            quote_reserve = (
+                2 * ((60 + self.policy.poll_seconds - 1) // self.policy.poll_seconds) + 1
+            )
+            if (
+                target is not None
+                and self.swing_snapshot(target) is None
+                and used + len(plan.calls) + len(proposed) <= self.policy.calls_per_minute
+                and history_used + len(proposed) <= self.policy.calls_per_minute - quote_reserve
+            ):
+                history_calls = proposed
+                plan = CapturePlan.model_validate(
+                    {**plan.model_dump(), "calls": (*plan.calls, *history_calls)}
+                )
         sequence = (last["sequence"] if last else 0) + 1
         self.db.execute(
             "INSERT INTO attempts VALUES(?,?,?,'STARTED',?,NULL,NULL,NULL)",
             (sequence, now.isoformat(), len(plan.calls), fingerprint(plan)),
         )
+        if history_calls:
+            self.db.execute(
+                "INSERT INTO swing_read_budget VALUES(?,?)", (sequence, len(history_calls))
+            )
         self.db.commit()
         try:
             captured = await reader(self.policy.capture, schemas=self.schemas, plan=plan)
@@ -398,6 +501,20 @@ class ContinuousFeed:
                 or captured.started_at < now
             ):
                 raise ValueError("Collector response plan changed")
+            swing, history_issues = None, ()
+            if history_calls:
+                from app.mixed.swing_feed import snapshot
+
+                try:
+                    swing = snapshot(
+                        self.policy.swing_history,
+                        tuple(i.symbol for i in self.policy.stocks),
+                        self.schemas,
+                        captured,
+                    )
+                except (ValueError, TypeError, ArithmeticError, SchemaError):
+                    # Unavailable history must not discard usable held quotes.
+                    history_issues = ("SWING_HISTORY_UNAVAILABLE",)
             packet = normalize(
                 self.policy,
                 self.schemas,
@@ -406,6 +523,7 @@ class ContinuousFeed:
                 held,
                 sequence=sequence,
                 now=captured.collected_at,
+                history_issues=history_issues,
             )
 
             def quotes(frame):
@@ -444,6 +562,16 @@ class ContinuousFeed:
                 "UPDATE attempts SET status='NORMALIZED',packet_json=?,packet_hash=? WHERE sequence=?",
                 (packet.model_dump_json(), fingerprint(packet), sequence),
             )
+            if swing is not None:
+                self.db.execute(
+                    "INSERT INTO swing_history VALUES(?,?,?,?)",
+                    (
+                        swing.target_session.isoformat(),
+                        sequence,
+                        swing.model_dump_json(),
+                        fingerprint(swing),
+                    ),
+                )
             self.db.commit()
             self.publish(packet)
             self.db.execute("UPDATE attempts SET status='DELIVERED' WHERE sequence=?", (sequence,))

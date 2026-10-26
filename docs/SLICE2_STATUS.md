@@ -1,5 +1,26 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Pre-open Swing history transport: 2026-10-26 EDT
+
+Starting feature HEAD aaae070ca83619e4d33a4a920878735a40241453. Explicit optional
+history enrollment adds daily/hourly plans, native calendar-normalized histories
+and durable original-capture-bound snapshots. Exact holidays/DST/half-day coverage,
+unchanged source/receipt clocks, unknown entitlement, cached restart reuse and
+publication recovery are preserved. Legacy policy hashes remain byte-compatible.
+Failed backfill spends a persistent spare budget that reserves future held quote
+polls. Optional history failure can publish already completed required quotes with
+an explicit coverage issue; required market-read failure still fails delivery.
+
+This completes history transport only. Runtime Swing source/seed/catalyst binding
+is still unfinished; Scope SPX/context and reviewed data/contract eligibility are
+also unresolved. Real daily/hourly responses have not been accepted. More offline
+coding can continue, so the stopping reason after publication is **slice end**.
+Final validation: 156 installed Python cases passed, with all 286 application
+files identical in source, wheel and installation. Ruff and diff checks passed.
+See SWING_HISTORY_FEED.md and SWING_HISTORY_FEED_PROOF.json for installed evidence.
+No authenticated collection, credentials, model calls, dependencies, subagents,
+hosted CI or host changes. The deployed dashboard remains a653cc7 frozen V3.
+
 ## Coordinated simulation startup and restart: 2026-10-26 EDT
 
 Starting feature HEAD 8b7a4d8aa18ad9a38523bf423766a8bcfa2f1234. A bounded installed

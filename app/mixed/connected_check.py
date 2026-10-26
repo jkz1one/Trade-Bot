@@ -68,7 +68,32 @@ def connection_report(settings, feed, schemas, *, journal, directory, now):
     if settings.swing_policy is not None or (
         settings.stock_policy is not None and settings.stock_policy.swing is not None
     ):
-        blockers.append("SWING_DAILY_AND_HOURLY_FEED_UNAVAILABLE")
+        if feed.swing_history is None:
+            blockers.append("SWING_DAILY_AND_HOURLY_FEED_UNAVAILABLE")
+        else:
+            blockers.append("SWING_PREOPEN_HISTORY_AND_SOURCE_BINDING_REQUIRED")
+            for policy in (
+                settings.swing_policy,
+                settings.stock_policy.swing if settings.stock_policy else None,
+            ):
+                if policy is None:
+                    continue
+                hourly = getattr(policy, "daily_base", None) or getattr(policy, "ma_pullback", None)
+                if policy.history_source != SOURCE or (
+                    getattr(policy, "hourly_source", SOURCE) != SOURCE
+                    or (hourly is not None and hourly.hourly_source != SOURCE)
+                ):
+                    errors.append("SWING_HISTORY_SOURCE_MISMATCH")
+                if (
+                    feed.swing_history.daily_bars < policy.daily_lookback
+                    or feed.swing_history.hourly_bars < getattr(policy, "hourly_lookback", 0)
+                    or (
+                        hourly is not None
+                        and feed.swing_history.hourly_bars < hourly.hourly_lookback
+                    )
+                ):
+                    errors.append("SWING_HISTORY_COVERAGE_TOO_SHORT")
+        blockers.append("SWING_CATALYST_FEED_UNAVAILABLE")
     candidates = []
     seen = set()
     for instrument in feed.candidates:
