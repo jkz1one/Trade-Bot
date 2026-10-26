@@ -52,7 +52,9 @@ def planned(policy, held, now, window, *, cycle):
     if any(i.provider != "robinhood" for i in (*policy.stocks, *policy.candidates, *held)):
         raise ValueError("Reviewed Robinhood instrument identities required")
     stock_ids = {i.instrument_id: i for i in policy.stocks}
-    options = {i.instrument_id: i for i in policy.candidates}
+    options = {
+        i.instrument_id: i for i in policy.candidates if now < i.contract.last_trading_at
+    }
     for i in held:
         if isinstance(i, StockInstrument):
             if stock_ids.get(i.instrument_id) != i:

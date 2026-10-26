@@ -1,0 +1,21 @@
+{
+  "version": "connected-simulation-proof-v1",
+  "date": "2026-10-26",
+  "parent": "0b3e51d87fe769fe54894441feeb24ba63920801",
+  "installed_python_passed": 12,
+  "warnings_as_errors": true,
+  "noneditable_isolated_install": true,
+  "copied_tests": true,
+  "application_file_count": 284,
+  "source_wheel_installed_identical": true,
+  "wheel_sha256": "cdaaa56e6654625bf88150ec5cdb0b3abe8264ba959dd967500ee9199b4190e6",
+  "changed_application_sha256": {
+    "app/mixed/connected_check.py": "822ae374dbc0769b49db6cc7c4feededb014e258c1526f7f60c98ea9085097c7",
+    "app/mixed/continuous_feed.py": "8ad1677d24f7908b420fc5395cbb840adebbb38567cf87a7bf1f45e68255d0d6",
+    "app/mixed/feed_cli.py": "939ac9187365f98ef1ee4e25e26586aa4650bd63546357ad6aa09e089cecec20"
+  },
+  "provider_calls": 0,
+  "host_changes": false,
+  "trading_ready": false,
+  "live_enabled": false
+}

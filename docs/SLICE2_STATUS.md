@@ -1,5 +1,20 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Connected simulation wiring checks: 2026-10-26 EDT
+
+Starting feature HEAD 0b3e51d87fe769fe54894441feeb24ba63920801. Collector startup
+now cross-checks the existing native owner's runtime configuration: account
+population, exact stock identities, source names, universe, feed path, v2 ownership,
+quote-fill mode and polling freshness. Invalid wiring exits before state/credentials.
+A configuration-only CLI reports entry blockers separately and makes no reads.
+Expired unheld options are omitted from reads; held contracts remain included.
+
+Current feed coverage does not include Swing daily/hourly/catalyst inputs or
+Scope SPX/context. These are now exposed, not quietly treated as supported. Full
+connected launch and reviewed data/contract binding remain unfinished. No host
+operation is requested while the operator is unavailable. See CONNECTED_SIMULATION.md
+and CONNECTED_SIMULATION_PROOF.json for scope and installed validation.
+
 ## Regular-session quote acceptance and confirmed refresh: 2026-10-26 EDT
 
 Operator output confirms a653cc7 successfully deployed with 283 matching app

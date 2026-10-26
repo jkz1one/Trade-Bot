@@ -1,6 +1,16 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.131. Regular-session raw quote acceptance, 2026-10-26 EDT.
+Version 1.132. Connected simulation wiring checks, 2026-10-26 EDT.
+
+[Connected simulation work](CONNECTED_SIMULATION.md) now checks collector/owner
+configuration together before opening state or credentials. Expired unheld
+candidates are retired from reads; held identities remain covered. This is not
+activation. The current collector lacks Swing daily/hourly/catalyst inputs and
+Scope SPX/context inputs; the earlier statement that feed integration was complete
+applied only to the implemented SPY/QQQ quote/intraday transport. Complete strategy
+feed coverage and guarded operational launch remain work, alongside explicit
+contract/entitlement/stock-size evidence. The operator is unavailable on the host
+during today's market hours; proceed offline without claiming tomorrow is ready.
 
 The operator confirmed a653cc7 deployed successfully: 283 application files match,
 health/authentication pass, and frozen V3 retains two native fills. The rounding
