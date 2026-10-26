@@ -1,5 +1,23 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Regular-session quote acceptance and confirmed refresh: 2026-10-26 EDT
+
+Operator output confirms a653cc7 successfully deployed with 283 matching app
+files, health/authentication OK and two retained frozen native fills. Rounding is
+installed; before-price-format is consumed. Do not rerun the old refresh action.
+
+The 09:33 EDT market check reports three fresh advancing samples of both stock
+and option subjects. Uploaded sample-3 independently matches the report's hash
+and passes exact plan/schema/identity/clock/book/calendar checks. Two underlyings
+normalize; both option books include sizes and Greeks. Full sequence advancement
+is operator-reported because only the third raw sample was supplied.
+See [acceptance](REGULAR_SESSION_QUOTE_PROOF.json). No repeat quote check is needed
+to establish this bounded result. Equity sizes, explicit entitlement and complete
+contract terms are absent; unknowns remain unknown. No simulated orders on these
+quotes, connected runtime activation, provider/model calls from this workspace,
+dependency changes or hosted CI occurred. This is evidence/documentation only;
+prior code validation remains unchanged, not a new application test claim.
+
 ## Premarket evidence and failed refresh recovery: 2026-10-26 EDT
 
 Operator output confirms three captures completed without errors at about 08:51

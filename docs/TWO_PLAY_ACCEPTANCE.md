@@ -1,30 +1,30 @@
 # Two-play deployment and remaining acceptance
 
 Code/offline proof is recorded in [TWO_PLAY_NATIVE_PROOF.json](TWO_PLAY_NATIVE_PROOF.json).
-The operator has confirmed host deployment of acabf4a to frozen ui-review-v3.
+The operator has confirmed host deployment of a653cc7 to frozen ui-review-v3.
 Full browser acceptance, ongoing authenticated delivery and market-open simulated
 execution are separate, still-unverified stages.
 No connected PAPER service or model worker was activated during implementation.
 
 The user wants virtual-money trading here, using real incoming market data and the
 same dashboard. No external PAPER/brokerage account is required. Use
-[MARKET_DATA_PROOF.md](MARKET_DATA_PROOF.md) for the next bounded data check.
+[MARKET_DATA_PROOF.md](MARKET_DATA_PROOF.md) for the accepted regular-session data proof.
 
 ## Confirmed existing host
 
 The operator's supplied output confirms dashboard revision/image
-acabf4a816ef5cc674fe36d687d29351d273e469, 283 matching installed application files,
+a653cc7e79d178c5ab2de6afb3311829282a7544, 283 matching installed application files,
 two native simulated fills, authenticated frozen-review mode and health OK.
 This is confirmed historical host evidence, not a fresh remote inspection.
 The original SHADOW worker/observer remain frozen. Full browser acceptance remains
 pending. The previous dashboard is already retained as
-`trade-bot-dashboard-before-two-play`; do not reuse that rollback name.
+`trade-bot-dashboard-before-price-format`; do not reuse that rollback name.
 Preserve ui-review-v1, ui-review-v2 and the deployed ui-review-v3.
 
 ## Historical V3 deployment procedure (already completed)
 
 Do not rerun the commands below: their directory and rollback name are consumed.
-Use the guarded V3 refresh in MARKET_DATA_PROOF.md for the price-formatting fix.
+The price-formatting refresh is also completed. Its rollback name is consumed.
 
 After fetching this validated release, the operator can use the guarded V3 path.
 It expects the currently confirmed d2092f1 image and reserves the new unused

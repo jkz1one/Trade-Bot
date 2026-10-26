@@ -1,5 +1,30 @@
 # Current data proof and dashboard price formatting
 
+## Latest acceptance: regular session and successful refresh
+
+The operator subsequently deployed a653cc7 successfully: all 283 application
+files match, health and authentication pass, frozen V3 still has two fills, and
+the price-formatting change is installed. before-price-format is now consumed.
+Do not rerun the historical refresh instructions below.
+
+The 09:33 EDT run in /root/trade-bot-market-proof-01Ccjk reports all three samples
+fresh and advancing for both equity and option subjects. The supplied sample-3
+raw file independently matches hash
+12922ab55470cdfb6768b926227af81beedce693aa206520a6cd8e154f2bce29 and validates
+the exact capture plan, pinned input/output schemas, identities, nonfuture clocks,
+positive uncrossed books and regular-session time. SPY/QQQ underlyings normalize;
+both option responses contain sizes, volume/open interest and finite Greeks.
+See [REGULAR_SESSION_QUOTE_PROOF.json](REGULAR_SESSION_QUOTE_PROOF.json).
+
+The uploaded raw file is one of the three samples; full sequence advancement is
+still evidence from the operator's report. No further bounded quote capture is
+needed merely to repeat this accepted result. This is a historical observation at
+09:33, not perpetual permission to call later quotes fresh. The response has no
+equity sizes, explicit entitlement or full exercise/deliverable/settlement terms.
+No fields are filled from guesses and no connected simulator is activated.
+
+## Earlier attempt (superseded deployment state)
+
 October 26 host update: the first bounded premarket capture completed all three
 samples without errors. SPY/QQQ equity clocks advanced and latest quotes were
 1.691/0.691 seconds old. Options retained Friday timestamps. This establishes

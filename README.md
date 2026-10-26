@@ -2,13 +2,14 @@
 
 Small, auditable experiment for testing whether an autonomous reasoning trader can add value while deterministic software owns authority and risk.
 
-Current host: acabf4a is confirmed deployed with two frozen simulated trades and
+Current host: a653cc7 is confirmed deployed with two frozen simulated trades and
 283 matching application files. The goal is virtual-money trading from real
 incoming data on this same dashboard; no separate brokerage account is needed.
-The connected simulator is not running yet. Run the
-[bounded current-data check](docs/MARKET_DATA_PROOF.md) next; it needs no rebuild
-or dashboard restart. The same release fixes padded stop/target prices and
-provides a guarded refresh of the existing V3 review.
+The connected simulator is not running yet. The
+[regular-session data proof](docs/REGULAR_SESSION_QUOTE_PROOF.json) now validates
+fresh stock/option responses at capture. The stop/target formatting fix is also
+deployed. Full contract terms, entitlement and connected simulator activation
+remain unresolved; do not rerun the completed dashboard refresh.
 
 ## Offline development checks
 

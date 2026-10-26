@@ -1,6 +1,27 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.130. Premarket evidence and dashboard startup diagnostics, 2026-10-26 EDT.
+Version 1.131. Regular-session raw quote acceptance, 2026-10-26 EDT.
+
+The operator confirmed a653cc7 deployed successfully: 283 application files match,
+health/authentication pass, and frozen V3 retains two native fills. The rounding
+fix is installed. before-price-format is now a consumed rollback name. Do not
+rerun the prior refresh. The original failed dceb64e startup cause remains unknown.
+
+At 09:33 EDT the bounded host check reported three fresh, advancing samples for
+SPY/QQQ equities and both known October 26 call contracts. The uploaded sample-3
+matches its reported SHA256 and independently passes exact plan, pinned schemas,
+subject identity, source-clock, book and session checks. Latest ages at capture
+were 0.473–1.124 seconds. Option sizes and Greeks are present. See
+[raw acceptance evidence](REGULAR_SESSION_QUOTE_PROOF.json). Only sample-3 was
+independently revalidated; three-sample advancement is operator-reported evidence.
+Do not repeat this bounded freshness check as an unresolved prerequisite.
+
+The response omits equity sizes, explicit data entitlement and full option
+contract terms. UNKNOWN is the mapper's conservative default, not an observed
+provider error. These fields cannot be invented from fast quote timestamps. No
+connected simulator has been activated and no simulated execution on this market
+capture is claimed. Continuous operation, runtime configuration and activation
+still need completion on the same bot/dashboard with virtual funds.
 
 The operator's first current-data check completed all three samples: SPY/QQQ
 equity quotes were fresh and their clocks advanced. Options still carried Friday
@@ -19,9 +40,9 @@ frozen UI deployment do not satisfy that goal.
 [Today's bounded data check](MARKET_DATA_PROOF.md) reuses the confirmed installed
 image, captures three sets of SPY/QQQ quotes and known October 26 option samples,
 and reports source-clock advancement, freshness, sizes and remaining restrictions.
-The first premarket host results are supplied; regular-session results are pending.
-The price display removes trailing decimal padding without changing stored stops
-or targets. The new formatting release still needs a guarded dashboard refresh.
+Premarket and regular-session host results are supplied; see the current acceptance above.
+The deployed price display removes trailing decimal padding without changing
+stored stops or targets.
 
 The [native two-play implementation](TWO_PLAY_IMPLEMENTATION.md) connects up to two
 simultaneous PAPER plays through one owner and bankroll: atomic capacity/funds
@@ -44,7 +65,7 @@ and Scope/SPX connected mapping remain unresolved. Browser visuals and fresh,
 ongoing market-open host acceptance remain pending. Do not call the connected
 engine ready or deploy/activate PAPER on the strength of offline checks.
 
-The operator's October 26 output confirms acabf4a deployed with 283 matching files,
+Earlier October 26 output confirmed acabf4a deployed with 283 matching files,
 two native simulated fills, health OK and authenticated frozen ui-review-v3. The
 startup resets cleared during retries. The previous d2092f1 reader is retained as
 before-two-play. Do not rerun V3 prepare/activate. The supplied browser screenshot
