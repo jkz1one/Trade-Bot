@@ -50,6 +50,9 @@ def test_installed_two_play_review_script_and_frozen_authenticated_page(tmp_path
         assert page.status_code == 200 and page.text.count("data-play-id=") == 2
         assert "Paused historical simulation" in page.text
         assert 'id="admin-dialog"' not in page.text
+        assert '<strong>$599.94</strong><small>Original $599.94</small>' in page.text
+        assert 'Original stop 599.94 · active stop 599.94' in page.text
+        assert 'Stored bid 601.20' in page.text
         view = client.get("/api/mixed").json()
         assert view["review"]["mode"] == "FROZEN_OFFLINE_UI_FIXTURE"
         marks = [Decimal(p["gross_unrealized"]) for p in view["positions"]]

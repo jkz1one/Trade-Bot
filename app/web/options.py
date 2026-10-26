@@ -15,13 +15,21 @@ from fastapi.templating import Jinja2Templates
 
 from app.domain.models import utc_now
 from app.options.observer import OptionObserver
-from app.web.mixed_view import display_time, evidence_id, family_of, mixed_view, trade_summary
+from app.web.mixed_view import (
+    display_time,
+    evidence_id,
+    family_of,
+    mixed_view,
+    price_text,
+    trade_summary,
+)
 from app.web.trade_rail import trade_rail
 
 basic = HTTPBasic(auto_error=False)
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 templates.env.globals["trade_rail"] = trade_rail
 templates.env.filters["dollars"] = lambda value: format(Decimal(value), ",.2f")
+templates.env.filters["price"] = price_text
 templates.env.filters["display_time"] = display_time
 templates.env.filters["evidence_id"] = evidence_id
 templates.env.globals["family_of"] = family_of

@@ -38,14 +38,19 @@ if [[ "$review_name" == ui-review-v3 ]]; then
   review_seed=portfolio-dashboard-review.json
 fi
 if [[ "$review_action" == refresh ]]; then
-  [[ "$review_name" == ui-review-v2 ]] || exit 1
-  review_previous_image=trade-bot-dashboard:d2092f16cc99a3749be04fb2bd5a5d26fa0e30bc
-  review_backup=trade-bot-dashboard-before-panel-height
+  [[ "$review_name" == ui-review-v2 || "$review_name" == ui-review-v3 ]] || exit 1
+  if [[ "$review_name" == ui-review-v3 ]]; then
+    review_previous_image=trade-bot-dashboard:acabf4a816ef5cc674fe36d687d29351d273e469
+    review_backup=trade-bot-dashboard-before-price-format
+  else
+    review_previous_image=trade-bot-dashboard:d2092f16cc99a3749be04fb2bd5a5d26fa0e30bc
+    review_backup=trade-bot-dashboard-before-panel-height
+  fi
   [[ "$(docker inspect --format '{{.Config.Image}}' trade-bot-dashboard)" == "$review_previous_image" ]] || {
     echo 'Unexpected dashboard release; inspect before refresh.' >&2; exit 1;
   }
   if docker container inspect "$review_backup" >/dev/null 2>&1; then
-    echo 'Panel rollback container already exists; inspect before refresh.' >&2; exit 1
+    echo 'Refresh rollback container already exists; inspect before refresh.' >&2; exit 1
   fi
   [[ -f "$review_data/$review_name/review.json" ]] || exit 1
   docker build -f Dockerfile.shadow --build-arg "TRADE_BOT_RELEASE=$review_release" \

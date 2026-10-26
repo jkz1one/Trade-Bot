@@ -1,5 +1,28 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Current-data proof and price formatting: 2026-10-26 EDT
+
+Starting local/remote HEAD acabf4a816ef5cc674fe36d687d29351d273e469. The operator
+confirmed that exact image deployed successfully: 283 matching application files,
+two native fills, health OK and authenticated frozen V3. before-two-play is now a
+consumed rollback name. Preserve V1/V2/V3; do not rerun V3 prepare/activate.
+
+The user clarified the goal: real incoming data drives simulated trades in this
+bot, visible on the existing dashboard. No external PAPER account is needed. The
+frozen review does not fulfill that goal and connected trading is not active.
+
+The screenshot showed padded stop decimals. Formatting now removes trailing
+padding while retaining significant fractional prices; exact accounting remains
+unchanged. A guarded V3 refresh expects acabf4a and uses before-price-format.
+
+The new bounded host proof reuses the confirmed image, makes three quote captures
+with 20-second spacing, and reports original clocks, freshness, sizes, advancement
+and failures. It performs no trading/model work or service changes. Unknown
+entitlement, incomplete metadata, missing stock sizes and unsupported Scope/SPX
+remain explicit. See [procedure](MARKET_DATA_PROOF.md) and
+[installed validation](MARKET_DATA_PROOF_VALIDATION.json). No workspace provider
+calls, credentials access, subagents, dependency changes or hosted CI were used.
+
 ## Native two-play lifecycle and continuous delivery: 2026-10-26 UTC
 
 Starting local/remote feature HEAD 4a66f30564ba3e3f8dcb2dcb45b73a115bd9c143.

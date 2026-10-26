@@ -6,6 +6,8 @@ No premium prices are plotted on an underlying axis; no touch implies a fill.
 
 from decimal import Decimal
 
+from app.web.mixed_view import price_text
+
 
 def trade_rail(position):
     if not position:
@@ -44,10 +46,10 @@ def trade_rail(position):
             group = groups[-1]
             group["positions"].append(x)
             group["position"] = sum(group["positions"]) / len(group["positions"])
-            group["labels"].append(f"{label} {value.normalize():f}")
+            group["labels"].append(f"{label} {price_text(value)}")
         else:
             groups.append(
-                {"position": x, "positions": [x], "labels": [f"{label} {value.normalize():f}"]}
+                {"position": x, "positions": [x], "labels": [f"{label} {price_text(value)}"]}
             )
     previous = None
     for group in groups:

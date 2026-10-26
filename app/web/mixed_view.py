@@ -8,6 +8,17 @@ from zoneinfo import ZoneInfo
 from app.mixed.observer import history_chart
 
 
+def price_text(value):
+    """Keep significant price precision, with cents and no decimal padding noise."""
+    if value is None:
+        return "Unavailable"
+    number = Decimal(str(value))
+    if not number.is_finite():
+        return "Unavailable"
+    whole, _, fraction = format(number, "f").partition(".")
+    return whole + "." + fraction.rstrip("0").ljust(2, "0")
+
+
 def evidence_id(value):
     return "record-" + hashlib.sha256(str(value).encode()).hexdigest()
 

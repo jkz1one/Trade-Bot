@@ -1,6 +1,19 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.128. Native portfolio continuation, 2026-10-26 UTC.
+Version 1.129. Bounded current-data proof and price formatting, 2026-10-26 EDT.
+
+The user wants simulated trades driven by real incoming data in this bot and on
+the existing dashboard. No separate brokerage account is required. A local
+virtual-cash ledger is implementation storage, not a new external account.
+The connected simulator is not yet running; offline lifecycle completion and a
+frozen UI deployment do not satisfy that goal.
+
+[Today's bounded data check](MARKET_DATA_PROOF.md) reuses the confirmed installed
+image, captures three sets of SPY/QQQ quotes and known October 26 option samples,
+and reports source-clock advancement, freshness, sizes and remaining restrictions.
+This is prepared and tested offline; fresh host results have not been supplied.
+The price display removes trailing decimal padding without changing stored stops
+or targets. The new formatting release still needs a guarded dashboard refresh.
 
 The [native two-play implementation](TWO_PLAY_IMPLEMENTATION.md) connects up to two
 simultaneous PAPER plays through one owner and bankroll: atomic capacity/funds
@@ -9,7 +22,7 @@ strategy/model receipts, restart recovery and sequential shared selection. V2 is
 explicit enrollment; old single-play databases and frozen fixtures retain their
 original protocol and IDs. [Installed proof](TWO_PLAY_NATIVE_PROOF.json) records
 the completed offline checks. This supersedes the isolated capacity/accounting
-checkpoints; no host population has been migrated or activated.
+checkpoints; no connected trading population has been migrated or activated.
 
 The UI now supports two complete play cards with a compact selector and preserves
 the selected play/tab/disclosures/scroll during polling. All lower tabs retain the
@@ -23,12 +36,14 @@ and Scope/SPX connected mapping remain unresolved. Browser visuals and fresh,
 ongoing market-open host acceptance remain pending. Do not call the connected
 engine ready or deploy/activate PAPER on the strength of offline checks.
 
-The host dashboard remains confirmed at d2092f1 with 259 matching files and three
-frozen fills, based on supplied operator output. The new release is not deployed.
-[Acceptance instructions](TWO_PLAY_ACCEPTANCE.md) prepare a separate ui-review-v3
-and preserve both older fixtures plus the already-used before-panel-balance
-rollback container. LIVE stays disabled. No broker/provider/model calls,
-credentials access, dependency changes, hosted CI or production changes occurred.
+The operator's October 26 output confirms acabf4a deployed with 283 matching files,
+two native simulated fills, health OK and authenticated frozen ui-review-v3. The
+startup resets cleared during retries. The previous d2092f1 reader is retained as
+before-two-play. Do not rerun V3 prepare/activate. The supplied browser screenshot
+confirms the two selectors/card display and identifies the stop-formatting defect;
+it does not establish full browser acceptance. LIVE stays disabled. No provider,
+model or trading worker was started. No workspace credentials access, dependency
+changes, hosted CI or remote service changes occurred during implementation.
 
 The [Data Stream/dashboard release](MIXED_DATA_STREAM.md) adds retained quote/event
 records inside the existing detail tabs, clearer average-entry/bid/ask/P&L display,
