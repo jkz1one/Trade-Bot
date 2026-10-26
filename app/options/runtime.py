@@ -359,11 +359,13 @@ class OptionRuntime:
             self.task = asyncio.create_task(self._cycle(slot, frame))
         return result
 
-    async def run(self, stop):
+    async def run(self, stop, *, ready=None):
         if self.running:
             raise ExecutionBlocked("OPTION_RUNTIME_ALREADY_RUNNING")
         if type(stop) is not asyncio.Event:
             raise ValueError("Explicit runtime shutdown event required")
+        if ready is not None and type(ready) is not asyncio.Event:
+            raise ValueError("Explicit first-tick readiness event required")
         self.stop = stop
         self.running = True
         failed = False
@@ -387,6 +389,8 @@ class OptionRuntime:
                 )
             while not stop.is_set():
                 await self.tick()
+                if ready is not None:
+                    ready.set()
                 try:
                     await asyncio.wait_for(stop.wait(), self.policy.tick_seconds)
                 except TimeoutError:

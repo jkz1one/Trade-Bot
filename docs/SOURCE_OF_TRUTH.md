@@ -1,6 +1,17 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.132. Connected simulation wiring checks, 2026-10-26 EDT.
+Version 1.133. Coordinated simulation startup and restart, 2026-10-26 EDT.
+
+The [coordinated runner](CONNECTED_RUNTIME.md) now reopens the enrolled native
+owner and continuous collector under their existing leases. The first runtime
+tick precedes held-instrument collection, including recovery of durable fills
+not yet journaled. Shared failure/shutdown fencing drains both components before
+lease release. A read-only check rejects missing enrollment, configuration drift
+and frozen review populations. Restart preserves cash, exact plays and delivery
+sequence; it never resumes entry or resets a bankroll. Installed offline evidence
+is in CONNECTED_RUNTIME_PROOF.json. Host enrollment/configuration, missing feed
+inputs, data eligibility and dashboard activation remain unfinished. No server,
+provider, model, credentials, dependencies or CI changes occurred.
 
 [Connected simulation work](CONNECTED_SIMULATION.md) now checks collector/owner
 configuration together before opening state or credentials. Expired unheld

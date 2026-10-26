@@ -24,8 +24,10 @@ python -I -m app.mixed.connected_check \
   --directory ABSOLUTE_FEED_DIRECTORY
 ```
 
-These are interface placeholders, not a host deployment command. The complete
-reviewed configuration and guarded launch procedure remain to be prepared.
+These are interface placeholders, not a host deployment command. A separately
+implemented [coordinated runtime](CONNECTED_RUNTIME.md) now reopens an enrolled
+owner and collector with first-tick recovery, shared shutdown and retained leases.
+Complete reviewed host configuration and deployment remain to be prepared.
 The feed CLI keeps its explicit --create/--run semantics; default validation
 does not read providers, and wiring failure returns code 2 before opening state.
 
@@ -43,8 +45,9 @@ Connection checks expose those omissions for enrolled strategies; do not silentl
 disable a family or describe those feed paths as completed.
 
 Complete reviewed contract and data-eligibility binding, appropriate dynamic
-candidate updates, missing strategy inputs, an operational launch/restart path,
-and the dashboard switch to the running journal. Preserve old review fixtures.
+candidate updates, missing strategy inputs, operational enrollment/deployment,
+and the dashboard switch to the running journal. The bounded coordinated runner
+now supplies the existing-owner launch/restart path. Preserve old review fixtures.
 Existing risk/protection/recovery rules remain authoritative. No fresh sample can
 by itself fill missing entitlement, stock size or contract terms.
 

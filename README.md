@@ -11,6 +11,11 @@ fresh stock/option responses at capture. The stop/target formatting fix is also
 deployed. Full contract terms, entitlement and connected simulator activation
 remain unresolved; do not rerun the completed dashboard refresh.
 
+The [coordinated simulation runner](docs/CONNECTED_RUNTIME.md) now supports bounded
+startup/shutdown and restart of an enrolled native owner and collector. Offline
+checks preserve two held plays and one bankroll through recovery. Operational
+configuration, complete strategy feeds and host activation remain pending.
+
 ## Offline development checks
 
 Use the [isolated options test procedure](docs/OPTIONS_TESTING.md) to verify an

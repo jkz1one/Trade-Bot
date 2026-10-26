@@ -1,5 +1,32 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Coordinated simulation startup and restart: 2026-10-26 EDT
+
+Starting feature HEAD 8b7a4d8aa18ad9a38523bf423766a8bcfa2f1234. A bounded installed
+runner now joins the existing native owner and collector. It verifies persisted
+configuration, rejects frozen replay activation, preserves both leases through
+cleanup and starts held collection only after the runtime's first reconciliation
+tick. Failures immediately fence entry, drain/cancel both tasks and return nonzero.
+No account enrollment, balance reset, automatic resume or dashboard change.
+
+Offline fixtures cover two actual native positions across restarts, original play
+identities and entries, no duplicate fills, unchanged cash, retained feed sequence,
+and a crash between venue fills and journal reconciliation. They also cover checks
+without mutation/credentials, configuration drift, duplicate ownership, frozen
+reviews, missing enrollment, early exits, component errors, forced shutdown,
+cancellation and first-tick failure. See CONNECTED_RUNTIME.md and its installed
+proof for final validation: 101 installed Python cases passed with all 285 app
+files identical in source, wheel and installation. Ruff and diff checks pass.
+An initial test incorrectly attempted direct entry
+after strategy enrollment; it was corrected to use the native selection path.
+No production admission rule was relaxed to make the fixture pass.
+
+The operator still runs a653cc7 frozen V3. Host configuration/deployment, Swing/
+Scope inputs, reviewed data/contract binding, candidate replacement and dashboard
+activation remain pending. No new collection is needed for continued offline work.
+No provider/model calls, credentials access, dependencies, subagents, hosted CI or
+host changes occurred. Main and PR #1's open/draft status are preserved.
+
 ## Connected simulation wiring checks: 2026-10-26 EDT
 
 Starting feature HEAD 0b3e51d87fe769fe54894441feeb24ba63920801. Collector startup

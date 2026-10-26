@@ -5,6 +5,7 @@ import asyncio
 import json
 import os
 import signal
+from contextlib import contextmanager
 from pathlib import Path
 
 from app.domain.models import utc_now
@@ -130,7 +131,9 @@ def initialize(directory, settings, *, clock=utc_now):
     }
 
 
-async def run(directory, stop, *, clock=utc_now):
+@contextmanager
+def existing_runtime(directory, *, clock=utc_now):
+    """Reopen the native owner and retain its lease through all runtime cleanup."""
     directory = Path(directory)
     if not directory.is_absolute():
         raise ValueError("Explicit absolute existing population directory required")
@@ -145,6 +148,11 @@ async def run(directory, stop, *, clock=utc_now):
     ) as engine:
         coordinator = _coordinator(engine, settings, False, clock)
         runtime = OptionRuntime(coordinator, settings.runtime)
+        yield runtime, settings
+
+
+async def run(directory, stop, *, clock=utc_now):
+    with existing_runtime(directory, clock=clock) as (runtime, settings):
         await runtime.run(stop)
     return {
         "status": "STOPPED",
