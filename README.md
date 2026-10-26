@@ -18,8 +18,9 @@ configuration, complete strategy feeds and host activation remain pending.
 
 Optional [pre-open Swing history transport](docs/SWING_HISTORY_FEED.md) now retains
 daily/hourly bars across collector restart. [Native original source/seed preparation](docs/SWING_SOURCE_BINDING.md)
-now preserves exact inputs and blocked results. Fresh catalyst/metadata delivery
-and runtime-frame assembly remain unfinished; entitlement stays unknown.
+now preserves exact inputs and blocked results. [Runtime assembly and expiry routing](docs/SWING_RUNTIME_DELIVERY.md)
+now combine originals with explicit current evidence and retain quotes when inputs
+are missing. The catalyst provider is still absent; entitlement stays unknown.
 
 ## Offline development checks
 

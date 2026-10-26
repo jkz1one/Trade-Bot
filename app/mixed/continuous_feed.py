@@ -11,6 +11,7 @@ import sqlite3
 from datetime import timedelta
 from pathlib import Path
 from typing import Literal
+from zoneinfo import ZoneInfo
 
 from jsonschema.exceptions import ValidationError as SchemaError
 from pydantic import Field
@@ -105,7 +106,20 @@ def planned(policy, held, now, window, *, cycle):
     ), tuple(options.values())
 
 
-def normalize(policy, schemas, captured, catalog, held, *, sequence, now, history_issues=()):
+def normalize(
+    policy,
+    schemas,
+    captured,
+    catalog,
+    held,
+    *,
+    sequence,
+    now,
+    history_issues=(),
+    source_settings=None,
+    swing_sources=None,
+    swing_evidence=None,
+):
     """A successful transport never upgrades unknown data into execution authority."""
     captured = CaptureResult.model_validate(captured.model_dump())
     if (
@@ -208,10 +222,9 @@ def normalize(policy, schemas, captured, catalog, held, *, sequence, now, histor
             for m in metadata
             if m.instrument.instrument_id in candidate_ids
             and m.instrument.contract.underlying == symbol
+            and m.instrument.contract.expiration
+            == now.astimezone(ZoneInfo("America/New_York")).date()
         )
-        expiries = {m.instrument.contract.expiration for m in items}
-        if len(expiries) > 1:
-            raise ValueError("One reviewed candidate expiry per underlying required")
         if items:
             inventories.append(
                 OptionInventory(
@@ -226,8 +239,44 @@ def normalize(policy, schemas, captured, catalog, held, *, sequence, now, histor
                     contracts=items,
                 )
             )
+    frame = DegenFrame(
+        portfolio_version="portfolio-frame-v2",
+        stocks=tuple(StockCycleInput(quote=q) for q in stocks),
+        quotes=candidate_quotes,
+        held_quotes=held_quotes,
+        underlyings=underlyings,
+        histories=histories,
+        inventories=tuple(inventories),
+    )
+    if source_settings is not None:
+        if (
+            source_settings.limits.population_id != policy.population_id
+            or source_settings.stock_policy is None
+            or source_settings.stock_policy.instruments != policy.stocks
+        ):
+            raise ValueError("Matching runtime owner and stock universe required")
+        if (
+            source_settings.stock_policy.swing is not None
+            or source_settings.swing_policy is not None
+        ):
+            from app.mixed.swing_binding import policy_from_settings
+            from app.mixed.swing_delivery import assemble
+
+            frame, missing = assemble(
+                frame,
+                swing_sources,
+                policy_from_settings(source_settings, policy.candidates),
+                metadata,
+                swing_evidence,
+                now=now,
+            )
+            issues.extend(missing)
+    elif swing_sources is not None or swing_evidence is not None:
+        raise ValueError("Swing delivery requires enrolled runtime settings")
     cycle = bool(histories) and len(stocks) == len(policy.stocks) and not issues
-    return PortfolioRuntimePacket(
+    if not cycle:
+        frame = DegenFrame.model_validate(frame.model_dump() | {"histories": (), "inventories": ()})
+    packet = PortfolioRuntimePacket(
         population_id=policy.population_id,
         sequence=sequence,
         recorded_at=now,
@@ -239,16 +288,35 @@ def normalize(policy, schemas, captured, catalog, held, *, sequence, now, histor
             if isinstance(i, OptionInstrument)
             and i.contract.underlying not in {s.symbol for s in policy.stocks}
         ),
-        frame=DegenFrame(
-            portfolio_version="portfolio-frame-v2",
-            stocks=tuple(StockCycleInput(quote=q) for q in stocks),
-            quotes=candidate_quotes,
-            held_quotes=held_quotes,
-            underlyings=underlyings,
-            histories=histories if cycle else (),
-            inventories=tuple(inventories) if cycle else (),
-        ),
+        frame=frame,
     )
+    return bounded_delivery(packet)
+
+
+def bounded_delivery(packet):
+    """Oversized strategy context must not make held-market delivery unreadable."""
+    from app.options.runtime import MAX_PACKET_BYTES
+
+    if len(packet.model_dump_json().encode()) <= MAX_PACKET_BYTES:
+        return packet
+    frame = packet.frame.model_dump() | {
+        "histories": (),
+        "inventories": (),
+        "swing": (),
+        "swing_batches": (),
+        "stocks": tuple(StockCycleInput(quote=s.quote) for s in packet.frame.stocks),
+    }
+    packet = PortfolioRuntimePacket.model_validate(
+        packet.model_dump()
+        | {
+            "kind": "MARKET",
+            "frame": frame,
+            "coverage_issues": (*packet.coverage_issues, "RUNTIME_STRATEGY_PACKET_CAPACITY"),
+        }
+    )
+    if len(packet.model_dump_json().encode()) > MAX_PACKET_BYTES:
+        raise ValueError("Market evidence exceeds runtime packet capacity")
+    return packet
 
 
 def available_quotes(schemas, call, raw, *, issues):
@@ -422,7 +490,16 @@ class ContinuousFeed:
 
         sync_directory(self.directory)
 
-    async def tick(self, *, now, held=(), window=None, reader=collect):
+    async def tick(
+        self,
+        *,
+        now,
+        held=(),
+        window=None,
+        reader=collect,
+        source_settings=None,
+        swing_evidence=None,
+    ):
         now = clock(now)
         last = self.db.execute("SELECT * FROM attempts ORDER BY sequence DESC LIMIT 1").fetchone()
         from datetime import datetime
@@ -515,6 +592,13 @@ class ContinuousFeed:
                 except (ValueError, TypeError, ArithmeticError, SchemaError):
                     # Unavailable history must not discard usable held quotes.
                     history_issues = ("SWING_HISTORY_UNAVAILABLE",)
+            bound = None
+            if source_settings is not None and self.policy.swing_history is not None:
+                bound = self.load_swing_sources(
+                    source_settings,
+                    captured.collected_at.astimezone(ZoneInfo("America/New_York")).date(),
+                    now=captured.collected_at,
+                )
             packet = normalize(
                 self.policy,
                 self.schemas,
@@ -524,6 +608,9 @@ class ContinuousFeed:
                 sequence=sequence,
                 now=captured.collected_at,
                 history_issues=history_issues,
+                source_settings=source_settings,
+                swing_sources=bound,
+                swing_evidence=swing_evidence,
             )
 
             def quotes(frame):
@@ -690,7 +777,12 @@ class ContinuousFeed:
     async def run(self, stop, *, clock_source, held_source, calendar, source_settings=None):
         while not stop.is_set():
             now = clock(clock_source())
-            await self.tick(now=now, held=held_source(), window=calendar.current_window(now))
+            await self.tick(
+                now=now,
+                held=held_source(),
+                window=calendar.current_window(now),
+                source_settings=source_settings,
+            )
             if source_settings is not None and self.policy.swing_history is not None:
                 self.bind_swing_sources(source_settings, now=clock_source())
             try:

@@ -1,14 +1,27 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.135. Native Swing source preparation, 2026-10-26 EDT.
+Version 1.136. Swing runtime assembly and contract routing, 2026-10-26 EDT.
+
+[Runtime assembly](SWING_RUNTIME_DELIVERY.md) now joins verified original Swing
+sources with exact current metadata/quotes and explicit typed catalysts. Degen
+inventories receive same-day expiries while Swing and held quotes remain covered.
+Missing inputs produce MARKET packets with explicit reasons and usable protection
+quotes; no partial strategy universe is silently enabled. Native catalyst gates
+remain authoritative. The collector loads retained source bindings on each tick;
+the installed run path still has no catalyst provider and supplies none. Diagnostic
+and packet-capacity handling preserve readable quote delivery. See
+SWING_RUNTIME_DELIVERY_PROOF.json for installed offline validation. This is a slice
+end, not a collection-forced stop. More offline coding remains possible. The host
+is unchanged and connected simulation is inactive.
 
 [Native source binding](SWING_SOURCE_BINDING.md) now prepares exact stock sources,
 single option seeds and complete batch roots through existing validators/builders.
 The collector retains one original result per session, including unknown-evidence
 blockers, and revalidates it on restart without restamping or rewriting. Current
-normalized history remains UNKNOWN and therefore blocked. Fresh catalyst/metadata
-delivery, Degen/Swing routing, runtime-frame assembly and connected carry-date
-input remain unfinished, alongside Scope, eligibility, candidates and host setup.
+normalized history remains UNKNOWN and therefore blocked. Current metadata and
+frame assembly now have the delivery path above. Catalyst provider/provenance and
+connected carry-date input remain unfinished, alongside Scope, eligibility,
+candidates and host setup.
 See SWING_SOURCE_BINDING_PROOF.json for installed offline evidence. Publication
 is a slice end; additional coding can continue without another collection run.
 
@@ -18,7 +31,7 @@ history snapshots. It preserves clocks and UNKNOWN entitlement, reserves quote
 read capacity, retains usable required quotes when optional history fails, and
 reuses history across restart. Legacy collector hashes remain unchanged. Installed
 offline evidence is in SWING_HISTORY_FEED_PROOF.json. This is history transport,
-not completed Swing signal delivery: fresh catalyst/metadata and frame delivery, Scope inputs,
+not completed Swing signal delivery: catalyst ingestion/provenance, Scope inputs,
 contract/data eligibility, candidate replacement and host setup still need work.
 Actual daily/hourly responses are unverified. More offline coding remains possible;
 publication is a slice end, not a stop forced by missing collection. No server or
@@ -38,9 +51,9 @@ provider, model, credentials, dependencies or CI changes occurred.
 [Connected simulation work](CONNECTED_SIMULATION.md) now checks collector/owner
 configuration together before opening state or credentials. Expired unheld
 candidates are retired from reads; held identities remain covered. This is not
-activation. Runtime delivery still lacks bound Swing sources/catalysts and
-Scope SPX/context inputs; the optional history cache above does not close those
-gaps. The earlier statement that feed integration was complete
+activation. Runtime delivery now has typed Swing source/catalyst assembly, but still lacks
+the catalyst provider and Scope SPX/context inputs; the optional history cache
+does not close those gaps. The earlier statement that feed integration was complete
 applied only to the implemented SPY/QQQ quote/intraday transport. Complete strategy
 feed coverage and guarded operational launch remain work, alongside explicit
 contract/entitlement/stock-size evidence. The operator is unavailable on the host

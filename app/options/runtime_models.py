@@ -269,7 +269,7 @@ class MixedRuntimePacket(ScopeRuntimePacket):
 
 class PortfolioRuntimePacket(MixedRuntimePacket):
     version: Literal["mixed-normalized-portfolio-v2"] = "mixed-normalized-portfolio-v2"
-    coverage_issues: tuple[Name, ...] = Field(default=(), max_length=10)
+    coverage_issues: tuple[Name, ...] = Field(default=(), max_length=64)
 
     @model_validator(mode="after")
     def explicit_portfolio(self):

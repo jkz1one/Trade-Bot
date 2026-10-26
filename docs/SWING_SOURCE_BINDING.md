@@ -6,7 +6,9 @@ standalone collector and coordinated runner pass the enrolled runtime settings
 to this step after collection. It makes no additional provider or model calls.
 
 This is source preparation, not completed strategy delivery or trading readiness.
-Fresh catalyst/contract-metadata delivery and runtime-frame assembly remain work.
+The subsequent [runtime assembly](SWING_RUNTIME_DELIVERY.md) joins verified
+originals with current metadata/quotes and explicit typed catalysts. Actual
+catalyst provider/provenance delivery remains work.
 The actual history mapper still emits UNKNOWN entitlement, so its current output
 correctly produces a BLOCKED receipt with no prepared sources or seeds.
 
@@ -68,8 +70,8 @@ and stays blocked across restart. Tests cover single derived targets, missing an
 ambiguous contracts, clocks, duplicate subjects, insufficient history, carry
 requirements and rehashed-result rejection.
 
-Still required: fresh catalyst/metadata delivery, combining prepared originals
-with current quotes in runtime packets, separate Degen/Swing contract routing,
+Runtime assembly and separate Degen/Swing expiry routing are implemented in the
+subsequent delivery slice. Still required: catalyst provider/provenance delivery,
 connected carry-date input, Scope feeds, reviewed data eligibility, dynamic
 replacement contracts and operational setup. Actual daily/hourly response
 acceptance also remains pending. The host is still the a653cc7 frozen dashboard.

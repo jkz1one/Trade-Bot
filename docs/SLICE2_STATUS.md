@@ -1,5 +1,29 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Swing runtime assembly and expiry routing: 2026-10-26 EDT
+
+Starting feature HEAD 76b1be0136e470f109a3ac8e39879bdded3de456. Collector normalization
+now loads verified retained originals and joins stock sources, single seeds or
+complete batches to exact current metadata/quotes and explicit typed catalysts.
+Degen inventories select the current New York expiry; later Swing and held books
+remain covered. Missing required inputs publish MARKET with explicit blockers,
+preserving available protection quotes. Unknown/stale catalyst eligibility remains
+with native gates. Future catalyst clocks cannot enter the runtime packet.
+Diagnostic capacity and oversized strategy fallback preserve readable delivery.
+No enrollment, account, execution authority or old packet hash is changed.
+
+Final validation: 201 installed Python cases passed; all 288 application files
+match source, wheel and installation. Ruff and diff checks pass.
+SWING_RUNTIME_DELIVERY_PROOF.json records the final installed validation. The
+installed run path still has no catalyst provider/provenance adapter and supplies
+no catalyst records. Current UNKNOWN history remains blocked. Connected carry-date
+input, Scope, data/contract eligibility, candidate replacement and guarded host
+setup remain unfinished. The host remains a653cc7 frozen V3; no connected trading
+was activated. Stopping reason after publication: **slice end**, with more offline
+coding available. No provider/model/credential access, dependency change, subagent,
+hosted CI or host change. See SWING_RUNTIME_DELIVERY.md for precise interfaces and
+limitations.
+
 ## Native Swing source preparation: 2026-10-26 EDT
 
 Starting feature HEAD 89076c6e118e8574c202639ee1a9a12221a97a4b. Native source binding
