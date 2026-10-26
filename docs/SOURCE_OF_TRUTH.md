@@ -1,6 +1,14 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.129. Bounded current-data proof and price formatting, 2026-10-26 EDT.
+Version 1.130. Premarket evidence and dashboard startup diagnostics, 2026-10-26 EDT.
+
+The operator's first current-data check completed all three samples: SPY/QQQ
+equity quotes were fresh and their clocks advanced. Options still carried Friday
+timestamps during premarket. The dceb64e price refresh subsequently passed file
+and fixture checks, then failed its six startup probes and rolled back to acabf4a.
+The helper now waits up to approximately 90 seconds, checks container liveness,
+and preserves startup logs before rollback. The previous failure's cause is not
+established. Connected simulation remains inactive. See MARKET_DATA_PROOF.md.
 
 The user wants simulated trades driven by real incoming data in this bot and on
 the existing dashboard. No separate brokerage account is required. A local
@@ -11,7 +19,7 @@ frozen UI deployment do not satisfy that goal.
 [Today's bounded data check](MARKET_DATA_PROOF.md) reuses the confirmed installed
 image, captures three sets of SPY/QQQ quotes and known October 26 option samples,
 and reports source-clock advancement, freshness, sizes and remaining restrictions.
-This is prepared and tested offline; fresh host results have not been supplied.
+The first premarket host results are supplied; regular-session results are pending.
 The price display removes trailing decimal padding without changing stored stops
 or targets. The new formatting release still needs a guarded dashboard refresh.
 

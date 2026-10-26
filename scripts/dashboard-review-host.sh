@@ -4,6 +4,7 @@ set -euo pipefail
 [[ "$EUID" == 0 ]] || { echo 'Run on the Trade-Bot server as root.' >&2; exit 1; }
 review_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$review_root"
+source "$review_root/scripts/dashboard-readiness.sh"
 [[ -z "$(git status --porcelain)" ]] || { echo 'Clean release checkout required.' >&2; exit 1; }
 review_release="$(git rev-parse HEAD)"
 review_image="trade-bot-dashboard:$review_release"
@@ -127,6 +128,7 @@ PY
     docker rename trade-bot-dashboard "$review_backup"
     rollback() {
       trap - ERR INT TERM
+      preserve_dashboard_failure trade-bot-dashboard || true
       docker rm -f trade-bot-dashboard >/dev/null 2>&1 || true
       docker rename "$review_backup" trade-bot-dashboard
       docker start trade-bot-dashboard
@@ -146,8 +148,7 @@ PY
       --mount type=bind,src=/etc/trade-bot/dashboard_password,dst=/run/secrets/dashboard_password,readonly \
       -e TRADER_LIVE_ENABLED=false "$review_image" \
       python -I -c 'import json, uvicorn; from pathlib import Path; from app.web.options import create_options_app; m=json.loads(Path("/data/review.json").read_text()); app=create_options_app("/data/options.db", m["population_id"], "/run/secrets/dashboard_password", mixed=True, review_at=m["as_of"]); uvicorn.run(app, host="0.0.0.0", port=8790, access_log=False, log_level="warning")'
-    curl -fsS --retry 5 --retry-all-errors --retry-delay 2 --max-time 5 \
-      http://127.0.0.1:8790/healthz
+    wait_for_dashboard trade-bot-dashboard http://127.0.0.1:8790/healthz
     [[ "$(curl -sS --max-time 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:8790/)" == 401 ]]
     docker exec -i trade-bot-dashboard python -I - <<'PY'
 import base64, json, urllib.request

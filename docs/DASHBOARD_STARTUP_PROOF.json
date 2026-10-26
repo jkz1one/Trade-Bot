@@ -1,0 +1,45 @@
+{
+  "version": "dashboard-startup-proof-v1",
+  "parent": "dceb64e44e47caf62b5e4b61428d99ba0c0f0c59",
+  "date": "2026-10-26",
+  "offline_behavior_tests_passed": 6,
+  "real_docker_used": false,
+  "provider_calls": 0,
+  "application_files_unchanged": 283,
+  "source_wheel_installed_identical": true,
+  "prior_application_validation": "MARKET_DATA_PROOF_VALIDATION.json",
+  "shell_syntax": "PASS",
+  "lint": "PASS",
+  "checks": [
+    "cold startup beyond six attempts",
+    "bounded never-ready failure",
+    "stopped container",
+    "OOM container",
+    "restarting container",
+    "private state and log preservation"
+  ],
+  "script_sha256": {
+    "scripts/dashboard-readiness.sh": "92783668648d87dde45e36080e0b2d43bce8aca02d8f2265934cc76e1b58ea1e",
+    "scripts/dashboard-review-host.sh": "670950b64ad76a3a21a6ad8d037de12a8b957cfe3039bb8321a832c12b65ac69",
+    "tests/test_dashboard_readiness.py": "c49433d21766a0fae71ee53bf27044bad5f6343653087cd705c26d653e1a3da0"
+  },
+  "host": {
+    "source": "operator-supplied output",
+    "failed_refresh": "dceb64e44e47caf62b5e4b61428d99ba0c0f0c59",
+    "rollback_reported": true,
+    "failure_cause": "UNKNOWN_NO_PRESERVED_LOGS",
+    "new_helper_executed": false
+  },
+  "market_evidence": {
+    "source": "operator-supplied report only; raw samples not inspected",
+    "directory": "/root/trade-bot-market-proof-RFotdi",
+    "samples_completed": 3,
+    "regular_session_quote_proof": false,
+    "equity_fresh_advancing": [
+      "SPY",
+      "QQQ"
+    ],
+    "option_fresh_advancing": false,
+    "connected_simulator_active": false
+  }
+}

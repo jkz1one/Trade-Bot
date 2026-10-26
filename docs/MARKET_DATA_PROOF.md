@@ -1,5 +1,23 @@
 # Current data proof and dashboard price formatting
 
+October 26 host update: the first bounded premarket capture completed all three
+samples without errors. SPY/QQQ equity clocks advanced and latest quotes were
+1.691/0.691 seconds old. Options retained Friday timestamps. This establishes
+fresh premarket equity observations, not regular-session option or trading
+acceptance. The operator then attempted the dceb64e display refresh: all 283 files
+and the fixture verified, but six health probes failed. The helper restored the
+previous acabf4a dashboard. No successful rounding deployment is claimed.
+
+The corrected helper waits up to approximately 90 seconds while requiring a
+running, nonrestarting container. It aborts on exit, restart or OOM and preserves
+bounded startup logs and sanitized container state before rollback. The actual
+reason for the earlier startup failure is unknown because its failed container
+was removed without preserving logs. Slow startup is a possibility, not a diagnosis.
+After checking out the corrected release supplied in chat, retry only
+`refresh ui-review-v3`; never rerun prepare/activate. The previous rollback was
+renamed back to trade-bot-dashboard, so the helper can safely check the expected
+acabf4a image and unused before-price-format name again.
+
 Goal: use real incoming market data to simulate trades with virtual money inside
 this bot and show them on the existing dashboard. No separate brokerage account
 is needed. The collector, simulator and dashboard still need connected acceptance

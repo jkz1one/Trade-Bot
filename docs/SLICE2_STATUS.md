@@ -1,5 +1,22 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Premarket evidence and failed refresh recovery: 2026-10-26 EDT
+
+Operator output confirms three captures completed without errors at about 08:51
+EDT. SPY/QQQ quotes were fresh with advancing source clocks (latest 1.691/0.691
+seconds old); options retained Friday timestamps before the regular session.
+No entitlement, size, regular-option or connected-simulation acceptance is inferred.
+
+The dceb64e refresh built and verified all 283 application files and the two-fill
+fixture, but all six HTTP startup attempts failed. Rollback restored the prior
+acabf4a dashboard. The failed container was deleted without preserving logs, so
+the cause is unknown. The new helper allows approximately 90 seconds for startup,
+fails early on container exit/restart/OOM and saves bounded logs plus selected
+state fields before rollback. No full inspect/environment or credentials are
+exported. Six copied offline shell-behavior tests pass using fake Docker/curl;
+the installed app bytes remain identical to the prior 149-case validated wheel.
+Host retry is pending. No workspace provider calls, dependency changes or CI.
+
 ## Current-data proof and price formatting: 2026-10-26 EDT
 
 Starting local/remote HEAD acabf4a816ef5cc674fe36d687d29351d273e469. The operator
