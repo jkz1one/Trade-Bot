@@ -93,14 +93,24 @@ class OptionsControl:
                 if now < command.issued_at
                 else ("COMMAND_EXPIRED" if now >= command.expires_at else None)
             )
-            if reason is None and command.action in {"RESUME", "RESET_LOSS_LOCK"}:
+            if reason is None and command.action == "SET_MAX_PLAYS":
+                try:
+                    from app.mixed.portfolio_controls import set_limit
+
+                    set_limit(self.engine, db, command, now)
+                except ExecutionBlocked as exc:
+                    reason = str(exc)
+            elif reason is None and command.action in {"RESUME", "RESET_LOSS_LOCK"}:
                 runtime = getattr(self.engine, "_option_runtime", None)
                 if runtime is not None and runtime.task is not None and not runtime.task.done():
                     reason = "OPTION_RUNTIME_CYCLE_IN_PROGRESS"
                 else:
                     try:
                         if command.action == "RESET_LOSS_LOCK":
-                            from app.options.loss_control import reset_reviewed
+                            if self.engine.portfolio_policy is not None:
+                                from app.mixed.portfolio_controls import reset_reviewed
+                            else:
+                                from app.options.loss_control import reset_reviewed
 
                             reset_reviewed(self.engine, db, command, now)
                         else:
@@ -119,6 +129,7 @@ class OptionsControl:
                         "UPDATE execution_operator SET revoked=1,generation=generation+1 WHERE id=1"
                     )
             result = {
+                **({"max_plays": command.max_plays} if command.max_plays is not None else {}),
                 **({"loss_family": command.loss_family} if command.loss_family is not None else {}),
                 "status": "REJECTED" if reason else "APPLIED",
                 "command_id": command.command_id,

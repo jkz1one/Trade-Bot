@@ -7,6 +7,7 @@ from typing import Annotated, Literal
 from pydantic import Field, model_validator
 
 from app.mixed.entry import StockEntryEvidence
+from app.mixed.portfolio_accounting import PortfolioHistory
 from app.options.degen import DegenScan
 from app.options.engine import clock, fingerprint
 from app.options.governor import admit_option
@@ -90,7 +91,12 @@ class EntryOpportunity(OptionRecord):
 class EntryPacket(OptionRecord):
     """Created by trusted software from admitted evidence, never from model output."""
 
-    version: Literal["option-entry-packet-v1"] = "option-entry-packet-v1"
+    version: Literal["option-entry-packet-v1", "portfolio-entry-packet-v2"] = (
+        "option-entry-packet-v1"
+    )
+    portfolio_history: "PortfolioHistory | None" = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     mode: Literal["PAPER"] = "PAPER"
     decision_id: Digest
     cycle_key: Name
@@ -108,8 +114,34 @@ class EntryPacket(OptionRecord):
 
     @model_validator(mode="after")
     def preflight(self):
+        if (self.version == "portfolio-entry-packet-v2") != (self.portfolio_history is not None):
+            raise ValueError("Explicit portfolio entry packet and original history required")
+        expected_key = "degen:" + str(int(self.as_of.timestamp()) // 300)
+        if self.portfolio_history is not None:
+            from app.mixed.accounting import reconstruct
+
+            expected_key += ":portfolio:0"
+            h = self.portfolio_history
+            projected = reconstruct(h)
+            if (
+                (
+                    h.account_id,
+                    h.population_id,
+                    projected.ledger.cash,
+                    projected.ledger.settled_cash,
+                )
+                != (
+                    self.account.account_id,
+                    self.limits.population_id,
+                    self.account.cash,
+                    self.account.settled_cash,
+                )
+                or h.captured_at != self.as_of
+                or projected.reserved_cash != self.account.reserved_cash
+            ):
+                raise ValueError("Original portfolio model account binding changed")
         if (
-            self.cycle_key != "degen:" + str(int(self.as_of.timestamp()) // 300)
+            self.cycle_key != expected_key
             or not self.as_of < self.valid_until
             or self.valid_until.timestamp() > (int(self.as_of.timestamp()) // 300 + 1) * 300
         ):
@@ -138,11 +170,23 @@ class EntryPacket(OptionRecord):
             raise ValueError("At least one entry opportunity required")
         if self.scope is not None:
             p = self.scope
+            expected_account = self.account
+            if self.portfolio_history is not None:
+                from app.mixed.portfolio_accounting import candidate_blockers, remaining_budget
+
+                budget = remaining_budget(h, projected, "SPX")
+                expected_account = self.account.model_copy(
+                    update={
+                        "daily_loss_available": budget,
+                        "total_loss_available": budget,
+                        "entry_blockers": candidate_blockers(h, projected, "SPX", ""),
+                    }
+                )
             if (
                 self.policy.scope_selection is None
                 or not self.as_of <= p.binding.evaluated_at < self.valid_until
                 or self.valid_until > p.binding.valid_until
-                or p.account != self.account
+                or p.account != expected_account
                 or p.binding.population_id != self.limits.population_id
                 or p.binding.account_id != self.limits.account_id
             ):
@@ -198,6 +242,24 @@ class EntryPacket(OptionRecord):
                 o.session,
                 now=self.as_of,
             )
+            if self.portfolio_history is not None:
+                from app.mixed.portfolio_admission import admit_portfolio_option
+
+                reviewed = admit_portfolio_option(
+                    c.proposal,
+                    o.quote,
+                    o.underlying,
+                    self.portfolio_history,
+                    o.session,
+                    now=self.as_of,
+                    reconciled=self.account.reconciled,
+                    entry_halted=self.account.entry_halted,
+                )
+                actual = OptionAdmission(
+                    **reviewed.model_dump(
+                        exclude={"policy_version", "history_hash", "proposal_hash", "play_id"}
+                    )
+                )
             if (
                 actual != c.admission
                 or actual.outcome != "APPROVED"

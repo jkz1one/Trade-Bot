@@ -45,7 +45,12 @@ def records(db, policy):
         kind = "ENTRY_MODEL"
         if "position_request" in evidence:
             kind = "MANAGEMENT_MODEL"
-            if (
+            if evidence["position_request"]["packet"]["version"] == "portfolio-position-packet-v2":
+                from app.mixed.portfolio_management import stored
+
+                request, _, _, _ = stored(db, call["source_key"])
+                entry_id = request.packet.play_id
+            elif (
                 evidence["position_request"]["packet"]["version"]
                 == "mixed-stock-position-packet-v1"
             ):
@@ -62,6 +67,12 @@ def records(db, policy):
                 entry_id = request.packet.entry.client_id
         else:
             request, _, _ = validate_stored(db, call["source_key"], evidence, usable=False)
+            if policy.mixed_owner.portfolio is not None:
+                selected = db.execute(
+                    "SELECT client_id FROM execution_portfolio_orders WHERE (source_key=? OR json_extract(approval_json,'$.inputs.scope_arbitration.cycle_key')=?) AND json_extract(intent_json,'$.side')='BUY'",
+                    (call["source_key"], call["source_key"]),
+                ).fetchone()
+                entry_id = selected[0] if selected else None
         at = datetime.fromisoformat(call["started_at"])
         if not request.packet.as_of <= at < request.packet.valid_until:
             raise ValueError("MIXED_MODEL_ATTEMPT_CLOCK_CHANGED")

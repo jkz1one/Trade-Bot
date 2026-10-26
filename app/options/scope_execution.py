@@ -25,6 +25,20 @@ ACTIVE = {"ORDER_WORKING", "POSITION_OPEN"}
 FINISHED = {"CLOSED", "ENDED_UNFILLED"}
 
 
+def order_table(db):
+    return (
+        "execution_portfolio_orders"
+        if db.execute(
+            "SELECT 1 FROM sqlite_master WHERE name='execution_portfolio_control'"
+        ).fetchone()
+        else "execution_orders"
+    )
+
+
+def approved_inputs(approval):
+    return approval["inputs"] if "history" in approval and "inputs" in approval else approval
+
+
 class ScopeExecutionRequest(OptionRecord):
     play_key: Name
     expected_revision: int = Field(strict=True, ge=1)
@@ -79,7 +93,7 @@ def prepare_review(engine, db, source_key, inputs, request, now):
     if packet["execution_blockers"]:
         raise ExecutionBlocked(";".join(packet["execution_blockers"]))
     if inputs["origin"] != "DETERMINISTIC" or any(
-        k in inputs for k in ("entry_request", "entry_result")
+        inputs.get(k) is not None for k in ("entry_request", "entry_result")
     ):
         raise ExecutionBlocked("SCOPE_DETERMINISTIC_ENTRY_REQUIRED")
     if request.arbitration_cycle is not None:
@@ -179,7 +193,7 @@ def stored_entry(db, source_key=None, *, play_key=None):
         db.execute(f"SELECT * FROM {TABLE} WHERE play_key=?", (play_key,)).fetchone()
         if play_key is not None
         else db.execute(
-            f"SELECT e.* FROM {TABLE} e JOIN execution_orders o ON o.client_id=e.client_id WHERE o.source_key=?",
+            f"SELECT e.* FROM {TABLE} e JOIN {order_table(db)} o ON o.client_id=e.client_id WHERE o.source_key=?",
             (source_key,),
         ).fetchone()
     )
@@ -205,7 +219,7 @@ def stored_entry(db, source_key=None, *, play_key=None):
         (row["play_key"],),
     ).fetchone()
     order = db.execute(
-        "SELECT source_key FROM execution_orders WHERE client_id=?", (row["client_id"],)
+        f"SELECT source_key FROM {order_table(db)} WHERE client_id=?", (row["client_id"],)
     ).fetchone()
     if (
         order is None
@@ -227,6 +241,7 @@ def stored_entry(db, source_key=None, *, play_key=None):
 
 
 def verify_native_intent(db, intent, approval):
+    approval = approved_inputs(approval)
     receipt = stored_entry(db, intent.source_key)
     if receipt is None:
         if "scope_entry" in approval or (
@@ -291,6 +306,7 @@ def verify_native_intent(db, intent, approval):
 
 
 def dispatch_review(engine, db, intent, approval, quote, underlying, now):
+    approval = approved_inputs(approval)
     from app.options.governor import admit_option
     from app.options.models import OptionProposal
     from app.options.scope_admission import reject_unlinked_scope_entry
@@ -347,11 +363,19 @@ def dispatch_review(engine, db, intent, approval, quote, underlying, now):
     effective = engine._effective_limits().model_copy(
         update={"max_contracts": min(engine.limits.max_contracts, scope_quantity_cap(quote.ask))}
     )
+    if engine.portfolio_policy is not None:
+        from app.mixed.portfolio_models import candidate_account
+
+        account = candidate_account(
+            engine, db, intent.instrument.contract.underlying, now, exclude=intent.client_id
+        )
+    else:
+        account = engine._account(db, now, exclude=intent.client_id)
     admission = admit_option(
         OptionProposal.model_validate(p["proposal"]),
         quote,
         underlying,
-        engine._account(db, now, exclude=intent.client_id),
+        account,
         effective,
         SessionWindow.model_validate(p["session"]),
         now=now,
@@ -376,18 +400,26 @@ def sync(engine, db, now):
         else []
     )
     ledger = OptionLedger.model_validate_json(engine._control(db)["ledger_json"])
+    positions = {}
+    if engine.portfolio_policy is not None:
+        from app.mixed.accounting import reconstruct
+        from app.mixed.portfolio_store import history
+
+        positions = reconstruct(history(engine, db, engine.portfolio_policy, now)).ledger.positions
     for row in rows:
         record = json.loads(row["record_json"])
         if "native_client_id" not in record:
             continue
         order = db.execute(
-            "SELECT * FROM execution_orders WHERE client_id=?", (record["native_client_id"],)
+            f"SELECT * FROM {order_table(db)} WHERE client_id=?", (record["native_client_id"],)
         ).fetchone()
         if order is None:
             raise ValueError("SCOPE_NATIVE_ORDER_REQUIRED")
         intent = OptionIntent.model_validate_json(order["intent_json"])
         verify_native_intent(db, intent, json.loads(order["approval_json"]))
         held = ledger.position and ledger.position.entry_client_id == intent.client_id
+        if engine.portfolio_policy is not None:
+            held = intent.client_id in positions
         if held:
             status = "POSITION_OPEN"
         elif order["status"] not in TERMINAL:
@@ -396,6 +428,10 @@ def sync(engine, db, now):
             filled = db.execute(
                 "SELECT 1 FROM execution_fills WHERE client_id=? LIMIT 1", (intent.client_id,)
             ).fetchone()
+            if engine.portfolio_policy is not None:
+                filled = (
+                    order["observation_json"] and json.loads(order["observation_json"])["fills"]
+                )
             status = "CLOSED" if filled else "ENDED_UNFILLED"
         if status != record["status"]:
             record["status"] = status

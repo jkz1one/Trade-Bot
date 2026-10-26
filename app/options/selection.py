@@ -199,7 +199,9 @@ def _plan(scan, inventory, policy, limits, now, *, expiration=None):
     )
 
 
-def admit_candidates(scan, plan, quotes, underlying, account, limits, session, *, now):
+def admit_candidates(
+    scan, plan, quotes, underlying, account, limits, session, *, now, portfolio_history=None
+):
     """This result is evidence. M2 re-admits the chosen fixed intent before attempt."""
     from app.options.engine import fingerprint
     from app.options.models import OptionQuote, UnderlyingQuote
@@ -256,6 +258,25 @@ def admit_candidates(scan, plan, quotes, underlying, account, limits, session, *
                 session,
                 now=now,
             )
+            if portfolio_history is not None:
+                from app.mixed.portfolio_admission import admit_portfolio_option
+                from app.options.models import OptionAdmission
+
+                reviewed = admit_portfolio_option(
+                    proposal,
+                    actual[instrument.instrument_id],
+                    underlying,
+                    portfolio_history,
+                    session,
+                    now=now,
+                    reconciled=account.reconciled,
+                    entry_halted=account.entry_halted,
+                )
+                result = OptionAdmission(
+                    **reviewed.model_dump(
+                        exclude={"policy_version", "history_hash", "proposal_hash", "play_id"}
+                    )
+                )
             candidate_id = fingerprint(
                 {
                     "scan": scan,

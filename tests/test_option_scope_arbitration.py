@@ -36,6 +36,7 @@ def shared(
     coordinator_options=None,
     carry=False,
     later_entry=False,
+    portfolio=False,
 ):
     path.mkdir(parents=True, exist_ok=True)
     ep = execution_policy() | {
@@ -57,7 +58,11 @@ def shared(
 
         ep["cost_policy"] = CostPolicy(total_budget="1", daily_budget=".1")
     with owned(
-        path, enroll=False, execution_policy_changes=ep, allowed_underlyings=("SPY", "SPX")
+        path,
+        enroll=False,
+        execution_policy_changes=ep,
+        allowed_underlyings=("SPY", "SPX"),
+        portfolio=portfolio,
     ) as (e, v, _):
         times = [AT]
         setup, selection = policies()
@@ -66,6 +71,31 @@ def shared(
             from test_option_swing_execution import settings
 
             _, swing, _ = settings(right)
+        options = dict(coordinator_options or {})
+        if portfolio:
+            from test_mixed_native_owner import changed
+            from test_mixed_selection import stock_policy
+
+            stock = stock_policy()
+            stock = changed(
+                stock,
+                instruments=tuple(
+                    changed(i, provider=e.limits.provider) for i in stock.instruments
+                ),
+                family_priority=priority,
+                paid_selection="mixed-paid-entry-v1" if costs else None,
+            )
+            options["stock_policy"] = stock
+            if options.get("entry_policy"):
+                options["entry_policy"] = changed(
+                    options["entry_policy"], mixed_selection="mixed-paid-entry-v1"
+                )
+            if costs:
+
+                async def stock_refresh(_instrument):
+                    raise ValueError("No scripted stock refresh")
+
+                options["stock_refresh"] = stock_refresh
         c = DegenCoordinator(
             e,
             setup,
@@ -78,7 +108,7 @@ def shared(
                 family_priority=priority,
                 version="shared-scope-entry-v1" if ai else "shared-scope-selection-v1",
             ),
-            **(coordinator_options or {}),
+            **options,
             swing_policy=swing,
         )
         f, context = data(right)
@@ -151,6 +181,17 @@ def shared(
                 )
             }
         )
+        if portfolio:
+            from test_mixed_selection import quote
+
+            from app.mixed.sources import StockCycleInput
+
+            combined = combined.model_copy(
+                update={
+                    "portfolio_version": "portfolio-frame-v2",
+                    "stocks": (StockCycleInput(quote=quote(now, instrument=stock.instruments[0])),),
+                }
+            )
         yield c, v, times, combined
 
 

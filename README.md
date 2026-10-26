@@ -49,11 +49,13 @@ expansion, correct Data Stream sizing, combine the active-trade dropdowns and re
 scroll-jump links. The operator confirmed deployment of d2092f1, including 259
 matching installed files and the three frozen fills. Browser visual acceptance remains pending. These changes do not connect the market feed.
 
-The [two-play accounting update](docs/TWO_PLAY_ACCOUNTING.md) adds versioned keyed
-stock/option positions, shared reservations and candidate-specific admission.
-Existing native mixed reconciliation now uses the common cash reducer. Native
-two-play preparation/dispatch, protection/recovery, feed and UI remain incomplete;
-this is not a two-play runtime release.
+The [native two-play upgrade](docs/TWO_PLAY_IMPLEMENTATION.md) now connects shared
+accounting, atomic reservations, independent execution/protection/recovery, original
+model receipts, continuous normalized delivery, two complete trade cards and signed
+0/1/2 controls. [Offline proof and acceptance](docs/TWO_PLAY_ACCEPTANCE.md) remain
+separate: metadata, entitlement, executable stock sizes, Scope feed coverage,
+browser review and market-open host acceptance are still required. Existing v1
+populations retain their original enrollment. LIVE stays disabled.
 
 ## Current product direction
 

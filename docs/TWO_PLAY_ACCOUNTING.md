@@ -1,7 +1,8 @@
 # Two-play accounting and candidate admission
 
-Status: implemented offline accounting/admission contracts; native two-play execution
-is incomplete. Starting local and remote HEAD was b901ded7a5b733075cfd643699d50543f3f3daae,
+Historical accounting checkpoint. Native integration has since continued in
+[TWO_PLAY_IMPLEMENTATION.md](TWO_PLAY_IMPLEMENTATION.md); the remaining-work statements
+below describe this earlier checkpoint, not the latest release. Starting local and remote HEAD was b901ded7a5b733075cfd643699d50543f3f3daae,
 with tree 0456a1b03d2b61661e3f44a09ccc00c082f941f3 and unchanged main
 b5359aaf396e692d2142d7e02908f1544e045ee6. PR #1 was open/draft. No applicable
 AGENTS.md was found. Work used a separate clean worktree.

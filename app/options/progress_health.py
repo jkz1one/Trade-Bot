@@ -33,8 +33,15 @@ def _underlying_ok(u, entry, limits, now):
 
 
 def _baseline(db, position, limits):
+    portfolio = (
+        db.execute(
+            "SELECT 1 FROM sqlite_master WHERE name='execution_portfolio_control'"
+        ).fetchone()
+        is not None
+    )
+    table = "execution_portfolio_orders" if portfolio else "execution_orders"
     row = db.execute(
-        "SELECT intent_json,approval_json FROM execution_orders WHERE client_id=?",
+        f"SELECT intent_json,approval_json FROM {table} WHERE client_id=?",
         (position.entry_client_id,),
     ).fetchone()
     entry = OptionIntent.model_validate_json(row[0])
@@ -44,6 +51,9 @@ def _baseline(db, position, limits):
         (entry.source_key,),
     ).fetchone()
     inputs = json.loads(original[0]) if original else {}
+    if portfolio:
+        inputs = approval["inputs"]
+        approval = inputs
     if (
         entry.side != "BUY"
         or entry.instrument.contract != position.contract
@@ -67,6 +77,16 @@ def _baseline(db, position, limits):
             (entry.client_id,),
         )
     ]
+    if portfolio:
+        observed = db.execute(
+            "SELECT observation_json FROM execution_portfolio_orders WHERE client_id=?",
+            (entry.client_id,),
+        ).fetchone()[0]
+        fills = (
+            [OptionFill.model_validate(f) for f in json.loads(observed)["fills"]]
+            if observed
+            else []
+        )
     if sum(f.quantity for f in fills) != entry.quantity:
         return entry, None
     basis = sum(f.price * f.quantity * position.contract.multiplier for f in fills)
@@ -120,6 +140,7 @@ def record(engine, db, position, quote, underlying, now):
         and quote.entitlement == "REALTIME"
         and quote.bid is not None
         and quote.bid > 0
+        and quote.bid_size is not None
         and quote.bid_size >= position.quantity
         and (quote.ask is None or quote.ask >= quote.bid)
         and _fresh(

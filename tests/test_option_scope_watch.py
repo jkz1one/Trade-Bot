@@ -46,11 +46,12 @@ def revision(engine):
 
 def ready(engine, venue, now):
     assert engine.reconcile(venue.snapshot(now), now=now)["reconciled"]
-    engine.assess(None, None, now=now)
+    if engine.portfolio_policy is None:
+        engine.assess(None, None, now=now)
 
 
 @contextmanager
-def owned(tmp_path, *, enroll=True, execution_policy_changes=None, **changes):
+def owned(tmp_path, *, enroll=True, execution_policy_changes=None, portfolio=False, **changes):
     _, limits, execution_policy = configuration()
     if execution_policy_changes:
         execution_policy = execution_policy.model_copy(update=execution_policy_changes)
@@ -62,8 +63,34 @@ def owned(tmp_path, *, enroll=True, execution_policy_changes=None, **changes):
             **changes,
         }
     )
+    portfolio_policy = None
+    if portfolio:
+        from types import SimpleNamespace
+
+        from test_mixed_native_owner import changed, settings
+
+        from app.mixed.native_models import PortfolioEnrollment
+        from app.mixed.portfolio_execution import policy as portfolio_settings
+
+        mixed = settings()[1].mixed_owner
+        mixed = changed(
+            mixed,
+            reasoning="mixed-paid-entry-v1" if costs_enabled(execution_policy) else None,
+            portfolio=PortfolioEnrollment(exposure_limit="500", index_exposure_limit="500"),
+            stocks=changed(mixed.stocks, share_step=".1", provider=limits.provider),
+        )
+        execution_policy = changed(
+            execution_policy, mixed_owner=mixed, loss_control=settings()[1].loss_control
+        )
+        portfolio_policy = portfolio_settings(
+            SimpleNamespace(policy=execution_policy, limits=limits, _closed=False)
+        )
     venue = DurableOptionVenue(
-        tmp_path / "venue.db", limits=limits, capital=execution_policy.capital
+        tmp_path / "venue.db",
+        limits=limits,
+        capital=execution_policy.capital,
+        **({"stock_limits": execution_policy.mixed_owner.stocks} if portfolio else {}),
+        portfolio_policy=portfolio_policy,
     )
     with OptionExecution.open(
         tmp_path / "options.db", limits, execution_policy, venue, now=AT, create=True
@@ -71,6 +98,10 @@ def owned(tmp_path, *, enroll=True, execution_policy_changes=None, **changes):
         ready(engine, venue, AT)
         book = ScopeWatchBook(engine, policy(), now=AT, create=True) if enroll else None
         yield engine, venue, book
+
+
+def costs_enabled(policy):
+    return policy.cost_policy is not None
 
 
 def call(book, *, f=None, key="first", selected=None, now=AT, expected=None):

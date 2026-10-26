@@ -8,7 +8,7 @@ from app.execution.engine import ExecutionBlocked
 from app.mixed.sources import StockSwingSource, geometry
 from app.options.engine import exact, fingerprint
 from app.options.governor import _fresh
-from app.options.runtime_models import MixedRuntimePacket
+from app.options.runtime_models import MixedRuntimePacket, PortfolioRuntimePacket
 
 
 def enrollment(c, policy):
@@ -18,12 +18,27 @@ def enrollment(c, policy):
         raise ValueError("Mixed runtime requires complete explicit enrollment")
 
 
-def validate_packet(c, packet):
+def validate_packet(c, packet, *, held=None):
     if not isinstance(packet, MixedRuntimePacket):
         raise ValueError("Explicit mixed runtime packet required")  # noqa: TRY004
     if c.scope_policy is None and (packet.frame.scope is not None or packet.action is not None):
         raise ValueError("Scope inputs require explicit native Scope enrollment")
     instruments = c.stock_policy.instruments
+    if getattr(c.engine, "portfolio_policy", None) is not None or held is not None:
+        from app.mixed.portfolio_selection import held_instruments
+
+        held = held_instruments(c) if held is None else held
+        allowed = {i.instrument_id: i for i in (*instruments, *held)}
+        for q in (*packet.frame.held_quotes, *(x.quote for x in packet.frame.held_stocks)):
+            if (
+                allowed.get(q.instrument.instrument_id) != q.instrument
+                or not q.source_at <= q.received_at <= packet.recorded_at
+            ):
+                raise ValueError("Exact held or pending quote identity and source clocks required")
+        symbols = {i.symbol if hasattr(i, "symbol") else i.contract.underlying for i in held}
+        for u in packet.frame.held_underlyings:
+            if u.symbol not in symbols or not u.source_at <= u.received_at <= packet.recorded_at:
+                raise ValueError("Exact held underlying identity and source clocks required")
     quotes = [x.quote for x in packet.frame.stocks]
     if len({q.instrument.instrument_id for q in quotes}) != len(quotes) or any(
         q.instrument not in instruments for q in quotes
@@ -150,8 +165,23 @@ class MixedRuntimeInputs:
                     ).fetchone()[0]
                     or 0
                 )
-                if packet.sequence != previous + 1:
+                portfolio = self.r.c.engine.portfolio_policy is not None
+                if packet.sequence <= previous or (
+                    not portfolio and packet.sequence != previous + 1
+                ):
                     raise ValueError("Mixed runtime delivery sequence gap")
+                if portfolio and packet.sequence > previous + 1:
+                    self.r.c.engine.journal.event(
+                        db,
+                        at,
+                        "PORTFOLIO_FEED_GAP",
+                        {
+                            "previous_sequence": previous,
+                            "received_sequence": packet.sequence,
+                            "missed_packets": packet.sequence - previous - 1,
+                            "continuous_coverage": False,
+                        },
+                    )
                 db.execute(
                     "INSERT INTO execution_mixed_runtime_inputs VALUES(?,?,?,?,'ACCEPTED')",
                     (packet.sequence, digest, packet.model_dump_json(), at.isoformat()),
@@ -216,6 +246,19 @@ class MixedRuntimeInputs:
         return quotes[0]
 
 
+def delivery_sequence_valid(db, sequence, previous, *, portfolio):
+    if sequence == previous + 1:
+        return True
+    return bool(
+        portfolio
+        and sequence > previous
+        and db.execute(
+            "SELECT 1 FROM execution_events WHERE kind='PORTFOLIO_FEED_GAP' AND json_extract(payload,'$.previous_sequence')=? AND json_extract(payload,'$.received_sequence')=?",
+            (previous, sequence),
+        ).fetchone()
+    )
+
+
 def stored_inputs(db, now):
     """Verify the complete delivered prefix without feed, runtime or order authority."""
     from types import SimpleNamespace
@@ -244,16 +287,34 @@ def stored_inputs(db, now):
         != "mixed-runtime-inputs-v1"
     ):
         raise ValueError("Frozen mixed runtime delivery enrollment required")
+    portfolio = c.engine.policy.mixed_owner.portfolio is not None
+    packet_type = PortfolioRuntimePacket if portfolio else MixedRuntimePacket
+    entries = []
+    if portfolio:
+        from app.mixed.portfolio_store import intent
+
+        entries = [
+            intent(r)
+            for r in db.execute(
+                "SELECT * FROM execution_portfolio_orders WHERE json_extract(intent_json,'$.side')='BUY'"
+            )
+        ]
     statuses, last = {}, None
-    for sequence, row in enumerate(
-        db.execute("SELECT * FROM execution_mixed_runtime_inputs ORDER BY sequence"), 1
-    ):
-        packet = MixedRuntimePacket.model_validate_json(row["packet_json"])
-        validate_packet(c, packet)
+    for row in db.execute("SELECT * FROM execution_mixed_runtime_inputs ORDER BY sequence"):
+        packet = packet_type.model_validate_json(row["packet_json"])
+        validate_packet(
+            c,
+            packet,
+            held=tuple(e.instrument for e in entries if e.prepared_at <= packet.recorded_at)
+            if portfolio
+            else None,
+        )
         accepted = datetime.fromisoformat(row["accepted_at"])
         if (
-            row["sequence"] != sequence
-            or packet.sequence != sequence
+            row["sequence"] != packet.sequence
+            or not delivery_sequence_valid(
+                db, packet.sequence, last.sequence if last else 0, portfolio=portfolio
+            )
             or packet.population_id != config["limits"]["population_id"]
             or fingerprint(packet) != row["packet_hash"]
             or not packet.recorded_at <= accepted <= now
@@ -266,7 +327,8 @@ def stored_inputs(db, now):
     if last is not None:
         delivered = state["feed_sequence"]
         if delivered != last.sequence and not (
-            delivered + 1 == last.sequence and row["status"] in {"ACCEPTED", "INTERRUPTED"}
+            delivery_sequence_valid(db, last.sequence, delivered, portfolio=portfolio)
+            and row["status"] in {"ACCEPTED", "INTERRUPTED"}
         ):
             raise ValueError("Mixed runtime delivery prefix changed")
         delivered_row = db.execute(

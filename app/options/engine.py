@@ -111,6 +111,9 @@ class OptionJournal(ExecutionJournal):
     ledger_type = OptionLedger
     extra_tables = frozenset(
         {
+            "execution_portfolio_control",
+            "execution_portfolio_orders",
+            "execution_portfolio_decisions",
             "execution_mixed_control",
             "execution_mixed_stock_sources",
             "execution_mixed_stock_terminals",
@@ -197,6 +200,26 @@ class OptionJournal(ExecutionJournal):
                         )
                     ],
                 )
+            if (result["config"]["policy"].get("mixed_owner") or {}).get("portfolio") is not None:
+                portfolio = db.execute(
+                    "SELECT * FROM execution_portfolio_control WHERE id=1"
+                ).fetchone()
+                result.update(
+                    mode="PORTFOLIO_PAPER_FIXTURE",
+                    ledger=None,
+                    stock_position=None,
+                    stock_protection=None,
+                    orders=[
+                        dict(r)
+                        for r in db.execute(
+                            "SELECT * FROM execution_portfolio_orders ORDER BY rowid DESC LIMIT 100"
+                        )
+                    ],
+                    stock_orders=[],
+                    portfolio_snapshot=json.loads(portfolio["snapshot_json"] or "null"),
+                    portfolio_protection=json.loads(portfolio["protection_json"]),
+                    portfolio_protocol="native-portfolio-v2",
+                )
             return result
 
 
@@ -240,6 +263,13 @@ class OptionExecution:
         ):
             raise ValueError("Exact PAPER venue/policy/calendar binding required")
         self.venue = venue
+        self.portfolio_policy = None
+        if self.policy.mixed_owner is not None and self.policy.mixed_owner.portfolio is not None:
+            from app.mixed.portfolio_execution import policy as portfolio_policy
+
+            self.portfolio_policy = portfolio_policy(self)
+        if venue.portfolio_policy != self.portfolio_policy:
+            raise ValueError("Portfolio venue requires matching native owner enrollment")
         self.calendar = XNYSCalendar()
         config = {
             "capital": str(self.policy.capital),
@@ -284,10 +314,22 @@ class OptionExecution:
             from app.mixed.native_store import enroll as enroll_mixed
 
             enroll_mixed(self, db, now, create=create)
+            if self.portfolio_policy is not None:
+                from app.mixed.portfolio_store import enroll as enroll_portfolio
+
+                enroll_portfolio(self, db, self.portfolio_policy, now, create=create)
         if create:
             self.journal.enable_restore_fence(now=now)
 
     def refresh_loss_control(self, *, now):
+        if self.portfolio_policy is not None:
+            from app.mixed.portfolio_loss import refresh as refresh_portfolio
+
+            with self.journal.write() as db:
+                self._control(db)
+                return refresh_portfolio(self, db, self.portfolio_policy, clock(now)).model_dump(
+                    mode="json"
+                )
         from app.options.loss_control import refresh
 
         with self.journal.write() as db:
@@ -343,6 +385,8 @@ class OptionExecution:
 
     @exact
     def _account(self, db, now, *, exclude=None, closing=False):
+        if self.portfolio_policy is not None:
+            raise ExecutionBlocked("EXPLICIT_PORTFOLIO_PLAY_ACCOUNT_REQUIRED")
         c = self._control(db)
         if not c["snapshot_json"] or json.loads(c["issues_json"]):
             raise ExecutionBlocked("OPTION_RECONCILIATION_REQUIRED")
@@ -455,7 +499,31 @@ class OptionExecution:
         entry_premium_protection=None,
         entry_time_protection=None,
         scope_entry=None,
+        play_id=None,
     ):
+        if self.portfolio_policy is not None:
+            from app.mixed.portfolio_options import prepare
+
+            return prepare(
+                self,
+                source_key,
+                proposal,
+                quote,
+                underlying,
+                now=now,
+                play_id=play_id,
+                origin=origin,
+                target_exit_schedule=target_exit_schedule,
+                entry_time_protection=entry_time_protection,
+                entry_premium_protection=entry_premium_protection,
+                ceiling=ceiling,
+                entry_request=entry_request,
+                entry_result=entry_result,
+                target_exit_stage=target_exit_stage,
+                scope_entry=scope_entry,
+            )
+        if play_id is not None:
+            raise ValueError("Portfolio identity requires explicit enrollment")
         now = clock(now)
         proposal = OptionProposal.model_validate(proposal.model_dump(warnings=False))
         quote = OptionQuote.model_validate(quote.model_dump(warnings=False)) if quote else None
@@ -1148,6 +1216,10 @@ class OptionExecution:
             return intent
 
     async def dispatch(self, client_id, quote, underlying=None, *, now):
+        if self.portfolio_policy is not None:
+            from app.mixed.portfolio_options import dispatch
+
+            return await dispatch(self, client_id, quote, underlying, now=now)
         admitted_monotonic = time.monotonic()
         now = clock(now)
         quote = OptionQuote.model_validate(quote.model_dump(warnings=False))
@@ -1200,6 +1272,23 @@ class OptionExecution:
             return "UNKNOWN"
 
     def _epoch(self, db):
+        if self.portfolio_policy is not None:
+            return fingerprint(
+                [
+                    dict(self._control(db)),
+                    *[
+                        dict(r)
+                        for r in db.execute(
+                            "SELECT * FROM execution_portfolio_orders ORDER BY client_id"
+                        )
+                    ],
+                    dict(
+                        db.execute(
+                            "SELECT * FROM execution_portfolio_control WHERE id=1"
+                        ).fetchone()
+                    ),
+                ]
+            )
         extra = []
         if self.policy.mixed_owner is not None:
             extra = [
@@ -1234,6 +1323,10 @@ class OptionExecution:
 
     @exact
     def reconcile(self, snapshot, *, now, _epoch=None):
+        if self.portfolio_policy is not None:
+            from app.mixed.portfolio_execution import reconcile
+
+            return reconcile(self, snapshot, now=now, epoch=_epoch)
         now = clock(now)
         with self.journal.write() as db:
             c = self._control(db)
@@ -1642,7 +1735,13 @@ class OptionExecution:
             raise ExecutionBlocked("OPTION_HEALTH_EVIDENCE_REQUIRED")
 
     @exact
-    def assess(self, quote, underlying, *, now):
+    def assess(self, quote, underlying, *, now, play_id=None):
+        if self.portfolio_policy is not None:
+            from app.mixed.portfolio_protection import assess_option
+
+            return assess_option(self, play_id, quote, underlying, now=now)
+        if play_id is not None:
+            raise ValueError("Portfolio identity requires explicit enrollment")
         if self.policy.mixed_owner is not None:
             from app.mixed.native_store import position
 
@@ -1729,7 +1828,21 @@ class OptionExecution:
             self.journal.event(db, now, "POSITION_SUPERVISED", payload)
             return payload
 
-    async def protective_tick(self, quote, underlying, *, now, stock_quotes=()):
+    async def protective_tick(
+        self, quote=None, underlying=None, *, now, stock_quotes=(), option_quotes=(), underlyings=()
+    ):
+        if self.portfolio_policy is not None:
+            from app.mixed.portfolio_protection import tick
+
+            return await tick(
+                self,
+                now=now,
+                stock_quotes=stock_quotes,
+                option_quotes=(*option_quotes, *((quote,) if quote else ())),
+                underlyings=(*underlyings, *((underlying,) if underlying else ())),
+            )
+        if option_quotes or underlyings:
+            raise ValueError("Portfolio quote collections require explicit enrollment")
         if stock_quotes and self.policy.mixed_owner is None:
             raise ValueError("Stock protection requires explicit native mixed ownership")
         result = await self.reconcile_fixture(now=now)
@@ -1825,7 +1938,13 @@ class OptionExecution:
         return {"status": status, "client_id": prepared["client_id"], "exit_reason": p.exit_reason}
 
     @exact
-    def tighten_invalidation(self, price, quote, underlying, *, now):
+    def tighten_invalidation(self, price, quote, underlying, *, now, play_id=None):
+        if self.portfolio_policy is not None:
+            from app.mixed.portfolio_protection import tighten
+
+            return tighten(self, play_id, price, quote, underlying, now=now)
+        if play_id is not None:
+            raise ValueError("Portfolio identity requires explicit enrollment")
         self.assess(quote, underlying, now=now)
         with self.journal.write() as db:
             ledger = OptionLedger.model_validate_json(self._control(db)["ledger_json"])
@@ -1860,6 +1979,10 @@ class OptionExecution:
 
     def _resume(self, db, reason, *, expected_revision, now):
         """Same revision/recovery gate inside an authenticated command transaction."""
+        if self.portfolio_policy is not None:
+            from app.mixed.portfolio_controls import resume
+
+            return resume(self, db, reason, expected_revision=expected_revision, now=now)
         if self.journal.revision(db) != expected_revision:
             raise ExecutionBlocked("OPTION_REVIEW_REVISION_CHANGED")
         account = self._account(db, now)
@@ -1904,7 +2027,14 @@ class OptionExecution:
             if position_request is None and self.policy.loss_control is not None:
                 from app.options.loss_control import model_family_reasons, refresh
 
-                state = refresh(self, db, now)
+                if self.portfolio_policy is not None:
+                    from app.mixed.portfolio_loss import refresh as portfolio_refresh
+
+                    state = portfolio_refresh(self, db, self.portfolio_policy, now).model_dump(
+                        mode="json"
+                    )
+                else:
+                    state = refresh(self, db, now)
                 reasons = list(state["reasons"]) or model_family_reasons(
                     self, db, source_key, state
                 )
@@ -1928,6 +2058,10 @@ class OptionExecution:
             raise EntryModelBlocked(blocked)
 
     def _admit_model_attempt(self, db, source_key, input_hash, now, position_request):
+        if self.portfolio_policy is not None:
+            from app.mixed.portfolio_models import admit_attempt
+
+            return admit_attempt(self, db, source_key, input_hash, now, position_request)
         if (
             self.policy.mixed_owner is not None
             and self.policy.mixed_owner.reasoning is not None
@@ -2075,6 +2209,13 @@ class OptionExecution:
             return cost
 
     def _mixed_submitting(self, db):
+        if self.portfolio_policy is not None:
+            return (
+                db.execute(
+                    "SELECT 1 FROM execution_portfolio_orders WHERE status='SUBMITTING'"
+                ).fetchone()
+                is not None
+            )
         if self.policy.mixed_owner is None:
             return False
         from app.mixed.native_store import unresolved
@@ -2082,8 +2223,31 @@ class OptionExecution:
         return unresolved(db, submitting=True)
 
     def prepare_stock(
-        self, source_key, proposal, quote=None, *, now, origin="DETERMINISTIC", close_quantity=None
+        self,
+        source_key,
+        proposal,
+        quote=None,
+        *,
+        now,
+        origin="DETERMINISTIC",
+        close_quantity=None,
+        play_id=None,
     ):
+        if self.portfolio_policy is not None:
+            from app.mixed.portfolio_execution import prepare_stock
+
+            return prepare_stock(
+                self,
+                source_key,
+                proposal,
+                quote,
+                now=now,
+                origin=origin,
+                close_quantity=close_quantity,
+                play_id=play_id,
+            )
+        if play_id is not None:
+            raise ValueError("Explicit portfolio identity requires portfolio enrollment")
         from app.mixed.native_execution import prepare
 
         return prepare(
@@ -2091,16 +2255,32 @@ class OptionExecution:
         )
 
     async def dispatch_stock(self, client_id, quote, *, now):
+        if self.portfolio_policy is not None:
+            from app.mixed.portfolio_execution import dispatch_stock
+
+            return await dispatch_stock(self, client_id, quote, now=now)
         from app.mixed.native_execution import dispatch
 
         return await dispatch(self, client_id, quote, now=now)
 
-    def assess_stock(self, quote, *, now):
+    def assess_stock(self, quote, *, now, play_id=None):
+        if self.portfolio_policy is not None:
+            from app.mixed.portfolio_protection import assess_stock
+
+            return assess_stock(self, play_id, quote, now=now)
+        if play_id is not None:
+            raise ValueError("Portfolio identity requires explicit enrollment")
         from app.mixed.native_protection import assess
 
         return assess(self, quote, now=now)
 
-    def tighten_stock_invalidation(self, price, quote, *, now):
+    def tighten_stock_invalidation(self, price, quote, *, now, play_id=None):
+        if self.portfolio_policy is not None:
+            from app.mixed.portfolio_protection import tighten
+
+            return tighten(self, play_id, price, quote, None, now=now, stock=True)
+        if play_id is not None:
+            raise ValueError("Portfolio identity requires explicit enrollment")
         from app.mixed.native_protection import tighten
 
         return tighten(self, price, quote, now=now)
@@ -2115,4 +2295,8 @@ class OptionExecution:
         if self.policy.mixed_owner is None:
             raise ExecutionBlocked("MIXED_NATIVE_OWNER_REQUIRED")
         with self.journal.read() as db:
+            if self.portfolio_policy is not None:
+                from app.mixed.portfolio_execution import selection_account
+
+                return selection_account(self, db, clock(now))
             return self._account(db, clock(now))

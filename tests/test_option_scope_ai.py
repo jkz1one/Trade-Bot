@@ -27,6 +27,7 @@ def ai_owner(
     position_policy=None,
     carry=False,
     later_entry=False,
+    portfolio=False,
 ):
     state = {}
 
@@ -77,6 +78,7 @@ def ai_owner(
         coordinator_options=options,
         carry=carry,
         later_entry=later_entry,
+        portfolio=portfolio,
     ) as owner:
         state["owner"] = owner
         c, _, times, _ = owner
@@ -97,6 +99,7 @@ def ai_owner(
                     evidence_ids=(fingerprint(request.packet.scope.model_dump(mode="json")),),
                     thesis="Fixture fixed Scope selection",
                     uncertainty="Full premium at risk",
+                    **({"stock": False} if portfolio else {}),
                 )
             else:
                 plan = SharedScopeEntryPlan.model_validate(
@@ -114,6 +117,12 @@ def ai_owner(
                         ),
                     ).model_dump(mode="json")
                     | {"version": "shared-scope-entry-plan-v1", "scope": False}
+                )
+            if portfolio and family != "SCOPE" and mode != "HOLD":
+                cls = plan_class(request.packet.policy)
+                plan = cls.model_validate(
+                    plan.model_dump()
+                    | {"version": cls.model_fields["version"].default, "stock": False}
                 )
             if carry and family != "SCOPE" and mode != "HOLD":
                 values = plan.model_dump()

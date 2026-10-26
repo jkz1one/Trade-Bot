@@ -15,7 +15,10 @@ class OptionsCommand(OptionRecord):
     command_id: str = Field(pattern=r"^[a-f0-9]{32}$")
     credential_generation: int = Field(ge=1, strict=True)
     actor: str = Field(min_length=1, max_length=80)
-    action: Literal["HALT", "RESUME", "REVOKE_KEY", "RESET_LOSS_LOCK"]
+    action: Literal["HALT", "RESUME", "REVOKE_KEY", "RESET_LOSS_LOCK", "SET_MAX_PLAYS"]
+    max_plays: int | None = Field(
+        default=None, strict=True, ge=0, le=2, exclude_if=lambda v: v is None
+    )
     loss_family: Literal["DEGEN", "SWING", "SCOPE"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -33,6 +36,8 @@ class OptionsCommand(OptionRecord):
 
     @model_validator(mode="after")
     def lifetime(self):
+        if (self.action == "SET_MAX_PLAYS") != (self.max_plays is not None):
+            raise ValueError("Exact 0/1/2 limit required only for SET_MAX_PLAYS")
         if self.loss_family is not None and self.action != "RESET_LOSS_LOCK":
             raise ValueError("A family target is valid only for a loss reset")
         if not 0 < (self.expires_at - self.issued_at).total_seconds() <= 300:

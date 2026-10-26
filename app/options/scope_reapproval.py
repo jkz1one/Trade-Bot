@@ -225,7 +225,12 @@ def review_paid_scope(
     charge = _charge(
         engine, db, model_source_key, request_hash, decision_hash, original, fresh, now
     )
-    account = engine._account(db, now)
+    if engine.portfolio_policy is not None:
+        from app.mixed.portfolio_models import candidate_account
+
+        account = candidate_account(engine, db, "SPX", now)
+    else:
+        account = engine._account(db, now)
     if (
         account.entry_halted
         or account.entry_blockers

@@ -1,27 +1,34 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.127. Adopted product direction and working delivery contract, 2026-10-25 America/New_York.
+Version 1.128. Native portfolio continuation, 2026-10-26 UTC.
 
-The latest [panel-height correction](MIXED_PANEL_BALANCE.md) gives every lower
-detail tab the same 420px default viewport, with internal scrolling and explicit
-Trades expansion. Active trade still renders one native position; multiple order
-rows are not multiple active-play cards. 27 installed Python and 19 JavaScript
-checks pass with 262 matching application files. Browser acceptance and deployment
-of this correction remain pending. The host still runs confirmed d2092f1.
+The [native two-play implementation](TWO_PLAY_IMPLEMENTATION.md) connects up to two
+simultaneous PAPER plays through one owner and bankroll: atomic capacity/funds
+reservation, full-cost accounting, independent orders/protection/exits, original
+strategy/model receipts, restart recovery and sequential shared selection. V2 is
+explicit enrollment; old single-play databases and frozen fixtures retain their
+original protocol and IDs. [Installed proof](TWO_PLAY_NATIVE_PROOF.json) records
+the completed offline checks. This supersedes the isolated capacity/accounting
+checkpoints; no host population has been migrated or activated.
 
-The user now requires up to two simultaneous PAPER plays before the first connected
-PAPER test. The [two-play implementation map](TWO_PLAY_IMPLEMENTATION.md) records
-the audited single-position assumptions, accounting invariants and remaining work.
-[Versioned accounting and admission](TWO_PLAY_ACCOUNTING.md) now reconstruct up to
-two explicitly identified stock/option holdings on one cash balance, preserve
-partial-entry reservations and independent exits/settlements, and size candidates
-against the remaining shared risk. Existing native mixed reconciliation uses the
-same cash reducer. These are accounting/admission contracts, not native two-play
-execution. Atomic native reservation, multi-play venue/preparation/dispatch,
-protection/recovery, selection/model binding, feed, migration, dashboard and admin
-integration remain incomplete. No database enrollment, migration, two-play
-deployment or PAPER activation occurred. Existing native owners remain single-play. The installed-wheel proof records 401
-deduplicated passing cases and 262 byte-identical application files.
+The UI now supports two complete play cards with a compact selector and preserves
+the selected play/tab/disclosures/scroll during polling. All lower tabs retain the
+same 420px default height. Signed/revision-bound 0/1/2 controls appear only for an
+explicit operator-inbox enrollment. Pages only read stored evidence.
+
+Continuous normalized feed transport is wired and tested offline with retained
+source clocks, held-instrument coverage, partial-batch evidence, rate budgets and
+restart/reconnect behavior. Reviewed metadata, entitlement, executable stock sizes
+and Scope/SPX connected mapping remain unresolved. Browser visuals and fresh,
+ongoing market-open host acceptance remain pending. Do not call the connected
+engine ready or deploy/activate PAPER on the strength of offline checks.
+
+The host dashboard remains confirmed at d2092f1 with 259 matching files and three
+frozen fills, based on supplied operator output. The new release is not deployed.
+[Acceptance instructions](TWO_PLAY_ACCEPTANCE.md) prepare a separate ui-review-v3
+and preserve both older fixtures plus the already-used before-panel-balance
+rollback container. LIVE stays disabled. No broker/provider/model calls,
+credentials access, dependency changes, hosted CI or production changes occurred.
 
 The [Data Stream/dashboard release](MIXED_DATA_STREAM.md) adds retained quote/event
 records inside the existing detail tabs, clearer average-entry/bid/ask/P&L display,
@@ -41,7 +48,8 @@ maximum-height cap so it follows the shared grid row. The active-trade tabs stay
 its Summary has one Exact levels and original targets disclosure. Extra scroll-jump
 links are removed. Plain-language explanations and amber negative amounts keep
 the same simulation, freshness and cost distinctions. No portfolio, engine, strategy or dependency changes. The deployed native implementation still supports one open
-position across families; the required two-play integration remains unfinished. 33 installed Python and 19 JavaScript
+position across families in its original v1 enrollment. The v2 continuation above
+adds native two-play ownership. That earlier checkpoint recorded 33 installed Python and 19 JavaScript
 checks pass with 259 matching files. Supplied operator output confirms d2092f1
 is deployed: matching image, 259 installed files, native frozen verification,
 authentication and three fills. Browser visual acceptance remains pending.

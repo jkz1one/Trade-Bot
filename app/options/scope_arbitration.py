@@ -263,7 +263,13 @@ def review_entry(engine, db, source_key, proposal, quote, inputs, now):
     policy = configuration(db)
     request = inputs.get("scope_entry") or {}
     key = request.get("arbitration_cycle") or source_key
-    if key != "degen:" + str(int(now.timestamp()) // 300):
+    expected = "degen:" + str(int(now.timestamp()) // 300)
+    valid = (
+        {expected}
+        if engine.portfolio_policy is None
+        else {expected + ":portfolio:0", expected + ":portfolio:1"}
+    )
+    if key not in valid:
         raise ExecutionBlocked("SHARED_SCOPE_CURRENT_CYCLE_REQUIRED")
     row = db.execute(
         "SELECT status,result_json FROM execution_option_opportunities WHERE cycle_key=?", (key,)

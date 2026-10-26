@@ -101,6 +101,8 @@ class MixedReplayAccount(OptionRecord):
 
     @model_validator(mode="after")
     def complete_role(self):
+        if self.execution.mixed_owner is not None and self.execution.mixed_owner.portfolio is not None:
+            raise ValueError("Historical mixed replay v1 cannot reinterpret portfolio enrollment; use the portfolio v2 protocol")
         paid = self.arm != "A"
         if (
             self.execution.mixed_owner is None

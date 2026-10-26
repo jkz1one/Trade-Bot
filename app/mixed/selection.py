@@ -244,9 +244,51 @@ def collect(c, key, frame, evidence):
                     rejected[symbol][candidate.setup_family] = ("STOCK_SOURCE_RETIRED",)
                     continue
                 try:
-                    admission, account, window = review(
-                        c.engine, db, candidate.proposal, item.quote, c.now()
-                    )
+                    if c.engine.portfolio_policy is not None:
+                        from app.mixed.governor import admit_stock
+                        from app.mixed.native_execution import session
+                        from app.mixed.portfolio_execution import selection_account
+                        from app.mixed.portfolio_loss import guard
+                        from app.mixed.portfolio_store import history
+
+                        account = selection_account(c.engine, db, c.now())
+                        h = history(c.engine, db, c.engine.portfolio_policy, c.now())
+                        window = session(c.engine, candidate.proposal.instrument, c.now())
+                        guard(
+                            c.engine,
+                            db,
+                            c.engine.portfolio_policy,
+                            c.now(),
+                            candidate.proposal.family,
+                        )
+                        admission = admit_stock(
+                            candidate.proposal,
+                            item.quote,
+                            h,
+                            window,
+                            now=c.now(),
+                            reconciled=True,
+                            entry_halted=account.entry_halted,
+                        )
+                        if admission.outcome == "APPROVED":
+                            from datetime import timedelta
+
+                            admission = admission.model_copy(
+                                update={
+                                    "approval_expires_at": min(
+                                        admission.approval_expires_at,
+                                        account.captured_at
+                                        + timedelta(
+                                            seconds=c.engine.limits.account_max_age_seconds
+                                        ),
+                                    )
+                                }
+                            )
+                    else:
+                        admission, account, window = review(
+                            c.engine, db, candidate.proposal, item.quote, c.now()
+                        )
+                        h = cash_history(c.engine, db, as_of=c.now())
                     if admission.outcome == "APPROVED":
                         accepted.append(
                             {
@@ -254,9 +296,7 @@ def collect(c, key, frame, evidence):
                                 "admission": admission.model_dump(mode="json"),
                                 "account_revision": c.engine.journal.revision(db),
                                 "snapshot_id": account.snapshot_id,
-                                "history": cash_history(c.engine, db, as_of=c.now()).model_dump(
-                                    mode="json"
-                                ),
+                                "history": h.model_dump(mode="json"),
                                 "account": account.model_dump(mode="json"),
                                 "session": window.model_dump(mode="json"),
                             }
@@ -362,9 +402,12 @@ def guard_stock(engine, db, source_key, proposal, quote, now, *, original=False)
 
     from app.mixed.governor import admit_stock
     from app.mixed.models import CashHistory
+    from app.mixed.portfolio_accounting import VERSION, PortfolioHistory
     from app.options.models import OptionAccount, SessionWindow
 
-    h = CashHistory.model_validate(raw["history"])
+    h = (
+        PortfolioHistory if raw["history"].get("version") == VERSION else CashHistory
+    ).model_validate(raw["history"])
     a = OptionAccount.model_validate(raw["account"])
     w = SessionWindow.model_validate(raw["session"])
     reviewed = admit_stock(

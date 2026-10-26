@@ -23,3 +23,7 @@
 .desk-ready #trades[data-expanded="true"]{height:auto;overflow:visible}.desk-ready #trades[data-expanded="true"]>.trades-panel{min-height:var(--detail-panel-height)}.desk-ready #trades[data-expanded="true"] .trades-body{flex:none;overflow:visible}
 .desk-ready .activity-panel:not(:has(#activity-more[aria-expanded="true"])){height:var(--detail-panel-height);overflow:auto}
 @media print{ #trades-more{display:none!important}.desk-ready .workspace>[data-panel-group],.desk-ready #data-stream>.stream-panel,.desk-ready #trades>.trades-panel,.desk-ready .activity-panel{height:auto!important;min-height:0!important;max-height:none;overflow:visible!important}.stream-console,.trades-body{overflow:visible;flex:none}}
+
+.play-selector{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}.play-selector button{font-size:12px;flex:1} [id$="trade-protection"] section{padding:0;border:0}
+
+#admin-open{margin-top:16px}#admin-dialog{max-width:480px;width:calc(100% - 32px);background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:24px}#admin-dialog::backdrop{background:#000a}#admin-dialog label{display:block;margin:16px 0}#admin-dialog input{display:block;width:100%;margin-top:6px;background:var(--raised);color:var(--text);border:1px solid var(--line);padding:12px;border-radius:6px}

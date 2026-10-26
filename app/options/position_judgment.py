@@ -14,6 +14,7 @@ from pydantic import Field, model_validator
 from app.execution.economics import CostPolicy, UsageEvidence
 from app.execution.judgment import JudgmentDiagnostics, JudgmentLimits
 from app.execution.process import _cleanup
+from app.mixed.portfolio_position import PortfolioPositionPacket
 from app.mixed.position import StockPositionPacket
 from app.options.engine import clock, fingerprint
 from app.options.models import OptionRecord
@@ -150,7 +151,7 @@ def configuration(costs, limits, position_policy):
 
 class PositionRequest(OptionRecord):
     request_id: str = Field(pattern=r"^[a-f0-9]{32}$")
-    packet: PositionPacket | StockPositionPacket
+    packet: PositionPacket | StockPositionPacket | PortfolioPositionPacket
     configuration: PositionModelConfiguration
     parent_pid: int = Field(gt=0, strict=True)
     started_monotonic: float = Field(gt=0)

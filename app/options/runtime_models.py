@@ -194,7 +194,7 @@ class _RuntimeEnvelope(OptionRecord):
 
     @model_validator(mode="after")
     def no_unenrolled_stocks(self):
-        if self.frame.stocks:
+        if self.frame.stocks or self.frame.portfolio_version is not None:
             raise ValueError("Stock inputs require separate mixed runtime enrollment")
         return self
 
@@ -257,6 +257,22 @@ class MixedRuntimePacket(ScopeRuntimePacket):
     def no_unenrolled_stocks(self):
         # Only this explicit envelope accepts shares. Legacy envelopes retain
         # their rejection, and the runtime checks the frozen native enrollment.
+        if (
+            self.frame.portfolio_version is not None
+            and self.version != "mixed-normalized-portfolio-v2"
+        ):
+            raise ValueError("Portfolio evidence requires a versioned portfolio packet")
         if self.kind != "CYCLE" and any(x.swing or x.catalyst for x in self.frame.stocks):
             raise ValueError("Only mixed CYCLE packets carry original stock sources")
+        return self
+
+
+class PortfolioRuntimePacket(MixedRuntimePacket):
+    version: Literal["mixed-normalized-portfolio-v2"] = "mixed-normalized-portfolio-v2"
+    coverage_issues: tuple[Name, ...] = Field(default=(), max_length=10)
+
+    @model_validator(mode="after")
+    def explicit_portfolio(self):
+        if self.frame.portfolio_version != "portfolio-frame-v2":
+            raise ValueError("Explicit versioned portfolio frame required")
         return self

@@ -81,10 +81,20 @@ def initialize(directory, settings, *, clock=utc_now):
         operator_key = bytes.fromhex(operator_hex)
     directory.mkdir(mode=0o700)
     _save(directory / "runtime.json", settings)
+    portfolio = None
+    if settings.execution.mixed_owner and settings.execution.mixed_owner.portfolio:
+        from types import SimpleNamespace
+
+        from app.mixed.portfolio_execution import policy as portfolio_policy
+
+        portfolio = portfolio_policy(
+            SimpleNamespace(policy=settings.execution, limits=settings.limits, _closed=False)
+        )
     venue = DurableOptionVenue(
         directory / "venue.db",
         limits=settings.limits,
         capital=settings.execution.capital,
+        portfolio_policy=portfolio,
         **(
             {"stock_limits": settings.execution.mixed_owner.stocks}
             if settings.execution.mixed_owner
@@ -102,7 +112,8 @@ def initialize(directory, settings, *, clock=utc_now):
     ) as engine:
         if not engine.reconcile(venue.snapshot(at), now=at)["reconciled"]:
             raise ValueError("Initial fixture reconciliation failed")
-        engine.assess(None, None, now=at)
+        if engine.portfolio_policy is None:
+            engine.assess(None, None, now=at)
         coordinator = _coordinator(engine, settings, True, clock)
         if operator_key is not None:
             from app.options.operator import OptionsControl

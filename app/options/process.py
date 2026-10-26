@@ -18,6 +18,7 @@ from app.execution.process import (
     FixtureProcessTimeout,
     _cleanup,
 )
+from app.mixed.portfolio_venue import PortfolioPolicy, PortfolioVenueSnapshot
 from app.mixed.stock_models import StockIntent, StockLimits
 from app.options.lifecycle import OptionIntent, OptionVenueSnapshot
 from app.options.models import Name, OptionRecord
@@ -34,6 +35,7 @@ class OptionRequest(OptionRecord):
     deadline_monotonic: float = Field(gt=0, allow_inf_nan=False)
     parent_pid: int = Field(gt=0, strict=True)
     intent: OptionIntent | None = None
+    portfolio_policy: PortfolioPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
     stock_limits: StockLimits | None = Field(default=None, exclude_if=lambda v: v is None)
     stock_intent: StockIntent | None = Field(default=None, exclude_if=lambda v: v is None)
     fault: FixtureFault = "NONE"
@@ -51,7 +53,7 @@ class OptionRequest(OptionRecord):
 
 class OptionProcessResult(OptionRecord):
     order_id: Name | None = None
-    snapshot: OptionVenueSnapshot | None = None
+    snapshot: PortfolioVenueSnapshot | OptionVenueSnapshot | None = None
 
 
 async def run_option_process(
@@ -82,6 +84,7 @@ async def run_option_process(
         intent=intent,
         stock_intent=stock_intent,
         stock_limits=venue.stock_limits,
+        portfolio_policy=venue.portfolio_policy,
         fault=venue.fault,
     )
     payload = request.model_dump_json().encode()
@@ -130,6 +133,7 @@ async def run_option_process(
                 or result.snapshot.account_id != venue.account_id
                 or result.snapshot.population_id != venue.population_id
                 or result.snapshot.stock_limits != venue.stock_limits
+                or getattr(result.snapshot, "portfolio_policy", None) != venue.portfolio_policy
             ):
                 raise FixtureProcessProtocolError("Invalid option snapshot binding")
             return result

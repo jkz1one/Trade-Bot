@@ -43,12 +43,20 @@ def review_for_execution(engine, db, key, request, result, quote, underlying, no
     for o in request.packet.opportunities:
         if o.session != engine._session(o.candidate.instrument.contract, now):
             raise ExecutionBlocked("ENTRY_SESSION_BINDING_CHANGED")
+    if engine.portfolio_policy is not None:
+        from app.mixed.portfolio_models import candidate_account
+
+        account = candidate_account(
+            engine, db, quote.instrument.contract.underlying, now, exclude=exclude
+        )
+    else:
+        account = engine._account(db, now, exclude=exclude)
     return review_entry_plan(
         request.packet,
         result.plan,
         quote=quote,
         underlying=underlying,
-        account=engine._account(db, now, exclude=exclude),
+        account=account,
         now=now,
     )
 
@@ -91,6 +99,7 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
     as_of = scans[0].evaluated_at
     scope = evidence.get("scope_candidate") if c.entry_policy.scope_selection is not None else None
     packet = EntryPacket(
+        **portfolio_packet(c, as_of),
         decision_id=fingerprint(
             {"population": c.engine.limits.population_id, "cycle": key, "configuration": config}
         ),
@@ -226,3 +235,13 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
             "candidate_id": selected.candidate_id,
         },
     )
+
+
+def portfolio_packet(c, at):
+    if c.engine.portfolio_policy is None:
+        return {}
+    from app.mixed.portfolio_store import history
+
+    with c.engine.journal.read() as db:
+        h = history(c.engine, db, c.engine.portfolio_policy, at)
+    return {"version": "portfolio-entry-packet-v2", "portfolio_history": h}

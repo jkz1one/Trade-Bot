@@ -274,6 +274,10 @@ def review_position_plan(
     An ELIGIBLE result cannot act, settle costs or clear a protection latch. Repeated
     pure calls do not consume anything. No model call or provider read occurs here.
     """
+    if getattr(packet, "version", None) == "portfolio-position-packet-v2":
+        from app.mixed.portfolio_position import review
+
+        return review(packet, plan, position=position, account=account, quote=quote, underlying=underlying, now=now)
     if getattr(packet, "version", None) == "mixed-stock-position-packet-v1":
         from app.mixed.position import review
 

@@ -22,6 +22,13 @@ def review(journal, population_id, key_file, *, now):
     key = bytes.fromhex(_secret(key_file))
     observer = OptionObserver(journal, population_id, clock=lambda: now)
     with observer.read() as db:
+        config = json.loads(
+            db.execute("SELECT config_json FROM execution_control WHERE id=1").fetchone()[0]
+        )
+        if config["policy"].get("mixed_owner") is not None:
+            from app.mixed.observer import MixedObserver
+
+            observer = MixedObserver(journal, population_id, clock=lambda: now)
         b = binding(db, key, population_id)
         if restore.status(db, restore.authority_path(Path(journal)))["status"] != "VERIFIED":
             raise ValueError("Verified restore authority required")
@@ -34,7 +41,7 @@ def review(journal, population_id, key_file, *, now):
             "revision": evidence["revision"],
             "observed_at": now.isoformat(),
             "evidence": {
-                k: evidence[k]
+                k: evidence.get(k)
                 for k in (
                     "entry",
                     "account",
@@ -42,6 +49,8 @@ def review(journal, population_id, key_file, *, now):
                     "runtime",
                     "model",
                     "position",
+                    "positions",
+                    "capacity",
                     "active_orders",
                     "loss_control",
                 )
@@ -52,7 +61,19 @@ def review(journal, population_id, key_file, *, now):
         }
 
 
-def submit(journal, review_file, key_file, action, actor, reason, *, now, ttl=60, loss_family=None):
+def submit(
+    journal,
+    review_file,
+    key_file,
+    action,
+    actor,
+    reason,
+    *,
+    now,
+    ttl=60,
+    loss_family=None,
+    max_plays=None,
+):
     journal = Path(journal)
     if not journal.is_absolute():
         raise ValueError("Absolute journal required")
@@ -78,6 +99,7 @@ def submit(journal, review_file, key_file, action, actor, reason, *, now, ttl=60
         actor=actor,
         action=action,
         loss_family=loss_family,
+        max_plays=max_plays,
         reason=reason,
         expected_revision=saved["revision"],
         issued_at=now,
@@ -112,9 +134,12 @@ def main(argv=None):
     send.add_argument("--review-file", required=True)
     send.add_argument("--key-file", required=True)
     send.add_argument(
-        "--action", choices=["HALT", "RESUME", "REVOKE_KEY", "RESET_LOSS_LOCK"], required=True
+        "--action",
+        choices=["HALT", "RESUME", "REVOKE_KEY", "RESET_LOSS_LOCK", "SET_MAX_PLAYS"],
+        required=True,
     )
     send.add_argument("--loss-family", choices=["DEGEN", "SWING", "SCOPE"])
+    send.add_argument("--max-plays", type=int, choices=[0, 1, 2])
     send.add_argument("--actor", required=True)
     send.add_argument("--reason", required=True)
     send.add_argument("--ttl", type=int, default=60)
@@ -138,6 +163,7 @@ def main(argv=None):
                 now=at,
                 ttl=args.ttl,
                 loss_family=args.loss_family,
+                max_plays=args.max_plays,
             )
     except (OSError, ValueError, KeyError, TypeError, sqlite3.Error):
         print(

@@ -28,8 +28,14 @@ def accept(venue, intent, now, deadline, parent_pid):
         orders = (*state.orders, *state.stock_orders)
         if any(o.client_id == intent.client_id for o in orders):
             raise ValueError("Attempted stock order cannot replay")
-        if any(o.status not in TERMINAL for o in orders) or state.underlying_exposures:
+        if (
+            venue.portfolio_policy is None and any(o.status not in TERMINAL for o in orders)
+        ) or state.underlying_exposures:
             raise ValueError("A cross-instrument order or exposure already exists")
+        if venue.portfolio_policy is not None:
+            from app.mixed.portfolio_venue import accepting
+
+            accepting(venue, state, intent, now)
         if not intent.prepared_at <= now < intent.approval_expires_at:
             raise ValueError("Original stock approval expired")
         if intent.side == "BUY":
@@ -79,7 +85,7 @@ def accept(venue, intent, now, deadline, parent_pid):
             }
         ), order.order_id
 
-    return venue._mutate(operation, deadline=deadline, parent_pid=parent_pid)
+    return venue._mutate(operation, deadline=deadline, parent_pid=parent_pid, intent=intent)
 
 
 def fill(venue, intent, quantity, quote, at, *, fill_id):
@@ -179,7 +185,7 @@ def fill(venue, intent, quantity, quote, at, *, fill_id):
             }
         ), receipt
 
-    return venue._mutate(operation)
+    return venue._mutate(operation, intent=intent)
 
 
 def terminal(venue, client_id, status, at):
@@ -225,7 +231,7 @@ def validate_state(state):
         or len({o.order_id for o in orders}) != len(orders)
     ):
         raise ValueError("Mixed fixture order identities must be unique and bounded")
-    if sum(o.status not in TERMINAL for o in orders) > 1:
+    if not hasattr(state, "positions") and sum(o.status not in TERMINAL for o in orders) > 1:
         raise ValueError("Mixed fixture has one unresolved order lock")
     fills = [f for o in orders for f in o.fills]
     if len({f.fill_id for f in fills}) != len(fills):

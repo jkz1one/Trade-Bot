@@ -48,18 +48,24 @@ def blocked(engine, db, position):
 @exact
 def assess(engine, db, p, quote, underlying, progress, now):
     """Only the owner invokes this inside a native protection write transaction."""
+    portfolio = engine.portfolio_policy is not None
+    table = "execution_portfolio_orders" if portfolio else "execution_orders"
     row = db.execute(
-        "SELECT intent_json,approval_json FROM execution_orders WHERE client_id=?",
+        f"SELECT intent_json,approval_json FROM {table} WHERE client_id=?",
         (p.entry_client_id,),
     ).fetchone()
     entry = OptionIntent.model_validate_json(row[0])
     approval = json.loads(row[1])
+    if portfolio:
+        approval = approval["inputs"]
     verify_binding(entry, approval)
     original = db.execute(
         "SELECT inputs_json FROM execution_option_decisions WHERE source_key=?",
         (entry.source_key,),
     ).fetchone()
     inputs = json.loads(original[0]) if original else {}
+    if portfolio:
+        inputs = approval
     if (
         entry.health_management != engine.policy.health_management
         or inputs.get("health_management") != entry.health_management

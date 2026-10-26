@@ -14,6 +14,7 @@ from app.options.coordinator import DegenCoordinator, DegenFrame
 from app.options.engine import fingerprint
 from app.options.runtime_models import (
     MixedRuntimePacket,
+    PortfolioRuntimePacket,
     RuntimePacket,
     RuntimePolicy,
     ScopeRuntimePacket,
@@ -51,7 +52,8 @@ def read_packet(path):
         return RuntimePacket.model_validate_json(raw)
     return TypeAdapter(
         Annotated[
-            RuntimePacket | ScopeRuntimePacket | MixedRuntimePacket, Field(discriminator="version")
+            RuntimePacket | ScopeRuntimePacket | MixedRuntimePacket | PortfolioRuntimePacket,
+            Field(discriminator="version"),
         ]
     ).validate_json(raw)
 
@@ -198,6 +200,10 @@ class OptionRuntime:
         packet, issue = None, None
         try:
             packet = read_packet(self.policy.feed_file)
+            if isinstance(packet, PortfolioRuntimePacket) != (
+                self.c.engine.portfolio_policy is not None
+            ):
+                raise ValueError("Explicit portfolio packet/owner enrollment required")
             if isinstance(packet, MixedRuntimePacket) != (self.mixed is not None) or (
                 self.mixed is None
                 and isinstance(packet, ScopeRuntimePacket) != (self.scope is not None)
@@ -256,12 +262,17 @@ class OptionRuntime:
             self.scope.expire()
         frame = packet.frame if packet else DegenFrame()
         # Feed failure never skips reconciliation/protection or invents market quotes.
+        from app.mixed.portfolio_selection import stock_inputs
+
         result = await self.c.supervise(
-            *protection(frame), **({"stocks": frame.stocks} if self.mixed is not None else {})
+            *protection(frame),
+            **({"stocks": stock_inputs(frame)} if self.mixed is not None else {}),
         )
         if result.get("reconciled") is False and result.get("issues") not in (
             ["OPTION_READ_SUPERSEDED"],
             ["OPTION_SUBMISSION_IN_PROGRESS"],
+            ["PORTFOLIO_READ_SUPERSEDED"],
+            ["PORTFOLIO_SUBMISSION_IN_PROGRESS"],
         ):
             issue = issue or "OPTION_RUNTIME_RECONCILIATION_BLOCKED"
         window = self.c.engine.calendar.current_window(at)

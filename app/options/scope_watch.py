@@ -183,6 +183,7 @@ class ScopeWatchBook:
             enrolled(self.engine, self.policy)
             return
         for table in (
+            "execution_portfolio_orders",
             "execution_orders",
             "execution_model_calls",
             "execution_option_decisions",
@@ -208,7 +209,14 @@ class ScopeWatchBook:
             )
             if reasons:
                 raise ExecutionBlocked(";".join(reasons))
-        account = self.engine._account(db, now)
+        if self.engine.portfolio_policy is not None:
+            from app.mixed.portfolio_models import candidate_account
+            from app.mixed.portfolio_protection import entry_guard
+
+            entry_guard(self.engine, db, self.engine.portfolio_policy, now)
+            account = candidate_account(self.engine, db, "SPX", now)
+        else:
+            account = self.engine._account(db, now)
         if (
             not account.complete
             or not account.reconciled
@@ -787,7 +795,12 @@ class ScopeWatchBook:
                             if observed.reasons
                             else "SCOPE_QUOTE_" + observed.status
                         )
-                account = self.engine._account(db, now)
+                if self.engine.portfolio_policy is not None:
+                    from app.mixed.portfolio_models import candidate_account
+
+                    account = candidate_account(self.engine, db, "SPX", now)
+                else:
+                    account = self.engine._account(db, now)
                 review["account"] = account.model_dump(mode="json")
                 self._ready(db, now)
                 self._review_arming(record, sample, frame, context, now)

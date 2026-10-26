@@ -80,6 +80,7 @@ class DurableOptionVenue:
         capital=None,
         fault="NONE",
         stock_limits=None,
+        portfolio_policy=None,
     ):
         self.path = Path(path).expanduser().absolute()
         self.fault = fault
@@ -88,6 +89,16 @@ class DurableOptionVenue:
             if stock_limits is not None
             else None
         )
+        if portfolio_policy is not None:
+            from app.mixed.portfolio_accounting import PortfolioPolicy
+
+            portfolio_policy = PortfolioPolicy.model_validate(portfolio_policy.model_dump())
+            if capital is not None and (
+                portfolio_policy.options != limits
+                or portfolio_policy.stocks != stock_limits
+                or portfolio_policy.capital != Decimal(capital)
+            ):
+                raise ValueError("Exact shared portfolio venue policy required")
         if capital is not None:
             if limits is None:
                 raise ValueError("Explicit frozen option policy required")
@@ -112,13 +123,29 @@ class DurableOptionVenue:
                 }
                 if stock_limits is not None:
                     meta["stock_limits"] = stock_limits.model_dump(mode="json")
-                state = VenueState(cash=initial.cash, settled_cash=initial.cash)
+                state_type = VenueState
+                if portfolio_policy is not None:
+                    from app.mixed.portfolio_venue import PortfolioVenueState
+
+                    state_type = PortfolioVenueState
+                    meta["schema"] = "durable-portfolio-fixture-v2"
+                    meta["portfolio_policy"] = portfolio_policy.model_dump(mode="json")
+                state = state_type(cash=initial.cash, settled_cash=initial.cash)
                 db.execute(
                     "INSERT INTO option_fixture_control VALUES(1,?,?)",
                     (json.dumps(meta, sort_keys=True), state.model_dump_json()),
                 )
         with self._db() as db:
             meta, _ = self._load(db)
+        from app.mixed.portfolio_accounting import PortfolioPolicy
+
+        self.portfolio_policy = (
+            PortfolioPolicy.model_validate(meta["portfolio_policy"])
+            if "portfolio_policy" in meta
+            else None
+        )
+        if portfolio_policy is not None and portfolio_policy != self.portfolio_policy:
+            raise ValueError("Portfolio venue policy mismatch")
         self.venue_id = meta["venue_id"]
         self.limits = OptionLimits.model_validate(meta["limits"])
         self.stock_limits = (
@@ -160,10 +187,26 @@ class DurableOptionVenue:
         row = db.execute("SELECT meta,state FROM option_fixture_control WHERE id=1").fetchone()
         meta = json.loads(row[0])
         if meta["schema"] != (
-            "durable-mixed-fixture-v1" if "stock_limits" in meta else "durable-option-fixture-v1"
+            "durable-portfolio-fixture-v2"
+            if "portfolio_policy" in meta
+            else "durable-mixed-fixture-v1"
+            if "stock_limits" in meta
+            else "durable-option-fixture-v1"
         ):
             raise ValueError("Wrong option fixture schema")
-        state = VenueState.model_validate_json(row[1])
+        state_type = VenueState
+        if "portfolio_policy" in meta:
+            from app.mixed.portfolio_venue import PortfolioPolicy, PortfolioVenueState
+
+            policy = PortfolioPolicy.model_validate(meta["portfolio_policy"])
+            if (
+                policy.options.model_dump(mode="json") != meta["limits"]
+                or policy.stocks.model_dump(mode="json") != meta.get("stock_limits")
+                or policy.capital != Decimal(meta["initial_capital"])
+            ):
+                raise ValueError("Portfolio venue enrollment changed")
+            state_type = PortfolioVenueState
+        state = state_type.model_validate_json(row[1])
         if "stock_limits" not in meta and (state.stock_position is not None or state.stock_orders):
             raise ValueError("Stock fixture inputs not enrolled")
         if "stock_limits" in meta:
@@ -177,7 +220,7 @@ class DurableOptionVenue:
             validate_state(state)
         return meta, state
 
-    def _mutate(self, operation, *, deadline=None, parent_pid=None):
+    def _mutate(self, operation, *, deadline=None, parent_pid=None, intent=None, identity=None):
         with self._db(write=True) as db:
             meta, state = self._load(db)
             if (
@@ -195,8 +238,41 @@ class DurableOptionVenue:
                 raise TimeoutError("Fixture admission lease expired")
             if parent_pid is not None and os.getppid() != parent_pid:
                 raise OSError("Fixture parent lost ownership")
+            prior = state
+            if self.portfolio_policy is not None:
+                from app.mixed.portfolio_venue import merge, play_id, view
+
+                if meta.get("portfolio_policy") != self.portfolio_policy.model_dump(mode="json"):
+                    raise ValueError("Portfolio venue policy changed")
+                if intent is not None:
+                    identity = play_id(intent)
+                state = view(state, identity)
             updated, result = operation(state)
-            updated = VenueState.model_validate(updated.model_dump(warnings=False))
+            if self.portfolio_policy is not None:
+                updated = merge(prior, updated, identity)
+                if intent is not None and any(
+                    o.client_id == intent.client_id
+                    for o in (*updated.orders, *updated.stock_orders)
+                ):
+                    intents = dict(updated.intents)
+                    if intent.client_id in intents and intents[intent.client_id] != intent:
+                        raise ValueError("Portfolio original intent changed")
+                    intents[intent.client_id] = intent
+                    updated = updated.model_copy(update={"intents": intents})
+            updated = type(prior).model_validate(updated.model_dump(warnings=False))
+            if self.portfolio_policy is not None:
+                from app.mixed.portfolio_venue import validate
+
+                at = max(
+                    (o.updated_at for o in (*updated.orders, *updated.stock_orders)), default=None
+                )
+                at = (
+                    max((r.occurred_at for r in updated.receipts), default=at)
+                    if at is None
+                    else max([at, *(r.occurred_at for r in updated.receipts)])
+                )
+                if at is not None:
+                    validate(self, updated, at)
             if self.stock_limits is not None:
                 from app.mixed.venue import validate_state
 
@@ -221,10 +297,14 @@ class DurableOptionVenue:
             if any(o.client_id == intent.client_id for o in (*state.orders, *state.stock_orders)):
                 raise ValueError("An attempted option order cannot replay")
             if (
-                any(o.status not in TERMINAL for o in (*state.orders, *state.stock_orders))
-                or state.underlying_exposures
-            ):
+                self.portfolio_policy is None
+                and any(o.status not in TERMINAL for o in (*state.orders, *state.stock_orders))
+            ) or state.underlying_exposures:
                 raise ValueError("Fixture already has working/unsupported exposure")
+            if self.portfolio_policy is not None:
+                from app.mixed.portfolio_venue import accepting
+
+                accepting(self, state, intent, now)
             if not intent.prepared_at <= now < intent.approval_expires_at:
                 raise ValueError("Option approval expired")
             if intent.side == "BUY":
@@ -255,7 +335,7 @@ class DurableOptionVenue:
                 update={"orders": (*state.orders, order), "submit_count": state.submit_count + 1}
             ), order.order_id
 
-        return self._mutate(accept, deadline=deadline, parent_pid=parent_pid)
+        return self._mutate(accept, deadline=deadline, parent_pid=parent_pid, intent=intent)
 
     def fill(
         self,
@@ -362,6 +442,14 @@ class DurableOptionVenue:
                 quote=quote,
                 underlying=underlying,
             )
+            if self.portfolio_policy is not None:
+                from app.mixed.portfolio_accounting import check_option_source_size
+
+                used = {}
+                for previous in state.orders:
+                    for old in previous.fills:
+                        check_option_source_size(state.intents[previous.client_id], old, used)
+                check_option_source_size(intent, receipt, used)
             ledger = apply_fill(
                 OptionLedger(
                     cash=state.cash,
@@ -393,7 +481,7 @@ class DurableOptionVenue:
                 }
             ), receipt
 
-        return self._mutate(fill)
+        return self._mutate(fill, intent=intent)
 
     def record_terminal(self, client_id, status, at):
         """Script an authoritative fake outcome. This is not an order-cancel adapter."""
@@ -423,8 +511,15 @@ class DurableOptionVenue:
 
         return self._mutate(terminal)
 
-    def record_receipt(self, receipt):
+    def record_receipt(self, receipt, *, play_id=None):
         receipt = OptionReceipt.model_validate(receipt.model_dump(warnings=False))
+
+        if self.portfolio_policy is None and play_id is not None:
+            raise ValueError("Legacy settlement cannot bind a portfolio play")
+        if self.portfolio_policy is not None and (receipt.kind != "FUNDS_SETTLED") != (
+            play_id is not None
+        ):
+            raise ValueError("Contract settlement requires exact play identity")
 
         def record(state):
             if self.stock_limits is not None:
@@ -435,7 +530,19 @@ class DurableOptionVenue:
                 r.receipt_id == receipt.receipt_id for r in state.receipts
             ):
                 raise ValueError("Receipt sequence/identity conflict")
-            if any(o.status not in TERMINAL for o in (*state.orders, *state.stock_orders)):
+            if any(
+                o.status not in TERMINAL
+                and (
+                    play_id is None
+                    or (
+                        state.intents[o.client_id].client_id
+                        if state.intents[o.client_id].side == "BUY"
+                        else state.intents[o.client_id].closing_entry_client_id
+                    )
+                    == play_id
+                )
+                for o in (*state.orders, *state.stock_orders)
+            ):
                 raise ValueError("Contract/funds receipts require complete terminal order history")
             updates = {"sequence": receipt.sequence, "receipts": (*state.receipts, receipt)}
             if receipt.kind == "PHYSICAL_EXERCISE":
@@ -477,9 +584,14 @@ class DurableOptionVenue:
                 updates.update(
                     cash=ledger.cash, settled_cash=ledger.settled_cash, position=ledger.position
                 )
+            if self.portfolio_policy is not None and play_id is not None:
+                updates["settlement_plays"] = {
+                    **state.settlement_plays,
+                    receipt.receipt_id: play_id,
+                }
             return state.model_copy(update=updates), None
 
-        return self._mutate(record)
+        return self._mutate(record, identity=play_id)
 
     def snapshot(self, at):
         with self._db() as db:
@@ -498,7 +610,19 @@ class DurableOptionVenue:
 
             _clock(state, at)
         payload = state.model_dump_json() + at.isoformat()
-        return OptionVenueSnapshot(
+        snapshot_type, extra = OptionVenueSnapshot, {}
+        if self.portfolio_policy is not None:
+            from app.mixed.portfolio_venue import PortfolioVenueSnapshot, validate
+
+            validate(self, state, at)
+            snapshot_type = PortfolioVenueSnapshot
+            extra = {
+                "portfolio_policy": self.portfolio_policy,
+                "positions": state.positions,
+                "settlement_plays": state.settlement_plays,
+            }
+        return snapshot_type(
+            **extra,
             venue_id=self.venue_id,
             account_id=self.account_id,
             population_id=self.population_id,

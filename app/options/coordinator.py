@@ -4,9 +4,10 @@ import json
 import os
 import time
 from pathlib import Path
+from typing import Literal
 from uuid import uuid4
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from app.domain.models import utc_now
 from app.execution.engine import ExecutionBlocked
@@ -32,6 +33,18 @@ from app.options.swing_batch import SwingBatchInput
 
 
 class DegenFrame(OptionRecord):
+    portfolio_version: Literal["portfolio-frame-v2"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    held_quotes: tuple[OptionQuote, ...] = Field(
+        default=(), max_length=2, exclude_if=lambda v: not v
+    )
+    held_underlyings: tuple[UnderlyingQuote, ...] = Field(
+        default=(), max_length=2, exclude_if=lambda v: not v
+    )
+    held_stocks: tuple[StockCycleInput, ...] = Field(
+        default=(), max_length=2, exclude_if=lambda v: not v
+    )
     stocks: tuple[StockCycleInput, ...] = Field(
         default=(), max_length=2, exclude_if=lambda v: not v
     )
@@ -44,6 +57,16 @@ class DegenFrame(OptionRecord):
     swing_batches: tuple[SwingBatchInput, ...] = Field(
         default=(), max_length=2, exclude_if=lambda v: not v
     )
+
+    @model_validator(mode="after")
+    def portfolio_inputs(self):
+        if (
+            self.held_quotes or self.held_underlyings or self.held_stocks
+        ) and self.portfolio_version is None:
+            raise ValueError("Explicit portfolio frame required for held-market coverage")
+        if any(x.swing is not None or x.catalyst is not None for x in self.held_stocks):
+            raise ValueError("Held stock coverage is protection evidence only")
+        return self
 
 
 class DegenCoordinator:
@@ -380,7 +403,14 @@ class DegenCoordinator:
                     ).fetchone()
                 ):
                     raise ExecutionBlocked("NEW_UNTRADED_STOCK_STRATEGY_REQUIRED")
-                account = engine._account(db, self.now())
+                if engine.portfolio_policy is not None:
+                    from app.mixed.portfolio_execution import selection_account
+
+                    if db.execute("SELECT 1 FROM execution_portfolio_orders LIMIT 1").fetchone():
+                        raise ExecutionBlocked("NEW_UNTRADED_PORTFOLIO_STRATEGY_REQUIRED")
+                    account = selection_account(engine, db, self.now())
+                else:
+                    account = engine._account(db, self.now())
                 if (
                     account.position is not None
                     or account.entry_halted
@@ -530,6 +560,9 @@ class DegenCoordinator:
         return OptionLedger.model_validate_json(self.engine._control(db)["ledger_json"])
 
     def _held_instrument(self, db, ledger):
+        if self.engine.portfolio_policy is not None:
+            # Portfolio protection resolves every exact play separately.
+            return None
         if ledger.position:
             client = ledger.position.entry_client_id
             row = db.execute(
@@ -542,6 +575,14 @@ class DegenCoordinator:
         return OptionIntent.model_validate_json(row[0]).instrument if row else None
 
     def quote_plan(self, histories, inventories, swing=(), *, swing_batches=()):
+        planned = self._quote_plan(histories, inventories, swing, swing_batches=swing_batches)
+        if self.engine.portfolio_policy is not None:
+            from app.mixed.portfolio_selection import held_instruments
+
+            planned["held_instruments"] = held_instruments(self)
+        return planned
+
+    def _quote_plan(self, histories, inventories, swing=(), *, swing_batches=()):
         """Local planning performs no provider/model/order operation."""
         at = self.now()
         if swing_batches and (self.swing_policy is None or self.swing_policy.family_batch is None):
@@ -560,7 +601,12 @@ class DegenCoordinator:
                     "scans": (),
                     "plans": (),
                 }
-            account = self.engine._account(db, at)
+            if self.engine.portfolio_policy is not None:
+                from app.mixed.portfolio_execution import selection_account
+
+                account = selection_account(self.engine, db, at)
+            else:
+                account = self.engine._account(db, at)
         if (
             account.entry_halted
             or account.entry_blockers
@@ -792,6 +838,13 @@ class DegenCoordinator:
         return selected, proposal, completed
 
     async def supervise(self, quotes=(), underlyings=(), *, stocks=()):
+        if self.engine.portfolio_policy is not None:
+            return await self.engine.protective_tick(
+                now=self.now(),
+                option_quotes=quotes,
+                underlyings=underlyings,
+                stock_quotes=tuple(x.quote for x in stocks),
+            )
         """Fast owned-position management, independent of the five-minute entry claim."""
         scope_underlying = ()
         if self.scope_policy is not None and len(underlyings) > 2:
@@ -829,7 +882,16 @@ class DegenCoordinator:
         )
 
     async def cycle(self, frame):
+        if self.engine.portfolio_policy is not None:
+            from app.mixed.portfolio_selection import cycle
+
+            return await cycle(self, frame)
+        return await self._cycle_once(frame)
+
+    async def _cycle_once(self, frame, *, portfolio_slot=None):
         frame = DegenFrame.model_validate(frame.model_dump(warnings=False))
+        if frame.portfolio_version is not None and self.engine.portfolio_policy is None:
+            raise ValueError("Portfolio frame requires portfolio owner")
         if frame.stocks and self.stock_policy is None:
             raise ValueError("Stock frames require explicit mixed selection enrollment")
         if frame.swing_batches and (
@@ -844,6 +906,8 @@ class DegenCoordinator:
         # One durable attempt per actual five-minute clock slot, including HOLD,
         # failed inputs and interruption. Repeated calls do not read the venue.
         key = "degen:" + str(int(at.timestamp()) // 300)
+        if portfolio_slot is not None:
+            key += ":portfolio:" + str(portfolio_slot)
         digest = fingerprint(frame)
         with self.engine.journal.write() as db:
             self._bound(db)
@@ -879,6 +943,20 @@ class DegenCoordinator:
                     },
                 )
             at = self.now()
+            if self.engine.portfolio_policy is not None:
+                from app.mixed.portfolio_selection import stock_inputs
+                from app.options.scope_runtime import protection
+
+                managed = await self.supervise(*protection(frame), stocks=stock_inputs(frame))
+                if not managed.get("reconciled"):
+                    return self._finish(
+                        key,
+                        {
+                            "status": "HOLD",
+                            "reason": "PORTFOLIO_PROTECTION_REQUIRED",
+                            "management": managed,
+                        },
+                    )
             with self.engine.journal.read() as db:
                 ledger = self._bound(db)
                 held = self._held_instrument(db, ledger)
@@ -938,7 +1016,8 @@ class DegenCoordinator:
                         "instrument_id": held.instrument_id,
                     },
                 )
-            self.engine.assess(None, None, now=at)
+            if self.engine.portfolio_policy is None:
+                self.engine.assess(None, None, now=at)
             if frame.swing_batches and (
                 self.swing_policy is None or self.swing_policy.family_batch is None
             ):
@@ -998,7 +1077,17 @@ class DegenCoordinator:
                     },
                 )
             with self.engine.journal.read() as db:
-                account = self.engine._account(db, self.now())
+                portfolio_history = None
+                if self.engine.portfolio_policy is not None:
+                    from app.mixed.portfolio_execution import selection_account
+                    from app.mixed.portfolio_store import history
+
+                    account = selection_account(self.engine, db, self.now())
+                    portfolio_history = history(
+                        self.engine, db, self.engine.portfolio_policy, self.now()
+                    )
+                else:
+                    account = self.engine._account(db, self.now())
             candidates, rejections = [], {}
             for scan, plan in zip(planned["scans"], planned["plans"], strict=True):
                 matched = tuple(quotes[i.instrument_id] for i in plan.instruments)
@@ -1016,6 +1105,7 @@ class DegenCoordinator:
                     self.engine._effective_limits(),
                     session,
                     now=planned["scans"][0].evaluated_at,
+                    portfolio_history=portfolio_history,
                 )
                 candidates.extend(accepted)
                 rejections.update(rejected)

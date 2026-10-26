@@ -3,14 +3,22 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, StrictInt, model_validator
 
 from app.mixed.carry import StockCarryPolicy
 from app.mixed.stock_models import StockLimits
 from app.options.models import Money, Name, OptionRecord
 
 
+class PortfolioEnrollment(OptionRecord):
+    version: Literal["mixed-native-portfolio-v2"] = "mixed-native-portfolio-v2"
+    max_plays: StrictInt = Field(default=2, ge=0, le=2)
+    exposure_limit: Money = Field(gt=0)
+    index_exposure_limit: Money = Field(gt=0)
+
+
 class MixedOwnerPolicy(OptionRecord):
+    portfolio: PortfolioEnrollment | None = Field(default=None, exclude_if=lambda v: v is None)
     version: Literal["mixed-native-owner-v1"] = "mixed-native-owner-v1"
     reasoning: Literal["mixed-paid-entry-v1"] | None = Field(
         default=None, exclude_if=lambda v: v is None

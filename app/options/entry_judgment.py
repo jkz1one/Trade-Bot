@@ -409,7 +409,9 @@ def validate_result(request, result):
             result.plan,
             quote=o.quote,
             underlying=o.underlying,
-            account=request.packet.account,
+            account=request.packet.scope.account
+            if getattr(result.plan, "scope", False) and request.packet.scope is not None
+            else request.packet.account,
             now=request.packet.scope.binding.evaluated_at
             if getattr(result.plan, "scope", False) and request.packet.scope is not None
             else request.packet.as_of,

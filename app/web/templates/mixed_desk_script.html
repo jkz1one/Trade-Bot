@@ -63,8 +63,8 @@
       saved.details[detail.id] = detail.open; save();
     });
   });
-  const levels = document.getElementById('exact-levels');
-  if (levels && matchMedia('(max-width:540px)').matches) levels.open = true;
+  if (matchMedia('(max-width:540px)').matches)
+    document.querySelectorAll('.exact-levels').forEach(levels => { levels.open = true; });
   document.querySelectorAll('[data-point-detail]').forEach(point => {
     const show = () => {
       const panel = point.closest('[data-panel-group="mixed-records"]');

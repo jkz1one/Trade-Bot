@@ -38,7 +38,12 @@ class MixedObserver(OptionObserver):
 
     def report(self, **kwargs):
         value = super().report(**kwargs)
-        return value | {"version": "mixed-stored-observer-v1", "mode": "MIXED_PAPER_FIXTURE"}
+        return value | {
+            "version": "mixed-stored-observer-v2"
+            if value.get("schema") == "mixed-portfolio-observer-v2"
+            else "mixed-stored-observer-v1",
+            "mode": "MIXED_PAPER_FIXTURE",
+        }
 
     def _snapshot(self, db, now, limit, before, family):
         try:
@@ -50,6 +55,19 @@ class MixedObserver(OptionObserver):
         tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         if not REQUIRED | TABLES <= tables:
             raise ValueError("Explicit native mixed schema required")
+        c = db.execute("SELECT * FROM execution_control WHERE id=1").fetchone()
+        config = _json(c["config_json"])
+        policy = OptionExecutionPolicy.model_validate(config["policy"])
+        limits = OptionLimits.model_validate(config["limits"])
+        if policy.mixed_owner is not None and policy.mixed_owner.portfolio is not None:
+            from app.mixed.portfolio_observer import snapshot
+
+            # These are the complete scans used by the portfolio projection.
+            # Append-only heartbeat/feed rows are paged separately and may grow.
+            for table in ("execution_portfolio_orders", "execution_model_calls"):
+                if db.execute(f"SELECT count(*) FROM {table}").fetchone()[0] > MAX_ROWS:
+                    raise ValueError("Mixed observer history capacity exceeded")
+            return snapshot(self, db, now, limit, before, family, config, policy, limits)
         # Bound the complete validation scans, including paid requests and runtime packets.
         for table in sorted(tables):
             if (
@@ -60,10 +78,6 @@ class MixedObserver(OptionObserver):
                 > MAX_ROWS
             ):
                 raise ValueError("Mixed observer row capacity exceeded")
-        c = db.execute("SELECT * FROM execution_control WHERE id=1").fetchone()
-        config = _json(c["config_json"])
-        policy = OptionExecutionPolicy.model_validate(config["policy"])
-        limits = OptionLimits.model_validate(config["limits"])
         if (
             config["schema"] != "option-paper-execution-v1"
             or policy.mixed_owner is None
@@ -595,7 +609,7 @@ def stored_stream(db, frames, position, now):
         unique[fingerprint(row)] = row
     records = list(unique.values())
     for event in db.execute(
-        "SELECT sequence,occurred_at,kind FROM execution_events ORDER BY sequence DESC LIMIT 60"
+        "SELECT sequence,occurred_at,kind,client_id,payload FROM execution_events ORDER BY sequence DESC LIMIT 60"
     ):
         if datetime.fromisoformat(event["occurred_at"]) > now:
             raise ValueError("Future stream event")
@@ -605,6 +619,8 @@ def stored_stream(db, frames, position, now):
                 "label": event["kind"].replace("_", " ").capitalize(),
                 "at": event["occurred_at"],
                 "sequence": event["sequence"],
+                "play_id": _json(event["payload"]).get("play_id"),
+                "client_id": event["client_id"],
             }
         )
     return sorted(

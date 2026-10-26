@@ -25,7 +25,10 @@ def main():
             request.population_id,
         ):
             return 1
-        if venue.stock_limits != request.stock_limits:
+        if (
+            venue.stock_limits != request.stock_limits
+            or venue.portfolio_policy != request.portfolio_policy
+        ):
             return 1
         if request.operation == "snapshot":
             if request.fault == "STALL_READ":

@@ -15,7 +15,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.domain.models import utc_now
 from app.options.observer import OptionObserver
-from app.web.mixed_view import display_time, evidence_id, family_of, mixed_view
+from app.web.mixed_view import display_time, evidence_id, family_of, mixed_view, trade_summary
 from app.web.trade_rail import trade_rail
 
 basic = HTTPBasic(auto_error=False)
@@ -26,6 +26,7 @@ templates.env.filters["display_time"] = display_time
 templates.env.filters["evidence_id"] = evidence_id
 templates.env.globals["family_of"] = family_of
 templates.env.globals["mixed_view"] = mixed_view
+templates.env.globals["trade_summary"] = trade_summary
 
 
 def password(path):
@@ -56,7 +57,10 @@ def create_options_app(
     comparison_file=None,
     mixed=False,
     review_at=None,
+    operator_key_file=None,
 ):
+    if operator_key_file is not None and (not mixed or review_at is not None):
+        raise ValueError("Admin controls require an active mixed observer")
     if review_at is not None:
         from app.options.engine import clock as checked_clock
 
@@ -106,6 +110,11 @@ def create_options_app(
                 headers={"WWW-Authenticate": 'Basic realm="Options PAPER observer"'},
             )
 
+    if operator_key_file is not None:
+        from app.web.portfolio_admin import install
+
+        install(app, authenticate, observer, journal, operator_key_file, clock)
+
     @app.get("/healthz")
     def health():
         return {"status": "OK", "service": "options-observer", "trader_health": "NOT_CHECKED"}
@@ -114,7 +123,14 @@ def create_options_app(
     def desk_script():
         return Response(
             templates.env.get_template("options_desk_script.html").render()
-            + (templates.env.get_template("mixed_desk_script.html").render() if mixed else ""),
+            + (
+                (
+                    templates.env.get_template("mixed_desk_script.html").render()
+                    + templates.env.get_template("portfolio_admin_script.html").render()
+                )
+                if mixed
+                else ""
+            ),
             media_type="application/javascript",
         )
 
@@ -137,6 +153,10 @@ def create_options_app(
             if family != "ALL":
                 raise HTTPException(422, "Mixed desk shows the common account; use ALL")
             data = observer.report(limit=limit, before=before, family=family)
+            data["admin_enabled"] = (
+                operator_key_file is not None
+                and data.get("schema") == "mixed-portfolio-observer-v2"
+            )
             if review_at is not None:
                 data["review"] = {
                     "mode": "FROZEN_OFFLINE_UI_FIXTURE",
@@ -177,6 +197,9 @@ def create_options_app(
         if mixed and family != "ALL":
             raise HTTPException(422, "Mixed desk shows the common account; use ALL")
         data = observer.report(limit=limit, before=before, family=family)
+        data["admin_enabled"] = (
+            operator_key_file is not None and data.get("schema") == "mixed-portfolio-observer-v2"
+        )
         if review_at is not None:
             data["review"] = {"mode": "FROZEN_OFFLINE_UI_FIXTURE", "as_of": review_at.isoformat()}
         return JSONResponse(data, status_code=503 if data["status"] == "UNAVAILABLE" else 200)
@@ -192,6 +215,9 @@ def create_options_app(
         if mixed and family != "ALL":
             raise HTTPException(422, "Mixed desk shows the common account; use ALL")
         data = observer.report(limit=limit, before=before, family=family)
+        data["admin_enabled"] = (
+            operator_key_file is not None and data.get("schema") == "mixed-portfolio-observer-v2"
+        )
         if review_at is not None:
             data["review"] = {"mode": "FROZEN_OFFLINE_UI_FIXTURE", "as_of": review_at.isoformat()}
         from app.options.comparison_view import chart_data

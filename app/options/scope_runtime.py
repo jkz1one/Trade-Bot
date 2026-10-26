@@ -6,7 +6,11 @@ from types import SimpleNamespace
 
 from app.execution.engine import ExecutionBlocked
 from app.options.engine import fingerprint
-from app.options.runtime_models import MixedRuntimePacket, ScopeRuntimePacket
+from app.options.runtime_models import (
+    MixedRuntimePacket,
+    PortfolioRuntimePacket,
+    ScopeRuntimePacket,
+)
 from app.options.scope_market_tape import ScopeTapePolicy, validate_scope_event
 from app.options.scope_replay import ScopeReplayStep, _perform
 
@@ -36,6 +40,17 @@ def validate_packet(c, packet):
 
 
 def protection(frame):
+    if frame.portfolio_version is not None:
+        from app.mixed.quote_fills import _unique
+
+        quotes = (*frame.quotes, *frame.held_quotes)
+        underlyings = (*frame.underlyings, *frame.held_underlyings)
+        if frame.scope is not None:
+            quotes += (frame.scope.frame.quote,) if frame.scope.frame.quote is not None else ()
+            underlyings += (frame.scope.underlying,)
+        return tuple(_unique(quotes, lambda q: q.instrument.instrument_id).values()), tuple(
+            _unique(underlyings, lambda q: q.symbol).values()
+        )
     if frame.scope is None:
         return frame.quotes, frame.underlyings
     quotes = {q.instrument.instrument_id: q for q in frame.quotes}
@@ -98,7 +113,10 @@ class ScopeRuntimeInputs:
                 if prior["packet_hash"] != digest or prior["status"] in {"PENDING", "INTERRUPTED"}:
                     raise ValueError("Scope runtime input changed or was interrupted")
             else:
-                if packet.sequence != state["feed_sequence"] + 1:
+                if packet.sequence <= state["feed_sequence"] or (
+                    self.r.c.engine.portfolio_policy is None
+                    and packet.sequence != state["feed_sequence"] + 1
+                ):
                     raise ValueError("Scope runtime input sequence gap")
                 if (
                     packet.action
@@ -260,16 +278,21 @@ def stored_inputs(db, now):
         if runtime["runtime"].get("mixed_inputs") != "mixed-runtime-inputs-v1":
             raise ValueError("Stored mixed Scope runtime enrollment required")
         packet_type = MixedRuntimePacket
-    statuses, actions, previous_at = {}, [], None
-    for sequence, row in enumerate(
-        db.execute("SELECT * FROM execution_option_scope_runtime_inputs ORDER BY sequence"), 1
-    ):
+    portfolio = bool((config["policy"].get("mixed_owner") or {}).get("portfolio"))
+    if portfolio:
+        packet_type = PortfolioRuntimePacket
+    from app.mixed.runtime import delivery_sequence_valid
+
+    statuses, actions, previous_at, previous_sequence = {}, [], None, 0
+    for row in db.execute("SELECT * FROM execution_option_scope_runtime_inputs ORDER BY sequence"):
         packet = packet_type.model_validate_json(row["packet_json"])
         validate_packet(c, packet)
         accepted = datetime.fromisoformat(row["accepted_at"])
         if (
-            packet.sequence != sequence
-            or row["sequence"] != sequence
+            row["sequence"] != packet.sequence
+            or not delivery_sequence_valid(
+                db, packet.sequence, previous_sequence, portfolio=portfolio
+            )
             or packet.population_id != limits.population_id
             or fingerprint(packet) != row["packet_hash"]
             or not packet.recorded_at <= accepted <= now
@@ -280,6 +303,7 @@ def stored_inputs(db, now):
         ):
             raise ValueError("Scope runtime delivery binding changed")
         previous_at = packet.recorded_at
+        previous_sequence = packet.sequence
         status = row["status"]
         statuses[status] = statuses.get(status, 0) + 1
         if status in {"RECORDED", "REJECTED"}:
@@ -326,7 +350,7 @@ def stored_inputs(db, now):
                     or fingerprint(request) != native[1]
                 ):
                     raise ValueError("Scope runtime native receipt changed")
-            actions.append({"sequence": sequence, "key": a.key, "status": status})
+            actions.append({"sequence": packet.sequence, "key": a.key, "status": status})
         elif row["result_json"] is not None:
             raise ValueError("Uncompleted Scope runtime input has a result")
     return {"statuses": statuses, "actions": actions, "execution_authority": False}

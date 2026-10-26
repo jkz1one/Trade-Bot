@@ -9,6 +9,7 @@ from pydantic import Field, model_validator
 from app.execution.engine import ExecutionBlocked
 from app.mixed.governor import admit_stock
 from app.mixed.models import CashHistory, StockAdmission
+from app.mixed.portfolio_accounting import PortfolioHistory, PortfolioStockAdmission
 from app.mixed.sources import (
     StockCycleInput,
     StockSelectionPolicy,
@@ -24,10 +25,10 @@ from app.robinhood.schedule import XNYSCalendar
 
 class StockEntryEvidence(OptionRecord):
     candidate: StockSourceCandidate
-    admission: StockAdmission
+    admission: PortfolioStockAdmission | StockAdmission
     account_revision: int = Field(ge=0, strict=True)
     snapshot_id: str
-    history: CashHistory
+    history: PortfolioHistory | CashHistory
     account: OptionAccount
     session: SessionWindow
     source: StockCycleInput
@@ -244,6 +245,18 @@ def validate_admission(engine, db, key, input_hash, now):
     frozen = json.loads(
         db.execute("SELECT policy_json FROM execution_option_strategy WHERE id=1").fetchone()[0]
     )
+    if engine.portfolio_policy is not None:
+        from app.mixed.portfolio_execution import selection_account
+        from app.mixed.portfolio_store import history
+
+        account = selection_account(engine, db, now)
+        h = history(engine, db, engine.portfolio_policy, now)
+        if request.packet.portfolio_history is None or request.packet.portfolio_history.model_dump(
+            exclude={"captured_at"}
+        ) != h.model_dump(exclude={"captured_at"}):
+            raise ExecutionBlocked("PORTFOLIO_MODEL_ACCOUNT_CHANGED")
+    else:
+        account = engine._account(db, now)
     if (
         request.packet.cycle_key != key
         or request.packet.policy.mixed_selection is None
@@ -251,7 +264,7 @@ def validate_admission(engine, db, key, input_hash, now):
         or request.configuration.model_dump(mode="json") != frozen.get("entry_model")
         or input_hash != fingerprint(j.request_content(request))
         or request.packet.limits != engine._effective_limits()
-        or request.packet.account != engine._account(db, now)
+        or request.packet.account != account
         or not request.packet.as_of <= now < request.packet.valid_until
         or evidence.get("mixed_selection") != receipt(configuration(db), key, evidence)
     ):

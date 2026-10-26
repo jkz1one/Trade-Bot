@@ -83,3 +83,35 @@ test('Trades expansion survives snapshot replacement even without storage',async
  h.document.getElementById=id=>id==='trades'?panel:id==='trades-more'?button:original(id);
  await h.tick();assert.equal(toggles,1);
 });
+
+test('two-play polling restores only matching play IDs and their own details',async()=>{
+ const h=harness();const restored=[];
+ const selected=['tab-play-second','second-tab-thesis','tab-data-stream'].map(id=>({id,click(){restored.push(id);}}));
+ const details=[{id:'first-exact-levels',open:false},{id:'second-exact-levels',open:true}];
+ const scroll={id:'second-thesis-scroll',scrollTop:218,scrollLeft:0};
+ const original=h.document.getElementById;
+ const ids=Object.fromEntries([...selected,...details,scroll].map(e=>[e.id,e]));
+ h.document.getElementById=id=>ids[id]||original(id);
+ h.document.querySelectorAll=s=>s.includes('aria-selected')?selected:s==='details[id]'?details:s==='[id]'?[scroll]:[];
+ h.document.dispatchEvent=()=>{details.forEach(d=>d.open=false);scroll.scrollTop=0;};
+ await h.tick();
+ assert.deepEqual(restored,selected.map(e=>e.id));assert.equal(details[0].open,false);assert.equal(details[1].open,true);assert.equal(scroll.scrollTop,218);
+});
+
+test('closed selected play cannot restore its labels or details onto the remaining play',async()=>{
+ const h=harness();let peerClicks=0;
+ const gone={id:'tab-play-closed'};const goneDetail={id:'closed-exact-levels',open:true};
+ const survivor={id:'tab-play-survivor',click(){peerClicks++;}};
+ const survivorDetail={id:'survivor-exact-levels',open:false};
+ const original=h.document.getElementById;let replaced=false;
+ h.document.getElementById=id=>id===survivor.id?survivor:id===survivorDetail.id?survivorDetail:(!replaced&&id===gone.id)?gone:original(id);
+ h.document.querySelectorAll=s=>s.includes('aria-selected')?[gone]:s==='details[id]'?[goneDetail]:[];
+ h.document.dispatchEvent=()=>{replaced=true;};
+ await h.tick();assert.equal(h.replaced(),1);assert.equal(peerClicks,0);assert.equal(survivorDetail.open,false);
+});
+
+test('open admin review holds snapshots without restarting or mixing review state',async()=>{
+ const h=harness();h.document.querySelector=s=>s==='dialog[open]'?{}:null;
+ await h.tick();assert.equal(h.replaced(),0);assert.match(h.statuses.at(-1),/while you inspect/);
+ h.document.querySelector=()=>null;await h.tick();assert.equal(h.replaced(),1);
+});

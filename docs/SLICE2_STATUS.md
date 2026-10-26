@@ -1,5 +1,47 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Native two-play lifecycle and continuous delivery: 2026-10-26 UTC
+
+Starting local/remote feature HEAD 4a66f30564ba3e3f8dcb2dcb45b73a115bd9c143.
+Main remains b5359aaf396e692d2142d7e02908f1544e045ee6; PR #1 remains open/draft.
+No applicable AGENTS.md exists. No dependencies, subagents, credentials,
+provider/broker/model calls, hosted CI or production changes were used.
+
+Final installed validation: 245 focused Python cases and 22 JavaScript cases
+passed, with all 283 application files identical in source, wheel and installed
+package. Wheel SHA256:
+ffc622c486d8e585249d8d2f8c77184a053a6bf70d456870e756c44e275bbeb3.
+Changed Python lint, host-helper shell syntax and whitespace checks pass. The
+synthetic frozen fixture retains two held plays and two native fills. A prior
+broader diagnostic run had 1,359 passes and 12 runtime-reader failures; all 12
+were fixed and passed in the final focused suite. The whole broad suite was not
+rerun against the final wheel. Browser and Docker host checks remain pending.
+
+Explicit v2 enrollment now connects shared accounting and atomic reservation to
+native multi-play venue/dispatch/reconciliation, independent original protection,
+partial/simultaneous exits, uncertain-attempt recovery, Degen/Swing/Scope selection
+and full paid entry/management receipts. Two is the maximum, not a target. Shared
+risk is unchanged; model calls are not added merely to fill a second slot.
+
+The stored dashboard now renders both complete cards with identity-preserving
+selection and polling. Lower panels keep the same 420px default height. An optional
+signed, expiring, revision-bound admin lightbox enforces 0/1/2 without closing held
+positions. Continuous normalized delivery persists raw captures, source clocks,
+held coverage, read budgets, partial-batch issues and restart evidence.
+
+Existing v1 populations retain their frozen protocol. A matching journal,
+authority and venue backup is verified before binary changes; v2 uses a deliberately
+separate PAPER enrollment and explicit replay protocol. The new two-play UI fixture
+uses ui-review-v3, preserves V1/V2 and reserves before-two-play as the unused
+rollback name. No host deployment or PAPER activation has occurred.
+
+See [implementation](TWO_PLAY_IMPLEMENTATION.md),
+[installed evidence](TWO_PLAY_NATIVE_PROOF.json) and
+[host/acceptance procedure](TWO_PLAY_ACCEPTANCE.md). The confirmed host remains
+d2092f1 with 259 matching files and three frozen fills. Browser acceptance remains
+pending. Reviewed metadata/entitlement, executable equity sizes, Scope/SPX feed
+mapping and fresh continuous market-open acceptance remain blockers. LIVE stays off.
+
 ## Equal default detail-tab heights: 2026-10-25 America/New_York
 
 Starting feature HEAD 2a5dae877e3116b03eb9c291abdec0bb638ab159. Main remains

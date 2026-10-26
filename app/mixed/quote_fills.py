@@ -34,7 +34,10 @@ def apply_quote_fills(runtime, packet, at):
     engine = runtime.c.engine
     quotes, underlyings = protection(packet.frame)
     options = _unique(quotes, lambda q: q.instrument.instrument_id)
-    stocks = _unique((i.quote for i in packet.frame.stocks), lambda q: q.instrument.instrument_id)
+    stocks = _unique(
+        (i.quote for i in (*packet.frame.stocks, *packet.frame.held_stocks)),
+        lambda q: q.instrument.instrument_id,
+    )
     underlying = _unique(underlyings, lambda q: q.symbol)
     with engine.journal.read() as db:
         runtime._bound(db)
@@ -53,10 +56,22 @@ def apply_quote_fills(runtime, packet, at):
         ):
             raise ValueError("Validated native delivery required before simulated fills")
         acknowledged = {}
+        if engine.portfolio_policy is not None:
+            from app.mixed.portfolio_store import verify_order
+
+            for row in db.execute(
+                "SELECT * FROM execution_portfolio_orders WHERE status IN ('OPEN','PARTIAL') AND attempted_at IS NOT NULL"
+            ):
+                acknowledged[row["client_id"]] = (
+                    verify_order(engine, db, engine.portfolio_policy, row),
+                    datetime.fromisoformat(row["attempted_at"]),
+                )
         for table, model in (
             ("execution_orders", OptionIntent),
             ("execution_stock_orders", StockIntent),
         ):
+            if engine.portfolio_policy is not None:
+                continue
             for row in db.execute(
                 f"SELECT client_id,intent_json,attempted_at FROM {table} "
                 "WHERE status IN ('OPEN','PARTIAL') AND attempted_at IS NOT NULL"

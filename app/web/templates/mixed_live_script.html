@@ -35,7 +35,7 @@
       const next = new DOMParser().parseFromString(data.html, 'text/html').getElementById('content');
       if (!next || next.dataset.population !== data.population || next.querySelector('script')) throw new Error('Snapshot invalid');
       // Avoid interrupting copying or keyboard interaction with an open select.
-      if (!(window.getSelection() && window.getSelection().toString()) && document.activeElement?.tagName !== 'SELECT') {
+      if (!(window.getSelection() && window.getSelection().toString()) && document.activeElement?.tagName !== 'SELECT' && !document.querySelector('dialog[open]')) {
         const active = document.activeElement;
         const focusId = active && active.id;
         const tabs = Array.from(document.querySelectorAll('[data-tabs] button[aria-selected="true"]')).map(el => el.id);

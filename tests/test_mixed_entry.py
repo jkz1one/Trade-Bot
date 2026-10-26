@@ -23,7 +23,15 @@ from app.options.venue import DurableOptionVenue
 
 @contextmanager
 def owner(
-    path, monkeypatch, *, choice="STOCK", mode="ENTER", delay=1, fresh=True, management=False
+    path,
+    monkeypatch,
+    *,
+    choice="STOCK",
+    mode="ENTER",
+    delay=1,
+    fresh=True,
+    management=False,
+    portfolio=False,
 ):
     limits, p = settings()
     costs = CostPolicy(total_budget="10", daily_budget="2", max_call_cost=".01")
@@ -36,10 +44,31 @@ def owner(
             stocks=changed(p.mixed_owner.stocks, share_step=".1"),
         ),
     )
+    portfolio_policy = None
+    if portfolio:
+        from types import SimpleNamespace
+
+        from app.mixed.native_models import PortfolioEnrollment
+        from app.mixed.portfolio_execution import policy as portfolio_settings
+
+        p = changed(
+            p,
+            mixed_owner=changed(
+                p.mixed_owner,
+                portfolio=PortfolioEnrollment(exposure_limit="500", index_exposure_limit="500"),
+            ),
+        )
+        portfolio_policy = portfolio_settings(
+            SimpleNamespace(policy=p, limits=limits, _closed=False)
+        )
     sp = changed(stock_policy(), paid_selection="mixed-paid-entry-v1")
     ep = changed(packet_for().policy, mixed_selection="mixed-paid-entry-v1")
     v = DurableOptionVenue(
-        path / "venue.db", limits=limits, stock_limits=p.mixed_owner.stocks, capital=p.capital
+        path / "venue.db",
+        limits=limits,
+        stock_limits=p.mixed_owner.stocks,
+        capital=p.capital,
+        portfolio_policy=portfolio_policy,
     )
     times, state = [AT], {}
 
@@ -48,7 +77,8 @@ def owner(
 
     with OptionExecution.open(path / "engine.db", limits, p, v, now=AT, create=True) as e:
         assert e.reconcile(v.snapshot(AT), now=AT)["reconciled"]
-        e.assess_stock(None, now=AT)
+        if not portfolio:
+            e.assess_stock(None, now=AT)
         setup, selection = policies()
         c = DegenCoordinator(
             e,
