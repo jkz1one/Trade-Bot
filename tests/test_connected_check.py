@@ -133,6 +133,8 @@ def test_cli_mismatch_returns_before_opening_feed_or_owner(tmp_path, schemas, mo
                 "--directory",
                 str(tmp_path / "feed"),
                 "--create",
+                "--expected-review",
+                "0" * 64,
             ]
         )
         == 2

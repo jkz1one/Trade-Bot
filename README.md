@@ -25,7 +25,9 @@ are missing. The catalyst provider is still absent; entitlement stays unknown.
 quotes between Swing cycles and after optional history failures. Missing enrolled
 Scope input explicitly blocks entry cycles. [Explicit carry schedules](docs/CONNECTED_CARRY_INTENT.md)
 now bind original stock/option exit dates through restart and runtime delivery;
-operational enrollment remains pending.
+[guarded first-collector enrollment](docs/CONNECTED_ENROLLMENT.md) now freezes the
+supplied schedule against the existing owner. Schedule rollover and host activation
+remain pending.
 
 ## Offline development checks
 

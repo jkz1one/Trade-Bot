@@ -21,12 +21,17 @@ def main(argv=None):
     parser.add_argument("--journal", required=True)
     parser.add_argument("--directory", required=True)
     parser.add_argument("--create", action="store_true")
+    parser.add_argument("--expected-review", help="Exact connected_enrollment review hash")
     parser.add_argument(
         "--run",
         action="store_true",
         help="Explicitly start continuous provider reads; default validates only",
     )
     args = parser.parse_args(argv)
+    if args.create and args.run:
+        parser.error("Collector enrollment and worker startup are separate operations")
+    if args.create != (args.expected_review is not None):
+        parser.error("Only --create requires --expected-review from connected_enrollment review")
     if any(
         not Path(p).is_absolute() for p in (args.policy, args.schemas, args.journal, args.directory)
     ):
@@ -43,10 +48,25 @@ def main(argv=None):
     print(json.dumps(report, sort_keys=True), flush=True)
     if not report["collector_can_start"]:
         return 2
+    if args.create:
+        from app.mixed.connected_enrollment import enroll
+
+        result = enroll(
+            Path(args.journal).parent,
+            args.directory,
+            args.policy,
+            args.schemas,
+            expected_review=args.expected_review,
+        )
+        print(json.dumps(result, sort_keys=True), flush=True)
+        return 0
+    from app.mixed.connected_runtime import inspect_owner
+
+    inspect_owner(Path(args.journal).parent, settings)
     observer = MixedObserver(args.journal, policy.population_id)
     held_from_observer(observer)
     # Validation does not acquire a credential or open a network transport.
-    feed = ContinuousFeed(args.directory, policy, schemas, create=args.create)
+    feed = ContinuousFeed(args.directory, policy, schemas)
     try:
         if not args.run:
             return 0

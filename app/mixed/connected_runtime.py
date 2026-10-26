@@ -15,9 +15,10 @@ from app.domain.models import utc_now
 from app.mixed.connected_check import connection_report
 from app.mixed.continuous_feed import ContinuousFeed, FeedPolicy, held_from_observer
 from app.mixed.observer import MixedObserver
+from app.options.engine import fingerprint
 from app.options.operator_inbox import private_directory, read
 from app.options.read_gateway import ReadSchemas
-from app.options.runtime_cli import existing_runtime, load
+from app.options.runtime_cli import existing_runtime, load, strategy_identity
 from app.options.venue import private_path
 from app.robinhood.schedule import XNYSCalendar
 
@@ -54,7 +55,22 @@ def inspect_owner(directory, settings, *, clock_source=utc_now):
             "policy"
         ] != settings.execution.model_dump(mode="json"):
             raise ValueError("Execution settings differ from the enrolled owner")
+        strategy = db.execute(
+            "SELECT policy_json FROM execution_option_strategy WHERE id=1"
+        ).fetchone()
+        expected_strategy = json.loads(strategy_identity(settings))
+        if (
+            strategy is None
+            or json.loads(strategy[0]) != expected_strategy
+            or frozen["strategy"] != expected_strategy
+            or frozen["engine"] != config
+        ):
+            raise ValueError("Strategy or runtime owner settings differ from enrollment")
         result = {
+            "owner_configuration_sha256": fingerprint(frozen),
+            "owner_revision": db.execute(
+                "SELECT COALESCE(MAX(sequence),0) FROM execution_events"
+            ).fetchone()[0],
             "runtime_status": row["status"],
             "runtime_generation": row["generation"],
             "feed_sequence": row["feed_sequence"],
@@ -89,7 +105,6 @@ def check(directory, feed_directory, policy_file, schemas_file, *, clock_source=
     private_path(feed_directory / "collector.db")
     # Reuse the bounded read-only database reader, without opening the collector
     # lease or performing interrupted-attempt recovery during a check.
-    from app.options.engine import fingerprint
     from app.options.observer import OptionObserver
 
     with OptionObserver(feed_directory / "collector.db", policy.population_id).read() as db:

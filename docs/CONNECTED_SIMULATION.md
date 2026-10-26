@@ -28,8 +28,11 @@ These are interface placeholders, not a host deployment command. A separately
 implemented [coordinated runtime](CONNECTED_RUNTIME.md) now reopens an enrolled
 owner and collector with first-tick recovery, shared shutdown and retained leases.
 Complete reviewed host configuration and deployment remain to be prepared.
-The feed CLI keeps its explicit --create/--run semantics; default validation
-does not read providers, and wiring failure returns code 2 before opening state.
+[Guarded first-collector enrollment](CONNECTED_ENROLLMENT.md) now provides a
+read-only review and exact-hash create against an unused native runtime. The feed
+CLI requires the same review for --create and rejects --create with --run. Existing
+collector reopening still does not read providers unless --run is explicit;
+wiring failure returns code 2 before opening state.
 
 Candidate checks report missing reviewed metadata/tradability, unsupported mapping,
 owner-universe conflicts and last-trading times already passed. The collector no

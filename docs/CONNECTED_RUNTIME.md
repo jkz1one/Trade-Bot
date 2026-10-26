@@ -9,6 +9,11 @@ This implementation is validated offline. The host still runs the frozen a653cc7
 dashboard; no collector, simulation runtime or model worker has been activated.
 No host action is requested while the operator is unavailable.
 
+For first collector setup, use [guarded enrollment](CONNECTED_ENROLLMENT.md)
+against the existing unused native runtime. It cannot replace a lost collector or
+convert a frozen review. Runtime check also verifies complete stored strategy
+identity without opening model keys.
+
 ## Read-only check
 
 `check` reads private runtime, policy and schema files, frozen owner configuration

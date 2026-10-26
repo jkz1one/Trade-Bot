@@ -49,10 +49,11 @@ or rewrite the first per-session result, including blocked receipts.
 
 Absent schedules serialize exactly as before, preserving legacy collector and
 binding hashes. No existing journal, fixture or enrolled collector is migrated.
-Adding or rolling a schedule requires a separately reviewed enrollment/rollover
-procedure. That operational workflow remains unfinished; do not edit the frozen
-review or existing collector configuration in place. No real dates have been
-selected or enrolled on the host by this change.
+[Guarded first-collector enrollment](CONNECTED_ENROLLMENT.md) now freezes an
+explicitly supplied schedule against an existing unused native runtime. Adding
+or rolling dates after enrollment still requires an unimplemented rollover
+procedure; do not edit the frozen review or existing collector configuration in
+place. No real dates have been selected or enrolled on the host.
 
 ## Validation and remaining work
 

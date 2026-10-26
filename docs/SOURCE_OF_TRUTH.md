@@ -1,6 +1,19 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.138. Explicit connected carry intent, 2026-10-26 EDT.
+Version 1.139. Guarded first collector enrollment, 2026-10-26 EDT.
+
+[Guarded collector enrollment](CONNECTED_ENROLLMENT.md) now reviews and creates the
+first collector against the existing unused native owner. Exact configuration and
+owner-revision hashes are rechecked under its lease. It preserves the one bankroll,
+halt, fills and runtime state; used runtimes cannot reset missing feed history.
+The old create CLI delegates to the same guard and cannot start workers during
+creation. Read-only runtime checks now verify the complete frozen strategy identity
+through the native serializer without opening model keys. See
+CONNECTED_ENROLLMENT_PROOF.json for 205 installed passing cases and all
+289 matching application files. Initial collector and
+supplied carry-schedule enrollment are implemented; schedule/catalog rollover,
+full host setup and missing eligible feeds remain unfinished. No host action or
+activation occurred. Stopping reason: slice end; more offline coding remains.
 
 [Connected carry intent](CONNECTED_CARRY_INTENT.md) now accepts an optional frozen
 per-session schedule with separate stock and option exit dates. Preparation,
@@ -8,7 +21,7 @@ restart verification and runtime assembly use the same original intent. Native
 calendar/expiry guards apply; no date or catalyst clearance is inferred. Absent
 schedules preserve legacy hashes, while changed enrolled schedules are rejected.
 See CONNECTED_CARRY_INTENT_PROOF.json for installed validation. Bounded carry-input
-wiring is implemented; operational schedule enrollment/rollover is still work.
+wiring and guarded first enrollment are implemented; schedule rollover is still work.
 The host is unchanged. Publication is a slice end and more offline coding remains.
 
 [Continuous delivery fixes](CONTINUOUS_STRATEGY_DELIVERY.md) preserve quotes between

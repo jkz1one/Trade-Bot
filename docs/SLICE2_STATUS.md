@@ -1,5 +1,36 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Guarded first collector enrollment: 2026-10-26 EDT
+
+Starting feature HEAD 3e3c5a0f988d3420d025a01c999d3e1cb847a04e. A read-only review
+now binds complete configuration, paths, owner identity/revision and initial runtime
+state. Explicit enrollment repeats that review under the existing owner lease and
+creates only the first collector. The one native bankroll, journal, halt and fills
+are unchanged. Used runtimes cannot recreate a lost collector and reset delivery
+history. Existing evidence, including failed preparation, cannot be overwritten.
+Optional supplied carry dates freeze with the collector. No account is created,
+no dates are inferred and no worker starts. The old collector create CLI delegates
+to the same review guard and cannot combine enrollment with run.
+
+Runtime preflight now compares complete stored strategy and engine identity before
+writable startup. The shared pure serializer is AST-identical to the previous
+native serializer after input renaming; model keys are not opened by inspection.
+Existing strategy/replay hashes and collector configuration format remain intact.
+
+Final validation: 205 unique installed Python cases passed. All
+289 application files match source, wheel and installation; release identity is
+VERIFIED_FILES. Ruff and diff checks pass. See CONNECTED_ENROLLMENT.md and
+CONNECTED_ENROLLMENT_PROOF.json for behavior, exact test evidence and limitations.
+No provider/model calls, credentials, server changes, dependencies, subagents or
+hosted CI. Main remains unchanged and PR #1 remains open/draft.
+
+Guarded first-collector and supplied initial schedule enrollment are implemented.
+Schedule/catalog rollover, full host configuration/deployment, catalyst and Scope
+inputs, data/contract eligibility and actual connected market acceptance remain
+unfinished. Server stays a653cc7 frozen V3; connected simulation inactive.
+Stopping reason: **slice end**, not a missing-collection stop. More offline coding
+is available. LIVE remains disabled.
+
 ## Explicit connected carry intent: 2026-10-26 EDT
 
 Starting feature HEAD ff7c74897eeec0a3cd7cdcc1114cf2fbc01af52c. Optional frozen

@@ -32,6 +32,63 @@ from app.options.swing import SwingInput, SwingPolicy
 from app.options.swing_batch import SwingBatchInput
 
 
+def strategy_configuration(
+    setup,
+    selection,
+    *,
+    stock_policy=None,
+    scope_policy=None,
+    swing_policy=None,
+    judgment_limits=None,
+    cost_policy=None,
+    key_file=None,
+    entry_policy=None,
+    position_policy=None,
+    replay_model=None,
+    scope_replay=None,
+    mixed_replay=None,
+):
+    """Rebuild the frozen strategy identity without reading state or secrets."""
+    config = {
+        "setup": setup.model_dump(mode="json"),
+        "selection": selection.model_dump(mode="json"),
+    }
+    if stock_policy is not None:
+        config["stocks"] = stock_policy.model_dump(mode="json")
+    if scope_policy is not None:
+        config["scope"] = scope_policy.model_dump(mode="json")
+    if swing_policy is not None:
+        config["swing"] = swing_policy.model_dump(mode="json")
+    if judgment_limits is not None:
+        config["model"] = {
+            "configuration": judgment.configuration(
+                cost_policy,
+                judgment_limits,
+                shared=swing_policy is not None and entry_policy is None,
+            ),
+            "key_file": str(key_file),
+        }
+    if replay_model is not None:
+        config["replay_model"] = replay_model.configuration()
+    if scope_replay is not None:
+        config["scope_replay"] = scope_replay.model_dump(mode="json")
+    if mixed_replay is not None:
+        config["mixed_replay"] = mixed_replay.model_dump(mode="json")
+    if entry_policy is not None:
+        from app.options.entry_judgment import configuration
+
+        config["entry_model"] = configuration(
+            cost_policy, judgment_limits, entry_policy
+        ).model_dump(mode="json")
+    if position_policy is not None:
+        from app.options.position_judgment import configuration
+
+        config["position_model"] = configuration(
+            cost_policy, judgment_limits, position_policy
+        ).model_dump(mode="json")
+    return json.dumps(config, sort_keys=True)
+
+
 class DegenFrame(OptionRecord):
     portfolio_version: Literal["portfolio-frame-v2"] | None = Field(
         default=None, exclude_if=lambda v: v is None
@@ -474,44 +531,21 @@ class DegenCoordinator:
         return clock(self.clock())
 
     def _configuration(self):
-        config = {
-            "setup": self.policy.model_dump(mode="json"),
-            "selection": self.selection.model_dump(mode="json"),
-        }
-        if self.stock_policy is not None:
-            config["stocks"] = self.stock_policy.model_dump(mode="json")
-        if self.scope_policy is not None:
-            config["scope"] = self.scope_policy.model_dump(mode="json")
-        if self.swing_policy is not None:
-            config["swing"] = self.swing_policy.model_dump(mode="json")
-        if self.judgment_limits is not None:
-            config["model"] = {
-                "configuration": judgment.configuration(
-                    self.engine.policy.cost_policy,
-                    self.judgment_limits,
-                    shared=self.swing_policy is not None and self.entry_policy is None,
-                ),
-                "key_file": str(self.key_file),
-            }
-        if self.replay_model is not None:
-            config["replay_model"] = self.replay_model.configuration()
-        if self.scope_replay is not None:
-            config["scope_replay"] = self.scope_replay.model_dump(mode="json")
-        if self.mixed_replay is not None:
-            config["mixed_replay"] = self.mixed_replay.model_dump(mode="json")
-        if self.entry_policy is not None:
-            from app.options.entry_judgment import configuration
-
-            config["entry_model"] = configuration(
-                self.engine.policy.cost_policy, self.judgment_limits, self.entry_policy
-            ).model_dump(mode="json")
-        if self.position_policy is not None:
-            from app.options.position_judgment import configuration
-
-            config["position_model"] = configuration(
-                self.engine.policy.cost_policy, self.judgment_limits, self.position_policy
-            ).model_dump(mode="json")
-        return json.dumps(config, sort_keys=True)
+        return strategy_configuration(
+            self.policy,
+            self.selection,
+            stock_policy=self.stock_policy,
+            scope_policy=self.scope_policy,
+            swing_policy=self.swing_policy,
+            judgment_limits=self.judgment_limits,
+            cost_policy=self.engine.policy.cost_policy,
+            key_file=self.key_file,
+            entry_policy=self.entry_policy,
+            position_policy=self.position_policy,
+            replay_model=self.replay_model,
+            scope_replay=self.scope_replay,
+            mixed_replay=self.mixed_replay,
+        )
 
     def _execution_market(self, quotes, underlyings):
         # Only the explicit fixture scheduler updates these current-prefix caches.

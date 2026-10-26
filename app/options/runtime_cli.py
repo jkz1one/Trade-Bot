@@ -23,6 +23,24 @@ def load(path):
     return RuntimeSettings.model_validate_json(read_private(path))
 
 
+def strategy_identity(settings):
+    """Same frozen strategy configuration as native enrollment, without secrets."""
+    from app.options.coordinator import strategy_configuration
+
+    return strategy_configuration(
+        settings.setup,
+        settings.selection,
+        stock_policy=settings.stock_policy,
+        scope_policy=settings.scope_policy,
+        swing_policy=settings.swing_policy,
+        judgment_limits=settings.judgment_limits,
+        cost_policy=settings.execution.cost_policy,
+        key_file=settings.key_file,
+        entry_policy=settings.entry_policy,
+        position_policy=settings.position_policy,
+    )
+
+
 def _save(path, settings):
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
     with os.fdopen(fd, "w") as stream:
