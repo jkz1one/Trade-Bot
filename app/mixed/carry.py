@@ -11,6 +11,23 @@ from app.options.governor import _fresh
 from app.options.models import Evidence, Name, OptionRecord, Symbol
 
 
+class SwingCarryIntent(OptionRecord):
+    """Explicit per-session holding intent, never inferred from a maximum limit."""
+
+    target_session: date
+    stock_exit_session: date | None = None
+    option_exit_session: date | None = None
+
+    @model_validator(mode="after")
+    def dates(self):
+        dates = tuple(
+            d for d in (self.stock_exit_session, self.option_exit_session) if d is not None
+        )
+        if not dates or any(not 0 < (d - self.target_session).days <= 60 for d in dates):
+            raise ValueError("Explicit future carry exits within sixty calendar days required")
+        return self
+
+
 class StockCarryPolicy(OptionRecord):
     version: Literal["mixed-stock-carry-v1"] = "mixed-stock-carry-v1"
     maximum_carry_sessions: int = Field(strict=True, ge=1, le=20)

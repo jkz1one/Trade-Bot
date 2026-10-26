@@ -14,8 +14,9 @@ from typing import Literal
 from zoneinfo import ZoneInfo
 
 from jsonschema.exceptions import ValidationError as SchemaError
-from pydantic import Field
+from pydantic import Field, model_validator
 
+from app.mixed.carry import SwingCarryIntent
 from app.mixed.sources import StockCycleInput
 from app.mixed.stock_models import StockInstrument
 from app.mixed.swing_feed import SwingHistoryPolicy
@@ -45,6 +46,21 @@ class FeedPolicy(OptionRecord):
     calls_per_minute: int = Field(default=24, strict=True, ge=1, le=120)
     capture: CapturePolicy
     swing_history: SwingHistoryPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
+
+    carry_intents: tuple[SwingCarryIntent, ...] = Field(
+        default=(), max_length=32, exclude_if=lambda v: not v
+    )
+
+    @model_validator(mode="after")
+    def carry_schedule(self):
+        sessions = tuple(i.target_session for i in self.carry_intents)
+        if len(set(sessions)) != len(sessions) or (sessions and self.swing_history is None):
+            raise ValueError("Unique carry sessions and explicit Swing history enrollment required")
+        return self
+
+
+def carry_intent_for(policy, target):
+    return next((i for i in policy.carry_intents if i.target_session == target), None)
 
 
 def planned(policy, held, now, window, *, cycle):
@@ -290,7 +306,11 @@ def normalize(
             frame, missing = assemble(
                 frame,
                 swing_sources,
-                policy_from_settings(source_settings, policy.candidates),
+                policy_from_settings(
+                    source_settings,
+                    policy.candidates,
+                    carry_intent_for(policy, now.astimezone(ZoneInfo("America/New_York")).date()),
+                ),
                 metadata,
                 swing_evidence,
                 now=now,
@@ -733,7 +753,9 @@ class ContinuousFeed:
         if history is None:
             raise ValueError("Original Swing history missing")
         bound = BoundSwingSources.model_validate_json(row["payload_json"])
-        policy = policy_from_settings(settings, self.policy.candidates)
+        policy = policy_from_settings(
+            settings, self.policy.candidates, carry_intent_for(self.policy, target)
+        )
         if (
             bound.created_at > clock(now)
             or bound.target_session != target
@@ -782,7 +804,9 @@ class ContinuousFeed:
                 "target_session": target.date().isoformat(),
                 "trading_ready": False,
             }
-        policy = policy_from_settings(settings, self.policy.candidates)
+        policy = policy_from_settings(
+            settings, self.policy.candidates, carry_intent_for(self.policy, target.date())
+        )
         # Additive, derived evidence only. Existing history enrollment and raw
         # captures are untouched; no execution or fixture database is migrated.
         self.db.execute(

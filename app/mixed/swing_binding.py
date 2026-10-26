@@ -5,6 +5,7 @@ from typing import Literal
 
 from pydantic import Field
 
+from app.mixed.carry import StockCarryPolicy, SwingCarryIntent
 from app.mixed.sources import StockDailyHistory, StockSwingPolicy, StockSwingSource, validate_source
 from app.mixed.stock_models import StockInstrument
 from app.mixed.swing_feed import SwingHistorySnapshot
@@ -35,6 +36,11 @@ class SwingBindingPolicy(OptionRecord):
     option_policy: SwingPolicy | None = None
     candidates: tuple[OptionInstrument, ...] = Field(default=(), max_length=6)
     carry_exit_session: date | None = None
+    carry_intent: SwingCarryIntent | None = Field(default=None, exclude_if=lambda v: v is None)
+    stock_carry: StockCarryPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
+    carry_expiry_guard_seconds: int | None = Field(
+        default=None, ge=0, strict=True, exclude_if=lambda v: v is None
+    )
 
 
 class BoundSwingSources(OptionRecord):
@@ -52,13 +58,41 @@ class BoundSwingSources(OptionRecord):
     live_enabled: Literal[False] = False
 
 
-def policy_from_settings(settings, candidates):
+def policy_from_settings(settings, candidates, carry_intent=None):
+    if carry_intent is not None:
+        carry_intent = SwingCarryIntent.model_validate(carry_intent.model_dump())
+        if (
+            settings.stock_policy is None
+            or (
+                carry_intent.stock_exit_session is not None
+                and (
+                    settings.stock_policy.swing is None
+                    or settings.execution.mixed_owner.stock_carry is None
+                )
+            )
+            or (
+                carry_intent.option_exit_session is not None
+                and (
+                    settings.swing_policy is None
+                    or settings.swing_policy.carry is None
+                    or settings.execution.swing_carry is None
+                )
+            )
+        ):
+            raise ValueError("Carry intent requires matching native asset enrollment")
     return SwingBindingPolicy(
         runtime_hash=fingerprint(settings),
         stocks=settings.stock_policy.instruments,
         stock_policy=settings.stock_policy.swing,
         option_policy=settings.swing_policy,
         candidates=candidates,
+        carry_intent=carry_intent,
+        stock_carry=settings.execution.mixed_owner.stock_carry
+        if carry_intent is not None and carry_intent.stock_exit_session is not None
+        else None,
+        carry_expiry_guard_seconds=settings.execution.expiry_guard_seconds
+        if carry_intent is not None and carry_intent.option_exit_session is not None
+        else None,
     )
 
 
@@ -80,6 +114,31 @@ def bind_sources(snapshot, policy, *, created_at):
     calendar = XNYSCalendar()
     symbols = tuple(i.symbol for i in policy.stocks)
     blockers, stocks, seeds, batches = [], [], [], []
+    intent = policy.carry_intent
+    stock_exit = intent.stock_exit_session if intent else policy.carry_exit_session
+    option_exit = intent.option_exit_session if intent else policy.carry_exit_session
+    if intent is not None:
+        if (
+            intent.target_session != snapshot.target_session
+            or policy.carry_exit_session is not None
+        ):
+            blockers.append("SWING_CARRY_INTENT_SESSION_OR_LEGACY_CONFLICT")
+        if stock_exit is not None:
+            from app.mixed.carry import calendar_path
+
+            if policy.stock_policy is None or policy.stock_carry is None:
+                blockers.append("SWING_STOCK_CARRY_NOT_ENROLLED")
+            else:
+                try:
+                    calendar_path(policy.stock_carry, calendar, snapshot.target_session, stock_exit)
+                except ValueError:
+                    blockers.append("SWING_STOCK_CARRY_CALENDAR_INVALID")
+        if option_exit is not None and (
+            policy.option_policy is None
+            or policy.option_policy.carry is None
+            or policy.carry_expiry_guard_seconds is None
+        ):
+            blockers.append("SWING_OPTION_CARRY_NOT_ENROLLED")
     if policy.stock_policy is None and policy.option_policy is None:
         blockers.append("SWING_NOT_ENROLLED")
     if (
@@ -132,7 +191,7 @@ def bind_sources(snapshot, policy, *, created_at):
                         hourly_history=trimmed(hourly, SwingHourlyHistory, p.hourly_lookback)
                         if needs_hourly
                         else None,
-                        carry_exit_session=policy.carry_exit_session,
+                        carry_exit_session=stock_exit,
                     )
                     stocks.append(validate_source(source, p, calendar))
                 except ValueError:
@@ -160,6 +219,21 @@ def bind_sources(snapshot, policy, *, created_at):
             ):
                 blockers.append("SWING_EXACT_REVIEWED_CONTRACT_CHOICE_REQUIRED:" + symbol)
                 continue
+            if intent is not None and option_exit is not None:
+                from app.options.swing_carry import calendar_path
+
+                for candidate in candidates:
+                    _, _, reasons = calendar_path(
+                        p.carry,
+                        calendar,
+                        snapshot.target_session,
+                        option_exit,
+                        candidate.contract,
+                        policy.carry_expiry_guard_seconds,
+                    )
+                    blockers.extend(reasons)
+                if blockers:
+                    continue
             hp = p.daily_base or p.ma_pullback
             try:
                 hour = trimmed(hourly, SwingHourlyHistory, hp.hourly_lookback) if hp else None
@@ -170,7 +244,7 @@ def bind_sources(snapshot, policy, *, created_at):
                         history=trimmed(daily, SwingBatchHistory, p.daily_lookback),
                         hourly_history=hour,
                         instruments=tuple(sorted(candidates, key=lambda i: i.contract.right)),
-                        carry_exit_session=policy.carry_exit_session,
+                        carry_exit_session=option_exit,
                     )
                     # Enumerate and validate every native variant before retaining
                     # the original root. A model never selects which source to omit.
@@ -199,7 +273,7 @@ def bind_sources(snapshot, policy, *, created_at):
                     "instrument": candidates[0],
                     "ma_period": p.ma_pullback.periods[0] if p.ma_pullback else None,
                     "level_key": p.higher_levels.keys[0] if p.higher_levels else None,
-                    "carry_exit_session": policy.carry_exit_session,
+                    "carry_exit_session": option_exit,
                 }
                 if p.target_derivation:
                     seed = build_swing_seed(

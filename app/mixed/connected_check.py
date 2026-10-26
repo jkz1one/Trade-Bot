@@ -94,6 +94,13 @@ def connection_report(settings, feed, schemas, *, journal, directory, now):
                 ):
                     errors.append("SWING_HISTORY_COVERAGE_TOO_SHORT")
         blockers.append("SWING_CATALYST_FEED_UNAVAILABLE")
+    for intent in feed.carry_intents:
+        from app.mixed.swing_binding import policy_from_settings
+
+        try:
+            policy_from_settings(settings, feed.candidates, intent)
+        except ValueError:
+            errors.append("SWING_CARRY_INTENT_ENROLLMENT_MISMATCH")
     candidates = []
     seen = set()
     for instrument in feed.candidates:

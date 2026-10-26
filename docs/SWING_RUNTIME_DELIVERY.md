@@ -81,8 +81,9 @@ retained blocker/quote delivery across restart, diagnostic capacity and oversize
 packet fallback. Existing native selection, batch, runtime, connection, source
 binding and collector suites run against the same wheel.
 
-Remaining work: reviewed catalyst/news ingestion and provenance, connected carry
-exit-date input, Scope SPX/context delivery, explicit data entitlement and stock
+Explicit [carry-intent schedules](CONNECTED_CARRY_INTENT.md) now reach source
+binding and runtime assembly. Remaining work: reviewed catalyst/news ingestion and
+provenance, operational schedule rollover, Scope SPX/context delivery, data entitlement and stock
 sizes, complete reviewed contract terms, candidate replacement, operational host
 enrollment and dashboard activation. Actual daily/hourly response acceptance and
 ongoing market execution/reconnect evidence remain pending. The accepted October

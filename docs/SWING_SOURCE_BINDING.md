@@ -33,7 +33,8 @@ exact eligible contract. A complete batch requires exactly one CALL and one PUT.
 Ambiguous choices are blocked rather than resolved by list order. Multiple MA or
 level variants require complete-batch enrollment or an explicit single variant.
 Carry dates are not invented; a policy needing them stays blocked without an
-explicit original exit session. Connected carry-date delivery remains unfinished.
+explicit original exit session. [Connected carry schedules](CONNECTED_CARRY_INTENT.md)
+now provide that explicit input; operational schedule enrollment remains unfinished.
 
 PREPARED means the original sources passed their native source validators. It
 does not indicate a confirmed signal, fresh catalyst clearance, executable quotes,
@@ -72,7 +73,7 @@ requirements and rehashed-result rejection.
 
 Runtime assembly and separate Degen/Swing expiry routing are implemented in the
 subsequent delivery slice. Still required: catalyst provider/provenance delivery,
-connected carry-date input, Scope feeds, reviewed data eligibility, dynamic
+operational carry schedule rollover, Scope feeds, reviewed data eligibility, dynamic
 replacement contracts and operational setup. Actual daily/hourly response
 acceptance also remains pending. The host is still the a653cc7 frozen dashboard.
 

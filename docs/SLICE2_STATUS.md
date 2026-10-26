@@ -1,5 +1,27 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Explicit connected carry intent: 2026-10-26 EDT
+
+Starting feature HEAD ff7c74897eeec0a3cd7cdcc1114cf2fbc01af52c. Optional frozen
+per-session schedules now supply distinct original stock/option exit dates through
+preparation, verified restart reuse and runtime assembly. Native stock calendar
+and option calendar/expiry guards are reused without fabricating catalysts.
+Missing dates remain missing; an option-only schedule cannot put stock sources
+into carry. Read-only connection checks reject unenrolled asset carry. Existing
+collector configuration hashes reject changed dates. Legacy absent schedules
+serialize unchanged. No fixture, journal or account migration.
+
+Final validation: 225 installed Python cases passed; all 288 application files
+match source, wheel and installation. Ruff and diff checks pass.
+CONNECTED_CARRY_INTENT_PROOF.json records installed offline evidence. The bounded
+explicit carry-input path is implemented. Operational schedule enrollment/rollover,
+provider catalyst/schema, Scope, eligibility, candidates and host setup remain
+unfinished. No dates were chosen or enrolled for the user. UNKNOWN history still
+blocks preparation and current catalysts must cover the original exit. Stopping
+reason: **slice end**; more offline coding remains possible. Server unchanged at
+a653cc7 frozen V3, connected simulation inactive, LIVE disabled. No provider/model
+calls, credentials, dependencies, subagents or hosted CI.
+
 ## Continuous strategy/protection delivery: 2026-10-26 EDT
 
 Starting feature HEAD bb9cdb5007652a094ff23178e046465536301c94. Fixed prepared Swing

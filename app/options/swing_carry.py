@@ -82,15 +82,29 @@ class SwingCarryReview(OptionRecord):
 
 def _calendar_path(r, calendar):
     """Bound the date span before calling the installed exchange calendar."""
-    start = r.item.seed.target_session
-    days = (r.exit_session - start).days
-    if not 0 < days <= r.carry.maximum_calendar_days:
+    path, deadline, reasons = calendar_path(
+        r.carry,
+        calendar,
+        r.item.seed.target_session,
+        r.exit_session,
+        r.item.seed.instrument.contract,
+        r.execution.expiry_guard_seconds,
+    )
+    if deadline is not None and r.item.catalyst.valid_through < deadline:
+        reasons += ("SWING_CARRY_CATALYST_HORIZON",)
+    return path, deadline, reasons
+
+
+def calendar_path(carry, calendar, start, exit_session, contract, expiry_guard_seconds):
+    """Native structural carry checks, without fabricating catalyst evidence."""
+    days = (exit_session - start).days
+    if not 0 < days <= carry.maximum_calendar_days:
         return (), None, ("SWING_CARRY_CALENDAR_SPAN",)
     cal = calendar.calendar
-    if not cal.is_session(start.isoformat()) or not cal.is_session(r.exit_session.isoformat()):
+    if not cal.is_session(start.isoformat()) or not cal.is_session(exit_session.isoformat()):
         return (), None, ("SWING_CARRY_EXACT_SESSIONS_REQUIRED",)
-    labels = cal.sessions_in_range(start.isoformat(), r.exit_session.isoformat())
-    if len(labels) - 1 > r.carry.maximum_carry_sessions:
+    labels = cal.sessions_in_range(start.isoformat(), exit_session.isoformat())
+    if len(labels) - 1 > carry.maximum_carry_sessions:
         return (), None, ("SWING_CARRY_SESSION_LIMIT",)
     path = tuple(
         CarrySession(
@@ -100,26 +114,21 @@ def _calendar_path(r, calendar):
         )
         for s in labels
     )
-    deadline = path[-1].closes_at - timedelta(minutes=r.carry.exit_before_close_minutes)
+    deadline = path[-1].closes_at - timedelta(minutes=carry.exit_before_close_minutes)
     reasons = []
     if deadline <= path[-1].opens_at:
         reasons.append("SWING_CARRY_EXIT_WINDOW_EMPTY")
-    contract = r.item.seed.instrument.contract
     if not cal.is_session(contract.expiration.isoformat()):
         reasons.append("SWING_CARRY_EXPIRY_SESSION_REQUIRED")
     else:
         last_exit = contract.expiration.isoformat()
-        for _ in range(r.carry.expiry_session_buffer):
+        for _ in range(carry.expiry_session_buffer):
             last_exit = cal.previous_session(last_exit)
-        if r.exit_session > last_exit.date():
+        if exit_session > last_exit.date():
             reasons.append("SWING_CARRY_EXPIRY_BUFFER")
         # Use the earlier explicit contract instant, not an assumed 16:00 expiry.
-        if deadline >= contract.last_trading_at - timedelta(
-            seconds=r.execution.expiry_guard_seconds
-        ):
+        if deadline >= contract.last_trading_at - timedelta(seconds=expiry_guard_seconds):
             reasons.append("SWING_CARRY_CONTRACT_CUTOFF")
-    if r.item.catalyst.valid_through < deadline:
-        reasons.append("SWING_CARRY_CATALYST_HORIZON")
     return path, deadline, tuple(reasons)
 
 

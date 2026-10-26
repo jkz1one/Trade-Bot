@@ -23,7 +23,9 @@ now combine originals with explicit current evidence and retain quotes when inpu
 are missing. The catalyst provider is still absent; entitlement stays unknown.
 [Continuous delivery fixes](docs/CONTINUOUS_STRATEGY_DELIVERY.md) preserve protection
 quotes between Swing cycles and after optional history failures. Missing enrolled
-Scope input explicitly blocks entry cycles.
+Scope input explicitly blocks entry cycles. [Explicit carry schedules](docs/CONNECTED_CARRY_INTENT.md)
+now bind original stock/option exit dates through restart and runtime delivery;
+operational enrollment remains pending.
 
 ## Offline development checks
 

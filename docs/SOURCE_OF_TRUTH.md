@@ -1,6 +1,15 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.137. Continuous strategy/protection delivery, 2026-10-26 EDT.
+Version 1.138. Explicit connected carry intent, 2026-10-26 EDT.
+
+[Connected carry intent](CONNECTED_CARRY_INTENT.md) now accepts an optional frozen
+per-session schedule with separate stock and option exit dates. Preparation,
+restart verification and runtime assembly use the same original intent. Native
+calendar/expiry guards apply; no date or catalyst clearance is inferred. Absent
+schedules preserve legacy hashes, while changed enrolled schedules are rejected.
+See CONNECTED_CARRY_INTENT_PROOF.json for installed validation. Bounded carry-input
+wiring is implemented; operational schedule enrollment/rollover is still work.
+The host is unchanged. Publication is a slice end and more offline coding remains.
 
 [Continuous delivery fixes](CONTINUOUS_STRATEGY_DELIVERY.md) preserve quotes between
 prepared Swing cycles and after optional intraday-history failures. MARKET
@@ -13,7 +22,7 @@ validation. No runtime schema was weakened or data eligibility promoted.
 The catalyst provider adapter is blocked by a missing reviewed source/schema:
 none of the six fixed read tools supplies catalyst/news clearance. No fictional
 provider or CLEAR override was added. This publication is a slice end; other
-offline implementation remains possible. Host setup, carry intent, Scope inputs,
+offline implementation remains possible. Host setup, schedule rollover, Scope inputs,
 eligibility and candidate replacement remain unfinished. Server unchanged;
 connected simulation inactive.
 
@@ -35,7 +44,7 @@ The collector retains one original result per session, including unknown-evidenc
 blockers, and revalidates it on restart without restamping or rewriting. Current
 normalized history remains UNKNOWN and therefore blocked. Current metadata and
 frame assembly now have the delivery path above. Catalyst provider/provenance and
-connected carry-date input remain unfinished, alongside Scope, eligibility,
+operational carry schedule rollover remain unfinished, alongside Scope, eligibility,
 candidates and host setup.
 See SWING_SOURCE_BINDING_PROOF.json for installed offline evidence. Publication
 is a slice end; additional coding can continue without another collection run.

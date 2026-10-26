@@ -37,6 +37,13 @@ longer requests expired unheld candidates. Held instruments remain requested,
 including contracts past their last-trading cutoff, to preserve available evidence.
 This does not synthesize replacement contracts or approve expiration handling.
 
+## Original carry intent
+
+[Explicit carry schedules](CONNECTED_CARRY_INTENT.md) now bind bounded per-session
+stock/option exit dates through source preparation, restart and runtime delivery.
+They cannot enable unenrolled carry or extend existing originals. Schedule
+rollover/enrollment on the host remains unfinished.
+
 ## Remaining implementation and evidence
 
 Current transport supplies SPY/QQQ quotes and intraday five-minute equity history.
