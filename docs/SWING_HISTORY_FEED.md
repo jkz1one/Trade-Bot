@@ -53,13 +53,14 @@ publication. No successful history bundle is stored for an incomplete capture.
 ## What this does and does not complete
 
 This completes an offline-tested history capture, normalization and persistence
-slice. It does not yet attach a native Swing source/seed or catalyst to the runtime
-frame. No REALTIME entitlement is inferred, no catalyst CLEAR status is invented,
+slice. [Native source/seed preparation](SWING_SOURCE_BINDING.md) is now implemented,
+but fresh catalyst/metadata and attachment to runtime frames remain unfinished.
+No REALTIME entitlement is inferred, no catalyst CLEAR status is invented,
 and a cached bundle does not grant entry permission. Connection checks retain
 explicit source-binding/catalyst blockers and reject insufficient enrolled history
 coverage or mismatched source names.
 
-Remaining coding includes original Swing source/seed binding, reviewed evidence
+Remaining coding includes Swing runtime-frame assembly, reviewed evidence
 delivery for catalysts and Scope, replacement contract candidates, and operational
 enrollment/deployment. Actual catalyst/news and Scope/SPX/context evidence is absent
 from the captured six-tool interface. Contract terms, entitlement and stock sizes

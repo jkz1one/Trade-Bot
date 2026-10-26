@@ -17,8 +17,9 @@ checks preserve two held plays and one bankroll through recovery. Operational
 configuration, complete strategy feeds and host activation remain pending.
 
 Optional [pre-open Swing history transport](docs/SWING_HISTORY_FEED.md) now retains
-daily/hourly bars across collector restart. Binding those original histories and
-catalyst evidence into Swing signals remains unfinished; entitlement stays unknown.
+daily/hourly bars across collector restart. [Native original source/seed preparation](docs/SWING_SOURCE_BINDING.md)
+now preserves exact inputs and blocked results. Fresh catalyst/metadata delivery
+and runtime-frame assembly remain unfinished; entitlement stays unknown.
 
 ## Offline development checks
 

@@ -1,6 +1,16 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.134. Pre-open Swing history transport, 2026-10-26 EDT.
+Version 1.135. Native Swing source preparation, 2026-10-26 EDT.
+
+[Native source binding](SWING_SOURCE_BINDING.md) now prepares exact stock sources,
+single option seeds and complete batch roots through existing validators/builders.
+The collector retains one original result per session, including unknown-evidence
+blockers, and revalidates it on restart without restamping or rewriting. Current
+normalized history remains UNKNOWN and therefore blocked. Fresh catalyst/metadata
+delivery, Degen/Swing routing, runtime-frame assembly and connected carry-date
+input remain unfinished, alongside Scope, eligibility, candidates and host setup.
+See SWING_SOURCE_BINDING_PROOF.json for installed offline evidence. Publication
+is a slice end; additional coding can continue without another collection run.
 
 The [Swing history collector](SWING_HISTORY_FEED.md) now has explicit opt-in daily/
 hourly capture, exact exchange-calendar normalization and durable raw-bound native
@@ -8,7 +18,7 @@ history snapshots. It preserves clocks and UNKNOWN entitlement, reserves quote
 read capacity, retains usable required quotes when optional history fails, and
 reuses history across restart. Legacy collector hashes remain unchanged. Installed
 offline evidence is in SWING_HISTORY_FEED_PROOF.json. This is history transport,
-not completed Swing signal delivery: source/seed/catalyst binding, Scope inputs,
+not completed Swing signal delivery: fresh catalyst/metadata and frame delivery, Scope inputs,
 contract/data eligibility, candidate replacement and host setup still need work.
 Actual daily/hourly responses are unverified. More offline coding remains possible;
 publication is a slice end, not a stop forced by missing collection. No server or

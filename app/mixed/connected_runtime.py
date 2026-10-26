@@ -187,6 +187,7 @@ async def run(directory, feed_directory, policy_file, schemas_file, stop, *, clo
                     clock_source=clock_source,
                     held_source=lambda: held_from_observer(observer),
                     calendar=XNYSCalendar(),
+                    source_settings=enrolled,
                 )
 
             await supervise(trade, collect, stop)

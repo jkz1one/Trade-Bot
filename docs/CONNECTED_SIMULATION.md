@@ -42,8 +42,9 @@ This does not synthesize replacement contracts or approve expiration handling.
 Current transport supplies SPY/QQQ quotes and intraday five-minute equity history.
 An optional [pre-open history transport](SWING_HISTORY_FEED.md) now captures and
 retains native daily/hourly histories with original clocks and UNKNOWN entitlement.
-Binding those histories into original Swing sources/seeds and fresh catalysts
-remains unfinished. Scope SPX/context inputs remain absent. Connection checks
+Binding those histories into original Swing sources/seeds now has a
+[native preparation path](SWING_SOURCE_BINDING.md). Fresh catalyst/metadata
+delivery and runtime-frame assembly remain unfinished. Scope SPX/context inputs remain absent. Connection checks
 expose these omissions; do not silently disable a family or call its feed complete.
 
 Complete reviewed contract and data-eligibility binding, appropriate dynamic

@@ -590,10 +590,109 @@ class ContinuousFeed:
             self.db.commit()
             return {"status": "FAILED", "sequence": sequence}
 
-    async def run(self, stop, *, clock_source, held_source, calendar):
+    def load_swing_sources(self, settings, target, *, now):
+        """Read and rebuild the full typed original, without inserting or refreshing it."""
+        from app.mixed.swing_binding import BoundSwingSources, bind_sources, policy_from_settings
+        from app.options.runtime_models import RuntimeSettings
+
+        settings = RuntimeSettings.model_validate(settings.model_dump())
+        if (
+            self.db.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='swing_source_bindings'"
+            ).fetchone()
+            is None
+        ):
+            return None
+        row = self.db.execute(
+            "SELECT * FROM swing_source_bindings WHERE target_session=?", (target.isoformat(),)
+        ).fetchone()
+        if row is None:
+            return None
+        history = self.swing_snapshot(target)
+        if history is None:
+            raise ValueError("Original Swing history missing")
+        bound = BoundSwingSources.model_validate_json(row["payload_json"])
+        policy = policy_from_settings(settings, self.policy.candidates)
+        if (
+            bound.created_at > clock(now)
+            or bound.target_session != target
+            or fingerprint(bound) != row["payload_hash"]
+            or bound != bind_sources(history, policy, created_at=bound.created_at)
+        ):
+            raise ValueError("Original Swing binding changed")
+        return bound
+
+    def bind_swing_sources(self, settings, *, now):
+        """Create once or verify an existing session's source-binding receipt.
+
+        This is derived collector evidence, separate from native execution state.
+        Blocked receipts are retained too; neither restart nor later prices can
+        rewrite the original preparation time or upgrade unknown entitlement.
+        """
+        from zoneinfo import ZoneInfo
+
+        from app.mixed.swing_binding import bind_sources, policy_from_settings
+        from app.options.runtime_models import RuntimeSettings
+
+        settings = RuntimeSettings.model_validate(settings.model_dump())
+        if settings.stock_policy is None or (
+            settings.stock_policy.swing is None and settings.swing_policy is None
+        ):
+            return None
+        if (
+            self.policy.swing_history is None
+            or settings.limits.population_id != self.policy.population_id
+            or settings.stock_policy.instruments != self.policy.stocks
+        ):
+            raise ValueError("Matching owner and Swing history enrollment required")
+        now = clock(now)
+        from app.robinhood.schedule import XNYSCalendar
+
+        cal = XNYSCalendar().calendar
+        day = now.astimezone(ZoneInfo("America/New_York")).date().isoformat()
+        target = cal.date_to_session(day, direction="next")
+        if now >= cal.session_close(target).to_pydatetime():
+            target = cal.next_session(target)
+        history = self.swing_snapshot(target.date())
+        if history is None:
+            return {
+                "status": "BLOCKED",
+                "blockers": ["SWING_PREOPEN_HISTORY_UNAVAILABLE"],
+                "target_session": target.date().isoformat(),
+                "trading_ready": False,
+            }
+        policy = policy_from_settings(settings, self.policy.candidates)
+        # Additive, derived evidence only. Existing history enrollment and raw
+        # captures are untouched; no execution or fixture database is migrated.
+        self.db.execute(
+            "CREATE TABLE IF NOT EXISTS swing_source_bindings(target_session TEXT PRIMARY KEY,payload_json TEXT NOT NULL,payload_hash TEXT NOT NULL)"
+        )
+        bound = self.load_swing_sources(settings, target.date(), now=now)
+        if bound is None:
+            bound = bind_sources(history, policy, created_at=now)
+            self.db.execute(
+                "INSERT INTO swing_source_bindings VALUES(?,?,?)",
+                (target.date().isoformat(), bound.model_dump_json(), fingerprint(bound)),
+            )
+            self.db.commit()
+        return {
+            "status": bound.status,
+            "blockers": list(bound.blockers),
+            "target_session": bound.target_session.isoformat(),
+            "created_at": bound.created_at.isoformat(),
+            "binding_hash": fingerprint(bound),
+            "stock_sources": len(bound.stocks),
+            "option_seeds": len(bound.seeds),
+            "option_batches": len(bound.batches),
+            "trading_ready": False,
+        }
+
+    async def run(self, stop, *, clock_source, held_source, calendar, source_settings=None):
         while not stop.is_set():
             now = clock(clock_source())
             await self.tick(now=now, held=held_source(), window=calendar.current_window(now))
+            if source_settings is not None and self.policy.swing_history is not None:
+                self.bind_swing_sources(source_settings, now=clock_source())
             try:
                 await asyncio.wait_for(stop.wait(), timeout=self.policy.poll_seconds)
             except TimeoutError:

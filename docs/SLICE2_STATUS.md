@@ -1,5 +1,25 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Native Swing source preparation: 2026-10-26 EDT
+
+Starting feature HEAD 89076c6e118e8574c202639ee1a9a12221a97a4b. Native source binding
+now consumes original daily/hourly history through stock source validation, single
+seed target derivation or full option-family batch enumeration. It checks original
+clocks, exact coverage, contract ambiguity, metadata and carry requirements. The
+collector persists and revalidates per-session originals and blocked results;
+restart cannot restamp sources or promote unknown history. Both run paths supply
+their existing frozen runtime configuration. No additional provider/model read.
+
+Current normalized entitlement stays UNKNOWN and blocks preparation. Eligible
+synthetic fixtures verify actual native stock sources, single-seed targets and all
+14 enrolled batch variants. Final validation: 150 installed Python tests passed,
+with all 287 application files identical in source, wheel and installation. Ruff
+and diff checks pass. See SWING_SOURCE_BINDING.md and its proof. Fresh
+catalyst/metadata delivery, Degen/Swing routing and runtime-frame assembly remain
+unfinished, as do connected carry-date input, Scope and operational activation.
+Stopping reason after publication: **slice end**. Further offline coding is possible.
+No credentials, provider/model calls, dependencies, subagents, CI or host changes.
+
 ## Pre-open Swing history transport: 2026-10-26 EDT
 
 Starting feature HEAD aaae070ca83619e4d33a4a920878735a40241453. Explicit optional

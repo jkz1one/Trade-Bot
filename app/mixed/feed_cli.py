@@ -61,6 +61,7 @@ def main(argv=None):
                 clock_source=utc_now,
                 held_source=lambda: held_from_observer(observer),
                 calendar=XNYSCalendar(),
+                source_settings=settings,
             )
 
         asyncio.run(run())

@@ -257,7 +257,10 @@ def test_native_restart_consumes_next_delivery_without_reset_or_duplicate_owner(
                 assert engine.reconcile(engine.venue.snapshot(later), now=later)["reconciled"]
         times[0] += timedelta(seconds=2)
 
-    async def offline_capture(self, stop, *, clock_source, held_source, calendar):
+    async def offline_capture(
+        self, stop, *, clock_source, held_source, calendar, source_settings=None
+    ):
+        assert source_settings == settings
         assert state(args[0])[0]["heartbeat_at"] is not None
         calls.append(held_source())
         # The first runner holds both real leases before any provider task starts.
