@@ -32,7 +32,10 @@ A [read-only dashboard snapshot publisher](docs/DASHBOARD_SNAPSHOT.md) now bridg
 the native root-owned journal to the existing dashboard reader without changing
 credentials or creating another account. A [reviewed dashboard switch and rollback](docs/CONNECTED_DASHBOARD_HOST.md)
 now verifies the existing login and the fresh display copy before switching readers.
-Cross-user host acceptance, operational owner settings and actual activation remain pending.
+[First-owner enrollment and coordinated publication](docs/CONNECTED_FIRST_OWNER.md)
+now create the native owner/collector from an exact configuration review and let
+the runner supervise its dashboard publisher through shutdown and restart.
+Concrete host settings/launcher, cross-user acceptance and actual activation remain pending.
 
 ## Offline development checks
 

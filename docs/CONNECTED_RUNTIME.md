@@ -73,6 +73,17 @@ and owner binding, lists enrolled sessions and reports the current effective
 policy hash. Older binaries cannot open a collector after its first rollover.
 Native state, delivery sequence and entry halts are retained.
 
+## Optional coordinated dashboard publisher
+
+The runner now accepts `--snapshot-directory`, `--reader-uid` and `--reader-gid`
+as one complete optional group for check/run. The snapshot must already exist
+with the same binding. Runtime, collector and publisher leases remain held through
+component cleanup and any in-progress copy. Both readers wait for the first native
+runtime tick. Publication runs in a background thread; failures stop the shared
+session, repeated cancellation drains the actual copy, and orderly shutdown emits
+one final stopped-state snapshot. No publisher is created, automatically retried
+or independently resumed. See [first owner and publication](CONNECTED_FIRST_OWNER.md).
+
 ## Dashboard and remaining work
 
 The existing dashboard remains a separate stored reader. The check's
@@ -81,7 +92,7 @@ bind later; no page request starts workers. No Caddy, port, password or existing
 review container changes are part of this command. Preserve all review fixtures
 and consumed rollback names.
 
-Still required: reviewed operational enrollment/configuration, full contract/data
+Still required: concrete reviewed host settings/launcher, full contract/data
 eligibility, replacement option candidates, Swing catalyst/metadata and runtime-frame delivery,
 Scope SPX/context, and a reviewed host deployment/dashboard switch. Then the
 operator can verify ongoing operation on the server. The accepted October 26

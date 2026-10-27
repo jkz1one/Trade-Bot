@@ -140,7 +140,7 @@ def check(directory, feed_directory, policy_file, schemas_file, *, clock_source=
     return result, settings, policy, schemas, observer
 
 
-async def supervise(runtime_run, collector_run, stop, *, shutdown_seconds=30.0):
+async def supervise(runtime_run, collector_run, stop, *, shutdown_seconds=30.0, publisher_run=None):
     """Drain both components before releasing either native ownership lease."""
     if type(stop) is not asyncio.Event or not 0 < shutdown_seconds <= 60:
         raise ValueError("Explicit shutdown event and bounded grace required")
@@ -164,6 +164,10 @@ async def supervise(runtime_run, collector_run, stop, *, shutdown_seconds=30.0):
             component("COLLECTOR", collector_run), name="connected-collector"
         ),
     }
+    if publisher_run is not None:
+        tasks["PUBLISHER"] = asyncio.create_task(
+            component("PUBLISHER", publisher_run), name="connected-publisher"
+        )
     waiter = asyncio.create_task(stop.wait(), name="connected-shutdown")
     forced = []
     try:
@@ -185,9 +189,69 @@ async def supervise(runtime_run, collector_run, stop, *, shutdown_seconds=30.0):
         )
 
 
-async def run(directory, feed_directory, policy_file, schemas_file, stop, *, clock_source=utc_now):
+def dashboard_check(directory, snapshot_directory, reader_uid, reader_gid, *, clock_source=utc_now):
+    if snapshot_directory is None:
+        if reader_uid is not None or reader_gid is not None:
+            raise ValueError("Reader identity requires an enrolled snapshot directory")
+        return None
+    from app.mixed.dashboard_snapshot import check as snapshot_check
+
+    result = snapshot_check(
+        directory, snapshot_directory, reader_uid, reader_gid, clock_source=clock_source
+    )
+    pending = Path(snapshot_directory) / ".pending.db"
+    if pending.exists() or pending.is_symlink():
+        raise ValueError("Retained failed snapshot requires inspection")
+    return result
+
+
+async def publish_async(publisher):
+    # SQLite backup/validation must not block native supervision. Cancellation
+    # drains the bounded copy before any owning lease or descriptor can close.
+    task = asyncio.create_task(asyncio.to_thread(publisher.publish), name="connected-snapshot-copy")
+    try:
+        return await asyncio.shield(task)
+    except asyncio.CancelledError:
+        while not task.done():
+            try:
+                await asyncio.shield(task)
+            except asyncio.CancelledError:
+                pass
+            except Exception:  # noqa: BLE001 -- consume copy failure, preserve cancellation
+                break
+        if not task.cancelled():
+            task.exception()  # Consume any copy failure while retaining cancellation.
+        raise
+
+
+async def await_ready(ready, stop):
+    waits = [asyncio.create_task(ready.wait()), asyncio.create_task(stop.wait())]
+    try:
+        await asyncio.wait(waits, return_when=asyncio.FIRST_COMPLETED)
+    finally:
+        for task in waits:
+            task.cancel()
+        await asyncio.gather(*waits, return_exceptions=True)
+    return not stop.is_set()
+
+
+async def run(
+    directory,
+    feed_directory,
+    policy_file,
+    schemas_file,
+    stop,
+    *,
+    clock_source=utc_now,
+    snapshot_directory=None,
+    reader_uid=None,
+    reader_gid=None,
+):
     report, settings, policy, schemas, observer = check(
         directory, feed_directory, policy_file, schemas_file, clock_source=clock_source
+    )
+    dashboard_check(
+        directory, snapshot_directory, reader_uid, reader_gid, clock_source=clock_source
     )
     if stop.is_set():
         return {"status": "NOT_STARTED", "live_enabled": False}
@@ -199,21 +263,21 @@ async def run(directory, feed_directory, policy_file, schemas_file, stop, *, clo
         # Recheck under the owner lease, including the retained replay event.
         inspect_owner(Path(directory), enrolled, clock_source=clock_source)
         feed = ContinuousFeed(feed_directory, policy, schemas)
+        publisher = None
         try:
+            if snapshot_directory is not None:
+                from app.mixed.dashboard_snapshot import DashboardPublisher
+
+                publisher = DashboardPublisher(
+                    directory, snapshot_directory, reader_uid, reader_gid, clock_source=clock_source
+                )
             ready = asyncio.Event()
 
             async def trade(stop):
                 await runtime.run(stop, ready=ready)
 
             async def collect(stop):
-                waits = [asyncio.create_task(ready.wait()), asyncio.create_task(stop.wait())]
-                try:
-                    await asyncio.wait(waits, return_when=asyncio.FIRST_COMPLETED)
-                finally:
-                    for task in waits:
-                        task.cancel()
-                    await asyncio.gather(*waits, return_exceptions=True)
-                if stop.is_set():
+                if not await await_ready(ready, stop):
                     return
                 await feed.run(
                     stop,
@@ -223,15 +287,34 @@ async def run(directory, feed_directory, policy_file, schemas_file, stop, *, clo
                     source_settings=enrolled,
                 )
 
-            await supervise(trade, collect, stop)
+            async def publish(stop):
+                if not await await_ready(ready, stop):
+                    return
+                while not stop.is_set():
+                    await publish_async(publisher)
+                    try:
+                        await asyncio.wait_for(stop.wait(), timeout=5)
+                    except TimeoutError:
+                        pass
+
+            await supervise(trade, collect, stop, publisher_run=publish if publisher else None)
+            if publisher is not None:
+                # All runtime/collector cleanup has finished. Publish the stopped
+                # native state once, still under all three ownership leases.
+                await publish_async(publisher)
         finally:
-            feed.close()
+            try:
+                if publisher is not None:
+                    publisher.close()
+            finally:
+                feed.close()
     return {
         "status": "STOPPED",
         "population_id": settings.limits.population_id,
         "live_enabled": False,
         "entry_blockers": report["entry_blockers"],
         "automatic_resume": False,
+        "dashboard_published": snapshot_directory is not None,
     }
 
 
@@ -242,7 +325,16 @@ async def serve(args):
         loop.add_signal_handler(sig, stop.set)
     timer = loop.call_later(args.seconds, stop.set)
     try:
-        return await run(args.directory, args.feed_directory, args.policy, args.schemas, stop)
+        return await run(
+            args.directory,
+            args.feed_directory,
+            args.policy,
+            args.schemas,
+            stop,
+            snapshot_directory=args.snapshot_directory,
+            reader_uid=args.reader_uid,
+            reader_gid=args.reader_gid,
+        )
     finally:
         timer.cancel()
         for sig in (signal.SIGINT, signal.SIGTERM):
@@ -255,7 +347,17 @@ def main(argv=None):
     for name in ("directory", "feed-directory", "policy", "schemas"):
         parser.add_argument("--" + name, required=True)
     parser.add_argument("--seconds", type=int, help="Required run duration, 1..86400 seconds")
+    parser.add_argument(
+        "--snapshot-directory", help="Existing enrolled dashboard snapshot; never created by run"
+    )
+    parser.add_argument("--reader-uid", type=int)
+    parser.add_argument("--reader-gid", type=int)
     args = parser.parse_args(argv)
+    if args.snapshot_directory is None:
+        if args.reader_uid is not None or args.reader_gid is not None:
+            parser.error("Reader UID/GID require --snapshot-directory")
+    elif args.reader_uid is None or args.reader_gid is None:
+        parser.error("Snapshot directory requires explicit reader UID and GID")
     if args.operation == "run" and (args.seconds is None or not 1 <= args.seconds <= 86400):
         parser.error("Explicit bounded run duration required")
     if args.operation == "check" and args.seconds is not None:
@@ -263,6 +365,11 @@ def main(argv=None):
     try:
         if args.operation == "check":
             result = check(args.directory, args.feed_directory, args.policy, args.schemas)[0]
+            snapshot = dashboard_check(
+                args.directory, args.snapshot_directory, args.reader_uid, args.reader_gid
+            )
+            if snapshot is not None:
+                result["dashboard_snapshot"] = snapshot
         else:
             result = asyncio.run(serve(args))
     except ComponentFailure as exc:

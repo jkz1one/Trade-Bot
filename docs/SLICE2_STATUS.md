@@ -1,5 +1,45 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## First native owner enrollment and coordinated publisher: 2026-10-26 EDT
+
+Starting feature HEAD 4f26b7ecef5ce79510cf812d23ea752d70f612d0. A create-only
+first-owner interface now reviews complete supplied settings, collector policy,
+schemas and paths without opening credentials. Exact-hash enrollment repeats
+review under a parent lease, initializes one native virtual-money bankroll,
+rechecks collector inputs and delegates guarded collector enrollment. A final
+receipt links all identities. No brokerage account, data read, model call or worker
+start occurs. Explicitly configured private model/operator keys retain their
+native enrollment validation. Partial failures remain and retries cannot overwrite.
+
+The existing connected runner accepts an optional already enrolled snapshot plus
+explicit reader UID/GID. Read-only preflight rejects changed identities or retained
+pending copies. Owner, collector and publisher leases precede asynchronous tasks.
+Native recovery's first tick precedes both readers. Publication runs on a thread;
+publisher failure/early return stops the common session. Repeated cancellation
+waits for the actual copy to finish before ownership resources close. Orderly
+shutdown emits a final stopped-state snapshot after runtime/collector cleanup.
+No automatic snapshot creation, retry, resume or bankroll reset was added.
+
+Final validation: 172 unique installed tests passed; one existing cross-user
+publisher test skipped in this ID-0-only sandbox. All 293 application files match
+source/wheel/install, release identity VERIFIED_FILES. Modified copied tests match;
+Ruff/format/diff checks pass. Native two-session tests preserve zero/two plays,
+unreconciled durable fills, cash, original entries, fills and feed sequence; final
+snapshot equals native stored state. Initial validation was 40 passed/1 failed:
+zero capacity was correctly rejected by native initialization. The new review now
+rejects it before creating files, with an explicit refusal test. No native gate
+was relaxed. Overlapping runs are not summed. See CONNECTED_FIRST_OWNER_PROOF.json
+and CONNECTED_FIRST_OWNER.md for evidence and CLI boundaries.
+
+Stopping reason: **slice end**, not missing-feed collection. Concrete operational
+settings/catalog and the reviewed host launcher still remain offline coding work.
+Actual Docker/cross-user/login/run acceptance, native operator-command transport,
+eligible catalyst/Scope inputs, complete contract/data eligibility and connected
+market acceptance remain open. Server unchanged on a653cc7 frozen V3, connected
+simulation inactive, LIVE disabled. No real provider/model calls, credentials,
+server changes, dependencies, hosted CI or subagents. Main unchanged; PR #1 stays
+open/draft.
+
 ## Reviewed snapshot dashboard switch and rollback: 2026-10-26 EDT
 
 Starting feature HEAD 39f818ce4588cf3cc7b5de3678e079a3ed9c326c. A new installed

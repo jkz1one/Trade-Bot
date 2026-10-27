@@ -2,6 +2,7 @@
 
 import asyncio
 import hashlib
+import os
 import sqlite3
 from datetime import timedelta
 
@@ -194,8 +195,9 @@ def test_supervisor_cancellation_drains_components_and_propagates():
 @pytest.mark.parametrize(
     "with_positions,unreconciled", [(False, False), (True, False), (True, True)]
 )
+@pytest.mark.parametrize("with_dashboard", [False, True])
 def test_native_restart_consumes_next_delivery_without_reset_or_duplicate_owner(
-    tmp_path, schemas, monkeypatch, with_positions, unreconciled
+    tmp_path, schemas, monkeypatch, with_positions, unreconciled, with_dashboard
 ):
     args, settings, _ = enrolled(tmp_path, schemas)
     times = [AT]
@@ -283,9 +285,33 @@ def test_native_restart_consumes_next_delivery_without_reset_or_duplicate_owner(
         stop.set()
 
     monkeypatch.setattr(ContinuousFeed, "run", offline_capture)
+    snapshot_args = {}
+    if with_dashboard:
+        from app.mixed.dashboard_snapshot import DashboardPublisher
+
+        destination = tmp_path / "dashboard"
+        publisher = DashboardPublisher(
+            args[0],
+            destination,
+            os.getuid(),
+            os.getgid(),
+            create=True,
+            clock_source=lambda: times[0],
+        )
+        try:
+            publisher.publish()
+        finally:
+            publisher.close()
+        snapshot_args = {
+            "snapshot_directory": destination,
+            "reader_uid": os.getuid(),
+            "reader_gid": os.getgid(),
+        }
     before_cash = None
     for generation in (1, 2):
-        result = asyncio.run(run(*args, asyncio.Event(), clock_source=lambda: times[0]))
+        result = asyncio.run(
+            run(*args, asyncio.Event(), clock_source=lambda: times[0], **snapshot_args)
+        )
         assert result["status"] == "STOPPED" and not result["automatic_resume"]
         runtime, control = state(args[0])
         assert runtime["generation"] == generation and runtime["feed_sequence"] == generation
@@ -296,6 +322,12 @@ def test_native_restart_consumes_next_delivery_without_reset_or_duplicate_owner(
             args[0] / "options.db", settings.limits.population_id, clock=lambda: times[0]
         ).report()
         assert report["status"] == "OK", report
+        if with_dashboard:
+            snapshot = MixedObserver(
+                destination / "options.db", settings.limits.population_id, clock=lambda: times[0]
+            ).report()
+            assert snapshot == report
+            assert result["dashboard_published"]
         assert {p["play_id"]: p["entry"] for p in report["positions"]} == entries
         assert len(report["fills"]) == len(entries)
         assert all(

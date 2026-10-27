@@ -5,6 +5,10 @@ for an already enrolled native simulation owner. It uses that owner's one shared
 bankroll and population. It does not create another account, reset cash, migrate
 the frozen dashboard, resume entry or start provider/model/runtime workers.
 
+For a first native owner that does not exist yet, use the separate
+[reviewed first-owner enrollment](CONNECTED_FIRST_OWNER.md). It creates one local
+virtual owner and delegates collector enrollment here; it never creates a broker account.
+
 This is an offline-verified setup interface, not a host activation instruction.
 The host remains on the a653cc7 frozen V3 review. No real configuration or carry
 dates were selected for the user. Host configuration and deployment still need work.

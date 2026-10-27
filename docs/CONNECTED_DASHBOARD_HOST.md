@@ -121,8 +121,8 @@ including late rename failures, retained failed starts, mismatched isolation,
 concurrent-operation exclusion and changed review hashes. These are not actual
 Docker, cross-user, browser or server acceptance tests.
 
-Reviewed host owner configuration/enrollment and orchestration of the bounded
-runtime/publisher still remain. Eligible catalyst/Scope inputs, complete contract
+The [first-owner and coordinated-publisher interface](CONNECTED_FIRST_OWNER.md) is
+now implemented. Concrete host settings and a reviewed launcher still remain. Eligible catalyst/Scope inputs, complete contract
 and data eligibility, operator-command transport and connected market acceptance
 also remain. The server is unchanged on frozen a653cc7; no connected simulation
 was started. This publication ends a coding slice, not a missing-feed stop.

@@ -1,6 +1,20 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.142. Reviewed dashboard switch and rollback, 2026-10-26 EDT.
+Version 1.143. First-owner enrollment and coordinated publication, 2026-10-26 EDT.
+
+[First-owner enrollment and coordinated publication](CONNECTED_FIRST_OWNER.md)
+now review/create one native owner and collector from complete supplied settings,
+with exact hashes, parent/native leases, retained failures and a linked receipt.
+No broker account or worker is created by review; enrollment starts no worker.
+The connected runner can supervise an already enrolled publisher alongside its
+runtime/collector, waiting for native recovery and draining the real copy thread
+through repeated cancellation. Orderly shutdown publishes final stopped state.
+See CONNECTED_FIRST_OWNER_PROOF.json: 172 installed tests passed; one cross-user
+publisher test skipped in the ID-0-only sandbox. All 293 application files match.
+An initial zero-capacity enrollment failure now rejects at review before creating
+files, preserving the native strategy rule. Concrete operational settings/catalog,
+reviewed host launch, operator transport and eligible feeds remain unfinished.
+Server unchanged, simulation inactive. Slice end; more offline coding remains.
 
 [Reviewed dashboard activation/rollback](CONNECTED_DASHBOARD_HOST.md) now binds
 an exact review to the existing frozen reader, new immutable image, snapshot and
