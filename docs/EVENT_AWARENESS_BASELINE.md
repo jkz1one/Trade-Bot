@@ -18,6 +18,14 @@ During verification the base advanced again to
 `f305ea19bef3fdfb5aec04c51aa431f32dc2b694` (bounded after-close Swing history proof).
 That helper/docs/tests change was also reviewed; no application contract changed.
 
+Current reconciliation: the feature now incorporates base
+`f305ea19bef3fdfb5aec04c51aa431f32dc2b694` in a merge **into the feature branch only**.
+The paragraphs above describe earlier checkpoints. The sole documentation conflict
+was resolved by retaining the full latest base status and a current event summary.
+Native application paths outside `app.events` match that base exactly. See
+[combined-tree offline proof](EVENT_RECONCILIATION_PROOF.json). No host action or
+runtime connection is performed by this reconciliation.
+
 Status: **fixture verified**, independently testable first implementation.
 Provider and host acceptance are outstanding. No deployment, server workers,
 model calls, subscription purchases, enforcement or LIVE enablement occurred.

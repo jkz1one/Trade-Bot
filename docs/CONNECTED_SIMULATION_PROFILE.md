@@ -68,6 +68,14 @@ This creates only `/etc/trade-bot-connected/profiles/initial/{runtime,policy,rev
 It refuses an existing destination, runs without network or OAuth, and never
 mounts the model-key directory into its profile-generation container.
 
+The host's `discovery.json` is the complete `read_cli discover` report, with its
+schemas under `result.schemas`. Both profile review and host bundle preparation
+now accept that completed report as well as an exported `ReadSchemas` object.
+The loader validates the full discovery envelope/result, rejects duplicate keys,
+retains the private-file bounds and checks the existing exact reviewed wire hash.
+It never rewrites the original discovery artifact. Prepared bundles still store
+only the native schema object, so downstream enrollment/runtime formats do not change.
+
 The observed SHADOW model key is UID/GID 10001, mode 0600. Native root-owned
 simulation requires its own root-owned 0600 file. This explicit host operation
 copies the existing key locally without changing the SHADOW source:
@@ -114,3 +122,11 @@ Host evidence so far: `a05da9f` image built successfully as
 SHADOW and its observer remain running, dashboard remains frozen on ui-review-v3,
 and connected state/publisher directories were absent. No server action was
 performed by this coding turn.
+
+The user subsequently built `19616d7` as
+`sha256:17f0fe5dd73e0f136b730d911c1dfa552cac6fd21789f5c9988234810917ed4a`.
+Profile review failed before state creation because it parsed the discovery
+envelope as bare schemas. A direct offline diagnostic confirmed that exact
+validation error; the compatibility loader above fixes both affected consumers.
+See `SCHEMA_ARTIFACT_PROOF.json` for the installed regression check. No new
+collection, authentication or changes to existing services are needed for this fix.

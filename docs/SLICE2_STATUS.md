@@ -1,5 +1,20 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Event feature reconciliation: 2026-10-27 EDT
+
+Merged verified base `f305ea19bef3fdfb5aec04c51aa431f32dc2b694` into
+`feat/event-awareness-baseline`, starting at `355e8c1f9071ee53f87b2c0dfd285cfedd2925d1`.
+Only SOURCE_OF_TRUTH.md conflicted; preserved the full current base status and
+added the feature's observation-only status. All native application code outside
+app.events matches the verified base. Existing event assessments, audit consumer,
+account safety and mandatory protection contracts are unchanged.
+
+See EVENT_RECONCILIATION_PROOF.json for installed combined-tree verification.
+Stopping reason: completed branch reconciliation, not provider/host acceptance.
+Remaining: real source access/coverage, host observer integration and process/UID
+isolation, missing candidate context, retention/alerts and real latency acceptance.
+No workers, deployment, enforcement, base/main writes or PR #1 edits occurred.
+
 ## Event observer continuation: 2026-10-27 EDT
 
 Continued `feat/event-awareness-baseline` from `f39a106639bbb1a66c85a75a7737f216b2a87fd6`.

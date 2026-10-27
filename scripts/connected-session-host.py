@@ -105,7 +105,15 @@ def mount(source, target, readonly=True):
     return ["--mount", f"type=bind,src={source},dst={target}" + (",readonly" if readonly else "")]
 
 
-def isolation():
+def session_resources():
+    # Runtime, collector and publisher (including children) share this quota.
+    # Use up to two available CPUs. A larger quota cannot add a core to a
+    # single-CPU host. This is a ceiling, not reserved host capacity.
+    available = len(os.sched_getaffinity(0))
+    return {"cpus": min(2, available), "available_logical_cpus": available}
+
+
+def isolation(*, cpus=1):
     return [
         "--init",
         "--read-only",
@@ -118,7 +126,7 @@ def isolation():
         "--memory",
         "1g",
         "--cpus",
-        "1",
+        str(cpus),
         "--pids-limit",
         "128",
         "--tmpfs",
@@ -203,6 +211,8 @@ def owner_args():
 def runtime_args():
     return [
         "--directory",
+        "/state/owner",
+        "--snapshot-owner",
         "/source",
         "--feed-directory",
         "/state/collector",
@@ -258,6 +268,7 @@ def review(image_id, phase, seconds=None, run_id=None):
             "snapshot_binding_sha256": native["dashboard_snapshot"]["binding_sha256"],
             "seconds": seconds,
             "container_name": name,
+            "resources": session_resources(),
         }
     plan = {
         "version": "connected-host-review-v1",
@@ -325,6 +336,9 @@ def apply(plan):
     private(AUTH, True)
     private(AUTH / "robinhood-oauth.json")
     private(AUTH / "discovery.json")
+    resources = session_resources()
+    if plan["binding"]["resources"] != resources:
+        raise ValueError("Reviewed session resources changed")
     args = config_mounts(True, source=True, exports=True) + secrets(manifest)
     # OAuth directory is writable only for existing token refresh/read leases.
     # Discovery is protected; gateway exposes only the six fixed market-read tools.
@@ -347,7 +361,7 @@ def apply(plan):
         "max-size=10m",
         "--log-opt",
         "max-file=3",
-        *isolation(),
+        *isolation(cpus=resources["cpus"]),
         "--cap-add",
         "CHOWN",
         "--cap-add",
@@ -374,6 +388,7 @@ def apply(plan):
         raise RuntimeError("Existing SHADOW identities changed; new session stopped")
     return {
         "status": "SESSION_STARTED",
+        "resources": resources,
         "container_name": name,
         "container_id": container_id,
         "seconds": plan["binding"]["seconds"],

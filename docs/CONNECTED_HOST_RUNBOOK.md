@@ -37,6 +37,8 @@ Existing server inputs:
 
 - Broker read auth directory: `/var/lib/trade-bot-read-auth`.
 - Exported schemas: `discovery.json` within that directory.
+- That file may contain the completed discovery report; the profile/bundle loaders
+  validate it and extract `result.schemas` without changing the source file.
 - OAuth file: `robinhood-oauth.json` within that directory.
 - Optional model/operator keys: existing paths explicitly named in the supplied
   runtime settings. They must be private root-owned files for the native root
@@ -173,3 +175,88 @@ current feed. Full contract terms, entitlement, executable stock sizes and eligi
 catalyst/Scope sources remain unresolved. No successful simulated entry is promised
 until its native eligibility gates pass. Operator transport and other broader
 strategy/data work are not declared complete by this runbook.
+
+## Recovery from the first host startup path failure
+
+On e2e97ff, enrollment used `/state/owner` but the launcher passed `/source` as
+its runtime directory. Although both mounts expose the same files, the native
+execution configuration freezes the venue path at enrollment and refuses the
+alias. Offline reproduction confirms the immutable-configuration error; host
+read-only evidence shows the owner stayed ENROLLED at generation/feed sequence 0.
+
+The corrected launcher keeps `--directory /state/owner` and adds
+`--snapshot-owner /source`. The latter is exclusively a display source: private
+runtime settings, journal and venue files must have the same filesystem identities
+as the execution owner. Copies, changed files and symlink paths are rejected.
+Alias identity is checked before startup and each publication. The runtime still
+opens and leases the original execution path. Read-only preflight also verifies
+the enrolled venue path. Existing snapshot bindings remain unchanged.
+
+Build the corrected release, then use `review-run --run-id first-check-2 --seconds
+600` and the resulting review hash for `run`. Do not rerun profile creation,
+key staging, bundle preparation or enrollment. Preserve the original first-check
+container, account and snapshot. This repair does not establish eligible market
+inputs or successful host collection; inspect the new session after launch.
+
+## Diagnosing a stopped component
+
+A SESSION_STARTED receipt confirms launch only. Inspect retained container status
+and bounded logs before selecting another run ID. A reused name is rejected even
+when its earlier container exited; this preserves the failed run's evidence.
+
+Connected failures now include `failures` with component, allowlisted `error_class`
+and up to eight application file/line locations. Unexpected returns and forced
+shutdowns have explicit codes. Startup failures use a single `failure` field.
+No exception message, traceback source text, local variable, credential or provider
+response is logged. The native FIXTURE_READ_FAILED event additionally records
+`operation`, `timeout_seconds` and `elapsed_seconds`; its event time retains the
+original operation timestamp. Earlier empty failure payloads cannot be recovered.
+
+The first corrected host run delivered 26 updates and consumed through sequence 25
+before a local fixture-read failure. Later offline probes passed in 1.358–1.831s.
+Do not infer a confirmed timeout or healthy sustained runtime from those probes.
+Deploy the diagnostic release and review a new bounded session, e.g.
+`review-run --run-id first-check-3 --seconds 600`, against the same enrolled owner.
+The existing failure halt remains in force. This is a collection/runtime diagnosis;
+it does not enable entries, clear eligibility blockers or reset the account.
+
+## Connected-session CPU allowance
+
+The native runtime, collector, publisher and their subprocesses previously shared
+the offline helper's one-CPU ceiling. Host first-check-3 confirmed a local snapshot
+FixtureProcessTimeout at the unchanged five-second deadline, while three isolated
+reads had passed in 1.358–1.831 seconds. Quota contention is a hypothesis, not an
+established root cause.
+
+Connected sessions now use up to two available CPUs. The review's `binding.resources`
+includes `cpus: min(2, available_logical_cpus)` and the host process affinity count.
+The resource record is bound by the expected review hash, rechecked before launch,
+and repeated in SESSION_STARTED. Offline helpers remain limited to one CPU.
+This does not reserve capacity, modify other containers, increase the five-second
+deadline or clear an existing entry halt. A one-CPU host cannot provide two CPUs
+of execution even with a higher quota; inspect its reported capacity before
+interpreting the next test. Host load or synchronous work may still cause delays.
+
+Build this release, then review `first-check-4` for 600 seconds and launch with
+its new hash. Preserve the enrolled account and all earlier containers. Confirm
+runtime/feed progression and the final container state; do not call the timeout
+resolved until the connected host test passes.
+
+## Single-CPU read-worker startup optimization
+
+The b78133d review confirmed one available logical CPU. Do not treat a quota of
+two as extra hardware or evidence that contention is resolved. The current
+launcher caps its reviewed allowance at the available logical CPU count.
+
+The read worker previously imported both execution engines and SQLAlchemy through
+clock helpers used only by parent orchestration. These imports are now deferred
+until the parent collection functions execute; request/result models, native
+clock validation, read authorization and every deadline are unchanged. The parent
+already loads this execution machinery for the native runtime. Read children do
+not load it merely to decode their protocol.
+
+A one-CPU local cold-import benchmark (five fresh processes per version) measured
+median CPU time of 0.5673s before and 0.2296s after. This is an import-cost reduction,
+not a complete host capture benchmark or proof the snapshot timeout is fixed.
+Rebuild, then freshly review the unused first-check-4 name for 600 seconds.
+Keep the existing account and halt; do not reuse the previous release's review hash.

@@ -185,6 +185,7 @@ def test_pre_stopped_session_does_not_publish_or_open_owner(tmp_path, schemas, m
     [
         ["--reader-uid", "0"],
         ["--snapshot-directory", "/missing"],
+        ["--snapshot-owner", "/source"],
         ["--snapshot-directory", "/missing", "--reader-uid", "0"],
     ],
 )

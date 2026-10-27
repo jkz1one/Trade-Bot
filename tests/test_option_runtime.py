@@ -513,6 +513,14 @@ def test_native_supervisor_timeout_fails_runtime_and_releases_pending_work(tmp_p
         assert state(c)["status"] == "FAILED"
         assert c.engine.journal.report(now=c.now())["halted"]
         assert r.task is None and not r.running
+        with c.engine.journal.read() as db:
+            detail = json.loads(
+                db.execute(
+                    "SELECT payload FROM execution_events WHERE kind='FIXTURE_READ_FAILED' ORDER BY sequence DESC LIMIT 1"
+                ).fetchone()[0]
+            )
+        assert detail["error_class"] == "FixtureProcessTimeout"
+        assert detail["elapsed_seconds"] >= detail["timeout_seconds"]
 
 
 def test_shutdown_request_immediately_fences_entry_during_a_snapshot_wait(tmp_path):

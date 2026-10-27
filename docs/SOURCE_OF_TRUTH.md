@@ -1,43 +1,149 @@
 # Autonomous Compounding Trader: source of truth
 
-Event feature continuation 2, 2026-10-27 EDT (isolated from the base's v1.151).
+Event feature reconciliation, 2026-10-27 EDT.
 
-The [event observation consumer](EVENT_AWARENESS_BASELINE.md#native-evidence-connection)
-now reads bounded batches from the existing publisher's immutable journal copy.
-Native saved family/exit deadlines are reused exactly. Missing context is a retained
-retryable gap. Observations, unique delivery receipts and cursor commit atomically;
-restart, publication continuity, backlog counts and gap retry bounds are explicit.
-It changes no native runtime, source publication, account, eligibility or protection.
-No scheduler/worker is deployed; provider and host acceptance remain outstanding.
-See EVENT_OBSERVER_PROOF.json for installed offline checks and artifact identity.
+`feat/event-awareness-baseline` now incorporates verified base
+`f305ea19bef3fdfb5aec04c51aa431f32dc2b694` into the feature branch. Base/main and
+PR #1 are not modified. The only merge conflict was this status document; the
+complete latest base status is preserved below. Native runtime, account, strategy,
+quote, protection and host-helper files are byte-identical to that base.
 
-Continuation starting feature HEAD: `f39a106639bbb1a66c85a75a7737f216b2a87fd6`.
-Remote base advanced to `de201bd686c37d71fbd93c287595c8e4b922ab8d`; all six commits
-were inspected, including host/runtime diagnostics and captured option catalogs.
-The native publication/decision contract is unchanged. Those base changes were
-not merged into this branch, and their separate host status is not revalidated here.
-Only `feat/event-awareness-baseline` and its own draft PR are updated.
-The parallel base later reached `f305ea19bef3fdfb5aec04c51aa431f32dc2b694` (v1.152,
-after-close Swing history proof). Its scripts/docs/tests do not alter this contract.
+The [event-awareness component](EVENT_AWARENESS_BASELINE.md) remains observation-only:
+background event evidence and local assessments, plus bounded native decision
+observation through the existing publisher's immutable copy. No runtime hook,
+scheduler, provider/model call, deployment, enforcement, new account or carry
+permission is added. The existing $1,000 / $1-per-day / two-play configuration and
+all catalyst, Scope, entitlement and eligibility blockers remain intact.
 
-Version 1.146. Observation-only event awareness feature branch, 2026-10-27 EDT.
+EVENT_RECONCILIATION_PROOF.json records installed combined-tree verification.
+EVENT_AWARENESS_PROOF.json and EVENT_OBSERVER_PROOF.json are historical proofs of
+the earlier isolated revisions. Real provider access/coverage, host scheduling,
+UID/mount isolation, missing-context delivery and host latency acceptance remain.
+This reconciliation does not convert prior base host evidence into acceptance of
+the event observer. The current paper-trading base status follows unchanged.
 
-[Event awareness baseline](EVENT_AWARENESS_BASELINE.md) is an independent additive
-component on `feat/event-awareness-baseline`, starting from verified remote base
-`19616d78546f62d6233d39c2d98055ed8a4da76a`. Background source adapters retain
-normalized revisions/failures and publish atomic versioned snapshots. Shared
-local checks report explicit market/symbol CLEAR, CAUTION, BLOCK_NEW_ENTRIES and
-UNKNOWN, with advisory entry/exposure/review/carry outcomes. Native decision
-linkage reads only the existing publisher's copy; it cannot lock the active
-trading journal. No runtime/strategy/accounting code or current $1,000, $1/day,
-two-play/no-carry profile changed. Catalyst and Scope source gaps remain.
-See the baseline's source/access review and offline proof for precise coverage,
-latency distributions and acceptance limits. This is a completed independently
-testable first slice, ready for a later observation consumer connection; it is
-not host/provider acceptance. No server workers, deployment, enforcement or LIVE.
-Base/main and PR #1 remain untouched; only the new feature branch is published.
+Version 1.152. Bounded after-close Swing history proof, 2026-10-27 EDT.
 
-Previous base checkpoint: Version 1.145. Concrete initial simulation profile.
+Added a host operation to capture actual enrolled daily/hourly histories once and
+run the native mapper without opening owner/collector databases or starting any
+worker. It reuses the existing 105f1a1 image and frozen feed policy; no rebuild or
+account migration is needed. Mid-session calls refuse before provider access.
+After-close/pre-open calls retain original raw evidence, a compact format report
+and mapped history only on complete native validation. UNKNOWN entitlement,
+source-binding/catalyst blockers and all account/entry restrictions remain.
+
+This prepares the next concrete provider acceptance check, which can run outside
+regular market hours. It is not an implemented catalyst or Scope adapter, and no
+new host capture was performed from the workspace. See SWING_HISTORY_HOST_PROOF.md
+and SWING_HISTORY_HOST_PROOF.json. Those strategy integrations still need work.
+
+Prior catalog preparation (v1.151):
+
+Host first-check-4 on 105f1a1 completed its bounded ten-minute session with exit 0,
+zero restarts and a published snapshot. Native runtime generation 3 consumed feed
+sequence 65 and stopped normally; collector sequence 66 was DELIVERED. Its 39
+batches were MARKET packets with SWING_ORIGINAL_SOURCES_UNAVAILABLE and
+SCOPE_CURRENT_INPUT_UNAVAILABLE. This proves one collection/ingestion run, not
+eligible strategy cycles, fills, a permanent timeout fix or dashboard activation.
+
+The uploaded October 27 16:10 EDT archive contains four active October 28 contracts
+and three fresh-at-capture, advancing option quote samples per subject. A new
+offline catalog preparer verifies original receipts, subjects, clocks and wire
+schemas, lists missing native terms, and can bind explicitly reviewed supplemental
+terms into a future-session FeedPolicy proposal for the existing rollover path.
+Broker sellout is not exchange last-trade/expiration/settlement. No supplemental
+terms are approved for the host by the synthetic regression tests. Entitlement
+remains UNKNOWN; accounts, risk, halts, worker state and LIVE are unchanged.
+See CAPTURED_OPTION_CATALOG.md and CAPTURED_OPTION_CATALOG_PROOF.json.
+
+Actual contract terms/data eligibility, Swing original sources/catalysts and
+Scope current SPX/context integration remain unresolved. Current connected
+transport still withholds all CYCLE packets when enrolled strategy coverage is
+incomplete. More offline integration work remains; complete paper-trading
+readiness is not established by this publication.
+
+Prior startup optimization (v1.150):
+
+Host review on b78133d reports available_logical_cpus=1. Its proposed two-CPU
+ceiling cannot supply a second core; first-check-4 has only been reviewed, not
+reported started. The native five-second snapshot timeout from first-check-3 is
+confirmed, while the exact scheduling/contention cause remains unproven.
+
+Import profiling found both execution engines and SQLAlchemy/storage loaded in
+every cold options market-read worker solely through parent-only clock helpers.
+Those imports now occur inside the parent collection functions. Native clock
+validation, schema/auth checks, subprocess protocol and timeouts are unchanged.
+Cold options and legacy market-read children reject execution/storage/calendar
+imports in an installed subprocess regression. On the same local machine pinned
+to one logical CPU, five fresh imports per version reduced median CPU time from
+0.5673s to 0.2296s (about 60%). This measures import work, not full captures or host
+runtime success. No network, real OAuth or model calls were used for this proof.
+
+Connected CPU review now uses min(2, available_logical_cpus), so this host receives
+an explicit one-CPU ceiling. Existing account, entry halt, execution policy,
+snapshot deadline and SHADOW services remain unchanged. Build the optimization,
+then freshly review first-check-4 against the same owner. Host sustained runtime
+and eligible-entry acceptance remain outstanding. See READ_WORKER_STARTUP_PROOF.json.
+
+Prior host diagnostics and CPU allowance review (v1.149):
+
+Host first-check-3 on f5f7f69 exited after about 19 seconds. The new diagnostics
+confirm FixtureProcessTimeout in native portfolio reconciliation's local snapshot
+child, under the unchanged five-second process deadline. The preceding isolated
+reads passed in 1.358–1.831 seconds; the earlier connected run delivered 26 updates
+and consumed 25 before failing. The original first-check-2 exception type remains
+unrecorded. No eligible-entry or uninterrupted session acceptance is claimed.
+
+The launcher used a shared one-CPU cgroup ceiling for runtime, collector,
+publisher and all child processes. The connected session now receives a two-CPU
+ceiling; offline setup/review helpers retain one CPU. Resource allowance and
+available host logical CPUs are bound into the run review hash and checked again
+before launch. This is a contention mitigation to verify on the host, not proof
+that quota throttling caused the timeout. It reserves no host capacity and cannot
+create an extra physical CPU. Snapshot deadline, one-GiB memory limit, PID bound,
+account configuration, entry halt, source freshness and SHADOW services remain
+unchanged. No account reset, automatic resume or policy relaxation.
+See CONNECTED_SESSION_CPU_PROOF.json for host-launcher regression validation.
+Build and review first-check-4 against the same owner; preserve prior containers.
+
+Prior diagnostic release (v1.148):
+
+The corrected b8f4ecd host session started at 18:42:51 UTC and exited at 18:50:10
+with CONNECTED_COMPONENT_STOPPED:RUNTIME. The collector recorded 26 DELIVERED
+attempts; the owner consumed feed sequence 25, reached generation 1 and repeatedly
+reconciled before FIXTURE_READ_FAILED and OPTION_RUNTIME_FAILED. The owner remains
+halted. This proves connected delivery/consumption, not quote freshness for every
+subject, strategy eligibility, fills or a completed session.
+
+Three subsequent isolated, read-only venue subprocess probes passed in 1.358,
+1.670 and 1.831 seconds at the same one-CPU limit. A transient five-second snapshot
+timeout is plausible but unconfirmed: the old failure event discarded exception
+metadata. New failures retain an allowlisted error type, bounded application file/
+line locations, operation, configured deadline and elapsed duration. Connected
+CLI failures include the same safe component diagnostics, without exception
+messages, locals, credentials or provider payloads. Failure propagation, child
+cleanup, timeouts and entry halts are unchanged. No automatic retry/resume/reset.
+See CONNECTED_FAILURE_DIAGNOSTICS_PROOF.json. Host diagnosis and uninterrupted
+runtime acceptance remain pending; preserve both first-check containers and state.
+
+The $1,000 simulation profile, private key, bundle, native owner/collector and
+initial dashboard snapshot are enrolled. The original e2e97ff launch failed before
+startup because of the execution alias mismatch; b8f4ecd corrected it:
+
+Offline reproduction found the host launcher reopened the execution owner through
+`/source`, although enrollment froze the venue path under `/state/owner`.
+The native immutable configuration check rejects that alias. The launcher now
+uses the original execution path and supplies `/source` only as the publisher
+source, verifying both paths expose the same private native files. Read-only
+preflight now rejects execution path changes before launch. No enrolled state,
+configuration, snapshot binding, bankroll or eligibility is migrated or reset.
+See CONNECTED_OWNER_PATH_PROOF.json for installed validation and
+CONNECTED_HOST_RUNBOOK.md for recovery with a new retained session name.
+The failed first-check container remains evidence; LIVE remains disabled.
+
+The completed discovery-envelope compatibility fix from v1.146 remains in place:
+profile and bundle setup validate either a completed discovery report or bare
+ReadSchemas against the exact reviewed wire hash, without rewriting captures.
 
 [Initial simulation configuration](CONNECTED_SIMULATION_PROFILE.md) now encodes the
 user's $1,000 virtual balance and $1/day AI ceiling with one two-play owner and all

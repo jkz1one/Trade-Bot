@@ -12,6 +12,7 @@ from app.options.operator_inbox import private_directory, read, save, sync_direc
 from app.options.read_gateway import ReadSchemas
 from app.options.runtime_cli import load
 from app.options.runtime_models import RuntimeSettings
+from app.options.schema_artifact import load_reviewed_schemas
 
 STATE = Path("/state")
 
@@ -19,7 +20,7 @@ STATE = Path("/state")
 def prepared(settings_file, policy_file, schemas_file, *, clock_source=utc_now):
     original = load(settings_file)
     original_policy = FeedPolicy.model_validate_json(read(policy_file, 256 * 1024))
-    schemas = ReadSchemas.model_validate_json(read(schemas_file, 256 * 1024))
+    schemas = load_reviewed_schemas(schemas_file)
     value = original.model_dump(mode="json")
     value["runtime"]["feed_file"] = str(STATE / "collector/feed.json")
     secrets = {}

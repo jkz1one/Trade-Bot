@@ -1,0 +1,76 @@
+{
+  "version": "connected-session-cpu-v1",
+  "base_commit": "f5f7f69f9d34868475060900ee3859b283858a54",
+  "passed": 24,
+  "skipped": 0,
+  "failures": 0,
+  "application_unchanged": true,
+  "installed_files_match": 297,
+  "installed_release": {
+    "version": "options-installed-release-v1",
+    "status": "VERIFIED_FILES",
+    "observed_at": "2026-10-27T19:15:31.014725Z",
+    "package": "autonomous-compounding-trader",
+    "package_version": "0.1.0",
+    "python_version": "3.12.14",
+    "application_sha256": "1749a22078ef1418d93469ea5c60e1e85dac64f5fd3905a7f6088c6f4c60344d",
+    "wheel_sha256": "6602238d5e92c7cd8815241896c4bb4551c5d96675b9ec8aae10ddfab15f9d17",
+    "file_count": 297,
+    "reason": null,
+    "execution_authority": false
+  },
+  "host_script_sha256": "c0f3abdb3d5806507e43dfbd5369c181d3e29a566c8540bed91ae4b632560aed",
+  "coverage": [
+    "Offline helpers retain one CPU",
+    "Connected Docker run uses two-CPU ceiling and repeats reviewed resource metadata",
+    "Host CPU affinity changes alter the review hash and reject stale plans before launch",
+    "Tampered resource quota cannot bypass reviewed limits",
+    "Existing profile, enrollment, run, failure preservation and stop launcher tests"
+  ],
+  "host_evidence": {
+    "run": "first-check-3",
+    "error_class": "FixtureProcessTimeout",
+    "component": "RUNTIME",
+    "original_snapshot_timeout_seconds": 5,
+    "isolated_read_seconds": [
+      1.358,
+      1.67,
+      1.831
+    ]
+  },
+  "limitations": [
+    "CPU contention is a hypothesis; host quota throttling was not measured",
+    "No Docker daemon or host access from this workspace; launcher uses recorded Docker boundary",
+    "Two-CPU host run and uninterrupted runtime acceptance remain pending"
+  ],
+  "timeout_changed": false,
+  "account_reset": false,
+  "entry_halt_cleared": false,
+  "live_enabled": false,
+  "tests": [
+    "::test_enrollment_and_run_mounts_keep_offline_stages_without_broker_auth",
+    "::test_changed_cpu_capacity_requires_a_new_review_before_launch",
+    "::test_modified_cpu_quota_cannot_bypass_review",
+    "::test_invalid_bounded_run_is_refused[0-a]",
+    "::test_invalid_bounded_run_is_refused[86401-a]",
+    "::test_invalid_bounded_run_is_refused[True-a]",
+    "::test_invalid_bounded_run_is_refused[60-../a]",
+    "::test_invalid_bounded_run_is_refused[60-a,readonly]",
+    "::test_invalid_bounded_run_is_refused[60-]",
+    "::test_stop_requires_exact_container_id_and_retains_it",
+    "::test_changed_worker_after_start_stops_only_new_session",
+    "::test_existing_active_session_prevents_another_launch",
+    "::test_private_mount_rejects_symlink_and_public_file",
+    "::test_stop_does_not_require_image_or_configuration",
+    "::test_stale_host_review_refuses_before_launch",
+    "::test_full_native_pipeline_restarts_same_owner_and_preserves_original_inputs",
+    "::test_profile_stages_mount_only_schema_and_separate_input_parent",
+    "::test_explicit_model_copy_is_private_create_only_and_source_unchanged",
+    "::test_model_copy_rejects_unsafe_sources_before_creating_destination[public]",
+    "::test_model_copy_rejects_unsafe_sources_before_creating_destination[symlink]",
+    "::test_model_copy_rejects_unsafe_sources_before_creating_destination[hardlink]",
+    "::test_model_copy_rejects_unsafe_sources_before_creating_destination[owner]",
+    "::test_model_copy_rejects_unsafe_sources_before_creating_destination[oversize]",
+    "::test_model_copy_rejects_unsafe_sources_before_creating_destination[multiline]"
+  ]
+}
