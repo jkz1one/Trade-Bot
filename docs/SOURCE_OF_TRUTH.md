@@ -1,6 +1,31 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.150. Remove execution imports from cold market-read workers, 2026-10-27 EDT.
+Version 1.151. Captured option catalog preparation and host session evidence, 2026-10-27 EDT.
+
+Host first-check-4 on 105f1a1 completed its bounded ten-minute session with exit 0,
+zero restarts and a published snapshot. Native runtime generation 3 consumed feed
+sequence 65 and stopped normally; collector sequence 66 was DELIVERED. Its 39
+batches were MARKET packets with SWING_ORIGINAL_SOURCES_UNAVAILABLE and
+SCOPE_CURRENT_INPUT_UNAVAILABLE. This proves one collection/ingestion run, not
+eligible strategy cycles, fills, a permanent timeout fix or dashboard activation.
+
+The uploaded October 27 16:10 EDT archive contains four active October 28 contracts
+and three fresh-at-capture, advancing option quote samples per subject. A new
+offline catalog preparer verifies original receipts, subjects, clocks and wire
+schemas, lists missing native terms, and can bind explicitly reviewed supplemental
+terms into a future-session FeedPolicy proposal for the existing rollover path.
+Broker sellout is not exchange last-trade/expiration/settlement. No supplemental
+terms are approved for the host by the synthetic regression tests. Entitlement
+remains UNKNOWN; accounts, risk, halts, worker state and LIVE are unchanged.
+See CAPTURED_OPTION_CATALOG.md and CAPTURED_OPTION_CATALOG_PROOF.json.
+
+Actual contract terms/data eligibility, Swing original sources/catalysts and
+Scope current SPX/context integration remain unresolved. Current connected
+transport still withholds all CYCLE packets when enrolled strategy coverage is
+incomplete. More offline integration work remains; complete paper-trading
+readiness is not established by this publication.
+
+Prior startup optimization (v1.150):
 
 Host review on b78133d reports available_logical_cpus=1. Its proposed two-CPU
 ceiling cannot supply a second core; first-check-4 has only been reviewed, not
