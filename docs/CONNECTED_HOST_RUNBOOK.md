@@ -175,3 +175,25 @@ current feed. Full contract terms, entitlement, executable stock sizes and eligi
 catalyst/Scope sources remain unresolved. No successful simulated entry is promised
 until its native eligibility gates pass. Operator transport and other broader
 strategy/data work are not declared complete by this runbook.
+
+## Recovery from the first host startup path failure
+
+On e2e97ff, enrollment used `/state/owner` but the launcher passed `/source` as
+its runtime directory. Although both mounts expose the same files, the native
+execution configuration freezes the venue path at enrollment and refuses the
+alias. Offline reproduction confirms the immutable-configuration error; host
+read-only evidence shows the owner stayed ENROLLED at generation/feed sequence 0.
+
+The corrected launcher keeps `--directory /state/owner` and adds
+`--snapshot-owner /source`. The latter is exclusively a display source: private
+runtime settings, journal and venue files must have the same filesystem identities
+as the execution owner. Copies, changed files and symlink paths are rejected.
+Alias identity is checked before startup and each publication. The runtime still
+opens and leases the original execution path. Read-only preflight also verifies
+the enrolled venue path. Existing snapshot bindings remain unchanged.
+
+Build the corrected release, then use `review-run --run-id first-check-2 --seconds
+600` and the resulting review hash for `run`. Do not rerun profile creation,
+key staging, bundle preparation or enrollment. Preserve the original first-check
+container, account and snapshot. This repair does not establish eligible market
+inputs or successful host collection; inspect the new session after launch.

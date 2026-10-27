@@ -101,6 +101,14 @@ def check(directory, feed_directory, policy_file, schemas_file, *, clock_source=
     if not result["collector_can_start"]:
         raise ValueError("Collector and runtime wiring differ")
     observer, state = inspect_owner(directory, settings, clock_source=clock_source)
+    # Execution freezes the venue's absolute path at enrollment. A second bind
+    # mount may expose identical files but is only valid as a display source.
+    with observer.read() as db:
+        frozen = json.loads(
+            db.execute("SELECT config_json FROM execution_control WHERE id=1").fetchone()[0]
+        )
+    if frozen["venue_path"] != str(directory / "venue.db"):
+        raise ValueError("Execution owner path differs from enrollment")
     private_directory(feed_directory)
     private_path(feed_directory / "collector.db")
     # Reuse the bounded read-only database reader, without opening the collector
@@ -189,15 +197,44 @@ async def supervise(runtime_run, collector_run, stop, *, shutdown_seconds=30.0, 
         )
 
 
-def dashboard_check(directory, snapshot_directory, reader_uid, reader_gid, *, clock_source=utc_now):
+def dashboard_source(directory, snapshot_owner):
+    """Allow a display alias only when it exposes the same native owner files."""
+    if snapshot_owner is None:
+        return Path(directory)
+    owner, source = Path(directory), Path(snapshot_owner)
+    if any(not p.is_absolute() or p.resolve() != p for p in (owner, source)):
+        raise ValueError("Canonical absolute execution and display owner paths required")
+    private_directory(owner)
+    private_directory(source)
+    for name in ("runtime.json", "options.db", "venue.db"):
+        private_path(owner / name)
+        private_path(source / name)
+        if not (owner / name).samefile(source / name):
+            raise ValueError("Dashboard source must alias the same execution owner files")
+    return source
+
+
+def dashboard_check(
+    directory,
+    snapshot_directory,
+    reader_uid,
+    reader_gid,
+    *,
+    clock_source=utc_now,
+    snapshot_owner=None,
+):
     if snapshot_directory is None:
-        if reader_uid is not None or reader_gid is not None:
+        if reader_uid is not None or reader_gid is not None or snapshot_owner is not None:
             raise ValueError("Reader identity requires an enrolled snapshot directory")
         return None
     from app.mixed.dashboard_snapshot import check as snapshot_check
 
     result = snapshot_check(
-        directory, snapshot_directory, reader_uid, reader_gid, clock_source=clock_source
+        dashboard_source(directory, snapshot_owner),
+        snapshot_directory,
+        reader_uid,
+        reader_gid,
+        clock_source=clock_source,
     )
     pending = Path(snapshot_directory) / ".pending.db"
     if pending.exists() or pending.is_symlink():
@@ -246,12 +283,18 @@ async def run(
     snapshot_directory=None,
     reader_uid=None,
     reader_gid=None,
+    snapshot_owner=None,
 ):
     report, settings, policy, schemas, observer = check(
         directory, feed_directory, policy_file, schemas_file, clock_source=clock_source
     )
     dashboard_check(
-        directory, snapshot_directory, reader_uid, reader_gid, clock_source=clock_source
+        directory,
+        snapshot_directory,
+        reader_uid,
+        reader_gid,
+        clock_source=clock_source,
+        snapshot_owner=snapshot_owner,
     )
     if stop.is_set():
         return {"status": "NOT_STARTED", "live_enabled": False}
@@ -269,7 +312,11 @@ async def run(
                 from app.mixed.dashboard_snapshot import DashboardPublisher
 
                 publisher = DashboardPublisher(
-                    directory, snapshot_directory, reader_uid, reader_gid, clock_source=clock_source
+                    dashboard_source(directory, snapshot_owner),
+                    snapshot_directory,
+                    reader_uid,
+                    reader_gid,
+                    clock_source=clock_source,
                 )
             ready = asyncio.Event()
 
@@ -291,6 +338,7 @@ async def run(
                 if not await await_ready(ready, stop):
                     return
                 while not stop.is_set():
+                    dashboard_source(directory, snapshot_owner)
                     await publish_async(publisher)
                     try:
                         await asyncio.wait_for(stop.wait(), timeout=5)
@@ -301,6 +349,7 @@ async def run(
             if publisher is not None:
                 # All runtime/collector cleanup has finished. Publish the stopped
                 # native state once, still under all three ownership leases.
+                dashboard_source(directory, snapshot_owner)
                 await publish_async(publisher)
         finally:
             try:
@@ -334,6 +383,7 @@ async def serve(args):
             snapshot_directory=args.snapshot_directory,
             reader_uid=args.reader_uid,
             reader_gid=args.reader_gid,
+            snapshot_owner=args.snapshot_owner,
         )
     finally:
         timer.cancel()
@@ -352,9 +402,14 @@ def main(argv=None):
     )
     parser.add_argument("--reader-uid", type=int)
     parser.add_argument("--reader-gid", type=int)
+    parser.add_argument("--snapshot-owner", help="Verified alias for the enrolled display source")
     args = parser.parse_args(argv)
     if args.snapshot_directory is None:
-        if args.reader_uid is not None or args.reader_gid is not None:
+        if (
+            args.reader_uid is not None
+            or args.reader_gid is not None
+            or args.snapshot_owner is not None
+        ):
             parser.error("Reader UID/GID require --snapshot-directory")
     elif args.reader_uid is None or args.reader_gid is None:
         parser.error("Snapshot directory requires explicit reader UID and GID")
@@ -366,7 +421,11 @@ def main(argv=None):
         if args.operation == "check":
             result = check(args.directory, args.feed_directory, args.policy, args.schemas)[0]
             snapshot = dashboard_check(
-                args.directory, args.snapshot_directory, args.reader_uid, args.reader_gid
+                args.directory,
+                args.snapshot_directory,
+                args.reader_uid,
+                args.reader_gid,
+                snapshot_owner=args.snapshot_owner,
             )
             if snapshot is not None:
                 result["dashboard_snapshot"] = snapshot

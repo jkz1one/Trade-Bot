@@ -203,6 +203,8 @@ def owner_args():
 def runtime_args():
     return [
         "--directory",
+        "/state/owner",
+        "--snapshot-owner",
         "/source",
         "--feed-directory",
         "/state/collector",

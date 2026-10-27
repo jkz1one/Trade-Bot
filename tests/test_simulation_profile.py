@@ -61,8 +61,9 @@ def test_profile_create_stale_hash_and_overwrite_leave_existing_inputs(tmp_path,
     assert all(p.stat().st_mode & 0o777 == 0o600 for p in dest.iterdir())
 
 
+@pytest.mark.parametrize("display_alias", [False, True])
 def test_full_profile_enrolls_consumes_publishes_and_restarts_same_owner(
-    tmp_path, schemas, monkeypatch
+    tmp_path, schemas, monkeypatch, display_alias
 ):
     report = simulation_profile.review(schemas)
     inputs = tmp_path / "inputs"
@@ -92,9 +93,14 @@ def test_full_profile_enrolls_consumes_publishes_and_restarts_same_owner(
     assert view["cash"] == "1000" and view["fill_count"] == 0 and not view["positions"]
     assert not result["workers_started"]
     snapshot = tmp_path / "snapshot"
+    source = args[0]
+    if display_alias:
+        from test_connected_owner_paths import alias_owner
+
+        source = alias_owner(args[0], tmp_path / "display-source")
     times = [AT]
     pub = DashboardPublisher(
-        args[0], snapshot, os.getuid(), os.getgid(), create=True, clock_source=lambda: times[0]
+        source, snapshot, os.getuid(), os.getgid(), create=True, clock_source=lambda: times[0]
     )
     try:
         pub.publish()
@@ -138,6 +144,7 @@ def test_full_profile_enrolls_consumes_publishes_and_restarts_same_owner(
                 snapshot_directory=snapshot,
                 reader_uid=os.getuid(),
                 reader_gid=os.getgid(),
+                snapshot_owner=source if display_alias else None,
             )
         )
         assert stopped["status"] == "STOPPED" and stopped["dashboard_published"]

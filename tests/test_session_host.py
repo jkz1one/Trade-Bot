@@ -118,6 +118,12 @@ def test_enrollment_and_run_mounts_keep_offline_stages_without_broker_auth(host)
     assert live[live.index("--stop-timeout") + 1] == "45"
     assert "--publish" not in live and "-p" not in live
     assert live[-2:] == ("--seconds", "60")
+    assert live[live.index("--directory") + 1] == "/state/owner"
+    assert live[live.index("--snapshot-owner") + 1] == "/source"
+    checks = [c for c in calls if "app.mixed.connected_runtime" in c and "check" in c]
+    assert checks
+    assert all(c[c.index("--directory") + 1] == "/state/owner" for c in checks)
+    assert all(c[c.index("--snapshot-owner") + 1] == "/source" for c in checks)
     assert f"type=bind,src={m.STATE}/config,dst=/state/config,readonly" in live
     assert f"type=bind,src={m.AUTH},dst=/auth" in live
     assert f"type=bind,src={m.AUTH}/discovery.json,dst=/auth/discovery.json,readonly" in live

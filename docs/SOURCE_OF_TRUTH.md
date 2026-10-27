@@ -1,16 +1,28 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.146. Host discovery-envelope compatibility fix, 2026-10-27 EDT.
+Version 1.147. Preserve enrolled execution paths during connected launch, 2026-10-27 EDT.
 
-The host built 19616d7 successfully but `review-profile` failed before creating
-state: `/var/lib/trade-bot-read-auth/discovery.json` is a completed discovery
-report, not an exported bare `ReadSchemas`. The direct offline traceback confirmed
-this format mismatch. A shared private-file loader now validates either format,
-including the completed envelope/result and exact reviewed wire hash. Both
-simulation profile review and host bundle preparation use it; frozen bundles
-continue to contain bare schemas. Original captures are never rewritten. See
-SCHEMA_ARTIFACT_PROOF.json. Host review/enrollment/current-feed acceptance remains
-pending; no workers, account, provider calls or live execution were started.
+The host successfully created the $1,000 simulation profile, staged its private
+model key, prepared the bundle, enrolled the owner/collector and published the
+first snapshot on e2e97ff. The first 600-second session exited after seven seconds
+with CONNECTED_RUNTIME_UNAVAILABLE. Follow-up read-only checks show the owner
+unchanged at revision 8, generation/feed sequence 0, ENROLLED, and a valid old
+snapshot. Current collection and trading acceptance remain unproven.
+
+Offline reproduction found the host launcher reopened the execution owner through
+`/source`, although enrollment froze the venue path under `/state/owner`.
+The native immutable configuration check rejects that alias. The launcher now
+uses the original execution path and supplies `/source` only as the publisher
+source, verifying both paths expose the same private native files. Read-only
+preflight now rejects execution path changes before launch. No enrolled state,
+configuration, snapshot binding, bankroll or eligibility is migrated or reset.
+See CONNECTED_OWNER_PATH_PROOF.json for installed validation and
+CONNECTED_HOST_RUNBOOK.md for recovery with a new retained session name.
+The failed first-check container remains evidence; LIVE remains disabled.
+
+The completed discovery-envelope compatibility fix from v1.146 remains in place:
+profile and bundle setup validate either a completed discovery report or bare
+ReadSchemas against the exact reviewed wire hash, without rewriting captures.
 
 [Initial simulation configuration](CONNECTED_SIMULATION_PROFILE.md) now encodes the
 user's $1,000 virtual balance and $1/day AI ceiling with one two-play owner and all
