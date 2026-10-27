@@ -1,5 +1,46 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Reviewed snapshot dashboard switch and rollback: 2026-10-26 EDT
+
+Starting feature HEAD 39f818ce4588cf3cc7b5de3678e079a3ed9c326c. A new installed
+reader validates the snapshot binding, native accounting and installed release,
+retains the existing login and exposes no operator routes. Each authenticated
+request rejects missing, altered, future or more-than-30-second-old publication.
+Underlying quote clocks and native eligibility remain unchanged. Fresh display
+publication is not evidence of fresh quotes or trading readiness.
+
+A root stdlib host coordinator now reviews and switches only the dashboard. Exact
+review hashes bind the current frozen a653cc7 reader, immutable new image ID,
+snapshot binding and existing SHADOW identities. The complete review repeats
+before mutation under a private operation lease. New startup must pass actual
+anonymous/authenticated HTML/API checks. Existing login, user 10001, read-only
+mounts and localhost 8790 remain. No Caddy/runtime/collector/model changes occur.
+
+The previous container is retained under a new unused backup name. Failed starts
+restore its exact ID and retain allocated failures rather than removing them.
+Reviewed intentional rollback works with stopped/stale connected readers and
+retains the retired reader. Unexpected identities, collisions, changed reviews,
+isolation mismatches and concurrent helper operations block. A failed restoration
+requires inspection. No server command or Docker activation was performed here.
+
+Validation: 166 unique installed tests passed; one retained cross-user publisher
+test skipped because this sandbox maps only UID/GID 0. All 292 application files
+match source/wheel/install; release identity VERIFIED_FILES. New source tests and
+host script match the copied proof. Ruff/format/diff checks pass. The stateful
+Docker harness exercises the actual coordinator logic but is not host acceptance.
+The initial 38 new cases passed; final coverage/regressions include those cases,
+not an additional count. See CONNECTED_DASHBOARD_HOST_PROOF.json and
+CONNECTED_DASHBOARD_HOST.md. No failing tests or relaxed deadlines in this slice.
+
+Stopping reason: **slice end**, not missing-feed collection. Operational owner
+settings/enrollment and bounded runtime/publisher orchestration remain offline
+coding work. Actual host activation/rollback, cross-user/login acceptance,
+operator-command transport, eligible catalyst/Scope inputs, complete contract/data
+eligibility and connected market acceptance remain open. Server unchanged on
+a653cc7 frozen V3; connected simulation inactive; LIVE disabled. No actual
+provider/model calls, credential access, dependencies, hosted CI or subagents.
+Main unchanged; PR #1 remains open/draft.
+
 ## Read-only native dashboard snapshot bridge: 2026-10-26 EDT
 
 Starting feature HEAD 9eb91288b9439822f1bb6e7d47167c9447f626e8. The root-owned

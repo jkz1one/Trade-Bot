@@ -30,8 +30,9 @@ supplied schedule against the existing owner. [Future-session rollover](docs/FEE
 now updates explicit catalogs/carry dates while retaining history and held quotes.
 A [read-only dashboard snapshot publisher](docs/DASHBOARD_SNAPSHOT.md) now bridges
 the native root-owned journal to the existing dashboard reader without changing
-credentials or creating another account. Cross-user host acceptance, automatic
-discovery and dashboard activation remain pending.
+credentials or creating another account. A [reviewed dashboard switch and rollback](docs/CONNECTED_DASHBOARD_HOST.md)
+now verifies the existing login and the fresh display copy before switching readers.
+Cross-user host acceptance, operational owner settings and actual activation remain pending.
 
 ## Offline development checks
 

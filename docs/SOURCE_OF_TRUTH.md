@@ -1,6 +1,20 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.141. Read-only native dashboard snapshot bridge, 2026-10-26 EDT.
+Version 1.142. Reviewed dashboard switch and rollback, 2026-10-26 EDT.
+
+[Reviewed dashboard activation/rollback](CONNECTED_DASHBOARD_HOST.md) now binds
+an exact review to the existing frozen reader, new immutable image, snapshot and
+untouched SHADOW identities. The helper repeats preflight, switches only the
+reader, verifies authentication/current mode and retains old/failed containers.
+Intentional rollback restores the same original ID. The new read-only reader
+rechecks publication identity/freshness on every authenticated request; stale
+publication returns 503 while native quote clocks and entry blockers stay intact.
+See CONNECTED_DASHBOARD_HOST_PROOF.json: 166 installed tests passed, one cross-user
+publisher test skipped in the ID-0-only sandbox; all 292 application files match.
+No host/Docker/cross-user/browser acceptance is claimed. Operational owner settings,
+bounded worker/publisher orchestration, actual activation and eligible strategy
+inputs remain unfinished. Server unchanged, simulation inactive. Slice end;
+more offline coding remains.
 
 [Dashboard snapshot publication](DASHBOARD_SNAPSHOT.md) now makes an atomic,
 native-validated display copy of the same root-owned simulation journal for the

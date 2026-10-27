@@ -66,7 +66,12 @@ def create_options_app(
     mixed=False,
     review_at=None,
     operator_key_file=None,
+    stored_guard=None,
 ):
+    if stored_guard is not None and (
+        not mixed or review_at is not None or operator_key_file is not None
+    ):
+        raise ValueError("Snapshot guard requires a read-only current mixed observer")
     if operator_key_file is not None and (not mixed or review_at is not None):
         raise ValueError("Admin controls require an active mixed observer")
     if review_at is not None:
@@ -117,6 +122,12 @@ def create_options_app(
                 "Authentication required",
                 headers={"WWW-Authenticate": 'Basic realm="Options PAPER observer"'},
             )
+
+        if stored_guard is not None:
+            try:
+                stored_guard()
+            except (OSError, ValueError, RuntimeError, KeyError, TypeError):
+                raise HTTPException(503, "Dashboard snapshot unavailable or not updating") from None
 
     if operator_key_file is not None:
         from app.web.portfolio_admin import install

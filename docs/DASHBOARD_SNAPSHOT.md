@@ -71,9 +71,9 @@ the display directory is root 0711, allowing reader traversal through a future
 Docker directory bind. Database files are reader-owned 0600. Binding and lease
 files stay root-owned 0600. No credentials are copied into this directory.
 
-A future dashboard switch must mount the **directory**, not the single database
-file, read-only at its data path; a file bind would pin the replaced inode. It must
-retain user 10001, the existing login and disabled operator controls. The mirror
+The [reviewed dashboard switch](CONNECTED_DASHBOARD_HOST.md) mounts the **directory**, not the single database
+file, read-only at its data path; a file bind would pin the replaced inode. It
+retains user 10001, the existing login and disabled operator controls. The mirror
 has no operator-command delivery channel. Writable operator transport requires its
 own native guarded integration. This helper does not switch Caddy, containers,
 ports or passwords, and does not start or stop the runtime or collector.
@@ -93,7 +93,7 @@ cross-user test now explicitly skips in such an environment. No successful host
 ownership or dashboard-login acceptance is claimed. Run that test in a suitable
 root environment before relying on the cross-user bridge for deployment.
 
-Reviewed host owner settings/enrollment, dashboard activation/rollback, writable
+Reviewed host owner settings/enrollment, actual dashboard activation acceptance, writable
 operator transport, eligible catalyst/Scope data, complete contract/data eligibility
 and connected market acceptance remain unfinished. The accepted regular-session
 quote proof remains valid as capture evidence; recollection is not needed to keep
