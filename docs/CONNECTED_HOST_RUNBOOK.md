@@ -197,3 +197,25 @@ Build the corrected release, then use `review-run --run-id first-check-2 --secon
 key staging, bundle preparation or enrollment. Preserve the original first-check
 container, account and snapshot. This repair does not establish eligible market
 inputs or successful host collection; inspect the new session after launch.
+
+## Diagnosing a stopped component
+
+A SESSION_STARTED receipt confirms launch only. Inspect retained container status
+and bounded logs before selecting another run ID. A reused name is rejected even
+when its earlier container exited; this preserves the failed run's evidence.
+
+Connected failures now include `failures` with component, allowlisted `error_class`
+and up to eight application file/line locations. Unexpected returns and forced
+shutdowns have explicit codes. Startup failures use a single `failure` field.
+No exception message, traceback source text, local variable, credential or provider
+response is logged. The native FIXTURE_READ_FAILED event additionally records
+`operation`, `timeout_seconds` and `elapsed_seconds`; its event time retains the
+original operation timestamp. Earlier empty failure payloads cannot be recovered.
+
+The first corrected host run delivered 26 updates and consumed through sequence 25
+before a local fixture-read failure. Later offline probes passed in 1.358–1.831s.
+Do not infer a confirmed timeout or healthy sustained runtime from those probes.
+Deploy the diagnostic release and review a new bounded session, e.g.
+`review-run --run-id first-check-3 --seconds 600`, against the same enrolled owner.
+The existing failure halt remains in force. This is a collection/runtime diagnosis;
+it does not enable entries, clear eligibility blockers or reset the account.

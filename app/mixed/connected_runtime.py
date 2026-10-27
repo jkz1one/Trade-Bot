@@ -12,6 +12,7 @@ import sqlite3
 from pathlib import Path
 
 from app.domain.models import utc_now
+from app.execution.failure import failure_details
 from app.mixed.connected_check import connection_report
 from app.mixed.continuous_feed import ContinuousFeed, FeedPolicy, held_from_observer
 from app.mixed.observer import MixedObserver
@@ -25,6 +26,10 @@ from app.robinhood.schedule import XNYSCalendar
 
 class ComponentFailure(RuntimeError):
     """A component stopped unexpectedly or exceeded graceful shutdown time."""
+
+    def __init__(self, reason, details):
+        super().__init__(reason)
+        self.details = details
 
 
 def inspect_owner(directory, settings, *, clock_source=utc_now):
@@ -192,8 +197,18 @@ async def supervise(runtime_run, collector_run, stop, *, shutdown_seconds=30.0, 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
     failures = [name for name, value in zip(tasks, results) if isinstance(value, BaseException)]
     if unexpected or forced or failures:
+        details = [
+            {"component": name, **failure_details(value)}
+            for name, value in zip(tasks, results)
+            if isinstance(value, BaseException)
+        ]
+        details.extend(
+            {"component": name, "error_class": "UNEXPECTED_RETURN"} for name in unexpected
+        )
+        details.extend({"component": name, "error_class": "SHUTDOWN_TIMEOUT"} for name in forced)
         raise ComponentFailure(
-            "CONNECTED_COMPONENT_STOPPED:" + ",".join(sorted(set(unexpected + forced + failures)))
+            "CONNECTED_COMPONENT_STOPPED:" + ",".join(sorted(set(unexpected + forced + failures))),
+            details,
         )
 
 
@@ -432,15 +447,25 @@ def main(argv=None):
         else:
             result = asyncio.run(serve(args))
     except ComponentFailure as exc:
-        print(json.dumps({"status": "UNAVAILABLE", "reason": str(exc), "live_enabled": False}))
+        print(
+            json.dumps(
+                {
+                    "status": "UNAVAILABLE",
+                    "reason": str(exc),
+                    "failures": exc.details,
+                    "live_enabled": False,
+                }
+            )
+        )
         return 2
-    except (OSError, ValueError, RuntimeError, sqlite3.Error, KeyError, TypeError):
+    except (OSError, ValueError, RuntimeError, sqlite3.Error, KeyError, TypeError) as exc:
         # Never echo provider exceptions, private configuration or credentials.
         print(
             json.dumps(
                 {
                     "status": "UNAVAILABLE",
                     "reason": "CONNECTED_RUNTIME_UNAVAILABLE",
+                    "failure": failure_details(exc),
                     "live_enabled": False,
                 }
             )

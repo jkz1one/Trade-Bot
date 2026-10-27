@@ -1,13 +1,28 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.147. Preserve enrolled execution paths during connected launch, 2026-10-27 EDT.
+Version 1.148. Preserve bounded runtime failure diagnostics, 2026-10-27 EDT.
 
-The host successfully created the $1,000 simulation profile, staged its private
-model key, prepared the bundle, enrolled the owner/collector and published the
-first snapshot on e2e97ff. The first 600-second session exited after seven seconds
-with CONNECTED_RUNTIME_UNAVAILABLE. Follow-up read-only checks show the owner
-unchanged at revision 8, generation/feed sequence 0, ENROLLED, and a valid old
-snapshot. Current collection and trading acceptance remain unproven.
+The corrected b8f4ecd host session started at 18:42:51 UTC and exited at 18:50:10
+with CONNECTED_COMPONENT_STOPPED:RUNTIME. The collector recorded 26 DELIVERED
+attempts; the owner consumed feed sequence 25, reached generation 1 and repeatedly
+reconciled before FIXTURE_READ_FAILED and OPTION_RUNTIME_FAILED. The owner remains
+halted. This proves connected delivery/consumption, not quote freshness for every
+subject, strategy eligibility, fills or a completed session.
+
+Three subsequent isolated, read-only venue subprocess probes passed in 1.358,
+1.670 and 1.831 seconds at the same one-CPU limit. A transient five-second snapshot
+timeout is plausible but unconfirmed: the old failure event discarded exception
+metadata. New failures retain an allowlisted error type, bounded application file/
+line locations, operation, configured deadline and elapsed duration. Connected
+CLI failures include the same safe component diagnostics, without exception
+messages, locals, credentials or provider payloads. Failure propagation, child
+cleanup, timeouts and entry halts are unchanged. No automatic retry/resume/reset.
+See CONNECTED_FAILURE_DIAGNOSTICS_PROOF.json. Host diagnosis and uninterrupted
+runtime acceptance remain pending; preserve both first-check containers and state.
+
+The $1,000 simulation profile, private key, bundle, native owner/collector and
+initial dashboard snapshot are enrolled. The original e2e97ff launch failed before
+startup because of the execution alias mismatch; b8f4ecd corrected it:
 
 Offline reproduction found the host launcher reopened the execution owner through
 `/source`, although enrollment froze the venue path under `/state/owner`.

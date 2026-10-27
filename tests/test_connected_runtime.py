@@ -137,6 +137,10 @@ def test_component_failure_or_early_return_drains_sibling(failed_role, raises):
                 stop,
             )
         assert "private" not in str(error.value)
+        assert error.value.details[0]["component"] == failed_role
+        assert error.value.details[0]["error_class"] == (
+            "ValueError" if raises else "UNEXPECTED_RETURN"
+        )
         assert stop.is_set() and cleaned == started == {"RUNTIME", "COLLECTOR"}
 
     asyncio.run(scenario())

@@ -15,6 +15,7 @@ from zoneinfo import ZoneInfo
 from app.execution import economics, restore
 from app.execution.economics import UsageEvidence
 from app.execution.engine import ExecutionBlocked
+from app.execution.failure import failure_details
 from app.execution.journal import ExecutionJournal
 from app.options.accounting import apply_fill, apply_receipt
 from app.options.governor import admit_option
@@ -1310,14 +1311,25 @@ class OptionExecution:
             ).fetchone() or self._mixed_submitting(db):
                 return {"reconciled": False, "issues": ["OPTION_SUBMISSION_IN_PROGRESS"]}
             epoch = self._epoch(db)
+        started = time.monotonic()
         try:
             result = await run_option_process(
                 self.venue, now=now, timeout_seconds=self.policy.process_timeout_seconds
             )
-        except BaseException:
+        except BaseException as exc:
             with self.journal.write() as db:
                 self._halt(db, "OPTION_FIXTURE_READ_FAILED", now)
-                self.journal.event(db, now, "FIXTURE_READ_FAILED", {})
+                self.journal.event(
+                    db,
+                    now,
+                    "FIXTURE_READ_FAILED",
+                    failure_details(exc)
+                    | {
+                        "operation": "snapshot",
+                        "timeout_seconds": self.policy.process_timeout_seconds,
+                        "elapsed_seconds": round(time.monotonic() - started, 3),
+                    },
+                )
             raise
         return self.reconcile(result.snapshot, now=now, _epoch=epoch)
 
