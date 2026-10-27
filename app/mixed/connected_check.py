@@ -63,6 +63,13 @@ def connection_report(settings, feed, schemas, *, journal, directory, now):
     # These are facts about the current mapper, not declarations the operator
     # can bypass by editing a configuration flag.
     blockers.extend(("ENTITLEMENT_NOT_ESTABLISHED", "STOCK_EXECUTABLE_SIZES_UNAVAILABLE"))
+    if any(not s.metadata_complete or not s.tradable for s in feed.stocks):
+        blockers.append("STOCK_CATALOG_UNREVIEWED")
+    if mixed is not None and any(
+        value is None
+        for value in (mixed.daily_data_cost, mixed.daily_host_cost, mixed.daily_operating_cost)
+    ):
+        blockers.append("OPERATING_COSTS_UNCONFIGURED")
     if settings.scope_policy is not None:
         blockers.append("SCOPE_CONTEXT_AND_SPX_MAPPING_UNAVAILABLE")
     if settings.swing_policy is not None or (

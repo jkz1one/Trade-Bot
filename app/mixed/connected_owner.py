@@ -48,6 +48,10 @@ def review(
         raise ValueError("Native owner and collector configuration differ")
     if settings.execution.mixed_owner.portfolio.max_plays == 0:
         raise ValueError("Native first strategy enrollment requires positive capacity")
+    if "OPERATING_COSTS_UNCONFIGURED" in result["entry_blockers"]:
+        raise ValueError(
+            "Native first strategy enrollment requires explicit operating cost allocations"
+        )
     binding = {
         "version": "connected-first-owner-v1",
         "paths": [str(p) for p in paths],

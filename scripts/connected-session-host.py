@@ -21,6 +21,58 @@ EXPORTS = Path("/var/lib/trade-bot-dashboard-publish")
 AUTH = Path("/var/lib/trade-bot-read-auth")
 LOCK = Path("/run/lock/trade-bot-connected-host.lock")
 LABEL = "trade-bot.connected-session-v1"
+PROFILE_HOME = Path("/etc/trade-bot-connected")
+MODEL_SOURCE = Path("/etc/trade-bot/openai_api_key")
+MODEL_SOURCE_UID = 10001
+
+
+def prepare_model_key():
+    """Explicit host-only copy; leave the original SHADOW key and permissions intact."""
+    if MODEL_SOURCE.resolve() != MODEL_SOURCE:
+        raise ValueError("Canonical existing model key required")
+    fd = os.open(MODEL_SOURCE, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(fd, "rb") as stream:
+        before = os.fstat(stream.fileno())
+        if (
+            not stat.S_ISREG(before.st_mode)
+            or before.st_uid != MODEL_SOURCE_UID
+            or stat.S_IMODE(before.st_mode) != 0o600
+            or before.st_nlink != 1
+            or not 1 <= before.st_size <= 513
+        ):
+            raise ValueError("Private existing SHADOW model key required")
+        value = stream.read(514)
+        after = os.fstat(stream.fileno())
+        if (before.st_size, before.st_mtime_ns, before.st_ctime_ns) != (
+            after.st_size,
+            after.st_mtime_ns,
+            after.st_ctime_ns,
+        ) or len(value) != before.st_size:
+            raise ValueError("Model key changed during copy")
+    # Exactly the native model-key format, without loading application dependencies.
+    secret = value.removesuffix(b"\n").decode("ascii")
+    if not 1 <= len(secret) <= 512 or any(
+        c.isspace() or ord(c) < 33 or ord(c) > 126 for c in secret
+    ):
+        raise ValueError("Single-line existing model key required")
+    parent(PROFILE_HOME)
+    destination = PROFILE_HOME / "model_key"
+    fd = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(fd, "wb") as output:
+        output.write(value)
+        output.flush()
+        os.fsync(output.fileno())
+    fd = os.open(PROFILE_HOME, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+    return {
+        "status": "MODEL_KEY_STAGED",
+        "destination": str(destination),
+        "source_unchanged": True,
+        "model_calls": 0,
+    }
 
 
 def private(path, directory=False):
@@ -332,6 +384,8 @@ def apply(plan):
 
 
 def run(args, release):
+    if args.operation == "prepare-model-key":
+        return prepare_model_key()
     if args.operation == "build":
         h.docker(
             "build",
@@ -364,6 +418,18 @@ def run(args, release):
             "trading_ready": False,
         }
     image_id = image(release)
+    if args.operation in ("review-profile", "prepare-profile"):
+        private(AUTH / "discovery.json")
+        mounts = mount(AUTH / "discovery.json", "/input/schemas.json")
+        flags = ["--schemas", "/input/schemas.json"]
+        operation = "review"
+        if args.operation == "prepare-profile":
+            parent(PROFILE_HOME)
+            parent(PROFILE_HOME / "profiles")
+            mounts += mount(PROFILE_HOME / "profiles", "/profiles", False)
+            flags += ["--directory", "/profiles/initial", "--expected-review", args.expected_review]
+            operation = "create"
+        return execute(image_id, "app.mixed.simulation_profile", [operation, *flags], mounts)
     if args.operation in ("review-config", "prepare"):
         if not args.settings or not args.policy:
             raise ValueError("Supplied native settings and policy required")
@@ -419,6 +485,9 @@ def main(argv=None):
         "operation",
         choices=(
             "build",
+            "review-profile",
+            "prepare-profile",
+            "prepare-model-key",
             "review-config",
             "prepare",
             "review-enroll",
@@ -434,8 +503,10 @@ def main(argv=None):
         p.add_argument("--" + name)
     p.add_argument("--seconds", type=int)
     a = p.parse_args(argv)
-    if (a.operation in ("prepare", "enroll", "run")) != (a.expected_review is not None):
-        p.error("Only prepare/enroll/run require --expected-review")
+    if (a.operation in ("prepare-profile", "prepare", "enroll", "run")) != (
+        a.expected_review is not None
+    ):
+        p.error("Only prepare-profile/prepare/enroll/run require --expected-review")
     if (a.operation == "stop") != (a.expected_container is not None):
         p.error("Only stop requires --expected-container")
     if a.seconds is not None and a.operation not in ("review-run", "run"):

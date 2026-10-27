@@ -1,6 +1,20 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.144. Reviewed host bundle and bounded launcher, 2026-10-26 EDT.
+Version 1.145. Concrete initial simulation profile, 2026-10-27 EDT.
+
+[Initial simulation configuration](CONNECTED_SIMULATION_PROFILE.md) now encodes the
+user's $1,000 virtual balance and $1/day AI ceiling with one two-play owner and all
+Degen/Swing/Scope families. Additional simulation risk, fee and overhead assumptions
+are explicit in review. No synthetic contract/entitlement/catalyst is promoted.
+New offline host profile review/create operations produce private native JSON.
+An explicit host-only model-key staging operation preserves the existing UID-10001
+SHADOW key and creates a private root-owned copy for the new owner. Unknown operating
+costs are rejected before first enrollment; no native gate was relaxed.
+The future $5/day LIVE preference is recorded only, with no LIVE configuration.
+The user built a05da9f on the host; SHADOW/observer/frozen dashboard are running,
+and connected state/publisher directories were absent. No connected worker or
+provider/model call has been started by this change. See the profile proof for
+installed tests; host acceptance and missing eligible inputs remain outstanding.
 
 [Host preparation and bounded launch](CONNECTED_HOST_RUNBOOK.md) are now
 implemented with path-only packaging of supplied native settings/policy/schema,

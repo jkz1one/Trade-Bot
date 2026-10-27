@@ -11,11 +11,17 @@ latency and current-feed acceptance must run on the host.
 
 ## Required inputs, with no hidden policy defaults
 
+For the user's selected $1,000 virtual balance and $1/day AI ceiling, the new
+[simulation profile](CONNECTED_SIMULATION_PROFILE.md) now creates explicit native
+inputs after review. Its additional limits and modeled expenses are displayed
+assumptions; unavailable contracts/eligibility stay blocked. Use its host sequence
+instead of inventing input JSON or copying a UI fixture.
+
 The launcher accepts a complete native `RuntimeSettings` JSON and `FeedPolicy`
-JSON. These must be reviewed operational inputs for the intended population,
-capital, strategies, risk/cost limits and candidate catalog. No concrete production
-settings for the user's complete strategy selection have been supplied or approved
-in this slice. The stored UI fixture is not a deployment configuration; the helper
+JSON. These must be reviewed inputs for the intended population,
+capital, strategies, risk/cost limits and candidate catalog. The first simulation
+profile retains all three families but is not complete market eligibility or LIVE
+configuration. The stored UI fixture is not a deployment configuration; the helper
 rejects its `ui-review-` identity. Tests use synthetic policies and are not approvals
 of those policies for the server.
 
