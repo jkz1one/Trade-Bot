@@ -6,6 +6,18 @@ Feature branch: `feat/event-awareness-baseline`. Remote base verified on
 Development used an isolated clone; existing checkouts, base, main and PR #1
 were not changed. Main was `b5359aaf396e692d2142d7e02908f1544e045ee6`.
 
+Continuation started from feature HEAD `f39a106639bbb1a66c85a75a7737f216b2a87fd6`.
+The remote base was rechecked on 2026-10-27 EDT and had advanced six commits to
+`de201bd686c37d71fbd93c287595c8e4b922ab8d`. Reviewed changes cover discovery/schema
+compatibility, enrolled owner paths, failure diagnostics, CPU allowance, cold
+read-worker imports and captured option catalogs. They do not change the native
+dashboard publication, checkpoint or decision schemas used here. They have not
+been merged or rebased into this isolated feature branch. Base/main/PR #1 are
+managed by the separate paper-trading work and were not modified by this slice.
+During verification the base advanced again to
+`f305ea19bef3fdfb5aec04c51aa431f32dc2b694` (bounded after-close Swing history proof).
+That helper/docs/tests change was also reviewed; no application contract changed.
+
 Status: **fixture verified**, independently testable first implementation.
 Provider and host acceptance are outstanding. No deployment, server workers,
 model calls, subscription purchases, enforcement or LIVE enablement occurred.
@@ -153,9 +165,11 @@ when present. Immutable reads cannot take SQLite locks on the trading owner.
 The source owner and venue are not opened by this consumer.
 
 Supported native decision tables are option, stock and two-play portfolio proposal
-decisions. The real `source_key` is the decision ID; family and holding horizon
-are explicit caller context, labelled in the audit rather than inferred from a
-calendar. Rejected/HOLD rows without saved instrument evidence retain
+decisions. The real `source_key` is the decision ID. The bounded consumer uses the
+original saved intent's family (including option entry lineage) and `exit_at`, or
+complete retained proposal context. An explicit caller request may supply missing
+context; any known native instrument, family or horizon must agree exactly.
+The audit labels the context origin. Rejected/HOLD rows without saved instrument evidence retain
 `native_instrument_verified=false`. Management-consumption events and observation
 of every rejected candidate/opportunity are not automatically tailed in this slice.
 
@@ -164,17 +178,73 @@ No later revisions are backfilled into an earlier outcome. The native result is
 retained separately from `EVENT_OBSERVATION_ONLY`; it is never rewritten. Event
 audit export does not enter native execution/accounting exports.
 
-An integration should enqueue a bounded reference after native decision commit or
-consume the published copy in a separate process, retain/detect observation gaps,
-and call this API there. Do not synchronously wait for audit persistence. Automatic
-consumer scheduling, durable delivery/backlog policy and host mounting/UID setup
-remain integration work; this first slice supplies the tested API, not a deployed
-always-on observer. Do not create another native owner or change simulation settings.
+`consume_once` now scans a bounded batch of the existing published journal. Host
+integration must invoke it in a separate process. It commits observation records, unique decision delivery receipts
+and its cursor together in the evidence journal. A restart resumes that cursor;
+repeating a successful invocation does not produce another observation. Missing
+context or conflicting caller context remains a retained GAP, never CLEAR or an
+invented family/horizon. Bounded oldest-attempt-first retries let later gaps make
+progress. Original gaps and every successful/failed batch remain in export even
+after resolution. No evidence is deleted automatically.
+
+The consumer stores the full native publisher binding, policy identity, publication
+checkpoint and last scanned event hash. It rejects source rebinding, publication
+clock/checkpoint regression across observer restarts, sequence holes, changed cursor
+anchors and changed gap evidence. This is continuity detection for the retained
+append-only native journal, not a full historical tamper-proof ledger or cross-host
+rollback guarantee. Atomic replacement during a read discards the whole attempted
+batch. A failed SQLite transaction leaves observations, delivery receipts and cursor
+unchanged. If even the evidence journal cannot persist a failure, the invocation
+raises rather than claiming that the failure was retained.
+
+`ObserverBatch` defaults to 100 native events and 25 gap retries per invocation
+(both bounded at 1,000). A publication older than 60 seconds is unavailable; the
+explicit batch setting allows 1–3,600 seconds. This is observer delivery freshness,
+separate from calendar and quote freshness; it is not trading policy. Results report
+pending **native events**, scanned count, new observations, gap retries and unresolved
+gaps. `CAUGHT_UP_WITH_GAPS` means scanning caught up but evidence remains missing.
+`BACKLOG` means more native events remain; `UNAVAILABLE` never advances the cursor.
+The batch bound limits records processed, not total SQL work or wall-clock time.
+The provisional 5 ms local assessment target does not apply to collection or audit IO.
+Successful observation with an UNKNOWN assessment counts as delivered and keeps that
+original result; later provider revisions never overwrite a historical assessment.
+
+The consumer only assesses the three `*_PROPOSAL_RECORDED` event kinds. Management
+consumption, opportunity selection and other native event kinds are scanned for
+continuity but not assessed. An explicit context file cannot invent a native event.
+The single-decision API remains available; its ad hoc records are separate from
+the consumer's exactly-once delivery receipts. Running both can create distinct
+audit records for the same decision, so use one delivery route in a host integration.
+
+The command below illustrates the one-shot interface using an already enrolled
+event evidence directory and the **existing publisher's exact binding file**:
+
+```sh
+python -m app.events.cli observe-once \
+  --directory /event-evidence --population EXISTING_POPULATION \
+  --policy /reviewed/event-policy.json \
+  --snapshot-binding /published/binding.json \
+  --observer-batch /reviewed/observer-batch.json
+```
+
+The optional batch JSON contains `version`, `max_events`, `max_gap_retries`,
+`max_publication_age_seconds` and `contexts` (default empty). Each supplied context
+is `{ "kind": "PORTFOLIO", "request": <complete Request JSON> }`. Invalid bounds,
+duplicate IDs or a different population are rejected. The CLI returns 2 on an
+unavailable operation. This command is documentation, not an executed host command.
+
+No scheduler or permanent consumer was installed or started. Host scheduling,
+mounts/UID isolation, durable sidecar delivery for otherwise missing candidate
+context, backlog alerts and long-term retention/archival remain acceptance work.
+Do not synchronously await this consumer from trading/protection, create another
+native owner or change simulation settings.
 
 ## Verification and remaining acceptance
 
 See [source/access review](EVENT_AWARENESS_SOURCES.md) and
 [machine-readable offline evidence](EVENT_AWARENESS_PROOF.json).
+The [observer continuation proof](EVENT_OBSERVER_PROOF.json) records the subsequent
+installed-package tests and exact application identity for durable delivery.
 
 Focused tests cover half-open event windows, independently timed related events,
 calendar versus quote freshness, DST ambiguity/nonexistent times, date-only DST

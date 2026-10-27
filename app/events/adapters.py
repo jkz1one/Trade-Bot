@@ -40,7 +40,7 @@ def get(url, headers=None, *, timeout=10):
 def local_time(value, zone):
     """Reject nonexistent/ambiguous wall times instead of silently choosing a DST fold."""
     tz = ZoneInfo(zone)
-    naive = datetime.strptime(value, "%Y%m%dT%H%M%S")  # noqa: DTZ007 - explicit DST validation below
+    naive = datetime.strptime(value, "%Y%m%dT%H%M%S")  # Explicit DST validation below.
     first, second = naive.replace(tzinfo=tz, fold=0), naive.replace(tzinfo=tz, fold=1)
     if (
         first.utcoffset() != second.utcoffset()

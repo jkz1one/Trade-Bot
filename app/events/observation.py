@@ -2,12 +2,14 @@
 
 import json
 import sqlite3
+from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
 from time import perf_counter_ns
 from urllib.parse import quote
 
 from app.events.assessment import assess, prepare
+from app.events.models import Request
 from app.mixed.dashboard_snapshot import VERSION, checkpoint, file_identity
 from app.options.engine import fingerprint
 
@@ -16,29 +18,35 @@ TABLES = {
     "STOCK": ("execution_stock_decisions", "STOCK_PROPOSAL_RECORDED"),
     "PORTFOLIO": ("execution_portfolio_decisions", "PORTFOLIO_PROPOSAL_RECORDED"),
 }
+ORDER_TABLES = {
+    "OPTION": "execution_orders",
+    "STOCK": "execution_stock_orders",
+    "PORTFOLIO": "execution_portfolio_orders",
+}
 
 
-def observe_decision(store, journal_path, kind, request, *, recorded_at, snapshot_binding):
-    """Link to an existing immutable source_key and its original native event clock.
+class ObservationUnavailable(ValueError):
+    """An allowlisted diagnostic code, without private exception payloads."""
 
-    The caller supplies candidate/family/horizon context (explicitly labelled).
-    No lookahead: use only a snapshot published by the actual decision time.
-    Only the existing publisher's atomic copy is accepted, never the active owner.
-    Event consumers cannot hold SQLite read locks against mandatory protection.
-    """
-    if kind not in TABLES or request.population_id != store.binding["population_id"]:
-        raise ValueError("Native decision kind/population mismatch")
-    if recorded_at < request.evaluated_at:
-        raise ValueError("Observation receipt predates native decision")
+    def __init__(self, code, message=None):
+        self.code = code
+        super().__init__(message or code)
+
+
+@contextmanager
+def native_snapshot(journal_path, snapshot_binding, population_id, recorded_at):
+    """One immutable published inode; refuse active paths before opening SQLite."""
     path = Path(journal_path).resolve()
     if (
         path != Path(snapshot_binding["destination"]) / "options.db"
         or path == Path(snapshot_binding["source_journal"])
-        or snapshot_binding["population_id"] != request.population_id
+        or snapshot_binding["population_id"] != population_id
     ):
-        raise ValueError("Published native snapshot required; active journal forbidden")
+        raise ObservationUnavailable(
+            "NATIVE_PUBLISHED_COPY_REQUIRED",
+            "Published native snapshot required; active journal forbidden",
+        )
     identity = file_identity(path, snapshot_binding["reader_uid"], snapshot_binding["reader_gid"])
-    table, event_kind = TABLES[kind]
     # Atomic publisher copies never change in place. Immutable reads take no locks.
     uri = "file:" + quote(str(path)) + "?mode=ro&immutable=1"
     db = sqlite3.connect(uri, uri=True, timeout=0)
@@ -54,54 +62,100 @@ def observe_decision(store, journal_path, kind, request, *, recorded_at, snapsho
             receipt["version"] != VERSION
             or receipt["binding_sha256"] != fingerprint(snapshot_binding)
             or receipt["checkpoint"] != checkpoint(db, snapshot_binding)
-            or datetime.fromisoformat(receipt["published_at"]) > recorded_at
         ):
-            raise ValueError("Native snapshot receipt mismatch")
+            raise ObservationUnavailable("NATIVE_SNAPSHOT_RECEIPT_MISMATCH")
+        if datetime.fromisoformat(receipt["published_at"]) > recorded_at:
+            raise ObservationUnavailable("NATIVE_PUBLICATION_IN_FUTURE")
         config = json.loads(
             db.execute("SELECT config_json FROM execution_control WHERE id=1").fetchone()[0]
         )
-        if config.get("limits", {}).get("population_id") != request.population_id:
-            raise ValueError("Native journal population mismatch")
-        row = db.execute(
-            f"SELECT * FROM {table} WHERE source_key=?", (request.decision_id,)
-        ).fetchone()
-        event = db.execute(
-            "SELECT sequence,occurred_at,payload FROM execution_events WHERE kind=? "
-            "AND json_extract(payload,'$.source_key')=? ORDER BY sequence LIMIT 1",
-            (event_kind, request.decision_id),
-        ).fetchone()
-        if row is None or event is None:
-            raise ValueError("Actual native decision and event required")
-        if datetime.fromisoformat(event["occurred_at"]) != request.evaluated_at:
-            raise ValueError("Original native decision time required")
-        native = dict(row)
-        native_event = dict(event)
-        inputs = json.loads(native.get("inputs_json", "{}"))
-        if kind == "PORTFOLIO":
-            order = db.execute(
-                "SELECT approval_json FROM execution_portfolio_orders WHERE source_key=?",
-                (request.decision_id,),
-            ).fetchone()
-            if order:
-                inputs = json.loads(order[0]).get("inputs", {})
-        instrument = (inputs.get("quote") or {}).get("instrument")
-        if instrument:
-            contract = instrument.get("contract")
-            symbol = contract["underlying"] if contract else instrument["symbol"]
-            underlying_kind = contract["underlying_kind"] if contract else instrument["kind"]
-            if (symbol, instrument["instrument_id"], underlying_kind) != (
-                request.symbol,
-                request.instrument_id,
-                request.underlying_kind,
-            ):
-                raise ValueError("Native decision instrument context mismatch")
+        if config.get("limits", {}).get("population_id") != population_id:
+            raise ObservationUnavailable("NATIVE_POPULATION_MISMATCH")
+        yield db, receipt
         if (
             file_identity(path, snapshot_binding["reader_uid"], snapshot_binding["reader_gid"])
             != identity
         ):
-            raise ValueError("Native snapshot replaced during observation; retry off-path")
+            raise ObservationUnavailable("NATIVE_SNAPSHOT_REPLACED_DURING_READ")
     finally:
         db.close()
+
+
+def decision_evidence(db, kind, decision_id):
+    table, event_kind = TABLES[kind]
+    row = db.execute(f"SELECT * FROM {table} WHERE source_key=?", (decision_id,)).fetchone()
+    events = db.execute(
+        "SELECT sequence,occurred_at,payload FROM execution_events WHERE kind=? "
+        "AND json_extract(payload,'$.source_key')=? ORDER BY sequence LIMIT 2",
+        (event_kind, decision_id),
+    ).fetchall()
+    if row is None or len(events) != 1:
+        raise ValueError("Unique actual native decision and event required")
+    native, native_event = dict(row), dict(events[0])
+    inputs = json.loads(native.get("inputs_json", "{}"))
+    order = db.execute(
+        f"SELECT intent_json,approval_json FROM {ORDER_TABLES[kind]} WHERE source_key=?",
+        (decision_id,),
+    ).fetchone()
+    intent = json.loads(order[0]) if order else {}
+    if order and kind == "PORTFOLIO":
+        inputs = json.loads(order[1]).get("inputs", {})
+    return native, native_event, inputs, intent
+
+
+def native_context(evidence, population_id):
+    """Use only retained native fields. No family, instrument or horizon guesses."""
+    native, event, inputs, intent = evidence
+    instrument = intent.get("instrument") or (inputs.get("quote") or {}).get("instrument")
+    proposal = inputs.get("proposal") or {}
+    family = intent.get("family") or (intent.get("entry_lineage") or {}).get("family")
+    family = family or proposal.get("family")
+    horizon = intent.get("exit_at") or proposal.get("exit_at")
+    if not (instrument and family and horizon):
+        return None
+    contract = instrument.get("contract")
+    return Request(
+        population_id=population_id,
+        decision_id=native["source_key"],
+        family=family,
+        symbol=contract["underlying"] if contract else instrument["symbol"],
+        instrument_id=instrument["instrument_id"],
+        underlying_kind=contract["underlying_kind"] if contract else instrument["kind"],
+        evaluated_at=datetime.fromisoformat(event["occurred_at"]),
+        holding_until=datetime.fromisoformat(horizon),
+    )
+
+
+def observation_payload(store, kind, request, evidence, receipt, *, recorded_at, context_origin):
+    native, native_event, inputs, intent = evidence
+    if request.population_id != store.binding["population_id"]:
+        raise ValueError("Native decision population mismatch")
+    if recorded_at < request.evaluated_at:
+        raise ValueError("Observation receipt predates native decision")
+    if (
+        native["source_key"] != request.decision_id
+        or datetime.fromisoformat(native_event["occurred_at"]) != request.evaluated_at
+    ):
+        raise ValueError("Original native decision identity/time required")
+    instrument = intent.get("instrument") or (inputs.get("quote") or {}).get("instrument")
+    if instrument:
+        contract = instrument.get("contract")
+        symbol = contract["underlying"] if contract else instrument["symbol"]
+        underlying_kind = contract["underlying_kind"] if contract else instrument["kind"]
+        if (symbol, instrument["instrument_id"], underlying_kind) != (
+            request.symbol,
+            request.instrument_id,
+            request.underlying_kind,
+        ):
+            raise ValueError("Native decision instrument context mismatch")
+    proposal = inputs.get("proposal") or {}
+    family = intent.get("family") or (intent.get("entry_lineage") or {}).get("family")
+    family = family or proposal.get("family")
+    horizon = intent.get("exit_at") or proposal.get("exit_at")
+    if (family and family != request.family) or (
+        horizon and datetime.fromisoformat(horizon) != request.holding_until
+    ):
+        raise ValueError("Native family or holding horizon context mismatch")
     snapshot = store.as_of(request.evaluated_at)
     view = prepare(snapshot, store.policy)
     start = perf_counter_ns()
@@ -142,13 +196,13 @@ def observe_decision(store, journal_path, kind, request, *, recorded_at, snapsho
     payload = {
         "kind": "EVENT_OBSERVATION_ONLY",
         "population_id": request.population_id,
-        "decision_table": table,
+        "decision_table": TABLES[kind][0],
         "decision_id": request.decision_id,
         "native_decision_hash": fingerprint(native),
         "native_event": native_event,
         "native_publication": receipt,
         "native_result": json.loads(native["result_json"]),
-        "context_origin": "EXPLICIT_CALLER_CANDIDATE_AND_HORIZON",
+        "context_origin": context_origin,
         "native_instrument_verified": bool(instrument),
         "recorded_at": recorded_at.isoformat(),
         "assessment": assessment.model_dump(mode="json"),
@@ -156,4 +210,24 @@ def observe_decision(store, journal_path, kind, request, *, recorded_at, snapsho
         "detection_delays": delays,
         "actual_decision_changed": False,
     }
+    return payload, assessment
+
+
+def observe_decision(store, journal_path, kind, request, *, recorded_at, snapshot_binding):
+    """Single decision API; the bounded consumer supplies durable delivery/checkpoints."""
+    if kind not in TABLES:
+        raise ValueError("Native decision kind mismatch")
+    with native_snapshot(
+        journal_path, snapshot_binding, store.binding["population_id"], recorded_at
+    ) as (db, receipt):
+        evidence = decision_evidence(db, kind, request.decision_id)
+        payload, assessment = observation_payload(
+            store,
+            kind,
+            request,
+            evidence,
+            receipt,
+            recorded_at=recorded_at,
+            context_origin="EXPLICIT_CALLER_CANDIDATE_AND_HORIZON",
+        )
     return store.observe(payload), assessment

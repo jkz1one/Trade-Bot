@@ -1,5 +1,25 @@
 # Autonomous Compounding Trader: source of truth
 
+Event feature continuation 2, 2026-10-27 EDT (isolated from the base's v1.151).
+
+The [event observation consumer](EVENT_AWARENESS_BASELINE.md#native-evidence-connection)
+now reads bounded batches from the existing publisher's immutable journal copy.
+Native saved family/exit deadlines are reused exactly. Missing context is a retained
+retryable gap. Observations, unique delivery receipts and cursor commit atomically;
+restart, publication continuity, backlog counts and gap retry bounds are explicit.
+It changes no native runtime, source publication, account, eligibility or protection.
+No scheduler/worker is deployed; provider and host acceptance remain outstanding.
+See EVENT_OBSERVER_PROOF.json for installed offline checks and artifact identity.
+
+Continuation starting feature HEAD: `f39a106639bbb1a66c85a75a7737f216b2a87fd6`.
+Remote base advanced to `de201bd686c37d71fbd93c287595c8e4b922ab8d`; all six commits
+were inspected, including host/runtime diagnostics and captured option catalogs.
+The native publication/decision contract is unchanged. Those base changes were
+not merged into this branch, and their separate host status is not revalidated here.
+Only `feat/event-awareness-baseline` and its own draft PR are updated.
+The parallel base later reached `f305ea19bef3fdfb5aec04c51aa431f32dc2b694` (v1.152,
+after-close Swing history proof). Its scripts/docs/tests do not alter this contract.
+
 Version 1.146. Observation-only event awareness feature branch, 2026-10-27 EDT.
 
 [Event awareness baseline](EVENT_AWARENESS_BASELINE.md) is an independent additive

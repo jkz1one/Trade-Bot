@@ -1,5 +1,26 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Event observer continuation: 2026-10-27 EDT
+
+Continued `feat/event-awareness-baseline` from `f39a106639bbb1a66c85a75a7737f216b2a87fd6`.
+Remote base now `de201bd686c37d71fbd93c287595c8e4b922ab8d`; six new commits inspected,
+no native journal contract changes, and no merge/rebase of that parallel work.
+During verification, base `f305ea19bef3fdfb5aec04c51aa431f32dc2b694` added an
+after-close Swing history proof helper; reviewed, with no application contract change.
+
+Added a one-shot bounded observer for the existing publisher copy, durable atomic
+delivery/cursor commits, native saved family/horizon reuse, retryable missing-context
+gaps, bounded fair retries, persistent checkpoint/anchor continuity and exported
+backlog/failure evidence. No account, native runtime, provider/model call, strategy,
+entry sizing, position protection or accounting changes. The CLI starts no scheduler.
+See EVENT_AWARENESS_BASELINE.md and EVENT_OBSERVER_PROOF.json for tests and limits.
+
+Stopping reason: **completed observer delivery slice**, with offline installed proof.
+Remaining: provider access/coverage acceptance, actual-host integration/scheduling,
+process/UID/mount isolation, candidate-context delivery where native data is missing,
+retention/alerts and host/source-detection latency. No server deployment, worker
+enablement, enforcement, base/main update or PR #1 edit occurred.
+
 ## Event awareness baseline feature slice: 2026-10-27 EDT
 
 New branch `feat/event-awareness-baseline` from remotely verified

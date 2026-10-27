@@ -16,6 +16,7 @@ from app.events.adapters import (
     sessions,
 )
 from app.events.assessment import assess, prepare
+from app.events.consumer import ObserverBatch, consume_once
 from app.events.models import Policy, Request, Snapshot
 from app.events.store import EventStore
 from app.events.worker import collect_once
@@ -25,7 +26,8 @@ from app.options.operator_inbox import read
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "operation", choices=("policy", "init", "collect-once", "sessions", "assess", "export")
+        "operation",
+        choices=("policy", "init", "collect-once", "sessions", "assess", "export", "observe-once"),
     )
     parser.add_argument("--directory")
     parser.add_argument("--population")
@@ -36,6 +38,8 @@ def main(argv=None):
     parser.add_argument("--symbol")
     parser.add_argument("--key-file")
     parser.add_argument("--request")
+    parser.add_argument("--snapshot-binding")
+    parser.add_argument("--observer-batch")
     args = parser.parse_args(argv)
     if args.operation == "policy":
         print(Policy().model_dump_json(indent=2))
@@ -50,6 +54,16 @@ def main(argv=None):
             result = {"status": "EVENT_AUDIT_CREATED", "workers_started": False}
         elif args.operation == "export":
             result = store.export()
+        elif args.operation == "observe-once":
+            if not args.snapshot_binding:
+                raise ValueError("Exact native publisher binding file required")
+            binding = json.loads(read(Path(args.snapshot_binding)))
+            batch = (
+                ObserverBatch.model_validate_json(read(Path(args.observer_batch), 4 * 1024 * 1024))
+                if args.observer_batch
+                else ObserverBatch()
+            )
+            result = consume_once(store, binding, recorded_at=now, batch=batch)
         elif args.operation in {"collect-once", "sessions"}:
             if args.start is None or args.end is None or args.start >= args.end:
                 raise ValueError("Explicit ordered collection interval required")
@@ -94,7 +108,7 @@ def main(argv=None):
             )
             result = assess(prepare(snapshot, policy), request).model_dump(mode="json")
         print(json.dumps(result, sort_keys=True))
-        return 0
+        return 2 if result.get("status") == "UNAVAILABLE" else 0
     except (ValueError, OSError, TypeError):
         print(json.dumps({"status": "EVENT_OPERATION_UNAVAILABLE", "authority": False}))
         return 2

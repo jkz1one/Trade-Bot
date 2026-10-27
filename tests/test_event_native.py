@@ -46,11 +46,12 @@ def published_fixture(tmp_path):
     path = destination / "options.db"
     with sqlite3.connect(path) as db:
         rows = db.execute(
-            "SELECT source_key,approval_json FROM execution_portfolio_orders"
+            "SELECT source_key,intent_json FROM execution_portfolio_orders"
         ).fetchall()
     requests = []
-    for key, approval in rows:
-        instrument = json.loads(approval)["inputs"]["quote"]["instrument"]
+    for key, raw in rows:
+        intent = json.loads(raw)
+        instrument = intent["instrument"]
         requests.append(
             request(
                 AT,
@@ -59,6 +60,8 @@ def published_fixture(tmp_path):
                 symbol=instrument["symbol"],
                 instrument_id=instrument["instrument_id"],
                 underlying_kind=instrument["kind"],
+                family=intent["family"],
+                holding_until=intent["exit_at"],
             )
         )
     return source, settings, path, binding, requests, AT + timedelta(seconds=2)

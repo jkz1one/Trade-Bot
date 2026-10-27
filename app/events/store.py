@@ -203,10 +203,13 @@ class EventStore:
 
     def export(self):
         """Portable evidence only; deliberately separate from native accounting exports."""
+        from app.events.consumer import observer_export
+
         with self.db() as db:
             db.execute("BEGIN")
             return {
                 "binding": self.binding,
+                "observer": observer_export(db),
                 "collections": [
                     json.loads(r[0])
                     for r in db.execute("SELECT payload FROM collections ORDER BY id")
