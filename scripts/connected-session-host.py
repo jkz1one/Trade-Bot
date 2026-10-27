@@ -107,9 +107,10 @@ def mount(source, target, readonly=True):
 
 def session_resources():
     # Runtime, collector and publisher (including children) share this quota.
-    # Keep the offline helpers at one CPU without throttling the connected group
-    # to that same single CPU. This is a ceiling, not reserved host capacity.
-    return {"cpus": 2, "available_logical_cpus": len(os.sched_getaffinity(0))}
+    # Use up to two available CPUs. A larger quota cannot add a core to a
+    # single-CPU host. This is a ceiling, not reserved host capacity.
+    available = len(os.sched_getaffinity(0))
+    return {"cpus": min(2, available), "available_logical_cpus": available}
 
 
 def isolation(*, cpus=1):

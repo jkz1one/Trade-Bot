@@ -1,6 +1,29 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.149. Review a separate connected-session CPU allowance, 2026-10-27 EDT.
+Version 1.150. Remove execution imports from cold market-read workers, 2026-10-27 EDT.
+
+Host review on b78133d reports available_logical_cpus=1. Its proposed two-CPU
+ceiling cannot supply a second core; first-check-4 has only been reviewed, not
+reported started. The native five-second snapshot timeout from first-check-3 is
+confirmed, while the exact scheduling/contention cause remains unproven.
+
+Import profiling found both execution engines and SQLAlchemy/storage loaded in
+every cold options market-read worker solely through parent-only clock helpers.
+Those imports now occur inside the parent collection functions. Native clock
+validation, schema/auth checks, subprocess protocol and timeouts are unchanged.
+Cold options and legacy market-read children reject execution/storage/calendar
+imports in an installed subprocess regression. On the same local machine pinned
+to one logical CPU, five fresh imports per version reduced median CPU time from
+0.5673s to 0.2296s (about 60%). This measures import work, not full captures or host
+runtime success. No network, real OAuth or model calls were used for this proof.
+
+Connected CPU review now uses min(2, available_logical_cpus), so this host receives
+an explicit one-CPU ceiling. Existing account, entry halt, execution policy,
+snapshot deadline and SHADOW services remain unchanged. Build the optimization,
+then freshly review first-check-4 against the same owner. Host sustained runtime
+and eligible-entry acceptance remain outstanding. See READ_WORKER_STARTUP_PROOF.json.
+
+Prior host diagnostics and CPU allowance review (v1.149):
 
 Host first-check-3 on f5f7f69 exited after about 19 seconds. The new diagnostics
 confirm FixtureProcessTimeout in native portfolio reconciliation's local snapshot

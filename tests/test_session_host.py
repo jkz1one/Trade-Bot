@@ -116,9 +116,9 @@ def test_enrollment_and_run_mounts_keep_offline_stages_without_broker_auth(host)
     live = next(c for c in calls if c[:2] == ("run", "-d"))
     assert live[live.index("--restart") + 1] == "no"
     assert live[live.index("--network") + 1] == "bridge"
-    assert live[live.index("--cpus") + 1] == "2"
+    assert live[live.index("--cpus") + 1] == str(plan["binding"]["resources"]["cpus"])
     assert result["resources"] == plan["binding"]["resources"]
-    assert result["resources"]["cpus"] == 2
+    assert result["resources"]["cpus"] == min(2, result["resources"]["available_logical_cpus"])
     assert result["resources"]["available_logical_cpus"] >= 1
     assert live[live.index("--stop-timeout") + 1] == "45"
     assert "--publish" not in live and "-p" not in live
@@ -147,6 +147,7 @@ def test_changed_cpu_capacity_requires_a_new_review_before_launch(host, monkeypa
     changed = m.review(IMAGE, "run", 60, "cpu-check")
     assert changed["review_sha256"] != original["review_sha256"]
     assert changed["binding"]["resources"]["available_logical_cpus"] == 1
+    assert changed["binding"]["resources"]["cpus"] == 1
     with pytest.raises(ValueError, match="resources changed"):
         m.apply(original)
     assert not any(c[:2] == ("run", "-d") for c in calls)

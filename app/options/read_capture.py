@@ -15,7 +15,6 @@ from pydantic import Field, JsonValue, field_validator, model_validator
 from app.domain.models import utc_now
 from app.execution.market_reads import market_read_lease, private_oauth
 from app.execution.process import _cleanup
-from app.options.engine import clock
 from app.options.models import OptionRecord
 from app.options.read_gateway import ENDPOINT, CapturePlan, ReadSchemas, encoded
 
@@ -216,6 +215,10 @@ async def collect(policy, *, schemas=None, plan=None, clock_source=utc_now):
 
 
 async def _collect_owned(policy, *, schemas, plan, clock_source):
+    # Parent orchestration only. The read child imports protocol models from this
+    # module and must not rebuild the execution engine just to decode a request.
+    from app.options.engine import clock
+
     private_oauth(policy.oauth_file)
     started = clock(clock_source())
     request = CaptureRequest(

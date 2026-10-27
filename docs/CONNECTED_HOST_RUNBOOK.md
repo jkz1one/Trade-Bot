@@ -228,8 +228,8 @@ FixtureProcessTimeout at the unchanged five-second deadline, while three isolate
 reads had passed in 1.358–1.831 seconds. Quota contention is a hypothesis, not an
 established root cause.
 
-Connected sessions now use a two-CPU ceiling. The review's `binding.resources`
-includes `cpus: 2` and `available_logical_cpus` from the host process affinity.
+Connected sessions now use up to two available CPUs. The review's `binding.resources`
+includes `cpus: min(2, available_logical_cpus)` and the host process affinity count.
 The resource record is bound by the expected review hash, rechecked before launch,
 and repeated in SESSION_STARTED. Offline helpers remain limited to one CPU.
 This does not reserve capacity, modify other containers, increase the five-second
@@ -241,3 +241,22 @@ Build this release, then review `first-check-4` for 600 seconds and launch with
 its new hash. Preserve the enrolled account and all earlier containers. Confirm
 runtime/feed progression and the final container state; do not call the timeout
 resolved until the connected host test passes.
+
+## Single-CPU read-worker startup optimization
+
+The b78133d review confirmed one available logical CPU. Do not treat a quota of
+two as extra hardware or evidence that contention is resolved. The current
+launcher caps its reviewed allowance at the available logical CPU count.
+
+The read worker previously imported both execution engines and SQLAlchemy through
+clock helpers used only by parent orchestration. These imports are now deferred
+until the parent collection functions execute; request/result models, native
+clock validation, read authorization and every deadline are unchanged. The parent
+already loads this execution machinery for the native runtime. Read children do
+not load it merely to decode their protocol.
+
+A one-CPU local cold-import benchmark (five fresh processes per version) measured
+median CPU time of 0.5673s before and 0.2296s after. This is an import-cost reduction,
+not a complete host capture benchmark or proof the snapshot timeout is fixed.
+Rebuild, then freshly review the unused first-check-4 name for 600 seconds.
+Keep the existing account and halt; do not reuse the previous release's review hash.

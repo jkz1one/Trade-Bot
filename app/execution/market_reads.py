@@ -19,7 +19,6 @@ from uuid import uuid4
 from pydantic import Field, field_validator
 
 from app.domain.models import Candidate, MarketPacket, utc_now
-from app.execution.engine import _clock
 from app.execution.models import Contract
 from app.execution.process import _cleanup
 from app.execution.quote_feed import DurableQuoteFeed
@@ -207,6 +206,9 @@ async def collect_once(feed, *, clock=utc_now):
 
 
 async def _collect_owned(feed, *, clock):
+    # Keep the engine/calendar/storage imports out of the market-read child.
+    from app.execution.engine import _clock
+
     policy = MarketReadPolicy.model_validate(feed.source)
     private_oauth(policy.oauth_file)
     started = clock()
