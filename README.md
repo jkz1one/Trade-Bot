@@ -39,6 +39,11 @@ The [host launcher and runbook](docs/CONNECTED_HOST_RUNBOOK.md) now cover config
 packaging, reviewed enrollment, bounded detached sessions, status and exact-ID stop.
 Reviewed real settings/catalog, host/cross-user acceptance and eligible data remain pending.
 
+The separate [event-awareness feature baseline](docs/EVENT_AWARENESS_BASELINE.md)
+adds local deterministic observations and native decision-linked audit evidence.
+It does not change trading eligibility, accounting or protection, and is not yet
+connected to the host. Source coverage/access and host acceptance remain explicit.
+
 ## Offline development checks
 
 Use the [isolated options test procedure](docs/OPTIONS_TESTING.md) to verify an

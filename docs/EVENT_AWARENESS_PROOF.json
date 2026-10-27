@@ -1,0 +1,1940 @@
+{
+  "version": "event-awareness-offline-proof-v1",
+  "branch": "feat/event-awareness-baseline",
+  "starting_remote_base": "19616d78546f62d6233d39c2d98055ed8a4da76a",
+  "main_verified": "b5359aaf396e692d2142d7e02908f1544e045ee6",
+  "verification": "FIXTURE_VERIFIED",
+  "stopping_reason": "COMPLETED_FIRST_IMPLEMENTATION_SLICE",
+  "provider_verified": false,
+  "host_verified": false,
+  "deployed": false,
+  "live_enabled": false,
+  "enforcement": false,
+  "server_workers_started": false,
+  "existing_pr_1_modified": false,
+  "new_model_calls": 0,
+  "new_dependencies": false,
+  "test_command": "Isolated Python 3.12 -I -W error, noneditable wheel, copied tests, explicit proof-root/test import paths; 12 selected test files",
+  "test_summary": {
+    "passed": 124,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 102.83,
+    "new_event_cases": 61
+  },
+  "cases": [
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_shared_clear_is_not_approval_and_never_enables_carry[DEGEN]",
+      "seconds": 0.522
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_shared_clear_is_not_approval_and_never_enables_carry[SWING]",
+      "seconds": 0.003
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_shared_clear_is_not_approval_and_never_enables_carry[SCOPE]",
+      "seconds": 0.003
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_scheduled_window_half_open_boundaries_without_provider_refresh[-901-False]",
+      "seconds": 0.003
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_scheduled_window_half_open_boundaries_without_provider_refresh[-900-True]",
+      "seconds": 0.003
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_scheduled_window_half_open_boundaries_without_provider_refresh[1799-True]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_scheduled_window_half_open_boundaries_without_provider_refresh[1800-False]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_validity_ends_at_next_window_activation_and_calendar_not_quote_clock",
+      "seconds": 0.003
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_decision_and_press_conference_have_distinct_windows",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_symbol_uncertainty_does_not_become_market_restriction",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_missing_or_stale_calendar_is_not_clear[missing]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_missing_or_stale_calendar_is_not_clear[partial]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_missing_or_stale_calendar_is_not_clear[stale]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_missing_or_stale_calendar_is_not_clear[short_horizon]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_missing_or_stale_calendar_is_not_clear[future]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_cancelled_and_conflicting_sources_are_not_silently_cleared",
+      "seconds": 0.006
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_stress_uses_available_original_evidence[updates0-DISPLAYED_LIQUIDITY_MISSING-UNKNOWN]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_stress_uses_available_original_evidence[updates1-LOW_DISPLAYED_LIQUIDITY-BLOCK_NEW_ENTRIES]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_stress_uses_available_original_evidence[updates2-WIDE_SPREAD-BLOCK_NEW_ENTRIES]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_stress_uses_available_original_evidence[updates3-ELEVATED_SPREAD-CAUTION]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_stress_uses_available_original_evidence[updates4-RAPID_PRICE_CHANGE-BLOCK_NEW_ENTRIES]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_stress_uses_available_original_evidence[updates5-PRICE_CHANGE_REFERENCE_MISSING_OR_STALE-UNKNOWN]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_stress_uses_available_original_evidence[updates6-QUOTE_STALE_OR_INVALID_CLOCK-UNKNOWN]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_stress_uses_available_original_evidence[updates7-QUOTE_ENTITLEMENT_UNCONFIRMED-UNKNOWN]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_stress_uses_available_original_evidence[updates8-QUOTE_BOOK_UNUSABLE-UNKNOWN]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_holiday_early_close_and_dst_session_windows[now0-OUTSIDE_REGULAR_SESSION]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_holiday_early_close_and_dst_session_windows[now1-SESSION_CLOSE_WINDOW]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_holiday_early_close_and_dst_session_windows[now2-OUTSIDE_REGULAR_SESSION]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_holiday_early_close_and_dst_session_windows[now3-SESSION_OPEN_WINDOW]",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_holding_period_crosses_close_and_future_coverage",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_empty_snapshot_policy_drift_naive_times_and_enforcement_rejected",
+      "seconds": 0.003
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_dense_calendar_is_explicitly_incomplete_and_assessment_is_bounded",
+      "seconds": 0.044
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_native_incomplete_quote_and_foreign_symbol_are_not_clear",
+      "seconds": 0.004
+    },
+    {
+      "class": "tests.test_event_assessment",
+      "name": "test_decimal_context_cannot_change_assessment",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_sources",
+      "name": "test_public_ical_normalizes_original_times_folded_text_duration_and_coverage[https://www.bls.gov/schedule/news_release/bls.ics]",
+      "seconds": 0.001
+    },
+    {
+      "class": "tests.test_event_sources",
+      "name": "test_public_ical_normalizes_original_times_folded_text_duration_and_coverage[https://www.bea.gov/news/schedule/ics/online-calendar-subscription.ics]",
+      "seconds": 0.0
+    },
+    {
+      "class": "tests.test_event_sources",
+      "name": "test_invalid_dst_and_floating_time_rejected[DTSTART;TZID=America/New_York:20260308T023000]",
+      "seconds": 0.0
+    },
+    {
+      "class": "tests.test_event_sources",
+      "name": "test_invalid_dst_and_floating_time_rejected[DTSTART;TZID=America/New_York:20261101T013000]",
+      "seconds": 0.0
+    },
+    {
+      "class": "tests.test_event_sources",
+      "name": "test_invalid_dst_and_floating_time_rejected[DTSTART:20261027T110000]",
+      "seconds": 0.0
+    },
+    {
+      "class": "tests.test_event_sources",
+      "name": "test_valid_dst_offsets_differ",
+      "seconds": 0.0
+    },
+    {
+      "class": "tests.test_event_sources",
+      "name": "test_unsupported_or_conflicting_ical_schema_not_silently_skipped[RRULE:FREQ=DAILY]",
+      "seconds": 0.0
+    },
+    {
+      "class": "tests.test_event_sources",
+      "name": "test_unsupported_or_conflicting_ical_schema_not_silently_skipped[SEQUENCE:2]",
+      "seconds": 0.0
+    },
+    {
+      "class": "tests.test_event_sources",
+      "name": "test_all_day_and_cancellation_preserve_uncertainty",
+      "seconds": 0.0
+    },
+    {
+      "class": "tests.test_event_sources",
+      "name": "test_te_preserves_distinct_related_events_no_name_whitelist_and_access_failure",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_sources",
+      "name": "test_company_date_is_not_exact_clearance_or_macro_coverage",
+      "seconds": 0.002
+    },
+    {
+      "class": "tests.test_event_sources",
+      "name": "test_daily_vix_retains_date_and_never_becomes_intraday_stress",
+      "seconds": 0.004
+    },
+    {
+      "class": "tests.test_event_sources",
+      "name": "test_native_quotes_keep_unknown_liquidity_entitlement_and_reference_identity",
+      "seconds": 0.001
+    },
+    {
+      "class": "tests.test_event_sources",
+      "name": "test_session_materialization_uses_actual_early_close_and_explicit_horizon",
+      "seconds": 0.001
+    },
+    {
+      "class": "tests.test_event_store",
+      "name": "test_revisions_reschedule_cancel_out_of_order_and_restart",
+      "seconds": 0.037
+    },
+    {
+      "class": "tests.test_event_store",
+      "name": "test_conflicting_same_revision_retained_and_atomic_reader",
+      "seconds": 0.041
+    },
+    {
+      "class": "tests.test_event_store",
+      "name": "test_interrupted_publication_preserves_last_good_and_skips_unpublished_version",
+      "seconds": 0.014
+    },
+    {
+      "class": "tests.test_event_store",
+      "name": "test_loader_corruption_regression_and_same_sequence_change_are_unknown",
+      "seconds": 0.017
+    },
+    {
+      "class": "tests.test_event_store",
+      "name": "test_source_outage_retains_events_and_collection_failure_no_secrets",
+      "seconds": 0.013
+    },
+    {
+      "class": "tests.test_event_store",
+      "name": "test_writer_lease_and_future_receipt_reject_without_partial_file",
+      "seconds": 0.008
+    },
+    {
+      "class": "tests.test_event_store",
+      "name": "test_worker_success_preserves_raw_and_original_source_times",
+      "seconds": 0.012
+    },
+    {
+      "class": "tests.test_event_store",
+      "name": "test_sequence_revision_and_publication_clock_regression",
+      "seconds": 0.011
+    },
+    {
+      "class": "tests.test_event_native",
+      "name": "test_actual_two_play_decisions_and_accounting_unchanged_with_would_block",
+      "seconds": 5.11
+    },
+    {
+      "class": "tests.test_event_native",
+      "name": "test_decision_link_refuses_invented_ids_population_clock_and_future_snapshot",
+      "seconds": 4.851
+    },
+    {
+      "class": "tests.test_event_native",
+      "name": "test_slow_or_failed_event_process_cannot_delay_two_mandatory_exits[False]",
+      "seconds": 3.397
+    },
+    {
+      "class": "tests.test_event_native",
+      "name": "test_slow_or_failed_event_process_cannot_delay_two_mandatory_exits[True]",
+      "seconds": 3.201
+    },
+    {
+      "class": "tests.test_event_native",
+      "name": "test_local_assessment_cannot_use_network_disk_or_model",
+      "seconds": 0.003
+    },
+    {
+      "class": "tests.test_portfolio_native",
+      "name": "test_native_two_pending_stock_entries_fill_and_close_independently",
+      "seconds": 3.143
+    },
+    {
+      "class": "tests.test_portfolio_native",
+      "name": "test_native_mixed_stock_option_reservations_and_independent_option_exit",
+      "seconds": 2.816
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_two_stock_positions_one_balance_and_independent_partial_exit",
+      "seconds": 0.004
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_close_one_and_simultaneous_exits_keep_exact_lineage",
+      "seconds": 0.007
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_two_unfilled_reservations_use_shared_funds_and_capacity",
+      "seconds": 0.003
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_partial_entry_cancel_releases_only_unfilled_debit",
+      "seconds": 0.006
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_pending_exit_and_uncertainty_keep_both_plays_committed",
+      "seconds": 0.003
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_limit_reduction_does_not_remove_positions_or_reserves",
+      "seconds": 0.005
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_mixed_stock_option_replay_has_one_cash_balance",
+      "seconds": 0.885
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_same_underlying_stock_and_option_is_rejected",
+      "seconds": 0.004
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_exit_cannot_target_another_play[missing]",
+      "seconds": 0.001
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_exit_cannot_target_another_play[foreign]",
+      "seconds": 0.003
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_exit_cannot_target_another_play[other-play]",
+      "seconds": 0.003
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_duplicate_fill_and_resume_after_exit_do_not_duplicate_cash",
+      "seconds": 0.004
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_no_silent_legacy_enrollment_or_scalar_position",
+      "seconds": 0.005
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_unknown_costs_and_shared_exposure_do_not_gain_second_budget",
+      "seconds": 0.006
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_account_funds_settlement_does_not_drop_an_open_play",
+      "seconds": 0.003
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_two_option_plays_and_exact_independent_close",
+      "seconds": 0.004
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_option_expiry_requires_exact_play_and_preserves_other_holding",
+      "seconds": 0.007
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_price_improvement_does_not_stay_reserved_after_partial_fill",
+      "seconds": 0.003
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_duplicate_reservation_and_two_working_orders_for_one_play_are_invalid",
+      "seconds": 0.004
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_option_source_liquidity_not_renewed_by_receive_time",
+      "seconds": 0.001
+    },
+    {
+      "class": "tests.test_portfolio_accounting",
+      "name": "test_portfolio_money_is_independent_of_global_decimal_precision",
+      "seconds": 0.003
+    },
+    {
+      "class": "tests.test_portfolio_controls",
+      "name": "test_native_concurrent_reservations_cannot_claim_a_third_slot",
+      "seconds": 0.092
+    },
+    {
+      "class": "tests.test_portfolio_controls",
+      "name": "test_signed_limit_reduction_keeps_positions_and_rejects_stale_revision",
+      "seconds": 1.536
+    },
+    {
+      "class": "tests.test_portfolio_controls",
+      "name": "test_simultaneous_native_exits_preserve_each_thesis",
+      "seconds": 3.692
+    },
+    {
+      "class": "tests.test_portfolio_controls",
+      "name": "test_two_play_observer_and_render_keep_distinct_cards_and_unknown_marks",
+      "seconds": 1.413
+    },
+    {
+      "class": "tests.test_portfolio_controls",
+      "name": "test_approval_event_tampering_blocks_reconciliation",
+      "seconds": 0.034
+    },
+    {
+      "class": "tests.test_portfolio_runtime",
+      "name": "test_scope_portfolio_reconnect_gap_retains_both_delivery_contracts",
+      "seconds": 1.794
+    },
+    {
+      "class": "tests.test_portfolio_selection",
+      "name": "test_sequential_selection_reserves_both_slots_and_retry_never_submits_again",
+      "seconds": 5.043
+    },
+    {
+      "class": "tests.test_portfolio_selection",
+      "name": "test_runtime_fills_both_then_keeps_held_only_delivery_and_source_clocks",
+      "seconds": 6.045
+    },
+    {
+      "class": "tests.test_portfolio_recovery",
+      "name": "test_uncertain_attempt_retains_capacity_and_never_resubmits[LOST_ACK]",
+      "seconds": 0.595
+    },
+    {
+      "class": "tests.test_portfolio_recovery",
+      "name": "test_uncertain_attempt_retains_capacity_and_never_resubmits[INVALID_ACK]",
+      "seconds": 0.583
+    },
+    {
+      "class": "tests.test_portfolio_recovery",
+      "name": "test_uncertain_attempt_retains_capacity_and_never_resubmits[CRASH_AFTER_ACCEPT]",
+      "seconds": 0.519
+    },
+    {
+      "class": "tests.test_portfolio_recovery",
+      "name": "test_partial_entry_cancel_releases_only_unfilled_cash_and_preserves_other_play",
+      "seconds": 1.323
+    },
+    {
+      "class": "tests.test_portfolio_recovery",
+      "name": "test_restart_after_durable_submit_marker_never_retries_unobserved_order",
+      "seconds": 0.054
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_mixed_runtime_native_fill_and_fast_stock_exit[False]",
+      "seconds": 3.715
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_mixed_runtime_native_fill_and_fast_stock_exit[True]",
+      "seconds": 4.394
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_mixed_runtime_delivery_cannot_bypass_enrollment[legacy]",
+      "seconds": 0.592
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_mixed_runtime_delivery_cannot_bypass_enrollment[gap]",
+      "seconds": 0.646
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_mixed_runtime_delivery_cannot_bypass_enrollment[identity]",
+      "seconds": 0.613
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_mixed_runtime_delivery_cannot_bypass_enrollment[future]",
+      "seconds": 0.598
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_mixed_runtime_delivery_cannot_bypass_enrollment[coverage]",
+      "seconds": 0.607
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_mixed_runtime_delivery_cannot_bypass_enrollment[unread_refresh]",
+      "seconds": 0.05
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_mixed_envelope_does_not_relax_old_stock_boundaries",
+      "seconds": 0.015
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_mixed_management_wait_keeps_independent_protection",
+      "seconds": 6.553
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_joint_scope_runtime_retains_actual_native_choice[STOCK]",
+      "seconds": 3.257
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_joint_scope_runtime_retains_actual_native_choice[OPTION]",
+      "seconds": 3.454
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_joint_scope_runtime_retains_actual_native_choice[SCOPE]",
+      "seconds": 5.166
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_joint_scope_runtime_retains_actual_native_choice[SCOPE_STALE]",
+      "seconds": 2.454
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_cli_mixed_restart_and_explicit_settlement_keep_one_balance",
+      "seconds": 4.205
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_fast_stock_quote_retirement_survives_rebound[False]",
+      "seconds": 2.798
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_fast_stock_quote_retirement_survives_rebound[True]",
+      "seconds": 2.784
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_stored_mixed_delivery_rejects_changed_evidence[hash]",
+      "seconds": 0.622
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_stored_mixed_delivery_rejects_changed_evidence[clock]",
+      "seconds": 0.622
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_stored_mixed_delivery_rejects_changed_evidence[prefix]",
+      "seconds": 0.627
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_interrupted_mixed_delivery_never_replays_or_refreshes",
+      "seconds": 0.85
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_stock_refresh_waits_for_completed_protection_tick",
+      "seconds": 1.305
+    },
+    {
+      "class": "tests.test_mixed_runtime",
+      "name": "test_scope_protection_accepts_nested_index_beside_two_common_quotes",
+      "seconds": 1.522
+    },
+    {
+      "class": "tests.test_simulation_profile",
+      "name": "test_review_binds_native_budget_and_keeps_missing_inputs_blocked",
+      "seconds": 0.009
+    },
+    {
+      "class": "tests.test_simulation_profile",
+      "name": "test_profile_create_stale_hash_and_overwrite_leave_existing_inputs",
+      "seconds": 0.027
+    },
+    {
+      "class": "tests.test_simulation_profile",
+      "name": "test_full_profile_enrolls_consumes_publishes_and_restarts_same_owner",
+      "seconds": 5.272
+    },
+    {
+      "class": "tests.test_simulation_profile",
+      "name": "test_unknown_costs_rejected_before_any_native_owner_is_created",
+      "seconds": 0.008
+    }
+  ],
+  "package_identity": {
+    "matched_application_files": 303,
+    "wheel_sha256": "17fd6f3bce7024b1af01be4b33fb25ad386ce57f8cc4ed8363e853d405932dd3",
+    "files": [
+      {
+        "path": "app/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "app/agent/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "app/agent/process.py",
+        "sha256": "a51bc6ccadd3a92a66f3e5f062d1c8c55cf4c7513908ecaf11f6dfc59557cd59"
+      },
+      {
+        "path": "app/agent/prompts.py",
+        "sha256": "f3343bd68399c2f8ae475bcaa38226be24d20d9b9bd1f43d7868cc5d32867dfb"
+      },
+      {
+        "path": "app/agent/trader.py",
+        "sha256": "dfb31009658fa9534cada5a3bdba062921773aeb1b781716f207ffd2b7fc60c8"
+      },
+      {
+        "path": "app/agent/worker.py",
+        "sha256": "5d7cbb051bf897263c825dcbf53ca90ea1317fd9ea2fb349b1195e2d858aa849"
+      },
+      {
+        "path": "app/broker/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "app/broker/base.py",
+        "sha256": "e291d4f4307e7db3feb8dc8a74f8d90a57ab57006998da4739c1acdca773a655"
+      },
+      {
+        "path": "app/broker/paper.py",
+        "sha256": "0e72abb42d4220ec506ed834a09d7767216d1fdb91c5607c54a59fd8da9a9766"
+      },
+      {
+        "path": "app/config.py",
+        "sha256": "5bf4454b67e86e39870ecd80f9fad57417060bda3fcd62551cb1dd27d6a25786"
+      },
+      {
+        "path": "app/domain/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "app/domain/models.py",
+        "sha256": "074dd1cda928cac4c59240b7202936cd28e5be41537ae035d8dd85d44318794d"
+      },
+      {
+        "path": "app/engine/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "app/engine/orchestrator.py",
+        "sha256": "d97548344d2b27e14f300420aeda512612b398fb2ecf8fed010a48522b7f12ae"
+      },
+      {
+        "path": "app/events/__init__.py",
+        "sha256": "f4d89fe52bd7b44d11ca550e44429711b65bb9fce009a7cb94d473e2755a34c1"
+      },
+      {
+        "path": "app/events/adapters.py",
+        "sha256": "23dff583cf818798314031bd292f8f3a98fa8e88bbd32615827fd0b57c71ab16"
+      },
+      {
+        "path": "app/events/assessment.py",
+        "sha256": "9a02b8f79f3f6ac1d3ce3dbf6a74ebed247de18a7a93a5b00867e510ee97c9b2"
+      },
+      {
+        "path": "app/events/cli.py",
+        "sha256": "fcba2d92f1fed655f36cc466bc35b5d5fe05fff2eaa6f282ce6d34b341e9e8db"
+      },
+      {
+        "path": "app/events/models.py",
+        "sha256": "37a7e32aec0158259d20b9782ff3c2cda68363de2e1cd5b2c38c1c742c266806"
+      },
+      {
+        "path": "app/events/observation.py",
+        "sha256": "c110fc0a284a9ab2fe8297f89c25fd7b1fc11a416ff614849bdbba0a69d0f88e"
+      },
+      {
+        "path": "app/events/store.py",
+        "sha256": "1f527f04dfe3bf6d82bbdaad3456be69cc76ca1a3ed4096a68d404119db5122c"
+      },
+      {
+        "path": "app/events/worker.py",
+        "sha256": "c84acf9ee1db8c3cd8ab983d133cce7303c2d3fee6d61b14dfdd1096d72225f5"
+      },
+      {
+        "path": "app/execution/__init__.py",
+        "sha256": "5b1a1f8ed77b12bda41d37039a98e8a383cf6a111600790474c135b4c6ede077"
+      },
+      {
+        "path": "app/execution/alert_cli.py",
+        "sha256": "f5cbd8d551e486ef50732a7dcc3726ad98bdb3ebfc59a13707eb7ceebcbf4ba3"
+      },
+      {
+        "path": "app/execution/alert_state.py",
+        "sha256": "8188044bd862ba978c12d9ffc0bb9a8636deceb7bfa7203b19e87127af8535e4"
+      },
+      {
+        "path": "app/execution/alert_worker.py",
+        "sha256": "ea50c1405c8e16cca9b86662c70541e5e084992632a1bb3bc4b08ee6159b57bc"
+      },
+      {
+        "path": "app/execution/alerts.py",
+        "sha256": "60c1739ee51b908185f4396ac0177b7a937df132ae1e6df9a96ef5ad9355d6d1"
+      },
+      {
+        "path": "app/execution/archive_cli.py",
+        "sha256": "0f781a62b2af05c8f436ab2c4cbf045be27e3121c3b8a10358142f6523e0cb95"
+      },
+      {
+        "path": "app/execution/checkpoint.py",
+        "sha256": "4b5ce9d0d67fd5a2b672634a67f99da722cc30a90b8bc376344257dd1483a297"
+      },
+      {
+        "path": "app/execution/checkpoint_archive.py",
+        "sha256": "b082d6b55817bc3685b067458688b28761c454f4f35b796151a26c58f99210e8"
+      },
+      {
+        "path": "app/execution/checkpoint_catalog.py",
+        "sha256": "90d77667fdf6f263d2427a6b0d0d2229b2badf243cd91b18e7bee5ac3f8d0c27"
+      },
+      {
+        "path": "app/execution/checkpoint_cli.py",
+        "sha256": "ebeb6cec538acde157f8b470de339e803c1bc3d2d5ce4912215cefc727cbc615"
+      },
+      {
+        "path": "app/execution/checkpoint_transfer.py",
+        "sha256": "e761a3dad2fc3bc0194892dca29a8da4ac0da451d8a4c9aeeab733b8cb249476"
+      },
+      {
+        "path": "app/execution/checkpoint_worker.py",
+        "sha256": "e51588e9440254230124b42f8adc6c61184720b0127342c5b6f91a74d2507e45"
+      },
+      {
+        "path": "app/execution/cli.py",
+        "sha256": "602fe033b25bb1828c3349ab53e89cb7c784f90e191484374af380ba6e7d68eb"
+      },
+      {
+        "path": "app/execution/control_api.py",
+        "sha256": "4505a89af6f1e192e7aecf4888b3a9d4534c377447aa553fa6ef6e0602dd9835"
+      },
+      {
+        "path": "app/execution/control_cli.py",
+        "sha256": "8e684b122ce4f3373cd7aa11cfa987345607339276681e3ac16dfae9b9cf7fa7"
+      },
+      {
+        "path": "app/execution/cycle_recovery.py",
+        "sha256": "d65bc899292c72bb472d72cd63018ec45bb1ebabd45b52306c4db548049197ac"
+      },
+      {
+        "path": "app/execution/durable_fixture.py",
+        "sha256": "ffc930f769fa71775439cb5fcff8f4af9306434abac324b94846aa725329c38a"
+      },
+      {
+        "path": "app/execution/economics.py",
+        "sha256": "b3687c640b5dae16a2dffff5b7156feaae5270b3bc7d8b971c7848bb55888873"
+      },
+      {
+        "path": "app/execution/engine.py",
+        "sha256": "c20341f9148afab92152d64752d2ea3855af873e3c391895b0f39eecd1d0d81f"
+      },
+      {
+        "path": "app/execution/fixture.py",
+        "sha256": "2502ed8cf65f3ece578f881bf164a2aee4f79402d61dab1597402d06756a98b6"
+      },
+      {
+        "path": "app/execution/host_audit.py",
+        "sha256": "f1bedc8964308b40c0d266f924a342ed0fad8aae8a66388a2d0a7a4fa70e23a7"
+      },
+      {
+        "path": "app/execution/journal.py",
+        "sha256": "6924895110da242b4d307cf951cbf5bc33d69ef3eeef2a05bf17f56dfe242af5"
+      },
+      {
+        "path": "app/execution/judgment.py",
+        "sha256": "03761696aa18d9a90321b2006c9873b9d8e81588a09002e9f77c6866e086c33e"
+      },
+      {
+        "path": "app/execution/judgment_worker.py",
+        "sha256": "a71062fac3f675d58b90423ee4d03ebe17dda9bd6cdbaba2cb7817305fbc6969"
+      },
+      {
+        "path": "app/execution/market_read_worker.py",
+        "sha256": "76cf736659e2e0624d646720e049097b1ab80d783d24d7761fee2867121941a2"
+      },
+      {
+        "path": "app/execution/market_reads.py",
+        "sha256": "dd721634a7403e5fea950313bcf48d1e9d17f423df77f9ce91f57562ff7a6bf7"
+      },
+      {
+        "path": "app/execution/market_service.py",
+        "sha256": "2e6d2e7d428123c8b34679b6b846414e3153a985530ead0c0963eeabd435570a"
+      },
+      {
+        "path": "app/execution/market_state.py",
+        "sha256": "0a22da2992d7eab08d6616190397ba8a06c11133b4401d80839bf13392914feb"
+      },
+      {
+        "path": "app/execution/market_validation.py",
+        "sha256": "75cac32460980e9c197cdedd688aed4df4497b67a2c31751894047b353f131b1"
+      },
+      {
+        "path": "app/execution/models.py",
+        "sha256": "bd7953f8904deb83268a6fa47aab5371b45e0c66c5c05f143548b94ed8145f0e"
+      },
+      {
+        "path": "app/execution/operator.py",
+        "sha256": "afab88764a45c735affa661021ea45bae0263afa909c44ba67430ab565b64887"
+      },
+      {
+        "path": "app/execution/process.py",
+        "sha256": "e48c501b8d40e4dc0c8df496c21c18cf6eae0a2d1607d69b0c944a78eeb77be2"
+      },
+      {
+        "path": "app/execution/quote_feed.py",
+        "sha256": "04acf4e31cde95820da7012991f84f27d0696f54de4d5ff0b5692c0c5ca1832d"
+      },
+      {
+        "path": "app/execution/restore.py",
+        "sha256": "af2fd2f6d854aff11534091c419924a0d7d7efb211cb44fd444c41cd4f6ef205"
+      },
+      {
+        "path": "app/execution/runtime.py",
+        "sha256": "98392c9057302eac5e6776d65455c503f6dffcc3b09c38f8e90bf19ba238c57f"
+      },
+      {
+        "path": "app/execution/runtime_cli.py",
+        "sha256": "8139eb161762d75ec1a236f5ac91ad89bbb052fde5698869340e6e7edddf433f"
+      },
+      {
+        "path": "app/execution/runtime_state.py",
+        "sha256": "a33777f50808f2774cf47309add2fef6a06fad42e77bfe517971b0809280baee"
+      },
+      {
+        "path": "app/execution/supervision.py",
+        "sha256": "d2703bee797bdd376fd0a8d2a237dabd0b523775e45e431715e11843afc9d9c1"
+      },
+      {
+        "path": "app/execution/supervisor.py",
+        "sha256": "9c8ccbd53f1f30f97b6da0dd9f9afba62cc81fd9fa2289a368bf6dd1fb991e62"
+      },
+      {
+        "path": "app/execution/supervisor_state.py",
+        "sha256": "d45c39a4c5f9f2ec66ef19e43323cfdba7ed7fa49032a390b8d2e1b69e482756"
+      },
+      {
+        "path": "app/execution/worker.py",
+        "sha256": "284d9b326d13687683a6b449de5e1e139b7dfc0bfe244ada382f006ba697125f"
+      },
+      {
+        "path": "app/experiment/__init__.py",
+        "sha256": "8847392e4d5f30b2c694d7e17746516ea370a43a6c801239145775871d125b55"
+      },
+      {
+        "path": "app/experiment/ledger.py",
+        "sha256": "cab86b0f29dd1823365301d106de75499cdf40aad61d70c81f4ea5efbb987c52"
+      },
+      {
+        "path": "app/experiment/runner.py",
+        "sha256": "005dd2b54868c4d8323358ed10cc434bd80209bf036cd7f26f4449e3db06662f"
+      },
+      {
+        "path": "app/experiment/storage.py",
+        "sha256": "f59d3427dfa63c548b4ab584ede8863e11afae7dc6713ece73bfa5e4938bc773"
+      },
+      {
+        "path": "app/main.py",
+        "sha256": "8b534fd1ca9163f32425e1941f921fcfc08feedbfe9601e9dc5c2c31c1241c9a"
+      },
+      {
+        "path": "app/market/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "app/market/base.py",
+        "sha256": "e527b998e783c8abd76582e397129be3fbbe8c7500e49e638ab5b102fb9c1bcd"
+      },
+      {
+        "path": "app/market/fixtures.py",
+        "sha256": "983966c15cf60c11a779a2c21d23bf30d5466725851c33585cfeb844cae7bf81"
+      },
+      {
+        "path": "app/metrics/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "app/metrics/benchmark.py",
+        "sha256": "1ff1d24032028506981ffba0f5bc87fe2dc9ff42758e992b1f18b4044b02dbc8"
+      },
+      {
+        "path": "app/metrics/costs.py",
+        "sha256": "e9e8bec151d4b54b8be80f093593fff4e68e9da231fcc00810e39cca1624f599"
+      },
+      {
+        "path": "app/metrics/performance.py",
+        "sha256": "b6d85372c89fa22d597e1d0fe5f3b694805dd48841cd04338f8fee16ccc17417"
+      },
+      {
+        "path": "app/metrics/shadow.py",
+        "sha256": "80661f2d56e3949618d245b297b13dd38a3807923d2167b1a9822c36aeefb22d"
+      },
+      {
+        "path": "app/metrics/shadow_outcomes.py",
+        "sha256": "58927dd8b210a26ca8365e978a52ce9a192182781e493c222ed52421abbf8719"
+      },
+      {
+        "path": "app/mixed/__init__.py",
+        "sha256": "1e53a357382d183f04ce0dddad65c3d1d34ae4f8ab8326d34f3ec5147a5832f0"
+      },
+      {
+        "path": "app/mixed/accounting.py",
+        "sha256": "86b66528f132957a4f475422cd9a7a22535d20332c42a48bc4e65c5e2a3b4caf"
+      },
+      {
+        "path": "app/mixed/carry.py",
+        "sha256": "51ba4197b10e4db5a883751be7f69bc38c841d8ca9f80345e86d87b416a8537e"
+      },
+      {
+        "path": "app/mixed/comparison.py",
+        "sha256": "5cd7ad64a56ac0eabbca78a9962c0459e1ed91a9069d641a8391e3b7d78538f2"
+      },
+      {
+        "path": "app/mixed/connected_check.py",
+        "sha256": "922ccc01ae223f7e04fa47fce7edeaa0287190c5ffd1f685259a9b14b8c1a49e"
+      },
+      {
+        "path": "app/mixed/connected_enrollment.py",
+        "sha256": "2abb2efd4e15d787c95431ffa446cf44e65e4b1e3326474fc6e0d09afa9c2cff"
+      },
+      {
+        "path": "app/mixed/connected_owner.py",
+        "sha256": "257003d2dd4e7b6d98635f00066219effc14d193ab6622de6ebb720243f331b7"
+      },
+      {
+        "path": "app/mixed/connected_runtime.py",
+        "sha256": "04b03ea6814aa43206a5e2c7000d342b3ffa3099cf7d38b7303de8d4e1cda602"
+      },
+      {
+        "path": "app/mixed/continuous_feed.py",
+        "sha256": "4d72f9bb6708de25e13459ffd79b94f7a3479fc2b88ece5504895abbec13a2f7"
+      },
+      {
+        "path": "app/mixed/dashboard_reader.py",
+        "sha256": "97eac1d077ad3b5660f75ac3264a86653ea86e1ba28566546dd571f7243c6ece"
+      },
+      {
+        "path": "app/mixed/dashboard_snapshot.py",
+        "sha256": "991d737eb5c4e7ad1d125e5f72e889d850ead9bc64ab5560bf50c23b8af3a6d8"
+      },
+      {
+        "path": "app/mixed/entry.py",
+        "sha256": "f20cde63c713668e37d8756528536664600ab5dde2eaf66a432afe24137a375b"
+      },
+      {
+        "path": "app/mixed/feed_cli.py",
+        "sha256": "fdd857546d0d73198d59c9a63ca1cb68d4ffc8086d56f4950c3de8b0c535ef32"
+      },
+      {
+        "path": "app/mixed/feed_rollover.py",
+        "sha256": "202c2fba4704b76a5ca2990ce8a06fc10da575030a2eb7c968b14302fcd46e1b"
+      },
+      {
+        "path": "app/mixed/governor.py",
+        "sha256": "677d8590c6438b3103e604faf879697a49a02a8b227c34b3fb8083b5ef5a3e1b"
+      },
+      {
+        "path": "app/mixed/host_bundle.py",
+        "sha256": "a30d667c9ddf9c4b55890aadafb2559d4c3b98028001c025bf3b48660635bd06"
+      },
+      {
+        "path": "app/mixed/loss_export.py",
+        "sha256": "4146f05678564b0318b99eb469a71431efbc28ec7de8019c7085a1ba6d7df84a"
+      },
+      {
+        "path": "app/mixed/market_tape.py",
+        "sha256": "05dffbc2a08d9b824086e6a94759c1db4bbaf1415d97928c501afe4069c00d92"
+      },
+      {
+        "path": "app/mixed/models.py",
+        "sha256": "4d7fdc5504c6b86186aa445bb1be57564e5a0e276c295da0e421f2a3e2d2a3fa"
+      },
+      {
+        "path": "app/mixed/native_execution.py",
+        "sha256": "43034e90ded3633ed68642abc7edcdaca64afd3b9e0d4db4109b16ac31bc53d6"
+      },
+      {
+        "path": "app/mixed/native_models.py",
+        "sha256": "083d3243bf7d1eefe08c13460e7f47aeaa11967b63ac9d21620d29a778262e91"
+      },
+      {
+        "path": "app/mixed/native_outcome.py",
+        "sha256": "9baa86a2ba0ccf4a13a91545b0f23085015dbb9efc63e4887f47956d5ed8fcc4"
+      },
+      {
+        "path": "app/mixed/native_protection.py",
+        "sha256": "b37d1bacba1642c17316e5951cdcbaff888809df9c55e24e58d96af81d702b8d"
+      },
+      {
+        "path": "app/mixed/native_store.py",
+        "sha256": "54f2ed66a979ab6352ee63f0a17ddd87390152e8cd82308918d23cb822d06f34"
+      },
+      {
+        "path": "app/mixed/observer.py",
+        "sha256": "08b09e203e23b88c2c9088f885b7eca3663c466050f54fc9b387728fb4958058"
+      },
+      {
+        "path": "app/mixed/paid_costs.py",
+        "sha256": "b479e0434f69b730f51711d84f8201859f9fe5f262feb6511dc4f06b94d923a6"
+      },
+      {
+        "path": "app/mixed/portfolio_accounting.py",
+        "sha256": "ccca2b4e3c6da45d31a4fcca6a50aa09878313246e9f87951f9af0918701b0c3"
+      },
+      {
+        "path": "app/mixed/portfolio_admission.py",
+        "sha256": "feafaa6d69452ce86920062ecf2efa7b50d7ad1f4613901f78d3800999fb99c3"
+      },
+      {
+        "path": "app/mixed/portfolio_capacity.py",
+        "sha256": "8301082d2fb566849a26210d7ceeee8108fd9ea90decda793db191a26e1fa9d0"
+      },
+      {
+        "path": "app/mixed/portfolio_compatibility.py",
+        "sha256": "44e706d0c165de20e8263666114732d6b8f01edd41a3837b48742df02ddff36a"
+      },
+      {
+        "path": "app/mixed/portfolio_controls.py",
+        "sha256": "31ed32e233ebf864115330ca018a15387846563a3f5194e4dbea92a0b87029f6"
+      },
+      {
+        "path": "app/mixed/portfolio_execution.py",
+        "sha256": "45747ac438b34ea1e87481d15ca7e1e174f6092c5e6a209095663348d88fec6f"
+      },
+      {
+        "path": "app/mixed/portfolio_loss.py",
+        "sha256": "11cd9722290949f70970b9131d60932edb36150b7da807996e9402966995f0e9"
+      },
+      {
+        "path": "app/mixed/portfolio_management.py",
+        "sha256": "097a7d6b59148cd4bb3bdc036b52785859cbb2d71ce992c5316e6d499e3e7dfa"
+      },
+      {
+        "path": "app/mixed/portfolio_models.py",
+        "sha256": "0b7885c3c154dcffb1dd973076964c9db095c930872e2e3e003a0e19b9560786"
+      },
+      {
+        "path": "app/mixed/portfolio_observer.py",
+        "sha256": "5fab1c9a967ee5506e769f2f1360bdeccfa39b7527edaf725e995069f817b1f6"
+      },
+      {
+        "path": "app/mixed/portfolio_options.py",
+        "sha256": "52d1d1445c3f24526d426126505cf9d149ae6b6c5d7370bdbbae293941ac14cd"
+      },
+      {
+        "path": "app/mixed/portfolio_position.py",
+        "sha256": "99002d8bfe660a463edd97828197eede9db60a1999e62d21c1f4917d494cfa63"
+      },
+      {
+        "path": "app/mixed/portfolio_protection.py",
+        "sha256": "fadd717a17d99cae115b88f4eb082402d488c3d65fa10c45a3e3ad9c67118040"
+      },
+      {
+        "path": "app/mixed/portfolio_replay.py",
+        "sha256": "3b23b40be49e761e98399e8f012096a1d334de3970550e166d722fe8bb8f8730"
+      },
+      {
+        "path": "app/mixed/portfolio_selection.py",
+        "sha256": "83aa80a043f3582eb85413e570754bea76a424467a63114b63066e0df99f7632"
+      },
+      {
+        "path": "app/mixed/portfolio_store.py",
+        "sha256": "c735e937bb23b2df96d4aa3737321539e3bd51e41176b1e8c7f527de122bc7a9"
+      },
+      {
+        "path": "app/mixed/portfolio_targets.py",
+        "sha256": "60892c1d651731214ca99129de9190da5c5e9be49bcb3baaf7810ccf8c8f4ae9"
+      },
+      {
+        "path": "app/mixed/portfolio_venue.py",
+        "sha256": "bec9972348f05ac4b1943c60891157f71e2610c7ea6d7d110e3f1acdc60bff7e"
+      },
+      {
+        "path": "app/mixed/position.py",
+        "sha256": "c64a9bda1a127cd140d63abcd5ff8385f9546b3e680bfc5b1c5867bee0cd7691"
+      },
+      {
+        "path": "app/mixed/quote_fills.py",
+        "sha256": "a03902e6013e0c8c79cb98b3bc02603f6bfba5da6d20e8a09ee3b4f473b29550"
+      },
+      {
+        "path": "app/mixed/replay.py",
+        "sha256": "26d924c661473a2f0bd8e32e85614b25d124ad6b4f1ff42019dc0d024102c434"
+      },
+      {
+        "path": "app/mixed/replay_cli.py",
+        "sha256": "5dc3b3a7811e0910ec796b9c2db3b211886b0b69478961a0a7abbeccaea83393"
+      },
+      {
+        "path": "app/mixed/replay_enrollment.py",
+        "sha256": "8145404347e4c1091b16be1a1fbbf71314bfb9bc6311c48c9bfad95e0d455913"
+      },
+      {
+        "path": "app/mixed/replay_export.py",
+        "sha256": "c551c18b0b24447e12c30f12c9050c4fd21b0c690694758da2a74982c9ef8845"
+      },
+      {
+        "path": "app/mixed/replay_model.py",
+        "sha256": "a572b9320a9c5bacd0d387099b8cacbdbe0899e6bfca93c2f3268e66d2910f07"
+      },
+      {
+        "path": "app/mixed/runtime.py",
+        "sha256": "84a82c3e1646b25beba560965219cd08664f7e53124f2f4ef66d2b4cbd5b588a"
+      },
+      {
+        "path": "app/mixed/selection.py",
+        "sha256": "d275508506f3142b2e2e14b1d4413f399672f326ff32b4a6c5ad9fefbfcdeac4"
+      },
+      {
+        "path": "app/mixed/simulation_profile.py",
+        "sha256": "89efd1a4e811ac55dd43f5ca99254fc2443ee77b6a6a33c879e913e449e04068"
+      },
+      {
+        "path": "app/mixed/sources.py",
+        "sha256": "14df254a29af4c37cc0308fd1bfb46add2d44c15f5b8054e02af76bc968d7ba0"
+      },
+      {
+        "path": "app/mixed/stock_models.py",
+        "sha256": "f7f769faebfb4cea46d1c572a5feb6eda977eb52272430b7c5babd86251ed763"
+      },
+      {
+        "path": "app/mixed/swing_binding.py",
+        "sha256": "ce31e6d17546197667f3601c44e080fc066e51539be791c76cf4aec6a1027909"
+      },
+      {
+        "path": "app/mixed/swing_delivery.py",
+        "sha256": "f9c74e778ec9b10abc83bc2e390cd58c1775771f47290dc3ad0e9bf9c7b6d1b8"
+      },
+      {
+        "path": "app/mixed/swing_feed.py",
+        "sha256": "121e8d3aad7e5a827f3d67fd4ff7662d2b2da7245eb1092651768500dc839881"
+      },
+      {
+        "path": "app/mixed/venue.py",
+        "sha256": "bdf962e79fcea905f1385c783e79027d9ca6f0ca0d9d5e3236470a65443773e3"
+      },
+      {
+        "path": "app/options/__init__.py",
+        "sha256": "f5350c6dd10aea52073007fe144ffc8a38b31e9e0c0724b53dbc845721102f9f"
+      },
+      {
+        "path": "app/options/accounting.py",
+        "sha256": "17a8afd357f700527a353795c06b08c4a6ba1f151decada89c1f5129070d0d0c"
+      },
+      {
+        "path": "app/options/attribution.py",
+        "sha256": "d1daa4a6aa335bfc1792cfc1802993f641a0b5fb3c4c05e4a61723b8de24a6b6"
+      },
+      {
+        "path": "app/options/carry_models.py",
+        "sha256": "34d91b207350037ec285acfde18e828c79ffa63ae8fe4a075e78257f59fee8ac"
+      },
+      {
+        "path": "app/options/comparison_cli.py",
+        "sha256": "c4359e1750638d33ccd6fe787f9b5417f4e7ea21a52ee86989efc400d7be10a0"
+      },
+      {
+        "path": "app/options/comparison_view.py",
+        "sha256": "9e71fd53b1b0c052faa5746b7f7f5153175e4a243c743c4162ac64ec30aaa28b"
+      },
+      {
+        "path": "app/options/coordinator.py",
+        "sha256": "e35364cd3039d19e1f570b95bcd64d66db4b4c6c0cd49d5616411846f16a0347"
+      },
+      {
+        "path": "app/options/degen.py",
+        "sha256": "2819639d7904fcf1dceeb8fe0585768650c78bc4f90788fd436c4db77998adac"
+      },
+      {
+        "path": "app/options/engine.py",
+        "sha256": "d27a54472d54f45b13c334b12208ccc0a8cec7a6e530986c04aeb4f813d694b4"
+      },
+      {
+        "path": "app/options/entry_coordination.py",
+        "sha256": "8e8b7a44ed20fe06d0ef7e328cabada54ba33962454699861d97eb6a0131a07d"
+      },
+      {
+        "path": "app/options/entry_judgment.py",
+        "sha256": "a6c88706e1100f6620d0c9c662b4c4f502071e9899499ef92d68210dfbe160f6"
+      },
+      {
+        "path": "app/options/entry_judgment_worker.py",
+        "sha256": "11a2bbab2f1e2ff8b6b8db3cacfe3c04cb222d53a4203762b542425557629940"
+      },
+      {
+        "path": "app/options/entry_lineage.py",
+        "sha256": "6f863020e42afe0d2eb9ba6df416f5b174853b62fc3c118d44f8b3cef2804d11"
+      },
+      {
+        "path": "app/options/entry_reasoning.py",
+        "sha256": "de7053fc66967a2bc4301642083ea58ea3fa812a5551ccc9ade96a36a8d967a2"
+      },
+      {
+        "path": "app/options/entry_reference.py",
+        "sha256": "41699145f755f765f5d7ec9b4fdb2268d4adb6f0a7439efb712059f48b7b1648"
+      },
+      {
+        "path": "app/options/evaluation.py",
+        "sha256": "7527b1e8417a484c7b2e372728b2cf72e02cacb4b3ea34f48f983da284d681b3"
+      },
+      {
+        "path": "app/options/evaluation_cli.py",
+        "sha256": "5e93ef1ce8fdb6cfc31e5df479b4eab45914901385a451b7e4eb5a67155b9950"
+      },
+      {
+        "path": "app/options/evaluation_export.py",
+        "sha256": "87460f63e31d42233027462de7fe1c3463b0090f683ad82f74830ce009b5e7ab"
+      },
+      {
+        "path": "app/options/evaluation_export_cli.py",
+        "sha256": "36d2c5f656b3055884775abe38f1ff6c7a327c1c9d968c7cbb69f5eca93c6eb6"
+      },
+      {
+        "path": "app/options/evaluation_models.py",
+        "sha256": "5d4a1cf32eaa8d7b26b643d7b5d0cfe4f6ea5b934c14489b78deaa5b52f5137f"
+      },
+      {
+        "path": "app/options/fill_evidence.py",
+        "sha256": "eb87ae01c013a19cace62834cc2169dcf3f64312f796cb9006361f22f8540b2b"
+      },
+      {
+        "path": "app/options/governor.py",
+        "sha256": "3d7473649ef11a6e222ce6ed5de8ad750f1726d3af9026647d843adf76197f8b"
+      },
+      {
+        "path": "app/options/greek_health.py",
+        "sha256": "1276b3bda68bd600b8787374987e724f7a52fffedba416f9f7048390754cf0cf"
+      },
+      {
+        "path": "app/options/health_management.py",
+        "sha256": "6631a2489096ef39c7d520dfc82f3b5672420a6c380290afd1027b7f01015d2c"
+      },
+      {
+        "path": "app/options/judgment.py",
+        "sha256": "c0b475927cbcd1dce935f0c391ffdb242bc16f9541330dba3281778ab7d9f223"
+      },
+      {
+        "path": "app/options/judgment_worker.py",
+        "sha256": "e34ed58995acbeacffec75e31f5418b55421a0ce7d6618b3fb54eb5caf8125ab"
+      },
+      {
+        "path": "app/options/lifecycle.py",
+        "sha256": "b27347f58e626a4e253ad6ad6f92a9b2dd9cf7aab156560d75d29fc4d6224f8c"
+      },
+      {
+        "path": "app/options/loss_control.py",
+        "sha256": "f5463def665e3d3beec541170505557242feb4926a51e3c55041ff4561e94bf8"
+      },
+      {
+        "path": "app/options/loss_evidence.py",
+        "sha256": "79d0d8795a0b2a3216211d91a3d6ec5fb40b774cc22536ec3765d022e2d7d8ee"
+      },
+      {
+        "path": "app/options/market_tape.py",
+        "sha256": "a58e64480020df7e584f136418cc7f9c8eed844e7c80b24e99c40f26cf114028"
+      },
+      {
+        "path": "app/options/models.py",
+        "sha256": "02cee124423b21b0f13b0b5d42a33fe56a0b1c51359e7e07f10e3d4fe2903867"
+      },
+      {
+        "path": "app/options/observer.py",
+        "sha256": "63eb6614a3f13a57d2717f05badc5fe0dd677796bd3f74af62db983ca915e875"
+      },
+      {
+        "path": "app/options/observer_cli.py",
+        "sha256": "3fc0e18379f058274be58e2b884069d99c1db0dc71ff6d56226ffc509a54df14"
+      },
+      {
+        "path": "app/options/operator.py",
+        "sha256": "ae97a298cacabc339f18a59fe78b030b0cdadb4eca5993a53a90f7c246238dcf"
+      },
+      {
+        "path": "app/options/operator_cli.py",
+        "sha256": "168c8efb984e53b85fa085c3b27787f8850ff375128bbec197d9a80aa5ee2bc3"
+      },
+      {
+        "path": "app/options/operator_inbox.py",
+        "sha256": "e89834660a77f4048acdcfb772aee1bc534c90a2db6b544fecca9ac12ad41bcd"
+      },
+      {
+        "path": "app/options/operator_models.py",
+        "sha256": "a54b735fffee473526861e4cd1ec96d9363a38d7eb459c4cb3c98691dbcac972"
+      },
+      {
+        "path": "app/options/position_coordination.py",
+        "sha256": "166ae4701feb344dd90ab11b0b6022e71e7266505ab152b7a8d0a7b0b0c36531"
+      },
+      {
+        "path": "app/options/position_judgment.py",
+        "sha256": "f55ff8b65c76330d8a75111cf238018b788b90f584ad9ccfbcbc7c47a326c0a8"
+      },
+      {
+        "path": "app/options/position_judgment_worker.py",
+        "sha256": "2b6c3057a7d5e094839c384d86f29518450d9dd9dbac7e00f3712d31f089bc06"
+      },
+      {
+        "path": "app/options/position_outcome.py",
+        "sha256": "8802865ec1e0120974a34fc913ef086a2f260762171755369114e19966dc8901"
+      },
+      {
+        "path": "app/options/position_reasoning.py",
+        "sha256": "80620112544a0cad4a2147ce8c8b992bb480c1fbe483ca00af15c0e213e86360"
+      },
+      {
+        "path": "app/options/premium_trail.py",
+        "sha256": "57161a742685f7f6d3e7e8adfa000c0d88a60f56165571df168975ac987b7a7b"
+      },
+      {
+        "path": "app/options/process.py",
+        "sha256": "0bdfc6930ef32fa0f817eb3bab880466967b2fadf6dea7342c9bd7b9fa9db050"
+      },
+      {
+        "path": "app/options/progress_health.py",
+        "sha256": "cefb0273d2441514a4a2df32a215a51fdcb3df01ff790cc4a1ed597987fc6e1f"
+      },
+      {
+        "path": "app/options/protection.py",
+        "sha256": "db3b858b795e49c61632b639957829dd591c84caa69bf7ccdf476624244c3bc6"
+      },
+      {
+        "path": "app/options/read_capture.py",
+        "sha256": "7d4d348966ed7dd8e100d78b511f40580a7db6431c9b74262a0ebf4920ffd2ab"
+      },
+      {
+        "path": "app/options/read_cli.py",
+        "sha256": "0e5ddabde76eec2b5ddfeb9cff788efbaaedd88ebfa53d6f2b9cea8598de3fb6"
+      },
+      {
+        "path": "app/options/read_gateway.py",
+        "sha256": "9dd10c232331a2a5a7ce0c1333a0155018a0b50b923b1ea5181d854e78bffd8e"
+      },
+      {
+        "path": "app/options/read_mapping.py",
+        "sha256": "3eaada5321ee4780141952710bf1d61974deaeacac3a838e3c6ee7cac2db6585"
+      },
+      {
+        "path": "app/options/read_worker.py",
+        "sha256": "e9585b3e238d9bd16d375df2f3ac6b6e2301ed1033db6ee3638c89298743f026"
+      },
+      {
+        "path": "app/options/recorded_evaluation.py",
+        "sha256": "c7e3ea566bbf9ded6eaca91e011712e46db88519aa1e68044f593d5cf01decc7"
+      },
+      {
+        "path": "app/options/release_identity.py",
+        "sha256": "ae93c4b0250ec6e7445ba0a11a76f659cade7fb43c1f46ebe5be94262aa7d54f"
+      },
+      {
+        "path": "app/options/replay.py",
+        "sha256": "39b17d82f2fc1b64bb6baaafb9a2cab2b96be819c8648fc8608e358cb5cbfd00"
+      },
+      {
+        "path": "app/options/replay_cli.py",
+        "sha256": "f7d2715324cb9f15f486f08b610ca35e9936c15400db64353913f76d611f6d7f"
+      },
+      {
+        "path": "app/options/replay_model.py",
+        "sha256": "154916ad41aedb576f092120b22ae47ef4a1607996b63af30d68d99bd7d35666"
+      },
+      {
+        "path": "app/options/runtime.py",
+        "sha256": "9aa83b1770404f65fb26aac916563cddedc439b564b568403d07cd6c32e1436f"
+      },
+      {
+        "path": "app/options/runtime_cli.py",
+        "sha256": "bcc57824ceb7545c032ab15af94199f4308b94acb21ebc9986aefaf3e9b803bf"
+      },
+      {
+        "path": "app/options/runtime_models.py",
+        "sha256": "72df447275c654f00b2ba2fc6ec168b665e0073aa93c4a88a5de80097796daf4"
+      },
+      {
+        "path": "app/options/runtime_state.py",
+        "sha256": "e9e612123186b395b7c59499087e5cfa29d4d57e159b48d42c6e6e728af53081"
+      },
+      {
+        "path": "app/options/scope.py",
+        "sha256": "e44dacf7b4167d9d7648ba55c2f2a9a1c36c595824087c75fd0eef084c512c6d"
+      },
+      {
+        "path": "app/options/scope_admission.py",
+        "sha256": "7c4d43993921bfa07b548c31eb7303422ab72a94e445a8dd957cf477b4888347"
+      },
+      {
+        "path": "app/options/scope_ai.py",
+        "sha256": "1bfba5583cad2037b11d09c7cb376af1ce7be51716b6253cb4e239677bb4869f"
+      },
+      {
+        "path": "app/options/scope_arbitration.py",
+        "sha256": "527023f9e207d5bf905f330fef27e0f67610448400ff40374008e353f4218c25"
+      },
+      {
+        "path": "app/options/scope_carry.py",
+        "sha256": "3f0706f3bd6f995effff97c34991dd4055ca94ccf35bf7e0c4de0da98ca4ba06"
+      },
+      {
+        "path": "app/options/scope_carry_replay_model.py",
+        "sha256": "d5a2582332f8e93a6a2180cac62dc532a0dadaa332344b803a8fa69769c2286b"
+      },
+      {
+        "path": "app/options/scope_carry_series.py",
+        "sha256": "b44e8950b0821e2a923bf124e7c5d180c84a4b8d4caaa1b1fdc3427450870176"
+      },
+      {
+        "path": "app/options/scope_comparison.py",
+        "sha256": "d900840cc6828e4f1aa72b64d4fe6708a4cbee4bd2bf8c3e1b9b62935fa4e0c6"
+      },
+      {
+        "path": "app/options/scope_context.py",
+        "sha256": "0964a4d857b9aab23cf44903a561ff1c047336a9aa0629a18268360e2225ad97"
+      },
+      {
+        "path": "app/options/scope_contract.py",
+        "sha256": "74a64e0c821302c8c6e1eb6a66fe1d5879a4a1a63d3a3ce5e02fb604bbbe53b7"
+      },
+      {
+        "path": "app/options/scope_entry.py",
+        "sha256": "ee3d868a28650d05c9ed350cc80500d1ce42af4399f2b50ced11e49bcf094999"
+      },
+      {
+        "path": "app/options/scope_execution.py",
+        "sha256": "1ada072756a27cc959c9dabf9cdeefdef9bbfb721a34e5e6b4f90dc85dfac945"
+      },
+      {
+        "path": "app/options/scope_execution_export.py",
+        "sha256": "bc2f23aaad68e795608877436fc497ddad779bf8efe76aed885f75f1a179cc1f"
+      },
+      {
+        "path": "app/options/scope_execution_replay.py",
+        "sha256": "998f233d7d0c543c65f57adc7af3b3ac4732d79420421fb5ad184598fa0ab0be"
+      },
+      {
+        "path": "app/options/scope_management.py",
+        "sha256": "39c1ff8ae87f2275347c7d022bbe1b0143d5998f7c92ebcb8c8cc664d1c41787"
+      },
+      {
+        "path": "app/options/scope_market_tape.py",
+        "sha256": "67feb40b19683fda1bea420ab671d59d2145c3e6ef3912b0ff3a5fe50925bd84"
+      },
+      {
+        "path": "app/options/scope_model_replay.py",
+        "sha256": "880319b050afd51038bbfbe76fcabc4524e513005afc6dbea6058fa5f1c679e4"
+      },
+      {
+        "path": "app/options/scope_observer.py",
+        "sha256": "9a8c69b0198650a75803d5a02cb5b790c3e45c8db45e559c191b97bf6e637d58"
+      },
+      {
+        "path": "app/options/scope_position.py",
+        "sha256": "387ab24413306deb9bf0f46c05c108213176865c82217eba9a197fb90d1575b3"
+      },
+      {
+        "path": "app/options/scope_quality.py",
+        "sha256": "9511fa39c4fa1e3d7dedfa8f9fec466f7d8152009242e311a5830d6ffc5e2739"
+      },
+      {
+        "path": "app/options/scope_quote.py",
+        "sha256": "22e794eb2f5ff8e86d164a561a31bb1424a781d51346b1abbc9607279b9e2182"
+      },
+      {
+        "path": "app/options/scope_reapproval.py",
+        "sha256": "35e1cfc417a3e26af50905bcdee1ec6df2e34b92c573a12cab09893cc496f0d5"
+      },
+      {
+        "path": "app/options/scope_reasoning.py",
+        "sha256": "e26b7b10cdf41aee0bd6971f1dba2d61b03186371f37d47bfdb293bfb7db5bd5"
+      },
+      {
+        "path": "app/options/scope_replay.py",
+        "sha256": "bcb75db8f2563a0f94e896502759d34c8df177e0a93aab418bc871efd9986d61"
+      },
+      {
+        "path": "app/options/scope_replay_enrollment.py",
+        "sha256": "bd67d21b9759c6329a732207a56f7c9788131ce74ad536f6b748c718db1c37a3"
+      },
+      {
+        "path": "app/options/scope_replay_model.py",
+        "sha256": "1dbeb4570e2e9839d2cae4bd3dd14202a410a81d4a6302bd22fae909f39a617c"
+      },
+      {
+        "path": "app/options/scope_replay_verify.py",
+        "sha256": "dc7e2d5755db24f8eb84d0b169fad075b98c4e74fad8de1dfc12898d81ffa552"
+      },
+      {
+        "path": "app/options/scope_runtime.py",
+        "sha256": "ff5f7d00925542c3f51d0d8efd90c367efb7e1a7a51453d1d38789525588d971"
+      },
+      {
+        "path": "app/options/scope_series.py",
+        "sha256": "2f8e3d91a1328230e257f1b8e1dd02f381e4d77783a0bbcb0b03b3f6a8d2c301"
+      },
+      {
+        "path": "app/options/scope_shortlist_replay.py",
+        "sha256": "ac3a9d5d72ee52c95c2fa6b41c6065b527af1370e58f884a57e741c3a9114902"
+      },
+      {
+        "path": "app/options/scope_structure.py",
+        "sha256": "032458bc415fcac275a21aebdae58eb86f4198bb4b852734aefefb9950626cb2"
+      },
+      {
+        "path": "app/options/scope_tape_watch.py",
+        "sha256": "61eaeddfc6fc2301b834ab800dc7dd68f8c940f56f33ef666fe58aab66079376"
+      },
+      {
+        "path": "app/options/scope_trading_replay.py",
+        "sha256": "96c2382c91cdb35fe8611e0d6b0622212520c1e175d4c222a491bb11ab33f6bc"
+      },
+      {
+        "path": "app/options/scope_watch.py",
+        "sha256": "147a729e23fabe963c83c69abda0615587f8aa2a104885664c6056cee847fd10"
+      },
+      {
+        "path": "app/options/selection.py",
+        "sha256": "133f66fb65e8600e114b21bdc8500967231d2834097636eb7ab6cc3736366dc1"
+      },
+      {
+        "path": "app/options/session_analysis.py",
+        "sha256": "5d16f28bafb410f1316dd732b9c9325bfd40b06041a2a89c83ded7c03043efdd"
+      },
+      {
+        "path": "app/options/shared_strategy.py",
+        "sha256": "602db732e2e65dcd4da417ee6f1c1a684b291a311cf9c010b65d2b50f98f311a"
+      },
+      {
+        "path": "app/options/swing.py",
+        "sha256": "4e3fa1868b37ba60a085d7e50a54d1ffc44a1f016d59d8cffd5fedd52bab15eb"
+      },
+      {
+        "path": "app/options/swing_base.py",
+        "sha256": "0967dd9df4c08c78742901f1e4e17b5bff09ba4d5902027f38185e3a8c9be648"
+      },
+      {
+        "path": "app/options/swing_base_models.py",
+        "sha256": "5f1c83482262cecd069eab55e0bc7179d7a7be1018fb1fec62e5d2de1b7d1ffc"
+      },
+      {
+        "path": "app/options/swing_batch.py",
+        "sha256": "90143f9da47c17d458fa2937c0ad30376b19661c6a7006283bbe0584de9c15f3"
+      },
+      {
+        "path": "app/options/swing_carry.py",
+        "sha256": "c0f1ca53eec1df17a24a71457665d650d90d62c3fa1153cc5e9d83fbbce30465"
+      },
+      {
+        "path": "app/options/swing_execution.py",
+        "sha256": "e290b5bd499f3f32599b28ac86e1cfcdc79655cc6c78e915de3b6a042a64ecc9"
+      },
+      {
+        "path": "app/options/swing_level_models.py",
+        "sha256": "418994dd6de9ab9189aeeb8d2fc70ccea7c2691d0a8c99eb2f9f115125242203"
+      },
+      {
+        "path": "app/options/swing_levels.py",
+        "sha256": "8ecb3c59b68724e20b7fe970b028c66cb79b9001cf28510fc10b1325783a2a62"
+      },
+      {
+        "path": "app/options/swing_lifecycle.py",
+        "sha256": "ebbb790e5c49b89690aa20f0d4e584ee3e4b83f68e49cd083fd00be5e5dba373"
+      },
+      {
+        "path": "app/options/swing_ma.py",
+        "sha256": "13b81f0117b93b6f6c5b3f421f87f9c81b148b9d82a348a9572b4ef61040d1fc"
+      },
+      {
+        "path": "app/options/swing_ma_models.py",
+        "sha256": "5df5c70f7412ab704af4e92ebcc547735ee58c9823363dd4d7df315479a67fa6"
+      },
+      {
+        "path": "app/options/swing_target_models.py",
+        "sha256": "f1e7ccfad3fedf9bbd368a666f7d28e978c9d866bf2f727561cbfb67f16912e1"
+      },
+      {
+        "path": "app/options/swing_targets.py",
+        "sha256": "ac84f5a2bcb839e727aa7ecf2b3c4719af02e2b0b4482391c329c4f5d13950ad"
+      },
+      {
+        "path": "app/options/target_exits.py",
+        "sha256": "cd7f4ebe2670f04d68bf1182658143237ff353b9422ccd73becac6341db9f4ca"
+      },
+      {
+        "path": "app/options/trade_floor.py",
+        "sha256": "a2653fb17a43cc33072230bdd89d1bc9e4b151db7fed61f35dd29d83fa9cb05a"
+      },
+      {
+        "path": "app/options/underlying_baseline.py",
+        "sha256": "7e71b472a992375b3ea7816b4704add31febace7a899d93ca66192274403aa82"
+      },
+      {
+        "path": "app/options/venue.py",
+        "sha256": "3fbe75685e67e6a777d3de7465d1aa363dce3cb9f2165dec798bb297a96cc9ce"
+      },
+      {
+        "path": "app/options/worker.py",
+        "sha256": "9ddddd88286a2c2b50644d51564fa3a331323916d92c684e95a48c04b36c2eb2"
+      },
+      {
+        "path": "app/risk/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "app/risk/governor.py",
+        "sha256": "c5469e898d90b9d7a5e38a7e8dfcca833bfc890bb52fe3168f93882edbea1787"
+      },
+      {
+        "path": "app/risk/policy.py",
+        "sha256": "94ff6db26e3ced6072771ad73efd3b6c6db5483eabec7e7834cde9b29769a75b"
+      },
+      {
+        "path": "app/risk/sizing.py",
+        "sha256": "343376e88c754973b9e41718306957431ff278f0a2553ad40bc2c4b1026a3ab7"
+      },
+      {
+        "path": "app/robinhood/__init__.py",
+        "sha256": "1735b009e8236263a9a58e6b650928c32528f260616c9c923f72d2b58b2aee0c"
+      },
+      {
+        "path": "app/robinhood/backup.py",
+        "sha256": "1b7f31157f16faafb4fcc6af1957b3a61417492310805c15221d033bfaf24f91"
+      },
+      {
+        "path": "app/robinhood/cli.py",
+        "sha256": "180a649733ebb75e27b8802ea613b880ded5e66dbd66df58a20cbaed9da370dc"
+      },
+      {
+        "path": "app/robinhood/client.py",
+        "sha256": "e5f925f5f24a560b9c4fe44c374841dc09b4451acb26985d823726b7047244f6"
+      },
+      {
+        "path": "app/robinhood/gateway.py",
+        "sha256": "372e99639a32f449aef787f570228dd606aa8137bea5d874354275f136bff817"
+      },
+      {
+        "path": "app/robinhood/market.py",
+        "sha256": "0853824b1842e55f77b9934ec90db64684ab6fad1aa0a7d7fab5c0f2bd75d8c5"
+      },
+      {
+        "path": "app/robinhood/models.py",
+        "sha256": "b01c211f9ec66d7a3f9f8277c8724ba62e28ac28991e3013872c708b2c3423d4"
+      },
+      {
+        "path": "app/robinhood/read.py",
+        "sha256": "3dc0ad4a17f96b5bc422a0790630f5f04e899485ed23a95713b9f467d4c03c99"
+      },
+      {
+        "path": "app/robinhood/reconcile.py",
+        "sha256": "7bacb1fa86f5d53ddad71177cb7268d2e02d50d3885e68bbcc599862fcb65d67"
+      },
+      {
+        "path": "app/robinhood/schedule.py",
+        "sha256": "ec446216f860e54fdec0c1dca31578e0e6514e8037da22ad740dfc4bf0912b8f"
+      },
+      {
+        "path": "app/robinhood/service.py",
+        "sha256": "71298f3b50693b14be21073c7d9863ef611cae4d40070e7a0b7c1b039ce939a4"
+      },
+      {
+        "path": "app/robinhood/shadow.py",
+        "sha256": "f321817b8c46fdc77a54a8b400482cf178cdc53434abf20fbe1b7bf9d43eda32"
+      },
+      {
+        "path": "app/storage/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "app/storage/db.py",
+        "sha256": "ec2044807e722fa80b2fbd3c95c821dc625c117cd610f21b779089ee73435017"
+      },
+      {
+        "path": "app/storage/models.py",
+        "sha256": "aa354dbc7ef8ef0d13a25bc3caecfef245ffde6e4973bba767d5078141754417"
+      },
+      {
+        "path": "app/storage/repository.py",
+        "sha256": "9d0427571749dded95fbdbe2d98b012a1c086b081b038349d1878fed75f3c02e"
+      },
+      {
+        "path": "app/web/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "app/web/mixed_view.py",
+        "sha256": "bacfc87bc0079194db585ce54af8a88c7cb49404c7e1f8b58e6443a05723ba4d"
+      },
+      {
+        "path": "app/web/options.py",
+        "sha256": "3d3d5db09b97187ffa1070825f14b19a92be2bc5d4b904bedf0751060c1d0de0"
+      },
+      {
+        "path": "app/web/portfolio_admin.py",
+        "sha256": "8f2c5c61a982eb33f060bc6ca36af42bd80c2e44c3f2eeabe664c3ecbf0e38e0"
+      },
+      {
+        "path": "app/web/routes.py",
+        "sha256": "4b121a676d51f4ddbe68dfba076a8ecec7f7aaf5f8de4ea0d591887687d57332"
+      },
+      {
+        "path": "app/web/shadow.py",
+        "sha256": "21c72c53914d25fc1c5ff4e7b7eb43816200369832826697e5550b1a5a3803b8"
+      },
+      {
+        "path": "app/web/shadow_data.py",
+        "sha256": "01b3fb546bcc6878cfce219991035e2207eeb5b8f997af99baca3d293da4594d"
+      },
+      {
+        "path": "app/web/templates/index.html",
+        "sha256": "912dd01626f2c163a9fbf5b31d40f1f66f52a75c4d7da0d658c759ffeb896469"
+      },
+      {
+        "path": "app/web/templates/mixed_content.html",
+        "sha256": "d651b1cab4b8accbf1c1455ef6f148613f91189ff46e66249acf91db79ae87d6"
+      },
+      {
+        "path": "app/web/templates/mixed_costs.html",
+        "sha256": "d9ed7d7cff84ce1727ad2bf6f10cb08843e83698544c37873a7b85d056c2ff3e"
+      },
+      {
+        "path": "app/web/templates/mixed_decisions.html",
+        "sha256": "8e91f92b90e56d61601377f0c5e74195c9f234d28a42a062aa11f3e295323d39"
+      },
+      {
+        "path": "app/web/templates/mixed_desk.html",
+        "sha256": "40d6740ec7a9b52d5da11c1f91cac44c46c8f5b9654432a017f0210ab4d1c92a"
+      },
+      {
+        "path": "app/web/templates/mixed_desk_script.html",
+        "sha256": "6f1978e3b487ba698c6e569df4d5677c49b1391d9ec601601ad1886c116ed3ee"
+      },
+      {
+        "path": "app/web/templates/mixed_live_script.html",
+        "sha256": "07f4985087e446ffabb7a75a5b69a0319cd8f598103bf169312b34662e7923d8"
+      },
+      {
+        "path": "app/web/templates/mixed_orders.html",
+        "sha256": "e82bbaff56c3f4674ad78d7fcb74a7402452f26d304eae4393ababfad3abe6be"
+      },
+      {
+        "path": "app/web/templates/mixed_protection.html",
+        "sha256": "b59a6fd1e97548d852bc62f43bd8d912c4be8a611ecc2b3ce54503a17a8eb011"
+      },
+      {
+        "path": "app/web/templates/mixed_stream.html",
+        "sha256": "079d2a635b945d90c57f381e170c9828c862ff4d6444182ae72a55b29c4e5844"
+      },
+      {
+        "path": "app/web/templates/mixed_styles.html",
+        "sha256": "27660f1f0da26ef3df7aaaea50886f25e80a73101f2e6747d783ca797a93dd54"
+      },
+      {
+        "path": "app/web/templates/mixed_trade.html",
+        "sha256": "960128c3c95ceda73a072905c693283bd51111d4460cb4135d26d8568b1a699d"
+      },
+      {
+        "path": "app/web/templates/options.html",
+        "sha256": "3b805b6f202bf69d18a9abcf32e11e1509a81854bfb0b074fe8bbb369cd63958"
+      },
+      {
+        "path": "app/web/templates/options_briefing.html",
+        "sha256": "8e976d7f829242df9ca9be727f75edc1abe33da2939bbab635f5895fe68da039"
+      },
+      {
+        "path": "app/web/templates/options_decisions.html",
+        "sha256": "f36aa3e5f856a2a68122cc46aa7899628838f5333d9da8efc03a333552c8ddee"
+      },
+      {
+        "path": "app/web/templates/options_desk_script.html",
+        "sha256": "e560bfcfe6b39ac24ec54f0b000f14a82a7f10301359826847062320187e1060"
+      },
+      {
+        "path": "app/web/templates/options_protection.html",
+        "sha256": "6f65df5811a332d341791150abc20568008e99c75ec8d91ff997ce872d9ae80f"
+      },
+      {
+        "path": "app/web/templates/options_scope_evidence.html",
+        "sha256": "6305357131fa50c0a9f9fe56e95722f1f257195ebc7535a034a826097358b1cb"
+      },
+      {
+        "path": "app/web/templates/options_styles.html",
+        "sha256": "acd7219e31ef0b2c7c1e9d6ce84c516b71eeae0285620be843596fcca6ccb7f9"
+      },
+      {
+        "path": "app/web/templates/options_trade_card.html",
+        "sha256": "13b1b208d4b705cb39970d7a295447bed6a5d76e0f0fcf6505a9d957c68ee87a"
+      },
+      {
+        "path": "app/web/templates/portfolio_admin.html",
+        "sha256": "4d8a3461f9ea7598c8268fe1f89220b0236bb9429118f2c94cf07a5dfeffb3df"
+      },
+      {
+        "path": "app/web/templates/portfolio_admin_script.html",
+        "sha256": "b259f828253922434ddb336514c9a2016479f3777935ed45b7e75dd15d5ca231"
+      },
+      {
+        "path": "app/web/templates/shadow.html",
+        "sha256": "0b3c526891a745cf268cdd579e7d69a28175215b2995e31f8537a88c6d0ff10c"
+      },
+      {
+        "path": "app/web/trade_rail.py",
+        "sha256": "dd0b83915c95441aaa69108a1cb32198bf14b2ad739b8336974ada7611eac7b8"
+      }
+    ]
+  },
+  "latency": {
+    "kind": "OFFLINE_SYNTHETIC_LATENCY",
+    "python": "3.12.14",
+    "provisional_target_ms": 5,
+    "host_acceptance": false,
+    "source_to_detection": "NOT_PROVIDER_MEASURED; separate native audit fields tested",
+    "results": [
+      {
+        "events": 0,
+        "workload": "spread",
+        "iterations": 250,
+        "prepare_ms": 0.538215,
+        "p50_ms": 0.023165,
+        "p95_ms": 0.030436,
+        "p99_ms": 0.073891,
+        "max_ms": 0.282827
+      },
+      {
+        "events": 250,
+        "workload": "spread",
+        "iterations": 250,
+        "prepare_ms": 10.555108,
+        "p50_ms": 0.0927,
+        "p95_ms": 0.163046,
+        "p99_ms": 0.378382,
+        "max_ms": 1.254808
+      },
+      {
+        "events": 10000,
+        "workload": "spread",
+        "iterations": 250,
+        "prepare_ms": 440.816519,
+        "p50_ms": 0.092861,
+        "p95_ms": 0.192221,
+        "p99_ms": 0.295237,
+        "max_ms": 0.492555
+      },
+      {
+        "events": 10000,
+        "workload": "dense",
+        "iterations": 250,
+        "prepare_ms": 492.407198,
+        "p50_ms": 0.8305865,
+        "p95_ms": 1.288669,
+        "p99_ms": 3.893661,
+        "max_ms": 102.538819
+      }
+    ]
+  },
+  "cli_offline_smoke": [
+    "policy JSON",
+    "create event audit only",
+    "materialize holiday/early-close sessions",
+    "export observation evidence"
+  ],
+  "diagnostics": {
+    "first_focused_run": "26 passed/26 failed: unvalidated default decimal values changed policy hash on round-trip; fixed validation before successful focused tests.",
+    "installed_collection_error": "Four module import collection errors: proof root missing for tests.* imports; fixed harness path, no application relaxation.",
+    "unindexed_10000_event_p99_ms": 124.198417,
+    "final_dense_maximum_exceeds_5ms": true,
+    "no_provider_detection_latency_claim": true
+  },
+  "source_access_dependencies": [
+    "Trading Economics economic-calendar API key/entitlement and actual cost review",
+    "Finnhub earnings API key/entitlement and actual cost review",
+    "Public calendar/CSV provider and host acceptance",
+    "Intraday volatility source/schema/license not implemented"
+  ],
+  "remaining": [
+    "Automatic observation delivery/backlog and retention scheduling",
+    "Host process/mount isolation and actual local/source latency",
+    "Broader company/non-scheduled/cross-asset source coverage",
+    "Existing native catalyst and Scope requirements remain unresolved"
+  ]
+}

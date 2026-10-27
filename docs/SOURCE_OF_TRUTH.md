@@ -1,6 +1,23 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.145. Concrete initial simulation profile, 2026-10-27 EDT.
+Version 1.146. Observation-only event awareness feature branch, 2026-10-27 EDT.
+
+[Event awareness baseline](EVENT_AWARENESS_BASELINE.md) is an independent additive
+component on `feat/event-awareness-baseline`, starting from verified remote base
+`19616d78546f62d6233d39c2d98055ed8a4da76a`. Background source adapters retain
+normalized revisions/failures and publish atomic versioned snapshots. Shared
+local checks report explicit market/symbol CLEAR, CAUTION, BLOCK_NEW_ENTRIES and
+UNKNOWN, with advisory entry/exposure/review/carry outcomes. Native decision
+linkage reads only the existing publisher's copy; it cannot lock the active
+trading journal. No runtime/strategy/accounting code or current $1,000, $1/day,
+two-play/no-carry profile changed. Catalyst and Scope source gaps remain.
+See the baseline's source/access review and offline proof for precise coverage,
+latency distributions and acceptance limits. This is a completed independently
+testable first slice, ready for a later observation consumer connection; it is
+not host/provider acceptance. No server workers, deployment, enforcement or LIVE.
+Base/main and PR #1 remain untouched; only the new feature branch is published.
+
+Previous base checkpoint: Version 1.145. Concrete initial simulation profile.
 
 [Initial simulation configuration](CONNECTED_SIMULATION_PROFILE.md) now encodes the
 user's $1,000 virtual balance and $1/day AI ceiling with one two-play owner and all

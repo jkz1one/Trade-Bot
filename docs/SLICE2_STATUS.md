@@ -1,5 +1,42 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Event awareness baseline feature slice: 2026-10-27 EDT
+
+New branch `feat/event-awareness-baseline` from remotely verified
+`19616d78546f62d6233d39c2d98055ed8a4da76a`; no base advance at checkout.
+Isolated clone preserves all prior work. Base/main and PR #1 are untouched.
+
+Added `app.events`: deterministic shared assessments, explicit provisional
+windows/stress thresholds, source identities/revisions/coverage, strict documented
+source adapters, append-only evidence history, atomic versioned local snapshots,
+background preparation, and advisory outcomes linked to actual native decision
+IDs through the existing dashboard publisher's copy. No native runtime,
+strategy, bankroll, account, entry, sizing, position management or model changes.
+No conversion to Swing catalyst/Scope clearance. Current profile remains $1,000
+virtual capital, $1/day AI ceiling, two plays, no carry and LIVE disabled.
+
+[Implementation/integration contract](EVENT_AWARENESS_BASELINE.md),
+[source dependencies](EVENT_AWARENESS_SOURCES.md) and
+[offline proof](EVENT_AWARENESS_PROOF.json) distinguish fixture verification from
+provider/host acceptance. Tests cover time/window/DST/early-close boundaries,
+missing/stale/conflicting evidence, revisions/cancellations, outage/restart/atomic
+publication, actual two-play accounting immutability and independent mandatory
+exits while the event worker is slow or failed. The installed proof records exact
+cases, full application file identity, CLI smoke checks and latency distributions.
+An initial unvalidated policy-default hash mismatch was reproduced and fixed.
+A test-harness collection-path error was fixed without relaxing application checks.
+The original large-calendar scan exceeded the provisional 5 ms target; background
+indexing and explicit local capacity bounds address it. Dense-calendar maximum
+latency still exceeds 5 ms in this environment, so no hard bound/host claim is made.
+
+Stopping reason: **completed first slice**. Remaining work: reviewed real source
+access/coverage (including TE/Finnhub credentials/entitlements and unverified costs),
+unsupported company/non-scheduled/cross-asset categories, automatic observation
+delivery/backlog/retention, host mounting/process isolation and real latency/source
+detection acceptance. These are explicitly separate from the ongoing paper-trading
+integration. No deployment, server workers, enforcement, subscription purchase,
+model call, base merge, main change or PR #1 edit occurred.
+
 ## Host configuration packaging and bounded launcher completed: 2026-10-26 EDT
 
 Starting feature HEAD 9156e45b7505423098f866afedd21962268293bb. Added a reviewed
