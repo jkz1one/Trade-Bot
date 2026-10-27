@@ -1,6 +1,21 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.151. Captured option catalog preparation and host session evidence, 2026-10-27 EDT.
+Version 1.152. Bounded after-close Swing history proof, 2026-10-27 EDT.
+
+Added a host operation to capture actual enrolled daily/hourly histories once and
+run the native mapper without opening owner/collector databases or starting any
+worker. It reuses the existing 105f1a1 image and frozen feed policy; no rebuild or
+account migration is needed. Mid-session calls refuse before provider access.
+After-close/pre-open calls retain original raw evidence, a compact format report
+and mapped history only on complete native validation. UNKNOWN entitlement,
+source-binding/catalyst blockers and all account/entry restrictions remain.
+
+This prepares the next concrete provider acceptance check, which can run outside
+regular market hours. It is not an implemented catalyst or Scope adapter, and no
+new host capture was performed from the workspace. See SWING_HISTORY_HOST_PROOF.md
+and SWING_HISTORY_HOST_PROOF.json. Those strategy integrations still need work.
+
+Prior catalog preparation (v1.151):
 
 Host first-check-4 on 105f1a1 completed its bounded ten-minute session with exit 0,
 zero restarts and a published snapshot. Native runtime generation 3 consumed feed

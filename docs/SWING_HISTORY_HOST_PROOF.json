@@ -1,0 +1,28 @@
+{
+  "version": "swing-history-host-proof-v1",
+  "installed_tests_passed": 87,
+  "failed": 0,
+  "skipped": 0,
+  "unchanged_host_image_application_files": 297,
+  "compatibility_reference": "105f1a151cf57ea85d6dc33ffff849593a239e3b",
+  "script_sha256": "cf548fd783213cec2ee4cabbd2a42b55c579a9d03503a74f91542c4ae1e31423",
+  "host_script_sha256": "cfad17e09fcc0293b76730a79fc84939e37ef96859155b4dfcd29d613ee255e7",
+  "host_capture_performed": false,
+  "provider_calls": false,
+  "model_calls": false,
+  "live_enabled": false,
+  "validation": [
+    "Original daily/hourly bars accepted under existing pinned schema",
+    "Missing bars and failed reads preserve diagnostics and reject mapping",
+    "No mid-session plan; after-close target is next exact session",
+    "No credentials read in plan-only mode; create-only capture artifacts",
+    "Existing Swing binding, delivery and continuous-strategy suites pass"
+  ],
+  "remaining": [
+    "Real daily/hourly provider response acceptance",
+    "Entitlement evidence",
+    "Swing catalyst ingestion",
+    "Scope current SPX/context ingestion",
+    "Reviewed contract terms"
+  ]
+}
