@@ -1,6 +1,19 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.140. Explicit future-session feed rollover, 2026-10-26 EDT.
+Version 1.141. Read-only native dashboard snapshot bridge, 2026-10-26 EDT.
+
+[Dashboard snapshot publication](DASHBOARD_SNAPSHOT.md) now makes an atomic,
+native-validated display copy of the same root-owned simulation journal for the
+existing UID/GID 10001 reader. Frozen bindings, a publisher lease and monotonic
+checkpoints reject changed or regressed state; failures retain the last complete
+copy and pending evidence. The offline host helper has no credentials, network,
+ports or service changes. It does not create an execution account or activate the
+dashboard. See DASHBOARD_SNAPSHOT_PROOF.json: 132 installed tests passed; one real
+cross-user test skipped because this workspace maps only ID 0. All 291 application
+files match. Cross-user host acceptance remains unverified. Reviewed host owner
+configuration, activation/rollback, operator transport and eligible feed inputs
+remain unfinished. Server unchanged, connected simulation inactive. Slice end;
+more offline coding remains.
 
 [Future-session rollover](FEED_ROLLOVER.md) now appends reviewed catalogs and carry
 intent under both stopped-component leases with an exact review hash. Immutable

@@ -28,7 +28,10 @@ now bind original stock/option exit dates through restart and runtime delivery;
 [guarded first-collector enrollment](docs/CONNECTED_ENROLLMENT.md) now freezes the
 supplied schedule against the existing owner. [Future-session rollover](docs/FEED_ROLLOVER.md)
 now updates explicit catalogs/carry dates while retaining history and held quotes.
-Automatic discovery and host activation remain pending.
+A [read-only dashboard snapshot publisher](docs/DASHBOARD_SNAPSHOT.md) now bridges
+the native root-owned journal to the existing dashboard reader without changing
+credentials or creating another account. Cross-user host acceptance, automatic
+discovery and dashboard activation remain pending.
 
 ## Offline development checks
 

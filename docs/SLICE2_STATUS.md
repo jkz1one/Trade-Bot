@@ -1,5 +1,38 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Read-only native dashboard snapshot bridge: 2026-10-26 EDT
+
+Starting feature HEAD 9eb91288b9439822f1bb6e7d47167c9447f626e8. The root-owned
+native virtual-money journal now has a bounded read-only snapshot publisher for
+the existing UID/GID 10001 dashboard reader. SQLite backup, native accounting
+validation and atomic replacement preserve complete old/new views. One frozen
+binding and a publisher lease protect identity; backwards revision/generation/feed
+sequence or publication clocks are rejected. Failed copies retain evidence and
+the previous complete display. Native owner leases, bankroll and credentials are
+untouched. This is a display copy, not another execution account.
+
+A root host helper prepares/publishes/checks/runs that copy with no network,
+credential mounts, ports or service changes. Its source is read-only; output alone
+is writable. CHOWN and DAC_READ_SEARCH are the only added capabilities. Permissions
+are set before ownership transfer. Future activation must bind the output directory
+read-only, retain the existing login/user and disable operator controls until a
+separate native guarded command channel is wired. No activation is included.
+
+Validation: 132 unique installed Python cases passed; one real cross-UID test was
+skipped because this workspace maps only UID/GID 0. Its initial run failed with
+EINVAL on ownership transfer to 10001; no cross-user or Docker host acceptance is
+claimed. The retained test runs in a suitable environment. All 291 application
+files match source/wheel/installation, release identity VERIFIED_FILES. Ruff,
+shell syntax and diff checks pass. See DASHBOARD_SNAPSHOT_PROOF.json and
+DASHBOARD_SNAPSHOT.md. Shell tests use offline Docker/Git recorders.
+
+Stopping reason: **slice end**, not missing feed collection. More offline host
+configuration, activation/rollback and operator-channel work remains. Eligible
+catalyst/Scope inputs, complete data/contract eligibility and connected market
+acceptance remain unresolved. Server unchanged on a653cc7 frozen V3; connected
+simulation inactive, LIVE disabled. No provider/model calls, credentials access,
+dependencies, subagents or hosted CI. Main unchanged; PR #1 stays open/draft.
+
 ## Explicit future-session feed rollover: 2026-10-26 EDT
 
 Starting feature HEAD 5392daf7f874db1c636b9a12d4d54f024490df32. A read-only review
