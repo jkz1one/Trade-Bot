@@ -1,5 +1,91 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+Earnings/IV observation continuation, 2026-10-27 EDT.
+
+Added an earnings-linked option-volatility diagnostic to the native event audit
+observer. It retains the original option/Greek evidence and separate provisional
+policy, with explicit UNKNOWN for absent/stale IV or incomplete earnings coverage.
+No crush magnitude forecast or live VIX policy is claimed. Existing observed
+entry-to-current IV diagnostics already exist and remain unchanged.
+
+See EARNINGS_IV_AWARENESS.md and EVENT_IV_PROOF.json. Stop: completed offline
+diagnostic slice; provider/host acceptance remains. Branch starts at 44d5535;
+remote base reverified unchanged at f305ea1. Native application code outside
+app.events remains identical to that base. No deployment or enforcement.
+
+## Event feature reconciliation: 2026-10-27 EDT
+
+Merged verified base `f305ea19bef3fdfb5aec04c51aa431f32dc2b694` into
+`feat/event-awareness-baseline`, starting at `355e8c1f9071ee53f87b2c0dfd285cfedd2925d1`.
+Only SOURCE_OF_TRUTH.md conflicted; preserved the full current base status and
+added the feature's observation-only status. All native application code outside
+app.events matches the verified base. Existing event assessments, audit consumer,
+account safety and mandatory protection contracts are unchanged.
+
+See EVENT_RECONCILIATION_PROOF.json for installed combined-tree verification.
+Stopping reason: completed branch reconciliation, not provider/host acceptance.
+Remaining: real source access/coverage, host observer integration and process/UID
+isolation, missing candidate context, retention/alerts and real latency acceptance.
+No workers, deployment, enforcement, base/main writes or PR #1 edits occurred.
+
+## Event observer continuation: 2026-10-27 EDT
+
+Continued `feat/event-awareness-baseline` from `f39a106639bbb1a66c85a75a7737f216b2a87fd6`.
+Remote base now `de201bd686c37d71fbd93c287595c8e4b922ab8d`; six new commits inspected,
+no native journal contract changes, and no merge/rebase of that parallel work.
+During verification, base `f305ea19bef3fdfb5aec04c51aa431f32dc2b694` added an
+after-close Swing history proof helper; reviewed, with no application contract change.
+
+Added a one-shot bounded observer for the existing publisher copy, durable atomic
+delivery/cursor commits, native saved family/horizon reuse, retryable missing-context
+gaps, bounded fair retries, persistent checkpoint/anchor continuity and exported
+backlog/failure evidence. No account, native runtime, provider/model call, strategy,
+entry sizing, position protection or accounting changes. The CLI starts no scheduler.
+See EVENT_AWARENESS_BASELINE.md and EVENT_OBSERVER_PROOF.json for tests and limits.
+
+Stopping reason: **completed observer delivery slice**, with offline installed proof.
+Remaining: provider access/coverage acceptance, actual-host integration/scheduling,
+process/UID/mount isolation, candidate-context delivery where native data is missing,
+retention/alerts and host/source-detection latency. No server deployment, worker
+enablement, enforcement, base/main update or PR #1 edit occurred.
+
+## Event awareness baseline feature slice: 2026-10-27 EDT
+
+New branch `feat/event-awareness-baseline` from remotely verified
+`19616d78546f62d6233d39c2d98055ed8a4da76a`; no base advance at checkout.
+Isolated clone preserves all prior work. Base/main and PR #1 are untouched.
+
+Added `app.events`: deterministic shared assessments, explicit provisional
+windows/stress thresholds, source identities/revisions/coverage, strict documented
+source adapters, append-only evidence history, atomic versioned local snapshots,
+background preparation, and advisory outcomes linked to actual native decision
+IDs through the existing dashboard publisher's copy. No native runtime,
+strategy, bankroll, account, entry, sizing, position management or model changes.
+No conversion to Swing catalyst/Scope clearance. Current profile remains $1,000
+virtual capital, $1/day AI ceiling, two plays, no carry and LIVE disabled.
+
+[Implementation/integration contract](EVENT_AWARENESS_BASELINE.md),
+[source dependencies](EVENT_AWARENESS_SOURCES.md) and
+[offline proof](EVENT_AWARENESS_PROOF.json) distinguish fixture verification from
+provider/host acceptance. Tests cover time/window/DST/early-close boundaries,
+missing/stale/conflicting evidence, revisions/cancellations, outage/restart/atomic
+publication, actual two-play accounting immutability and independent mandatory
+exits while the event worker is slow or failed. The installed proof records exact
+cases, full application file identity, CLI smoke checks and latency distributions.
+An initial unvalidated policy-default hash mismatch was reproduced and fixed.
+A test-harness collection-path error was fixed without relaxing application checks.
+The original large-calendar scan exceeded the provisional 5 ms target; background
+indexing and explicit local capacity bounds address it. Dense-calendar maximum
+latency still exceeds 5 ms in this environment, so no hard bound/host claim is made.
+
+Stopping reason: **completed first slice**. Remaining work: reviewed real source
+access/coverage (including TE/Finnhub credentials/entitlements and unverified costs),
+unsupported company/non-scheduled/cross-asset categories, automatic observation
+delivery/backlog/retention, host mounting/process isolation and real latency/source
+detection acceptance. These are explicitly separate from the ongoing paper-trading
+integration. No deployment, server workers, enforcement, subscription purchase,
+model call, base merge, main change or PR #1 edit occurred.
+
 ## Host configuration packaging and bounded launcher completed: 2026-10-26 EDT
 
 Starting feature HEAD 9156e45b7505423098f866afedd21962268293bb. Added a reviewed

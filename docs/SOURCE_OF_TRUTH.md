@@ -1,5 +1,40 @@
 # Autonomous Compounding Trader: source of truth
 
+Earnings/IV observation continuation, 2026-10-27 EDT.
+
+Added an earnings-linked option-volatility diagnostic to the native event audit
+observer. It retains the original option/Greek evidence and separate provisional
+policy, with explicit UNKNOWN for absent/stale IV or incomplete earnings coverage.
+No crush magnitude forecast or live VIX policy is claimed. Existing observed
+entry-to-current IV diagnostics already exist and remain unchanged.
+
+See EARNINGS_IV_AWARENESS.md and EVENT_IV_PROOF.json. Stop: completed offline
+diagnostic slice; provider/host acceptance remains. Branch starts at 44d5535;
+remote base reverified unchanged at f305ea1. Native application code outside
+app.events remains identical to that base. No deployment or enforcement.
+
+Event feature reconciliation, 2026-10-27 EDT.
+
+`feat/event-awareness-baseline` now incorporates verified base
+`f305ea19bef3fdfb5aec04c51aa431f32dc2b694` into the feature branch. Base/main and
+PR #1 are not modified. The only merge conflict was this status document; the
+complete latest base status is preserved below. Native runtime, account, strategy,
+quote, protection and host-helper files are byte-identical to that base.
+
+The [event-awareness component](EVENT_AWARENESS_BASELINE.md) remains observation-only:
+background event evidence and local assessments, plus bounded native decision
+observation through the existing publisher's immutable copy. No runtime hook,
+scheduler, provider/model call, deployment, enforcement, new account or carry
+permission is added. The existing $1,000 / $1-per-day / two-play configuration and
+all catalyst, Scope, entitlement and eligibility blockers remain intact.
+
+EVENT_RECONCILIATION_PROOF.json records installed combined-tree verification.
+EVENT_AWARENESS_PROOF.json and EVENT_OBSERVER_PROOF.json are historical proofs of
+the earlier isolated revisions. Real provider access/coverage, host scheduling,
+UID/mount isolation, missing-context delivery and host latency acceptance remain.
+This reconciliation does not convert prior base host evidence into acceptance of
+the event observer. The current paper-trading base status follows unchanged.
+
 Version 1.152. Bounded after-close Swing history proof, 2026-10-27 EDT.
 
 Added a host operation to capture actual enrolled daily/hourly histories once and

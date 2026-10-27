@@ -1,0 +1,1679 @@
+{
+  "version": "event-reconciliation-offline-proof-v1",
+  "recorded_at": "2026-10-27T18:00:33.224551-04:00",
+  "branch": "feat/event-awareness-baseline",
+  "feature_parent": "355e8c1f9071ee53f87b2c0dfd285cfedd2925d1",
+  "base_parent": "f305ea19bef3fdfb5aec04c51aa431f32dc2b694",
+  "merge_direction": "verified base into event feature only",
+  "resolved_conflicts": [
+    "docs/SOURCE_OF_TRUTH.md"
+  ],
+  "latest_base_source_of_truth_preserved": true,
+  "native_application_identical_to_base": true,
+  "event_application_identical_to_feature_parent": true,
+  "proof_scope": "Installed noneditable combined wheel with offline native simulator fixtures; no provider or host acceptance",
+  "python": "3.12.14",
+  "test_flags": [
+    "-I",
+    "-W",
+    "error"
+  ],
+  "installed_tests_passed": 315,
+  "installed_tests_skipped": 1,
+  "elapsed_seconds": 277.311,
+  "test_files": [
+    "tests/test_connected_owner_paths.py",
+    "tests/test_connected_publisher.py",
+    "tests/test_connected_runtime.py",
+    "tests/test_contract_catalog.py",
+    "tests/test_dashboard_snapshot.py",
+    "tests/test_event_assessment.py",
+    "tests/test_event_consumer.py",
+    "tests/test_event_native.py",
+    "tests/test_event_sources.py",
+    "tests/test_event_store.py",
+    "tests/test_failure_diagnostics.py",
+    "tests/test_mixed_runtime.py",
+    "tests/test_option_runtime.py",
+    "tests/test_portfolio_accounting.py",
+    "tests/test_portfolio_controls.py",
+    "tests/test_portfolio_native.py",
+    "tests/test_portfolio_recovery.py",
+    "tests/test_portfolio_runtime.py",
+    "tests/test_portfolio_selection.py",
+    "tests/test_read_worker_imports.py",
+    "tests/test_schema_artifact.py",
+    "tests/test_session_host.py",
+    "tests/test_simulation_profile.py",
+    "tests/test_swing_history_proof.py"
+  ],
+  "test_cases": [
+    {
+      "test": "tests.test_event_assessment::test_shared_clear_is_not_approval_and_never_enables_carry[DEGEN]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_shared_clear_is_not_approval_and_never_enables_carry[SWING]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_shared_clear_is_not_approval_and_never_enables_carry[SCOPE]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_scheduled_window_half_open_boundaries_without_provider_refresh[-901-False]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_scheduled_window_half_open_boundaries_without_provider_refresh[-900-True]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_scheduled_window_half_open_boundaries_without_provider_refresh[1799-True]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_scheduled_window_half_open_boundaries_without_provider_refresh[1800-False]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_validity_ends_at_next_window_activation_and_calendar_not_quote_clock",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_decision_and_press_conference_have_distinct_windows",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_symbol_uncertainty_does_not_become_market_restriction",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_missing_or_stale_calendar_is_not_clear[missing]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_missing_or_stale_calendar_is_not_clear[partial]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_missing_or_stale_calendar_is_not_clear[stale]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_missing_or_stale_calendar_is_not_clear[short_horizon]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_missing_or_stale_calendar_is_not_clear[future]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_cancelled_and_conflicting_sources_are_not_silently_cleared",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_stress_uses_available_original_evidence[updates0-DISPLAYED_LIQUIDITY_MISSING-UNKNOWN]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_stress_uses_available_original_evidence[updates1-LOW_DISPLAYED_LIQUIDITY-BLOCK_NEW_ENTRIES]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_stress_uses_available_original_evidence[updates2-WIDE_SPREAD-BLOCK_NEW_ENTRIES]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_stress_uses_available_original_evidence[updates3-ELEVATED_SPREAD-CAUTION]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_stress_uses_available_original_evidence[updates4-RAPID_PRICE_CHANGE-BLOCK_NEW_ENTRIES]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_stress_uses_available_original_evidence[updates5-PRICE_CHANGE_REFERENCE_MISSING_OR_STALE-UNKNOWN]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_stress_uses_available_original_evidence[updates6-QUOTE_STALE_OR_INVALID_CLOCK-UNKNOWN]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_stress_uses_available_original_evidence[updates7-QUOTE_ENTITLEMENT_UNCONFIRMED-UNKNOWN]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_stress_uses_available_original_evidence[updates8-QUOTE_BOOK_UNUSABLE-UNKNOWN]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_holiday_early_close_and_dst_session_windows[now0-OUTSIDE_REGULAR_SESSION]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_holiday_early_close_and_dst_session_windows[now1-SESSION_CLOSE_WINDOW]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_holiday_early_close_and_dst_session_windows[now2-OUTSIDE_REGULAR_SESSION]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_holiday_early_close_and_dst_session_windows[now3-SESSION_OPEN_WINDOW]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_holding_period_crosses_close_and_future_coverage",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_empty_snapshot_policy_drift_naive_times_and_enforcement_rejected",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_dense_calendar_is_explicitly_incomplete_and_assessment_is_bounded",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_native_incomplete_quote_and_foreign_symbol_are_not_clear",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_assessment::test_decimal_context_cannot_change_assessment",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_sources::test_public_ical_normalizes_original_times_folded_text_duration_and_coverage[https://www.bls.gov/schedule/news_release/bls.ics]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_sources::test_public_ical_normalizes_original_times_folded_text_duration_and_coverage[https://www.bea.gov/news/schedule/ics/online-calendar-subscription.ics]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_sources::test_invalid_dst_and_floating_time_rejected[DTSTART;TZID=America/New_York:20260308T023000]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_sources::test_invalid_dst_and_floating_time_rejected[DTSTART;TZID=America/New_York:20261101T013000]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_sources::test_invalid_dst_and_floating_time_rejected[DTSTART:20261027T110000]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_sources::test_valid_dst_offsets_differ",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_sources::test_unsupported_or_conflicting_ical_schema_not_silently_skipped[RRULE:FREQ=DAILY]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_sources::test_unsupported_or_conflicting_ical_schema_not_silently_skipped[SEQUENCE:2]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_sources::test_all_day_and_cancellation_preserve_uncertainty",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_sources::test_te_preserves_distinct_related_events_no_name_whitelist_and_access_failure",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_sources::test_company_date_is_not_exact_clearance_or_macro_coverage",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_sources::test_daily_vix_retains_date_and_never_becomes_intraday_stress",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_sources::test_native_quotes_keep_unknown_liquidity_entitlement_and_reference_identity",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_sources::test_session_materialization_uses_actual_early_close_and_explicit_horizon",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_store::test_revisions_reschedule_cancel_out_of_order_and_restart",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_store::test_conflicting_same_revision_retained_and_atomic_reader",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_store::test_interrupted_publication_preserves_last_good_and_skips_unpublished_version",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_store::test_loader_corruption_regression_and_same_sequence_change_are_unknown",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_store::test_source_outage_retains_events_and_collection_failure_no_secrets",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_store::test_writer_lease_and_future_receipt_reject_without_partial_file",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_store::test_worker_success_preserves_raw_and_original_source_times",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_store::test_sequence_revision_and_publication_clock_regression",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_native::test_actual_two_play_decisions_and_accounting_unchanged_with_would_block",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_native::test_decision_link_refuses_invented_ids_population_clock_and_future_snapshot",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_native::test_slow_or_failed_event_process_cannot_delay_two_mandatory_exits[False]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_native::test_slow_or_failed_event_process_cannot_delay_two_mandatory_exits[True]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_native::test_local_assessment_cannot_use_network_disk_or_model",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_bounded_restart_exactly_once_and_unchanged_native_accounting",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_missing_context_gap_is_retained_then_repaired_without_lookahead",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_conflicting_context_is_gap_not_silently_shorter_holding_coverage",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_atomic_batch_rollback_and_retry_after_persistence_failure",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_unavailable_snapshot_retains_failure_without_advancing[stale]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_unavailable_snapshot_retains_failure_without_advancing[future]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_unavailable_snapshot_retains_failure_without_advancing[missing]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_unavailable_snapshot_retains_failure_without_advancing[corrupt]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_unavailable_snapshot_retains_failure_without_advancing[sequence_gap]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_publication_regression_and_anchor_mutation_rejected_across_restart",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_snapshot_replaced_during_assessment_rolls_back_entire_batch",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_no_event_snapshot_at_decision_is_unknown",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_active_owner_and_duplicate_contexts_and_changed_binding_refused",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_concurrent_consumer_lease_and_collection_independence",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_gap_retry_budget_does_not_starve_later_gaps",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_one_shot_cli_reports_committed_batch_and_unavailable_exit",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_slow_or_failed_observer_cannot_delay_native_protection[False]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_event_consumer::test_slow_or_failed_observer_cannot_delay_native_protection[True]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_native::test_native_two_pending_stock_entries_fill_and_close_independently",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_native::test_native_mixed_stock_option_reservations_and_independent_option_exit",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_two_stock_positions_one_balance_and_independent_partial_exit",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_close_one_and_simultaneous_exits_keep_exact_lineage",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_two_unfilled_reservations_use_shared_funds_and_capacity",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_partial_entry_cancel_releases_only_unfilled_debit",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_pending_exit_and_uncertainty_keep_both_plays_committed",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_limit_reduction_does_not_remove_positions_or_reserves",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_mixed_stock_option_replay_has_one_cash_balance",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_same_underlying_stock_and_option_is_rejected",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_exit_cannot_target_another_play[missing]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_exit_cannot_target_another_play[foreign]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_exit_cannot_target_another_play[other-play]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_duplicate_fill_and_resume_after_exit_do_not_duplicate_cash",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_no_silent_legacy_enrollment_or_scalar_position",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_unknown_costs_and_shared_exposure_do_not_gain_second_budget",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_account_funds_settlement_does_not_drop_an_open_play",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_two_option_plays_and_exact_independent_close",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_option_expiry_requires_exact_play_and_preserves_other_holding",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_price_improvement_does_not_stay_reserved_after_partial_fill",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_duplicate_reservation_and_two_working_orders_for_one_play_are_invalid",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_option_source_liquidity_not_renewed_by_receive_time",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_accounting::test_portfolio_money_is_independent_of_global_decimal_precision",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_controls::test_native_concurrent_reservations_cannot_claim_a_third_slot",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_controls::test_signed_limit_reduction_keeps_positions_and_rejects_stale_revision",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_controls::test_simultaneous_native_exits_preserve_each_thesis",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_controls::test_two_play_observer_and_render_keep_distinct_cards_and_unknown_marks",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_controls::test_approval_event_tampering_blocks_reconciliation",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_runtime::test_scope_portfolio_reconnect_gap_retains_both_delivery_contracts",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_selection::test_sequential_selection_reserves_both_slots_and_retry_never_submits_again",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_selection::test_runtime_fills_both_then_keeps_held_only_delivery_and_source_clocks",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_recovery::test_uncertain_attempt_retains_capacity_and_never_resubmits[LOST_ACK]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_recovery::test_uncertain_attempt_retains_capacity_and_never_resubmits[INVALID_ACK]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_recovery::test_uncertain_attempt_retains_capacity_and_never_resubmits[CRASH_AFTER_ACCEPT]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_recovery::test_partial_entry_cancel_releases_only_unfilled_cash_and_preserves_other_play",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_portfolio_recovery::test_restart_after_durable_submit_marker_never_retries_unobserved_order",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_mixed_runtime_native_fill_and_fast_stock_exit[False]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_mixed_runtime_native_fill_and_fast_stock_exit[True]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_mixed_runtime_delivery_cannot_bypass_enrollment[legacy]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_mixed_runtime_delivery_cannot_bypass_enrollment[gap]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_mixed_runtime_delivery_cannot_bypass_enrollment[identity]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_mixed_runtime_delivery_cannot_bypass_enrollment[future]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_mixed_runtime_delivery_cannot_bypass_enrollment[coverage]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_mixed_runtime_delivery_cannot_bypass_enrollment[unread_refresh]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_mixed_envelope_does_not_relax_old_stock_boundaries",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_mixed_management_wait_keeps_independent_protection",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_joint_scope_runtime_retains_actual_native_choice[STOCK]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_joint_scope_runtime_retains_actual_native_choice[OPTION]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_joint_scope_runtime_retains_actual_native_choice[SCOPE]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_joint_scope_runtime_retains_actual_native_choice[SCOPE_STALE]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_cli_mixed_restart_and_explicit_settlement_keep_one_balance",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_fast_stock_quote_retirement_survives_rebound[False]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_fast_stock_quote_retirement_survives_rebound[True]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_stored_mixed_delivery_rejects_changed_evidence[hash]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_stored_mixed_delivery_rejects_changed_evidence[clock]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_stored_mixed_delivery_rejects_changed_evidence[prefix]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_interrupted_mixed_delivery_never_replays_or_refreshes",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_stock_refresh_waits_for_completed_protection_tick",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_mixed_runtime::test_scope_protection_accepts_nested_index_beside_two_common_quotes",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_simulation_profile::test_review_binds_native_budget_and_keeps_missing_inputs_blocked",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_simulation_profile::test_profile_create_stale_hash_and_overwrite_leave_existing_inputs",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_simulation_profile::test_full_profile_enrolls_consumes_publishes_and_restarts_same_owner[False]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_simulation_profile::test_full_profile_enrolls_consumes_publishes_and_restarts_same_owner[True]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_simulation_profile::test_unknown_costs_rejected_before_any_native_owner_is_created",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_consistent_snapshot_keeps_native_account_and_two_plays[False]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_consistent_snapshot_keeps_native_account_and_two_plays[True]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_existing_native_owner_lease_does_not_block_stored_snapshot",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_wal_commit_is_copied_without_copying_uncommitted_rows",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_atomic_replace_leaves_existing_open_reader_on_complete_old_snapshot",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_publisher_lease_excludes_second_writer",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_backward_source_never_replaces_latest_good_snapshot[revision]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_backward_source_never_replaces_latest_good_snapshot[generation]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_backward_source_never_replaces_latest_good_snapshot[sequence]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_backward_source_never_replaces_latest_good_snapshot[clock]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_invalid_bindings_fail_before_publication[frozen]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_invalid_bindings_fail_before_publication[binding]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_invalid_bindings_fail_before_publication[symlink]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_invalid_bindings_fail_before_publication[public]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_invalid_bindings_fail_before_publication[reader]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_failed_validation_preserves_last_good_snapshot_and_partial_evidence",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_shutdown_stops_only_the_publisher",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_cross_uid_snapshot_is_readable_by_unprivileged_dashboard_without_auth_copy",
+      "result": "skipped",
+      "reason": "Reader 10001 is not mapped in this environment: uid"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_failed_publication_retains_last_complete_snapshot[deadline]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_failed_publication_retains_last_complete_snapshot[ownership]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_dashboard_snapshot::test_failed_publication_retains_last_complete_snapshot[replace]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_owner_paths::test_original_launcher_alias_reproduces_frozen_path_failure",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_owner_paths::test_preflight_rejects_execution_alias_without_changing_state",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_owner_paths::test_identical_copied_file_is_not_an_owner_alias[runtime.json]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_owner_paths::test_identical_copied_file_is_not_an_owner_alias[options.db]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_owner_paths::test_identical_copied_file_is_not_an_owner_alias[venue.db]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_owner_paths::test_display_symlink_is_rejected",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_check_is_read_only_and_does_not_open_credentials",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_frozen_review_rejected_before_state_changes[reason]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_frozen_review_rejected_before_state_changes[event]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_missing_enrollment_never_creates_population",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_changed_enrollment_rejected_before_owner_open[runtime]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_changed_enrollment_rejected_before_owner_open[collector]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_component_failure_or_early_return_drains_sibling[False-RUNTIME]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_component_failure_or_early_return_drains_sibling[False-COLLECTOR]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_component_failure_or_early_return_drains_sibling[True-RUNTIME]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_component_failure_or_early_return_drains_sibling[True-COLLECTOR]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_shutdown_deadline_cancels_and_awaits_stuck_collector",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_supervisor_cancellation_drains_components_and_propagates",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_native_restart_consumes_next_delivery_without_reset_or_duplicate_owner[False-False-False]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_native_restart_consumes_next_delivery_without_reset_or_duplicate_owner[False-True-False]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_native_restart_consumes_next_delivery_without_reset_or_duplicate_owner[False-True-True]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_native_restart_consumes_next_delivery_without_reset_or_duplicate_owner[True-False-False]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_native_restart_consumes_next_delivery_without_reset_or_duplicate_owner[True-True-False]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_native_restart_consumes_next_delivery_without_reset_or_duplicate_owner[True-True-True]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_runtime::test_failed_first_tick_never_starts_collector_and_releases_lease",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_publisher::test_publisher_failure_fences_and_drains_runtime_and_collector[True]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_publisher::test_publisher_failure_fences_and_drains_runtime_and_collector[False]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_publisher::test_repeated_cancellation_waits_for_actual_copy_thread[False]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_publisher::test_repeated_cancellation_waits_for_actual_copy_thread[True]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_publisher::test_supervisor_cancellation_drains_copy_before_components_release",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_publisher::test_invalid_publisher_enrollment_prevents_runtime_or_provider_start[missing]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_publisher::test_invalid_publisher_enrollment_prevents_runtime_or_provider_start[reader]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_publisher::test_invalid_publisher_enrollment_prevents_runtime_or_provider_start[pending]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_publisher::test_pre_stopped_session_does_not_publish_or_open_owner",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_publisher::test_cli_requires_complete_snapshot_binding_before_any_check[extra0]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_publisher::test_cli_requires_complete_snapshot_binding_before_any_check[extra1]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_publisher::test_cli_requires_complete_snapshot_binding_before_any_check[extra2]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_connected_publisher::test_cli_requires_complete_snapshot_binding_before_any_check[extra3]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_failure_diagnostics::test_failed_fixture_read_is_recorded_then_reraised_and_halted[FixtureProcessTimeout]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_failure_diagnostics::test_failed_fixture_read_is_recorded_then_reraised_and_halted[FixtureProcessFailed]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_failure_diagnostics::test_failed_fixture_read_is_recorded_then_reraised_and_halted[FixtureProcessProtocolError]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_failure_diagnostics::test_failed_fixture_read_is_recorded_then_reraised_and_halted[OperationalError]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_failure_diagnostics::test_failed_fixture_read_is_recorded_then_reraised_and_halted[ValueError]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_failure_diagnostics::test_failed_fixture_read_is_recorded_then_reraised_and_halted[CancelledError]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_failure_diagnostics::test_unknown_exception_name_is_not_logged",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_failure_diagnostics::test_cli_reports_component_type_without_private_messages",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_read_worker_imports::test_installed_market_read_child_does_not_import_execution_engines[app.options.read_worker]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_read_worker_imports::test_installed_market_read_child_does_not_import_execution_engines[app.execution.market_read_worker]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_real_capture_review_preserves_clocks_and_unknowns",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_rejects_inconsistent_capture_evidence[receipt]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_rejects_inconsistent_capture_evidence[schema]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_rejects_inconsistent_capture_evidence[partial]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_rejects_inconsistent_capture_evidence[duplicate]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_rejects_inconsistent_capture_evidence[chain]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_rejects_inconsistent_capture_evidence[expiry]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_rejects_inconsistent_capture_evidence[strike]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_rejects_inconsistent_capture_evidence[inactive]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_rejects_inconsistent_capture_evidence[pagination]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_rejects_inconsistent_capture_evidence[missing_quote]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_rejects_inconsistent_capture_evidence[plan]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_rejects_inconsistent_capture_evidence[time]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_rejects_inconsistent_capture_evidence[regress]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_rejects_inconsistent_capture_evidence[future]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_rejects_inconsistent_capture_evidence[same_clock_changed]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_rejects_inconsistent_capture_evidence[source]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_rejects_inconsistent_capture_evidence[duplicate_capture]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_stale_book_is_evidence_not_freshness",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_selected_subset_maps_real_quotes_without_restamping",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_conflicting_native_terms_rejected[strike-759]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_conflicting_native_terms_rejected[right-CALL]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_conflicting_native_terms_rejected[multiplier-10]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_conflicting_native_terms_rejected[expiration-2026-10-29]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_conflicting_native_terms_rejected[tick_below_three-.05]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_conflicting_native_terms_rejected[underlying-QQQ]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_incomplete_or_ambiguous_selection_rejected",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_proposal_changes_only_catalog_and_filters_target_carry",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_cli_inspects_private_files_without_auth_or_state",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_tick_breakpoint_must_be_representable",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_cli_creates_proposal_once_and_cannot_change_existing_output",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_contract_catalog::test_cli_rejects_duplicate_json_keys",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_schema_artifact::test_both_host_consumers_accept_discovery_and_preserve_same_review",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_schema_artifact::test_reject_bad_or_unreviewed_discovery[outer_failed]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_schema_artifact::test_reject_bad_or_unreviewed_discovery[inner_failed]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_schema_artifact::test_reject_bad_or_unreviewed_discovery[operation]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_schema_artifact::test_reject_bad_or_unreviewed_discovery[extra]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_schema_artifact::test_reject_bad_or_unreviewed_discovery[missing]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_schema_artifact::test_reject_bad_or_unreviewed_discovery[no_schema]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_schema_artifact::test_reject_bad_or_unreviewed_discovery[bad_digest]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_schema_artifact::test_reject_bad_or_unreviewed_discovery[unreviewed]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_schema_artifact::test_reject_bad_or_unreviewed_discovery[authority]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_schema_artifact::test_duplicate_keys_and_public_file_rejected",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_session_host::test_enrollment_and_run_mounts_keep_offline_stages_without_broker_auth",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_session_host::test_changed_cpu_capacity_requires_a_new_review_before_launch",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_session_host::test_modified_cpu_quota_cannot_bypass_review",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_session_host::test_invalid_bounded_run_is_refused[0-a]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_session_host::test_invalid_bounded_run_is_refused[86401-a]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_session_host::test_invalid_bounded_run_is_refused[True-a]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_session_host::test_invalid_bounded_run_is_refused[60-../a]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_session_host::test_invalid_bounded_run_is_refused[60-a,readonly]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_session_host::test_invalid_bounded_run_is_refused[60-]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_session_host::test_stop_requires_exact_container_id_and_retains_it",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_session_host::test_changed_worker_after_start_stops_only_new_session",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_session_host::test_existing_active_session_prevents_another_launch",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_session_host::test_private_mount_rejects_symlink_and_public_file",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_session_host::test_stop_does_not_require_image_or_configuration",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_session_host::test_stale_host_review_refuses_before_launch",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_swing_history_proof::test_maps_exact_original_histories",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_swing_history_proof::test_failed_capture_keeps_diagnostics[gap-HISTORY_MAPPING_UNAVAILABLE]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_swing_history_proof::test_failed_capture_keeps_diagnostics[transport-HISTORY_UNAVAILABLE]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_swing_history_proof::test_mid_session_has_no_plan",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_swing_history_proof::test_after_close_prepares_next_session",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_swing_history_proof::test_wrong_receipt_rejected",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_swing_history_proof::test_cli_no_auth_for_review_and_preserves_capture_for_run[False]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_swing_history_proof::test_cli_no_auth_for_review_and_preserves_capture_for_run[True]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_invalid_policy[changes0]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_invalid_policy[changes1]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_invalid_policy[changes2]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_invalid_policy[changes3]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_invalid_policy[changes4]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_invalid_policy[changes5]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_invalid_policy[changes6]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_unpaired_or_impossible_settings[costs]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_unpaired_or_impossible_settings[model_limits]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_unpaired_or_impossible_settings[management]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_unpaired_or_impossible_settings[freshness]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_packet_read_is_bounded_private_and_regular[symlink]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_packet_read_is_bounded_private_and_regular[permissions]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_packet_read_is_bounded_private_and_regular[huge]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_packet_read_is_bounded_private_and_regular[fifo]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_packet_read_is_bounded_private_and_regular[invalid]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_enrollment_one_owner_slot_claim_and_legacy_read_only_observer",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_feed_fault_halts_entry_retains_prior_sequence_and_still_supervises[missing]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_feed_fault_halts_entry_retains_prior_sequence_and_still_supervises[stale]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_feed_fault_halts_entry_retains_prior_sequence_and_still_supervises[future]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_feed_fault_halts_entry_retains_prior_sequence_and_still_supervises[foreign]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_feed_fault_halts_entry_retains_prior_sequence_and_still_supervises[regression]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_feed_fault_halts_entry_retains_prior_sequence_and_still_supervises[conflict]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_feed_fault_halts_entry_retains_prior_sequence_and_still_supervises[older_time]",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_pending_cycle_skips_later_slot_and_cannot_queue_old_decision",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_protection_runs_during_paid_management_wait_and_cost_is_retained",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_stop_cancels_pending_cycle_before_owner_release_and_restart_never_resumes",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_clock_rollback_fails_and_cleans_pending_task",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_runtime_heartbeat_gates_entry_and_is_truthful_when_stale",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_native_runtime_entry_fill_and_subsequent_stop_without_extra_cycle",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_actual_management_attempt_remains_unknown_after_runtime_shutdown",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_bad_feed_fences_pending_entry_before_snapshot_wait",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_changed_runtime_policy_cannot_adopt_existing_enrollment",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_native_supervisor_timeout_fails_runtime_and_releases_pending_work",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_shutdown_request_immediately_fences_entry_during_a_snapshot_wait",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_runtime_html_reads_only_stored_state",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_create_only_settings_and_interrupted_restart",
+      "result": "passed"
+    },
+    {
+      "test": "tests.test_option_runtime::test_installed_cli_init_run_shutdown_and_reuse_rejection",
+      "result": "passed"
+    }
+  ],
+  "test_source_sha256": {
+    "tests/test_connected_owner_paths.py": "548088ca3ffd9b0687067fb1c078b17295b5f3c09a5b2c9bb41a3cccf0073936",
+    "tests/test_connected_publisher.py": "292d2500a434d2f80824f45b2041a8767db8b0ba5d8382b8a2ad61aa440d301f",
+    "tests/test_connected_runtime.py": "255af9365faf246abbee88dcb4f4059a7c6d98705e478e83b1e034ce90bbc710",
+    "tests/test_contract_catalog.py": "497ee5a7bdb2532c176ad9671fc6d818a20a20e4ed44c4976b9d5c2a28d77b37",
+    "tests/test_dashboard_snapshot.py": "59f96d0a6558a97773d3cfb9dd584ad74bdedf58529f3e4578d6e0f19c04da5a",
+    "tests/test_event_assessment.py": "d3da90381adf2b382b309d700d502948c95eb1a6528819bbc6553ddd21437a16",
+    "tests/test_event_consumer.py": "cd0711ec3988c4ace3770b8b13c174727a30d00489bc6cece0641ff480ecff1f",
+    "tests/test_event_native.py": "63784acfc5ea2a51af2bc8440ef85d184098625819c596a2247027645e845cba",
+    "tests/test_event_sources.py": "69edeed101939886297799289673d0a9aa12d38bcfad3db58da691f28ceeb1d2",
+    "tests/test_event_store.py": "5097ac7d033cee27305e42e54723c67578fbdc8fbd63d911878c86ef058c3641",
+    "tests/test_failure_diagnostics.py": "b1674e1f1e45767dc487a04e475328d40d334b7ec58a0ef458005dd058a69135",
+    "tests/test_mixed_runtime.py": "66212c44c2abe25f11ab95f6456e4d5fefa0f75118fd02bd1fc2d03b11ae1bdb",
+    "tests/test_option_runtime.py": "577220c8435f60fdfb50a7fa75f5d32a11d17e0172d5fe6cc3979006e5c7fa3d",
+    "tests/test_portfolio_accounting.py": "47572e8c947a15a1d43a50379de8afcf9e64f4681e7d0e09b9136df17bd14e98",
+    "tests/test_portfolio_controls.py": "a9f8502d331e2a05e001a048358af0da139bdc91f4fa5ec0efdd2d3ad5cade7f",
+    "tests/test_portfolio_native.py": "b8143e359ba0f9765594a19acb616741dbea9a3b1971bfb55a6f97846164c33e",
+    "tests/test_portfolio_recovery.py": "1156c389faf151abc7082eedd086447b254cc8474551ac2b42ceda538b8118ce",
+    "tests/test_portfolio_runtime.py": "e7f4908340ae9001a23dbcb738547995badce0f96ef433b1b23e0eab1bdfb9e7",
+    "tests/test_portfolio_selection.py": "fd9bf39a59db7e16826593fdfa5db2642cacde6b445a6d527cdb5a95ba8d3827",
+    "tests/test_read_worker_imports.py": "6f1a6d690ff86492d1f9a613e7a7025df68666a1bc2836874f4f3c73ba6188c5",
+    "tests/test_schema_artifact.py": "2772a74fe3a0208eefea08d1961a24407db81b1fcb933eb43bcf41300155eb33",
+    "tests/test_session_host.py": "a3f78af1bd82e4b694de2687562e17590d228e77e606ebb82ba85337b952c25e",
+    "tests/test_simulation_profile.py": "dbb372da93223674665c89c701803a92db3c6dcb97ad24a1749391368ff15341",
+    "tests/test_swing_history_proof.py": "1b1a59c63144584759871ad163c11c6ee9c55466685538e5d84aa2839ea9f0ba"
+  },
+  "matched_application_files": 307,
+  "wheel_sha256": "c9346e3a1aaa678efbce3a5a79ea510ba520844719461e2d6a27a7fb4fa6194f",
+  "source_wheel_install_sha256": {
+    "app/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/agent/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/agent/process.py": "a51bc6ccadd3a92a66f3e5f062d1c8c55cf4c7513908ecaf11f6dfc59557cd59",
+    "app/agent/prompts.py": "f3343bd68399c2f8ae475bcaa38226be24d20d9b9bd1f43d7868cc5d32867dfb",
+    "app/agent/trader.py": "dfb31009658fa9534cada5a3bdba062921773aeb1b781716f207ffd2b7fc60c8",
+    "app/agent/worker.py": "5d7cbb051bf897263c825dcbf53ca90ea1317fd9ea2fb349b1195e2d858aa849",
+    "app/broker/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/broker/base.py": "e291d4f4307e7db3feb8dc8a74f8d90a57ab57006998da4739c1acdca773a655",
+    "app/broker/paper.py": "0e72abb42d4220ec506ed834a09d7767216d1fdb91c5607c54a59fd8da9a9766",
+    "app/config.py": "5bf4454b67e86e39870ecd80f9fad57417060bda3fcd62551cb1dd27d6a25786",
+    "app/domain/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/domain/models.py": "074dd1cda928cac4c59240b7202936cd28e5be41537ae035d8dd85d44318794d",
+    "app/engine/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/engine/orchestrator.py": "d97548344d2b27e14f300420aeda512612b398fb2ecf8fed010a48522b7f12ae",
+    "app/events/__init__.py": "f4d89fe52bd7b44d11ca550e44429711b65bb9fce009a7cb94d473e2755a34c1",
+    "app/events/adapters.py": "ed3ec4838a71e74dae5da8abc4293bccb4424464a002f704ec86834e3baa5293",
+    "app/events/assessment.py": "9a02b8f79f3f6ac1d3ce3dbf6a74ebed247de18a7a93a5b00867e510ee97c9b2",
+    "app/events/cli.py": "aa907c6ed44b54a4354eeac26ab9219214bfdb35fa218adceba394daa71efbf9",
+    "app/events/consumer.py": "029aef84502e4ca7ac1e045320851dba6c0dc8b615bd4254efce966858600b38",
+    "app/events/models.py": "37a7e32aec0158259d20b9782ff3c2cda68363de2e1cd5b2c38c1c742c266806",
+    "app/events/observation.py": "a73f9caad842c6c9ce9ed88f6b0709f1cbfa80fa5d44c68f1c7f435f721d2a0a",
+    "app/events/store.py": "9a936b36bf2763e9ec756143ddc37146ec4ad0c8e3c1203913bdda14ec016abd",
+    "app/events/worker.py": "c84acf9ee1db8c3cd8ab983d133cce7303c2d3fee6d61b14dfdd1096d72225f5",
+    "app/execution/__init__.py": "5b1a1f8ed77b12bda41d37039a98e8a383cf6a111600790474c135b4c6ede077",
+    "app/execution/alert_cli.py": "f5cbd8d551e486ef50732a7dcc3726ad98bdb3ebfc59a13707eb7ceebcbf4ba3",
+    "app/execution/alert_state.py": "8188044bd862ba978c12d9ffc0bb9a8636deceb7bfa7203b19e87127af8535e4",
+    "app/execution/alert_worker.py": "ea50c1405c8e16cca9b86662c70541e5e084992632a1bb3bc4b08ee6159b57bc",
+    "app/execution/alerts.py": "60c1739ee51b908185f4396ac0177b7a937df132ae1e6df9a96ef5ad9355d6d1",
+    "app/execution/archive_cli.py": "0f781a62b2af05c8f436ab2c4cbf045be27e3121c3b8a10358142f6523e0cb95",
+    "app/execution/checkpoint.py": "4b5ce9d0d67fd5a2b672634a67f99da722cc30a90b8bc376344257dd1483a297",
+    "app/execution/checkpoint_archive.py": "b082d6b55817bc3685b067458688b28761c454f4f35b796151a26c58f99210e8",
+    "app/execution/checkpoint_catalog.py": "90d77667fdf6f263d2427a6b0d0d2229b2badf243cd91b18e7bee5ac3f8d0c27",
+    "app/execution/checkpoint_cli.py": "ebeb6cec538acde157f8b470de339e803c1bc3d2d5ce4912215cefc727cbc615",
+    "app/execution/checkpoint_transfer.py": "e761a3dad2fc3bc0194892dca29a8da4ac0da451d8a4c9aeeab733b8cb249476",
+    "app/execution/checkpoint_worker.py": "e51588e9440254230124b42f8adc6c61184720b0127342c5b6f91a74d2507e45",
+    "app/execution/cli.py": "602fe033b25bb1828c3349ab53e89cb7c784f90e191484374af380ba6e7d68eb",
+    "app/execution/control_api.py": "4505a89af6f1e192e7aecf4888b3a9d4534c377447aa553fa6ef6e0602dd9835",
+    "app/execution/control_cli.py": "8e684b122ce4f3373cd7aa11cfa987345607339276681e3ac16dfae9b9cf7fa7",
+    "app/execution/cycle_recovery.py": "d65bc899292c72bb472d72cd63018ec45bb1ebabd45b52306c4db548049197ac",
+    "app/execution/durable_fixture.py": "ffc930f769fa71775439cb5fcff8f4af9306434abac324b94846aa725329c38a",
+    "app/execution/economics.py": "b3687c640b5dae16a2dffff5b7156feaae5270b3bc7d8b971c7848bb55888873",
+    "app/execution/engine.py": "c20341f9148afab92152d64752d2ea3855af873e3c391895b0f39eecd1d0d81f",
+    "app/execution/failure.py": "f7649292d2b1cae59e19f22cbc9fc07b9a9baef4ff158f1d9709c7a7ee4209cf",
+    "app/execution/fixture.py": "2502ed8cf65f3ece578f881bf164a2aee4f79402d61dab1597402d06756a98b6",
+    "app/execution/host_audit.py": "f1bedc8964308b40c0d266f924a342ed0fad8aae8a66388a2d0a7a4fa70e23a7",
+    "app/execution/journal.py": "6924895110da242b4d307cf951cbf5bc33d69ef3eeef2a05bf17f56dfe242af5",
+    "app/execution/judgment.py": "03761696aa18d9a90321b2006c9873b9d8e81588a09002e9f77c6866e086c33e",
+    "app/execution/judgment_worker.py": "a71062fac3f675d58b90423ee4d03ebe17dda9bd6cdbaba2cb7817305fbc6969",
+    "app/execution/market_read_worker.py": "76cf736659e2e0624d646720e049097b1ab80d783d24d7761fee2867121941a2",
+    "app/execution/market_reads.py": "8081ad3b5ba9e1a1f06c41ffdd8c841c79128b04f328639fdcd123484309e6ad",
+    "app/execution/market_service.py": "2e6d2e7d428123c8b34679b6b846414e3153a985530ead0c0963eeabd435570a",
+    "app/execution/market_state.py": "0a22da2992d7eab08d6616190397ba8a06c11133b4401d80839bf13392914feb",
+    "app/execution/market_validation.py": "75cac32460980e9c197cdedd688aed4df4497b67a2c31751894047b353f131b1",
+    "app/execution/models.py": "bd7953f8904deb83268a6fa47aab5371b45e0c66c5c05f143548b94ed8145f0e",
+    "app/execution/operator.py": "afab88764a45c735affa661021ea45bae0263afa909c44ba67430ab565b64887",
+    "app/execution/process.py": "e48c501b8d40e4dc0c8df496c21c18cf6eae0a2d1607d69b0c944a78eeb77be2",
+    "app/execution/quote_feed.py": "04acf4e31cde95820da7012991f84f27d0696f54de4d5ff0b5692c0c5ca1832d",
+    "app/execution/restore.py": "af2fd2f6d854aff11534091c419924a0d7d7efb211cb44fd444c41cd4f6ef205",
+    "app/execution/runtime.py": "98392c9057302eac5e6776d65455c503f6dffcc3b09c38f8e90bf19ba238c57f",
+    "app/execution/runtime_cli.py": "8139eb161762d75ec1a236f5ac91ad89bbb052fde5698869340e6e7edddf433f",
+    "app/execution/runtime_state.py": "a33777f50808f2774cf47309add2fef6a06fad42e77bfe517971b0809280baee",
+    "app/execution/supervision.py": "d2703bee797bdd376fd0a8d2a237dabd0b523775e45e431715e11843afc9d9c1",
+    "app/execution/supervisor.py": "9c8ccbd53f1f30f97b6da0dd9f9afba62cc81fd9fa2289a368bf6dd1fb991e62",
+    "app/execution/supervisor_state.py": "d45c39a4c5f9f2ec66ef19e43323cfdba7ed7fa49032a390b8d2e1b69e482756",
+    "app/execution/worker.py": "284d9b326d13687683a6b449de5e1e139b7dfc0bfe244ada382f006ba697125f",
+    "app/experiment/__init__.py": "8847392e4d5f30b2c694d7e17746516ea370a43a6c801239145775871d125b55",
+    "app/experiment/ledger.py": "cab86b0f29dd1823365301d106de75499cdf40aad61d70c81f4ea5efbb987c52",
+    "app/experiment/runner.py": "005dd2b54868c4d8323358ed10cc434bd80209bf036cd7f26f4449e3db06662f",
+    "app/experiment/storage.py": "f59d3427dfa63c548b4ab584ede8863e11afae7dc6713ece73bfa5e4938bc773",
+    "app/main.py": "8b534fd1ca9163f32425e1941f921fcfc08feedbfe9601e9dc5c2c31c1241c9a",
+    "app/market/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/market/base.py": "e527b998e783c8abd76582e397129be3fbbe8c7500e49e638ab5b102fb9c1bcd",
+    "app/market/fixtures.py": "983966c15cf60c11a779a2c21d23bf30d5466725851c33585cfeb844cae7bf81",
+    "app/metrics/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/metrics/benchmark.py": "1ff1d24032028506981ffba0f5bc87fe2dc9ff42758e992b1f18b4044b02dbc8",
+    "app/metrics/costs.py": "e9e8bec151d4b54b8be80f093593fff4e68e9da231fcc00810e39cca1624f599",
+    "app/metrics/performance.py": "b6d85372c89fa22d597e1d0fe5f3b694805dd48841cd04338f8fee16ccc17417",
+    "app/metrics/shadow.py": "80661f2d56e3949618d245b297b13dd38a3807923d2167b1a9822c36aeefb22d",
+    "app/metrics/shadow_outcomes.py": "58927dd8b210a26ca8365e978a52ce9a192182781e493c222ed52421abbf8719",
+    "app/mixed/__init__.py": "1e53a357382d183f04ce0dddad65c3d1d34ae4f8ab8326d34f3ec5147a5832f0",
+    "app/mixed/accounting.py": "86b66528f132957a4f475422cd9a7a22535d20332c42a48bc4e65c5e2a3b4caf",
+    "app/mixed/carry.py": "51ba4197b10e4db5a883751be7f69bc38c841d8ca9f80345e86d87b416a8537e",
+    "app/mixed/comparison.py": "5cd7ad64a56ac0eabbca78a9962c0459e1ed91a9069d641a8391e3b7d78538f2",
+    "app/mixed/connected_check.py": "922ccc01ae223f7e04fa47fce7edeaa0287190c5ffd1f685259a9b14b8c1a49e",
+    "app/mixed/connected_enrollment.py": "2abb2efd4e15d787c95431ffa446cf44e65e4b1e3326474fc6e0d09afa9c2cff",
+    "app/mixed/connected_owner.py": "257003d2dd4e7b6d98635f00066219effc14d193ab6622de6ebb720243f331b7",
+    "app/mixed/connected_runtime.py": "276d0684e0a90962261963762d5542f7fd975e732cc0d5e8ff6f270f2916338d",
+    "app/mixed/continuous_feed.py": "4d72f9bb6708de25e13459ffd79b94f7a3479fc2b88ece5504895abbec13a2f7",
+    "app/mixed/contract_catalog.py": "23dbea732389ac2bd17ae0c68330a3a1570cd62a49293a9f17c03245d4018207",
+    "app/mixed/dashboard_reader.py": "97eac1d077ad3b5660f75ac3264a86653ea86e1ba28566546dd571f7243c6ece",
+    "app/mixed/dashboard_snapshot.py": "991d737eb5c4e7ad1d125e5f72e889d850ead9bc64ab5560bf50c23b8af3a6d8",
+    "app/mixed/entry.py": "f20cde63c713668e37d8756528536664600ab5dde2eaf66a432afe24137a375b",
+    "app/mixed/feed_cli.py": "fdd857546d0d73198d59c9a63ca1cb68d4ffc8086d56f4950c3de8b0c535ef32",
+    "app/mixed/feed_rollover.py": "202c2fba4704b76a5ca2990ce8a06fc10da575030a2eb7c968b14302fcd46e1b",
+    "app/mixed/governor.py": "677d8590c6438b3103e604faf879697a49a02a8b227c34b3fb8083b5ef5a3e1b",
+    "app/mixed/host_bundle.py": "8e6894810db8e5fd46d5617cf194df5a3a055c090a95f03ac6647ed9c08f97b8",
+    "app/mixed/loss_export.py": "4146f05678564b0318b99eb469a71431efbc28ec7de8019c7085a1ba6d7df84a",
+    "app/mixed/market_tape.py": "05dffbc2a08d9b824086e6a94759c1db4bbaf1415d97928c501afe4069c00d92",
+    "app/mixed/models.py": "4d7fdc5504c6b86186aa445bb1be57564e5a0e276c295da0e421f2a3e2d2a3fa",
+    "app/mixed/native_execution.py": "43034e90ded3633ed68642abc7edcdaca64afd3b9e0d4db4109b16ac31bc53d6",
+    "app/mixed/native_models.py": "083d3243bf7d1eefe08c13460e7f47aeaa11967b63ac9d21620d29a778262e91",
+    "app/mixed/native_outcome.py": "9baa86a2ba0ccf4a13a91545b0f23085015dbb9efc63e4887f47956d5ed8fcc4",
+    "app/mixed/native_protection.py": "b37d1bacba1642c17316e5951cdcbaff888809df9c55e24e58d96af81d702b8d",
+    "app/mixed/native_store.py": "54f2ed66a979ab6352ee63f0a17ddd87390152e8cd82308918d23cb822d06f34",
+    "app/mixed/observer.py": "08b09e203e23b88c2c9088f885b7eca3663c466050f54fc9b387728fb4958058",
+    "app/mixed/paid_costs.py": "b479e0434f69b730f51711d84f8201859f9fe5f262feb6511dc4f06b94d923a6",
+    "app/mixed/portfolio_accounting.py": "ccca2b4e3c6da45d31a4fcca6a50aa09878313246e9f87951f9af0918701b0c3",
+    "app/mixed/portfolio_admission.py": "feafaa6d69452ce86920062ecf2efa7b50d7ad1f4613901f78d3800999fb99c3",
+    "app/mixed/portfolio_capacity.py": "8301082d2fb566849a26210d7ceeee8108fd9ea90decda793db191a26e1fa9d0",
+    "app/mixed/portfolio_compatibility.py": "44e706d0c165de20e8263666114732d6b8f01edd41a3837b48742df02ddff36a",
+    "app/mixed/portfolio_controls.py": "31ed32e233ebf864115330ca018a15387846563a3f5194e4dbea92a0b87029f6",
+    "app/mixed/portfolio_execution.py": "45747ac438b34ea1e87481d15ca7e1e174f6092c5e6a209095663348d88fec6f",
+    "app/mixed/portfolio_loss.py": "11cd9722290949f70970b9131d60932edb36150b7da807996e9402966995f0e9",
+    "app/mixed/portfolio_management.py": "097a7d6b59148cd4bb3bdc036b52785859cbb2d71ce992c5316e6d499e3e7dfa",
+    "app/mixed/portfolio_models.py": "0b7885c3c154dcffb1dd973076964c9db095c930872e2e3e003a0e19b9560786",
+    "app/mixed/portfolio_observer.py": "5fab1c9a967ee5506e769f2f1360bdeccfa39b7527edaf725e995069f817b1f6",
+    "app/mixed/portfolio_options.py": "52d1d1445c3f24526d426126505cf9d149ae6b6c5d7370bdbbae293941ac14cd",
+    "app/mixed/portfolio_position.py": "99002d8bfe660a463edd97828197eede9db60a1999e62d21c1f4917d494cfa63",
+    "app/mixed/portfolio_protection.py": "fadd717a17d99cae115b88f4eb082402d488c3d65fa10c45a3e3ad9c67118040",
+    "app/mixed/portfolio_replay.py": "3b23b40be49e761e98399e8f012096a1d334de3970550e166d722fe8bb8f8730",
+    "app/mixed/portfolio_selection.py": "83aa80a043f3582eb85413e570754bea76a424467a63114b63066e0df99f7632",
+    "app/mixed/portfolio_store.py": "c735e937bb23b2df96d4aa3737321539e3bd51e41176b1e8c7f527de122bc7a9",
+    "app/mixed/portfolio_targets.py": "60892c1d651731214ca99129de9190da5c5e9be49bcb3baaf7810ccf8c8f4ae9",
+    "app/mixed/portfolio_venue.py": "bec9972348f05ac4b1943c60891157f71e2610c7ea6d7d110e3f1acdc60bff7e",
+    "app/mixed/position.py": "c64a9bda1a127cd140d63abcd5ff8385f9546b3e680bfc5b1c5867bee0cd7691",
+    "app/mixed/quote_fills.py": "a03902e6013e0c8c79cb98b3bc02603f6bfba5da6d20e8a09ee3b4f473b29550",
+    "app/mixed/replay.py": "26d924c661473a2f0bd8e32e85614b25d124ad6b4f1ff42019dc0d024102c434",
+    "app/mixed/replay_cli.py": "5dc3b3a7811e0910ec796b9c2db3b211886b0b69478961a0a7abbeccaea83393",
+    "app/mixed/replay_enrollment.py": "8145404347e4c1091b16be1a1fbbf71314bfb9bc6311c48c9bfad95e0d455913",
+    "app/mixed/replay_export.py": "c551c18b0b24447e12c30f12c9050c4fd21b0c690694758da2a74982c9ef8845",
+    "app/mixed/replay_model.py": "a572b9320a9c5bacd0d387099b8cacbdbe0899e6bfca93c2f3268e66d2910f07",
+    "app/mixed/runtime.py": "84a82c3e1646b25beba560965219cd08664f7e53124f2f4ef66d2b4cbd5b588a",
+    "app/mixed/selection.py": "d275508506f3142b2e2e14b1d4413f399672f326ff32b4a6c5ad9fefbfcdeac4",
+    "app/mixed/simulation_profile.py": "30f3b96208dc0571f7b6316d147d4cc4445a99c09621c5bac954ea2a05ee03b9",
+    "app/mixed/sources.py": "14df254a29af4c37cc0308fd1bfb46add2d44c15f5b8054e02af76bc968d7ba0",
+    "app/mixed/stock_models.py": "f7f769faebfb4cea46d1c572a5feb6eda977eb52272430b7c5babd86251ed763",
+    "app/mixed/swing_binding.py": "ce31e6d17546197667f3601c44e080fc066e51539be791c76cf4aec6a1027909",
+    "app/mixed/swing_delivery.py": "f9c74e778ec9b10abc83bc2e390cd58c1775771f47290dc3ad0e9bf9c7b6d1b8",
+    "app/mixed/swing_feed.py": "121e8d3aad7e5a827f3d67fd4ff7662d2b2da7245eb1092651768500dc839881",
+    "app/mixed/venue.py": "bdf962e79fcea905f1385c783e79027d9ca6f0ca0d9d5e3236470a65443773e3",
+    "app/options/__init__.py": "f5350c6dd10aea52073007fe144ffc8a38b31e9e0c0724b53dbc845721102f9f",
+    "app/options/accounting.py": "17a8afd357f700527a353795c06b08c4a6ba1f151decada89c1f5129070d0d0c",
+    "app/options/attribution.py": "d1daa4a6aa335bfc1792cfc1802993f641a0b5fb3c4c05e4a61723b8de24a6b6",
+    "app/options/carry_models.py": "34d91b207350037ec285acfde18e828c79ffa63ae8fe4a075e78257f59fee8ac",
+    "app/options/comparison_cli.py": "c4359e1750638d33ccd6fe787f9b5417f4e7ea21a52ee86989efc400d7be10a0",
+    "app/options/comparison_view.py": "9e71fd53b1b0c052faa5746b7f7f5153175e4a243c743c4162ac64ec30aaa28b",
+    "app/options/coordinator.py": "e35364cd3039d19e1f570b95bcd64d66db4b4c6c0cd49d5616411846f16a0347",
+    "app/options/degen.py": "2819639d7904fcf1dceeb8fe0585768650c78bc4f90788fd436c4db77998adac",
+    "app/options/engine.py": "0565419ba159d5c9c3a0086de6ea49a271dcf732987b8d37580eb5fefb4cd308",
+    "app/options/entry_coordination.py": "8e8b7a44ed20fe06d0ef7e328cabada54ba33962454699861d97eb6a0131a07d",
+    "app/options/entry_judgment.py": "a6c88706e1100f6620d0c9c662b4c4f502071e9899499ef92d68210dfbe160f6",
+    "app/options/entry_judgment_worker.py": "11a2bbab2f1e2ff8b6b8db3cacfe3c04cb222d53a4203762b542425557629940",
+    "app/options/entry_lineage.py": "6f863020e42afe0d2eb9ba6df416f5b174853b62fc3c118d44f8b3cef2804d11",
+    "app/options/entry_reasoning.py": "de7053fc66967a2bc4301642083ea58ea3fa812a5551ccc9ade96a36a8d967a2",
+    "app/options/entry_reference.py": "41699145f755f765f5d7ec9b4fdb2268d4adb6f0a7439efb712059f48b7b1648",
+    "app/options/evaluation.py": "7527b1e8417a484c7b2e372728b2cf72e02cacb4b3ea34f48f983da284d681b3",
+    "app/options/evaluation_cli.py": "5e93ef1ce8fdb6cfc31e5df479b4eab45914901385a451b7e4eb5a67155b9950",
+    "app/options/evaluation_export.py": "87460f63e31d42233027462de7fe1c3463b0090f683ad82f74830ce009b5e7ab",
+    "app/options/evaluation_export_cli.py": "36d2c5f656b3055884775abe38f1ff6c7a327c1c9d968c7cbb69f5eca93c6eb6",
+    "app/options/evaluation_models.py": "5d4a1cf32eaa8d7b26b643d7b5d0cfe4f6ea5b934c14489b78deaa5b52f5137f",
+    "app/options/fill_evidence.py": "eb87ae01c013a19cace62834cc2169dcf3f64312f796cb9006361f22f8540b2b",
+    "app/options/governor.py": "3d7473649ef11a6e222ce6ed5de8ad750f1726d3af9026647d843adf76197f8b",
+    "app/options/greek_health.py": "1276b3bda68bd600b8787374987e724f7a52fffedba416f9f7048390754cf0cf",
+    "app/options/health_management.py": "6631a2489096ef39c7d520dfc82f3b5672420a6c380290afd1027b7f01015d2c",
+    "app/options/judgment.py": "c0b475927cbcd1dce935f0c391ffdb242bc16f9541330dba3281778ab7d9f223",
+    "app/options/judgment_worker.py": "e34ed58995acbeacffec75e31f5418b55421a0ce7d6618b3fb54eb5caf8125ab",
+    "app/options/lifecycle.py": "b27347f58e626a4e253ad6ad6f92a9b2dd9cf7aab156560d75d29fc4d6224f8c",
+    "app/options/loss_control.py": "f5463def665e3d3beec541170505557242feb4926a51e3c55041ff4561e94bf8",
+    "app/options/loss_evidence.py": "79d0d8795a0b2a3216211d91a3d6ec5fb40b774cc22536ec3765d022e2d7d8ee",
+    "app/options/market_tape.py": "a58e64480020df7e584f136418cc7f9c8eed844e7c80b24e99c40f26cf114028",
+    "app/options/models.py": "02cee124423b21b0f13b0b5d42a33fe56a0b1c51359e7e07f10e3d4fe2903867",
+    "app/options/observer.py": "63eb6614a3f13a57d2717f05badc5fe0dd677796bd3f74af62db983ca915e875",
+    "app/options/observer_cli.py": "3fc0e18379f058274be58e2b884069d99c1db0dc71ff6d56226ffc509a54df14",
+    "app/options/operator.py": "ae97a298cacabc339f18a59fe78b030b0cdadb4eca5993a53a90f7c246238dcf",
+    "app/options/operator_cli.py": "168c8efb984e53b85fa085c3b27787f8850ff375128bbec197d9a80aa5ee2bc3",
+    "app/options/operator_inbox.py": "e89834660a77f4048acdcfb772aee1bc534c90a2db6b544fecca9ac12ad41bcd",
+    "app/options/operator_models.py": "a54b735fffee473526861e4cd1ec96d9363a38d7eb459c4cb3c98691dbcac972",
+    "app/options/position_coordination.py": "166ae4701feb344dd90ab11b0b6022e71e7266505ab152b7a8d0a7b0b0c36531",
+    "app/options/position_judgment.py": "f55ff8b65c76330d8a75111cf238018b788b90f584ad9ccfbcbc7c47a326c0a8",
+    "app/options/position_judgment_worker.py": "2b6c3057a7d5e094839c384d86f29518450d9dd9dbac7e00f3712d31f089bc06",
+    "app/options/position_outcome.py": "8802865ec1e0120974a34fc913ef086a2f260762171755369114e19966dc8901",
+    "app/options/position_reasoning.py": "80620112544a0cad4a2147ce8c8b992bb480c1fbe483ca00af15c0e213e86360",
+    "app/options/premium_trail.py": "57161a742685f7f6d3e7e8adfa000c0d88a60f56165571df168975ac987b7a7b",
+    "app/options/process.py": "0bdfc6930ef32fa0f817eb3bab880466967b2fadf6dea7342c9bd7b9fa9db050",
+    "app/options/progress_health.py": "cefb0273d2441514a4a2df32a215a51fdcb3df01ff790cc4a1ed597987fc6e1f",
+    "app/options/protection.py": "db3b858b795e49c61632b639957829dd591c84caa69bf7ccdf476624244c3bc6",
+    "app/options/read_capture.py": "3337a45d188f7cee58f84e92004e038813cdf20a4cec96948641d3734a2415b9",
+    "app/options/read_cli.py": "0e5ddabde76eec2b5ddfeb9cff788efbaaedd88ebfa53d6f2b9cea8598de3fb6",
+    "app/options/read_gateway.py": "9dd10c232331a2a5a7ce0c1333a0155018a0b50b923b1ea5181d854e78bffd8e",
+    "app/options/read_mapping.py": "3eaada5321ee4780141952710bf1d61974deaeacac3a838e3c6ee7cac2db6585",
+    "app/options/read_worker.py": "e9585b3e238d9bd16d375df2f3ac6b6e2301ed1033db6ee3638c89298743f026",
+    "app/options/recorded_evaluation.py": "c7e3ea566bbf9ded6eaca91e011712e46db88519aa1e68044f593d5cf01decc7",
+    "app/options/release_identity.py": "ae93c4b0250ec6e7445ba0a11a76f659cade7fb43c1f46ebe5be94262aa7d54f",
+    "app/options/replay.py": "39b17d82f2fc1b64bb6baaafb9a2cab2b96be819c8648fc8608e358cb5cbfd00",
+    "app/options/replay_cli.py": "f7d2715324cb9f15f486f08b610ca35e9936c15400db64353913f76d611f6d7f",
+    "app/options/replay_model.py": "154916ad41aedb576f092120b22ae47ef4a1607996b63af30d68d99bd7d35666",
+    "app/options/runtime.py": "9aa83b1770404f65fb26aac916563cddedc439b564b568403d07cd6c32e1436f",
+    "app/options/runtime_cli.py": "bcc57824ceb7545c032ab15af94199f4308b94acb21ebc9986aefaf3e9b803bf",
+    "app/options/runtime_models.py": "72df447275c654f00b2ba2fc6ec168b665e0073aa93c4a88a5de80097796daf4",
+    "app/options/runtime_state.py": "e9e612123186b395b7c59499087e5cfa29d4d57e159b48d42c6e6e728af53081",
+    "app/options/schema_artifact.py": "62680bd3c81766cc2b387cea8b2185e34307166f5a3831bf7902a887e76516ae",
+    "app/options/scope.py": "e44dacf7b4167d9d7648ba55c2f2a9a1c36c595824087c75fd0eef084c512c6d",
+    "app/options/scope_admission.py": "7c4d43993921bfa07b548c31eb7303422ab72a94e445a8dd957cf477b4888347",
+    "app/options/scope_ai.py": "1bfba5583cad2037b11d09c7cb376af1ce7be51716b6253cb4e239677bb4869f",
+    "app/options/scope_arbitration.py": "527023f9e207d5bf905f330fef27e0f67610448400ff40374008e353f4218c25",
+    "app/options/scope_carry.py": "3f0706f3bd6f995effff97c34991dd4055ca94ccf35bf7e0c4de0da98ca4ba06",
+    "app/options/scope_carry_replay_model.py": "d5a2582332f8e93a6a2180cac62dc532a0dadaa332344b803a8fa69769c2286b",
+    "app/options/scope_carry_series.py": "b44e8950b0821e2a923bf124e7c5d180c84a4b8d4caaa1b1fdc3427450870176",
+    "app/options/scope_comparison.py": "d900840cc6828e4f1aa72b64d4fe6708a4cbee4bd2bf8c3e1b9b62935fa4e0c6",
+    "app/options/scope_context.py": "0964a4d857b9aab23cf44903a561ff1c047336a9aa0629a18268360e2225ad97",
+    "app/options/scope_contract.py": "74a64e0c821302c8c6e1eb6a66fe1d5879a4a1a63d3a3ce5e02fb604bbbe53b7",
+    "app/options/scope_entry.py": "ee3d868a28650d05c9ed350cc80500d1ce42af4399f2b50ced11e49bcf094999",
+    "app/options/scope_execution.py": "1ada072756a27cc959c9dabf9cdeefdef9bbfb721a34e5e6b4f90dc85dfac945",
+    "app/options/scope_execution_export.py": "bc2f23aaad68e795608877436fc497ddad779bf8efe76aed885f75f1a179cc1f",
+    "app/options/scope_execution_replay.py": "998f233d7d0c543c65f57adc7af3b3ac4732d79420421fb5ad184598fa0ab0be",
+    "app/options/scope_management.py": "39c1ff8ae87f2275347c7d022bbe1b0143d5998f7c92ebcb8c8cc664d1c41787",
+    "app/options/scope_market_tape.py": "67feb40b19683fda1bea420ab671d59d2145c3e6ef3912b0ff3a5fe50925bd84",
+    "app/options/scope_model_replay.py": "880319b050afd51038bbfbe76fcabc4524e513005afc6dbea6058fa5f1c679e4",
+    "app/options/scope_observer.py": "9a8c69b0198650a75803d5a02cb5b790c3e45c8db45e559c191b97bf6e637d58",
+    "app/options/scope_position.py": "387ab24413306deb9bf0f46c05c108213176865c82217eba9a197fb90d1575b3",
+    "app/options/scope_quality.py": "9511fa39c4fa1e3d7dedfa8f9fec466f7d8152009242e311a5830d6ffc5e2739",
+    "app/options/scope_quote.py": "22e794eb2f5ff8e86d164a561a31bb1424a781d51346b1abbc9607279b9e2182",
+    "app/options/scope_reapproval.py": "35e1cfc417a3e26af50905bcdee1ec6df2e34b92c573a12cab09893cc496f0d5",
+    "app/options/scope_reasoning.py": "e26b7b10cdf41aee0bd6971f1dba2d61b03186371f37d47bfdb293bfb7db5bd5",
+    "app/options/scope_replay.py": "bcb75db8f2563a0f94e896502759d34c8df177e0a93aab418bc871efd9986d61",
+    "app/options/scope_replay_enrollment.py": "bd67d21b9759c6329a732207a56f7c9788131ce74ad536f6b748c718db1c37a3",
+    "app/options/scope_replay_model.py": "1dbeb4570e2e9839d2cae4bd3dd14202a410a81d4a6302bd22fae909f39a617c",
+    "app/options/scope_replay_verify.py": "dc7e2d5755db24f8eb84d0b169fad075b98c4e74fad8de1dfc12898d81ffa552",
+    "app/options/scope_runtime.py": "ff5f7d00925542c3f51d0d8efd90c367efb7e1a7a51453d1d38789525588d971",
+    "app/options/scope_series.py": "2f8e3d91a1328230e257f1b8e1dd02f381e4d77783a0bbcb0b03b3f6a8d2c301",
+    "app/options/scope_shortlist_replay.py": "ac3a9d5d72ee52c95c2fa6b41c6065b527af1370e58f884a57e741c3a9114902",
+    "app/options/scope_structure.py": "032458bc415fcac275a21aebdae58eb86f4198bb4b852734aefefb9950626cb2",
+    "app/options/scope_tape_watch.py": "61eaeddfc6fc2301b834ab800dc7dd68f8c940f56f33ef666fe58aab66079376",
+    "app/options/scope_trading_replay.py": "96c2382c91cdb35fe8611e0d6b0622212520c1e175d4c222a491bb11ab33f6bc",
+    "app/options/scope_watch.py": "147a729e23fabe963c83c69abda0615587f8aa2a104885664c6056cee847fd10",
+    "app/options/selection.py": "133f66fb65e8600e114b21bdc8500967231d2834097636eb7ab6cc3736366dc1",
+    "app/options/session_analysis.py": "5d16f28bafb410f1316dd732b9c9325bfd40b06041a2a89c83ded7c03043efdd",
+    "app/options/shared_strategy.py": "602db732e2e65dcd4da417ee6f1c1a684b291a311cf9c010b65d2b50f98f311a",
+    "app/options/swing.py": "4e3fa1868b37ba60a085d7e50a54d1ffc44a1f016d59d8cffd5fedd52bab15eb",
+    "app/options/swing_base.py": "0967dd9df4c08c78742901f1e4e17b5bff09ba4d5902027f38185e3a8c9be648",
+    "app/options/swing_base_models.py": "5f1c83482262cecd069eab55e0bc7179d7a7be1018fb1fec62e5d2de1b7d1ffc",
+    "app/options/swing_batch.py": "90143f9da47c17d458fa2937c0ad30376b19661c6a7006283bbe0584de9c15f3",
+    "app/options/swing_carry.py": "c0f1ca53eec1df17a24a71457665d650d90d62c3fa1153cc5e9d83fbbce30465",
+    "app/options/swing_execution.py": "e290b5bd499f3f32599b28ac86e1cfcdc79655cc6c78e915de3b6a042a64ecc9",
+    "app/options/swing_level_models.py": "418994dd6de9ab9189aeeb8d2fc70ccea7c2691d0a8c99eb2f9f115125242203",
+    "app/options/swing_levels.py": "8ecb3c59b68724e20b7fe970b028c66cb79b9001cf28510fc10b1325783a2a62",
+    "app/options/swing_lifecycle.py": "ebbb790e5c49b89690aa20f0d4e584ee3e4b83f68e49cd083fd00be5e5dba373",
+    "app/options/swing_ma.py": "13b81f0117b93b6f6c5b3f421f87f9c81b148b9d82a348a9572b4ef61040d1fc",
+    "app/options/swing_ma_models.py": "5df5c70f7412ab704af4e92ebcc547735ee58c9823363dd4d7df315479a67fa6",
+    "app/options/swing_target_models.py": "f1e7ccfad3fedf9bbd368a666f7d28e978c9d866bf2f727561cbfb67f16912e1",
+    "app/options/swing_targets.py": "ac84f5a2bcb839e727aa7ecf2b3c4719af02e2b0b4482391c329c4f5d13950ad",
+    "app/options/target_exits.py": "cd7f4ebe2670f04d68bf1182658143237ff353b9422ccd73becac6341db9f4ca",
+    "app/options/trade_floor.py": "a2653fb17a43cc33072230bdd89d1bc9e4b151db7fed61f35dd29d83fa9cb05a",
+    "app/options/underlying_baseline.py": "7e71b472a992375b3ea7816b4704add31febace7a899d93ca66192274403aa82",
+    "app/options/venue.py": "3fbe75685e67e6a777d3de7465d1aa363dce3cb9f2165dec798bb297a96cc9ce",
+    "app/options/worker.py": "9ddddd88286a2c2b50644d51564fa3a331323916d92c684e95a48c04b36c2eb2",
+    "app/risk/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/risk/governor.py": "c5469e898d90b9d7a5e38a7e8dfcca833bfc890bb52fe3168f93882edbea1787",
+    "app/risk/policy.py": "94ff6db26e3ced6072771ad73efd3b6c6db5483eabec7e7834cde9b29769a75b",
+    "app/risk/sizing.py": "343376e88c754973b9e41718306957431ff278f0a2553ad40bc2c4b1026a3ab7",
+    "app/robinhood/__init__.py": "1735b009e8236263a9a58e6b650928c32528f260616c9c923f72d2b58b2aee0c",
+    "app/robinhood/backup.py": "1b7f31157f16faafb4fcc6af1957b3a61417492310805c15221d033bfaf24f91",
+    "app/robinhood/cli.py": "180a649733ebb75e27b8802ea613b880ded5e66dbd66df58a20cbaed9da370dc",
+    "app/robinhood/client.py": "e5f925f5f24a560b9c4fe44c374841dc09b4451acb26985d823726b7047244f6",
+    "app/robinhood/gateway.py": "372e99639a32f449aef787f570228dd606aa8137bea5d874354275f136bff817",
+    "app/robinhood/market.py": "0853824b1842e55f77b9934ec90db64684ab6fad1aa0a7d7fab5c0f2bd75d8c5",
+    "app/robinhood/models.py": "b01c211f9ec66d7a3f9f8277c8724ba62e28ac28991e3013872c708b2c3423d4",
+    "app/robinhood/read.py": "3dc0ad4a17f96b5bc422a0790630f5f04e899485ed23a95713b9f467d4c03c99",
+    "app/robinhood/reconcile.py": "7bacb1fa86f5d53ddad71177cb7268d2e02d50d3885e68bbcc599862fcb65d67",
+    "app/robinhood/schedule.py": "ec446216f860e54fdec0c1dca31578e0e6514e8037da22ad740dfc4bf0912b8f",
+    "app/robinhood/service.py": "71298f3b50693b14be21073c7d9863ef611cae4d40070e7a0b7c1b039ce939a4",
+    "app/robinhood/shadow.py": "f321817b8c46fdc77a54a8b400482cf178cdc53434abf20fbe1b7bf9d43eda32",
+    "app/storage/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/storage/db.py": "ec2044807e722fa80b2fbd3c95c821dc625c117cd610f21b779089ee73435017",
+    "app/storage/models.py": "aa354dbc7ef8ef0d13a25bc3caecfef245ffde6e4973bba767d5078141754417",
+    "app/storage/repository.py": "9d0427571749dded95fbdbe2d98b012a1c086b081b038349d1878fed75f3c02e",
+    "app/web/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/web/mixed_view.py": "bacfc87bc0079194db585ce54af8a88c7cb49404c7e1f8b58e6443a05723ba4d",
+    "app/web/options.py": "3d3d5db09b97187ffa1070825f14b19a92be2bc5d4b904bedf0751060c1d0de0",
+    "app/web/portfolio_admin.py": "8f2c5c61a982eb33f060bc6ca36af42bd80c2e44c3f2eeabe664c3ecbf0e38e0",
+    "app/web/routes.py": "4b121a676d51f4ddbe68dfba076a8ecec7f7aaf5f8de4ea0d591887687d57332",
+    "app/web/shadow.py": "21c72c53914d25fc1c5ff4e7b7eb43816200369832826697e5550b1a5a3803b8",
+    "app/web/shadow_data.py": "01b3fb546bcc6878cfce219991035e2207eeb5b8f997af99baca3d293da4594d",
+    "app/web/templates/index.html": "912dd01626f2c163a9fbf5b31d40f1f66f52a75c4d7da0d658c759ffeb896469",
+    "app/web/templates/mixed_content.html": "d651b1cab4b8accbf1c1455ef6f148613f91189ff46e66249acf91db79ae87d6",
+    "app/web/templates/mixed_costs.html": "d9ed7d7cff84ce1727ad2bf6f10cb08843e83698544c37873a7b85d056c2ff3e",
+    "app/web/templates/mixed_decisions.html": "8e91f92b90e56d61601377f0c5e74195c9f234d28a42a062aa11f3e295323d39",
+    "app/web/templates/mixed_desk.html": "40d6740ec7a9b52d5da11c1f91cac44c46c8f5b9654432a017f0210ab4d1c92a",
+    "app/web/templates/mixed_desk_script.html": "6f1978e3b487ba698c6e569df4d5677c49b1391d9ec601601ad1886c116ed3ee",
+    "app/web/templates/mixed_live_script.html": "07f4985087e446ffabb7a75a5b69a0319cd8f598103bf169312b34662e7923d8",
+    "app/web/templates/mixed_orders.html": "e82bbaff56c3f4674ad78d7fcb74a7402452f26d304eae4393ababfad3abe6be",
+    "app/web/templates/mixed_protection.html": "b59a6fd1e97548d852bc62f43bd8d912c4be8a611ecc2b3ce54503a17a8eb011",
+    "app/web/templates/mixed_stream.html": "079d2a635b945d90c57f381e170c9828c862ff4d6444182ae72a55b29c4e5844",
+    "app/web/templates/mixed_styles.html": "27660f1f0da26ef3df7aaaea50886f25e80a73101f2e6747d783ca797a93dd54",
+    "app/web/templates/mixed_trade.html": "960128c3c95ceda73a072905c693283bd51111d4460cb4135d26d8568b1a699d",
+    "app/web/templates/options.html": "3b805b6f202bf69d18a9abcf32e11e1509a81854bfb0b074fe8bbb369cd63958",
+    "app/web/templates/options_briefing.html": "8e976d7f829242df9ca9be727f75edc1abe33da2939bbab635f5895fe68da039",
+    "app/web/templates/options_decisions.html": "f36aa3e5f856a2a68122cc46aa7899628838f5333d9da8efc03a333552c8ddee",
+    "app/web/templates/options_desk_script.html": "e560bfcfe6b39ac24ec54f0b000f14a82a7f10301359826847062320187e1060",
+    "app/web/templates/options_protection.html": "6f65df5811a332d341791150abc20568008e99c75ec8d91ff997ce872d9ae80f",
+    "app/web/templates/options_scope_evidence.html": "6305357131fa50c0a9f9fe56e95722f1f257195ebc7535a034a826097358b1cb",
+    "app/web/templates/options_styles.html": "acd7219e31ef0b2c7c1e9d6ce84c516b71eeae0285620be843596fcca6ccb7f9",
+    "app/web/templates/options_trade_card.html": "13b1b208d4b705cb39970d7a295447bed6a5d76e0f0fcf6505a9d957c68ee87a",
+    "app/web/templates/portfolio_admin.html": "4d8a3461f9ea7598c8268fe1f89220b0236bb9429118f2c94cf07a5dfeffb3df",
+    "app/web/templates/portfolio_admin_script.html": "b259f828253922434ddb336514c9a2016479f3777935ed45b7e75dd15d5ca231",
+    "app/web/templates/shadow.html": "0b3c526891a745cf268cdd579e7d69a28175215b2995e31f8537a88c6d0ff10c",
+    "app/web/trade_rail.py": "dd0b83915c95441aaa69108a1cb32198bf14b2ad739b8336974ada7611eac7b8"
+  },
+  "verification": [
+    "All event boundary, source, revision, snapshot, audit and consumer checks on the combined runtime",
+    "Native two-play accounting, controls, selection, runtime, recovery and mandatory protection",
+    "Blocked/failed event collection and consumer processes do not delay mandatory exits",
+    "Current base owner-path, publisher, connected-runtime and diagnostics regressions",
+    "Cold worker imports, option catalog, schema, session host and Swing history helper checks",
+    "No native application edits beyond importing the verified base",
+    "No event application changes from the previously verified feature revision",
+    "Latest base source-of-truth text preserved in full below current feature status",
+    "git diff --check; no unresolved conflict markers"
+  ],
+  "provider_calls": false,
+  "model_calls": false,
+  "server_workers_started": false,
+  "deployed": false,
+  "enforcement_enabled": false,
+  "live_enabled": false,
+  "base_or_main_modified": false,
+  "pr1_edited": false,
+  "remaining": [
+    "Provider credentials/entitlements, exact costs, coverage and original source-clock acceptance",
+    "Host observer scheduling, process/UID/mount isolation and missing candidate-context delivery",
+    "Backlog alerts, long-term retention/archival and real host/source-detection measurements",
+    "Unsupported event categories and existing separate Swing catalyst/Scope input gaps"
+  ]
+}
