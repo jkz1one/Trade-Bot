@@ -108,9 +108,27 @@ def check(directory, feed_directory, policy_file, schemas_file, *, clock_source=
     from app.options.observer import OptionObserver
 
     with OptionObserver(feed_directory / "collector.db", policy.population_id).read() as db:
-        row = db.execute("SELECT configuration FROM control WHERE id=1").fetchone()
-        if row is None or row[0] != fingerprint({"policy": policy, "schemas": schemas}):
-            raise ValueError("Collector settings differ from the enrolled feed")
+        from zoneinfo import ZoneInfo
+
+        from app.mixed.feed_rollover import load_rollovers, policy_for, verify_owner
+
+        try:
+            rows = load_rollovers(db, policy, schemas)
+            verify_owner(rows, state["owner_configuration_sha256"])
+        except ValueError:
+            raise ValueError("Collector settings differ or rollover evidence is invalid") from None
+        target = clock_source().astimezone(ZoneInfo("America/New_York")).date()
+        effective = policy_for(policy, rows, target)
+        result = connection_report(
+            settings,
+            effective,
+            schemas,
+            journal=directory / "options.db",
+            directory=feed_directory,
+            now=clock_source(),
+        )
+        result["rollover_sessions"] = [r.target_session.isoformat() for r in rows]
+        result["effective_policy_sha256"] = fingerprint(effective)
     result.update(
         version="connected-runtime-check-v1",
         owner_state=state,

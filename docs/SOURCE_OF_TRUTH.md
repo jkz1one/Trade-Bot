@@ -1,6 +1,19 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.139. Guarded first collector enrollment, 2026-10-26 EDT.
+Version 1.140. Explicit future-session feed rollover, 2026-10-26 EDT.
+
+[Future-session rollover](FEED_ROLLOVER.md) now appends reviewed catalogs and carry
+intent under both stopped-component leases with an exact review hash. Immutable
+session policies preserve the base configuration, owner bankroll, held quote
+coverage, read budgets, delivery sequence and old raw-bound Swing preparation.
+One transaction commits the receipt chain/head and protocol guard. Older binaries
+reject the new guard instead of ignoring the policy. Read-only runtime checks
+verify the chain/owner and report the current effective policy. See
+FEED_ROLLOVER_PROOF.json: 176 unique installed tests passed and all 290 application
+files match. This completes bounded explicit future-session rollover; automatic
+catalog discovery, long-term retention, full host setup and eligible feed inputs
+remain unfinished. Server unchanged, connected simulation inactive. Slice end;
+more offline coding remains.
 
 [Guarded collector enrollment](CONNECTED_ENROLLMENT.md) now reviews and creates the
 first collector against the existing unused native owner. Exact configuration and
@@ -11,8 +24,8 @@ creation. Read-only runtime checks now verify the complete frozen strategy ident
 through the native serializer without opening model keys. See
 CONNECTED_ENROLLMENT_PROOF.json for 205 installed passing cases and all
 289 matching application files. Initial collector and
-supplied carry-schedule enrollment are implemented; schedule/catalog rollover,
-full host setup and missing eligible feeds remain unfinished. No host action or
+supplied carry-schedule enrollment and explicit future-session rollover are
+implemented; full host setup and missing eligible feeds remain unfinished. No host action or
 activation occurred. Stopping reason: slice end; more offline coding remains.
 
 [Connected carry intent](CONNECTED_CARRY_INTENT.md) now accepts an optional frozen
@@ -21,7 +34,7 @@ restart verification and runtime assembly use the same original intent. Native
 calendar/expiry guards apply; no date or catalyst clearance is inferred. Absent
 schedules preserve legacy hashes, while changed enrolled schedules are rejected.
 See CONNECTED_CARRY_INTENT_PROOF.json for installed validation. Bounded carry-input
-wiring and guarded first enrollment are implemented; schedule rollover is still work.
+wiring, guarded first enrollment and explicit future-session rollover are implemented.
 The host is unchanged. Publication is a slice end and more offline coding remains.
 
 [Continuous delivery fixes](CONTINUOUS_STRATEGY_DELIVERY.md) preserve quotes between
@@ -35,8 +48,8 @@ validation. No runtime schema was weakened or data eligibility promoted.
 The catalyst provider adapter is blocked by a missing reviewed source/schema:
 none of the six fixed read tools supplies catalyst/news clearance. No fictional
 provider or CLEAR override was added. This publication is a slice end; other
-offline implementation remains possible. Host setup, schedule rollover, Scope inputs,
-eligibility and candidate replacement remain unfinished. Server unchanged;
+offline implementation remains possible. Host setup, Scope inputs,
+eligibility and automatic candidate discovery remain unfinished. Server unchanged;
 connected simulation inactive.
 
 [Runtime assembly](SWING_RUNTIME_DELIVERY.md) now joins verified original Swing
@@ -57,8 +70,8 @@ The collector retains one original result per session, including unknown-evidenc
 blockers, and revalidates it on restart without restamping or rewriting. Current
 normalized history remains UNKNOWN and therefore blocked. Current metadata and
 frame assembly now have the delivery path above. Catalyst provider/provenance and
-operational carry schedule rollover remain unfinished, alongside Scope, eligibility,
-candidates and host setup.
+actual host carry enrollment remain unfinished, alongside Scope, eligibility,
+automatic candidate discovery and host setup.
 See SWING_SOURCE_BINDING_PROOF.json for installed offline evidence. Publication
 is a slice end; additional coding can continue without another collection run.
 
@@ -69,7 +82,7 @@ read capacity, retains usable required quotes when optional history fails, and
 reuses history across restart. Legacy collector hashes remain unchanged. Installed
 offline evidence is in SWING_HISTORY_FEED_PROOF.json. This is history transport,
 not completed Swing signal delivery: catalyst ingestion/provenance, Scope inputs,
-contract/data eligibility, candidate replacement and host setup still need work.
+contract/data eligibility, automatic candidate discovery and host setup still need work.
 Actual daily/hourly responses are unverified. More offline coding remains possible;
 publication is a slice end, not a stop forced by missing collection. No server or
 provider/model/credential access occurred.

@@ -1,5 +1,39 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Explicit future-session feed rollover: 2026-10-26 EDT
+
+Starting feature HEAD 5392daf7f874db1c636b9a12d4d54f024490df32. A read-only review
+and exact-hash apply now append a full catalog/carry policy for a named future
+exchange session under the existing native owner and collector leases. Only the
+catalog and target-session carry intent may change. The base policy, cash, owner
+state, raw captures, rate budgets, delivery sequence and old Swing bindings remain
+intact. Held identities stay independently covered. Earlier preparation, duplicate
+targets, changed contracts/aliases, active leases and stale reviews are rejected.
+
+An atomic collector transaction commits a bounded receipt chain/head and a new
+protocol hash. Legacy unrolled collectors are unchanged. Older binaries reject
+rolled collectors; compatible coherent backup/restore is required for rollback.
+Quote planning, normalization, Swing preparation and original-source verification
+select the exact session policy. Midnight-crossing captures retain MARKET quotes
+and block entry cycles. Read-only checks validate owner/chain and show effective
+policy/session enrollment. No actual host policy, date or candidate was enrolled.
+
+Validation: 176 unique installed Python cases passed. All 290 application files
+match source, wheel and installation; release identity VERIFIED_FILES. Ruff and
+diff checks pass. FEED_ROLLOVER_PROOF.json records exact accepted cases and two
+corrected test defects. Application gates were not relaxed. The new suite verifies
+retained originals/budgets, removed held reads, restart, stale reviews, two leases,
+corrupted receipts, atomic rollback, clock/session boundaries and safe CLI behavior.
+
+Bounded explicit schedule/catalog rollover is implemented. Automatic contract
+discovery, long-term receipt archival, eligible catalyst/Scope feeds, complete
+market eligibility, host settings/deployment/dashboard activation and connected
+market acceptance remain work. Stopping reason: **slice end**, not missing feed
+collection. More offline implementation is possible. Server remains a653cc7 frozen
+V3; connected simulation inactive; LIVE disabled. No provider/model calls,
+credentials, server changes, dependencies, subagents or hosted CI. Main unchanged;
+PR #1 remains open/draft.
+
 ## Guarded first collector enrollment: 2026-10-26 EDT
 
 Starting feature HEAD 3e3c5a0f988d3420d025a01c999d3e1cb847a04e. A read-only review

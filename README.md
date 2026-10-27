@@ -26,8 +26,9 @@ quotes between Swing cycles and after optional history failures. Missing enrolle
 Scope input explicitly blocks entry cycles. [Explicit carry schedules](docs/CONNECTED_CARRY_INTENT.md)
 now bind original stock/option exit dates through restart and runtime delivery;
 [guarded first-collector enrollment](docs/CONNECTED_ENROLLMENT.md) now freezes the
-supplied schedule against the existing owner. Schedule rollover and host activation
-remain pending.
+supplied schedule against the existing owner. [Future-session rollover](docs/FEED_ROLLOVER.md)
+now updates explicit catalogs/carry dates while retaining history and held quotes.
+Automatic discovery and host activation remain pending.
 
 ## Offline development checks
 

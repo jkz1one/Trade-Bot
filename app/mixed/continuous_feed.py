@@ -453,11 +453,9 @@ class ContinuousFeed:
                     self.db.execute(
                         "CREATE TABLE swing_read_budget(sequence INTEGER PRIMARY KEY,calls INTEGER NOT NULL)"
                     )
-            if (
-                self.db.execute("SELECT configuration FROM control WHERE id=1").fetchone()[0]
-                != frozen
-            ):
-                raise ValueError("Frozen feed configuration changed")
+            from app.mixed.feed_rollover import load_rollovers
+
+            self.rollovers = load_rollovers(self.db, self.policy, self.schemas)
             self.db.execute("UPDATE attempts SET status='INTERRUPTED' WHERE status='STARTED'")
             self.db.commit()
             self.recover()
@@ -470,6 +468,11 @@ class ContinuousFeed:
     def close(self):
         self.db.close()
         os.close(self.lock)
+
+    def policy_for(self, target):
+        from app.mixed.feed_rollover import policy_for
+
+        return policy_for(self.policy, self.rollovers, target)
 
     def swing_snapshot(self, target):
         """Revalidate cached native histories against the retained original capture."""
@@ -573,7 +576,9 @@ class ContinuousFeed:
             last is None
             or int(datetime.fromisoformat(last["started_at"]).timestamp()) // 300 != slot
         )
-        plan, catalog = planned(self.policy, held, now, window, cycle=cycle)
+        target_day = now.astimezone(ZoneInfo("America/New_York")).date()
+        effective = self.policy_for(target_day)
+        plan, catalog = planned(effective, held, now, window, cycle=cycle)
         used = self.db.execute(
             "SELECT COALESCE(SUM(calls),0) FROM attempts WHERE started_at>?",
             ((now - timedelta(minutes=1)).isoformat(),),
@@ -653,8 +658,10 @@ class ContinuousFeed:
                     captured.collected_at.astimezone(ZoneInfo("America/New_York")).date(),
                     now=captured.collected_at,
                 )
+            if captured.collected_at.astimezone(ZoneInfo("America/New_York")).date() != target_day:
+                history_issues = (*history_issues, "SESSION_BOUNDARY_DURING_CAPTURE")
             packet = normalize(
-                self.policy,
+                effective,
                 self.schemas,
                 captured,
                 catalog,
@@ -753,8 +760,9 @@ class ContinuousFeed:
         if history is None:
             raise ValueError("Original Swing history missing")
         bound = BoundSwingSources.model_validate_json(row["payload_json"])
+        effective = self.policy_for(target)
         policy = policy_from_settings(
-            settings, self.policy.candidates, carry_intent_for(self.policy, target)
+            settings, effective.candidates, carry_intent_for(effective, target)
         )
         if (
             bound.created_at > clock(now)
@@ -804,8 +812,9 @@ class ContinuousFeed:
                 "target_session": target.date().isoformat(),
                 "trading_ready": False,
             }
+        effective = self.policy_for(target.date())
         policy = policy_from_settings(
-            settings, self.policy.candidates, carry_intent_for(self.policy, target.date())
+            settings, effective.candidates, carry_intent_for(effective, target.date())
         )
         # Additive, derived evidence only. Existing history enrollment and raw
         # captures are untouched; no execution or fixture database is migrated.

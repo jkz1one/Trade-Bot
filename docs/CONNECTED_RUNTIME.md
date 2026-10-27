@@ -64,6 +64,15 @@ play identities, original entries, fills, feed sequence and retained read budget
 Interrupted native work and entry halts retain their existing review rules. The
 runner never automatically resumes entry or resubmits an uncertain order.
 
+## Future-session policies
+
+[Explicit rollover](FEED_ROLLOVER.md) can append a reviewed catalog/carry policy
+for a future session while the owner and collector are stopped. Continue passing
+the original base policy on restart. Read-only check validates the retained chain
+and owner binding, lists enrolled sessions and reports the current effective
+policy hash. Older binaries cannot open a collector after its first rollover.
+Native state, delivery sequence and entry halts are retained.
+
 ## Dashboard and remaining work
 
 The existing dashboard remains a separate stored reader. The check's

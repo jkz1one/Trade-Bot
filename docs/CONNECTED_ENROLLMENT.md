@@ -87,8 +87,9 @@ retained failures, CLI review binding, paid identity without secrets, and native
 runtime/replay compatibility.
 
 This completes guarded first-collector enrollment, including an already supplied
-carry schedule. Updating an enrolled schedule or candidate catalog is still not
-implemented. Do not edit their frozen configurations in place. Full host setup,
+carry schedule. [Future-session rollover](FEED_ROLLOVER.md) now accepts explicit target-session
+catalogs and carry dates through a separate guarded operation. Do not edit the
+original base configuration in place. Full host setup,
 dashboard activation, actual ongoing feed acceptance, catalyst/Scope ingestion,
 entitlement, stock sizes and reviewed contract terms remain unresolved.
 

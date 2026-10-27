@@ -45,7 +45,8 @@ This does not synthesize replacement contracts or approve expiration handling.
 [Explicit carry schedules](CONNECTED_CARRY_INTENT.md) now bind bounded per-session
 stock/option exit dates through source preparation, restart and runtime delivery.
 They cannot enable unenrolled carry or extend existing originals. Schedule
-rollover/enrollment on the host remains unfinished.
+rollover is now implemented through [explicit future-session updates](FEED_ROLLOVER.md);
+actual host configuration/enrollment remains unfinished.
 
 ## Remaining implementation and evidence
 

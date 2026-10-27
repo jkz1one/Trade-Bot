@@ -51,9 +51,9 @@ Absent schedules serialize exactly as before, preserving legacy collector and
 binding hashes. No existing journal, fixture or enrolled collector is migrated.
 [Guarded first-collector enrollment](CONNECTED_ENROLLMENT.md) now freezes an
 explicitly supplied schedule against an existing unused native runtime. Adding
-or rolling dates after enrollment still requires an unimplemented rollover
-procedure; do not edit the frozen review or existing collector configuration in
-place. No real dates have been selected or enrolled on the host.
+future session dates now uses the separate [rollover procedure](FEED_ROLLOVER.md),
+which preserves old policy bindings. Do not edit the frozen review or original
+base collector configuration in place. No real dates have been selected or enrolled on the host.
 
 ## Validation and remaining work
 
@@ -68,7 +68,8 @@ suites run against the same wheel.
 This completes the bounded explicit carry-input path, not operational activation.
 Catalyst ingestion still requires a reviewed source/schema absent from the six
 market-read tools. Scope feeds, entitlement, stock sizes, complete contract terms,
-dynamic candidates, schedule rollover and guarded host setup remain work.
+automatic candidate discovery and guarded host setup remain work. Explicit
+future-session catalog/schedule rollover is now implemented separately.
 
 Stopping reason: **slice end**. More offline implementation is possible. No
 provider/model calls, credentials, server changes or live routing occurred.

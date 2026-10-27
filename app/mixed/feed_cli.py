@@ -8,7 +8,6 @@ from pathlib import Path
 
 from app.domain.models import utc_now
 from app.mixed.continuous_feed import ContinuousFeed, FeedPolicy, held_from_observer
-from app.mixed.observer import MixedObserver
 from app.options.operator_inbox import read
 from app.options.read_gateway import ReadSchemas
 from app.robinhood.schedule import XNYSCalendar
@@ -45,8 +44,8 @@ def main(argv=None):
     report = connection_report(
         settings, policy, schemas, journal=args.journal, directory=args.directory, now=utc_now()
     )
-    print(json.dumps(report, sort_keys=True), flush=True)
     if not report["collector_can_start"]:
+        print(json.dumps(report, sort_keys=True), flush=True)
         return 2
     if args.create:
         from app.mixed.connected_enrollment import enroll
@@ -60,10 +59,12 @@ def main(argv=None):
         )
         print(json.dumps(result, sort_keys=True), flush=True)
         return 0
-    from app.mixed.connected_runtime import inspect_owner
+    from app.mixed.connected_runtime import check
 
-    inspect_owner(Path(args.journal).parent, settings)
-    observer = MixedObserver(args.journal, policy.population_id)
+    report, settings, policy, schemas, observer = check(
+        Path(args.journal).parent, args.directory, args.policy, args.schemas
+    )
+    print(json.dumps(report, sort_keys=True), flush=True)
     held_from_observer(observer)
     # Validation does not acquire a credential or open a network transport.
     feed = ContinuousFeed(args.directory, policy, schemas)

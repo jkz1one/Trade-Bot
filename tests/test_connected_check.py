@@ -118,9 +118,6 @@ def test_cli_mismatch_returns_before_opening_feed_or_owner(tmp_path, schemas, mo
     monkeypatch.setattr(
         feed_cli, "ContinuousFeed", lambda *a, **k: pytest.fail("Must not open collector")
     )
-    monkeypatch.setattr(
-        feed_cli, "MixedObserver", lambda *a, **k: pytest.fail("Must not open owner")
-    )
     assert (
         feed_cli.main(
             [
