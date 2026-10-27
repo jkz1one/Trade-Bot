@@ -108,6 +108,7 @@ def test_enrollment_and_run_mounts_keep_offline_stages_without_broker_auth(host)
     assert m.apply(plan)["dashboard_snapshot_created"]
     offline = list(calls)
     assert all(c[c.index("--network") + 1] == "none" for c in offline if c[0] == "run")
+    assert all(c[c.index("--cpus") + 1] == "1" for c in offline if c[0] == "run")
     assert all(str(m.AUTH) not in " ".join(c) for c in offline)
     plan = m.review(IMAGE, "run", 60, "session-one")
     result = m.apply(plan)
@@ -115,6 +116,10 @@ def test_enrollment_and_run_mounts_keep_offline_stages_without_broker_auth(host)
     live = next(c for c in calls if c[:2] == ("run", "-d"))
     assert live[live.index("--restart") + 1] == "no"
     assert live[live.index("--network") + 1] == "bridge"
+    assert live[live.index("--cpus") + 1] == "2"
+    assert result["resources"] == plan["binding"]["resources"]
+    assert result["resources"]["cpus"] == 2
+    assert result["resources"]["available_logical_cpus"] >= 1
     assert live[live.index("--stop-timeout") + 1] == "45"
     assert "--publish" not in live and "-p" not in live
     assert live[-2:] == ("--seconds", "60")
@@ -131,6 +136,29 @@ def test_enrollment_and_run_mounts_keep_offline_stages_without_broker_auth(host)
     with pytest.raises(ValueError, match="already exists"):
         m.review(IMAGE, "run", 60, "session-one")
     assert not any(c[0] in ("rm", "rename", "start") for c in calls)
+
+
+def test_changed_cpu_capacity_requires_a_new_review_before_launch(host, monkeypatch):
+    m, calls, _, _, _ = host
+    monkeypatch.setattr(m.os, "sched_getaffinity", lambda pid: {0, 1})
+    original = m.review(IMAGE, "run", 60, "cpu-check")
+    assert original["binding"]["resources"] == {"cpus": 2, "available_logical_cpus": 2}
+    monkeypatch.setattr(m.os, "sched_getaffinity", lambda pid: {0})
+    changed = m.review(IMAGE, "run", 60, "cpu-check")
+    assert changed["review_sha256"] != original["review_sha256"]
+    assert changed["binding"]["resources"]["available_logical_cpus"] == 1
+    with pytest.raises(ValueError, match="resources changed"):
+        m.apply(original)
+    assert not any(c[:2] == ("run", "-d") for c in calls)
+
+
+def test_modified_cpu_quota_cannot_bypass_review(host):
+    m, calls, _, _, _ = host
+    plan = m.review(IMAGE, "run", 60, "cpu-check")
+    plan["binding"]["resources"]["cpus"] = 8
+    with pytest.raises(ValueError, match="resources changed"):
+        m.apply(plan)
+    assert not any(c[:2] == ("run", "-d") for c in calls)
 
 
 @pytest.mark.parametrize(

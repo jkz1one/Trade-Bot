@@ -219,3 +219,25 @@ Deploy the diagnostic release and review a new bounded session, e.g.
 `review-run --run-id first-check-3 --seconds 600`, against the same enrolled owner.
 The existing failure halt remains in force. This is a collection/runtime diagnosis;
 it does not enable entries, clear eligibility blockers or reset the account.
+
+## Connected-session CPU allowance
+
+The native runtime, collector, publisher and their subprocesses previously shared
+the offline helper's one-CPU ceiling. Host first-check-3 confirmed a local snapshot
+FixtureProcessTimeout at the unchanged five-second deadline, while three isolated
+reads had passed in 1.358–1.831 seconds. Quota contention is a hypothesis, not an
+established root cause.
+
+Connected sessions now use a two-CPU ceiling. The review's `binding.resources`
+includes `cpus: 2` and `available_logical_cpus` from the host process affinity.
+The resource record is bound by the expected review hash, rechecked before launch,
+and repeated in SESSION_STARTED. Offline helpers remain limited to one CPU.
+This does not reserve capacity, modify other containers, increase the five-second
+deadline or clear an existing entry halt. A one-CPU host cannot provide two CPUs
+of execution even with a higher quota; inspect its reported capacity before
+interpreting the next test. Host load or synchronous work may still cause delays.
+
+Build this release, then review `first-check-4` for 600 seconds and launch with
+its new hash. Preserve the enrolled account and all earlier containers. Confirm
+runtime/feed progression and the final container state; do not call the timeout
+resolved until the connected host test passes.

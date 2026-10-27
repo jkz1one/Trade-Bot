@@ -1,6 +1,27 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.148. Preserve bounded runtime failure diagnostics, 2026-10-27 EDT.
+Version 1.149. Review a separate connected-session CPU allowance, 2026-10-27 EDT.
+
+Host first-check-3 on f5f7f69 exited after about 19 seconds. The new diagnostics
+confirm FixtureProcessTimeout in native portfolio reconciliation's local snapshot
+child, under the unchanged five-second process deadline. The preceding isolated
+reads passed in 1.358–1.831 seconds; the earlier connected run delivered 26 updates
+and consumed 25 before failing. The original first-check-2 exception type remains
+unrecorded. No eligible-entry or uninterrupted session acceptance is claimed.
+
+The launcher used a shared one-CPU cgroup ceiling for runtime, collector,
+publisher and all child processes. The connected session now receives a two-CPU
+ceiling; offline setup/review helpers retain one CPU. Resource allowance and
+available host logical CPUs are bound into the run review hash and checked again
+before launch. This is a contention mitigation to verify on the host, not proof
+that quota throttling caused the timeout. It reserves no host capacity and cannot
+create an extra physical CPU. Snapshot deadline, one-GiB memory limit, PID bound,
+account configuration, entry halt, source freshness and SHADOW services remain
+unchanged. No account reset, automatic resume or policy relaxation.
+See CONNECTED_SESSION_CPU_PROOF.json for host-launcher regression validation.
+Build and review first-check-4 against the same owner; preserve prior containers.
+
+Prior diagnostic release (v1.148):
 
 The corrected b8f4ecd host session started at 18:42:51 UTC and exited at 18:50:10
 with CONNECTED_COMPONENT_STOPPED:RUNTIME. The collector recorded 26 DELIVERED
