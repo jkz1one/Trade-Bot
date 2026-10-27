@@ -8,9 +8,9 @@ from app.domain.models import utc_now
 from app.mixed.connected_check import connection_report
 from app.mixed.continuous_feed import FeedPolicy
 from app.options.engine import fingerprint
-from app.options.operator_inbox import private_directory, read, save, sync_directory
-from app.options.read_gateway import ReadSchemas
+from app.options.operator_inbox import private_directory, save, sync_directory
 from app.options.runtime_models import RuntimeSettings
+from app.options.schema_artifact import load_reviewed_schemas
 from app.options.scope import SCOPE_GROUPS
 from app.options.swing_base_models import SWING_FAMILIES
 from app.options.swing_level_models import LEVEL_FAMILIES
@@ -395,7 +395,7 @@ def main(argv=None):
     if args.operation == "review" and (args.directory or args.expected_review):
         parser.error("Review accepts schemas only")
     try:
-        schemas = ReadSchemas.model_validate_json(read(Path(args.schemas), 256 * 1024))
+        schemas = load_reviewed_schemas(Path(args.schemas))
         result = (
             review(schemas)
             if args.operation == "review"

@@ -37,6 +37,8 @@ Existing server inputs:
 
 - Broker read auth directory: `/var/lib/trade-bot-read-auth`.
 - Exported schemas: `discovery.json` within that directory.
+- That file may contain the completed discovery report; the profile/bundle loaders
+  validate it and extract `result.schemas` without changing the source file.
 - OAuth file: `robinhood-oauth.json` within that directory.
 - Optional model/operator keys: existing paths explicitly named in the supplied
   runtime settings. They must be private root-owned files for the native root

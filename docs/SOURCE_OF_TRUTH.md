@@ -1,6 +1,16 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.145. Concrete initial simulation profile, 2026-10-27 EDT.
+Version 1.146. Host discovery-envelope compatibility fix, 2026-10-27 EDT.
+
+The host built 19616d7 successfully but `review-profile` failed before creating
+state: `/var/lib/trade-bot-read-auth/discovery.json` is a completed discovery
+report, not an exported bare `ReadSchemas`. The direct offline traceback confirmed
+this format mismatch. A shared private-file loader now validates either format,
+including the completed envelope/result and exact reviewed wire hash. Both
+simulation profile review and host bundle preparation use it; frozen bundles
+continue to contain bare schemas. Original captures are never rewritten. See
+SCHEMA_ARTIFACT_PROOF.json. Host review/enrollment/current-feed acceptance remains
+pending; no workers, account, provider calls or live execution were started.
 
 [Initial simulation configuration](CONNECTED_SIMULATION_PROFILE.md) now encodes the
 user's $1,000 virtual balance and $1/day AI ceiling with one two-play owner and all
