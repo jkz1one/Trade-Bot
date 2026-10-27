@@ -1,5 +1,18 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+Earnings/IV observation continuation, 2026-10-27 EDT.
+
+Added an earnings-linked option-volatility diagnostic to the native event audit
+observer. It retains the original option/Greek evidence and separate provisional
+policy, with explicit UNKNOWN for absent/stale IV or incomplete earnings coverage.
+No crush magnitude forecast or live VIX policy is claimed. Existing observed
+entry-to-current IV diagnostics already exist and remain unchanged.
+
+See EARNINGS_IV_AWARENESS.md and EVENT_IV_PROOF.json. Stop: completed offline
+diagnostic slice; provider/host acceptance remains. Branch starts at 44d5535;
+remote base reverified unchanged at f305ea1. Native application code outside
+app.events remains identical to that base. No deployment or enforcement.
+
 ## Event feature reconciliation: 2026-10-27 EDT
 
 Merged verified base `f305ea19bef3fdfb5aec04c51aa431f32dc2b694` into

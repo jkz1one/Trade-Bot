@@ -61,3 +61,17 @@ the current connected profile/feed still only supplies its reviewed SPY/QQQ set.
    same population and same bankroll, plus source workers and an in-memory loader.
    Host supervision, source budgets, observation delivery/backlog and retention
    rotation are not activated here.
+
+## Earnings/IV interpretation reviewed 2026-10-27
+
+[OCC/OIC earnings and volatility explanation](https://www.optionseducation.org/news/july-office-hours-faqs-implied-volatility-position-greeks-and-market-maker-order-flow)
+describes possible pre-earnings IV increases and post-release declines. This
+supports a qualitative exposure warning, not our provisional window lengths or
+a numerical forecast. [OIC vega](https://www.optionseducation.org/advancedconcepts/vega)
+identifies sensitivity to IV; the native Greek schema does not currently include
+vega. No pricing scenario is inferred.
+
+[Cboe VIX FAQ](https://www.cboe.com/tradable_products/vix/faqs) describes the
+SPX-based 30-day index. It does not validate using daily VIX as individual-contract
+IV. These public documentation reads are source research, not successful adapter
+ingestion, licensed-feed access or host acceptance. See EARNINGS_IV_AWARENESS.md.

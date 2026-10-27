@@ -30,6 +30,14 @@ Status: **fixture verified**, independently testable first implementation.
 Provider and host acceptance are outstanding. No deployment, server workers,
 model calls, subscription purchases, enforcement or LIVE enablement occurred.
 
+## Earnings/IV continuation
+
+The native audit observer now records a separate earnings-linked option-volatility
+diagnostic. See [contract, settings and limits](EARNINGS_IV_AWARENESS.md) and
+`EVENT_IV_PROOF.json`. This adds advisory earnings proximity and IV-evidence
+checks, not a crush forecast or live VIX policy. The original event policy and
+all native trading behavior remain unchanged.
+
 ## Delivered boundary
 
 `app.events` is one shared deterministic component for Degen, Swing and Scope.

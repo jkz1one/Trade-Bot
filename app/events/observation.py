@@ -8,10 +8,14 @@ from pathlib import Path
 from time import perf_counter_ns
 from urllib.parse import quote
 
+from pydantic import ValidationError
+
 from app.events.assessment import assess, prepare
 from app.events.models import Request
+from app.events.option_volatility import prepare_option_volatility, review_option_volatility
 from app.mixed.dashboard_snapshot import VERSION, checkpoint, file_identity
 from app.options.engine import fingerprint
+from app.options.models import OptionQuote
 
 TABLES = {
     "OPTION": ("execution_option_decisions", "OPTION_PROPOSAL_RECORDED"),
@@ -210,6 +214,32 @@ def observation_payload(store, kind, request, evidence, receipt, *, recorded_at,
         "detection_delays": delays,
         "actual_decision_changed": False,
     }
+    if kind == "OPTION" or (instrument and instrument.get("contract")):
+        raw_quote = inputs.get("quote")
+        try:
+            option_quote = OptionQuote.model_validate(raw_quote) if raw_quote else None
+        except ValidationError:
+            option_quote = None
+        if (
+            option_quote is not None
+            and instrument
+            and option_quote.instrument.model_dump(mode="json") != instrument
+        ):
+            option_quote = None
+        # Separate background preparation/measurement and policy identity. Native
+        # decisions and the existing event assessment are never rewritten.
+        volatility_view = prepare_option_volatility(view)
+        start = perf_counter_ns()
+        diagnostic = review_option_volatility(volatility_view, request, option_quote)
+        payload["option_volatility_local_check_ms"] = (perf_counter_ns() - start) / 1_000_000
+        payload["option_event_volatility"] = diagnostic | {
+            "policy": volatility_view.policy.model_dump(mode="json"),
+            "snapshot_hash": view.snapshot_hash,
+            "snapshot_sequence": snapshot.sequence if snapshot else None,
+            "base_policy_hash": view.policy_hash,
+            "native_quote_hash": fingerprint(raw_quote) if raw_quote else None,
+            "native_quote": raw_quote,
+        }
     return payload, assessment
 
 
