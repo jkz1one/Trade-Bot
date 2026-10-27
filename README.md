@@ -35,7 +35,9 @@ now verifies the existing login and the fresh display copy before switching read
 [First-owner enrollment and coordinated publication](docs/CONNECTED_FIRST_OWNER.md)
 now create the native owner/collector from an exact configuration review and let
 the runner supervise its dashboard publisher through shutdown and restart.
-Concrete host settings/launcher, cross-user acceptance and actual activation remain pending.
+The [host launcher and runbook](docs/CONNECTED_HOST_RUNBOOK.md) now cover configuration
+packaging, reviewed enrollment, bounded detached sessions, status and exact-ID stop.
+Reviewed real settings/catalog, host/cross-user acceptance and eligible data remain pending.
 
 ## Offline development checks
 

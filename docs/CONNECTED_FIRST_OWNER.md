@@ -127,8 +127,9 @@ relaxed. Cross-user publication remains unverified in this ID-0-only sandbox.
 No Docker/server activation, real credential access or provider/model call was
 performed during implementation.
 
-Concrete operational settings/catalog and a reviewed host launcher are still
-needed. Eligible catalyst/Scope inputs, complete contract/data eligibility,
+The [reviewed host launcher](CONNECTED_HOST_RUNBOOK.md) is now implemented and
+tested offline through two native sessions. Real reviewed settings/catalog and
+host acceptance are still needed. Eligible catalyst/Scope inputs, complete contract/data eligibility,
 operator-command transport and connected market acceptance remain unfinished.
 The server is unchanged on frozen a653cc7, connected simulation inactive, LIVE
 disabled. This is a slice end; more offline coding remains possible.

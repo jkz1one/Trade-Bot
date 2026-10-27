@@ -1,5 +1,49 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Host configuration packaging and bounded launcher completed: 2026-10-26 EDT
+
+Starting feature HEAD 9156e45b7505423098f866afedd21962268293bb. Added a reviewed
+host configuration packager and root stdlib host launcher. Supplied native
+settings/policy/schema are frozen with original and packaged hashes; only
+container paths change. Capital, families, risk/cost limits, carry intent and
+unknown data remain unchanged. Verification recomputes displayed configuration
+facts from native settings, preventing altered manifest descriptions. No test
+configuration or concrete production strategy settings were selected for the user.
+
+The launcher pins the clean checkout image and fixed private host layout. Offline
+review/preparation/enrollment use network-none containers without OAuth mounts.
+Configured model/operator key files retain native validation without copies or
+permission changes. Exact reviewed native/host hashes precede first enrollment.
+An explicit bounded run is the only operation mounting existing broker OAuth and
+allowing network reads/configured model workers. It starts runtime, collector and
+publisher together, with no exposed ports or automatic restart. Nested config and
+discovery mounts remain read-only. The same owner is reused across unique retained
+session containers. Active sessions/leases fence duplicates; exact-ID stop retains
+state/logs and works without a built image or available configuration. Dashboard
+activation/rollback stays separate and the original SHADOW identities are checked.
+
+Final validation: 157 unique installed tests passed; one cross-user publisher test
+skipped in the ID-0-only sandbox. All 294 application files match source/wheel/install;
+release identity VERIFIED_FILES. Copied new tests/host script match. Ruff/format/diff
+checks pass. Native integration covers bundle -> enroll -> publish -> captured feed
+consumption -> authenticated current reader -> stop -> same-owner restart. The
+existing two-held-play recovery tests run alongside it. Host coordinator tests use
+a stateful offline Docker recorder; no Docker/host/browser acceptance is claimed.
+Earlier 20-case and 156-case passes overlap; no failed tests occurred. The final
+build additionally binds manifest review facts to native settings. See
+CONNECTED_HOST_LAUNCH_PROOF.json and CONNECTED_HOST_RUNBOOK.md.
+
+The requested host setup/launch coding block is complete. Remaining first-run
+work is reviewed actual settings/catalog and server acceptance (Docker, UID/GID
+10001, login, current feed), not another missing launcher. Those production inputs
+were not supplied/approved by this slice; frozen UI/test settings are not a
+substitute. Full contract/entitlement/stock-size eligibility and catalyst/Scope
+sources remain unresolved. Separate native dashboard operator transport and wider
+strategy/data work remain open, so this is not a claim that the entire trading
+system is finished. Server unchanged on a653cc7 frozen V3, connected simulation
+inactive, LIVE disabled. No real provider/model calls, credential access, server
+changes, dependencies, hosted CI or subagents. Main unchanged; PR #1 stays open/draft.
+
 ## First native owner enrollment and coordinated publisher: 2026-10-26 EDT
 
 Starting feature HEAD 4f26b7ecef5ce79510cf812d23ea752d70f612d0. A create-only

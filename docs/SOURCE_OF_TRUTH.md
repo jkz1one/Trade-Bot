@@ -1,6 +1,19 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.143. First-owner enrollment and coordinated publication, 2026-10-26 EDT.
+Version 1.144. Reviewed host bundle and bounded launcher, 2026-10-26 EDT.
+
+[Host preparation and bounded launch](CONNECTED_HOST_RUNBOOK.md) are now
+implemented with path-only packaging of supplied native settings/policy/schema,
+exact review hashes, fixed private layout and pinned image IDs. Offline preparation
+has no OAuth/network; explicit run starts the bounded runtime/collector/publisher,
+retains its container, refuses duplicate sessions and provides status/exact-ID stop.
+Native configuration facts are verified against the manifest. No concrete
+production policy is inferred from test defaults. See CONNECTED_HOST_LAUNCH_PROOF.json:
+157 installed tests passed, one cross-user test skipped, all 294 application files
+match. The full native setup/feed/read/stop/restart sequence passes offline; Docker
+host commands use a recorder. The requested launcher block is complete. Next are
+reviewed real inputs and host/current-data acceptance. Missing eligible feeds and
+separate operator transport remain open. Server unchanged; simulation inactive.
 
 [First-owner enrollment and coordinated publication](CONNECTED_FIRST_OWNER.md)
 now review/create one native owner and collector from complete supplied settings,

@@ -1,0 +1,480 @@
+#!/usr/bin/env python3
+"""Pinned, reviewed first simulation setup and bounded host sessions. Never run implicitly."""
+
+import argparse
+import fcntl
+import importlib.util
+import json
+import os
+import re
+import stat
+import sys
+from pathlib import Path
+
+spec = importlib.util.spec_from_file_location(
+    "dashboard_host", Path(__file__).with_name("connected-dashboard-host.py")
+)
+h = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(h)
+STATE = Path("/var/lib/trade-bot-connected")
+EXPORTS = Path("/var/lib/trade-bot-dashboard-publish")
+AUTH = Path("/var/lib/trade-bot-read-auth")
+LOCK = Path("/run/lock/trade-bot-connected-host.lock")
+LABEL = "trade-bot.connected-session-v1"
+
+
+def private(path, directory=False):
+    path = Path(path)
+    info = path.lstat()
+    if path.resolve() != path or any(c in str(path) for c in (",", "\n", "\x00")):
+        raise ValueError("Canonical mount path required")
+    if (
+        info.st_uid != 0
+        or stat.S_IMODE(info.st_mode) != (0o700 if directory else 0o600)
+        or not (stat.S_ISDIR(info.st_mode) if directory else stat.S_ISREG(info.st_mode))
+    ):
+        raise ValueError("Private root-owned host input required")
+
+
+def parent(path):
+    if not path.exists() and not path.is_symlink():
+        path.mkdir(mode=0o700)
+    private(path, True)
+
+
+def image(release):
+    item = json.loads(h.docker("image", "inspect", "trade-bot-dashboard:" + release).stdout)[0]
+    if "TRADER_RELEASE_SHA=" + release not in item["Config"]["Env"]:
+        raise ValueError("Pinned release image required")
+    return item["Id"]
+
+
+def mount(source, target, readonly=True):
+    return ["--mount", f"type=bind,src={source},dst={target}" + (",readonly" if readonly else "")]
+
+
+def isolation():
+    return [
+        "--init",
+        "--read-only",
+        "--user",
+        "0:0",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges:true",
+        "--memory",
+        "1g",
+        "--cpus",
+        "1",
+        "--pids-limit",
+        "128",
+        "--tmpfs",
+        "/tmp:size=128m,mode=1777",
+        "-e",
+        "TRADER_LIVE_ENABLED=false",
+    ]
+
+
+def config_mounts(writable=False, *, source=False, exports=False):
+    private(STATE, True)
+    private(STATE / "config", True)
+    args = mount(STATE, "/state", not writable)
+    if writable:
+        args += mount(STATE / "config", "/state/config")
+    if source:
+        private(STATE / "owner", True)
+        args += mount(STATE / "owner", "/source", not writable)
+    if exports:
+        private(EXPORTS, True)
+        args += mount(EXPORTS, "/exports", not writable)
+    return args
+
+
+def execute(image_id, module, args, mounts, *, copies=False):
+    caps = ["--cap-add", "CHOWN", "--cap-add", "DAC_READ_SEARCH"] if copies else []
+    result = h.docker(
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        *isolation(),
+        *caps,
+        *mounts,
+        image_id,
+        "python",
+        "-I",
+        "-W",
+        "error",
+        "-m",
+        module,
+        *args,
+        timeout=60,
+    )
+    return json.loads(result.stdout)
+
+
+def bundle(image_id):
+    return execute(
+        image_id,
+        "app.mixed.host_bundle",
+        ["verify", "--directory", "/state/config"],
+        config_mounts(),
+    )
+
+
+def secrets(manifest):
+    args = []
+    for role, path in sorted(manifest["binding"]["secret_files"].items()):
+        if role not in ("model", "operator"):
+            raise ValueError("Unexpected secret role")
+        private(Path(path))
+        args += mount(path, "/run/secrets/" + role)
+    return args
+
+
+def owner_args():
+    return [
+        "--directory",
+        "/state/owner",
+        "--feed-directory",
+        "/state/collector",
+        "--settings",
+        "/state/config/runtime.json",
+        "--policy",
+        "/state/config/policy.json",
+        "--schemas",
+        "/state/config/schemas.json",
+    ]
+
+
+def runtime_args():
+    return [
+        "--directory",
+        "/source",
+        "--feed-directory",
+        "/state/collector",
+        "--policy",
+        "/state/config/policy.json",
+        "--schemas",
+        "/state/config/schemas.json",
+        "--snapshot-directory",
+        "/exports/connected-v1",
+        "--reader-uid",
+        "10001",
+        "--reader-gid",
+        "10001",
+    ]
+
+
+def no_active_session():
+    if h.docker("ps", "--filter", "label=" + LABEL, "--format", "{{.ID}}").stdout.strip():
+        raise ValueError("A connected session is already running")
+
+
+def review(image_id, phase, seconds=None, run_id=None):
+    manifest = bundle(image_id)
+    no_active_session()
+    before = h.workers()
+    if phase == "enroll":
+        if (EXPORTS / "connected-v1").exists() or (EXPORTS / "connected-v1").is_symlink():
+            raise ValueError("Publisher already exists; preserve enrolled state")
+        native = execute(
+            image_id, "app.mixed.connected_owner", ["review", *owner_args()], config_mounts()
+        )
+        binding = {"native_review_sha256": native["review_sha256"]}
+    else:
+        if (
+            type(seconds) is not int
+            or not 1 <= seconds <= 86400
+            or not re.fullmatch("[a-z0-9][a-z0-9-]{0,39}", run_id or "")
+        ):
+            raise ValueError("Explicit bounded duration and unique session ID required")
+        name = "trade-bot-connected-" + run_id
+        if h.container(name, missing=True) is not None:
+            raise ValueError("Session name already exists; retain evidence and choose a new ID")
+        native = execute(
+            image_id,
+            "app.mixed.connected_runtime",
+            ["check", *runtime_args()],
+            config_mounts(source=True, exports=True),
+            copies=True,
+        )
+        binding = {
+            "owner_state": native["owner_state"],
+            "policy_sha256": native["effective_policy_sha256"],
+            "snapshot_binding_sha256": native["dashboard_snapshot"]["binding_sha256"],
+            "seconds": seconds,
+            "container_name": name,
+        }
+    plan = {
+        "version": "connected-host-review-v1",
+        "phase": phase,
+        "image_id": image_id,
+        "bundle_sha256": manifest["review_sha256"],
+        "configuration": {
+            "population_id": manifest["population_id"],
+            "initial_virtual_capital": manifest["initial_virtual_capital"],
+            "maximum_plays": manifest["maximum_plays"],
+            "families": manifest["families"],
+            "model_configured": "model" in manifest["binding"]["secret_files"],
+            "operator_configured": "operator" in manifest["binding"]["secret_files"],
+        },
+        "binding": binding,
+        "workers": before,
+        "entry_blockers": native["entry_blockers"],
+        "trading_ready": False,
+        "live_enabled": False,
+    }
+    if before != h.workers():
+        raise ValueError("Existing SHADOW identities changed")
+    return plan | {"review_sha256": h.digest(plan)}
+
+
+def snapshot(image_id):
+    parent(EXPORTS)
+    # The publisher's own create-only checks retain all previous failure evidence.
+    mounts = config_mounts(source=True) + mount(EXPORTS, "/exports", False)
+    return execute(
+        image_id,
+        "app.mixed.dashboard_snapshot",
+        [
+            "create",
+            "--owner",
+            "/source",
+            "--destination",
+            "/exports/connected-v1",
+            "--reader-uid",
+            "10001",
+            "--reader-gid",
+            "10001",
+        ],
+        mounts,
+        copies=True,
+    )
+
+
+def apply(plan):
+    image_id = plan["image_id"]
+    manifest = bundle(image_id)
+    if manifest["review_sha256"] != plan["bundle_sha256"]:
+        raise ValueError("Bundle changed")
+    if plan["phase"] == "enroll":
+        result = execute(
+            image_id,
+            "app.mixed.connected_owner",
+            ["enroll", *owner_args(), "--expected-review", plan["binding"]["native_review_sha256"]],
+            config_mounts(True) + secrets(manifest),
+        )
+        snapshot(image_id)
+        if plan["workers"] != h.workers():
+            raise ValueError("Existing SHADOW identities changed")
+        return result | {"dashboard_snapshot_created": True}
+    private(AUTH, True)
+    private(AUTH / "robinhood-oauth.json")
+    private(AUTH / "discovery.json")
+    args = config_mounts(True, source=True, exports=True) + secrets(manifest)
+    # OAuth directory is writable only for existing token refresh/read leases.
+    # Discovery is protected; gateway exposes only the six fixed market-read tools.
+    args += mount(AUTH, "/auth", False) + mount(AUTH / "discovery.json", "/auth/discovery.json")
+    name = plan["binding"]["container_name"]
+    result = h.docker(
+        "run",
+        "-d",
+        "--name",
+        name,
+        "--restart",
+        "no",
+        "--stop-timeout",
+        "45",
+        "--network",
+        "bridge",
+        "--label",
+        LABEL + "=" + plan["review_sha256"],
+        "--log-opt",
+        "max-size=10m",
+        "--log-opt",
+        "max-file=3",
+        *isolation(),
+        "--cap-add",
+        "CHOWN",
+        "--cap-add",
+        "DAC_READ_SEARCH",
+        *args,
+        image_id,
+        "python",
+        "-I",
+        "-W",
+        "error",
+        "-m",
+        "app.mixed.connected_runtime",
+        "run",
+        *runtime_args(),
+        "--seconds",
+        str(plan["binding"]["seconds"]),
+    )
+    container_id = result.stdout.strip()
+    item = h.container(name)
+    if item["Id"] != container_id or item["Image"] != image_id or not item["State"]["Running"]:
+        raise RuntimeError("Session did not remain running; inspect retained container")
+    if h.workers() != plan["workers"]:
+        h.docker("stop", "--time", "45", container_id, timeout=55)
+        raise RuntimeError("Existing SHADOW identities changed; new session stopped")
+    return {
+        "status": "SESSION_STARTED",
+        "container_name": name,
+        "container_id": container_id,
+        "seconds": plan["binding"]["seconds"],
+        "automatic_resume": False,
+        "trading_ready": False,
+        "live_enabled": False,
+    }
+
+
+def run(args, release):
+    if args.operation == "build":
+        h.docker(
+            "build",
+            "-f",
+            "Dockerfile.shadow",
+            "--build-arg",
+            "TRADE_BOT_RELEASE=" + release,
+            "-t",
+            "trade-bot-dashboard:" + release,
+            ".",
+            timeout=900,
+        )
+        return {"status": "IMAGE_BUILT", "image_id": image(release)}
+    if args.operation in ("status", "stop"):
+        if not re.fullmatch("[a-z0-9][a-z0-9-]{0,39}", args.run_id or ""):
+            raise ValueError("Session ID required")
+        item = h.container("trade-bot-connected-" + args.run_id)
+        if not (item["Config"].get("Labels") or {}).get(LABEL):
+            raise ValueError("Not a connected session")
+        if args.operation == "stop":
+            if item["Id"] != args.expected_container:
+                raise ValueError("Exact inspected container ID required")
+            h.docker("stop", "--time", "45", item["Id"], timeout=55)
+            item = h.container("trade-bot-connected-" + args.run_id)
+        return {
+            "container_id": item["Id"],
+            "state": item["State"],
+            "restarts": item["RestartCount"],
+            "live_enabled": False,
+            "trading_ready": False,
+        }
+    image_id = image(release)
+    if args.operation in ("review-config", "prepare"):
+        if not args.settings or not args.policy:
+            raise ValueError("Supplied native settings and policy required")
+        for p in (args.settings, args.policy, AUTH / "discovery.json"):
+            private(Path(p))
+        mounts = (
+            mount(args.settings, "/input/runtime.json")
+            + mount(args.policy, "/input/policy.json")
+            + mount(AUTH / "discovery.json", "/input/schemas.json")
+        )
+        flags = [
+            "--settings",
+            "/input/runtime.json",
+            "--policy",
+            "/input/policy.json",
+            "--schemas",
+            "/input/schemas.json",
+        ]
+        if args.operation == "review-config":
+            return execute(image_id, "app.mixed.host_bundle", ["review", *flags], mounts)
+        parent(STATE)
+        return execute(
+            image_id,
+            "app.mixed.host_bundle",
+            [
+                "create",
+                *flags,
+                "--directory",
+                "/state/config",
+                "--expected-review",
+                args.expected_review,
+            ],
+            mounts + mount(STATE, "/state", False),
+        )
+    if args.operation == "snapshot":
+        bundle(image_id)
+        no_active_session()
+        return snapshot(image_id)
+    phase = "enroll" if args.operation in ("review-enroll", "enroll") else "run"
+    plan = review(image_id, phase, args.seconds, args.run_id)
+    if args.operation.startswith("review-"):
+        return plan
+    if plan["review_sha256"] != args.expected_review:
+        raise ValueError("Host review changed")
+    if review(image_id, phase, args.seconds, args.run_id) != plan:
+        raise ValueError("Host review changed before action")
+    return apply(plan)
+
+
+def main(argv=None):
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument(
+        "operation",
+        choices=(
+            "build",
+            "review-config",
+            "prepare",
+            "review-enroll",
+            "enroll",
+            "snapshot",
+            "review-run",
+            "run",
+            "status",
+            "stop",
+        ),
+    )
+    for name in ("settings", "policy", "expected-review", "run-id", "expected-container"):
+        p.add_argument("--" + name)
+    p.add_argument("--seconds", type=int)
+    a = p.parse_args(argv)
+    if (a.operation in ("prepare", "enroll", "run")) != (a.expected_review is not None):
+        p.error("Only prepare/enroll/run require --expected-review")
+    if (a.operation == "stop") != (a.expected_container is not None):
+        p.error("Only stop requires --expected-container")
+    if a.seconds is not None and a.operation not in ("review-run", "run"):
+        p.error("Duration is only for session review/run")
+    fd = None
+    try:
+        if os.geteuid() != 0:
+            raise ValueError("Root host operator required")
+        fd = os.open(LOCK, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
+        private(LOCK)
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        os.chdir(Path(__file__).resolve().parents[1])
+        if h.command(["git", "status", "--porcelain"]).stdout:
+            raise ValueError("Clean release checkout required")
+        release = h.command(["git", "rev-parse", "HEAD"]).stdout.strip()
+        if not re.fullmatch("[a-f0-9]{40}", release):
+            raise ValueError("Pinned release required")
+        print(json.dumps(run(a, release), sort_keys=True))
+        return 0
+    except (
+        OSError,
+        ValueError,
+        RuntimeError,
+        KeyError,
+        TypeError,
+        h.subprocess.SubprocessError,
+    ) as exc:
+        reason = (
+            str(exc) if type(exc) in (ValueError, RuntimeError) else "HOST_INSPECTION_UNAVAILABLE"
+        )
+        print(
+            json.dumps({"status": "UNAVAILABLE", "reason": reason, "live_enabled": False}),
+            file=sys.stderr,
+        )
+        return 2
+    finally:
+        if fd is not None:
+            os.close(fd)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
