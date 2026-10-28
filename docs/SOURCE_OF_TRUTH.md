@@ -1,6 +1,23 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.152. Bounded after-close Swing history proof, 2026-10-27 EDT.
+Version 1.153. Candidate daily/half-hour mapping from original history evidence, 2026-10-27 EDT.
+
+The host's four history reads completed at 2026-10-28 01:25 UTC. Uploaded original
+responses show 55 daily midnight-UTC labels ending October 26 and 47 whole-hour
+bars per symbol. They cannot satisfy the native 56-day/54-session-hour policy.
+October 27's daily bar is absent; relabeling whole-hour prices as 09:30-aligned
+hours would be incorrect. The missing daily bar's cause remains unproven.
+
+A separate --resampled proof requests daily UTC-date bounds and exact 30-minute
+pieces, then tests date-key normalization and lossless OHLCV aggregation into
+native session hours. Full coverage is required; the original capture still
+fails. The normal collector mapper, frozen settings, account and source bindings
+are unchanged. No original record is repaired/restamped or assigned entitlement.
+This candidate path needs real response acceptance before collector integration.
+See SWING_BAR_MAPPING_PROOF.md and SWING_BAR_MAPPING_PROOF.json. More strategy
+integration work remains; this is not paper-trading readiness.
+
+Prior history proof (v1.152):
 
 Added a host operation to capture actual enrolled daily/hourly histories once and
 run the native mapper without opening owner/collector databases or starting any

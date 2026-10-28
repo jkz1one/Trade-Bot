@@ -94,7 +94,7 @@ def inspect_capture(policy, plan, artifact):
     return report, history
 
 
-def main(argv=None):
+def main(argv=None, *, planner=plan_for, inspector=inspect_capture):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--directory", required=True)
     parser.add_argument("--policy", required=True)
@@ -106,7 +106,7 @@ def main(argv=None):
     try:
         private_directory(directory)
         policy = FeedPolicy.model_validate(private_json(args.policy))
-        target, plan = plan_for(policy, utc_now())
+        target, plan = planner(policy, utc_now())
         if plan is None:
             print(json.dumps({"status": "WAIT_FOR_PREOPEN_WINDOW", "provider_calls": False}))
             return 2
@@ -153,7 +153,7 @@ def main(argv=None):
         if "result" not in artifact:
             report, history = {"status": "CAPTURE_UNAVAILABLE", "live_enabled": False}, None
         else:
-            report, history = inspect_capture(policy, plan, artifact)
+            report, history = inspector(policy, plan, artifact)
         report["requested_target_session"] = str(target)
         report["capture_sha256"] = hashlib.sha256(raw_path.read_bytes()).hexdigest()
         if history is not None:
