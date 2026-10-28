@@ -6,6 +6,7 @@ from datetime import UTC, date, datetime, time
 from pathlib import Path
 
 from app.events.adapters import (
+    ADAPTER_VERSIONS,
     BEA_URL,
     BLS_URL,
     CboeDailyAdapter,
@@ -84,7 +85,7 @@ def main(argv=None):
                 }[args.source]
                 spec = SourceSpec(
                     args.source,
-                    args.source + "-adapter-v1",
+                    ADAPTER_VERSIONS[args.source],
                     dataset,
                     datetime.combine(args.start, time(), UTC),
                     datetime.combine(args.end, time(), UTC),

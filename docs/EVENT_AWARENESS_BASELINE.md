@@ -38,6 +38,14 @@ diagnostic. See [contract, settings and limits](EARNINGS_IV_AWARENESS.md) and
 checks, not a crush forecast or live VIX policy. The original event policy and
 all native trading behavior remain unchanged.
 
+## Public-source continuation
+
+Actual workspace captures and a fixed-child capture/replay command now cover BLS,
+BEA and daily VIX schema checks. Coverage remains partial; these are not host or
+complete calendar acceptance. See [source evidence and usage](EVENT_SOURCE_ACCEPTANCE.md)
+and `EVENT_SOURCE_PROOF.json`. Reviewed base f25efaa (following 988ff86) was incorporated into the
+feature only; prior reconciliation paragraphs describe historical checkpoints.
+
 ## Delivered boundary
 
 `app.events` is one shared deterministic component for Degen, Swing and Scope.

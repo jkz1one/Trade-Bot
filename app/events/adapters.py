@@ -20,6 +20,27 @@ BLS_URL = "https://www.bls.gov/schedule/news_release/bls.ics"
 BEA_URL = "https://www.bea.gov/news/schedule/ics/online-calendar-subscription.ics"
 VIX_URL = "https://cdn-api.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv"
 MAX_RESPONSE = 8 * 1024 * 1024
+ADAPTER_VERSIONS = {s: s + "-adapter-v1" for s in ("bls", "bea", "vix", "te", "finnhub")}
+ADAPTER_VERSIONS["bls"] = "bls-adapter-v2"
+# Reviewed from the original BLS public capture. Never treat an arbitrary custom
+# TZID as an IANA name or accept changed offsets/recurrence rules silently.
+BLS_EASTERN_DEFINITION = """BEGIN:VTIMEZONE
+TZID:US-Eastern
+BEGIN:DAYLIGHT
+TZOFFSETFROM:-0500
+TZOFFSETTO:-0400
+DTSTART:20070311T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU
+TZNAME:EDT
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:-0400
+TZOFFSETTO:-0500
+DTSTART:20071104T020000
+RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU
+TZNAME:EST
+END:STANDARD
+END:VTIMEZONE"""
 
 
 class NoRedirect(HTTPRedirectHandler):
@@ -112,6 +133,24 @@ class ICalendarAdapter:
         ):
             raise ValueError("Complete bounded iCalendar required")
         lines = re.sub(r"\r?\n[ \t]", "", raw).splitlines()
+        if any("TZID=US-Eastern:" in line or line == "TZID:US-Eastern" for line in lines):
+            if (
+                self.url != BLS_URL
+                or lines.count("BEGIN:VTIMEZONE") != 1
+                or lines.count("END:VTIMEZONE") != 1
+            ):
+                raise ValueError("Unreviewed custom timezone")
+            definition = lines[lines.index("BEGIN:VTIMEZONE") : lines.index("END:VTIMEZONE") + 1]
+            if definition != BLS_EASTERN_DEFINITION.splitlines():
+                raise ValueError("BLS timezone definition changed")
+            lines = [
+                re.sub(
+                    r"^((?:DTSTART|DTEND|DTSTAMP|LAST-MODIFIED);TZID=)US-Eastern:",
+                    r"\1America/New_York:",
+                    line,
+                )
+                for line in lines
+            ]
         records, current = [], None
         for line in lines:
             if line == "BEGIN:VEVENT":

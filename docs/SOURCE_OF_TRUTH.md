@@ -1,5 +1,25 @@
 # Autonomous Compounding Trader: source of truth
 
+Public source capture continuation, 2026-10-27 EDT (receipts retain UTC clocks).
+
+Added a one-shot public-source probe with a bounded fixed child, private atomic
+receipts, decoded original responses, normalized evidence, and offline replay.
+Actual workspace captures parsed BEA (168 events), BLS (313 events after a reviewed
+custom-timezone fix), and one daily VIX observation. Coverage remains PARTIAL;
+BLS revision timestamps remain absent. These are workspace provider/schema checks,
+not host acceptance, broad macro clearance or live VIX coverage.
+
+Feature work started at 376652d. Reviewed base 988ff86 and its later proof-only
+follow-up f25efaa; incorporated f25efaa into this feature only. Its Swing history
+proof changes no native application
+contracts. Preserved its complete source-of-truth body below the feature history.
+See EVENT_SOURCE_ACCEPTANCE.md and EVENT_SOURCE_PROOF.json for exact receipts,
+offline tests and remaining access/host work. No operational event snapshot was
+published, and no server worker, enforcement, account or live trading was enabled.
+
+Earlier feature checkpoints follow; the latest paper-trading base status is
+preserved after them.
+
 Earnings/IV observation continuation, 2026-10-27 EDT.
 
 Added an earnings-linked option-volatility diagnostic to the native event audit
@@ -35,7 +55,40 @@ UID/mount isolation, missing-context delivery and host latency acceptance remain
 This reconciliation does not convert prior base host evidence into acceptance of
 the event observer. The current paper-trading base status follows unchanged.
 
-Version 1.152. Bounded after-close Swing history proof, 2026-10-27 EDT.
+Version 1.154. Real hourly acceptance and daily-placeholder diagnosis, 2026-10-27 EDT.
+
+The uploaded resampled capture at 2026-10-28 03:53:42 UTC validates both SPY/QQQ
+half-hour arrays into 54 native session hours. Each daily array has 56 rows, but
+the October 27 row is explicitly interpolated with zero volume and yesterday's
+close copied into all OHLC fields. Combined history remains correctly rejected.
+No mapper relaxation, substituted daily price or source restamping was made.
+
+The proof now reports every series independently, with exact bounded per-bar
+failure reasons. Real capture regressions verify hourly acceptance and rejection
+of daily placeholders, including when the interpolation flag is removed but
+volume remains zero. This history path now needs actual completed daily data;
+provider publication time is unconfirmed. Other strategy integration work remains.
+See SWING_BAR_MAPPING_PROOF.md and SWING_DAILY_PLACEHOLDER_PROOF.json. No account,
+collector enrollment, production mapping, LIVE or dashboard change occurred.
+
+Prior candidate mapping (v1.153):
+
+The host's four history reads completed at 2026-10-28 01:25 UTC. Uploaded original
+responses show 55 daily midnight-UTC labels ending October 26 and 47 whole-hour
+bars per symbol. They cannot satisfy the native 56-day/54-session-hour policy.
+October 27's daily bar is absent; relabeling whole-hour prices as 09:30-aligned
+hours would be incorrect. The missing daily bar's cause remains unproven.
+
+A separate --resampled proof requests daily UTC-date bounds and exact 30-minute
+pieces, then tests date-key normalization and lossless OHLCV aggregation into
+native session hours. Full coverage is required; the original capture still
+fails. The normal collector mapper, frozen settings, account and source bindings
+are unchanged. No original record is repaired/restamped or assigned entitlement.
+This candidate path needs real response acceptance before collector integration.
+See SWING_BAR_MAPPING_PROOF.md and SWING_BAR_MAPPING_PROOF.json. More strategy
+integration work remains; this is not paper-trading readiness.
+
+Prior history proof (v1.152):
 
 Added a host operation to capture actual enrolled daily/hourly histories once and
 run the native mapper without opening owner/collector databases or starting any

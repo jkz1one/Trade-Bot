@@ -1,0 +1,27 @@
+{
+  "version": "candidate-swing-bar-mapping-proof-v1",
+  "installed_tests_passed": 98,
+  "failed": 0,
+  "archive_sha256": "f5422922af29a61323a4eae77384cfd9a6bcfba8a07086e56a8e562848888fdf",
+  "capture_sha256": "de406f6c478391588f14762d385cffbcb308c27554b053c55b3c68c272498ca8",
+  "original_capture_still_rejected": true,
+  "candidate_provider_capture_performed": false,
+  "production_mapper_changed": false,
+  "state_modified": false,
+  "live_enabled": false,
+  "entitlement": "UNKNOWN",
+  "validation": [
+    "Exact half-hour OHLCV aggregation",
+    "Daily date-key complete session coverage",
+    "Whole-hour captured prices never restamped",
+    "Missing/duplicate/shifted/interpolated/zero-volume bars rejected",
+    "Holiday/short-day/DST calendar cases",
+    "98 installed history/source/delivery tests"
+  ],
+  "remaining": [
+    "Actual 30-minute source and daily date-bound response acceptance",
+    "Versioned collector integration after acceptance",
+    "Entitlement and reviewed contract terms",
+    "Swing catalyst and Scope sources"
+  ]
+}

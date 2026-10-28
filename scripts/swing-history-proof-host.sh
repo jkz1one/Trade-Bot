@@ -3,6 +3,13 @@
 set -euo pipefail
 [[ "$EUID" == 0 ]] || { echo 'Run on the Trade-Bot host as root.' >&2; exit 1; }
 umask 077
+proof_helper=swing-history-proof.py
+if [[ "${1:-}" == --resampled && "$#" == 1 ]]; then
+  proof_helper=swing-history-bars-proof.py
+elif [[ "$#" != 0 ]]; then
+  echo 'Usage: bash scripts/swing-history-proof-host.sh [--resampled]' >&2
+  exit 2
+fi
 proof_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$proof_root"
 [[ -z "$(git status --porcelain)" ]] || { echo 'Clean checkout required.' >&2; exit 1; }
@@ -24,7 +31,7 @@ docker run --rm --network bridge --init --read-only \
   --mount "type=bind,src=$proof_root/scripts,dst=/scripts,readonly" \
   --mount "type=bind,src=$proof_output,dst=/out" \
   -e TRADER_LIVE_ENABLED=false "$proof_image" \
-  python -I -W error /scripts/swing-history-proof.py \
+  python -I -W error "/scripts/$proof_helper" \
   --directory /out --policy /input/policy.json --schemas /auth/discovery.json \
   --oauth-file /auth/robinhood-oauth.json --run || proof_status=$?
 printf 'Exit code: %s\nEvidence directory: %s\n' "$proof_status" "$proof_output"

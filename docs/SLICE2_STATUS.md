@@ -1,5 +1,16 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Public event-source acceptance slice
+
+From feature 376652d; remote base 988ff86 and follow-up f25efaa reviewed; f25efaa incorporated into this
+feature only. Added fixed-child one-shot capture/replay; retained actual public
+BLS, BEA and daily VIX receipts. Fixed BLS custom timezone only after matching its
+explicit modern US DST definition. Coverage stays PARTIAL, missing source clocks
+stay missing. See EVENT_SOURCE_ACCEPTANCE.md and EVENT_SOURCE_PROOF.json.
+Stopping reason: completed provider/schema capture and offline proof slice.
+Remaining: complete coverage, paid/credentialed sources, host integration and
+source-to-detection/latency acceptance. No deployment or enforcement.
+
 Earnings/IV observation continuation, 2026-10-27 EDT.
 
 Added an earnings-linked option-volatility diagnostic to the native event audit
