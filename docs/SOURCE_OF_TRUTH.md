@@ -1,5 +1,26 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.156. Robinhood-only family isolation, 2026-10-28 EDT.
+
+The connected portfolio can evaluate ordinary strategy inputs when Scope or Swing
+inputs are absent. Missing Scope remains explicit coverage evidence; an active
+Scope watch still requires exact coverage. Missing Swing is recorded as an
+explicit portfolio-only swing_unavailable frame with no Swing sources or
+catalysts. Native planning, stock selection, entry verification and tape item
+expansion exclude that unavailable family without manufacturing evidence. Complete
+Swing inputs retain the existing strict source checks. Quote, history, account,
+position protection, risk, entitlement and contract checks remain enforced.
+
+This supersedes the all-family collector veto described in earlier delivery notes.
+Robinhood is the user's only intended provider. SignalFlow's broader provider
+assumptions are not a requirement to buy another feed. The current host profile
+still has no reviewed option candidates, UNKNOWN entitlement, unreviewed stock
+metadata/sizes, and an ordinary stopped entry halt. This change alone does not
+make the host trading-ready, clear its halt, activate the dashboard or enable LIVE.
+See ROBINHOOD_FAMILY_ISOLATION.md for scope and verification.
+
+Previous version notes (historical):
+
 Version 1.155. Versioned production Swing history connection, 2026-10-28 EDT.
 
 Moved daily date-key / exact half-hour mapping into an opt-in native collector

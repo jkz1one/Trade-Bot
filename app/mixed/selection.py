@@ -209,7 +209,7 @@ def collect(c, key, frame, evidence):
                 item.swing is not None or item.catalyst is not None
             ):
                 raise ValueError("STOCK_SWING_NOT_ENROLLED")
-            if c.stock_policy.swing is not None:
+            if c.stock_policy.swing is not None and not frame.swing_unavailable:
                 if item.swing is None or item.catalyst is None:
                     raise ValueError("STOCK_COMPLETE_SWING_SOURCE_REQUIRED")
                 lock(c, db, item)
@@ -221,6 +221,7 @@ def collect(c, key, frame, evidence):
                 c.engine.policy,
                 c.engine.calendar,
                 now=c.now(),
+                swing_unavailable=frame.swing_unavailable,
             )
             rejected[symbol] = issues
             for family, reason in terminals.items():
@@ -438,7 +439,8 @@ def guard_stock(engine, db, source_key, proposal, quote, now, *, original=False)
     history = next(x for x in frame.histories if x.symbol == item.quote.instrument.symbol)
     at = clock(datetime.fromisoformat(row["started_at"]))
     rebuilt, _, _ = candidates(
-        item, history, DegenPolicy.model_validate(cfg["setup"]), policy, execution, calendar, now=at
+        item, history, DegenPolicy.model_validate(cfg["setup"]), policy, execution, calendar, now=at,
+        swing_unavailable=frame.swing_unavailable
     )
     if (
         candidate not in rebuilt

@@ -90,6 +90,7 @@ def strategy_configuration(
 
 
 class DegenFrame(OptionRecord):
+    swing_unavailable: bool = Field(default=False, strict=True, exclude_if=lambda v: not v)
     portfolio_version: Literal["portfolio-frame-v2"] | None = Field(
         default=None, exclude_if=lambda v: v is None
     )
@@ -117,6 +118,11 @@ class DegenFrame(OptionRecord):
 
     @model_validator(mode="after")
     def portfolio_inputs(self):
+        if self.swing_unavailable and (
+            self.portfolio_version is None or self.swing or self.swing_batches
+            or any(x.swing is not None or x.catalyst is not None for x in self.stocks)
+        ):
+            raise ValueError("Unavailable Swing requires an empty portfolio Swing universe")
         if (
             self.held_quotes or self.held_underlyings or self.held_stocks
         ) and self.portfolio_version is None:
@@ -608,15 +614,20 @@ class DegenCoordinator:
             ).fetchone()
         return OptionIntent.model_validate_json(row[0]).instrument if row else None
 
-    def quote_plan(self, histories, inventories, swing=(), *, swing_batches=()):
-        planned = self._quote_plan(histories, inventories, swing, swing_batches=swing_batches)
+    def quote_plan(self, histories, inventories, swing=(), *, swing_batches=(), swing_unavailable=False):
+        if swing_unavailable and (self.engine.portfolio_policy is None or swing or swing_batches):
+            raise ValueError("Unavailable Swing requires portfolio enrollment and no Swing inputs")
+        planned = self._quote_plan(
+            histories, inventories, swing, swing_batches=swing_batches,
+            swing_unavailable=swing_unavailable,
+        )
         if self.engine.portfolio_policy is not None:
             from app.mixed.portfolio_selection import held_instruments
 
             planned["held_instruments"] = held_instruments(self)
         return planned
 
-    def _quote_plan(self, histories, inventories, swing=(), *, swing_batches=()):
+    def _quote_plan(self, histories, inventories, swing=(), *, swing_batches=(), swing_unavailable=False):
         """Local planning performs no provider/model/order operation."""
         at = self.now()
         if swing_batches and (self.swing_policy is None or self.swing_policy.family_batch is None):
@@ -691,7 +702,7 @@ class DegenCoordinator:
             )
             for scan in scans
         )
-        if self.swing_policy is not None:
+        if self.swing_policy is not None and not swing_unavailable:
             from app.options.shared_strategy import swing_plans
 
             if self.swing_policy.family_batch is not None:
@@ -1056,7 +1067,7 @@ class DegenCoordinator:
                 self.swing_policy is None or self.swing_policy.family_batch is None
             ):
                 raise ValueError("Swing batches require explicit enrollment")
-            if self.swing_policy is not None:
+            if self.swing_policy is not None and not frame.swing_unavailable:
                 from app.options.shared_strategy import lock_seeds
 
                 if self.swing_policy.family_batch is not None:
@@ -1069,11 +1080,13 @@ class DegenCoordinator:
                     if frame.swing_batches:
                         raise ValueError("Swing batches require explicit enrollment")
                     lock_seeds(self, frame.swing)
+            if self.swing_policy is not None:
                 from app.options.swing_lifecycle import observe_quotes
 
                 observe_quotes(self, frame.underlyings)
             planned = self.quote_plan(
-                frame.histories, frame.inventories, frame.swing, swing_batches=frame.swing_batches
+                frame.histories, frame.inventories, frame.swing, swing_batches=frame.swing_batches,
+                swing_unavailable=frame.swing_unavailable,
             )
             if self.swing_policy and self.swing_policy.unfilled_lifecycle is not None:
                 from app.options.swing_lifecycle import retain_scans
@@ -1091,13 +1104,17 @@ class DegenCoordinator:
                     else {}
                 ),
                 **self._family_evidence(),
+                **({"unavailable_families": ["SWING"]} if frame.swing_unavailable else {}),
                 "scans": [s.model_dump(mode="json") for s in planned["scans"]],
                 "read_plans": [p.model_dump(mode="json") for p in planned["plans"]],
             }
             if (
                 len(expected) != len(planned["instruments"])
                 or len(quotes) != len(frame.quotes)
-                or set(quotes) != set(expected)
+                or (
+                    not set(expected) <= set(quotes) if frame.swing_unavailable
+                    else set(quotes) != set(expected)
+                )
                 or any(quotes[k].instrument != i for k, i in expected.items())
                 or len(underlyings) != len(frame.underlyings)
                 or set(underlyings) != set(self.policy.symbols)

@@ -222,7 +222,7 @@ def candidate(
 
 
 @exact
-def candidates(item, history, structure, policy, execution, calendar, *, now):
+def candidates(item, history, structure, policy, execution, calendar, *, now, swing_unavailable=False):
     """Recompute source signals; account admission and native attempt remain separate."""
     from app.options.lifecycle import OptionExecutionPolicy
 
@@ -280,6 +280,11 @@ def candidates(item, history, structure, policy, execution, calendar, *, now):
             rejected[setup.family] = ("STOCK_ORIGINAL_GEOMETRY_CONSUMED",)
         else:
             found.append(c)
+    if swing_unavailable:
+        if item.swing is not None or item.catalyst is not None:
+            raise ValueError("Unavailable Swing cannot carry sources")
+        rejected["SWING"] = ("SWING_INPUT_UNAVAILABLE",)
+        return tuple(found), rejected, terminals
     if policy.swing is None:
         if item.swing is not None or item.catalyst is not None:
             raise ValueError("STOCK_SWING_NOT_ENROLLED")

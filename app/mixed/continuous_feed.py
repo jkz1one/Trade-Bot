@@ -316,11 +316,29 @@ def normalize(
                 now=now,
             )
             issues.extend(missing)
+            if missing or history_issues:
+                frame = DegenFrame.model_validate(
+                    frame.model_dump() | {
+                        "swing_unavailable": True, "swing": (), "swing_batches": (),
+                        "stocks": tuple(StockCycleInput(quote=x.quote) for x in frame.stocks),
+                    }
+                )
         if source_settings.scope_policy is not None and frame.scope is None:
             issues.append("SCOPE_CURRENT_INPUT_UNAVAILABLE")
     elif swing_sources is not None or swing_evidence is not None:
         raise ValueError("Swing delivery requires enrolled runtime settings")
-    cycle = bool(histories) and len(stocks) == len(policy.stocks) and not issues
+    # Missing family sources cannot create candidates for that family, but do
+    # not discard ordinary strategy inputs. Shared quote/history failures still
+    # block the cycle; active Scope watches retain their native coverage guard.
+    cycle_issues = [
+        issue for issue in issues
+        if issue != "SCOPE_CURRENT_INPUT_UNAVAILABLE"
+        and not (
+            frame.swing_unavailable
+            and (issue.startswith("SWING_") or issue in history_issues)
+        )
+    ]
+    cycle = bool(histories) and len(stocks) == len(policy.stocks) and not cycle_issues
     if not cycle:
         frame = market_frame(frame)
     packet = PortfolioRuntimePacket(

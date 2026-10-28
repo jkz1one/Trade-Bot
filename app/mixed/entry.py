@@ -24,6 +24,7 @@ from app.robinhood.schedule import XNYSCalendar
 
 
 class StockEntryEvidence(OptionRecord):
+    swing_unavailable: bool = Field(default=False, strict=True, exclude_if=lambda v: not v)
     candidate: StockSourceCandidate
     admission: PortfolioStockAdmission | StockAdmission
     account_revision: int = Field(ge=0, strict=True)
@@ -40,6 +41,8 @@ class StockEntryEvidence(OptionRecord):
 
     @model_validator(mode="after")
     def bound(self):
+        if self.swing_unavailable and not isinstance(self.history, PortfolioHistory):
+            raise ValueError("Unavailable Swing requires portfolio evidence")
         rebuilt, _, _ = candidates(
             self.source,
             self.intraday,
@@ -48,6 +51,7 @@ class StockEntryEvidence(OptionRecord):
             self.execution,
             XNYSCalendar(),
             now=self.as_of,
+            swing_unavailable=self.swing_unavailable,
         )
         actual = admit_stock(
             self.candidate.proposal,
@@ -94,6 +98,7 @@ def evidence_for(c, key, evidence):
     return tuple(
         StockEntryEvidence(
             **raw,
+            swing_unavailable=frame.swing_unavailable,
             source=next(
                 x
                 for x in frame.stocks

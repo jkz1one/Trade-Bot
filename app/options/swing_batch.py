@@ -196,6 +196,8 @@ def expand_batches(supplied, policy, calendar, symbols, at):
 
 
 def frame_items(frame, policy, calendar, symbols, at):
+    if frame.swing_unavailable:
+        return ()
     if policy is not None and policy.family_batch is not None:
         if frame.swing:
             raise ValueError("Joint Swing requires only complete original batches")

@@ -165,14 +165,17 @@ def test_prepared_sources_do_not_prevent_market_delivery_when_a_peer_input_fails
     extras = {"history_issues": ("SWING_HISTORY_UNAVAILABLE",)} if damage == "history" else {}
     capture, catalog = capture_for(feed, schemas, now, missing_stock=damage == "missing_stock")
     packet = normalized(feed, schemas, capture, catalog, settings, bound, evidence, 1, **extras)
-    assert packet.kind == "MARKET" and packet.coverage_issues
+    assert packet.kind == ("CYCLE" if damage == "history" else "MARKET")
+    assert packet.coverage_issues
+    assert packet.frame.swing_unavailable is (damage == "history" or damage == "missing_stock")
     assert len(packet.frame.quotes) == 2
     assert not packet.frame.swing and not packet.frame.swing_batches
-    assert not packet.frame.histories and not packet.frame.inventories
+    assert bool(packet.frame.histories) is (damage == "history")
     assert all(s.swing is None and s.catalyst is None for s in packet.frame.stocks)
 
 
-def test_native_scope_enrollment_requires_explicit_feed_coverage(tmp_path, schemas):
+@pytest.mark.parametrize("missing_stock", [False, True])
+def test_missing_scope_preserves_other_cycle_inputs(tmp_path, schemas, missing_stock):
     from test_option_runtime import policy
     from test_option_scope_arbitration import shared
 
@@ -214,12 +217,17 @@ def test_native_scope_enrollment_requires_explicit_feed_coverage(tmp_path, schem
         capture=CapturePolicy(oauth_file="/unused/offline", timeout_seconds=5.0),
     )
     now = AT + timedelta(minutes=30)
-    capture, catalog = capture_for(feed, schemas, now)
+    capture, catalog = capture_for(feed, schemas, now, missing_stock=missing_stock)
     packet = normalized(feed, schemas, capture, catalog, settings, None, None, 1)
-    assert packet.kind == "MARKET"
-    assert packet.coverage_issues == ("SCOPE_CURRENT_INPUT_UNAVAILABLE",)
-    assert len(packet.frame.stocks) == len(feed.stocks)
-    assert packet.frame.stocks[0].quote.source_at == now
+    assert packet.kind == ("MARKET" if missing_stock else "CYCLE")
+    assert bool(packet.frame.histories) is not missing_stock
+    assert packet.frame.scope is None
+    assert "SCOPE_CURRENT_INPUT_UNAVAILABLE" in packet.coverage_issues
+    if missing_stock:
+        assert "MISSING_QUOTE:SPY" in packet.coverage_issues
+    assert len(packet.frame.stocks) == (0 if missing_stock else len(feed.stocks))
+    if not missing_stock:
+        assert packet.frame.stocks[0].quote.source_at == now
 
 
 def test_collector_publishes_intervening_quote_poll_and_recovers_it_after_restart(

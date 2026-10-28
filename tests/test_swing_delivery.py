@@ -295,7 +295,7 @@ def test_collector_delivers_persisted_blockers_after_restart_without_erasing_quo
         feed.close()
 
 
-def test_missing_swing_inputs_downgrade_actual_cycle_but_preserve_held_quotes(tmp_path, schemas):
+def test_missing_swing_inputs_preserve_other_cycle_and_held_quotes(tmp_path, schemas):
     settings, p = connected(tmp_path)
     p, capture, catalog, held = captured_market(schemas, p)
     plain = normalize(p, schemas, capture, catalog, (held,), sequence=1, now=capture.collected_at)
@@ -310,12 +310,14 @@ def test_missing_swing_inputs_downgrade_actual_cycle_but_preserve_held_quotes(tm
         now=capture.collected_at,
         source_settings=settings,
     )
-    assert packet.kind == "MARKET"
+    assert packet.kind == "CYCLE"
+    assert packet.frame.swing_unavailable
     assert packet.coverage_issues == ("SWING_ORIGINAL_SOURCES_UNAVAILABLE",)
     assert packet.frame.held_quotes == plain.frame.held_quotes
     assert packet.frame.quotes == plain.frame.quotes
     assert packet.frame.stocks == plain.frame.stocks
-    assert not packet.frame.histories and not packet.frame.inventories
+    assert packet.frame.histories == plain.frame.histories
+    assert packet.frame.inventories == plain.frame.inventories
 
 
 def test_single_seed_delivery_keeps_original_derived_targets():
