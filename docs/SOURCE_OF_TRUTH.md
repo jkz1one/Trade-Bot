@@ -1,6 +1,22 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.153. Candidate daily/half-hour mapping from original history evidence, 2026-10-27 EDT.
+Version 1.154. Real hourly acceptance and daily-placeholder diagnosis, 2026-10-27 EDT.
+
+The uploaded resampled capture at 2026-10-28 03:53:42 UTC validates both SPY/QQQ
+half-hour arrays into 54 native session hours. Each daily array has 56 rows, but
+the October 27 row is explicitly interpolated with zero volume and yesterday's
+close copied into all OHLC fields. Combined history remains correctly rejected.
+No mapper relaxation, substituted daily price or source restamping was made.
+
+The proof now reports every series independently, with exact bounded per-bar
+failure reasons. Real capture regressions verify hourly acceptance and rejection
+of daily placeholders, including when the interpolation flag is removed but
+volume remains zero. This history path now needs actual completed daily data;
+provider publication time is unconfirmed. Other strategy integration work remains.
+See SWING_BAR_MAPPING_PROOF.md and SWING_DAILY_PLACEHOLDER_PROOF.json. No account,
+collector enrollment, production mapping, LIVE or dashboard change occurred.
+
+Prior candidate mapping (v1.153):
 
 The host's four history reads completed at 2026-10-28 01:25 UTC. Uploaded original
 responses show 55 daily midnight-UTC labels ending October 26 and 47 whole-hour

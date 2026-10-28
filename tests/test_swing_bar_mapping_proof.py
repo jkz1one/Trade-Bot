@@ -102,3 +102,35 @@ def test_holiday_short_day_and_dst_coverage(schemas,at):
     report,h=module.inspect_capture(p,plan,a)
     assert report['status']=='CANDIDATE_HISTORY_MAPPED'
     assert len(h.hourly[0].bars)==54
+
+
+def test_real_half_hours_pass_but_latest_daily_placeholders_block(schemas):
+    path = Path(__file__).parent / 'fixtures/swing_resampled_20261028.json'
+    a = json.loads(path.read_text())['capture']
+    a['result']['schemas'] = schemas.model_dump(mode='json')
+    before = copy.deepcopy(a)
+    from app.options.read_gateway import CapturePlan
+    plan = CapturePlan.model_validate(a['result']['plan'])
+    report, history = module.inspect_capture(policy(), plan, a)
+    assert history is None and report['status'] == 'CANDIDATE_HISTORY_MAPPING_UNAVAILABLE'
+    validation = report['series_validation']
+    assert validation['hourly_bars'] == {'SPY': 54, 'QQQ': 54}
+    assert validation['daily_bars'] == {}
+    assert [f['label'] for f in validation['failures']] == ['swing-SPY-day', 'swing-QQQ-day']
+    assert all(f['reason'] == 'INTERPOLATED_BAR' and
+               f['observed_begins_at'] == '2026-10-27T00:00:00+00:00'
+               for f in validation['failures'])
+    assert a == before
+    assert not report['trading_ready'] and report['entitlement'] == 'UNKNOWN'
+
+
+def test_zero_volume_does_not_become_valid_when_flag_removed(schemas):
+    path = Path(__file__).parent / 'fixtures/swing_resampled_20261028.json'
+    a = json.loads(path.read_text())['capture']
+    a['result']['schemas'] = schemas.model_dump(mode='json')
+    for receipt in a['result']['observations'][::2]:
+        receipt['raw']['structuredContent']['data']['results'][0]['bars'][-1].pop('interpolated')
+    from app.options.read_gateway import CapturePlan
+    report, history = module.inspect_capture(policy(), CapturePlan.model_validate(a['result']['plan']), a)
+    assert history is None
+    assert all(f['reason'] == 'NONPOSITIVE_VOLUME' for f in report['series_validation']['failures'])

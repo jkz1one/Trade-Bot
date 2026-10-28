@@ -46,3 +46,26 @@ short sessions and DST. Real daily date-key and half-hour response acceptance
 remains pending; the report from the next proof determines whether this candidate
 mapping fits the provider. A changed daily bound is a hypothesis to test, not a
 claim that October 27 data is available. Scope/catalyst integrations remain absent.
+
+## Real resampled capture: current daily placeholders
+
+The subsequent capture at 2026-10-28 03:53:42 UTC (October 27 23:53 EDT) verifies
+that both 100-piece half-hour series map exactly to 54 native session hours.
+Daily arrays contain 56 rows, but their October 27 rows are explicitly
+interpolated=true with volume=0. SPY's OHLC is flat at 765.37, and QQQ's is flat
+at 712.20, matching their respective preceding daily closes. Row count therefore
+does not establish complete observed history. The mapper correctly rejects them.
+
+Reports now validate every series independently and include series_validation:
+accepted daily/hourly counts and bounded bar failures with label, reason and
+original/expected timestamps. INTERPOLATED_BAR and NONPOSITIVE_VOLUME are
+separate from source-label/session mismatches; other validation failures retain a
+fixed SERIES_VALIDATION_FAILED code. No arbitrary exception text or transport
+payload is printed. A failed daily series still prevents a combined snapshot.
+
+The real regression verifies both accepted hourly series and both rejected daily
+placeholders. Removing the interpolation flag alone still fails on zero volume.
+No daily OHLC is copied from yesterday, invented or synthesized to pass the test.
+The next useful capture must supply actually observed completed daily bars; the
+provider's publication time has not been established. Candidate production
+integration, entitlement and other strategy sources remain outstanding.

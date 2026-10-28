@@ -44,6 +44,16 @@ def plan_for(policy, now):
     return target, CapturePlan(purpose=old.purpose, symbols=old.symbols, calls=tuple(calls))
 
 
+class HistoryBarError(ValueError):
+    """Bounded, public bar diagnostics; never exception text or transport payloads."""
+
+    def __init__(self, reason, label, expected, observed):
+        super().__init__(reason)
+        self.detail = {"reason": reason, "label": label,
+                       "expected_begins_at": expected.isoformat(),
+                       "observed_begins_at": observed.isoformat()}
+
+
 def map_series(schemas, call, raw, *, received_at, target, count):
     _, data = response(schemas, call, raw, "get_equity_historicals")
     interval = call.arguments["interval"]
@@ -79,10 +89,15 @@ def map_series(schemas, call, raw, *, received_at, target, count):
             pieces = []
             for label, opened, closed in group:
                 raw_bar = next(source_bars)
-                if (instant(raw_bar["begins_at"]) != label or raw_bar.get("session") != "reg"
-                        or raw_bar.get("interpolated", False) is not False
-                        or raw_bar["volume"] <= 0):
-                    raise ValueError("Missing, shifted or interpolated source bar")
+                observed = instant(raw_bar["begins_at"])
+                reason = (
+                    "SOURCE_LABEL_MISMATCH" if observed != label else
+                    "NONREGULAR_BAR" if raw_bar.get("session") != "reg" else
+                    "INTERPOLATED_BAR" if raw_bar.get("interpolated", False) is not False else
+                    "NONPOSITIVE_VOLUME" if raw_bar["volume"] <= 0 else None
+                )
+                if reason:
+                    raise HistoryBarError(reason, call.label, label, observed)
                 pieces.append(SwingDailyBar(
                     begins_at=opened, closes_at=closed, open=raw_bar["open_price"],
                     high=raw_bar["high_price"], low=raw_bar["low_price"],
@@ -112,9 +127,9 @@ def inspect_capture(policy, plan, artifact):
     report["requested_target_session"] = str(target)
     if captured.status != "COMPLETE" or len(captured.observations) != len(plan.calls):
         return report, None
-    daily, hourly = [], []
-    try:
-        for call, receipt in zip(plan.calls, captured.observations, strict=True):
+    daily, hourly, failures = [], [], []
+    for call, receipt in zip(plan.calls, captured.observations, strict=True):
+        try:
             if receipt.get("completed") is not True:
                 raise ValueError("Incomplete history read")
             is_daily = call.arguments["interval"] == "day"
@@ -124,7 +139,16 @@ def inspect_capture(policy, plan, artifact):
                                      else policy.swing_history.hourly_bars),
             )
             (daily if is_daily else hourly).extend(values)
-    except (ValueError, KeyError, TypeError, ArithmeticError, base.SchemaError):
+        except HistoryBarError as exc:
+            failures.append(exc.detail)
+        except (ValueError, KeyError, TypeError, ArithmeticError, base.SchemaError):
+            failures.append({"label": call.label, "reason": "SERIES_VALIDATION_FAILED"})
+    report["series_validation"] = {
+        "daily_bars": {h.symbol: len(h.bars) for h in daily},
+        "hourly_bars": {h.symbol: len(h.bars) for h in hourly},
+        "failures": failures,
+    }
+    if failures:
         report["status"] = "CANDIDATE_HISTORY_MAPPING_UNAVAILABLE"
         return report, None
     history = SwingHistorySnapshot(target_session=target, captured_at=captured.collected_at,
