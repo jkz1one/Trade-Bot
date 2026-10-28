@@ -12,7 +12,9 @@ review. No actual catalog, carry dates or host activation were performed here.
 
 `app.mixed.feed_rollover review` takes the existing owner, collector, base policy
 and exported schemas, plus a proposed full FeedPolicy and a target session.
-Only `candidates` and `carry_intents` may differ from the base. Transport settings,
+Only `candidates`, `carry_intents`, and the explicitly versioned
+`swing_history.bar_mapping` selector may differ from the base. History enrollment
+and lookback sizes remain frozen; see NATIVE_SWING_BAR_MAPPING.md. Transport settings,
 provider/schema identity, stock universe, limits and history enrollment stay fixed.
 
 The target must be an exact exchange session after the current New York date and

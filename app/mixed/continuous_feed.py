@@ -502,7 +502,7 @@ class ContinuousFeed:
             or fingerprint(captured.plan) != attempt["request_hash"]
             or value
             != snapshot(
-                self.policy.swing_history,
+                self.policy_for(target).swing_history,
                 tuple(i.symbol for i in self.policy.stocks),
                 self.schemas,
                 captured,
@@ -587,10 +587,13 @@ class ContinuousFeed:
             return {"status": "RATE_LIMITED"}
         history_calls = ()
         if self.policy.swing_history is not None:
-            from app.mixed.swing_feed import planned_history
+            from app.robinhood.schedule import XNYSCalendar
+            from app.mixed.swing_feed import planned_history, target_session
 
+            history_target = target_session(now, XNYSCalendar())
+            history_policy = self.policy_for(history_target).swing_history if history_target else self.policy.swing_history
             target, proposed = planned_history(
-                self.policy.swing_history, tuple(i.symbol for i in self.policy.stocks), now
+                history_policy, tuple(i.symbol for i in self.policy.stocks), now
             )
             history_used = self.db.execute(
                 "SELECT COALESCE(SUM(b.calls),0) FROM swing_read_budget b JOIN attempts a USING(sequence) WHERE a.started_at>?",
@@ -643,7 +646,7 @@ class ContinuousFeed:
 
                 try:
                     swing = snapshot(
-                        self.policy.swing_history,
+                        history_policy,
                         tuple(i.symbol for i in self.policy.stocks),
                         self.schemas,
                         captured,

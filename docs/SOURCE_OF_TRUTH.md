@@ -1,6 +1,23 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.154. Real hourly acceptance and daily-placeholder diagnosis, 2026-10-27 EDT.
+Version 1.155. Versioned production Swing history connection, 2026-10-28 EDT.
+
+Moved daily date-key / exact half-hour mapping into an opt-in native collector
+path. Default policy serialization and legacy capture replay remain unchanged.
+Future-session rollover can select bar_mapping without changing history lookback,
+transport or account configuration. The collector uses the target session's
+mapping for planning, snapshot creation and durable replay, including overnight
+preparation across New York/UTC date boundaries. Existing original target history
+or source receipts prevent reinterpretation. No host update or enrollment occurred.
+
+Actual uploaded daily placeholders remain rejected; UNKNOWN entitlement is not
+promoted. The history production path can now be deployed and explicitly enrolled
+without account reset, but data acceptance is still incomplete. Scope and Swing
+catalyst integration require identified provider contracts/payloads absent from
+the reviewed six-tool feed. Do not describe all coding or paper readiness as done.
+See NATIVE_SWING_BAR_MAPPING.md and NATIVE_SWING_BAR_MAPPING_PROOF.json.
+
+Prior placeholder diagnosis (v1.154):
 
 The uploaded resampled capture at 2026-10-28 03:53:42 UTC validates both SPY/QQQ
 half-hour arrays into 54 native session hours. Each daily array has 56 rows, but

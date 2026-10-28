@@ -52,9 +52,14 @@ def configuration_hash(policy, schemas, *, rolled):
 
 
 def validate_policy(base, proposed, target, created_at):
-    immutable = {"candidates", "carry_intents"}
+    immutable = {"candidates", "carry_intents", "swing_history"}
     if base.model_dump(exclude=immutable) != proposed.model_dump(exclude=immutable):
         raise ValueError("Rollover cannot change frozen transport, universe or history settings")
+    if base.swing_history != proposed.swing_history:
+        if (base.swing_history is None or proposed.swing_history is None
+                or base.swing_history.model_dump(exclude={"bar_mapping"})
+                != proposed.swing_history.model_dump(exclude={"bar_mapping"})):
+            raise ValueError("Rollover may change history mapping only, not history enrollment or lookbacks")
     now = clock(created_at)
     if not 0 < (target - now.astimezone(ZoneInfo("America/New_York")).date()).days <= 60:
         raise ValueError("Rollover requires a future session within sixty days")

@@ -21,6 +21,9 @@ from app.robinhood.schedule import XNYSCalendar
 
 class SwingHistoryPolicy(OptionRecord):
     version: Literal["preopen-swing-history-v1"] = "preopen-swing-history-v1"
+    bar_mapping: Literal["session-aligned-v1", "utc-day-halfhour-v1"] = Field(
+        default="session-aligned-v1", exclude_if=lambda v: v == "session-aligned-v1"
+    )
     daily_bars: int = Field(default=56, strict=True, ge=56, le=260)
     hourly_bars: int = Field(default=54, strict=True, ge=54, le=260)
 
@@ -75,6 +78,10 @@ def planned_history(policy, symbols, now, *, calendar=None):
     policy = SwingHistoryPolicy.model_validate(policy.model_dump())
     if not symbols or len(set(symbols)) != len(symbols) or not set(symbols) <= {"SPY", "QQQ"}:
         raise ValueError("Exact supported Swing history subjects required")
+    if policy.bar_mapping == "utc-day-halfhour-v1":
+        from app.mixed.swing_bar_mapping import planned
+
+        return planned(policy, symbols, now, calendar=calendar)
     calendar = calendar or XNYSCalendar()
     target = target_session(now, calendar)
     if target is None:
@@ -190,7 +197,10 @@ def snapshot(policy, symbols, schemas, captured):
         ):
             raise ValueError("Swing read receipt identity changed")
         interval = call.arguments["interval"]
-        result = map_history(
+        mapper = map_history
+        if policy.bar_mapping == "utc-day-halfhour-v1":
+            from app.mixed.swing_bar_mapping import map_history as mapper
+        result = mapper(
             schemas,
             call,
             receipt["raw"],
