@@ -98,19 +98,67 @@ class OptionContract(OptionRecord):
 
 
 class OptionInstrument(OptionRecord):
+    simulation_terms: Literal["STANDARD_ETF_INTRADAY_V1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     provider: Name
     instrument_id: Name
     contract: OptionContract
     metadata_complete: StrictBool
     option_tradable: StrictBool
 
+    @model_validator(mode="after")
+    def simulated_terms_boundary(self):
+        if self.simulation_terms is not None and (
+            self.provider != "robinhood" or self.contract.underlying not in {"SPY", "QQQ"}
+            or self.contract.underlying_kind != "ETF" or self.contract.multiplier != 100
+            or self.contract.deliverable_units != 100 or self.contract.adjusted
+            or self.contract.exercise_style != "AMERICAN"
+            or self.contract.settlement != "PHYSICAL"
+            or self.contract.deliverable_kind != "SHARES"
+        ):
+            raise ValueError("Standard ETF simulation assumptions require unadjusted SPY/QQQ terms")
+        return self
+
 
 class Evidence(OptionRecord):
+    simulation_basis: Literal["ROBINHOOD_OBSERVED_V1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     source: Name
     source_at: datetime
     received_at: datetime
     entitlement: Literal["REALTIME", "DELAYED", "INDICATIVE", "UNKNOWN"]
     complete: StrictBool
+
+    @model_validator(mode="after")
+    def observed_simulation_source(self):
+        if self.simulation_basis is not None and (
+            self.entitlement != "UNKNOWN" or self.source != "robinhood-mcp"
+            or type(self).__name__ not in {
+                "OptionQuote", "UnderlyingQuote", "OptionGreekObservation",
+                "ContractMetadata", "OptionInventory", "DegenHistory", "StockQuote",
+            }
+        ):
+            raise ValueError("Observed simulation requires supported original Robinhood market evidence")
+        return self
+
+
+def paper_market_evidence(value):
+    """PAPER evidence only: preserve UNKNOWN entitlement on observed simulation data.
+
+    This is not a freshness/completeness/admission check or a LIVE entitlement.
+    Callers must retain their separate size, source, clock and identity checks.
+    """
+    return value.entitlement == "REALTIME" or (
+        value.entitlement == "UNKNOWN"
+        and value.source == "robinhood-mcp"
+        and value.simulation_basis == "ROBINHOOD_OBSERVED_V1"
+        and type(value).__name__ in {
+            "OptionQuote", "UnderlyingQuote", "OptionGreekObservation",
+            "ContractMetadata", "OptionInventory", "DegenHistory", "StockQuote",
+        }
+    )
 
 
 class OptionGreekObservation(Evidence):

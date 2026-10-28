@@ -196,7 +196,7 @@ def test_invalid_rollover_changes_nothing(tmp_path, schemas, damage):
     elif damage == "duplicate":
         value["candidates"] = (future(), future())
     elif damage == "past":
-        args = (*args[:-1], AT.date())
+        args = (*args[:-1], AT.date() - timedelta(days=1))
     elif damage == "weekend":
         args = (*args[:-1], date(2026, 10, 25))
     else:
@@ -489,3 +489,16 @@ def test_cli_review_apply_and_sanitized_failure_never_start_workers(
     assert "unreviewed-private-text" not in capsys.readouterr().out
     assert rollover.main(["apply", *flags, "--expected-review", reviewed["review_sha256"]]) == 0
     assert not json.loads(capsys.readouterr().out)["workers_started"]
+
+
+def test_current_session_cannot_reinterpret_prior_collection(tmp_path, schemas):
+    args, _, base, _ = prepared(tmp_path, schemas)
+    args = (*args[:-1], AT.date())
+    from test_portfolio_feed import reader
+    feed = ContinuousFeed(args[1], base, schemas)
+    try:
+        assert asyncio.run(feed.tick(now=AT, held=(), reader=reader(AT, [])))["status"] == "DELIVERED"
+    finally:
+        feed.close()
+    with pytest.raises(ValueError, match="prior collection today"):
+        review(args)

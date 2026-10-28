@@ -10,6 +10,7 @@ from typing import Literal
 
 from pydantic import Field, model_validator
 
+from app.options.models import paper_market_evidence
 from app.execution.engine import ExecutionBlocked
 from app.execution.judgment import JudgmentLimits
 from app.mixed.market_tape import MixedRecordedTape, validate_series
@@ -264,7 +265,7 @@ def stock_fill_quantity(intent, order, snapshot, quote, at, limits):
         or not intent.prepared_at < quote.source_at <= quote.received_at <= at
         or not order.updated_at <= at < intent.order_expires_at
         or quote.source != limits.quote_source
-        or quote.entitlement != "REALTIME"
+        or not paper_market_evidence(quote)
         or not quote.complete
         or not _fresh(
             quote.source_at,

@@ -7,6 +7,7 @@ from typing import Literal
 
 from pydantic import Field, model_validator
 
+from app.options.models import paper_market_evidence
 from app.mixed.carry import StockCatalyst, derive_terms
 from app.mixed.models import StockProposal
 from app.mixed.stock_models import StockInstrument, StockQuote
@@ -244,7 +245,7 @@ def candidates(item, history, structure, policy, execution, calendar, *, now, sw
     quote_bad = (
         q.source != limits.quote_source
         or not q.complete
-        or q.entitlement != "REALTIME"
+        or not paper_market_evidence(q)
         or not _fresh(
             q.source_at,
             q.received_at,

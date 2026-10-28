@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+from app.options.models import paper_market_evidence
 from app.options.engine import clock, exact, fingerprint
 from app.options.governor import _fresh
 from app.options.greek_health import SOURCE_COMMIT, _display
@@ -20,7 +21,7 @@ def _underlying_ok(u, entry, limits, now):
         and u.symbol == entry.instrument.contract.underlying
         and u.source == limits.underlying_source
         and u.complete
-        and u.entitlement == "REALTIME"
+        and paper_market_evidence(u)
         and u.bid <= u.ask
         and _fresh(
             u.source_at,
@@ -137,7 +138,7 @@ def record(engine, db, position, quote, underlying, now):
         and quote.instrument.option_tradable
         and quote.source == limits.option_source
         and quote.complete
-        and quote.entitlement == "REALTIME"
+        and paper_market_evidence(quote)
         and quote.bid is not None
         and quote.bid > 0
         and quote.bid_size is not None

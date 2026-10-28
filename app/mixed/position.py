@@ -8,6 +8,7 @@ from uuid import uuid4
 
 from pydantic import Field, model_validator
 
+from app.options.models import paper_market_evidence
 from app.execution.engine import ExecutionBlocked
 from app.mixed.entry import StockEntryEvidence
 from app.mixed.governor import admit_stock
@@ -160,7 +161,7 @@ def review(packet, plan, *, position, account, quote, now, protection=None):
     if (
         quote.source != limits.quote_source
         or not quote.complete
-        or quote.entitlement != "REALTIME"
+        or not paper_market_evidence(quote)
         or not _fresh(
             quote.source_at,
             quote.received_at,

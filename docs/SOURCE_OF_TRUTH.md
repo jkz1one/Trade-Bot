@@ -1,5 +1,24 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.157. Explicit observed-quote PAPER session, 2026-10-28 EDT.
+
+Added opt-in observed Robinhood simulation evidence, keeping entitlement UNKNOWN,
+plus explicit standard ETF contract assumptions with observed identities and ticks.
+No extra provider, separate account, stock size fabrication, catalyst fabrication,
+or LIVE activation is included. The existing owner, two-play cap and AI budgets
+remain unchanged. Native size, freshness, account, source and protection guards
+remain authoritative. Default serialization and strict entitlement behavior remain.
+
+The host can prepare and enroll a proposed session catalog from retained original
+captures and start a bounded run with explicit revision-bound flat recovery. The
+recovery waits for fresh native delivery before clearing a runtime stop/failure;
+normal runs do not auto-resume. Current-day policy enrollment refuses prior daily
+collection/held exposure. See OBSERVED_PAPER_SESSION.md for the assumptions,
+readiness distinctions and exact host operation. Deployment/current market
+acceptance still requires running it on the user's server and inspecting output.
+
+Previous version notes (historical):
+
 Version 1.156. Robinhood-only family isolation, 2026-10-28 EDT.
 
 The connected portfolio can evaluate ordinary strategy inputs when Scope or Swing

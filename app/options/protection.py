@@ -3,6 +3,7 @@
 from datetime import timedelta
 from decimal import ROUND_FLOOR, Context, Decimal, localcontext
 
+from app.options.models import paper_market_evidence
 from app.options.governor import _fresh, _tick_price
 from app.options.lifecycle import EntryPremiumProtection, EntryTimeProtection
 
@@ -71,7 +72,7 @@ def _assess(p, quote, underlying, limits, policy, now):
         and underlying.symbol == p.contract.underlying
         and underlying.source == limits.underlying_source
         and underlying.complete
-        and underlying.entitlement == "REALTIME"
+        and paper_market_evidence(underlying)
         and underlying.bid <= underlying.ask
         and _fresh(
             underlying.source_at,
@@ -87,7 +88,7 @@ def _assess(p, quote, underlying, limits, policy, now):
         and quote.instrument.provider == limits.provider
         and quote.source == limits.option_source
         and quote.complete
-        and quote.entitlement == "REALTIME"
+        and paper_market_evidence(quote)
         and quote.bid is not None
         and quote.bid > 0
         and quote.bid_size > 0

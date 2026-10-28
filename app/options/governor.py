@@ -3,6 +3,7 @@
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_CEILING, ROUND_FLOOR, Context, Decimal, localcontext
 
+from app.options.models import paper_market_evidence
 from app.options.models import (
     OptionAccount,
     OptionAdmission,
@@ -145,7 +146,7 @@ def admit_option(
         reasons.append("OPTION_SOURCE_MISMATCH")
     if not quote.instrument.metadata_complete or not quote.instrument.option_tradable:
         reasons.append("OPTION_METADATA_OR_TRADABILITY")
-    if not quote.complete or quote.entitlement != "REALTIME":
+    if not quote.complete or not paper_market_evidence(quote):
         reasons.append("OPTION_COVERAGE_OR_ENTITLEMENT")
     if not _fresh(
         quote.source_at,
@@ -219,7 +220,7 @@ def admit_option(
             reasons.append("UNDERLYING_SOURCE_OR_SYMBOL_MISMATCH")
         if underlying.bid < limits.minimum_underlying_price:
             reasons.append("UNDERLYING_BELOW_PRICE_FLOOR")
-        if not underlying.complete or underlying.entitlement != "REALTIME":
+        if not underlying.complete or not paper_market_evidence(underlying):
             reasons.append("UNDERLYING_COVERAGE_OR_ENTITLEMENT")
         if (
             not _fresh(

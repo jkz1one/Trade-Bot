@@ -4,6 +4,7 @@ import json
 from contextlib import nullcontext
 from datetime import timedelta
 
+from app.options.models import paper_market_evidence
 from app.execution.engine import ExecutionBlocked
 from app.mixed.accounting import reconstruct
 from app.mixed.native_execution import session
@@ -69,7 +70,7 @@ def assess_stock(engine, play_id, quote, *, now, _db=None):
             or quote.instrument != held.instrument
             or quote.source != p.stocks.quote_source
             or not quote.complete
-            or quote.entitlement != "REALTIME"
+            or not paper_market_evidence(quote)
             or not _fresh(
                 quote.source_at,
                 quote.received_at,

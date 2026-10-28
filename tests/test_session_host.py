@@ -256,3 +256,21 @@ def test_stale_host_review_refuses_before_launch(host, monkeypatch):
     assert not any(c[:2] == ("run", "-d") for c in calls)
     args.expected_review = plan["review_sha256"]
     assert m.run(args, RELEASE)["status"] == "SESSION_STARTED"
+
+
+def test_resume_requires_review_binding_and_reaches_bounded_container(host, monkeypatch):
+    m, calls, _, _, _ = host
+    original = m.execute
+    def execute(image, module, args, mounts, **kwargs):
+        result = original(image, module, args, mounts, **kwargs)
+        if module == "app.mixed.connected_runtime":
+            result["owner_state"]["halt_reason"] = "OPTION_RUNTIME_STOPPED"
+        return result
+    monkeypatch.setattr(m, "execute", execute)
+    plan = m.review(IMAGE, "run", 600, "resume-test", resume_flat=True)
+    assert plan["binding"]["resume_flat_reviewed_revision"] == 1
+    ordinary = m.review(IMAGE, "run", 600, "resume-test")
+    assert plan["review_sha256"] != ordinary["review_sha256"]
+    m.apply(plan)
+    invocation = next(c for c in calls if c[:2] == ("run", "-d"))
+    assert invocation[invocation.index("--resume-flat-reviewed-revision") + 1] == "1"

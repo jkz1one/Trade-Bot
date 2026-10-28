@@ -1,5 +1,6 @@
 """Sticky pre-entry Swing retirement in the existing fenced owner journal."""
 
+from app.options.models import paper_market_evidence
 from app.execution.engine import ExecutionBlocked
 from app.options.engine import exact, fingerprint
 from app.options.swing import SwingSeed, SwingTerminal, seed_issues
@@ -161,7 +162,7 @@ def quote_terminal(seed, policy, limits, calendar, quote, now):
         or quote.symbol != seed.history.symbol
         or quote.source != limits.underlying_source
         or not quote.complete
-        or quote.entitlement != "REALTIME"
+        or not paper_market_evidence(quote)
         or not limits.minimum_underlying_price <= quote.bid <= quote.ask
         or not _fresh(
             quote.source_at,

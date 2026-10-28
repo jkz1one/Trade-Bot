@@ -6,6 +6,7 @@ from typing import Literal
 
 from pydantic import Field, model_validator
 
+from app.options.models import paper_market_evidence
 from app.options.governor import _fresh
 from app.options.models import Count, Evidence, Money, Name, OptionRecord, PositiveCount, Symbol
 
@@ -124,7 +125,7 @@ def _scan(h, p, w, now):
         issues.append("HISTORY_BINDING_MISMATCH")
     if (
         not h.complete
-        or h.entitlement != "REALTIME"
+        or not paper_market_evidence(h)
         or not _fresh(
             h.source_at, h.received_at, now, p.max_bar_age_seconds, p.max_receive_lag_seconds
         )

@@ -4,6 +4,7 @@ import hashlib
 from datetime import timedelta
 from decimal import ROUND_CEILING, ROUND_FLOOR
 
+from app.options.models import paper_market_evidence
 from app.options.engine import fingerprint
 from app.options.governor import _fresh, _tick_price
 
@@ -15,7 +16,7 @@ def validate_underlying(limits, intent, quote, underlying, at):
         u.symbol != intent.instrument.contract.underlying
         or u.source != limits.underlying_source
         or not u.complete
-        or u.entitlement != "REALTIME"
+        or not paper_market_evidence(u)
         or not limits.minimum_underlying_price <= u.bid <= u.ask
         or not _fresh(
             u.source_at,
@@ -37,7 +38,7 @@ def validate_fill(limits, intent, fill, index, used):
         q.instrument != intent.instrument
         or q.source != limits.option_source
         or not q.complete
-        or q.entitlement != "REALTIME"
+        or not paper_market_evidence(q)
         or not _fresh(
             q.source_at,
             q.received_at,

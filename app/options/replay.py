@@ -12,6 +12,7 @@ from pathlib import Path
 
 from pydantic import Field, model_validator
 
+from app.options.models import paper_market_evidence
 from app.execution.judgment import JudgmentLimits
 from app.options.coordinator import DegenCoordinator
 from app.options.engine import OptionExecution
@@ -91,7 +92,7 @@ def fill_quantity(intent, order, snapshot, quote, at, limits):
             limits.max_receive_lag_seconds,
         )
         or quote.source != limits.option_source
-        or quote.entitlement != "REALTIME"
+        or not paper_market_evidence(quote)
         or not quote.complete
         or quote.bid is None
         or quote.ask is None

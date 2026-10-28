@@ -4,6 +4,7 @@ import json
 from datetime import timedelta
 from decimal import Decimal
 
+from app.options.models import paper_market_evidence
 from app.execution.engine import ExecutionBlocked
 from app.mixed.models import StockProposal
 from app.mixed.native_execution import enrolled, session
@@ -63,7 +64,7 @@ def assess_owned(engine, db, quote, now):
             or quote.instrument != p.instrument
             or quote.source != limits.quote_source
             or not quote.complete
-            or quote.entitlement != "REALTIME"
+            or not paper_market_evidence(quote)
             or not _fresh(
                 quote.source_at,
                 quote.received_at,

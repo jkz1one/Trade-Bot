@@ -5,6 +5,7 @@
 <main id="content" tabindex="-1" data-update-mode="{{ update_mode|default('paused') }}" data-population="mixed:{{ data.population_id }}">
 <header class="desk-header"><div><a class="brand" href="/">▦ TRADE-BOT</a><span class="account-name">{{ 'Historical review' if data.review else 'Simulated account' }}</span></div><div class="header-evidence"><span class="tag">SIMULATED ACCOUNT</span><span class="muted">LIVE DISABLED</span><button type="button" id="sync-now" class="text-button">Sync now</button></div></header>
 {% if data.review %}<aside class="notice" aria-label="Offline review"><strong>Paused historical simulation</strong><span>Virtual money and simulated trades. Paused at {{ clock(data.review.as_of) }}. Prices and trades are not updating.</span></aside>{% endif %}
+{% if data.simulation_data_basis %}<p class="source-line">{{ data.simulation_data_basis }}</p>{% endif %}
 <div class="source-line"><span>Account checked {{ clock(data.observed_at) }}</span><span id="sync-status" role="status">{{ 'Frozen review · updates paused' if data.review else 'History view · updates paused' if update_mode|default('paused') == 'history' else 'Updates every 5 seconds' if update_mode|default('paused') == 'auto' else 'Automatic updates paused' }}</span></div>
 {% if data.status == 'OK' %}
 {% if data.halted or data.accounting != 'VERIFIED' or data.health != 'FRESH' or data.unknown_costs or (data.position and (data.position.exit_reason or data.position.issue)) %}

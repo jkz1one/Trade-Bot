@@ -5,6 +5,7 @@ from datetime import datetime
 from decimal import Decimal
 from types import SimpleNamespace
 
+from app.options.models import paper_market_evidence
 from app.mixed.accounting import reconstruct
 from app.mixed.portfolio_store import control, history, intent
 from app.mixed.portfolio_venue import PortfolioVenueSnapshot
@@ -173,6 +174,10 @@ def snapshot(observer, db, now, limit, before, family, config, policy, limits):
     return {
         "status": "OK",
         "schema": "mixed-portfolio-observer-v2",
+        "simulation_data_basis": (
+            "Observed Robinhood quotes; entitlement unverified; simulated contract terms may apply"
+            if any(item.get("simulation_basis") for item in stream) else None
+        ),
         "revision": revision,
         "stream": stream,
         "accounting": "VERIFIED",
@@ -251,7 +256,7 @@ def position(held, entry, saved, orders, policy, now):
         correct
         and not conflict
         and q.complete
-        and q.entitlement == "REALTIME"
+        and paper_market_evidence(q)
         and q.source == (rule.quote_source if stock else rule.option_source)
         and q.bid is not None
         and q.bid > 0

@@ -9,6 +9,7 @@ import asyncio
 import json
 import signal
 import sqlite3
+from datetime import datetime
 from pathlib import Path
 
 from app.domain.models import utc_now
@@ -287,6 +288,34 @@ async def await_ready(ready, stop):
     return not stop.is_set()
 
 
+
+def session_counts(engine):
+    with engine.journal.read() as db:
+        queries = {
+            "delivered_packets": "SELECT COUNT(*) FROM execution_mixed_runtime_inputs WHERE status='DELIVERED'",
+            "completed_cycles": "SELECT COUNT(*) FROM execution_option_runtime_slots WHERE status='COMPLETE'",
+            "simulated_orders": "SELECT COUNT(*) FROM execution_portfolio_orders",
+            "model_calls": "SELECT COUNT(*) FROM execution_model_calls",
+            "reviewed_entry_resumes": "SELECT COUNT(*) FROM execution_events WHERE kind='OPTION_REVIEWED_RESUME'",
+        }
+        return {key: db.execute(sql).fetchone()[0] for key, sql in queries.items()}
+
+
+def resume_flat(engine, now, *, fresh_startup_feed=False):
+    """Explicit startup recovery only after native reconciliation, never held exposure."""
+    from app.mixed.portfolio_controls import recoverable
+
+    with engine.journal.write() as db:
+        control = engine._control(db)
+        allowed = {"OPTION_RUNTIME_STOPPED", "OPTION_RUNTIME_FAILED"}
+        if fresh_startup_feed:
+            allowed.add("OPTION_RUNTIME_FEED_UNAVAILABLE")
+        if not control["halted"] or control["halt_reason"] not in allowed:
+            raise ValueError("Only a reviewed runtime stop/failure may resume")
+        recoverable(engine, db, now, flat=True)
+        engine._resume(db, "Explicit reviewed flat connected simulation restart",
+                       expected_revision=engine.journal.revision(db), now=now)
+
 async def run(
     directory,
     feed_directory,
@@ -299,10 +328,17 @@ async def run(
     reader_uid=None,
     reader_gid=None,
     snapshot_owner=None,
+    resume_flat_reviewed_revision=None,
 ):
     report, settings, policy, schemas, observer = check(
         directory, feed_directory, policy_file, schemas_file, clock_source=clock_source
     )
+    if resume_flat_reviewed_revision is not None and (
+        type(resume_flat_reviewed_revision) is not int
+        or report["owner_state"]["owner_revision"] != resume_flat_reviewed_revision
+        or report["owner_state"]["halt_reason"] not in {"OPTION_RUNTIME_STOPPED", "OPTION_RUNTIME_FAILED"}
+    ):
+        raise ValueError("Exact stopped owner review required for explicit flat recovery")
     dashboard_check(
         directory,
         snapshot_directory,
@@ -319,8 +355,11 @@ async def run(
         if settings != enrolled:
             raise ValueError("Runtime settings changed during startup")
         # Recheck under the owner lease, including the retained replay event.
-        inspect_owner(Path(directory), enrolled, clock_source=clock_source)
+        _, locked_owner = inspect_owner(Path(directory), enrolled, clock_source=clock_source)
+        if resume_flat_reviewed_revision is not None and locked_owner["owner_revision"] != resume_flat_reviewed_revision:
+            raise ValueError("Owner changed before reviewed recovery")
         feed = ContinuousFeed(feed_directory, policy, schemas)
+        before_counts = session_counts(runtime.c.engine)
         publisher = None
         try:
             if snapshot_directory is not None:
@@ -341,13 +380,38 @@ async def run(
             async def collect(stop):
                 if not await await_ready(ready, stop):
                     return
-                await feed.run(
+                operation = feed.run(
                     stop,
                     clock_source=clock_source,
                     held_source=lambda: held_from_observer(observer),
                     calendar=XNYSCalendar(),
                     source_settings=enrolled,
                 )
+                if resume_flat_reviewed_revision is None:
+                    await operation
+                    return
+                collector = asyncio.create_task(operation)
+                try:
+                    while not stop.is_set() and not collector.done():
+                        at = clock_source()
+                        with runtime.c.engine.journal.read() as db:
+                            current = runtime._bound(db)
+                            fresh = (
+                                current["status"] == "RUNNING"
+                                and current["feed_sequence"] > locked_owner["feed_sequence"]
+                                and current["feed_recorded_at"] is not None
+                                and 0 <= (at - datetime.fromisoformat(current["feed_recorded_at"])).total_seconds()
+                                < runtime.policy.feed_max_age_seconds
+                            )
+                        if fresh:
+                            resume_flat(runtime.c.engine, at, fresh_startup_feed=True)
+                            break
+                        await asyncio.sleep(0.1)
+                    await collector
+                finally:
+                    if not collector.done():
+                        collector.cancel()
+                    await asyncio.gather(collector, return_exceptions=True)
 
             async def publish(stop):
                 if not await await_ready(ready, stop):
@@ -361,6 +425,7 @@ async def run(
                         pass
 
             await supervise(trade, collect, stop, publisher_run=publish if publisher else None)
+            after_counts = session_counts(runtime.c.engine)
             if publisher is not None:
                 # All runtime/collector cleanup has finished. Publish the stopped
                 # native state once, still under all three ownership leases.
@@ -374,6 +439,7 @@ async def run(
                 feed.close()
     return {
         "status": "STOPPED",
+        "session_activity": {key: after_counts[key] - before_counts[key] for key in before_counts},
         "population_id": settings.limits.population_id,
         "live_enabled": False,
         "entry_blockers": report["entry_blockers"],
@@ -399,6 +465,7 @@ async def serve(args):
             reader_uid=args.reader_uid,
             reader_gid=args.reader_gid,
             snapshot_owner=args.snapshot_owner,
+            resume_flat_reviewed_revision=args.resume_flat_reviewed_revision,
         )
     finally:
         timer.cancel()
@@ -411,6 +478,7 @@ def main(argv=None):
     parser.add_argument("operation", choices=("check", "run"))
     for name in ("directory", "feed-directory", "policy", "schemas"):
         parser.add_argument("--" + name, required=True)
+    parser.add_argument("--resume-flat-reviewed-revision", type=int)
     parser.add_argument("--seconds", type=int, help="Required run duration, 1..86400 seconds")
     parser.add_argument(
         "--snapshot-directory", help="Existing enrolled dashboard snapshot; never created by run"
@@ -430,6 +498,8 @@ def main(argv=None):
         parser.error("Snapshot directory requires explicit reader UID and GID")
     if args.operation == "run" and (args.seconds is None or not 1 <= args.seconds <= 86400):
         parser.error("Explicit bounded run duration required")
+    if args.operation == "check" and args.resume_flat_reviewed_revision is not None:
+        parser.error("Recovery is only available during an explicitly reviewed run")
     if args.operation == "check" and args.seconds is not None:
         parser.error("Check does not start workers")
     try:

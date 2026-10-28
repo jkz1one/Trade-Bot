@@ -52,7 +52,7 @@ def configuration_hash(policy, schemas, *, rolled):
 
 
 def validate_policy(base, proposed, target, created_at):
-    immutable = {"candidates", "carry_intents", "swing_history"}
+    immutable = {"candidates", "carry_intents", "swing_history", "observed_simulation"}
     if base.model_dump(exclude=immutable) != proposed.model_dump(exclude=immutable):
         raise ValueError("Rollover cannot change frozen transport, universe or history settings")
     if base.swing_history != proposed.swing_history:
@@ -61,8 +61,8 @@ def validate_policy(base, proposed, target, created_at):
                 != proposed.swing_history.model_dump(exclude={"bar_mapping"})):
             raise ValueError("Rollover may change history mapping only, not history enrollment or lookbacks")
     now = clock(created_at)
-    if not 0 < (target - now.astimezone(ZoneInfo("America/New_York")).date()).days <= 60:
-        raise ValueError("Rollover requires a future session within sixty days")
+    if not 0 <= (target - now.astimezone(ZoneInfo("America/New_York")).date()).days <= 60:
+        raise ValueError("Rollover requires a current or future session within sixty days")
     cal = XNYSCalendar().calendar
     if not cal.is_session(target.isoformat()):
         raise ValueError("Exact exchange session required")
@@ -71,6 +71,8 @@ def validate_policy(base, proposed, target, created_at):
     ):
         raise ValueError("Only the exact target session carry intent may be supplied")
     opened = cal.session_open(target.isoformat()).to_pydatetime()
+    if now >= cal.session_close(target.isoformat()).to_pydatetime():
+        raise ValueError("Session policy must be enrolled before its market close")
     for i in proposed.candidates:
         if (
             not i.metadata_complete
@@ -253,6 +255,16 @@ def review(
                 ).fetchone()
             ):
                 raise ValueError("Original target-session preparation already exists")
+        if target == now.astimezone(ZoneInfo("America/New_York")).date():
+            from datetime import time, timedelta, UTC
+
+            start = datetime.combine(target, time(), ZoneInfo("America/New_York")).astimezone(UTC)
+            end = datetime.combine(target + timedelta(days=1), time(), ZoneInfo("America/New_York")).astimezone(UTC)
+            if held or db.execute(
+                "SELECT 1 FROM attempts WHERE started_at>=? AND started_at<? LIMIT 1",
+                (start.isoformat(), end.isoformat()),
+            ).fetchone():
+                raise ValueError("Current-session policy requires no held exposure or prior collection today")
         identities((base, *(r.policy for r in rows), proposed), held)
         feed_state = collector_state(db, rows)
     binding = {

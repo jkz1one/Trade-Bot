@@ -62,7 +62,9 @@ def connection_report(settings, feed, schemas, *, journal, directory, now):
         errors.append("POLL_INTERVAL_EXCEEDS_FEED_FRESHNESS")
     # These are facts about the current mapper, not declarations the operator
     # can bypass by editing a configuration flag.
-    blockers.extend(("ENTITLEMENT_NOT_ESTABLISHED", "STOCK_EXECUTABLE_SIZES_UNAVAILABLE"))
+    if feed.observed_simulation is None:
+        blockers.append("ENTITLEMENT_NOT_ESTABLISHED")
+    blockers.append("STOCK_EXECUTABLE_SIZES_UNAVAILABLE")
     if any(not s.metadata_complete or not s.tradable for s in feed.stocks):
         blockers.append("STOCK_CATALOG_UNREVIEWED")
     if mixed is not None and any(
@@ -128,8 +130,15 @@ def connection_report(settings, feed, schemas, *, journal, directory, now):
         candidates.append({"instrument_id": instrument.instrument_id, "blockers": reasons})
     if not candidates:
         blockers.append("NO_REVIEWED_OPTION_CANDIDATES")
+    option_blockers = ([] if feed.observed_simulation else ["ENTITLEMENT_NOT_ESTABLISHED"])
+    if not candidates:
+        option_blockers.append("NO_REVIEWED_OPTION_CANDIDATES")
+    if candidates and all(c["blockers"] for c in candidates):
+        option_blockers.append("NO_USABLE_OPTION_CANDIDATES")
     return {
         "version": "connected-simulation-check-v1",
+        "degen_option_configuration_ready": not errors and not option_blockers,
+        "degen_option_blockers": option_blockers,
         "status": "WIRING_INVALID" if errors else "WIRED_WITH_ENTRY_BLOCKERS",
         "population_id": settings.limits.population_id,
         "account_id": settings.limits.account_id,
@@ -138,6 +147,8 @@ def connection_report(settings, feed, schemas, *, journal, directory, now):
         "option_candidates": candidates,
         "collector_can_start": not errors,
         "trading_ready": False,
+        "simulation_data_basis": feed.observed_simulation or "VERIFIED_ENTITLEMENT_REQUIRED",
+        "entitlement": "UNKNOWN",
         "provider_reads": False,
         "credentials_opened": False,
         "live_enabled": False,

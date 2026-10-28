@@ -12,6 +12,7 @@ from decimal import ROUND_CEILING, ROUND_FLOOR, Context, Decimal, localcontext
 from itertools import pairwise
 from zoneinfo import ZoneInfo
 
+from app.options.models import paper_market_evidence
 from app.mixed.models import (
     CashHistory,
     CashProjection,
@@ -113,7 +114,7 @@ def _stock_fill_rules(p, intent, fill, index, used):
         q.instrument != intent.instrument
         or q.source != p.quote_source
         or not q.complete
-        or q.entitlement != "REALTIME"
+        or not paper_market_evidence(q)
         or q.source_at <= intent.prepared_at
         or not _fresh(
             q.source_at,

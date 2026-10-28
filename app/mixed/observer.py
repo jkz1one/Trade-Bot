@@ -4,6 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from types import SimpleNamespace
 
+from app.options.models import paper_market_evidence
 from app.execution.engine import ExecutionBlocked
 from app.mixed.accounting import reconstruct
 from app.mixed.native_models import StockProtection
@@ -284,6 +285,11 @@ class MixedObserver(OptionObserver):
         )
         return {
             "status": "OK",
+            "simulation_data_basis": (
+                "Observed Robinhood quotes; entitlement unverified; simulated contract terms may apply"
+                if any(q.simulation_basis for f in frames for q in (*f.quotes, *f.underlyings))
+                else None
+            ),
             "stream": stored_stream(db, frames, position, now),
             "accounting": accounting,
             "account_id": limits.account_id,
@@ -383,7 +389,7 @@ def stock_position(db, p, mixed, policy, now, frames):
         and not conflict
         and q.instrument == p.instrument
         and q.complete
-        and q.entitlement == "REALTIME"
+        and paper_market_evidence(q)
         and q.source == limits.quote_source
         and q.bid_size is not None
         and q.bid_size >= p.quantity
@@ -601,6 +607,8 @@ def stored_stream(db, frames, position, now):
             "received_at": received,
             "source": q.get("source", "Unknown"),
             "entitlement": q.get("entitlement", "UNKNOWN"),
+            **({"simulation_basis": q["simulation_basis"]} if q.get("simulation_basis") else {}),
+            **({"simulation_terms": instrument["simulation_terms"]} if instrument.get("simulation_terms") else {}),
             "bid": q.get("bid"),
             "ask": q.get("ask"),
             "bid_size": q.get("bid_size"),

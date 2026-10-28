@@ -5,6 +5,7 @@ from typing import Literal
 
 from pydantic import Field, JsonValue, model_validator
 
+from app.options.models import paper_market_evidence
 from app.mixed.accounting import reconstruct
 from app.mixed.native_models import StockProtection
 from app.mixed.portfolio_accounting import PortfolioHistory
@@ -162,7 +163,7 @@ def review(packet, plan, *, position, account, quote, underlying, now, protectio
     limits = packet.execution_policy.mixed_owner.stocks if stock else packet.limits
     if (
         not quote.complete
-        or quote.entitlement != "REALTIME"
+        or not paper_market_evidence(quote)
         or quote.bid is None
         or quote.bid <= 0
         or quote.bid_size is None

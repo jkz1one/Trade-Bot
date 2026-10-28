@@ -7,6 +7,7 @@ governor. Neither function authenticates that assertion or grants dispatch right
 from datetime import timedelta
 from decimal import ROUND_CEILING, ROUND_FLOOR, Context, Decimal, localcontext
 
+from app.options.models import paper_market_evidence
 from app.mixed.accounting import reconstruct
 from app.mixed.models import StockAdmission, StockProposal, StockQuote
 from app.options.engine import clock, fingerprint
@@ -142,7 +143,7 @@ def _admit(proposal, q, history, result, session, now, reconciled, entry_halted,
         q.instrument != i
         or q.source != p.quote_source
         or not q.complete
-        or q.entitlement != "REALTIME"
+        or not paper_market_evidence(q)
         or not _fresh(
             q.source_at, q.received_at, now, p.quote_max_age_seconds, p.max_receive_lag_seconds
         )

@@ -3,6 +3,7 @@
 from datetime import timedelta
 from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
 
+from app.options.models import paper_market_evidence
 from app.options.engine import fingerprint
 from app.options.governor import _fresh
 
@@ -12,7 +13,7 @@ ZERO = Decimal(0)
 def _quote_ok(q, at, limits):
     return (
         q.source == limits.underlying_source
-        and q.entitlement == "REALTIME"
+        and paper_market_evidence(q)
         and q.complete
         and q.bid <= q.ask
         and _fresh(

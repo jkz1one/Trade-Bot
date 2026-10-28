@@ -4,6 +4,7 @@ from collections import Counter
 from datetime import timedelta
 from decimal import Context, Decimal, localcontext
 
+from app.options.models import paper_market_evidence
 from app.options.accounting import apply_fill, apply_receipt
 from app.options.engine import fingerprint
 from app.options.evaluation_models import EvaluationBundle
@@ -260,7 +261,7 @@ def _benchmark(value, session, source):
         if (
             q.symbol != "SPY"
             or q.source != source
-            or q.entitlement != "REALTIME"
+            or not paper_market_evidence(q)
             or not q.complete
             or q.bid <= 0
             or q.bid > q.ask

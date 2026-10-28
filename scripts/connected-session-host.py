@@ -234,7 +234,7 @@ def no_active_session():
         raise ValueError("A connected session is already running")
 
 
-def review(image_id, phase, seconds=None, run_id=None):
+def review(image_id, phase, seconds=None, run_id=None, *, resume_flat=False):
     manifest = bundle(image_id)
     no_active_session()
     before = h.workers()
@@ -270,6 +270,12 @@ def review(image_id, phase, seconds=None, run_id=None):
             "container_name": name,
             "resources": session_resources(),
         }
+    if resume_flat:
+        if phase != "run" or native["owner_state"]["halt_reason"] not in {
+            "OPTION_RUNTIME_STOPPED", "OPTION_RUNTIME_FAILED",
+        }:
+            raise ValueError("Reviewed runtime stop/failure required for flat restart")
+        binding["resume_flat_reviewed_revision"] = native["owner_state"]["owner_revision"]
     plan = {
         "version": "connected-host-review-v1",
         "phase": phase,
@@ -286,6 +292,8 @@ def review(image_id, phase, seconds=None, run_id=None):
         "binding": binding,
         "workers": before,
         "entry_blockers": native["entry_blockers"],
+        "degen_option_configuration_ready": native.get("degen_option_configuration_ready", False),
+        "degen_option_blockers": native.get("degen_option_blockers", []),
         "trading_ready": False,
         "live_enabled": False,
     }
@@ -378,6 +386,8 @@ def apply(plan):
         *runtime_args(),
         "--seconds",
         str(plan["binding"]["seconds"]),
+        *(["--resume-flat-reviewed-revision", str(plan["binding"]["resume_flat_reviewed_revision"])]
+          if "resume_flat_reviewed_revision" in plan["binding"] else []),
     )
     container_id = result.stdout.strip()
     item = h.container(name)
@@ -479,17 +489,51 @@ def run(args, release):
             ],
             mounts + mount(STATE, "/state", False),
         )
+    if args.operation in ("prepare-session", "review-session", "enroll-session"):
+        bundle(image_id)
+        no_active_session()
+        if not args.target_session or not args.next_policy:
+            raise ValueError("Explicit target session and next policy path required")
+        destination = Path(args.next_policy)
+        if not destination.is_absolute():
+            raise ValueError("Absolute next policy path required")
+        if args.operation == "prepare-session":
+            captures = Path(args.capture_directory or "")
+            if not captures.is_absolute():
+                raise ValueError("Absolute original capture directory required")
+            private(captures, True)
+            for name in ("contracts.json", "quotes-1.json", "quotes-2.json", "quotes-3.json"):
+                private(captures / name)
+            parent(destination.parent)
+            return execute(image_id, "app.mixed.simulation_catalog", [
+                "--policy", "/state/config/policy.json", "--contracts", "/captures/contracts.json",
+                "--sample", "/captures/quotes-1.json", "--sample", "/captures/quotes-2.json",
+                "--sample", "/captures/quotes-3.json", "--target-session", args.target_session,
+                "--output", "/proposal/" + destination.name,
+                "--report", "/proposal/" + destination.name + ".review.json",
+            ], config_mounts() + mount(captures, "/captures")
+               + mount(destination.parent, "/proposal", False))
+        private(destination)
+        flags = ["apply" if args.operation == "enroll-session" else "review",
+                 "--directory", "/state/owner", "--feed-directory", "/state/collector",
+                 "--policy", "/state/config/policy.json", "--schemas", "/state/config/schemas.json",
+                 "--next-policy", "/proposal/policy.json", "--target-session", args.target_session]
+        if args.operation == "enroll-session":
+            flags += ["--expected-review", args.expected_review]
+        return execute(image_id, "app.mixed.feed_rollover", flags,
+                       config_mounts(args.operation == "enroll-session")
+                       + mount(destination, "/proposal/policy.json"))
     if args.operation == "snapshot":
         bundle(image_id)
         no_active_session()
         return snapshot(image_id)
     phase = "enroll" if args.operation in ("review-enroll", "enroll") else "run"
-    plan = review(image_id, phase, args.seconds, args.run_id)
+    plan = review(image_id, phase, args.seconds, args.run_id, resume_flat=getattr(args, "resume_flat", False))
     if args.operation.startswith("review-"):
         return plan
     if plan["review_sha256"] != args.expected_review:
         raise ValueError("Host review changed")
-    if review(image_id, phase, args.seconds, args.run_id) != plan:
+    if review(image_id, phase, args.seconds, args.run_id, resume_flat=getattr(args, "resume_flat", False)) != plan:
         raise ValueError("Host review changed before action")
     return apply(plan)
 
@@ -508,17 +552,22 @@ def main(argv=None):
             "review-enroll",
             "enroll",
             "snapshot",
+            "prepare-session",
+            "review-session",
+            "enroll-session",
             "review-run",
             "run",
             "status",
             "stop",
         ),
     )
-    for name in ("settings", "policy", "expected-review", "run-id", "expected-container"):
+    for name in ("settings", "policy", "expected-review", "run-id", "expected-container",
+                 "capture-directory", "target-session", "next-policy"):
         p.add_argument("--" + name)
+    p.add_argument("--resume-flat", action="store_true")
     p.add_argument("--seconds", type=int)
     a = p.parse_args(argv)
-    if (a.operation in ("prepare-profile", "prepare", "enroll", "run")) != (
+    if (a.operation in ("prepare-profile", "prepare", "enroll", "run", "enroll-session")) != (
         a.expected_review is not None
     ):
         p.error("Only prepare-profile/prepare/enroll/run require --expected-review")
@@ -526,6 +575,8 @@ def main(argv=None):
         p.error("Only stop requires --expected-container")
     if a.seconds is not None and a.operation not in ("review-run", "run"):
         p.error("Duration is only for session review/run")
+    if a.resume_flat and a.operation not in ("review-run", "run"):
+        p.error("--resume-flat requires review-run or run")
     fd = None
     try:
         if os.geteuid() != 0:

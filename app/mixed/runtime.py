@@ -4,6 +4,7 @@ import asyncio
 import json
 from datetime import datetime
 
+from app.options.models import paper_market_evidence
 from app.execution.engine import ExecutionBlocked
 from app.mixed.sources import StockSwingSource, geometry
 from app.options.engine import exact, fingerprint
@@ -97,7 +98,7 @@ def observe_quotes(c, quotes):
                 q.instrument not in c.stock_policy.instruments
                 or q.source != limits.quote_source
                 or not q.complete
-                or q.entitlement != "REALTIME"
+                or not paper_market_evidence(q)
                 or not _fresh(
                     q.source_at,
                     q.received_at,

@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 
 from pydantic import Field, model_validator
 
+from app.options.models import paper_market_evidence
 from app.options.degen import DegenScan, Family
 from app.options.governor import _fresh, _supported, admit_option
 from app.options.models import (
@@ -107,7 +108,7 @@ def _plan(scan, inventory, policy, limits, now, *, expiration=None):
         != (expiration or now.astimezone(ZoneInfo("America/New_York")).date())
         or inventory.source != policy.metadata_source
         or not inventory.complete
-        or inventory.entitlement != "REALTIME"
+        or not paper_market_evidence(inventory)
         or not _fresh(
             inventory.source_at,
             inventory.received_at,
@@ -154,7 +155,7 @@ def _plan(scan, inventory, policy, limits, now, *, expiration=None):
         if (
             metadata.source != policy.metadata_source
             or not metadata.complete
-            or metadata.entitlement != "REALTIME"
+            or not paper_market_evidence(metadata)
             or not _fresh(
                 metadata.source_at,
                 metadata.received_at,

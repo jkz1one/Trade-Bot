@@ -14,6 +14,7 @@ from uuid import uuid4
 
 from pydantic import Field, model_validator
 
+from app.options.models import paper_market_evidence
 from app.mixed.stock_models import StockLimits, StockObservation, StockPosition
 from app.options.accounting import apply_fill, apply_receipt
 from app.options.governor import _fresh, _tick_price
@@ -375,7 +376,7 @@ class DurableOptionVenue:
                 quote.instrument != intent.instrument
                 or quote.source != self.limits.option_source
                 or not quote.complete
-                or quote.entitlement != "REALTIME"
+                or not paper_market_evidence(quote)
                 or not _fresh(
                     quote.source_at,
                     quote.received_at,

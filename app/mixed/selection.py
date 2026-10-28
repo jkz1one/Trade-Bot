@@ -2,6 +2,7 @@
 
 import json
 
+from app.options.models import paper_market_evidence
 from app.execution.engine import ExecutionBlocked
 from app.mixed.sources import (
     StockSelectionPolicy,
@@ -456,7 +457,7 @@ def guard_stock(engine, db, source_key, proposal, quote, now, *, original=False)
         if (
             quote.source != limits.quote_source
             or not quote.complete
-            or quote.entitlement != "REALTIME"
+            or not paper_market_evidence(quote)
             or not _fresh(
                 quote.source_at,
                 quote.received_at,

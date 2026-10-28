@@ -12,6 +12,7 @@ from urllib.parse import quote
 
 from pydantic import TypeAdapter
 
+from app.options.models import paper_market_evidence
 from app.domain.models import utc_now
 from app.options.coordinator import DegenFrame
 from app.options.engine import clock
@@ -749,7 +750,7 @@ class OptionObserver:
             fresh
             and not conflict
             and q.complete
-            and q.entitlement == "REALTIME"
+            and paper_market_evidence(q)
             and q.source == limits.option_source
             and q.instrument.provider == limits.provider
             and q.instrument == entry.instrument

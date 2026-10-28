@@ -3,6 +3,7 @@
 from datetime import timedelta
 from decimal import Decimal
 
+from app.options.models import paper_market_evidence
 from app.options.engine import clock, exact, fingerprint
 from app.options.governor import _fresh
 from app.options.models import OptionLimits, OptionQuote
@@ -21,7 +22,7 @@ def _usable(quote, limits, at, prefix, reasons):
         or not quote.instrument.metadata_complete
         or not quote.instrument.option_tradable
         or not quote.complete
-        or quote.entitlement != "REALTIME"
+        or not paper_market_evidence(quote)
         or quote.bid is None
         or quote.bid <= 0
         or quote.bid_size == 0
@@ -43,7 +44,7 @@ def _usable(quote, limits, at, prefix, reasons):
     if (
         g.source != limits.option_source
         or not g.complete
-        or g.entitlement != "REALTIME"
+        or not paper_market_evidence(g)
         or g.provenance != "OBSERVED"
         or g.received_at > quote.received_at
         or abs(g.source_at - quote.source_at) > timedelta(seconds=limits.max_sync_seconds)

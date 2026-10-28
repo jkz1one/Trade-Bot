@@ -40,6 +40,9 @@ from app.options.selection import OptionInventory
 class FeedPolicy(OptionRecord):
     version: Literal["portfolio-continuous-feed-v2"] = "portfolio-continuous-feed-v2"
     population_id: Name
+    observed_simulation: Literal["robinhood-observed-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     stocks: tuple[StockInstrument, ...] = Field(min_length=1, max_length=2)
     candidates: tuple[OptionInstrument, ...] = Field(default=(), max_length=6)
     poll_seconds: int = Field(default=10, strict=True, ge=5, le=30)
@@ -53,6 +56,8 @@ class FeedPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def carry_schedule(self):
+        if any(i.simulation_terms is not None for i in self.candidates) and self.observed_simulation is None:
+            raise ValueError("Simulated contract terms require explicit observed simulation")
         sessions = tuple(i.target_session for i in self.carry_intents)
         if len(set(sessions)) != len(sessions) or (sessions and self.swing_history is None):
             raise ValueError("Unique carry sessions and explicit Swing history enrollment required")
@@ -341,6 +346,12 @@ def normalize(
     cycle = bool(histories) and len(stocks) == len(policy.stocks) and not cycle_issues
     if not cycle:
         frame = market_frame(frame)
+    if policy.observed_simulation is not None:
+        if source_settings is None or source_settings.limits.mode != "PAPER":
+            raise ValueError("Observed simulation requires explicit PAPER runtime settings")
+        from app.mixed.observed_simulation import annotate
+
+        frame = annotate(frame)
     packet = PortfolioRuntimePacket(
         population_id=policy.population_id,
         sequence=sequence,
