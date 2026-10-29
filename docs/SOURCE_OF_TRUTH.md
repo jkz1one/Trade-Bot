@@ -1,5 +1,26 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.159. Preserve after-close quote analytics as catalog evidence, 2026-10-28 EDT.
+
+The host completed all eight reads into /root/trade-bot-options-proof-hCABXA.
+Final offline catalog review rejected different full quote hashes at unchanged
+source clocks. The operator's field diff shows only Greeks, implied volatility
+and probability estimates changing; bid/ask and sizes did not change. This is
+not proof that those analytics have their own valid source clock or are fresh.
+
+Offline catalog review now separates eight explicit analytic fields from other
+quote fields. Analytics-only same-time changes are recorded by field name with
+both original full-row and non-analytic hashes. All original captures, timestamps,
+source-regression checks and freshness results remain. Non-analytic same-time
+changes (including prices, sizes, volume, open interest and marks) still reject.
+Simulation catalog reports expose historical freshness, clock advancement and
+analytic-change diagnostics. The existing host captures can be re-reviewed
+without provider calls. Runtime source-consistency, Greek admission, fills and
+freshness checks are unchanged; no analytics are promoted to current evidence.
+No host enrollment, trade, account reset or dashboard activation is claimed.
+
+Previous version notes (historical):
+
 Version 1.158. Ticker-based bounded contract capture, 2026-10-28 EDT.
 
 Host evidence confirms October 29 SPY/QQQ chains and active/tradable contracts

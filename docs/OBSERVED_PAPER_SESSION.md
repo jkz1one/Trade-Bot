@@ -118,3 +118,20 @@ installed application files match source. These are offline tests, not proof of
 current provider acceptance. End-of-run logs now include session_activity counts
 for delivered packets, completed cycles, simulated orders, model calls and
 reviewed entry resumes.
+
+## After-close analytics in retained captures
+
+The October 28 host capture completed discovery and all three quote samples, but
+Greeks/IV/probability estimates drifted while `updated_at` remained at the final
+quoted book time. Offline catalog review permits changes only in the explicit
+eight-field analytic group and records their field names, full original quote
+hashes and non-analytic hashes. A price, size, mark, volume, open-interest or other
+non-analytic change at that same time still rejects. Original clocks never advance
+because of an analytic change, and stale quotes remain stale. This exception is
+not used by the collector, runtime, fills or Greek admission.
+
+Retained complete captures can be passed directly to `prepare-session` after the
+new image is built; do not recapture or delete the evidence just to regenerate
+the failed capture report. The simulation proposal now displays historical
+freshness, clock advancement and same-time analytic changes for each contract.
+These are catalog preparation diagnostics, never current market acceptance.

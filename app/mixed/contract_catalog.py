@@ -15,6 +15,14 @@ from app.options.read_capture import CaptureResult
 from app.options.read_gateway import encoded
 from app.options.read_mapping import instant, option_metadata, quote_rows, response
 
+# These provider analytics can change while the quoted book's updated_at stays
+# fixed. This exception is only for offline catalog evidence, never runtime
+# freshness, fill eligibility or a claim that analytics have an independent clock.
+ANALYTIC_FIELDS = frozenset({
+    "delta", "gamma", "theta", "vega", "rho", "implied_volatility",
+    "chance_of_profit_long", "chance_of_profit_short",
+})
+
 
 def digest(value):
     return hashlib.sha256(encoded(value)).hexdigest()
@@ -86,6 +94,7 @@ def review(contracts, samples):
     if not 1 <= len(catalog) <= 8:
         raise ValueError("Bounded nonempty contract discovery required")
     observations = {key: [] for key in catalog}
+    last_quotes = {}
     previous = original.collected_at
     requests = {original.request_id}
     for artifact in samples:
@@ -117,12 +126,14 @@ def review(contracts, samples):
                 if age < 0 or (history and source < instant(history[-1]["source_at"])):
                     raise ValueError("Future or regressing quote clock")
                 row_hash = digest(row)
-                if (
-                    history
-                    and source == instant(history[-1]["source_at"])
-                    and row_hash != history[-1]["quote_sha256"]
-                ):
-                    raise ValueError("Quote changed at the same source clock")
+                non_analytic_hash = digest({k: v for k, v in row.items() if k not in ANALYTIC_FIELDS})
+                analytic_changes = []
+                if history and source == instant(history[-1]["source_at"]):
+                    if non_analytic_hash != history[-1]["non_analytic_sha256"]:
+                        raise ValueError("Quote changed at the same source clock")
+                    analytic_changes = sorted(
+                        k for k in ANALYTIC_FIELDS if row.get(k) != last_quotes[key].get(k)
+                    )
                 history.append(
                     {
                         "source_at": source.isoformat(),
@@ -141,8 +152,11 @@ def review(contracts, samples):
                             and row["ask_size"] > 0
                         ),
                         "quote_sha256": row_hash,
+                        "non_analytic_sha256": non_analytic_hash,
+                        "analytic_changes_at_same_quote_time": analytic_changes,
                     }
                 )
+                last_quotes[key] = row
         if seen != set(catalog):
             raise ValueError("Complete quote subject coverage required")
     return {

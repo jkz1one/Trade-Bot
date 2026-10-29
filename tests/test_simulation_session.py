@@ -86,3 +86,21 @@ def test_reviewed_restart_resumes_only_after_native_ready(tmp_path, schemas, mon
     assert result["session_activity"]["delivered_packets"] >= 1
     assert observed == [0]
     assert state(args[0])[0]["status"] == "STOPPED"
+
+
+def test_catalog_proposal_reports_stale_analytic_drift_without_promoting_it(captures):
+    import copy
+    first = captures[1]['result']['observations'][0]['raw']['structuredContent']['data']['results'][0]['quote']
+    first = copy.deepcopy(first)
+    first['updated_at'] = '2026-10-27T19:00:00Z'
+    for index, artifact in enumerate(captures[1:]):
+        q = copy.deepcopy(first)
+        q['delta'] = str(.2 + index / 100)
+        artifact['result']['observations'][0]['raw']['structuredContent']['data']['results'][0]['quote'] = q
+    _, base = configuration()
+    policy, report = proposal(base, captures[0], captures[1:], date(2026, 10, 28))
+    evidence = next(r for r in report['historical_quote_evidence'] if r['instrument_id'] == first['instrument_id'])
+    assert evidence['analytic_changes_at_same_quote_time'] == ['delta']
+    assert not evidence['all_fresh_at_capture'] and not evidence['source_clock_advanced']
+    assert not report['trading_ready'] and report['entitlement'] == 'UNKNOWN'
+    assert len(policy.candidates) == 4

@@ -67,6 +67,15 @@ def proposal(policy, contracts, samples, target):
         "clock_note": "Conservative regular-session simulation cutoffs, not verified contract expiry or settlement timestamps. Broker sellout is not used as exchange close.",
         "broker_terms_verified": False, "entitlement": "UNKNOWN",
         "capture_hashes": reviewed["capture_hashes"],
+        "historical_quote_evidence": [{
+            "instrument_id": item["provider_record"]["id"],
+            "all_fresh_at_capture": item["all_fresh_at_capture"],
+            "source_clock_advanced": item["source_clock_advanced"],
+            "analytic_changes_at_same_quote_time": sorted({
+                field for sample in item["samples"]
+                for field in sample["analytic_changes_at_same_quote_time"]
+            }),
+        } for item in reviewed["contracts"]],
         "option_candidates": [i.instrument_id for i in selected],
         "live_enabled": False, "trading_ready": False, "state_modified": False,
         "remaining": ["Enroll reviewed session policy", "Fresh native input acceptance", "Reviewed native entry recovery", "Bounded connected run"],

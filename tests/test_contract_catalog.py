@@ -303,3 +303,40 @@ def test_cli_rejects_duplicate_json_keys(tmp_path, capsys):
     path.chmod(0o600)
     assert main(["--contracts", str(path), "--quotes", str(path)]) == 2
     assert json.loads(capsys.readouterr().out)["status"] == "UNAVAILABLE"
+
+
+@pytest.mark.parametrize('field', [
+    'delta', 'gamma', 'theta', 'vega', 'rho', 'implied_volatility',
+    'chance_of_profit_long', 'chance_of_profit_short',
+])
+def test_analytic_drift_keeps_original_stale_book_and_hashes(captures, field):
+    # Synthetic reproduction of the host's after-close analytics-only drift.
+    original = copy.deepcopy(rows(captures[1])["results"][0]["quote"])
+    original["updated_at"] = "2026-10-27T19:00:00Z"
+    for i, artifact in enumerate(captures[1:]):
+        q = copy.deepcopy(original)
+        q[field] = str(.2 + i / 100)
+        rows(artifact)["results"][0]["quote"] = q
+    before = copy.deepcopy(captures)
+    report = review(captures[0], captures[1:])
+    item = next(c for c in report["contracts"] if c["provider_record"]["id"] == original["instrument_id"])
+    assert not item["all_fresh_at_capture"] and not item["source_clock_advanced"]
+    samples = item["samples"]
+    assert len({s["quote_sha256"] for s in samples}) == 3
+    assert len({s["non_analytic_sha256"] for s in samples}) == 1
+    assert [s["analytic_changes_at_same_quote_time"] for s in samples] == [[], [field], [field]]
+    assert captures == before
+
+
+@pytest.mark.parametrize('field,value', [
+    ('bid_price', '0.29'), ('ask_price', '0.32'), ('bid_size', 999),
+    ('ask_size', 999), ('volume', 123456), ('open_interest', 123456),
+    ('mark_price', '0.301'),
+])
+def test_same_clock_non_analytic_mutations_still_reject(captures, field, value):
+    q = copy.deepcopy(rows(captures[1])["results"][0]["quote"])
+    q[field] = value
+    q['delta'] = '.123'
+    rows(captures[2])["results"][0]["quote"] = q
+    with pytest.raises(ValueError, match='same source clock'):
+        review(captures[0], captures[1:])
