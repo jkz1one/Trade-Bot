@@ -46,7 +46,10 @@ async def collect(request):
         async with connection(request.policy).client() as client:
             gateway = OptionReadGateway(client)
             stage = "DISCOVER"
-            await gateway.discover()
+            if request.include_inventory:
+                await gateway.discover(include_inventory=True)
+            else:
+                await gateway.discover()
             if request.operation == "CAPTURE":
                 stage = "VALIDATE_PLAN"
                 plan = gateway.validate_plan(request.plan, request.schemas)
@@ -89,6 +92,7 @@ async def collect(request):
         observations=observations,
         error_class=error,
         failure=failure,
+        inventory=gateway.inventory if gateway and request.include_inventory else None,
     )
 
 

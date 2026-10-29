@@ -115,9 +115,12 @@ class CaptureRequest(OptionRecord):
     deadline_monotonic: float = Field(gt=0)
     schemas: ReadSchemas | None = None
     plan: CapturePlan | None = None
+    include_inventory: bool = Field(default=False, strict=True, exclude_if=lambda v: not v)
 
     @model_validator(mode="after")
     def paired(self):
+        if self.include_inventory and self.operation != "DISCOVER":
+            raise ValueError("Inventory is discovery-only, never a market tool call")
         if (self.operation == "CAPTURE") != (
             self.schemas is not None and self.plan is not None
         ) or (self.operation == "DISCOVER" and (self.schemas is not None or self.plan is not None)):
@@ -140,9 +143,15 @@ class CaptureResult(OptionRecord):
     observations: list[dict[str, JsonValue]] = Field(default_factory=list, max_length=8)
     error_class: str | None = Field(default=None, pattern=r"^[A-Za-z_][A-Za-z0-9_]{0,127}$")
     failure: CaptureFailure | None = Field(default=None, exclude_if=lambda v: v is None)
+    inventory: dict[str, JsonValue] | None = Field(default=None, exclude_if=lambda v: v is None)
 
     @model_validator(mode="after")
     def coherence(self):
+        if self.inventory is not None:
+            from app.options.capability_inventory import MAX_INVENTORY_BYTES
+
+            if self.operation != "DISCOVER" or len(encoded(self.inventory)) > MAX_INVENTORY_BYTES:
+                raise ValueError("Bounded discovery-only inventory required")
         if (self.status == "FAILED") != (self.error_class is not None):
             raise ValueError("Capture status and failure evidence must agree")
         if self.failure is not None and (
@@ -208,13 +217,14 @@ async def _read(request):
             await _cleanup(child)
 
 
-async def collect(policy, *, schemas=None, plan=None, clock_source=utc_now):
+async def collect(policy, *, schemas=None, plan=None, clock_source=utc_now, include_inventory=False):
     policy = CapturePolicy.model_validate(policy.model_dump(warnings=False))
     with market_read_lease(policy.oauth_file):
-        return await _collect_owned(policy, schemas=schemas, plan=plan, clock_source=clock_source)
+        return await _collect_owned(policy, schemas=schemas, plan=plan, clock_source=clock_source,
+                                    include_inventory=include_inventory)
 
 
-async def _collect_owned(policy, *, schemas, plan, clock_source):
+async def _collect_owned(policy, *, schemas, plan, clock_source, include_inventory=False):
     # Parent orchestration only. The read child imports protocol models from this
     # module and must not rebuild the execution engine just to decode a request.
     from app.options.engine import clock
@@ -230,6 +240,7 @@ async def _collect_owned(policy, *, schemas, plan, clock_source):
         deadline_monotonic=time.monotonic() + policy.timeout_seconds,
         schemas=schemas,
         plan=plan,
+        include_inventory=include_inventory,
     )
     result = await _read(request)
     finished = clock(clock_source())
@@ -244,6 +255,8 @@ async def _collect_owned(policy, *, schemas, plan, clock_source):
     ):
         raise ValueError("Capture identity, policy, operation, timing or plan mismatch")
     if result.status == "COMPLETE":
+        if include_inventory != (result.inventory is not None):
+            raise ValueError("Requested capability inventory coverage mismatch")
         if result.schemas is None or result.error_class is not None:
             raise ValueError("Completed capture lacks schema evidence")
         if plan is not None and (

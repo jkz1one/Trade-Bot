@@ -1,5 +1,31 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.160. Audit remaining inputs with bounded provider metadata inventory, 2026-10-28 EDT.
+
+The operator successfully enrolled the October 29 observed-simulation policy:
+rollover a3349bb1847a7b85faa1abfbd09913fd5a7b8eb381421938a1cb1271f5bde87d,
+proposed policy cadf98750328d8bb958691532035de170c2a1db6de8ce494f5a3746e62c366c4.
+Four DEGEN option candidates have no configuration blockers. No new market-hours
+run or simulated trade has yet been reported; the public dashboard is unchanged.
+
+The six reviewed tools are an adapter allowlist, not proof of the provider's full
+capabilities. Added an opt-in, metadata-only inventory operation using the existing
+headless process/timeout/private-auth lease. It retains advertised schemas and
+candidate field paths without calling or authorizing additional tools. SDK tool
+listing now follows bounded opaque pagination and rejects partial/repeated pages.
+Default discovery/market capture schemas and serialization remain unchanged.
+
+The audit separates data gaps from configuration: Swing requires original longer
+history, catalyst coverage and 7–45 DTE contracts; the existing same-day catalog
+cannot cover it. Scope requires its specific nine-group/SPX inputs. Stock sizes
+and catalog records are missing, and whole-share entries still have a $250 cap.
+Do not resolve these by buying another provider, fabricating neutral evidence,
+editing frozen settings or resetting the enrolled account. The next input is the
+actual host inventory; see REMAINING_ROBINHOOD_INPUTS.md. This update does not
+remove any strategy, fill, entitlement, freshness or position-management guard.
+
+Previous version notes (historical):
+
 Version 1.159. Preserve after-close quote analytics as catalog evidence, 2026-10-28 EDT.
 
 The host completed all eight reads into /root/trade-bot-options-proof-hCABXA.

@@ -117,8 +117,10 @@ class OptionReadGateway:
     def __init__(self, client):
         self.client = client
         self.schemas = None
+        self.inventory = None
 
-    async def discover(self):
+    async def discover(self, *, include_inventory=False):
+        self.inventory = None
         raw = await self.client.list_tools()
         if not isinstance(raw, list) or len(raw) > 256:
             raise ValueError("Bounded tool inventory required")
@@ -133,6 +135,10 @@ class OptionReadGateway:
             seen.add(item["name"])
             if item["name"] in READ_TOOLS:
                 tools[item["name"]] = _normalize_tool_metadata(item)
+        if include_inventory:
+            from app.options.capability_inventory import build
+
+            self.inventory = build(raw, READ_TOOLS)
         self.schemas = ReadSchemas(
             captured_at=utc_now(),
             tools=tools,

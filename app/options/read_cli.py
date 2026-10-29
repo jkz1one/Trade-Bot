@@ -9,6 +9,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from app.execution.market_reads import private_oauth
+from app.options.capability_inventory import summary as inventory_summary
 from app.options.read_capture import CapturePolicy, CaptureResult, collect, failure_evidence
 from app.options.read_gateway import CapturePlan, ReadSchemas, encoded
 
@@ -90,7 +91,7 @@ def main(argv=None):
     export.add_argument("--source", required=True)
     export.add_argument("--output", required=True)
     export.add_argument("--schema-sha256", required=True)
-    for name in ("discover", "capture"):
+    for name in ("discover", "capture", "inventory"):
         cmd = sub.add_parser(name)
         cmd.add_argument("--oauth-file", required=True)
         cmd.add_argument("--output", required=True)
@@ -155,7 +156,8 @@ def main(argv=None):
             os.fsync(parent_fd)
         finally:
             os.close(parent_fd)
-        result = asyncio.run(collect(policy, schemas=schemas, plan=plan))
+        result = asyncio.run(collect(policy, schemas=schemas, plan=plan,
+                                    include_inventory=args.operation == "inventory"))
         _save(fd, {**admission, "status": result.status, "result": result.model_dump(mode="json")})
         print(
             json.dumps(
@@ -173,6 +175,8 @@ def main(argv=None):
                     else [],
                     "execution_authority": False,
                     "normalized_data_verified": False,
+                    **({"capability_inventory": inventory_summary(result.inventory)}
+                       if result.inventory is not None else {}),
                     **(
                         {
                             "error_class": result.error_class,

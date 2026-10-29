@@ -89,10 +89,20 @@ class McpSdkToolClient:
         self._client = client
 
     async def list_tools(self) -> list[dict[str, Any]]:
-        result = await self._client.list_tools()
-        # MCP SDK v2 uses snake_case Python fields but camelCase JSON aliases. Persist the
-        # protocol/wire representation so schemas remain inputSchema/outputSchema.
-        return [tool.model_dump(mode="json", by_alias=True) for tool in result.tools]
+        tools, seen, cursor = [], set(), None
+        for _ in range(8):
+            result = await self._client.list_tools(**({"cursor": cursor} if cursor else {}))
+            # Retain wire aliases, and never mistake the first page for the full inventory.
+            tools.extend(tool.model_dump(mode="json", by_alias=True) for tool in result.tools)
+            if len(tools) > 256:
+                raise ValueError("Tool inventory exceeds bound")
+            cursor = getattr(result, "next_cursor", None)
+            if cursor is None:
+                return tools
+            if not isinstance(cursor, str) or not 0 < len(cursor) <= 4096 or cursor in seen:
+                raise ValueError("Invalid or repeated tool inventory cursor")
+            seen.add(cursor)
+        raise ValueError("Tool inventory pagination exceeds bound")
 
     async def call_tool(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         result = await self._client.call_tool(name, arguments)
