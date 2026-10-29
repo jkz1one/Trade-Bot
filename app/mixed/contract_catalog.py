@@ -56,8 +56,11 @@ def review(contracts, samples):
     if not 1 <= len(samples) <= 8:
         raise ValueError("One to eight original quote captures required")
     catalog = {}
+    chains = {}
     for call, data in zip(original.plan.calls, payloads, strict=True):
         args = call.arguments
+        if not (args.get("chain_id") or args.get("chain_symbol")) or args.get("ids"):
+            raise ValueError("Explicit chain ID or symbol discovery required")
         if data.get("next"):
             raise ValueError("Unfinished contract pagination")
         for row in data.get("instruments") or ():
@@ -65,7 +68,10 @@ def review(contracts, samples):
                 row is None
                 or row["id"] in catalog
                 or row["chain_symbol"] not in original.plan.symbols
-                or row["chain_id"] != args.get("chain_id")
+                or not row["chain_id"]
+                or (args.get("chain_id") and row["chain_id"] != args["chain_id"])
+                or (args.get("chain_symbol") and row["chain_symbol"] != args["chain_symbol"])
+                or (row["chain_symbol"] in chains and chains[row["chain_symbol"]] != row["chain_id"])
                 or row["expiration_date"] != args.get("expiration_dates")
                 or Decimal(row["strike_price"]) != Decimal(args["strike_price"])
                 or row["state"] != "active"
@@ -76,6 +82,7 @@ def review(contracts, samples):
             ):
                 raise ValueError("Exact active equity-option discovery subjects required")
             catalog[row["id"]] = row
+            chains[row["chain_symbol"]] = row["chain_id"]
     if not 1 <= len(catalog) <= 8:
         raise ValueError("Bounded nonempty contract discovery required")
     observations = {key: [] for key in catalog}

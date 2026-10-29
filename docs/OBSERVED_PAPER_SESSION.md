@@ -45,7 +45,37 @@ Default runs still never resume automatically. End-of-run stop halts entry again
 
 ## Host operation
 
-Build the pinned release using `connected-session-host.py build`. For the retained
+Build the pinned release using `connected-session-host.py build`. Capture a new
+session using the same Robinhood connection:
+
+```sh
+bash scripts/paper-contract-capture-host.sh 2026-10-29
+```
+
+The helper prints its private evidence directory. It makes eight market-tool calls:
+underlying quotes, two chain lookups, two exact-strike ticker lookups and three
+option quote samples. One whole-dollar strike per symbol is rounded from the
+observed bid/ask midpoint. This is a bounded candidate probe, not a complete chain
+scan, price recommendation or guarantee of an eligible/affordable trade. Stale
+after-hours prices remain labeled with their original clocks. Empty, paginated,
+untradable or chain-mismatched results refuse; the saved captures remain intact.
+No owner/account or model key is mounted. It does not enroll or start a session.
+
+On the target date, before the simulation cutoff, pass the printed directory to
+`paper-session-start.py --capture-directory DIR --target-session YYYY-MM-DD
+--run-id NEW-ID --seconds 600`. Current runtime data must independently pass
+freshness and strategy/risk checks. A future-session policy can also be prepared
+and reviewed through the existing `prepare-session` / `review-session` operations;
+the one-command starter deliberately requires the target date itself.
+
+Host evidence from October 28 established that ticker-only discovery returned
+active/tradable October 29 contracts, while earlier chain-ID plus explicit
+state/tradability requests were empty. The exact offending filter is unproven.
+The catalog reader now supports ticker-bound exact-strike receipts while checking
+the returned states, identities, expiry and complete quote coverage. Neither the
+100-row first page nor expired October 28 captures should be enrolled directly.
+
+Historical example (October 28 only): for the retained
 October 27 capture directory with October 28 contracts, on October 28 only:
 
 ```sh

@@ -1,5 +1,29 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.158. Ticker-based bounded contract capture, 2026-10-28 EDT.
+
+Host evidence confirms October 29 SPY/QQQ chains and active/tradable contracts
+from minimal ticker-based instrument requests. Earlier chain-ID requests with
+explicit active/tradable filters returned empty. The exact filter responsible
+is not isolated. Do not treat this as missing expirations or a provider outage.
+
+Catalog review now accepts exact ticker-based discovery as well as chain IDs,
+while retaining expiry, strike, returned active/tradable state, consistent chain
+identity, complete pagination and quote-subject checks. A bounded host helper
+captures advertised chains and underlying quotes, probes one rounded midpoint
+strike per symbol, and retains three option quote samples. These are candidates,
+not trade recommendations or proof of affordability/strategy eligibility. It
+refuses ambiguous chains, empty/partial probes and mismatched instruments.
+No account, owner or dashboard is mounted by the capture helper. Existing risk
+limits, PAPER-only assumptions and fresh runtime acceptance remain unchanged.
+
+Closed-session rollover now reports SESSION_CLOSED through the host wrapper,
+without disclosing arbitrary exception messages. The previous October 28 launch
+was rejected after its simulation cutoff, before enrollment. No simulated trades
+or current host acceptance have been demonstrated for this update.
+
+Previous version notes (historical):
+
 Version 1.157. Explicit observed-quote PAPER session, 2026-10-28 EDT.
 
 Added opt-in observed Robinhood simulation evidence, keeping entitlement UNKNOWN,

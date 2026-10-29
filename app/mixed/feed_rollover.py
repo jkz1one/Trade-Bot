@@ -27,6 +27,10 @@ MAX_ROLLOVERS = 256
 DIGEST = r"^[a-f0-9]{64}$"
 
 
+class SessionClosed(ValueError):
+    """Public operational condition, with no private exception payload."""
+
+
 class FeedRollover(OptionRecord):
     version: Literal["session-feed-rollover-v1"] = PROTOCOL
     sequence: int = Field(strict=True, ge=1, le=MAX_ROLLOVERS)
@@ -72,7 +76,7 @@ def validate_policy(base, proposed, target, created_at):
         raise ValueError("Only the exact target session carry intent may be supplied")
     opened = cal.session_open(target.isoformat()).to_pydatetime()
     if now >= cal.session_close(target.isoformat()).to_pydatetime():
-        raise ValueError("Session policy must be enrolled before its market close")
+        raise SessionClosed("Session policy must be enrolled before its market close")
     for i in proposed.candidates:
         if (
             not i.metadata_complete
@@ -406,12 +410,12 @@ def main(argv=None):
             if args.operation == "review"
             else apply(*paths, expected_review=args.expected_review)
         )
-    except (OSError, ValueError, RuntimeError, sqlite3.Error, KeyError, TypeError):
+    except (OSError, ValueError, RuntimeError, sqlite3.Error, KeyError, TypeError) as exc:
         print(
             json.dumps(
                 {
                     "status": "UNAVAILABLE",
-                    "reason": "FEED_ROLLOVER_UNAVAILABLE",
+                    "reason": "SESSION_CLOSED" if isinstance(exc, SessionClosed) else "FEED_ROLLOVER_UNAVAILABLE",
                     "live_enabled": False,
                     "workers_started": False,
                 }

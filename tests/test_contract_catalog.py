@@ -78,6 +78,32 @@ def test_real_capture_review_preserves_clocks_and_unknowns(captures):
     assert captures == before
 
 
+def test_symbol_discovery_preserves_exact_identity_and_tradability(captures):
+    for call, observation in zip(captures[0]["result"]["plan"]["calls"],
+                                 captures[0]["result"]["observations"], strict=True):
+        row = observation["raw"]["structuredContent"]["data"]["instruments"][0]
+        call["arguments"].pop("chain_id")
+        call["arguments"].pop("state")
+        call["arguments"].pop("tradability")
+        call["arguments"]["chain_symbol"] = row["chain_symbol"]
+    before = copy.deepcopy(captures)
+    assert len(review(captures[0], captures[1:])["contracts"]) == 4
+    assert captures == before
+    for key, bad in (("chain_symbol", "QQQ"), ("chain_id", "another-chain"),
+                     ("state", "inactive"), ("tradability", "untradable"),
+                     ("strike_price", "759"), ("expiration_date", "2026-10-29")):
+        changed = copy.deepcopy(captures)
+        rows(changed[0])["instruments"][0][key] = bad
+        with pytest.raises(ValueError):
+            review(changed[0], changed[1:])
+
+
+def test_discovery_cannot_omit_chain_selector(captures):
+    captures[0]["result"]["plan"]["calls"][0]["arguments"].pop("chain_id")
+    with pytest.raises(ValueError, match="chain ID or symbol"):
+        review(captures[0], captures[1:])
+
+
 @pytest.mark.parametrize(
     "corruption",
     [

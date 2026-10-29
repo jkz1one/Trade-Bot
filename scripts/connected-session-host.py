@@ -170,7 +170,19 @@ def execute(image_id, module, args, mounts, *, copies=False):
         module,
         *args,
         timeout=60,
+        allow_failure=True,
     )
+    if result.returncode:
+        # Only fixed public reason codes cross this boundary, never raw stderr.
+        try:
+            reason = json.loads(result.stdout).get("reason")
+        except (ValueError, AttributeError):
+            reason = None
+        if module == "app.mixed.feed_rollover" and reason in {
+            "SESSION_CLOSED", "FEED_ROLLOVER_UNAVAILABLE"
+        }:
+            raise RuntimeError(reason)
+        raise RuntimeError("Host command failed: docker run")
     return json.loads(result.stdout)
 
 

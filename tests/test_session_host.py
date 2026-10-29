@@ -15,6 +15,19 @@ IMAGE = "sha256:" + "a" * 64
 RELEASE = "b" * 40
 
 
+def test_execute_reports_only_fixed_rollover_failure_codes(monkeypatch):
+    m = load()
+    for payload, expected in (({"reason": "SESSION_CLOSED"}, "SESSION_CLOSED"),
+                              ({"reason": "private-token"}, "Host command failed")):
+        def docker(*args, **kwargs):
+            assert kwargs["allow_failure"] is True
+            return subprocess.CompletedProcess(args, 2, json.dumps(payload), "private-stderr")
+        monkeypatch.setattr(m.h, "docker", docker)
+        with pytest.raises(RuntimeError, match=expected) as caught:
+            m.execute(IMAGE, "app.mixed.feed_rollover", [], [])
+        assert "private" not in str(caught.value)
+
+
 def load():
     spec = importlib.util.spec_from_file_location("session_under_test", SCRIPT)
     m = importlib.util.module_from_spec(spec)

@@ -502,3 +502,16 @@ def test_current_session_cannot_reinterpret_prior_collection(tmp_path, schemas):
         feed.close()
     with pytest.raises(ValueError, match="prior collection today"):
         review(args)
+
+
+def test_cli_reports_closed_session_without_private_exception(monkeypatch, capsys):
+    def closed(*args, **kwargs):
+        raise rollover.SessionClosed("private-detail")
+    monkeypatch.setattr(rollover, "review", closed)
+    args = ["review", "--directory", "/owner", "--feed-directory", "/feed",
+            "--policy", "/policy", "--schemas", "/schemas", "--next-policy", "/next",
+            "--target-session", "2026-10-28"]
+    assert rollover.main(args) == 2
+    output = capsys.readouterr().out
+    assert json.loads(output)["reason"] == "SESSION_CLOSED"
+    assert "private-detail" not in output
