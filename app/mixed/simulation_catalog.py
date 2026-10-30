@@ -22,7 +22,7 @@ def proposal(policy, contracts, samples, target, *, earnings_probe=None, observe
     from app.options.earnings_context import from_probe
 
     earnings = from_probe(earnings_probe, target) if earnings_probe is not None else None
-    reviewed = review(contracts, samples)
+    reviewed = review(contracts, samples, retain_future_quotes=True)
     cal = XNYSCalendar().calendar
     if not cal.is_session(target.isoformat()):
         raise ValueError("Exchange trading session required")
@@ -37,7 +37,7 @@ def proposal(policy, contracts, samples, target, *, earnings_probe=None, observe
     if swing_contracts is not None:
         if not observed_swing_history:
             raise ValueError("Swing catalog requires explicit observed history enrollment")
-        swing_review = review(swing_contracts, swing_samples)
+        swing_review = review(swing_contracts, swing_samples, retain_future_quotes=True)
         swing_selected = instruments(policy, swing_review, target, cal, swing=True)
         if sorted((i.contract.underlying, i.contract.right) for i in swing_selected) != sorted(
             (s.symbol, right) for s in policy.stocks for right in ("CALL", "PUT")
@@ -75,6 +75,7 @@ def proposal(policy, contracts, samples, target, *, earnings_probe=None, observe
             "instrument_id": item["provider_record"]["id"],
             "all_fresh_at_capture": item["all_fresh_at_capture"],
             "source_clock_advanced": item["source_clock_advanced"],
+            "future_quote_samples": [q for q in item["samples"] if q.get("clock_issue")],
             "analytic_changes_at_same_quote_time": sorted({
                 field for sample in item["samples"]
                 for field in sample["analytic_changes_at_same_quote_time"]
@@ -83,6 +84,9 @@ def proposal(policy, contracts, samples, target, *, earnings_probe=None, observe
         "option_candidates": [i.instrument_id for i in selected],
         **({"swing_catalog": {
             "capture_hashes": swing_review["capture_hashes"],
+            "future_quote_samples": [{"instrument_id": item["provider_record"]["id"],
+                                      **q} for item in swing_review["contracts"]
+                                     for q in item["samples"] if q.get("clock_issue")],
             "contracts": [{"instrument_id": i.instrument_id,
                            "expiration": i.contract.expiration.isoformat(),
                            "last_trading_at": i.contract.last_trading_at.isoformat()}

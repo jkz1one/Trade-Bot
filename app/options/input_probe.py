@@ -18,6 +18,12 @@ PINS = {
     "get_index_historicals": "592e766f6cd419ee95c33009ab2b8f281958ba0c6bc777e52e76f2423fe382fd",
 }
 
+# Diagnostic-only book payload observed at 484,845 bytes during market hours.
+# Keep the original response intact; ordinary/runtime reads retain their 128 KiB
+# cap. Reserve space inside the existing 768 KiB capture / 1 MiB process envelope.
+MAX_BOOK_PROBE_BYTES = 512 * 1024
+MAX_PROBE_OBSERVATIONS_BYTES = 704 * 1024
+
 
 class InputProbeIncomplete(RuntimeError):
     pass
@@ -32,10 +38,11 @@ def check_response(raw, metadata, row, observations):
     row["response_issue"] = "NON_JSON_RESPONSE"
     size = len(encoded(raw))
     row["response_bytes"] = size
-    if size > MAX_SAMPLE_BYTES:
+    limit = MAX_BOOK_PROBE_BYTES if row.get("tool") == "get_equity_price_book" else MAX_SAMPLE_BYTES
+    if size > limit:
         row["response_issue"] = "RESPONSE_TOO_LARGE"
         raise InputProbeResponseError
-    if len(encoded(observations)) + size > 512 * 1024:
+    if len(encoded(observations)) + size > MAX_PROBE_OBSERVATIONS_BYTES:
         row["response_issue"] = "AGGREGATE_RESPONSE_TOO_LARGE"
         raise InputProbeResponseError
     # Only private evidence retains rejected content; never print it in the report.

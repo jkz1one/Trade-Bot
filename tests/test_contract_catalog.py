@@ -177,6 +177,45 @@ def test_stale_book_is_evidence_not_freshness(captures):
     assert not any(r["all_fresh_at_capture"] for r in report["contracts"])
 
 
+def test_offline_future_quote_is_retained_without_restamping_or_native_acceptance(captures):
+    from datetime import timedelta
+    from app.mixed.simulation_catalog import proposal
+    from app.options.read_mapping import option_quotes
+    from app.options.read_capture import CaptureResult
+    from app.options.models import OptionInstrument
+
+    selected = terms(captures)
+    sample = captures[2]
+    q = rows(sample)["results"][0]["quote"]
+    received = datetime.fromisoformat(sample["result"]["collected_at"])
+    q["updated_at"] = (received + timedelta(microseconds=545227)).isoformat()
+    before = copy.deepcopy(captures)
+    with pytest.raises(ValueError, match="Future or regressing"):
+        review(captures[0], captures[1:])
+    with pytest.raises(ValueError, match="Future or regressing"):
+        bind(captures[0], captures[1:], selected)
+    _, base = configuration()
+    _, report = proposal(base, captures[0], captures[1:], date(2026, 10, 28))
+    evidence = report["historical_quote_evidence"][0]
+    anomaly, = evidence["future_quote_samples"]
+    assert anomaly["age_seconds_at_capture"] == -.545227
+    assert anomaly["original_source_at"] == q["updated_at"]
+    assert not anomaly["fresh_book_at_capture"] and not evidence["all_fresh_at_capture"]
+    assert not report["trading_ready"]
+    result = CaptureResult.model_validate(sample["result"])
+    with pytest.raises(ValueError, match="Source quote cannot follow receipt"):
+        option_quotes(result.schemas, result.plan.calls[0], result.observations[0]["raw"],
+                      received_at=result.collected_at,
+                      instruments=tuple(OptionInstrument.model_validate(i) for i in selected))
+    assert captures == before
+
+
+def test_offline_future_retention_still_rejects_regression(captures):
+    rows(captures[2])["results"][0]["quote"]["updated_at"] = "2026-10-27T20:00:00Z"
+    with pytest.raises(ValueError, match="regressing"):
+        review(captures[0], captures[1:], retain_future_quotes=True)
+
+
 def test_selected_subset_maps_real_quotes_without_restamping(captures):
     selected = terms(captures)[:1]
     report = bind(captures[0], captures[1:], selected)

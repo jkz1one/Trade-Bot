@@ -38,7 +38,14 @@ def context(captures):
     return artifact
 
 
-def test_capture_sequence_produces_reviewable_symbol_catalog(captures):
+@pytest.mark.parametrize("future_quote", [False, True])
+def test_capture_sequence_produces_reviewable_symbol_catalog(captures, future_quote):
+    if future_quote:
+        from datetime import datetime, timedelta
+        received = datetime.fromisoformat(captures[2]["result"]["collected_at"])
+        captures[2]["result"]["observations"][0]["raw"]["structuredContent"]["data"]["results"][0]["quote"]["updated_at"] = (
+            received + timedelta(microseconds=545227)
+        ).isoformat()
     seen, pauses = [], []
     source = context(captures)
 
@@ -56,6 +63,8 @@ def test_capture_sequence_produces_reviewable_symbol_catalog(captures):
     assert result["provider_tool_calls"] == sum(len(p["calls"]) for _, p in seen) == 8
     assert len(result["option_candidates"]) == 4 and pauses == [5, 5]
     assert not result["trading_ready"] and not result["workers_started"]
+    assert bool(result["future_quote_samples"]) is future_quote
+    assert result["all_fresh_at_capture"] is not future_quote
     assert [a["strike"] for a in result["anchors"]] == ["760", "705"]
     for c in seen[1][1]["calls"]:
         assert set(c["arguments"]) == {"chain_symbol", "expiration_dates", "strike_price"}

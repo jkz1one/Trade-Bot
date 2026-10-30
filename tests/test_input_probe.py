@@ -343,7 +343,7 @@ def test_response_rejection_categories_and_private_payload_retention(raw, catego
 def test_aggregate_bound_and_non_json_response_never_store_unbounded_raw():
     row = {'tool':'get_earnings_calendar', 'completed':False}
     with pytest.raises(ValueError):
-        probe.check_response({'ok':1}, TOOLS['get_earnings_calendar'], row, [{'padding':'x'*(512*1024)}])
+        probe.check_response({'ok':1}, TOOLS['get_earnings_calendar'], row, [{'padding':'x'*probe.MAX_PROBE_OBSERVATIONS_BYTES}])
     assert row['response_issue'] == 'AGGREGATE_RESPONSE_TOO_LARGE' and 'rejected_raw' not in row
     row = {'tool':'get_earnings_calendar', 'completed':False}
     with pytest.raises(ValueError):
@@ -370,6 +370,42 @@ def test_new_probe_uses_one_day_without_filter_or_expanding_response_bounds():
     assert MAX_SAMPLE_BYTES == 128 * 1024
     assert len(client.calls) == 5
     assert not report['earnings_is_complete_catalyst_coverage']
+
+
+def test_large_book_probe_preserves_original_within_existing_process_envelope(tmp_path, monkeypatch):
+    from app.options.read_gateway import encoded, MAX_SAMPLE_BYTES
+    client = Client()
+    original = client.call_tool
+    retained = []
+
+    async def large_book(name, arguments):
+        raw = await original(name, arguments)
+        if name == 'get_equity_price_book':
+            raw['content'] = [{'type': 'text', 'text': 'x' * 484000}]
+            assert MAX_SAMPLE_BYTES < len(encoded(raw)) < probe.MAX_BOOK_PROBE_BYTES
+            retained.append(deepcopy(raw))
+        return raw
+
+    client.call_tool = large_book
+    connected(client, monkeypatch)
+    req = request(tmp_path).model_copy(update={'operation': 'INPUT_PROBE', 'started_at': AT})
+    result = asyncio.run(read_worker.collect(req))
+    assert result.status == 'COMPLETE'
+    assert result.observations[0]['raw'] == retained[0]
+    assert result.input_probe['completed_reads'] == 5
+    assert not result.input_probe['trading_ready']
+    assert len(result.model_dump_json().encode()) < read_capture.MAX_RESPONSE_BYTES
+    assert MAX_SAMPLE_BYTES == 128 * 1024
+
+
+def test_book_probe_remains_bounded_and_does_not_expand_other_tools():
+    for tool, limit in [('get_equity_price_book', probe.MAX_BOOK_PROBE_BYTES),
+                        ('get_earnings_calendar', 128 * 1024)]:
+        row = {'tool': tool, 'completed': False}
+        with pytest.raises(probe.InputProbeResponseError):
+            probe.check_response({'padding': 'x' * limit}, TOOLS[tool], row, [row])
+        assert row['response_issue'] == 'RESPONSE_TOO_LARGE'
+        assert 'raw' not in row and 'rejected_raw' not in row
 
 
 def test_legacy_seven_day_evidence_replays_but_cannot_satisfy_new_request():

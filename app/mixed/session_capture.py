@@ -96,11 +96,14 @@ def collect(target, capture, *, pause=time.sleep):
         samples.append(capture(f"quotes-{sample}", quotes))
         if sample < 3:
             pause(5)
-    reviewed = review(contracts, samples)
+    reviewed = review(contracts, samples, retain_future_quotes=True)
     return {"status": "CATALOG_CAPTURED", "target_session": target.isoformat(),
             "anchors": anchors, "option_candidates": ids, "context_sha256": digest(context),
             "capture_hashes": reviewed["capture_hashes"],
             "all_fresh_at_capture": all(c["all_fresh_at_capture"] for c in reviewed["contracts"]),
+            "future_quote_samples": [{"instrument_id": c["provider_record"]["id"], **q}
+                                     for c in reviewed["contracts"] for q in c["samples"]
+                                     if q.get("clock_issue")],
             "provider_tool_calls": 8, "workers_started": False, "live_enabled": False,
             "trading_ready": False, "entitlement": "UNKNOWN"}
 

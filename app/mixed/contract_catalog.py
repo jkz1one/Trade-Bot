@@ -58,8 +58,13 @@ def capture(artifact, tool):
     return result, payloads
 
 
-def review(contracts, samples):
-    """Validate captured identities and historical quote quality, without term inference."""
+def review(contracts, samples, *, retain_future_quotes=False):
+    """Review identities; optionally retain unusable future quotes as offline evidence.
+
+    This option is only for observed-simulation catalog preparation. It never
+    corrects a timestamp or makes a quote eligible for native market admission.
+    Strict reviewed-term binding keeps the default rejection.
+    """
     original, payloads = capture(contracts, "get_option_instruments")
     if not 1 <= len(samples) <= 8:
         raise ValueError("One to eight original quote captures required")
@@ -123,7 +128,9 @@ def review(contracts, samples):
                 age = (result.collected_at - source).total_seconds()
                 bid, ask = Decimal(row["bid_price"]), Decimal(row["ask_price"])
                 history = observations[key]
-                if age < 0 or (history and source < instant(history[-1]["source_at"])):
+                if (age < 0 and not retain_future_quotes) or (
+                    history and source < instant(history[-1]["source_at"])
+                ):
                     raise ValueError("Future or regressing quote clock")
                 row_hash = digest(row)
                 non_analytic_hash = digest({k: v for k, v in row.items() if k not in ANALYTIC_FIELDS})
@@ -139,12 +146,14 @@ def review(contracts, samples):
                         "source_at": source.isoformat(),
                         "received_at": result.collected_at.isoformat(),
                         "age_seconds_at_capture": age,
+                        **({"clock_issue": "SOURCE_AFTER_CAPTURE",
+                            "original_source_at": row["updated_at"]} if age < 0 else {}),
                         "bid": str(bid),
                         "ask": str(ask),
                         "bid_size": row["bid_size"],
                         "ask_size": row["ask_size"],
                         "fresh_book_at_capture": (
-                            age <= 30
+                            0 <= age <= 30
                             and bid.is_finite()
                             and ask.is_finite()
                             and 0 < bid <= ask

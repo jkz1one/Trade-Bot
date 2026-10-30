@@ -166,3 +166,33 @@ keeping policy.json and schemas.json read-only. If the initial apply failed, bui
 the corrected release and retry the **original** apply review hash. The pending
 intent is recovery evidence and must be retained. Review/ordinary runtime config
 mount protections are unchanged.
+
+October 30 market-hours evidence: the operator's read-only verification confirmed
+`UPGRADE_VERIFIED` at owner revision 355 with the stop/halt preserved. Do not apply
+the completed amendment again. The current session still needs reviewed inputs.
+
+The saved `trade-bot-options-proof-VQXJP1` capture contained two source timestamps
+0.545227 and 0.539 seconds after capture completion, with no regression and host
+NTP synchronization reported. That does not establish the provider clock's cause
+or justify correcting timestamps. Observed-simulation catalog preparation now
+retains future samples as `SOURCE_AFTER_CAPTURE`, preserves their original clocks
+and negative ages, and reports them as not fresh. Only contract identities/terms
+are prepared; no captured quote is enrolled as an executable quote. Strict catalog
+binding, regression rejection, native future-quote rejection, and all runtime
+freshness/fill guards remain unchanged. Existing saved captures can be reused for
+offline observed-simulation preparation.
+
+The independent `trade-bot-input-probe-Nrk6E9` received a current SPX quote but no
+explicitly noninterpolated history bars (204 interpolated, 84 unknown). Its stock
+book response was 484,845 bytes, exceeding the diagnostic's old 128 KiB limit.
+Only that diagnostic tool now permits 512 KiB, with a 704 KiB observations budget
+inside the unchanged 768 KiB capture and 1 MiB worker envelope. Other tool payloads
+retain 128 KiB limits. Full original responses are retained without trimming or
+rewriting. The oversized prior response was not retained and requires a new probe.
+This change does not enroll stock sizes, certify history, or start trading.
+
+Validation: 218 focused tests pass, including preserved negative quote ages,
+unchanged strict/native rejection, capture-to-catalog reporting, original large
+book retention within the worker envelope, size-limit failures, isolated captures,
+observed PAPER fills, session preparation and guarded flat recovery. Host data
+acceptance remains pending; these tests do not certify the provider clocks.
