@@ -80,7 +80,7 @@ hash in `app/options/input_probe.py`.
 - `get_equity_price_book`: price levels with integer share quantities and a
   snapshot timestamp. This is a book snapshot, not automatically consolidated
   executable NBBO or proof of source-clock freshness. Requires actual payloads.
-- `get_earnings_calendar`: seven-day company earnings coverage, with tentative
+- `get_earnings_calendar`: one-day company earnings capture (original probe: seven days), with tentative
   versus verified dates. Empty results do not clear all ETF catalysts or macro news.
 - `get_indexes`, `get_index_quotes`, `get_index_historicals`: SPX identity and
   market data candidates. The schemas explicitly support restricted results.
@@ -142,3 +142,15 @@ invalid schema, malformed response) and byte counts. Bounded rejected payloads
 remain private; oversized payloads are not retained and limits remain unchanged.
 Use the normal probe command to obtain this additional evidence; the offline
 report cannot reconstruct a response discarded by the previous collector.
+
+## Earnings response-size evidence
+
+The next host capture, `b9b459fb615a466e91be642db14d6228`, reported
+`RESPONSE_TOO_LARGE` at 427115 bytes. The seven-day response exceeded the unchanged
+128 KiB per-response bound. This is not an empty calendar or proof of unavailable
+provider capability. New probes request one Eastern calendar day, with no company
+filter and no retries. Reports include exact start_date/days and preserve the
+unavailable-versus-empty distinction. A one-day result does not establish seven-day
+or complete catalyst coverage. Historical seven-day captures remain replayable;
+the parent requires the one-day binding for any new probe. Response limits remain
+unchanged and a still-oversized day will be reported explicitly.

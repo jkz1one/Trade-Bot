@@ -359,3 +359,30 @@ def test_captured_empty_calendar_is_distinct_from_failed_or_null_calendar():
     report, _ = run(client)
     assert report['earnings_events'] is None and report['earnings_status'] == 'UNAVAILABLE'
     assert not report['earnings_is_complete_catalyst_coverage']
+
+
+def test_new_probe_uses_one_day_without_filter_or_expanding_response_bounds():
+    from app.options.read_gateway import MAX_SAMPLE_BYTES
+    client = Client()
+    report, rows = run(client)
+    assert rows[1]['arguments'] == {'start_date':'2026-10-29', 'days':1}
+    assert report['earnings_window'] == rows[1]['arguments']
+    assert MAX_SAMPLE_BYTES == 128 * 1024
+    assert len(client.calls) == 5
+    assert not report['earnings_is_complete_catalyst_coverage']
+
+
+def test_legacy_seven_day_evidence_replays_but_cannot_satisfy_new_request():
+    evidence = json.loads((Path(__file__).parent / 'fixtures/robinhood_inputs_20261029.json').read_text())
+    rows = evidence['observations']; at = datetime.fromisoformat(evidence['started_at'])
+    probe.validate_observations(rows, at)
+    assert probe.summary(rows)['earnings_window']['days'] == 7
+    with pytest.raises(ValueError, match='binding'):
+        probe.validate_observations(rows, at, expected_calendar_days=1)
+    changed = deepcopy(rows)
+    changed[1]['arguments']['days'] = 3
+    with pytest.raises(ValueError, match='reviewed'):
+        probe.validate_observations(changed, at)
+    changed[1]['arguments']['days'] = True
+    with pytest.raises(ValueError, match='reviewed'):
+        probe.validate_observations(changed, at)

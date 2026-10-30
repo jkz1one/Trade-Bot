@@ -1,5 +1,24 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.164. Narrow earnings probe after observed response-size rejection, 2026-10-29 EDT.
+
+Host capture b9b459fb615a466e91be642db14d6228 from
+/root/trade-bot-input-probe-2Ay003 identifies the earnings failure precisely:
+RESPONSE_TOO_LARGE, 427115 encoded bytes, above the 131072-byte sample bound.
+Four independent market reads completed. This is a capture-size rejection, not
+proof of missing earnings access, an entitlement denial or an empty calendar.
+
+New probes request one Eastern calendar day instead of seven, without filtering
+out companies. Existing per-response, aggregate, process and call-count limits
+remain unchanged. There are no automatic retry or unbounded pagination loops.
+Reports explicitly retain the requested start_date and days. Offline reporting
+continues to accept original seven-day evidence, while new worker/parent call
+binding requires exactly one day. Actual one-day response capture is still pending;
+a busy one-day response could also exceed the unchanged bound. No complete
+catalyst coverage, runtime admission or simulated trading is claimed.
+
+Previous version notes (historical):
+
 Version 1.163. Preserve recovered provider evidence and classify input-probe failures, 2026-10-29 EDT.
 
 The operator uploaded /root/trade-bot-input-probe-LB05wA/probe.json. Offline

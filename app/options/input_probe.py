@@ -55,12 +55,14 @@ def check_response(raw, metadata, row, observations):
     del row["response_issue"]
 
 
-def initial_calls(at):
+def initial_calls(at, *, calendar_days=1):
+    if type(calendar_days) is not int or calendar_days not in (1, 7):
+        raise ValueError("Only current one-day or historical seven-day probe windows are reviewed")
     return [
         ("get_equity_price_book", {"symbols": ["SPY", "QQQ"]}),
         ("get_earnings_calendar", {
             "start_date": at.astimezone(ZoneInfo("America/New_York")).date().isoformat(),
-            "days": 7,
+            "days": calendar_days,
         }),
         ("get_indexes", {"symbols": "SPX"}),
     ]
@@ -114,11 +116,16 @@ def data_of(row):
     return row["raw"]["structuredContent"]["data"] if row.get("completed") else {}
 
 
-def validate_observations(rows, at, *, complete=False):
+def validate_observations(rows, at, *, complete=False, expected_calendar_days=None):
     """Parent rechecks the exact bounded call sequence and arguments."""
     if len(rows) > 5:
         raise ValueError("Input probe exceeds fixed call bound")
-    expected = initial_calls(at)
+    # Offline reports can replay the original seven-day probe. New workers/parents
+    # explicitly require one day; arbitrary windows and filters remain rejected.
+    days = expected_calendar_days
+    if days is None:
+        days = rows[1].get("arguments", {}).get("days") if len(rows) >= 2 else 1
+    expected = initial_calls(at, calendar_days=days)
     if len(rows) >= 3:
         identity = index_id(data_of(rows[2]))
         if identity is None and len(rows) > 3:
@@ -173,7 +180,7 @@ async def run(client, inventory, at, observations):
         quote_data = await capture(*quotes)
         if not quote_data.get("restricted"):
             await capture(*history)
-    validate_observations(observations, at)
+    validate_observations(observations, at, expected_calendar_days=1)
     return summary(observations)
 
 
@@ -201,6 +208,8 @@ def summary(rows):
         "earnings_status": ("CAPTURED" if by_name.get("get_earnings_calendar", {}).get("completed")
                             and earnings.get("results") is not None else "UNAVAILABLE"),
         "earnings_events": (len(earnings["results"]) if earnings.get("results") is not None else None),
+        "earnings_window": {k: by_name.get("get_earnings_calendar", {}).get("arguments", {}).get(k)
+                            for k in ("start_date", "days")},
         "earnings_is_complete_catalyst_coverage": False,
         "spx_identity_resolved": index_id(indexes) is not None,
         "index_quotes": [{k: q[k] for k in ("instrument_id", "symbol", "value", "venue_timestamp")}

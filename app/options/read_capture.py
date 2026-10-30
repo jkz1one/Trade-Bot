@@ -268,7 +268,8 @@ async def _collect_owned(policy, *, schemas, plan, clock_source, include_invento
     if input_probe:
         from app.options.input_probe import summary, validate_observations
 
-        validate_observations(result.observations, started, complete=result.status == "COMPLETE")
+        validate_observations(result.observations, started, complete=result.status == "COMPLETE",
+                              expected_calendar_days=1)
         if result.status == "COMPLETE" and result.input_probe is None:
             raise ValueError("Completed input probe lacks its report")
         if result.input_probe is not None and result.input_probe != summary(result.observations):
