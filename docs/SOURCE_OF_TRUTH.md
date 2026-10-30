@@ -1,5 +1,29 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.163. Preserve recovered provider evidence and classify input-probe failures, 2026-10-29 EDT.
+
+The operator uploaded /root/trade-bot-input-probe-LB05wA/probe.json. Offline
+validation recovered all four completed responses and confirmed optional missing
+index-bar interpolation flags caused the report bug. The capture ran at 20:14 EDT:
+SPY/QQQ books returned empty sides; SPX resolved to the provider UUID
+432fbbb8-b82c-454a-852d-eb85382c7066, with value 7720.39 from venue time 16:32 EDT.
+SPX history contains 288 bars: 204 explicitly interpolated and 84 without the flag.
+No bar explicitly asserts interpolated=false. Those 84 remain unknown, and the
+stale quote/empty books are not fresh execution evidence. No index restrictions
+were returned. Original observations are preserved as a regression fixture.
+
+The earnings call failed independently with a generic ValueError; its rejected
+payload was not retained by the previous version, so the actual cause is unknown.
+Reports now distinguish unavailable/null calendars from a successfully empty list.
+The next capture records fixed rejection categories and response byte counts;
+rejected payloads are retained only within existing per-response/aggregate bounds,
+in private evidence, never printed in reports. No larger bounds, retry loops,
+new tools, extra provider or missing-data substitutions are introduced. Live and
+runtime strategy admission remain unchanged. Next evidence is a classified
+earnings response plus market-hours two-sided books/fresh index observations.
+
+Previous version notes (historical):
+
 Version 1.162. Recover input-probe reports with unknown interpolation flags, 2026-10-29 EDT.
 
 The host ran 1381d33 and retained four completed reads in

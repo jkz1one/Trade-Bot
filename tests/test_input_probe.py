@@ -296,3 +296,66 @@ def test_offline_report_rejects_missing_or_wrong_artifact(tmp_path, capsys):
     source.chmod(0o600)
     assert read_cli.main(['input-probe-report', '--source', str(source)]) == 1
     assert json.loads(capsys.readouterr().out)['reason'] == 'SAVED_PROBE_REPORT_UNAVAILABLE'
+
+
+def test_original_host_capture_recovers_four_reads_and_unknown_history_flags():
+    from app.options.read_gateway import _validator
+    evidence = json.loads((Path(__file__).parent / 'fixtures/robinhood_inputs_20261029.json').read_text())
+    rows = evidence['observations']
+    probe.validate_observations(rows, datetime.fromisoformat(evidence['started_at']))
+    for row in rows:
+        if row['completed']:
+            _validator(TOOLS[row['tool']]['outputSchema']).validate(row['raw']['structuredContent'])
+    report = probe.summary(rows)
+    assert report['completed_reads'] == 4 and report['status'] == 'PARTIAL_CAPTURE'
+    assert report['spx_identity_resolved'] and not report['restricted']
+    assert report['index_quotes'][0]['instrument_id'] == '432fbbb8-b82c-454a-852d-eb85382c7066'
+    assert report['index_quotes'][0]['value'] == '7720.39'
+    history = report['index_histories'][0]
+    assert (history['bars'], history['interpolated_bars'], history['noninterpolated_bars'],
+            history['interpolation_unknown_bars']) == (288, 204, 0, 84)
+    assert all(b['bid_levels'] == b['ask_levels'] == 0 for b in report['stock_books'])
+    assert report['earnings_status'] == 'UNAVAILABLE' and report['earnings_events'] is None
+    assert report['read_failures'][0]['response_issue'] == 'UNCLASSIFIED_FAILURE'
+    assert not report['trading_ready']
+
+
+@pytest.mark.parametrize('raw,category,retained', [
+    ({'isError': True, 'content': [{'type':'text', 'text':'PRIVATE-PROVIDER-ERROR'}]}, 'PROVIDER_TOOL_ERROR', True),
+    ({'isError':'false'}, 'MALFORMED_MCP_RESPONSE', True),
+    ({'content': []}, 'STRUCTURED_OUTPUT_MISSING', True),
+    ({'structuredContent':{'data':{}, 'guide':'PRIVATE'}}, 'OUTPUT_SCHEMA_MISMATCH', True),
+    ({'oversized':'x'*(129*1024)}, 'RESPONSE_TOO_LARGE', False),
+])
+def test_response_rejection_categories_and_private_payload_retention(raw, category, retained):
+    row = {'tool':'get_earnings_calendar', 'completed':False}
+    with pytest.raises(Exception):
+        probe.check_response(raw, TOOLS['get_earnings_calendar'], row, [row])
+    assert row['response_issue'] == category
+    assert isinstance(row['response_bytes'], int)
+    assert ('rejected_raw' in row) == retained
+    report = probe.summary([row])
+    assert report['earnings_events'] is None
+    assert 'PRIVATE' not in json.dumps(report)
+    assert 'rejected_raw' not in json.dumps(report)
+
+
+def test_aggregate_bound_and_non_json_response_never_store_unbounded_raw():
+    row = {'tool':'get_earnings_calendar', 'completed':False}
+    with pytest.raises(ValueError):
+        probe.check_response({'ok':1}, TOOLS['get_earnings_calendar'], row, [{'padding':'x'*(512*1024)}])
+    assert row['response_issue'] == 'AGGREGATE_RESPONSE_TOO_LARGE' and 'rejected_raw' not in row
+    row = {'tool':'get_earnings_calendar', 'completed':False}
+    with pytest.raises(ValueError):
+        probe.check_response({'bad':float('nan')}, TOOLS['get_earnings_calendar'], row, [row])
+    assert row['response_issue'] == 'NON_JSON_RESPONSE' and 'rejected_raw' not in row
+
+
+def test_captured_empty_calendar_is_distinct_from_failed_or_null_calendar():
+    client = Client()
+    report, _ = run(client)
+    assert report['earnings_events'] == 0 and report['earnings_status'] == 'CAPTURED'
+    client.data['get_earnings_calendar'] = {'results':None}
+    report, _ = run(client)
+    assert report['earnings_events'] is None and report['earnings_status'] == 'UNAVAILABLE'
+    assert not report['earnings_is_complete_catalyst_coverage']

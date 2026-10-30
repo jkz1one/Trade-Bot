@@ -120,3 +120,25 @@ The original capture failure remains visible. This mounts only the evidence
 folder read-only with network disabled and never overwrites or promotes evidence.
 Attach the original `probe.json` for payload mapping, even if its stored status is
 FAILED; completed individual responses may still be useful.
+
+## Recovered October 29 probe evidence
+
+The original uploaded probe was validated offline against the pinned schemas.
+`tests/fixtures/robinhood_inputs_20261029.json` preserves original observations,
+the capture ID and the SHA-256 of the complete original artifact. Results:
+
+| Input | Observed result | Still needed |
+| --- | --- | --- |
+| SPY/QQQ price books | Both returned empty bid/ask lists at 20:14 EDT | Actual populated books and source-clock/freshness verification during market hours |
+| SPX identity | UUID `432fbbb8-b82c-454a-852d-eb85382c7066`; no restricted result | Bind future observations to this original identity; no SPY proxy |
+| SPX quote | 7720.39, venue timestamp 16:32:47 EDT, captured 20:14:11 EDT | Fresh/advancing market-hours values; this quote was roughly 3h41m old |
+| SPX history | 288 bars: 204 interpolated=true, 84 omitted flags, none explicit false | Preserve unknown interpolation status; do not silently promote unknown bars |
+| Earnings | Failed read with generic ValueError; no raw response retained | New classified rejection and bounded original response |
+
+The report no longer displays zero events for a failed or null calendar. A
+successfully captured empty array remains a distinct zero. The probe now retains
+fixed response rejection codes (oversize, MCP error, missing structured output,
+invalid schema, malformed response) and byte counts. Bounded rejected payloads
+remain private; oversized payloads are not retained and limits remain unchanged.
+Use the normal probe command to obtain this additional evidence; the offline
+report cannot reconstruct a response discarded by the previous collector.

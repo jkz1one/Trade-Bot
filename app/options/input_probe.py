@@ -23,6 +23,38 @@ class InputProbeIncomplete(RuntimeError):
     pass
 
 
+class InputProbeResponseError(ValueError):
+    """Fixed public category only; provider contents stay in private evidence."""
+
+
+def check_response(raw, metadata, row, observations):
+    """Retain bounded rejected payloads and distinguish rejection from transport failure."""
+    row["response_issue"] = "NON_JSON_RESPONSE"
+    size = len(encoded(raw))
+    row["response_bytes"] = size
+    if size > MAX_SAMPLE_BYTES:
+        row["response_issue"] = "RESPONSE_TOO_LARGE"
+        raise InputProbeResponseError
+    if len(encoded(observations)) + size > 512 * 1024:
+        row["response_issue"] = "AGGREGATE_RESPONSE_TOO_LARGE"
+        raise InputProbeResponseError
+    # Only private evidence retains rejected content; never print it in the report.
+    row["rejected_raw"] = raw
+    row["response_issue"] = "MALFORMED_MCP_RESPONSE"
+    if not isinstance(raw, dict) or type(raw.get("isError", False)) is not bool:
+        raise InputProbeResponseError
+    if raw.get("isError", False):
+        row["response_issue"] = "PROVIDER_TOOL_ERROR"
+        raise InputProbeResponseError
+    if not isinstance(raw.get("structuredContent"), dict):
+        row["response_issue"] = "STRUCTURED_OUTPUT_MISSING"
+        raise InputProbeResponseError
+    row["response_issue"] = "OUTPUT_SCHEMA_MISMATCH"
+    _validator(metadata["outputSchema"]).validate(raw["structuredContent"])
+    del row["rejected_raw"]
+    del row["response_issue"]
+
+
 def initial_calls(at):
     return [
         ("get_equity_price_book", {"symbols": ["SPY", "QQQ"]}),
@@ -118,17 +150,13 @@ async def run(client, inventory, at, observations):
             raise ValueError("Outside fixed input probe")
         _validator(reviewed[name]["inputSchema"]).validate(arguments)
         row = {"tool": name, "arguments": arguments, "completed": False,
-               "attempted_at": utc_now().isoformat(), "metadata_sha256": PINS[name]}
+               "attempted_at": utc_now().isoformat(), "metadata_sha256": PINS[name],
+               "response_issue": "CLIENT_CALL_FAILED"}
         observations.append(row)
         tick = time.monotonic()
         try:
             raw = await client.call_tool(name, arguments)
-            if (not isinstance(raw, dict) or len(encoded(raw)) > MAX_SAMPLE_BYTES
-                    or type(raw.get("isError", False)) is not bool or raw.get("isError", False)):
-                raise ValueError("Failed or oversized input probe response")
-            _validator(reviewed[name]["outputSchema"]).validate(raw.get("structuredContent"))
-            if len(encoded(observations)) + len(encoded(raw)) > 512 * 1024:
-                raise ValueError("Input probe aggregate evidence exceeds bound")
+            check_response(raw, reviewed[name], row, observations)
             row.update(raw=raw, completed=True, output_schema_validated=True)
         except Exception as exc:  # bounded diagnostics, no arbitrary provider exception text
             row["failure"] = failure_evidence(exc, "MARKET_READ").model_dump(mode="json")
@@ -170,7 +198,9 @@ def summary(rows):
                          "best_ask": (b.get("asks") or [None])[0]}
                         for b in books.get("books") or [] if b],
         "stock_book_errors": [e["symbol"] for e in books.get("errors") or []],
-        "earnings_events": len(earnings.get("results") or []),
+        "earnings_status": ("CAPTURED" if by_name.get("get_earnings_calendar", {}).get("completed")
+                            and earnings.get("results") is not None else "UNAVAILABLE"),
+        "earnings_events": (len(earnings["results"]) if earnings.get("results") is not None else None),
         "earnings_is_complete_catalyst_coverage": False,
         "spx_identity_resolved": index_id(indexes) is not None,
         "index_quotes": [{k: q[k] for k in ("instrument_id", "symbol", "value", "venue_timestamp")}
@@ -187,6 +217,11 @@ def summary(rows):
                                           ("get_index_historicals", history))
                        for r in data.get("restricted") or [] if r],
         "account_tradability_probed": False,
+        "read_failures": [{"tool": r["tool"],
+                           "response_issue": r.get("response_issue", "UNCLASSIFIED_FAILURE"),
+                           "response_bytes": r.get("response_bytes"),
+                           "failure": r.get("failure")}
+                          for r in rows if not r["completed"]],
         "remaining": ["Validate original payload identity, clocks and coverage",
                       "Map supported evidence into explicit reviewed runtime policy",
                       "Complete Swing catalyst and Scope context coverage"],
