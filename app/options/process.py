@@ -1,6 +1,7 @@
 """One bounded fixed local options child. No generic adapter or external tools."""
 
 import asyncio
+import json
 import os
 import sys
 import time
@@ -24,6 +25,7 @@ from app.options.lifecycle import OptionIntent, OptionVenueSnapshot
 from app.options.models import Name, OptionRecord
 from app.options.venue import DurableOptionVenue
 from app.options.process_trace import OptionProcessDiagnostics, TraceReader
+from app.options.snapshot_worker import VERSION as SNAPSHOT_VERSION
 
 
 class OptionRequest(OptionRecord):
@@ -89,7 +91,17 @@ async def run_option_process(
         portfolio_policy=venue.portfolio_policy,
         fault=venue.fault,
     )
-    payload = request.model_dump_json().encode()
+    snapshot_read = request.operation == "snapshot"
+    payload = (
+        json.dumps({
+            "version": SNAPSHOT_VERSION,
+            "path": request.path,
+            "parent_pid": request.parent_pid,
+            "deadline_monotonic": request.deadline_monotonic,
+            "fault": "STALL_READ" if request.fault == "STALL_READ" else "NONE",
+        }).encode()
+        if snapshot_read else request.model_dump_json().encode()
+    )
     if len(payload) > MAX_REQUEST_BYTES:
         raise FixtureProcessProtocolError("Option request exceeds fixed protocol")
     env = {key: os.environ[key] for key in ("PATH", "LANG", "LC_ALL") if key in os.environ}
@@ -98,7 +110,7 @@ async def run_option_process(
             sys.executable,
             "-I",
             "-m",
-            "app.options.worker",
+            "app.options.snapshot_worker" if snapshot_read else "app.options.worker",
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
@@ -130,8 +142,24 @@ async def run_option_process(
                 raise FixtureProcessFailed("Option fixture child failed")
             try:
                 phase = "RESPONSE_VALIDATE"
-                result = OptionProcessResult.model_validate_json(data)
-            except ValueError:
+                if time.monotonic() >= deadline:
+                    raise TimeoutError
+                if snapshot_read:
+                    record = json.loads(data)
+                    if (type(record) is not dict or set(record) != {"version", "meta", "state"}
+                            or record["version"] != SNAPSHOT_VERSION
+                            or type(record["meta"]) is not str or type(record["state"]) is not str):
+                        raise ValueError("Invalid snapshot record")
+                    result = OptionProcessResult(snapshot=venue.snapshot_from_record(
+                        record["meta"], record["state"], now
+                    ))
+                else:
+                    result = OptionProcessResult.model_validate_json(data)
+                # Native validation remains inside the original deadline. A late
+                # read cannot become an accepted snapshot merely because it is local.
+                if time.monotonic() >= deadline:
+                    raise TimeoutError
+            except (ValueError, KeyError, TypeError):
                 raise FixtureProcessProtocolError("Invalid option fixture response") from None
             if intent is not None or stock_intent is not None:
                 if result.order_id is None or result.snapshot is not None:

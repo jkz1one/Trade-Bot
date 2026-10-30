@@ -676,7 +676,8 @@ def test_native_child_is_isolated_cancellation_reaps_it_and_retains_reservation(
         spawn = asyncio.create_subprocess_exec
 
         async def capture(*args, **kwargs):
-            assert args[:4] == (sys.executable, "-I", "-m", "app.options.worker")
+            assert args[:3] == (sys.executable, "-I", "-m")
+            assert args[3] in {"app.options.worker", "app.options.snapshot_worker"}
             assert set(kwargs["env"]) <= {"PATH", "LANG", "LC_ALL"}
             child = await spawn(*args, **kwargs)
             children.append(child)

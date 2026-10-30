@@ -1,5 +1,24 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.169. Remove cold trading imports from frequent PAPER snapshot reads, 2026-10-30 EDT.
+
+Host evidence confirms the combined eight-contract collector fix: nine packets
+delivered, runtime sequence 82, reviewed entry recovery, zero fills. The following
+run again timed out; its last observed child stage was IMPORTS before request or
+venue handling. Frequent snapshot reads now use a fixed read-only standard-library
+SQLite child. The running parent performs the existing native decoding, frozen
+binding and portfolio-accounting validation under the original deadline. Native
+order acceptance remains in the existing fully validated isolated worker.
+
+All 234 focused tests pass. A one-CPU local comparison with two busy competitors
+measured a median 0.103 seconds for the new snapshot path versus 1.865 seconds for
+the old child, returning identical snapshots. This is not host acceptance; a new
+bounded run must still verify the timeout correction. Account/state/enrollment,
+five-second process timeout and halts are preserved. LIVE remains disabled.
+Swing/Scope missing-input blockers remain. See [integration and rollout](SWING_SCOPE_ROBINHOOD.md).
+
+Previous version notes (historical):
+
 Version 1.168. Repair offline strategy-amendment configuration mounts, 2026-10-30 EDT.
 
 The first host apply attempt at 5778000 returned the launcher's generic Docker

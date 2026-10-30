@@ -23,7 +23,7 @@ def test_stalled_snapshot_records_native_progress_and_preserves_venue(tmp_path):
         assert details["parent_phase"] == "RESPONSE_READ"
         assert details["child_trace_status"] == "OBSERVED"
         stages = details["child_stages"]
-        assert [r["stage"] for r in stages] == ["IMPORTS", "REQUEST", "VENUE_OPEN", "SNAPSHOT"]
+        assert [r["stage"] for r in stages] == ["REQUEST", "VENUE_OPEN", "SNAPSHOT"]
         assert all(r["elapsed_seconds"] >= 0 and r["cpu_seconds"] >= 0 for r in stages)
         assert venue.path.read_bytes() == before
         with engine.journal.read() as db:

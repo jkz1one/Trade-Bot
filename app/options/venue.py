@@ -187,7 +187,11 @@ class DurableOptionVenue:
         }:
             raise ValueError("Not a dedicated option fixture")
         row = db.execute("SELECT meta,state FROM option_fixture_control WHERE id=1").fetchone()
-        meta = json.loads(row[0])
+        return DurableOptionVenue._decode_record(row[0], row[1])
+
+    @staticmethod
+    def _decode_record(meta_json, state_json):
+        meta = json.loads(meta_json)
         if meta["schema"] != (
             "durable-portfolio-fixture-v2"
             if "portfolio_policy" in meta
@@ -208,7 +212,7 @@ class DurableOptionVenue:
             ):
                 raise ValueError("Portfolio venue enrollment changed")
             state_type = PortfolioVenueState
-        state = state_type.model_validate_json(row[1])
+        state = state_type.model_validate_json(state_json)
         if "stock_limits" not in meta and (state.stock_position is not None or state.stock_orders):
             raise ValueError("Stock fixture inputs not enrolled")
         if "stock_limits" in meta:
@@ -598,6 +602,15 @@ class DurableOptionVenue:
     def snapshot(self, at):
         with self._db() as db:
             meta, state = self._load(db)
+        return self._snapshot(meta, state, at)
+
+    def snapshot_from_record(self, meta_json, state_json, at):
+        """Validate a bounded child's consistent read with the same native rules."""
+        with localcontext(Context(prec=192)):
+            meta, state = self._decode_record(meta_json, state_json)
+        return self._snapshot(meta, state, at)
+
+    def _snapshot(self, meta, state, at):
         if (
             meta["venue_id"] != self.venue_id
             or OptionLimits.model_validate(meta["limits"]) != self.limits
@@ -605,6 +618,9 @@ class DurableOptionVenue:
                 StockLimits.model_validate(meta["stock_limits"]) if "stock_limits" in meta else None
             )
             != self.stock_limits
+            or meta.get("portfolio_policy") != (
+                self.portfolio_policy.model_dump(mode="json") if self.portfolio_policy else None
+            )
         ):
             raise ValueError("Option venue identity changed")
         if self.stock_limits is not None:

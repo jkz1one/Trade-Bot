@@ -292,3 +292,40 @@ malformed stderr, and reap a child flooding stderr. All 312 installed applicatio
 files match the source and installed release inspection reports VERIFIED_FILES.
 Ruff could not run because this environment's installed wrapper has no binary;
 `git diff --check` is clean.
+
+## Lightweight snapshot transport after host import-stage timeout
+
+Host `paper-oct30-3` failed with parent phase RESPONSE_READ after 5.655 seconds;
+its only observed child marker was IMPORTS (0.002122 seconds elapsed, 0.000041
+CPU seconds). No REQUEST or venue-read marker was observed. This locates the last
+observed boundary before domain imports completed; it does not by itself identify
+one slow import or distinguish CPU scheduling delays from import work.
+
+Frequent snapshot operations now use a separate fixed standard-library-only
+child. It accepts only a bounded snapshot-record request, checks its parent and
+deadline, opens the private owned venue database read-only, verifies the dedicated
+table and reads metadata/state in one SQLite transaction. It bounds raw and
+encoded response sizes, rejects changed file identity, and cannot submit orders.
+No Pydantic, trading-model, broker or model-runtime imports occur in this child.
+
+The already-running native parent applies the same extracted venue decoding,
+schema, original-intent, stock/option policy, clock and portfolio-accounting
+validation to that consistent record. Frozen portfolio-policy identity is also
+checked against the existing venue handle. Snapshot contents and hashes match
+direct native reads for legacy, mixed and two-play portfolio state. Validation
+is checked before and after against the original process deadline; a late result
+is rejected. SQLite I/O remains in the killable child; domain validation now runs
+in the parent, as response-model validation already did. Order acceptance retains
+the existing fully validated isolated worker and its commit/deadline checks.
+
+Validation: 234 focused tests pass, including native lifecycle, runtime,
+connected supervision, cancellation, real child import denial, two held plays,
+forged economics/binding refusal, permissions, symlinks, oversized records and
+late parent validation. In six alternating local samples pinned to one logical
+CPU with two busy competitors, the old snapshot worker median was 1.865 seconds
+(max 2.802), versus 0.103 seconds (max 0.119) for the new complete path, with
+identical snapshots. This is local performance evidence, not host acceptance.
+
+The account, eight-contract session, snapshot publication and five-second timeout
+remain unchanged. Build this release and obtain a fresh review with a new run ID;
+do not reset, re-enroll or recreate state. A completed host run is still required.
