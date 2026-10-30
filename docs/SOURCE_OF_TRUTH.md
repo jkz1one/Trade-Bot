@@ -1,5 +1,34 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.161. Probe reviewed Robinhood book, earnings and index inputs, 2026-10-29 EDT.
+
+The operator uploaded the completed 87-tool inventory from release 4c2a2a7.
+It exposes equity price-book levels and share quantities, company earnings
+calendars, and index lookup/quotes/history. This corrects the earlier assumption
+that the six-tool adapter represented all provider capabilities. The advertised
+stock tradability tool requires an explicit brokerage account number; this probe
+does not choose an account or call account/order tools. Company earnings alone
+cannot establish complete ETF catalyst or broad economic/news coverage.
+
+Added an explicit INPUT_PROBE operation using the existing isolated headless
+worker, deadline, private OAuth lease, bounded output and process cleanup. It
+pins five full tool metadata hashes from the supplied inventory before any read,
+then requests SPY/QQQ books, a seven-day earnings calendar, and SPX identity.
+Only an unambiguous unrestricted SPX UUID permits quote/history follow-ups;
+restricted results stop dependent reads without aliases, proxies or retries.
+There are at most five market calls. Original responses stay in private evidence;
+stdout reports availability and counts, never generic readiness. The connected
+six-tool allowlist, frozen owner, session policy, account and dashboard are unchanged.
+
+Host command: bash scripts/robinhood-input-probe-host.sh after building this
+release. It mounts no owner, collector or model key. An after-hours book may be
+unavailable; independent calendar/index reads still proceed. Actual payloads are
+required before wiring these inputs into native strategy eligibility. No successful
+DEGEN entry, fresh stock book, index entitlement or complete Swing/Scope coverage
+is claimed by this release. October 29 contracts must not be reused on a later day.
+
+Previous version notes (historical):
+
 Version 1.160. Audit remaining inputs with bounded provider metadata inventory, 2026-10-28 EDT.
 
 The operator successfully enrolled the October 29 observed-simulation policy:

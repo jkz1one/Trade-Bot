@@ -87,7 +87,7 @@ def summary(inventory):
     """Candidate names/fields are leads for review, never evidence of data coverage."""
     tools = inventory["tools"]
     groups = {
-        "stock_quotes_and_sizes": r"equity.*quote|stock.*quote|bid_size|ask_size",
+        "stock_quotes_and_sizes": r"equity.*quote|equity.*price_book|stock.*quote|bid_size|ask_size",
         "stock_reference": r"equity.*instrument|equity.*tradab|stock.*instrument|corporate",
         "swing_history": r"equity.*histor|stock.*histor",
         "news_events_and_catalysts": r"news|earning|catalyst|calendar|economic|event",

@@ -39,6 +39,7 @@ def connection(policy):
 async def collect(request):
     started = time.monotonic()
     gateway, observations, error, failure = None, [], None, None
+    probe_report = None
     stage = "PRIVATE_AUTH"
     try:
         private_oauth(request.policy.oauth_file)
@@ -46,10 +47,17 @@ async def collect(request):
         async with connection(request.policy).client() as client:
             gateway = OptionReadGateway(client)
             stage = "DISCOVER"
-            if request.include_inventory:
+            if request.include_inventory or request.operation == "INPUT_PROBE":
                 await gateway.discover(include_inventory=True)
             else:
                 await gateway.discover()
+            if request.operation == "INPUT_PROBE":
+                from app.options.input_probe import run, InputProbeIncomplete
+
+                stage = "MARKET_READ"
+                probe_report = await run(client, gateway.inventory, request.started_at, observations)
+                if any(not row["completed"] for row in observations):
+                    raise InputProbeIncomplete
             if request.operation == "CAPTURE":
                 stage = "VALIDATE_PLAN"
                 plan = gateway.validate_plan(request.plan, request.schemas)
@@ -92,6 +100,7 @@ async def collect(request):
         observations=observations,
         error_class=error,
         failure=failure,
+        input_probe=probe_report,
         inventory=gateway.inventory if gateway and request.include_inventory else None,
     )
 

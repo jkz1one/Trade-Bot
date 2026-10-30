@@ -68,3 +68,39 @@ no provider exception text, OAuth tokens or account responses printed.
 Next work depends on the actual inventory: review specific candidate schemas,
 add individually allowed read-only captures and validate original payloads, then
 connect the supported inputs through explicit existing-owner policy updates.
+
+## Observed full inventory and next capture
+
+The operator supplied inventory capture 94ca4690043e4f2ea97bc13c156dea71,
+containing 87 tools. Its original file SHA-256 is `42245ba9234f5965820edf66a0af3cc3b6cfc102c17547291bd12433822139af`.
+Selected original metadata is preserved in
+`tests/fixtures/robinhood_input_probe_schemas.json` and matched by full metadata
+hash in `app/options/input_probe.py`.
+
+- `get_equity_price_book`: price levels with integer share quantities and a
+  snapshot timestamp. This is a book snapshot, not automatically consolidated
+  executable NBBO or proof of source-clock freshness. Requires actual payloads.
+- `get_earnings_calendar`: seven-day company earnings coverage, with tentative
+  versus verified dates. Empty results do not clear all ETF catalysts or macro news.
+- `get_indexes`, `get_index_quotes`, `get_index_historicals`: SPX identity and
+  market data candidates. The schemas explicitly support restricted results.
+  Respect these rather than substituting another symbol or estimating values.
+- `get_equity_tradability` requires `account_number`; no account is automatically
+  discovered or selected. It is excluded from the new probe.
+- Technical indicators exist but do not replace missing original histories or
+  independently establish dealer positions/options flow.
+
+Run `bash scripts/robinhood-input-probe-host.sh` with a clean built release.
+It saves `probe.json` in a new private `/root/trade-bot-input-probe-*` directory.
+This is an evidence-only operation: at most five calls, no auto-retries, and no
+runtime enrollment/activation. It uses the existing private-auth lease and fixed
+30-second process deadline. All five schemas are pinned before the first call.
+Schema changes refuse the probe; capture errors retain bounded diagnostics and
+permit independent calls within the same deadline. `COMPLETE` means the capture
+finished, not that all symbols are available, current, entitled or strategy-ready.
+The report separately exposes per-symbol book failures and index restrictions.
+
+After-close captures can establish response mapping and restriction evidence.
+Freshness and advancing book/index clocks still need market-hours verification.
+For an actual new trading day, prepare an appropriate new session catalog; the
+previous October 29 enrollment does not cover expired contracts on another day.

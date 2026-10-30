@@ -91,7 +91,7 @@ def main(argv=None):
     export.add_argument("--source", required=True)
     export.add_argument("--output", required=True)
     export.add_argument("--schema-sha256", required=True)
-    for name in ("discover", "capture", "inventory"):
+    for name in ("discover", "capture", "inventory", "input-probe"):
         cmd = sub.add_parser(name)
         cmd.add_argument("--oauth-file", required=True)
         cmd.add_argument("--output", required=True)
@@ -156,8 +156,9 @@ def main(argv=None):
             os.fsync(parent_fd)
         finally:
             os.close(parent_fd)
+        extra = {"input_probe": True} if args.operation == "input-probe" else {}
         result = asyncio.run(collect(policy, schemas=schemas, plan=plan,
-                                    include_inventory=args.operation == "inventory"))
+                                    include_inventory=args.operation == "inventory", **extra))
         _save(fd, {**admission, "status": result.status, "result": result.model_dump(mode="json")})
         print(
             json.dumps(
@@ -175,6 +176,7 @@ def main(argv=None):
                     else [],
                     "execution_authority": False,
                     "normalized_data_verified": False,
+                    **({"input_probe": result.input_probe} if result.input_probe is not None else {}),
                     **({"capability_inventory": inventory_summary(result.inventory)}
                        if result.inventory is not None else {}),
                     **(

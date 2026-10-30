@@ -107,7 +107,7 @@ class CapturePolicy(OptionRecord):
 
 
 class CaptureRequest(OptionRecord):
-    operation: Literal["DISCOVER", "CAPTURE"]
+    operation: Literal["DISCOVER", "CAPTURE", "INPUT_PROBE"]
     policy: CapturePolicy
     request_id: str = Field(pattern=r"^[a-f0-9]{32}$")
     started_at: datetime
@@ -123,7 +123,7 @@ class CaptureRequest(OptionRecord):
             raise ValueError("Inventory is discovery-only, never a market tool call")
         if (self.operation == "CAPTURE") != (
             self.schemas is not None and self.plan is not None
-        ) or (self.operation == "DISCOVER" and (self.schemas is not None or self.plan is not None)):
+        ) or (self.operation != "CAPTURE" and (self.schemas is not None or self.plan is not None)):
             raise ValueError("Capture requires exactly its reviewed schema and plan")
         return self
 
@@ -131,7 +131,7 @@ class CaptureRequest(OptionRecord):
 class CaptureResult(OptionRecord):
     request_id: str = Field(pattern=r"^[a-f0-9]{32}$")
     policy_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
-    operation: Literal["DISCOVER", "CAPTURE"]
+    operation: Literal["DISCOVER", "CAPTURE", "INPUT_PROBE"]
     started_at: datetime
     collected_at: datetime
     elapsed_seconds: float = Field(ge=0, le=30)
@@ -143,10 +143,15 @@ class CaptureResult(OptionRecord):
     observations: list[dict[str, JsonValue]] = Field(default_factory=list, max_length=8)
     error_class: str | None = Field(default=None, pattern=r"^[A-Za-z_][A-Za-z0-9_]{0,127}$")
     failure: CaptureFailure | None = Field(default=None, exclude_if=lambda v: v is None)
+    input_probe: dict[str, JsonValue] | None = Field(default=None, exclude_if=lambda v: v is None)
     inventory: dict[str, JsonValue] | None = Field(default=None, exclude_if=lambda v: v is None)
 
     @model_validator(mode="after")
     def coherence(self):
+        if self.input_probe is not None and (
+            self.operation != "INPUT_PROBE" or len(encoded(self.input_probe)) > 64 * 1024
+        ):
+            raise ValueError("Bounded input-probe report required")
         if self.inventory is not None:
             from app.options.capability_inventory import MAX_INVENTORY_BYTES
 
@@ -162,6 +167,8 @@ class CaptureResult(OptionRecord):
             raise ValueError("Discovery cannot report tool calls")
         if self.operation == "CAPTURE" and self.plan is None:
             raise ValueError("Capture must retain its reviewed plan")
+        if self.operation == "INPUT_PROBE" and self.plan is not None:
+            raise ValueError("Input probe uses only its fixed reviewed calls")
         return self
 
 
@@ -217,22 +224,26 @@ async def _read(request):
             await _cleanup(child)
 
 
-async def collect(policy, *, schemas=None, plan=None, clock_source=utc_now, include_inventory=False):
+async def collect(policy, *, schemas=None, plan=None, clock_source=utc_now,
+                  include_inventory=False, input_probe=False):
     policy = CapturePolicy.model_validate(policy.model_dump(warnings=False))
     with market_read_lease(policy.oauth_file):
         return await _collect_owned(policy, schemas=schemas, plan=plan, clock_source=clock_source,
-                                    include_inventory=include_inventory)
+                                    include_inventory=include_inventory, input_probe=input_probe)
 
 
-async def _collect_owned(policy, *, schemas, plan, clock_source, include_inventory=False):
+async def _collect_owned(policy, *, schemas, plan, clock_source, include_inventory=False,
+                         input_probe=False):
     # Parent orchestration only. The read child imports protocol models from this
     # module and must not rebuild the execution engine just to decode a request.
     from app.options.engine import clock
 
+    if input_probe and (schemas is not None or plan is not None or include_inventory):
+        raise ValueError("Input probe cannot accompany another operation")
     private_oauth(policy.oauth_file)
     started = clock(clock_source())
     request = CaptureRequest(
-        operation="CAPTURE" if plan is not None else "DISCOVER",
+        operation="INPUT_PROBE" if input_probe else ("CAPTURE" if plan is not None else "DISCOVER"),
         policy=policy,
         request_id=uuid4().hex,
         started_at=started,
@@ -254,6 +265,14 @@ async def _collect_owned(policy, *, schemas, plan, clock_source, include_invento
         or result.plan != request.plan
     ):
         raise ValueError("Capture identity, policy, operation, timing or plan mismatch")
+    if input_probe:
+        from app.options.input_probe import summary, validate_observations
+
+        validate_observations(result.observations, started, complete=result.status == "COMPLETE")
+        if result.status == "COMPLETE" and result.input_probe is None:
+            raise ValueError("Completed input probe lacks its report")
+        if result.input_probe is not None and result.input_probe != summary(result.observations):
+            raise ValueError("Input probe report does not match original observations")
     if result.status == "COMPLETE":
         if include_inventory != (result.inventory is not None):
             raise ValueError("Requested capability inventory coverage mismatch")

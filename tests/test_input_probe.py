@@ -1,0 +1,240 @@
+"""Evidence probes cannot widen the connected simulator's read capability."""
+import asyncio
+from copy import deepcopy
+from datetime import datetime, timezone
+import json
+from pathlib import Path
+from contextlib import asynccontextmanager
+
+import pytest
+
+from app.options import input_probe as probe, read_capture, read_worker, read_cli
+from app.options.capability_inventory import build
+from app.options.read_gateway import READ_TOOLS
+from test_option_read_capture import metadata, oauth, request
+
+AT = datetime(2026, 10, 30, 0, 1, tzinfo=timezone.utc)
+ID = '11111111-1111-4111-8111-111111111111'
+TOOLS = json.loads((Path(__file__).parent / 'fixtures/robinhood_input_probe_schemas.json').read_text())
+
+
+def payloads():
+    return {
+        'get_equity_price_book': {'books': [
+            {'symbol': 'SPY', 'updated_at': AT.isoformat(), 'bids': [{'price': '700.01', 'quantity': 20}],
+             'asks': [{'price': '700.02', 'quantity': 10}]},
+        ], 'errors': [{'symbol': 'QQQ', 'error': 'Market closed'}]},
+        'get_earnings_calendar': {'results': []},
+        'get_indexes': {'indexes': [{'id': ID, 'symbol': 'SPX', 'name': 'S&P 500',
+            'current_value': '7000.01', 'trade_halted': False, 'updated_at': AT.isoformat()}]},
+        'get_index_quotes': {'quotes': [{'instrument_id': ID, 'symbol': 'SPX', 'value': '7000.01',
+            'state': 'active', 'updated_at': AT.isoformat(), 'venue_timestamp': AT.isoformat()}]},
+        'get_index_historicals': {'results': [{'instrument_id': ID, 'symbol': 'SPX',
+            'interval': '5minute', 'bars': [{'begins_at': AT.isoformat(), 'open_value': '7000',
+                'close_value': '7000.01', 'low_value': '6999', 'high_value': '7001', 'interpolated': False}]}]},
+    }
+
+
+class Client:
+    def __init__(self):
+        self.calls = []
+        self.tools = metadata() + list(deepcopy(TOOLS).values())
+        self.data = payloads()
+
+    async def list_tools(self):
+        return self.tools
+
+    async def call_tool(self, name, arguments):
+        self.calls.append((name, arguments))
+        value = self.data[name]
+        if isinstance(value, Exception):
+            raise value
+        return {'structuredContent': {'data': value, 'guide': 'schema evidence'}}
+
+
+def run(client):
+    observations = []
+    report = asyncio.run(probe.run(client, build(client.tools, READ_TOOLS), AT, observations))
+    return report, observations
+
+
+def test_original_metadata_pins_and_fixed_read_only_sequence():
+    client = Client()
+    report, rows = run(client)
+    assert client.calls == probe.initial_calls(AT) + probe.followup_calls(ID, AT)
+    assert report['completed_reads'] == 5
+    assert report['stock_books'][0]['best_bid']['quantity'] == 20
+    assert report['stock_book_errors'] == ['QQQ']
+    assert report['index_histories'][0]['bars'] == 1
+    assert not report['earnings_is_complete_catalyst_coverage']
+    assert not report['trading_ready'] and not report['runtime_policy_changed']
+    assert not report['account_tradability_probed']
+    assert client.calls[1][1]['start_date'] == '2026-10-29'  # Eastern date, not UTC date.
+    assert all(row['output_schema_validated'] for row in rows)
+    assert not (set(probe.PINS) & READ_TOOLS)
+
+
+@pytest.mark.parametrize('name', list(probe.PINS))
+def test_any_changed_pin_prevents_all_market_calls(name):
+    client = Client()
+    next(t for t in client.tools if t['name'] == name)['description'] += ' changed'
+    with pytest.raises(ValueError, match='changed'):
+        run(client)
+    assert not client.calls
+
+
+@pytest.mark.parametrize('mode', ['restricted', 'missing', 'duplicate', 'wrong_symbol', 'bad_id', 'halted'])
+def test_ambiguous_unavailable_or_restricted_index_is_never_followed(mode):
+    client = Client()
+    data = client.data['get_indexes']
+    if mode == 'restricted':
+        data['restricted'] = [{'instrument_id': ID, 'symbol': 'SPX', 'message': 'Unavailable through this channel'}]
+    elif mode == 'missing':
+        data['indexes'] = []
+    elif mode == 'duplicate':
+        data['indexes'] *= 2
+    elif mode == 'wrong_symbol':
+        data['indexes'][0]['symbol'] = 'SPY'
+    elif mode == 'bad_id':
+        data['indexes'][0]['id'] = 'not-an-id'
+    else:
+        data['indexes'][0]['trade_halted'] = True
+    report, rows = run(client)
+    assert len(client.calls) == 3
+    assert not report['spx_identity_resolved']
+    if mode == 'restricted':
+        assert report['restricted'][0]['message'] == 'Unavailable through this channel'
+
+
+def test_restriction_in_quote_stops_history_without_retry():
+    client = Client()
+    client.data['get_index_quotes'] = {'quotes': [], 'restricted': [
+        {'symbol': 'SPX', 'instrument_id': ID, 'message': 'Restricted index'}]}
+    report, rows = run(client)
+    assert len(client.calls) == 4 and not report['index_histories']
+    assert report['restricted'][0]['tool'] == 'get_index_quotes'
+
+
+def test_failed_book_does_not_hide_independent_earnings_and_index_evidence():
+    client = Client()
+    client.data['get_equity_price_book'] = ValueError('PRIVATE-TOKEN-DO-NOT-PRINT')
+    report, rows = run(client)
+    assert report['completed_reads'] == 4 and report['status'] == 'PARTIAL_CAPTURE'
+    assert report['index_histories'][0]['bars'] == 1
+    assert 'PRIVATE-TOKEN' not in json.dumps(rows)
+
+
+def test_invalid_structured_output_retains_failure_not_false_success():
+    client = Client()
+    client.data['get_earnings_calendar'] = {'wrong': []}
+    report, rows = run(client)
+    assert not rows[1]['completed'] and report['status'] == 'PARTIAL_CAPTURE'
+
+
+def test_parent_rejects_injected_tools_arguments_and_unbound_ids():
+    _, rows = run(Client())
+    for index, field, value in [(0, 'tool', 'get_accounts'), (0, 'arguments', {'symbols':['AAPL']}),
+                                (3, 'arguments', {'instrument_ids':['different']})]:
+        changed = deepcopy(rows)
+        changed[index][field] = value
+        with pytest.raises(ValueError):
+            probe.validate_observations(changed, AT)
+
+
+def connected(client, monkeypatch):
+    @asynccontextmanager
+    async def context():
+        yield client
+    class Connection:
+        client = staticmethod(context)
+    monkeypatch.setattr(read_worker, 'connection', lambda _: Connection())
+
+
+def test_worker_probe_is_explicit_and_retains_private_original_payloads(tmp_path, monkeypatch):
+    client = Client()
+    connected(client, monkeypatch)
+    req = request(tmp_path).model_copy(update={'operation':'INPUT_PROBE', 'started_at':AT})
+    result = asyncio.run(read_worker.collect(req))
+    assert result.status == 'COMPLETE' and result.inventory is None
+    assert result.input_probe['completed_reads'] == 5
+    assert result.observations[0]['raw']['structuredContent']['data']['books']
+    assert set(result.schemas.tools) == READ_TOOLS
+    assert all(name in probe.PINS for name, _ in client.calls)
+
+
+def test_worker_partial_capture_is_failed_with_safe_report(tmp_path, monkeypatch):
+    client = Client()
+    client.data['get_earnings_calendar'] = ValueError('PRIVATE')
+    connected(client, monkeypatch)
+    req = request(tmp_path).model_copy(update={'operation':'INPUT_PROBE', 'started_at':AT})
+    result = asyncio.run(read_worker.collect(req))
+    assert result.status == 'FAILED' and result.error_class == 'InputProbeIncomplete'
+    assert result.input_probe['completed_reads'] == 4
+    assert 'PRIVATE' not in result.model_dump_json()
+
+
+def test_probe_cannot_mix_with_inventory_or_user_selected_plan(tmp_path):
+    req = request(tmp_path).model_dump()
+    req['operation'] = 'INPUT_PROBE'
+    req['include_inventory'] = True
+    with pytest.raises(ValueError):
+        read_capture.CaptureRequest.model_validate(req)
+    req['include_inventory'] = False
+    req['schemas'] = {'bad': 'schema'}
+    with pytest.raises(ValueError):
+        read_capture.CaptureRequest.model_validate(req)
+
+
+def test_native_isolated_probe_and_cli_keep_originals_private(tmp_path, monkeypatch, capsys):
+    from test_option_read_capture import native_connection_script, intercept_native
+
+    tmp_path.chmod(0o700)
+    script = native_connection_script(tmp_path)
+    text = script.read_text().replace(repr(json.dumps(metadata())),
+                                     repr(json.dumps(metadata() + list(TOOLS.values()))))
+    text = text.replace("return {'isError':False,'structuredContent':{'rows':[]}}",
+                        "return {'structuredContent':{'data':json.loads(" +
+                        repr(json.dumps(payloads())) + ")[name],'guide':'fixture'}}")
+    script.write_text(text)
+    children = intercept_native(monkeypatch, script)
+    destination = tmp_path / 'probe.json'
+    assert read_cli.main(['input-probe', '--oauth-file', str(oauth(tmp_path)),
+                          '--output', str(destination), '--timeout-seconds', '10']) == 0
+    artifact = json.loads(destination.read_text())
+    assert artifact['operation'] == 'input-probe'
+    assert artifact['result']['operation'] == 'INPUT_PROBE'
+    assert len(artifact['result']['observations']) == 5
+    assert artifact['result']['input_probe']['completed_reads'] == 5
+    assert artifact['result']['schemas']['sha256']
+    assert destination.stat().st_mode & 0o777 == 0o600
+    output = capsys.readouterr().out
+    assert 'PRIVATE-TOKEN' not in output and 'structuredContent' not in output
+    assert all(child.returncode == 0 for child in children)
+
+
+def test_missing_reviewed_tool_fails_before_first_call():
+    client = Client()
+    client.tools = [t for t in client.tools if t['name'] != 'get_index_historicals']
+    with pytest.raises(ValueError, match='missing'):
+        run(client)
+    assert not client.calls
+
+
+def test_parent_rejects_truncated_success_and_extra_followup_after_restriction():
+    _, rows = run(Client())
+    with pytest.raises(ValueError, match='coverage'):
+        probe.validate_observations(rows[:3], AT, complete=True)
+    with pytest.raises(ValueError, match='coverage'):
+        probe.validate_observations([], AT, complete=True)
+    rows[3]['raw']['structuredContent']['data']['restricted'] = [
+        {'instrument_id': ID, 'symbol': 'SPX', 'message': 'Unavailable'}]
+    with pytest.raises(ValueError, match='coverage'):
+        probe.validate_observations(rows, AT)
+
+
+def test_oversized_provider_result_is_partial_not_an_unbounded_export():
+    client = Client()
+    client.data['get_earnings_calendar'] = {'results': [], 'oversize': 'x' * (129 * 1024)}
+    report, rows = run(client)
+    assert report['status'] == 'PARTIAL_CAPTURE'
+    assert not rows[1]['completed'] and 'raw' not in rows[1]
