@@ -1,5 +1,32 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.171. Verify observed PAPER lifecycle and count portfolio fill receipts, 2026-10-30 EDT.
+
+Actual host replay on 7f73c75 clears all four saved SPY/QQQ history rejections.
+The original bars were 19.817–27.397 seconds old, with 15.376–23.434 seconds from
+interval close to receipt. All corrected setups remain WATCHING for original
+extension/retest/confirmation conditions; no historical trade is claimed.
+
+A new offline integration uses the production $1,000, two-play profile, eight
+contract feed, unchanged risk/budget policies and native runtime with synthetic
+qualifying CALL/PUT bars and scripted model responses. It follows raw pinned
+mapping through selection, admission, isolated order submission, later-quote
+fills, independent premium-stop exit, interrupted-owner reopen, remaining-play
+exit, duplicate delivery and stored observer reconciliation. One paid-selection
+opportunity per cycle remains enforced; two plays share the original loss cap.
+
+This exposed a host report bug: execution_fills is a legacy table and remains
+empty for portfolio accounts. The report now counts portfolio order observations,
+never mixes their receipts with legacy projections, and refuses unavailable fill
+evidence. The earlier host run still had zero orders; this does not imply missed
+trades. Application trading code and configuration are unchanged in this revision.
+All 136 focused lifecycle, fill, model-response, history and reporting tests pass.
+No Docker rebuild is needed for the reporting helper. Connected model/fill
+acceptance, Swing original history, Scope reviewed inputs and public dashboard
+activation remain outstanding. LIVE remains disabled.
+
+Previous version notes (historical):
+
 Version 1.170. Distinguish observed completed-bar age from quote delivery lag, 2026-10-30 EDT.
 
 Host paper-oct30-4 completed successfully but both decisions were blocked before

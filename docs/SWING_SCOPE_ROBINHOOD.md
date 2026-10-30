@@ -391,3 +391,44 @@ the false 26-second rejection, retain bad-history/quote rejection, preserve orig
 clocks and verify fingerprint-fenced read-only replay. All 314 installed application
 files pass installed-release verification. Swing/Scope inputs and a connected
 simulated fill lifecycle remain outstanding.
+
+
+## Returned replay and complete offline profile regression
+
+The operator's saved-history replay confirms all four scans have no replayed
+history issues. At 18:35:27.397246 UTC the bars were 27.397246 seconds old and
+arrived 23.434268 seconds after close. At 18:40:19.817336 UTC the corresponding
+values were 19.817336 and 15.375752 seconds. Original histories stayed unchanged.
+Every setup is WATCHING for its original structural conditions, especially
+extension and absent retest/reversal confirmation; no trade is retroactively made.
+
+`tests/test_observed_profile_lifecycle.py` now joins the actual simulation profile
+and price/options amendment with the combined eight-contract collector and native
+runtime. Only local feed/key paths change. Synthetic qualifying bars and executable
+books pass the pinned raw mapper. A scripted model transport supplies bounded,
+validated entry responses; no external model or quote service is called. CALL and
+PUT cases each enter SPY then QQQ in separate cycles, fill from subsequent source
+quotes, stop SPY without changing QQQ, reopen the interrupted owner with its cash
+and position intact, then exit QQQ through independent protection. Duplicate packet
+delivery leaves fills/cash unchanged; the stored observer reconciles four receipts.
+Risk settings, $1,000 capital, two-play maximum, $250 loss cap and model budgets
+remain unchanged. The raw ask size is one contract in the synthetic test, keeping
+both admitted plays within the existing shared loss budget.
+
+The test exposed `paper-session-report.py` counting legacy execution_fills rather
+than portfolio order observation receipts. The corrected read-only helper reports
+its fill-count source and includes stock fills for legacy mixed owners. Portfolio
+and legacy stores are never added together. Oversized/missing receipt structure
+refuses the count rather than reporting zero. This changes reporting only; no
+runtime package rebuild, reset or fresh capture is necessary. The previous host
+run's zero-order finding remains valid independently of this correction.
+
+This closes a local integration test gap. Real connected model service behavior,
+fresh qualifying setup/entry/fill/exit acceptance and remaining Swing/Scope input
+coverage are still open. The public dashboard has not been switched from its
+frozen review by these changes.
+
+Validation: 136 focused tests passed, including both complete profile lifecycles,
+portfolio selection/model admission, quote fills, history mapping, entry worker
+response validation and the standalone reporting helper. No application source
+changed, so the already-built 7f73c75 runtime image remains applicable.

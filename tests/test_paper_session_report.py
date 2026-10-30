@@ -67,6 +67,30 @@ def test_missing_database_is_not_created(tmp_path):
     assert not (tmp_path / "missing.db").exists()
 
 
+def test_portfolio_receipts_are_authoritative_even_with_empty_legacy_tables():
+    with sqlite3.connect(':memory:') as db:
+        db.executescript('CREATE TABLE execution_fills(id); CREATE TABLE execution_stock_fills(id);'
+                         'CREATE TABLE execution_portfolio_orders(observation_json);')
+        db.executemany('INSERT INTO execution_portfolio_orders VALUES(?)', [
+            (None,), (json.dumps({'fills': []}),),
+            (json.dumps({'fills': [{'fill_id': 'one'}, {'fill_id': 'two'}]}),),
+            (json.dumps({'fills': [{'fill_id': 'three'}]}),),
+        ])
+        assert module.fill_count(db) == (3, 'PORTFOLIO_ORDER_OBSERVATIONS')
+        db.execute('INSERT INTO execution_fills VALUES(1)')
+        assert module.fill_count(db)[0] == 3  # Never double-count a legacy projection.
+        db.execute("INSERT INTO execution_portfolio_orders VALUES('{}')")
+        with pytest.raises(ValueError, match='FILL_EVIDENCE_UNAVAILABLE'):
+            module.fill_count(db)
+
+
+def test_legacy_mixed_owner_counts_stock_and_option_fills():
+    with sqlite3.connect(':memory:') as db:
+        db.executescript('CREATE TABLE execution_fills(id); INSERT INTO execution_fills VALUES(1);'
+                         'CREATE TABLE execution_stock_fills(id); INSERT INTO execution_stock_fills VALUES(2);')
+        assert module.fill_count(db) == (2, 'LEGACY_FILL_TABLES')
+
+
 def test_reason_extraction_is_bounded_and_does_not_print_prose():
     assert module.codes(["FRESHNESS_FAILED", "private message /some/path", "x" * 1000]) == ["FRESHNESS_FAILED"]
     assert len(module.codes([f"REASON_{i}" for i in range(200)])) == 100

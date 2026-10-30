@@ -67,6 +67,29 @@ def connection(path):
     return db
 
 
+def fill_count(db):
+    """Count the owner's actual receipt store, without mixing legacy projections."""
+    tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    if 'execution_portfolio_orders' in tables:
+        count = 0
+        for row in db.execute(
+            'SELECT CASE WHEN length(observation_json)<=2097152 THEN observation_json '
+            'ELSE NULL END FROM execution_portfolio_orders WHERE observation_json IS NOT NULL'
+        ):
+            if row[0] is None:
+                raise ValueError('FILL_EVIDENCE_TOO_LARGE')
+            observation = json.loads(row[0])
+            fills = observation.get('fills') if isinstance(observation, dict) else None
+            if not isinstance(fills, list):
+                raise ValueError('FILL_EVIDENCE_UNAVAILABLE')
+            count += len(fills)
+        return count, 'PORTFOLIO_ORDER_OBSERVATIONS'
+    count = db.execute('SELECT COUNT(*) FROM execution_fills').fetchone()[0]
+    if 'execution_stock_fills' in tables:
+        count += db.execute('SELECT COUNT(*) FROM execution_stock_fills').fetchone()[0]
+    return count, 'LEGACY_FILL_TABLES'
+
+
 def report(directory, started, finished):
     start = datetime.fromisoformat(started).astimezone(timezone.utc).isoformat()
     end = datetime.fromisoformat(finished).astimezone(timezone.utc).isoformat()
@@ -96,7 +119,7 @@ def report(directory, started, finished):
             "SELECT status,reason,feed_sequence FROM execution_option_runtime WHERE id=1")]
         result["current_control"] = [dict(r) for r in db.execute(
             "SELECT halted,halt_reason FROM execution_control WHERE id=1")]
-        result["account_total_fills"] = db.execute("SELECT COUNT(*) FROM execution_fills").fetchone()[0]
+        result["account_total_fills"], result["fill_count_source"] = fill_count(db)
     finally:
         db.close()
     db = connection(directory / "collector/collector.db")
