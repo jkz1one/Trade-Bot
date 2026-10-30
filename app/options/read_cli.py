@@ -87,6 +87,8 @@ def export_schemas(source, output, expected_sha):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="operation", required=True)
+    report = sub.add_parser("input-probe-report")
+    report.add_argument("--source", required=True)
     export = sub.add_parser("export-schemas")
     export.add_argument("--source", required=True)
     export.add_argument("--output", required=True)
@@ -101,6 +103,29 @@ def main(argv=None):
             cmd.add_argument("--schema-sha256", required=True)
             cmd.add_argument("--plan", required=True)
     args = parser.parse_args(argv)
+    if args.operation == "input-probe-report":
+        try:
+            from app.options.input_probe import summary, validate_observations
+
+            artifact = private_json(args.source)
+            result = CaptureResult.model_validate(artifact["result"])
+            if result.operation != "INPUT_PROBE" or artifact.get("operation") != "input-probe":
+                raise ValueError("Original input probe required")
+            validate_observations(result.observations, result.started_at)
+            if not result.observations:
+                raise ValueError("No saved probe observations")
+            output = {
+                "status": "SAVED_PROBE_REPORT", "original_capture_status": result.status,
+                "original_error_class": result.error_class,
+                "input_probe": summary(result.observations), "provider_reads": False,
+                "credentials_opened": False, "state_modified": False, "live_enabled": False,
+            }
+        except (OSError, ValueError, KeyError, TypeError):
+            print(json.dumps({"status": "UNAVAILABLE", "reason": "SAVED_PROBE_REPORT_UNAVAILABLE",
+                              "provider_reads": False, "live_enabled": False}))
+            return 1
+        print(json.dumps(output))
+        return 0
     if args.operation == "export-schemas":
         try:
             result = export_schemas(args.source, args.output, args.schema_sha256)

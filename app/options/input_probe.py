@@ -177,7 +177,9 @@ def summary(rows):
                          for q in quotes.get("quotes") or [] if q],
         "index_histories": [{"instrument_id": h["instrument_id"], "symbol": h["symbol"],
                              "bars": len(h.get("bars") or []),
-                             "interpolated_bars": sum(b["interpolated"] for b in h.get("bars") or [] if b)}
+                             "interpolated_bars": sum(b.get("interpolated") is True for b in h.get("bars") or [] if b),
+                             "noninterpolated_bars": sum(b.get("interpolated") is False for b in h.get("bars") or [] if b),
+                             "interpolation_unknown_bars": sum(b.get("interpolated") is None for b in h.get("bars") or [] if b)}
                             for h in history.get("results") or [] if h],
         "restricted": [{"tool": name, "symbol": r["symbol"],
                         "message": r.get("message", "Index history restricted")}

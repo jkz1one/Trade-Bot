@@ -104,3 +104,19 @@ After-close captures can establish response mapping and restriction evidence.
 Freshness and advancing book/index clocks still need market-hours verification.
 For an actual new trading day, prepare an appropriate new session catalog; the
 previous October 29 enrollment does not cover expired contracts on another day.
+
+## Offline report recovery
+
+The index-history schema permits omission of `interpolated`. Report counts keep
+explicit true, explicit false and unknown separate; absent does not mean false.
+The host's four-read failure has its original observations saved in `probe.json`.
+After building the corrected release, recover its report without another request:
+
+```sh
+bash scripts/robinhood-input-probe-host.sh --report /root/trade-bot-input-probe-LB05wA
+```
+
+The original capture failure remains visible. This mounts only the evidence
+folder read-only with network disabled and never overwrites or promotes evidence.
+Attach the original `probe.json` for payload mapping, even if its stored status is
+FAILED; completed individual responses may still be useful.

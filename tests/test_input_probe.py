@@ -238,3 +238,61 @@ def test_oversized_provider_result_is_partial_not_an_unbounded_export():
     report, rows = run(client)
     assert report['status'] == 'PARTIAL_CAPTURE'
     assert not rows[1]['completed'] and 'raw' not in rows[1]
+
+
+def test_optional_interpolation_flag_is_unknown_not_false():
+    client = Client()
+    bars = client.data['get_index_historicals']['results'][0]['bars']
+    bars.append(deepcopy(bars[0]) | {'interpolated': True})
+    missing = deepcopy(bars[0])
+    del missing['interpolated']
+    bars.append(missing)
+    report, rows = run(client)
+    assert rows[-1]['completed']  # Omission is valid under the original provider schema.
+    history = report['index_histories'][0]
+    assert history['bars'] == 3
+    assert history['interpolated_bars'] == 1
+    assert history['noninterpolated_bars'] == 1
+    assert history['interpolation_unknown_bars'] == 1
+    assert not report['trading_ready']
+
+
+def test_offline_report_recovers_failed_summary_without_auth_or_overwrite(tmp_path, monkeypatch, capsys):
+    client = Client()
+    client.data['get_equity_price_book'] = ValueError('PRIVATE')
+    del client.data['get_index_historicals']['results'][0]['bars'][0]['interpolated']
+    connected(client, monkeypatch)
+    original_summary = probe.summary
+    def broken_summary(rows):
+        raise KeyError('interpolated')
+    monkeypatch.setattr(probe, 'summary', broken_summary)
+    req = request(tmp_path).model_copy(update={'operation':'INPUT_PROBE', 'started_at':AT})
+    result = asyncio.run(read_worker.collect(req))
+    assert result.status == 'FAILED' and result.input_probe is None
+    assert sum(r['completed'] for r in result.observations) == 4
+    source = tmp_path / 'probe.json'
+    source.write_text(json.dumps({'operation':'input-probe', 'status':'FAILED',
+                                 'result':result.model_dump(mode='json')}))
+    source.chmod(0o600)
+    before = source.read_bytes()
+    monkeypatch.setattr(probe, 'summary', original_summary)
+    def forbidden(*args, **kwargs):
+        raise AssertionError('Offline replay opened auth or started capture')
+    monkeypatch.setattr(read_cli, 'private_oauth', forbidden)
+    monkeypatch.setattr(read_cli, 'collect', forbidden)
+    assert read_cli.main(['input-probe-report', '--source', str(source)]) == 0
+    output = json.loads(capsys.readouterr().out)
+    assert output['original_capture_status'] == 'FAILED'
+    assert output['original_error_class'] == 'KeyError'
+    assert output['input_probe']['status'] == 'PARTIAL_CAPTURE'
+    assert output['input_probe']['index_histories'][0]['interpolation_unknown_bars'] == 1
+    assert not output['provider_reads'] and not output['credentials_opened']
+    assert not output['state_modified'] and source.read_bytes() == before
+
+
+def test_offline_report_rejects_missing_or_wrong_artifact(tmp_path, capsys):
+    source = tmp_path / 'wrong.json'
+    source.write_text('{}')
+    source.chmod(0o600)
+    assert read_cli.main(['input-probe-report', '--source', str(source)]) == 1
+    assert json.loads(capsys.readouterr().out)['reason'] == 'SAVED_PROBE_REPORT_UNAVAILABLE'

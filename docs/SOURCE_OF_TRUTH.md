@@ -1,5 +1,23 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.162. Recover input-probe reports with unknown interpolation flags, 2026-10-29 EDT.
+
+The host ran 1381d33 and retained four completed reads in
+/root/trade-bot-input-probe-LB05wA/probe.json before an ExceptionGroup/KeyError.
+Review of the pinned index-history schema found that interpolated is optional;
+our summary indexed it as required. A schema-valid omitted flag reproduces the
+report failure. The actual host payload still needs inspection to confirm its
+contents. Missing interpolation flags now remain explicitly unknown, separate
+from explicit true/false counts; they are not promoted to original real bars.
+
+Added an offline input-probe-report command and host --report mode. It reads the
+existing private artifact with no network/auth/owner mounts, rechecks the fixed
+call bindings, reports partial evidence and preserves the original failure status.
+It neither overwrites the capture nor retries provider reads or changes runtime
+policy. Existing partial capture and restriction semantics remain unchanged.
+
+Previous version notes (historical):
+
 Version 1.161. Probe reviewed Robinhood book, earnings and index inputs, 2026-10-29 EDT.
 
 The operator uploaded the completed 87-tool inventory from release 4c2a2a7.
