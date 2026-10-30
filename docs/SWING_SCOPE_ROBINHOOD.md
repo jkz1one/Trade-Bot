@@ -329,3 +329,28 @@ identical snapshots. This is local performance evidence, not host acceptance.
 The account, eight-contract session, snapshot publication and five-second timeout
 remain unchanged. Build this release and obtain a fresh review with a new run ID;
 do not reset, re-enroll or recreate state. A completed host run is still required.
+
+## Completed host run and saved decision report
+
+Host `paper-oct30-4` on 88d11ec completed from 2026-10-30T18:30:22Z to
+18:40:34Z with exit 0, STOPPED and dashboard_published=true. It delivered 35
+packets, completed two decision cycles and recorded one reviewed entry resume.
+There were zero model calls and zero simulated orders. The snapshot timeout did
+not recur in this bounded run. This establishes runtime/feed stability for the
+observed run, not a fill lifecycle or all-strategy readiness.
+
+Use `python3 scripts/paper-session-report.py --run-id paper-oct30-4` to inspect
+the retained decisions. This host-only standard-library report needs no image
+build, provider reads, new run, policy amendment or owner reset. It verifies a
+finished connected container, scopes cycles/opportunities/collector counts to its
+actual start/end times and prints selected machine-code rejection/setup reasons,
+candidate counts and unavailable families. Current owner control/runtime and
+account-total fills are explicitly distinct from the run-scoped evidence.
+It excludes raw quote captures, model text, secrets and full candidate payloads.
+
+Four focused report tests pass: exact run-window filtering, rejection extraction,
+no database writes or missing-file creation, bounded/private-field filtering and
+refusal to inspect unrelated or still-running containers. The next investigation
+is the saved no-order decision evidence; another market capture is unnecessary
+for diagnosing those completed cycles. No specific rejection is claimed before
+that host report is returned.
