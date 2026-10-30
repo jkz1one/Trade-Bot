@@ -157,3 +157,12 @@ timeouts. All three pass in the final installed-package run. That local rerun do
 not establish server timing: retain the bounded host check, especially on its
 single-CPU deployment. No timeout, freshness, spending or admission safeguards were
 removed to make tests pass.
+
+
+Host apply correction (2026-10-30): the initial release's launcher incorrectly
+mounted the configuration directory read-only for the amendment operation. The
+fixed launcher permits only this offline apply path to publish configuration while
+keeping policy.json and schemas.json read-only. If the initial apply failed, build
+the corrected release and retry the **original** apply review hash. The pending
+intent is recovery evidence and must be retained. Review/ordinary runtime config
+mount protections are unchanged.

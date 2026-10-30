@@ -136,12 +136,21 @@ def isolation(*, cpus=1):
     ]
 
 
-def config_mounts(writable=False, *, source=False, exports=False):
+def config_mounts(writable=False, *, source=False, exports=False, amend_strategy=False):
+    if amend_strategy and not writable:
+        raise ValueError("Strategy amendment requires writable state")
     private(STATE, True)
     private(STATE / "config", True)
     args = mount(STATE, "/state", not writable)
-    if writable:
+    if writable and not amend_strategy:
         args += mount(STATE / "config", "/state/config")
+    if amend_strategy:
+        # Only the reviewed offline amendment publishes runtime.json/manifest.json.
+        # Normal sessions retain the read-only directory overlay. Market policy
+        # and discovered schemas remain read-only even during this amendment.
+        for name in ("policy.json", "schemas.json"):
+            private(STATE / "config" / name)
+            args += mount(STATE / "config" / name, "/state/config/" + name)
     if source:
         private(STATE / "owner", True)
         args += mount(STATE / "owner", "/source", not writable)
@@ -443,7 +452,8 @@ def run(args, release):
         command = ["apply" if apply_upgrade else "review", "--state", "/state"]
         if apply_upgrade:
             command += ["--expected-review", args.expected_review]
-        return execute(image_id, "app.mixed.strategy_upgrade", command, config_mounts(writable=apply_upgrade))
+        return execute(image_id, "app.mixed.strategy_upgrade", command,
+                       config_mounts(writable=apply_upgrade, amend_strategy=apply_upgrade))
     if args.operation in ("status", "stop"):
         if not re.fullmatch("[a-z0-9][a-z0-9-]{0,39}", args.run_id or ""):
             raise ValueError("Session ID required")

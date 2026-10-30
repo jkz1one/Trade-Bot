@@ -35,6 +35,40 @@ def load():
     return m
 
 
+@pytest.mark.parametrize('operation', ['review-strategy-upgrade', 'apply-strategy-upgrade'])
+def test_strategy_upgrade_mounts_only_apply_configuration_writable(tmp_path, monkeypatch, operation):
+    m = load()
+    state = tmp_path / 'state'; state.mkdir(mode=0o700)
+    config = state / 'config'; config.mkdir(mode=0o700)
+    for name in ('policy.json', 'schemas.json'):
+        path = config / name; path.write_text('{}'); path.chmod(0o600)
+    monkeypatch.setattr(m, 'STATE', state)
+    monkeypatch.setattr(m, 'image', lambda _: IMAGE)
+    monkeypatch.setattr(m, 'no_active_session', lambda: None)
+    calls = []
+    def docker(*args, **kwargs):
+        calls.append(args)
+        return subprocess.CompletedProcess(args, 0, '{}', '')
+    monkeypatch.setattr(m.h, 'docker', docker)
+    review = 'c' * 64
+    m.run(SimpleNamespace(operation=operation, expected_review=review), RELEASE)
+    invocation = calls[0]
+    assert invocation[invocation.index('--network') + 1] == 'none'
+    assert not any('/auth' in x or '/run/secrets' in x for x in invocation)
+    if operation == 'apply-strategy-upgrade':
+        assert f'type=bind,src={state},dst=/state' in invocation
+        assert not any('dst=/state/config,' in x for x in invocation)
+        for name in ('policy.json', 'schemas.json'):
+            assert f'type=bind,src={config / name},dst=/state/config/{name},readonly' in invocation
+        assert invocation[-2:] == ('--expected-review', review)
+    else:
+        assert f'type=bind,src={state},dst=/state,readonly' in invocation
+    # Ordinary writable runtime/enrollment operations still cannot alter config.
+    assert f'type=bind,src={config},dst=/state/config,readonly' in m.config_mounts(True)
+    with pytest.raises(ValueError, match='requires writable'):
+        m.config_mounts(amend_strategy=True)
+
+
 def test_session_preparation_mounts_optional_original_earnings_read_only(tmp_path, monkeypatch):
     m = load()
     captures = tmp_path / 'captures'; captures.mkdir(mode=0o700)

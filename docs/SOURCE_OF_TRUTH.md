@@ -1,5 +1,26 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.168. Repair offline strategy-amendment configuration mounts, 2026-10-30 EDT.
+
+The first host apply attempt at 5778000 returned the launcher's generic Docker
+failure. Inspection found that apply inherited the ordinary runtime's read-only
+configuration directory mount, which prevents publishing the reviewed runtime and
+manifest files. Only apply-strategy-upgrade now omits that directory overlay;
+policy.json and schemas.json remain individually mounted read-only. Review and
+normal runtime/enrollment mounts retain their original read-only protection.
+Network isolation and absence of broker/model secret mounts are unchanged.
+
+A failed apply may already have appended the native amendment and saved its recovery
+intent. Deploy this launcher fix and retry apply with the original review SHA;
+do not issue a new review, remove the intent, reset the account or manually edit
+settings. The existing recovery verifies the pending amendment and finishes its
+file publication without appending another strategy event or clearing the halt.
+All 27 host-command and native upgrade/recovery tests pass, including explicit
+checks of the apply mount permissions and each interrupted file-publication stage.
+Host success remains unverified until the operator supplies the retry result.
+
+Previous version notes (historical):
+
 Version 1.167. Integrate explicit Robinhood price/options Swing and Scope PAPER paths, 2026-10-30 UTC.
 
 The operator explicitly selected price/options-only Swing and Scope variants.
