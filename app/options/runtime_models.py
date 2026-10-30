@@ -11,6 +11,7 @@ from app.mixed.sources import StockSelectionPolicy
 from app.options.coordinator import DegenFrame
 from app.options.degen import DegenPolicy
 from app.options.entry_reasoning import EntryReasoningPolicy
+from app.options.earnings_context import CompanyEarningsObservation
 from app.options.lifecycle import OptionExecutionPolicy
 from app.options.models import Name, OptionLimits, OptionRecord
 from app.options.position_reasoning import PositionReasoningPolicy
@@ -270,9 +271,16 @@ class MixedRuntimePacket(ScopeRuntimePacket):
 class PortfolioRuntimePacket(MixedRuntimePacket):
     version: Literal["mixed-normalized-portfolio-v2"] = "mixed-normalized-portfolio-v2"
     coverage_issues: tuple[Name, ...] = Field(default=(), max_length=64)
+    company_earnings: CompanyEarningsObservation | None = Field(default=None, exclude_if=lambda v: v is None)
 
     @model_validator(mode="after")
     def explicit_portfolio(self):
+        if self.company_earnings is not None:
+            from zoneinfo import ZoneInfo
+
+            if (self.company_earnings.received_at > self.recorded_at
+                    or self.company_earnings.target_session != self.recorded_at.astimezone(ZoneInfo("America/New_York")).date()):
+                raise ValueError("Company earnings require exact session and original receive clock")
         if self.frame.portfolio_version != "portfolio-frame-v2":
             raise ValueError("Explicit versioned portfolio frame required")
         return self

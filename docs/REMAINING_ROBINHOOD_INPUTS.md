@@ -180,3 +180,33 @@ No SPY/QQQ rows appear, and no ETF constituent mapping is inferred. Missing or
 empty company events never become complete native CatalystEvidence/CLEAR status.
 The mapper is ready as an evidence component; complete Swing catalyst coverage,
 Scope economic/news/flow/dealer inputs and actual strategy admission remain separate.
+
+## Session and runtime calendar observations
+
+When preparing a new session, `connected-session-host.py prepare-session` accepts
+optional `--earnings-probe /absolute/private/probe.json` alongside the normal
+contract captures, target session and next-policy destination. The host mounts
+that original file read-only in the offline preparation container. It does not
+mount OAuth for this operation or call the provider. A derived earnings export
+is not accepted as an original probe.
+
+The proposed policy retains the original bounded earnings receipt and canonical
+capture hash. Review/enrollment binds it to the exact target session using the
+existing append-only rollover; old owner state and journals remain unchanged.
+The flag is optional and never silently carried forward from an old proposal.
+Existing sessions are not edited or re-enrolled to attach observations.
+
+The collector emits compact `company_earnings` context outside strategy frames.
+It is retained in native runtime packet storage and exposed through replay and
+the portfolio `/api/mixed` response, including delivery status, original receipt
+age, requested calendar window and whether the saved session is still current.
+No new dashboard panel or changed trade eligibility is introduced. Missing
+context in a newer packet supersedes older context; it is not backfilled.
+
+A calendar outside its requested date window is explicitly historical context,
+not fresh/current catalyst coverage. Even an in-window calendar remains partial
+company evidence with UNKNOWN entitlement and no provider update timestamp.
+The October 29 capture therefore cannot clear October 30 catalysts. Obtaining
+another calendar is unnecessary for testing this transport offline, but would be
+needed to observe another day's company calendar. Full Swing/Scope requirements
+remain separately blocked and do not prevent DEGEN's own acceptance test.

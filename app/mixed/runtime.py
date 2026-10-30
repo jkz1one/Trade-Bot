@@ -340,5 +340,36 @@ def stored_inputs(db, now):
     return {
         "statuses": statuses,
         "latest_sequence": last.sequence if last else 0,
+        **({"company_earnings": last.company_earnings.model_dump(mode="json"),
+            "company_earnings_delivery_status": row["status"]}
+           if isinstance(last, PortfolioRuntimePacket) and last.company_earnings is not None else {}),
         "execution_authority": False,
+    }
+
+
+def stored_company_earnings(db, now):
+    """Display the latest packet's calendar context without reviving an older one."""
+    from zoneinfo import ZoneInfo
+
+    if not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_mixed_runtime_inputs'").fetchone():
+        return None
+    row = db.execute("SELECT * FROM execution_mixed_runtime_inputs ORDER BY sequence DESC LIMIT 1").fetchone()
+    if row is None:
+        return None
+    raw = json.loads(row["packet_json"])
+    if raw.get("version") != "mixed-normalized-portfolio-v2":
+        return None
+    packet = PortfolioRuntimePacket.model_validate(raw)
+    if (fingerprint(packet) != row["packet_hash"] or row["sequence"] != packet.sequence
+            or not packet.recorded_at <= datetime.fromisoformat(row["accepted_at"]) <= now
+            or row["status"] not in {"ACCEPTED", "DELIVERED", "BLOCKED", "INTERRUPTED"}):
+        raise ValueError("Original earnings delivery changed")
+    evidence = packet.company_earnings
+    if evidence is None:
+        return None
+    return evidence.model_dump(mode="json") | {
+        "delivery_status": row["status"], "feed_sequence": packet.sequence,
+        "delivered_at": packet.recorded_at.isoformat(),
+        "receipt_age_seconds": (now - evidence.received_at).total_seconds(),
+        "current_session": evidence.target_session == now.astimezone(ZoneInfo("America/New_York")).date(),
     }

@@ -21,6 +21,7 @@ from app.mixed.sources import StockCycleInput
 from app.mixed.stock_models import StockInstrument
 from app.mixed.swing_feed import SwingHistoryPolicy
 from app.options.coordinator import DegenFrame
+from app.options.earnings_context import CompanyEarningsBinding, for_delivery
 from app.options.engine import clock, fingerprint
 from app.options.models import Name, OptionInstrument, OptionRecord
 from app.options.read_capture import CapturePolicy, CaptureResult, collect
@@ -49,6 +50,7 @@ class FeedPolicy(OptionRecord):
     calls_per_minute: int = Field(default=24, strict=True, ge=1, le=120)
     capture: CapturePolicy
     swing_history: SwingHistoryPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
+    company_earnings: CompanyEarningsBinding | None = Field(default=None, exclude_if=lambda v: v is None)
 
     carry_intents: tuple[SwingCarryIntent, ...] = Field(
         default=(), max_length=32, exclude_if=lambda v: not v
@@ -357,6 +359,7 @@ def normalize(
         sequence=sequence,
         recorded_at=now,
         kind="CYCLE" if cycle else "MARKET",
+        company_earnings=for_delivery(policy.company_earnings, now),
         coverage_issues=tuple(issues)
         + tuple(
             "UNREVIEWED_HELD_MAPPING:" + i.instrument_id

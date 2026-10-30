@@ -517,14 +517,23 @@ def run(args, release):
             for name in ("contracts.json", "quotes-1.json", "quotes-2.json", "quotes-3.json"):
                 private(captures / name)
             parent(destination.parent)
+            earnings_flags, earnings_mounts = [], []
+            if getattr(args, "earnings_probe", None):
+                earnings = Path(args.earnings_probe)
+                if not earnings.is_absolute():
+                    raise ValueError("Absolute original earnings probe path required")
+                private(earnings)
+                earnings_flags = ["--earnings-probe", "/earnings/probe.json"]
+                earnings_mounts = mount(earnings, "/earnings/probe.json")
             return execute(image_id, "app.mixed.simulation_catalog", [
                 "--policy", "/state/config/policy.json", "--contracts", "/captures/contracts.json",
                 "--sample", "/captures/quotes-1.json", "--sample", "/captures/quotes-2.json",
                 "--sample", "/captures/quotes-3.json", "--target-session", args.target_session,
                 "--output", "/proposal/" + destination.name,
                 "--report", "/proposal/" + destination.name + ".review.json",
+                *earnings_flags,
             ], config_mounts() + mount(captures, "/captures")
-               + mount(destination.parent, "/proposal", False))
+               + mount(destination.parent, "/proposal", False) + earnings_mounts)
         private(destination)
         flags = ["apply" if args.operation == "enroll-session" else "review",
                  "--directory", "/state/owner", "--feed-directory", "/state/collector",
@@ -574,11 +583,13 @@ def main(argv=None):
         ),
     )
     for name in ("settings", "policy", "expected-review", "run-id", "expected-container",
-                 "capture-directory", "target-session", "next-policy"):
+                 "capture-directory", "target-session", "next-policy", "earnings-probe"):
         p.add_argument("--" + name)
     p.add_argument("--resume-flat", action="store_true")
     p.add_argument("--seconds", type=int)
     a = p.parse_args(argv)
+    if a.earnings_probe is not None and a.operation != "prepare-session":
+        p.error("--earnings-probe is only for prepare-session")
     if (a.operation in ("prepare-profile", "prepare", "enroll", "run", "enroll-session")) != (
         a.expected_review is not None
     ):

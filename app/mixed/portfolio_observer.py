@@ -18,6 +18,7 @@ from app.options.observer import _age, _health
 
 
 def snapshot(observer, db, now, limit, before, family, config, policy, limits):
+    from app.mixed.runtime import stored_company_earnings
     from app.mixed.observer import history_chart, stored_stream
     from app.mixed.portfolio_execution import policy as portfolio_policy
     from app.options.operator import summary
@@ -180,6 +181,7 @@ def snapshot(observer, db, now, limit, before, family, config, policy, limits):
         ),
         "revision": revision,
         "stream": stream,
+        "company_earnings": stored_company_earnings(db, now),
         "accounting": "VERIFIED",
         "account_id": limits.account_id,
         "captured_at": snap.captured_at.isoformat(),

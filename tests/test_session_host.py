@@ -35,6 +35,29 @@ def load():
     return m
 
 
+def test_session_preparation_mounts_optional_original_earnings_read_only(tmp_path, monkeypatch):
+    m = load()
+    captures = tmp_path / 'captures'; captures.mkdir(mode=0o700)
+    for name in ('contracts.json', 'quotes-1.json', 'quotes-2.json', 'quotes-3.json'):
+        path = captures / name; path.write_text('{}'); path.chmod(0o600)
+    earnings = tmp_path / 'probe.json'; earnings.write_text('{}'); earnings.chmod(0o600)
+    monkeypatch.setattr(m, 'image', lambda release: IMAGE)
+    monkeypatch.setattr(m, 'bundle', lambda image: None)
+    monkeypatch.setattr(m, 'no_active_session', lambda: None)
+    monkeypatch.setattr(m, 'config_mounts', lambda: [])
+    seen = []
+    monkeypatch.setattr(m, 'execute', lambda *args: seen.append(args) or {})
+    args = SimpleNamespace(operation='prepare-session', target_session='2026-10-30',
+                           next_policy=str(tmp_path / 'proposal' / 'policy.json'),
+                           capture_directory=str(captures), earnings_probe=str(earnings))
+    m.run(args, RELEASE)
+    call = seen[0]
+    assert call[1] == 'app.mixed.simulation_catalog'
+    assert call[2][-2:] == ['--earnings-probe', '/earnings/probe.json']
+    assert f'type=bind,src={earnings},dst=/earnings/probe.json,readonly' in call[3]
+    assert not any('/auth' in x or 'model_key' in x for x in call[3])
+
+
 @pytest.fixture
 def host(tmp_path, monkeypatch):
     m = load()

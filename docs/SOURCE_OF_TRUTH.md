@@ -1,5 +1,35 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.166. Carry reviewed company calendars into connected runtime observations, 2026-10-29 EDT.
+
+The company-earnings mapper now has an explicit session integration path.
+prepare-session accepts optional --earnings-probe pointing to the original private
+input-probe artifact. It validates capture/call/receipt clocks and retains the
+bounded original earnings receipt plus canonical artifact hash in the proposed
+session policy. The existing exact-hash rollover review/enrollment binds this
+addition to one target session and rejects future receipts or changed reviews.
+There are no new provider reads, credentials, account resets or background workers.
+
+The collector delivers a compact company-calendar observation separately from
+strategy frames. Native mixed-runtime storage retains it under the existing
+packet hash and delivery status; replay and the portfolio dashboard data response
+expose source/record hashes, requested dates, original receive time, counts and
+coverage limitations. Older windows remain OUTSIDE_REQUESTED_WINDOW, not current
+coverage. Dashboard receipt age is not a provider source timestamp. A later packet
+without a calendar does not revive an older one. The optional field is omitted
+from old policies/packets, preserving their serialized hashes and retained history.
+
+This is observation transport, not native CatalystEvidence or event eligibility.
+Company calendars never imply CLEAR, complete ETF/news/macro coverage or REALTIME
+entitlement. DEGEN frames, Swing/Scope blockers and order handling are unchanged.
+No currently enrolled host policy was modified; this release is not deployed.
+The saved October 29 calendar can be retained as historical context for a later
+session, but cannot satisfy that later day's calendar coverage. Populated stock
+books/fresh SPX quotes still need market-hours evidence; broader Swing/Scope
+coverage and historical-source integration remain unfinished.
+
+Previous version notes (historical):
+
 Version 1.165. Map original company earnings with explicit incomplete coverage, 2026-10-29 EDT.
 
 The operator's one-day capture f3b17e1630584cf9ab94fa8a79f0330e completed all

@@ -137,6 +137,8 @@ def connection_report(settings, feed, schemas, *, journal, directory, now):
         option_blockers.append("NO_USABLE_OPTION_CANDIDATES")
     return {
         "version": "connected-simulation-check-v1",
+        **({"company_earnings": feed.company_earnings.observation().model_dump(mode="json")}
+           if feed.company_earnings is not None else {}),
         "degen_option_configuration_ready": not errors and not option_blockers,
         "degen_option_blockers": option_blockers,
         "status": "WIRING_INVALID" if errors else "WIRED_WITH_ENTRY_BLOCKERS",

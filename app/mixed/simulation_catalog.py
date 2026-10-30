@@ -16,8 +16,11 @@ from app.options.operator_inbox import read, save
 from app.robinhood.schedule import XNYSCalendar
 
 
-def proposal(policy, contracts, samples, target):
+def proposal(policy, contracts, samples, target, *, earnings_probe=None):
     policy = FeedPolicy.model_validate(policy.model_dump())
+    from app.options.earnings_context import from_probe
+
+    earnings = from_probe(earnings_probe, target) if earnings_probe is not None else None
     reviewed = review(contracts, samples)
     cal = XNYSCalendar().calendar
     if not cal.is_session(target.isoformat()):
@@ -57,9 +60,11 @@ def proposal(policy, contracts, samples, target):
         raise ValueError("One to six captured simulation contracts required")
     proposed = FeedPolicy.model_validate(policy.model_dump() | {
         "candidates": tuple(selected), "observed_simulation": "robinhood-observed-v1",
+        "company_earnings": earnings,
     })
     return proposed, {
         "version": "intraday-simulation-catalog-v1", "target_session": target.isoformat(),
+        **({"company_earnings": earnings.observation().model_dump(mode="json")} if earnings else {}),
         "simulation_terms": "STANDARD_ETF_INTRADAY_V1",
         "observed": ["provider IDs", "symbol", "right", "strike", "expiration", "multiplier", "ticks", "tradability"],
         "assumed": ["unadjusted standard 100-share deliverable", "American physical ETF terms", "USD", "root equals symbol"],
@@ -87,10 +92,14 @@ def main(argv=None):
     for key in ("policy", "contracts", "target-session", "output", "report"):
         p.add_argument("--" + key, required=True)
     p.add_argument("--sample", action="append", required=True)
+    p.add_argument("--earnings-probe", help="Original input probe; company calendar observation only")
     a = p.parse_args(argv)
     load = lambda path: json.loads(read(Path(path), 8 * 1024 * 1024))
     proposed, report = proposal(FeedPolicy.model_validate(load(a.policy)), load(a.contracts),
-                                [load(path) for path in a.sample], date.fromisoformat(a.target_session))
+                                [load(path) for path in a.sample], date.fromisoformat(a.target_session),
+                                earnings_probe=json.loads(read(Path(a.earnings_probe), 1024 * 1024)) if a.earnings_probe else None)
+    if len(proposed.model_dump_json().encode()) > 256 * 1024:
+        raise ValueError("Proposed session policy exceeds existing capacity")
     save(Path(a.output), proposed.model_dump(mode="json"))
     save(Path(a.report), report)
     print(json.dumps(report, sort_keys=True))
