@@ -23,6 +23,7 @@ from app.mixed.stock_models import StockIntent, StockLimits
 from app.options.lifecycle import OptionIntent, OptionVenueSnapshot
 from app.options.models import Name, OptionRecord
 from app.options.venue import DurableOptionVenue
+from app.options.process_trace import OptionProcessDiagnostics, TraceReader
 
 
 class OptionRequest(OptionRecord):
@@ -63,6 +64,7 @@ async def run_option_process(
         raise ValueError("Only the bounded built-in option fixture is supported")
     if stock_intent is not None and (intent is not None or venue.stock_limits is None):
         raise ValueError("One explicitly enrolled stock request required")
+    started = time.monotonic()
     deadline = (
         min(deadline, time.monotonic() + timeout_seconds)
         if deadline is not None
@@ -99,27 +101,35 @@ async def run_option_process(
             "app.options.worker",
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.PIPE,
             start_new_session=True,
             env=env,
         )
     )
     child = None
+    trace = TraceReader()
+    trace_task = None
+    phase = "SPAWN"
     try:
         async with asyncio.timeout(max(0, deadline - time.monotonic())):
             child = await asyncio.shield(spawn)
+            trace_task = asyncio.create_task(trace.drain(child.stderr))
+            phase = "REQUEST_WRITE"
             child.stdin.write(payload)
             await child.stdin.drain()
             child.stdin.close()
+            phase = "RESPONSE_READ"
             data = bytearray()
             while chunk := await child.stdout.read(4096):
                 data.extend(chunk)
                 if len(data) > MAX_RESPONSE_BYTES:
                     raise FixtureProcessProtocolError("Option response exceeds fixed protocol")
+            phase = "CHILD_EXIT"
             await child.wait()
             if child.returncode:
                 raise FixtureProcessFailed("Option fixture child failed")
             try:
+                phase = "RESPONSE_VALIDATE"
                 result = OptionProcessResult.model_validate_json(data)
             except ValueError:
                 raise FixtureProcessProtocolError("Invalid option fixture response") from None
@@ -138,7 +148,13 @@ async def run_option_process(
                 raise FixtureProcessProtocolError("Invalid option snapshot binding")
             return result
     except TimeoutError:
-        raise FixtureProcessTimeout("Option child deadline exceeded") from None
+        failure = FixtureProcessTimeout("Option child deadline exceeded")
+        # Freeze what the parent observed before cleanup; missing progress does
+        # not prove the child never reached a stage (the event loop may be late).
+        failure.option_process_diagnostics = OptionProcessDiagnostics(
+            phase, time.monotonic() - started, trace.invalid, tuple(trace.records)
+        )
+        raise failure from None
     finally:
         if child is None:
             while not spawn.done():
@@ -148,5 +164,12 @@ async def run_option_process(
                     continue
             if not spawn.cancelled() and spawn.exception() is None:
                 child = spawn.result()
-        if child is not None:
-            await _cleanup(child)
+        try:
+            if child is not None:
+                if trace_task is None:
+                    trace_task = asyncio.create_task(trace.drain(child.stderr))
+                await _cleanup(child)
+        finally:
+            if trace_task is not None:
+                trace_task.cancel()
+                await asyncio.gather(trace_task, return_exceptions=True)

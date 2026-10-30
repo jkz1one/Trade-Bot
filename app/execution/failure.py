@@ -41,6 +41,14 @@ def failure_details(exc):
         else "OTHER_ERROR",
         "frames": [],
     }
+    if (kind.__module__, kind.__name__) == ("app.execution.process", "FixtureProcessTimeout"):
+        from app.options.process_trace import OptionProcessDiagnostics
+
+        diagnostic = getattr(exc, "option_process_diagnostics", None)
+        if type(diagnostic) is OptionProcessDiagnostics:
+            public = diagnostic.public()
+            if public is not None:
+                result["option_process"] = public
     trace = exc.__traceback__
     while trace is not None:
         code = trace.tb_frame.f_code

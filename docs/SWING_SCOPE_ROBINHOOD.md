@@ -257,3 +257,38 @@ The independent simulator timeout remains unresolved; no deadline, risk limit or
 halt behavior was relaxed. Build the correction and obtain a fresh run review
 under a new run ID against the already-enrolled session; do not re-enroll, reset
 the owner or recreate the already-published snapshot.
+
+## Accepted combined feed; simulator timeout still unresolved
+
+Host `paper-oct30-2` (a042b8d) confirms the collector correction: all nine attempts
+75–83 were DELIVERED, the runtime accepted sequence 82, and a native reviewed entry
+resume occurred at 2026-10-30T16:27:45.832205Z. There were zero fills. The runtime
+stopped at 16:30:09Z with the same snapshot-read FixtureProcessTimeout, after about
+168 seconds. This is accepted-feed/recovery evidence, not completed trading
+acceptance. Missing Swing/Scope inputs remain separate blockers.
+
+The fixed local option child now emits bounded progress markers for imports,
+request parsing, venue opening, snapshot/accept, serialization and completion.
+Each marker carries elapsed wall and process CPU time since entry to the child
+main function. On timeout the parent freezes its last observed markers and its
+own phase before cleanup. Failure events and the existing connected failure JSON
+include these structured diagnostics; no raw stderr, exception messages, paths,
+payloads, model content or credentials are retained. Unknown, oversized or malformed
+stderr invalidates the trace and is drained/discarded with fixed memory bounds.
+
+Markers show the last observed boundary, not proof of an underlying cause. A
+missing marker may reflect parent scheduling delay; CPU time excludes time before
+child main and wall time includes waiting. No timeout increase, retry, policy
+amendment, account reset or recovery bypass is introduced. The normal five-second
+deadline and process-group termination/reaping remain in force. A fresh bounded
+host run is needed to distinguish startup/import delay from venue-read delay or
+late parent observation. Existing session enrollment and snapshots remain valid.
+
+Validation: 216 focused tests pass across subprocess diagnostics, actual isolated
+option/stock/portfolio children, native execution, cancellation, runtime and
+connected supervision. Tests distinguish a deliberate import stall from a native
+snapshot stall, persist the structured timeout with the halt, reject private or
+malformed stderr, and reap a child flooding stderr. All 312 installed application
+files match the source and installed release inspection reports VERIFIED_FILES.
+Ruff could not run because this environment's installed wrapper has no binary;
+`git diff --check` is clean.

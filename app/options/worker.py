@@ -4,13 +4,18 @@ import os
 import signal
 import sys
 
-from app.execution.process import MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES
-from app.execution.worker import _stall
-from app.options.process import OptionProcessResult, OptionRequest
-from app.options.venue import DurableOptionVenue
+from app.options.process_trace import ChildTrace
 
 
 def main():
+    trace = ChildTrace()
+    trace.mark("IMPORTS")
+    from app.execution.process import MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES
+    from app.execution.worker import _stall
+    from app.options.process import OptionProcessResult, OptionRequest
+    from app.options.venue import DurableOptionVenue
+
+    trace.mark("REQUEST")
     data = sys.stdin.buffer.read(MAX_REQUEST_BYTES + 1)
     if len(data) > MAX_REQUEST_BYTES:
         return 1
@@ -18,6 +23,7 @@ def main():
         request = OptionRequest.model_validate_json(data)
         if os.getppid() != request.parent_pid:
             return 1
+        trace.mark("VENUE_OPEN")
         venue = DurableOptionVenue(request.path)
         if (venue.venue_id, venue.account_id, venue.population_id) != (
             request.venue_id,
@@ -31,10 +37,12 @@ def main():
         ):
             return 1
         if request.operation == "snapshot":
+            trace.mark("SNAPSHOT")
             if request.fault == "STALL_READ":
                 _stall(request.parent_pid)
             result = OptionProcessResult(snapshot=venue.snapshot(request.now))
         else:
+            trace.mark("ACCEPT")
             if request.fault == "STALL_BEFORE_ACCEPT":
                 _stall(request.parent_pid)
             accept = venue._accept_stock if request.operation == "stock_accept" else venue._accept
@@ -56,7 +64,10 @@ def main():
                 sys.stdout.flush()
                 _stall(request.parent_pid)
             result = OptionProcessResult(order_id=order_id)
+        trace.mark("SERIALIZE")
         sys.stdout.write(result.model_dump_json())
+        sys.stdout.flush()
+        trace.mark("COMPLETE")
         return 0
     except (ValueError, OSError):
         return 1
