@@ -49,12 +49,12 @@ class SwingBatchSeed(OptionRecord):
 class SwingBatchInput(OptionRecord):
     seed: SwingBatchSeed
     metadata: tuple[ContractMetadata, ContractMetadata]
-    catalyst: CatalystEvidence
+    catalyst: CatalystEvidence | None
 
     @model_validator(mode="after")
     def exact_metadata(self):
         if tuple(m.instrument for m in self.metadata) != self.seed.instruments or (
-            self.catalyst.symbol != self.seed.history.symbol
+            self.catalyst is not None and self.catalyst.symbol != self.seed.history.symbol
         ):
             raise ValueError("Exact batch contracts and symbol-specific catalyst required")
         return self

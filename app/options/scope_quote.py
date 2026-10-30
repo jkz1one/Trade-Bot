@@ -1,5 +1,6 @@
 """Observed Scope quote lifecycle; locked geometry, no inferred bars or trade authority."""
 
+from app.options.models import parse_underlying
 from datetime import datetime
 from typing import Literal
 
@@ -7,7 +8,7 @@ from pydantic import Field, model_validator
 
 from app.options.engine import fingerprint
 from app.options.governor import _fresh
-from app.options.models import Name, OptionRecord, UnderlyingQuote
+from app.options.models import IndexReference, Name, OptionRecord, UnderlyingObservation, paper_market_evidence
 from app.options.scope_structure import ScopeGeometry
 
 TERMINALS = {"INVALIDATED_UNFILLED", "OBJECTIVE_CONSUMED_UNFILLED", "EXPIRED_UNFILLED"}
@@ -18,7 +19,7 @@ class ScopeQuoteReview(OptionRecord):
     evaluated_at: datetime
     geometry: ScopeGeometry
     limits_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
-    quote: UnderlyingQuote | None
+    quote: UnderlyingObservation | None
     status: Literal[
         "OBSERVED",
         "REJECTED",
@@ -56,7 +57,7 @@ def price_status(g, quote):
     return "OBSERVED"
 
 
-def review_quote(record, quote, limits, now):
+def review_quote(record, quote, limits, now, *, price_options=False):
     g = ScopeGeometry.model_validate(record["geometry"])
     cutoff = datetime.fromisoformat(record["locked_frame"]["session"]["entry_cutoff_at"])
     reasons = []
@@ -69,7 +70,8 @@ def review_quote(record, quote, limits, now):
             or quote.symbol != "SPX"
             or quote.source != limits.underlying_source
             or not quote.complete
-            or quote.entitlement != "REALTIME"
+            or (not paper_market_evidence(quote) if price_options else quote.entitlement != "REALTIME")
+            or (isinstance(quote, IndexReference) and not price_options)
             or not limits.minimum_underlying_price <= quote.bid <= quote.ask
             or quote.source_at
             < max(datetime.fromisoformat(record[k]) for k in ("called_at", "reviewed_through"))
@@ -83,7 +85,7 @@ def review_quote(record, quote, limits, now):
         ):
             reasons.append("SCOPE_WATCH_QUOTE_UNAVAILABLE_OR_STALE")
         elif prior is not None:
-            previous = UnderlyingQuote.model_validate(prior)
+            previous = parse_underlying(prior)
             if quote.source_at < previous.source_at or (
                 quote.source_at == previous.source_at and quote != previous
             ):

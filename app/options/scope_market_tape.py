@@ -101,11 +101,11 @@ def validate_scope_event(header, event):
     if f.quote is not None and f.quote.greeks is not None:
         _observed(f.quote.greeks, p.quote_source, f.quote.received_at)
     for value, source in (
-        (context.dealer, sources["dealer_structure"]),
-        (context.moves, sources["options_analytics"]),
-        (context.flow, sources["options_flow"]),
-        (context.news, sources["broad_market_news"]),
-        (context.events, sources["economic_events"]),
+        (context.dealer, sources.get("dealer_structure")),
+        (context.moves, sources.get("options_analytics")),
+        (context.flow, sources.get("options_flow")),
+        (context.news, sources.get("broad_market_news")),
+        (context.events, sources.get("economic_events")),
         (context.prior, header.scope.watch.context.prior_source),
     ):
         if value is not None:
@@ -121,6 +121,8 @@ def validate_scope_event(header, event):
         raise ValueError("Scope expected-move expiration must match the recorded session")
     if item.underlying.symbol != "SPX":
         raise ValueError("Exact Scope underlying required")
+    if f.index_reference is not None and f.index_reference != item.underlying:
+        raise ValueError("Conflicting Scope frame and current index reference")
     _observed(item.underlying, header.limits.underlying_source, at)
     # Two representations at one receipt must agree; no consumer-specific quote truth.
     for q in event.frame.quotes:

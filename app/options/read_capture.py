@@ -107,7 +107,7 @@ class CapturePolicy(OptionRecord):
 
 
 class CaptureRequest(OptionRecord):
-    operation: Literal["DISCOVER", "CAPTURE", "INPUT_PROBE"]
+    operation: Literal["DISCOVER", "CAPTURE", "INPUT_PROBE", "SCOPE_INPUT"]
     policy: CapturePolicy
     request_id: str = Field(pattern=r"^[a-f0-9]{32}$")
     started_at: datetime
@@ -117,8 +117,12 @@ class CaptureRequest(OptionRecord):
     plan: CapturePlan | None = None
     include_inventory: bool = Field(default=False, strict=True, exclude_if=lambda v: not v)
 
+    scope_requested: bool = Field(default=False, strict=True, exclude_if=lambda v: not v)
+
     @model_validator(mode="after")
     def paired(self):
+        if self.scope_requested and (self.operation != "CAPTURE" or self.plan is None or len(self.plan.calls) > 5):
+            raise ValueError("Combined Scope capture requires at most five ordinary reads")
         if self.include_inventory and self.operation != "DISCOVER":
             raise ValueError("Inventory is discovery-only, never a market tool call")
         if (self.operation == "CAPTURE") != (
@@ -131,7 +135,7 @@ class CaptureRequest(OptionRecord):
 class CaptureResult(OptionRecord):
     request_id: str = Field(pattern=r"^[a-f0-9]{32}$")
     policy_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
-    operation: Literal["DISCOVER", "CAPTURE", "INPUT_PROBE"]
+    operation: Literal["DISCOVER", "CAPTURE", "INPUT_PROBE", "SCOPE_INPUT"]
     started_at: datetime
     collected_at: datetime
     elapsed_seconds: float = Field(ge=0, le=30)
@@ -146,8 +150,16 @@ class CaptureResult(OptionRecord):
     input_probe: dict[str, JsonValue] | None = Field(default=None, exclude_if=lambda v: v is None)
     inventory: dict[str, JsonValue] | None = Field(default=None, exclude_if=lambda v: v is None)
 
+    scope_requested: bool = Field(default=False, strict=True, exclude_if=lambda v: not v)
+    scope_observations: list[dict[str, JsonValue]] = Field(default_factory=list, max_length=3, exclude_if=lambda v: not v)
+    scope_error_class: str | None = Field(default=None, pattern=r"^[A-Za-z_][A-Za-z0-9_]{0,127}$", exclude_if=lambda v: v is None)
+
     @model_validator(mode="after")
     def coherence(self):
+        if (self.scope_requested and self.operation != "CAPTURE") or (not self.scope_requested and (self.scope_observations or self.scope_error_class)):
+            raise ValueError("Unrequested Scope capture evidence")
+        if len(encoded([self.observations, self.scope_observations])) > 768 * 1024:
+            raise ValueError("Combined market capture exceeds aggregate bound")
         if self.input_probe is not None and (
             self.operation != "INPUT_PROBE" or len(encoded(self.input_probe)) > 64 * 1024
         ):
@@ -167,7 +179,7 @@ class CaptureResult(OptionRecord):
             raise ValueError("Discovery cannot report tool calls")
         if self.operation == "CAPTURE" and self.plan is None:
             raise ValueError("Capture must retain its reviewed plan")
-        if self.operation == "INPUT_PROBE" and self.plan is not None:
+        if self.operation in {"INPUT_PROBE", "SCOPE_INPUT"} and self.plan is not None:
             raise ValueError("Input probe uses only its fixed reviewed calls")
         return self
 
@@ -225,25 +237,26 @@ async def _read(request):
 
 
 async def collect(policy, *, schemas=None, plan=None, clock_source=utc_now,
-                  include_inventory=False, input_probe=False):
+                  include_inventory=False, input_probe=False, scope_input=False):
     policy = CapturePolicy.model_validate(policy.model_dump(warnings=False))
     with market_read_lease(policy.oauth_file):
         return await _collect_owned(policy, schemas=schemas, plan=plan, clock_source=clock_source,
-                                    include_inventory=include_inventory, input_probe=input_probe)
+                                    include_inventory=include_inventory, input_probe=input_probe, scope_input=scope_input)
 
 
 async def _collect_owned(policy, *, schemas, plan, clock_source, include_inventory=False,
-                         input_probe=False):
+                         input_probe=False, scope_input=False):
     # Parent orchestration only. The read child imports protocol models from this
     # module and must not rebuild the execution engine just to decode a request.
     from app.options.engine import clock
 
-    if input_probe and (schemas is not None or plan is not None or include_inventory):
+    if input_probe and (schemas is not None or plan is not None or include_inventory or scope_input) or (scope_input and include_inventory):
         raise ValueError("Input probe cannot accompany another operation")
     private_oauth(policy.oauth_file)
     started = clock(clock_source())
     request = CaptureRequest(
-        operation="INPUT_PROBE" if input_probe else ("CAPTURE" if plan is not None else "DISCOVER"),
+        operation="CAPTURE" if plan is not None else ("SCOPE_INPUT" if scope_input else ("INPUT_PROBE" if input_probe else "DISCOVER")),
+        scope_requested=bool(scope_input and plan is not None),
         policy=policy,
         request_id=uuid4().hex,
         started_at=started,
@@ -263,8 +276,13 @@ async def _collect_owned(policy, *, schemas, plan, clock_source, include_invento
         or not started <= result.collected_at <= finished
         or result.elapsed_seconds > policy.timeout_seconds
         or result.plan != request.plan
+        or result.scope_requested != request.scope_requested
     ):
         raise ValueError("Capture identity, policy, operation, timing or plan mismatch")
+    if scope_input:
+        from app.options.scope_read import validate
+        validate(result.scope_observations if request.scope_requested else result.observations, started,
+                 complete=result.status == "COMPLETE" and result.scope_error_class is None)
     if input_probe:
         from app.options.input_probe import summary, validate_observations
 

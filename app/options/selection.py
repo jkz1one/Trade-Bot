@@ -205,7 +205,7 @@ def admit_candidates(
 ):
     """This result is evidence. M2 re-admits the chosen fixed intent before attempt."""
     from app.options.engine import fingerprint
-    from app.options.models import OptionQuote, UnderlyingQuote
+    from app.options.models import OptionQuote, parse_underlying
     from app.options.swing import SwingScan
 
     scan_type = SwingScan if isinstance(scan, SwingScan) else DegenScan
@@ -213,7 +213,7 @@ def admit_candidates(
     candidate_type = SwingCandidate if isinstance(scan, SwingScan) else DegenCandidate
     plan = ContractReadPlan.model_validate(plan.model_dump(warnings=False))
     quotes = tuple(OptionQuote.model_validate(q.model_dump(warnings=False)) for q in quotes)
-    underlying = UnderlyingQuote.model_validate(underlying.model_dump(warnings=False))
+    underlying = parse_underlying(underlying.model_dump(warnings=False))
     expected = {i.instrument_id: i for i in plan.instruments}
     actual = {q.instrument.instrument_id: q for q in quotes}
     if plan.issues or scan.issues or plan.evaluated_at != now or scan.evaluated_at != now:

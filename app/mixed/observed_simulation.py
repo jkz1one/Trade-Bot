@@ -7,6 +7,8 @@ BASIS = "ROBINHOOD_OBSERVED_V1"
 MARKET_TYPES = {
     "OptionQuote", "UnderlyingQuote", "OptionGreekObservation", "ContractMetadata",
     "OptionInventory", "DegenHistory", "StockQuote",
+    "StockDailyHistory", "SwingHistory", "SwingBaseHistory", "SwingMAHistory",
+    "SwingLevelHistory", "SwingBatchHistory", "SwingHourlyHistory",
 }
 
 

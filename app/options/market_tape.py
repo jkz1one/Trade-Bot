@@ -129,7 +129,8 @@ def _validate_event(header, event):
             history.symbol not in header.setup.symbols
             or seed.instrument.contract.underlying != history.symbol
             or item.metadata.instrument != seed.instrument
-            or item.catalyst.symbol != history.symbol
+            or (item.catalyst is None if header.swing.input_basis is None else item.catalyst is not None)
+            or (item.catalyst is not None and item.catalyst.symbol != history.symbol)
             or seed.created_at > at
             or not history.received_at <= seed.created_at
         ):
@@ -139,6 +140,8 @@ def _validate_event(header, event):
             (item.metadata, header.selection.metadata_source),
             (item.catalyst, header.swing.catalyst_source),
         ):
+            if evidence is None:
+                continue
             if evidence.source != source or not evidence.source_at <= evidence.received_at <= at:
                 raise ValueError("Foreign or unavailable Swing evidence")
         if any(b.closes_at > min(history.source_at, history.received_at) for b in history.bars):

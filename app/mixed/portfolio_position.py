@@ -20,7 +20,7 @@ from app.options.models import (
     OptionQuote,
     OptionRecord,
     SessionWindow,
-    UnderlyingQuote,
+    UnderlyingObservation,
 )
 from app.options.position_reasoning import (
     Digest,
@@ -49,7 +49,7 @@ class PortfolioPositionPacket(OptionRecord):
     history: PortfolioHistory
     account: OptionAccount
     quote: StockQuote | OptionQuote
-    underlying: UnderlyingQuote | None
+    underlying: UnderlyingObservation | None
     scan: DegenScan | ScopeContextScan
     session: SessionWindow
     limits: OptionLimits

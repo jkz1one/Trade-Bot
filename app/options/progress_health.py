@@ -1,5 +1,6 @@
 """Durable observed progress diagnostics; no protection or order authority."""
 
+from app.options.models import parse_underlying
 import json
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -9,7 +10,7 @@ from app.options.engine import clock, exact, fingerprint
 from app.options.governor import _fresh
 from app.options.greek_health import SOURCE_COMMIT, _display
 from app.options.lifecycle import OptionFill, OptionIntent
-from app.options.models import UnderlyingQuote
+from app.options.models import UnderlyingObservation
 
 D = Decimal
 TABLE = "execution_option_progress"
@@ -63,7 +64,7 @@ def _baseline(db, position, limits):
         or inputs.get("underlying") != approval["underlying"]
     ):
         raise ValueError("Progress baseline lost original entry binding")
-    u = UnderlyingQuote.model_validate(approval["underlying"])
+    u = parse_underlying(approval["underlying"])
     if not _underlying_ok(u, entry, limits, entry.prepared_at):
         raise ValueError("Progress baseline underlying is unusable")
     direction = 1 if position.contract.right == "CALL" else -1

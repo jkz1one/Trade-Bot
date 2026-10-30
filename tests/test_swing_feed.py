@@ -364,3 +364,21 @@ def test_wiring_keeps_catalyst_binding_blockers_and_checks_lookback(tmp_path, sc
     assert "SWING_CATALYST_FEED_UNAVAILABLE" in checked["entry_blockers"]
     assert "SWING_PREOPEN_HISTORY_AND_SOURCE_BINDING_REQUIRED" in checked["entry_blockers"]
     assert not checked["trading_ready"]
+
+
+def test_resampled_optional_failure_keeps_required_market_reads(tmp_path, schemas):
+    # The original half-hour request must retain the same optional-failure boundary
+    # as the old hourly mapping; otherwise a missing Swing history drops peers.
+    p = policy(swing_history=SwingHistoryPolicy(bar_mapping='utc-day-halfhour-v1'))
+    seen = []
+    feed = ContinuousFeed(tmp_path / 'feed', p, schemas, create=True)
+    try:
+        result = asyncio.run(feed.tick(now=PREOPEN, reader=reader(PREOPEN, seen, bad_history='transport')))
+        assert result['status'] == 'DELIVERED', result
+        assert any(c.arguments.get('interval') == '30minute' for c in seen[0].calls)
+        packet = read_packet(tmp_path / 'feed/feed.json')
+        assert packet.kind == 'MARKET' and len(packet.frame.stocks) == 2
+        assert packet.coverage_issues == ('SWING_HISTORY_UNAVAILABLE',)
+        assert feed.swing_snapshot(date(2026, 11, 30)) is None
+    finally:
+        feed.close()

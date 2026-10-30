@@ -223,6 +223,8 @@ def trade_summary(position):
         "source": quote.get("source"),
         "underlying_bid": underlying.get("bid"),
         "underlying_ask": underlying.get("ask"),
+        **({"underlying_index_value": underlying["value"], "underlying_executable_book": False}
+           if underlying.get("version") == "robinhood-spx-index-reference-v1" else {}),
         "underlying_at": underlying.get("source_at"),
         "greeks": quote.get("greeks") or {},
     }

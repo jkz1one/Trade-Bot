@@ -189,7 +189,7 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
 
     from app.mixed.models import StockProposal
     from app.mixed.portfolio_store import intent as stored_intent
-    from app.options.models import OptionProposal, OptionQuote, UnderlyingQuote
+    from app.options.models import OptionProposal, OptionQuote, parse_underlying
 
     now = clock(now)
     p = policy(engine)
@@ -201,7 +201,7 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
         for q in option_quotes
     }
     underlying_quotes = {
-        q.symbol: UnderlyingQuote.model_validate(q.model_dump()) for q in underlyings
+        q.symbol: parse_underlying(q.model_dump()) for q in underlyings
     }
     if (
         len(quotes) != len(stock_quotes)
@@ -353,14 +353,14 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
 @exact
 def assess_option(engine, play_id, quote, underlying, *, now, _db=None):
     from app.options.lifecycle import OptionPosition
-    from app.options.models import OptionQuote, UnderlyingQuote
+    from app.options.models import OptionQuote, parse_underlying
     from app.options.protection import assess_position
 
     now = clock(now)
     p = policy(engine)
     quote = OptionQuote.model_validate(quote.model_dump()) if quote is not None else None
     underlying = (
-        UnderlyingQuote.model_validate(underlying.model_dump()) if underlying is not None else None
+        parse_underlying(underlying.model_dump()) if underlying is not None else None
     )
     with nullcontext(_db) if _db is not None else engine.journal.write() as db:
         fresh(engine, db, p, now)

@@ -280,3 +280,51 @@ def test_continuous_run_binds_after_capture_without_starting_another_reader(
         )
     finally:
         feed.close()
+
+
+def observed_original():
+    snapshot, policy, _ = original()
+    common = {"source": "robinhood-mcp", "entitlement": "UNKNOWN"}
+    snapshot = snapshot.model_copy(update={
+        "daily": tuple(h.model_copy(update=common) for h in snapshot.daily),
+        "hourly": tuple(h.model_copy(update=common) for h in snapshot.hourly),
+    })
+    raw = policy.model_dump()
+    raw["stock_policy"].update(history_source="robinhood-mcp", hourly_source="robinhood-mcp")
+    raw["option_policy"]["history_source"] = "robinhood-mcp"
+    for key in ("daily_base", "ma_pullback"):
+        if raw["option_policy"].get(key):
+            raw["option_policy"][key]["hourly_source"] = "robinhood-mcp"
+    return snapshot, SwingBindingPolicy.model_validate(raw)
+
+
+def test_explicit_observed_swing_keeps_original_hash_clocks_and_all_native_children():
+    snapshot, policy = observed_original()
+    assert bind_sources(snapshot, policy, created_at=snapshot.captured_at).status == "BLOCKED"
+    policy = policy.model_copy(update={"observed_simulation": "robinhood-observed-v1"})
+    bound = bind_sources(snapshot, policy, created_at=snapshot.captured_at)
+    assert bound.status == "PREPARED", bound.blockers
+    assert bound.history_hash == fingerprint(snapshot)
+    assert snapshot.daily[0].simulation_basis is None
+    children = batch_seeds(bound.batches[0], policy.option_policy, XNYSCalendar(), ("SPY",))
+    assert len(children) == 14
+    for h in (bound.stocks[0].history, *(c.history for c in children)):
+        assert h.entitlement == "UNKNOWN" and h.simulation_basis == "ROBINHOOD_OBSERVED_V1"
+        assert h.source_at == snapshot.daily[0].source_at
+        assert h.received_at == snapshot.daily[0].received_at
+    assert not bound.trading_ready
+
+
+@pytest.mark.parametrize("damage", ["delayed", "incomplete", "interpolated"])
+def test_observed_swing_does_not_repair_unusable_history(damage):
+    snapshot, policy = observed_original()
+    policy = policy.model_copy(update={"observed_simulation": "robinhood-observed-v1"})
+    daily = snapshot.daily[0]
+    if damage == "delayed":
+        daily = daily.model_copy(update={"entitlement": "DELAYED"})
+    elif damage == "incomplete":
+        daily = daily.model_copy(update={"complete": False})
+    else:
+        daily = daily.model_copy(update={"bars": (*daily.bars[:-1], daily.bars[-1].model_copy(update={"interpolated": True}))})
+    snapshot = snapshot.model_copy(update={"daily": (daily,)})
+    assert bind_sources(snapshot, policy, created_at=snapshot.captured_at).status == "BLOCKED"

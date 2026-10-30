@@ -153,6 +153,8 @@ def initialize(directory, settings, *, clock=utc_now):
 def existing_runtime(directory, *, clock=utc_now):
     """Reopen the native owner and retain its lease through all runtime cleanup."""
     directory = Path(directory)
+    if (directory.parent / "price-options-upgrade.json").exists():
+        raise ValueError("Pending strategy amendment must be completed first")
     if not directory.is_absolute():
         raise ValueError("Explicit absolute existing population directory required")
     settings = load(directory / "runtime.json")

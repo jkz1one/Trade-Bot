@@ -24,7 +24,7 @@ from app.options.models import (
     OptionProposal,
     OptionRecord,
     PositiveCount,
-    UnderlyingQuote,
+    UnderlyingObservation,
 )
 
 
@@ -35,7 +35,7 @@ class FillUnderlyingObservation(OptionRecord):
     quantity: PositiveCount
     occurred_at: datetime
     fill_hash: Digest
-    underlying: UnderlyingQuote
+    underlying: UnderlyingObservation
 
 
 def fill_underlying_observation(fill):

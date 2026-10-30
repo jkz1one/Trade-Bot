@@ -279,6 +279,50 @@ def test_worker_retains_successful_prefix_and_sanitizes_failed_read(tmp_path, mo
     assert not result.execution_authority and not result.normalized_data_verified
 
 
+@pytest.mark.parametrize('scope_failure', [False, True])
+def test_combined_scope_reads_share_connection_and_preserve_peer_quotes(tmp_path, monkeypatch, scope_failure):
+    from pathlib import Path
+    from test_scope_feed import setup
+    from app.options.scope_read import validate
+    _, cap, _, _, _ = setup()
+    pinned = json.loads((Path(__file__).parent / 'fixtures/robinhood_input_probe_schemas.json').read_text())
+    class Combined(Client):
+        async def call_tool(self, name, arguments):
+            if name in pinned:
+                self.calls.append((name, arguments))
+                if scope_failure and name == 'get_index_historicals':
+                    raise RuntimeError('PRIVATE-TOKEN')
+                return next(r['raw'] for r in cap.observations if r['tool'] == name)
+            return await super().call_tool(name, arguments)
+    client = Combined(tools=metadata() + list(pinned.values()))
+    schemas = asyncio.run(OptionReadGateway(client).discover())
+    connections = []
+    @asynccontextmanager
+    async def connection_client():
+        connections.append(True)
+        yield client
+    monkeypatch.setattr(read_worker, 'connection', lambda p: type('Connection', (), {'client': staticmethod(connection_client)})())
+    req = request(tmp_path, schemas, plan()).model_copy(update={'scope_requested': True})
+    result = asyncio.run(read_worker.collect(req))
+    assert len(connections) == 1 and result.status == 'COMPLETE'
+    assert result.observations[0]['completed']
+    assert 'PRIVATE-TOKEN' not in result.model_dump_json()
+    if scope_failure:
+        assert result.scope_error_class == 'RuntimeError'
+    else:
+        assert result.scope_error_class is None
+        validate(result.scope_observations, req.started_at, complete=True)
+    assert len(client.calls) <= 4
+
+
+def test_combined_scope_reserves_three_calls(tmp_path):
+    client = Client()
+    schemas = asyncio.run(OptionReadGateway(client).discover())
+    req = request(tmp_path, schemas, plan(*(['get_option_quotes'] * 6)))
+    with pytest.raises(ValidationError):
+        CaptureRequest.model_validate(req.model_dump() | {'scope_requested': True})
+
+
 def native_connection_script(tmp_path, fault="NONE"):
     script = tmp_path / "native_fixture.py"
     script.write_text(f"""import asyncio,json,os,signal,time

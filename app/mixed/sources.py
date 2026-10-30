@@ -27,6 +27,7 @@ class StockDailyHistory(SwingMAHistory):
 
 class StockSwingPolicy(OptionRecord):
     version: Literal["stock-original-swing-v1"] = "stock-original-swing-v1"
+    input_basis: Literal["robinhood-price-options-v1"] | None = Field(default=None, exclude_if=lambda v: v is None)
     families: tuple[SwingFamily, ...] = Field(min_length=1, max_length=10)
     history_source: Name
     daily_lookback: int = Field(strict=True, ge=56, le=260)
@@ -117,7 +118,7 @@ def validate_source(source, policy, calendar):
         h.symbol != source.instrument.symbol
         or h.source != policy.history_source
         or not h.complete
-        or h.entitlement != "REALTIME"
+        or not paper_market_evidence(h)
         or len(h.bars) != policy.daily_lookback
         or not close <= h.source_at <= h.received_at <= source.created_at < opened
     ):
@@ -144,7 +145,7 @@ def validate_source(source, policy, calendar):
             hourly.symbol != h.symbol
             or hourly.source != policy.hourly_source
             or not hourly.complete
-            or hourly.entitlement != "REALTIME"
+            or not paper_market_evidence(hourly)
             or len(hourly.bars) != policy.hourly_lookback
             or not close <= hourly.source_at <= hourly.received_at <= source.created_at
         ):
@@ -290,9 +291,11 @@ def candidates(item, history, structure, policy, execution, calendar, *, now, sw
         if item.swing is not None or item.catalyst is not None:
             raise ValueError("STOCK_SWING_NOT_ENROLLED")
         return tuple(found), rejected, terminals
-    if item.swing is None or item.catalyst is None:
+    if item.swing is None or (item.catalyst is None and policy.swing.input_basis is None):
         raise ValueError("STOCK_COMPLETE_SWING_SOURCE_REQUIRED")
     p, s, cat = policy.swing, validate_source(item.swing, policy.swing, calendar), item.catalyst
+    if p.input_basis is not None and (cat is not None or s.carry_exit_session is not None):
+        raise ValueError("Price/options stock Swing requires absent catalyst and no carry")
     if s.instrument != instrument or s.target_session.isoformat() != w.session_date:
         raise ValueError("STOCK_ORIGINAL_SWING_SESSION_OR_IDENTITY_REQUIRED")
     carry = None
@@ -313,7 +316,7 @@ def candidates(item, history, structure, policy, execution, calendar, *, now, sw
                 now=now,
                 exit_session=s.carry_exit_session,
             )
-    catalyst_bad = (
+    catalyst_bad = p.input_basis is None and (
         cat.symbol != instrument.symbol
         or cat.source != p.catalyst_source
         or cat.status != "CLEAR"

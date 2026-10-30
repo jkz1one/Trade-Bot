@@ -436,6 +436,14 @@ def run(args, release):
             timeout=900,
         )
         return {"status": "IMAGE_BUILT", "image_id": image(release)}
+    if args.operation in ("review-strategy-upgrade", "apply-strategy-upgrade"):
+        no_active_session()
+        image_id = image(release)
+        apply_upgrade = args.operation == "apply-strategy-upgrade"
+        command = ["apply" if apply_upgrade else "review", "--state", "/state"]
+        if apply_upgrade:
+            command += ["--expected-review", args.expected_review]
+        return execute(image_id, "app.mixed.strategy_upgrade", command, config_mounts(writable=apply_upgrade))
     if args.operation in ("status", "stop"):
         if not re.fullmatch("[a-z0-9][a-z0-9-]{0,39}", args.run_id or ""):
             raise ValueError("Session ID required")
@@ -518,6 +526,24 @@ def run(args, release):
                 private(captures / name)
             parent(destination.parent)
             earnings_flags, earnings_mounts = [], []
+            swing_flags, swing_mounts = [], []
+            scope_flags, scope_mounts = [], []
+            if getattr(args, "scope_binding", None):
+                scope_file = Path(args.scope_binding)
+                if not scope_file.is_absolute():
+                    raise ValueError("Absolute reviewed Scope binding required")
+                private(scope_file)
+                scope_flags = ["--scope-binding", "/scope/binding.json"]
+                scope_mounts = mount(scope_file, "/scope/binding.json")
+            if getattr(args, "swing_capture_directory", None):
+                swing = Path(args.swing_capture_directory)
+                if not swing.is_absolute() or not getattr(args, "observed_swing_history", False):
+                    raise ValueError("Absolute Swing captures and explicit observed history required")
+                private(swing, True)
+                for name in ("contracts.json", "quotes-1.json", "quotes-2.json", "quotes-3.json"):
+                    private(swing / name)
+                swing_flags = ["--swing-capture-directory", "/swing-captures"]
+                swing_mounts = mount(swing, "/swing-captures")
             if getattr(args, "earnings_probe", None):
                 earnings = Path(args.earnings_probe)
                 if not earnings.is_absolute():
@@ -532,8 +558,11 @@ def run(args, release):
                 "--output", "/proposal/" + destination.name,
                 "--report", "/proposal/" + destination.name + ".review.json",
                 *earnings_flags,
+                *swing_flags,
+                *scope_flags,
+                *(["--observed-swing-history"] if getattr(args, "observed_swing_history", False) else []),
             ], config_mounts() + mount(captures, "/captures")
-               + mount(destination.parent, "/proposal", False) + earnings_mounts)
+               + mount(destination.parent, "/proposal", False) + earnings_mounts + swing_mounts + scope_mounts)
         private(destination)
         flags = ["apply" if args.operation == "enroll-session" else "review",
                  "--directory", "/state/owner", "--feed-directory", "/state/collector",
@@ -569,6 +598,8 @@ def main(argv=None):
             "prepare-profile",
             "prepare-model-key",
             "review-config",
+            "review-strategy-upgrade",
+            "apply-strategy-upgrade",
             "prepare",
             "review-enroll",
             "enroll",
@@ -583,14 +614,21 @@ def main(argv=None):
         ),
     )
     for name in ("settings", "policy", "expected-review", "run-id", "expected-container",
-                 "capture-directory", "target-session", "next-policy", "earnings-probe"):
+                 "capture-directory", "target-session", "next-policy", "earnings-probe", "swing-capture-directory", "scope-binding"):
         p.add_argument("--" + name)
     p.add_argument("--resume-flat", action="store_true")
+    p.add_argument("--observed-swing-history", action="store_true")
     p.add_argument("--seconds", type=int)
     a = p.parse_args(argv)
+    if a.scope_binding is not None and a.operation != "prepare-session":
+        p.error("--scope-binding is only for prepare-session")
     if a.earnings_probe is not None and a.operation != "prepare-session":
         p.error("--earnings-probe is only for prepare-session")
-    if (a.operation in ("prepare-profile", "prepare", "enroll", "run", "enroll-session")) != (
+    if a.observed_swing_history and a.operation != "prepare-session":
+        p.error("--observed-swing-history is only for prepare-session")
+    if a.swing_capture_directory and (a.operation != "prepare-session" or not a.observed_swing_history):
+        p.error("--swing-capture-directory requires prepare-session --observed-swing-history")
+    if (a.operation in ("prepare-profile", "prepare", "enroll", "run", "enroll-session", "apply-strategy-upgrade")) != (
         a.expected_review is not None
     ):
         p.error("Only prepare-profile/prepare/enroll/run require --expected-review")

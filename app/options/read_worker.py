@@ -40,6 +40,7 @@ async def collect(request):
     started = time.monotonic()
     gateway, observations, error, failure = None, [], None, None
     probe_report = None
+    scope_rows, scope_error = [], None
     stage = "PRIVATE_AUTH"
     try:
         private_oauth(request.policy.oauth_file)
@@ -47,7 +48,7 @@ async def collect(request):
         async with connection(request.policy).client() as client:
             gateway = OptionReadGateway(client)
             stage = "DISCOVER"
-            if request.include_inventory or request.operation == "INPUT_PROBE":
+            if request.include_inventory or request.scope_requested or request.operation in {"INPUT_PROBE", "SCOPE_INPUT"}:
                 await gateway.discover(include_inventory=True)
             else:
                 await gateway.discover()
@@ -58,31 +59,50 @@ async def collect(request):
                 probe_report = await run(client, gateway.inventory, request.started_at, observations)
                 if any(not row["completed"] for row in observations):
                     raise InputProbeIncomplete
+            if request.operation == "SCOPE_INPUT":
+                from app.options.scope_read import run
+                stage = "MARKET_READ"
+                await run(client, gateway.inventory, request.started_at, observations)
             if request.operation == "CAPTURE":
                 stage = "VALIDATE_PLAN"
                 plan = gateway.validate_plan(request.plan, request.schemas)
-                for call in plan.calls:
-                    stage = "MARKET_READ"
-                    at, tick = utc_now(), time.monotonic()
-                    row = {
-                        "label": call.label,
-                        "tool": call.tool,
-                        "attempted_at": at.isoformat(),
-                        "completed": False,
-                    }
-                    observations.append(row)
+                async def ordinary_reads():
+                    nonlocal stage
+                    for call in plan.calls:
+                        stage = "MARKET_READ"
+                        at, tick = utc_now(), time.monotonic()
+                        row = {
+                            "label": call.label,
+                            "tool": call.tool,
+                            "attempted_at": at.isoformat(),
+                            "completed": False,
+                        }
+                        observations.append(row)
+                        try:
+                            raw, checked = await gateway.sample(call, request.schemas)
+                            if len(encoded([*observations, raw])) > 512 * 1024:
+                                raise ValueError("Aggregate samples exceed bound")
+                            row.update(
+                                completed=True,
+                                received_at=utc_now().isoformat(),
+                                raw=raw,
+                                output_schema_validated=checked,
+                            )
+                        finally:
+                            row["elapsed_seconds"] = time.monotonic() - tick
+                async def index_reads():
+                    nonlocal scope_error
+                    from app.options.scope_read import run
                     try:
-                        raw, checked = await gateway.sample(call, request.schemas)
-                        if len(encoded([*observations, raw])) > 512 * 1024:
-                            raise ValueError("Aggregate samples exceed bound")
-                        row.update(
-                            completed=True,
-                            received_at=utc_now().isoformat(),
-                            raw=raw,
-                            output_schema_validated=checked,
-                        )
-                    finally:
-                        row["elapsed_seconds"] = time.monotonic() - tick
+                        await run(client, gateway.inventory, request.started_at, scope_rows)
+                    except Exception as exc:
+                        scope_error = type(exc).__name__
+                if request.scope_requested:
+                    async with asyncio.TaskGroup() as group:
+                        group.create_task(index_reads())
+                        group.create_task(ordinary_reads())
+                else:
+                    await ordinary_reads()
             stage = "CLOSE"
     except Exception as exc:  # noqa: BLE001 -- sanitized failure evidence, never provider text
         error = type(exc).__name__
@@ -101,6 +121,8 @@ async def collect(request):
         error_class=error,
         failure=failure,
         input_probe=probe_report,
+        scope_requested=request.scope_requested, scope_observations=scope_rows,
+        scope_error_class=scope_error,
         inventory=gateway.inventory if gateway and request.include_inventory else None,
     )
 

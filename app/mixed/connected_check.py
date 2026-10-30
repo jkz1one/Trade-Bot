@@ -72,8 +72,17 @@ def connection_report(settings, feed, schemas, *, journal, directory, now):
         for value in (mixed.daily_data_cost, mixed.daily_host_cost, mixed.daily_operating_cost)
     ):
         blockers.append("OPERATING_COSTS_UNCONFIGURED")
-    if settings.scope_policy is not None:
-        blockers.append("SCOPE_CONTEXT_AND_SPX_MAPPING_UNAVAILABLE")
+    if settings.scope_policy is not None and feed.scope_binding is None:
+        blockers.append("SCOPE_CONNECTED_INDEX_REFERENCE_UNAVAILABLE"
+                        if settings.scope_policy.watch.context.structure.preflight.input_basis
+                        else "SCOPE_CONTEXT_AND_SPX_MAPPING_UNAVAILABLE")
+    if feed.scope_binding is not None:
+        pf = settings.scope_policy.watch.context.structure.preflight if settings.scope_policy else None
+        if (pf is None or pf.input_basis is None or pf.session_source != feed.scope_binding.session.source
+                or pf.provider != 'robinhood' or pf.metadata_source != SOURCE or pf.quote_source != SOURCE
+                or settings.limits.mode != 'PAPER'):
+            errors.append('SCOPE_PRICE_OPTIONS_BINDING_MISMATCH')
+        blockers.append('SCOPE_ORIGINAL_MARKET_ACCEPTANCE_REQUIRED')
     if settings.swing_policy is not None or (
         settings.stock_policy is not None and settings.stock_policy.swing is not None
     ):
@@ -102,7 +111,12 @@ def connection_report(settings, feed, schemas, *, journal, directory, now):
                     )
                 ):
                     errors.append("SWING_HISTORY_COVERAGE_TOO_SHORT")
-        blockers.append("SWING_CATALYST_FEED_UNAVAILABLE")
+        if any(p is not None and p.input_basis is None for p in (
+            settings.swing_policy, settings.stock_policy.swing if settings.stock_policy else None
+        )):
+            blockers.append("SWING_CATALYST_FEED_UNAVAILABLE")
+        elif feed.swing_observed_simulation is None:
+            blockers.append("SWING_OBSERVED_HISTORY_NOT_ENROLLED")
     for intent in feed.carry_intents:
         from app.mixed.swing_binding import policy_from_settings
 

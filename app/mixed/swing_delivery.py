@@ -94,14 +94,20 @@ def assemble(frame, bound, policy, metadata, evidence, *, now):
         item, cat = stock_books.get(symbol), stock_cats.get(symbol)
         if item is None or item.quote.instrument != source.instrument:
             issues.append("SWING_STOCK_QUOTE_UNAVAILABLE:" + symbol)
-        if cat is None:
+        price_only = policy.stock_policy.input_basis is not None
+        if cat is None and not price_only:
             issues.append("SWING_STOCK_CATALYST_UNAVAILABLE:" + symbol)
-        if item is not None and cat is not None:
+        if price_only and cat is not None:
+            issues.append("SWING_PRICE_OPTIONS_CATALYST_MUST_BE_ABSENT:" + symbol)
+        if item is not None and (cat is not None or price_only):
             stocks.append(StockCycleInput(quote=item.quote, swing=source, catalyst=cat))
     for symbol, original in originals.items():
         cat = option_cats.get(symbol)
-        if cat is None:
+        price_only = policy.option_policy.input_basis is not None
+        if cat is None and not price_only:
             issues.append("SWING_OPTION_CATALYST_UNAVAILABLE:" + symbol)
+        if price_only and cat is not None:
+            issues.append("SWING_PRICE_OPTIONS_CATALYST_MUST_BE_ABSENT:" + symbol)
         instruments = original.instruments if bound.batches else (original.instrument,)
         matched = []
         for instrument in instruments:
@@ -117,7 +123,7 @@ def assemble(frame, bound, policy, metadata, evidence, *, now):
                 issues.append("SWING_EXACT_CONTRACT_EVIDENCE_UNAVAILABLE:" + identity)
             else:
                 matched.append(m)
-        if cat is not None and len(matched) == len(instruments):
+        if (cat is not None or price_only) and len(matched) == len(instruments):
             if bound.batches:
                 batches.append(
                     SwingBatchInput(seed=original, metadata=tuple(matched), catalyst=cat)

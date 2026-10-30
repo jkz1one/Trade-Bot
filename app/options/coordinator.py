@@ -19,7 +19,7 @@ from app.options.degen import DegenHistory, DegenPolicy, scan_degen
 from app.options.engine import EntryModelBlocked, OptionExecution, clock, fingerprint
 from app.options.governor import _fresh
 from app.options.lifecycle import OptionIntent, OptionLedger
-from app.options.models import OptionProposal, OptionQuote, OptionRecord, UnderlyingQuote
+from app.options.models import OptionProposal, OptionQuote, OptionRecord, UnderlyingObservation
 from app.options.scope_arbitration import ScopeCycleInput, SharedScopePolicy
 from app.options.selection import (
     ContractReadPlan,
@@ -97,7 +97,7 @@ class DegenFrame(OptionRecord):
     held_quotes: tuple[OptionQuote, ...] = Field(
         default=(), max_length=2, exclude_if=lambda v: not v
     )
-    held_underlyings: tuple[UnderlyingQuote, ...] = Field(
+    held_underlyings: tuple[UnderlyingObservation, ...] = Field(
         default=(), max_length=2, exclude_if=lambda v: not v
     )
     held_stocks: tuple[StockCycleInput, ...] = Field(
@@ -109,7 +109,7 @@ class DegenFrame(OptionRecord):
     histories: tuple[DegenHistory, ...] = Field(default=(), max_length=2)
     inventories: tuple[OptionInventory, ...] = Field(default=(), max_length=2)
     quotes: tuple[OptionQuote, ...] = Field(default=(), max_length=8)
-    underlyings: tuple[UnderlyingQuote, ...] = Field(default=(), max_length=2)
+    underlyings: tuple[UnderlyingObservation, ...] = Field(default=(), max_length=2)
     scope: ScopeCycleInput | None = Field(default=None, exclude_if=lambda v: v is None)
     swing: tuple[SwingInput, ...] = Field(default=(), max_length=2, exclude_if=lambda v: not v)
     swing_batches: tuple[SwingBatchInput, ...] = Field(

@@ -1,5 +1,6 @@
 """Durable options PAPER lifecycle on the existing journal/restore/ownership foundation."""
 
+from app.options.models import parse_underlying
 import hashlib
 import json
 import time
@@ -40,7 +41,7 @@ from app.options.models import (
     OptionProposal,
     OptionQuote,
     SessionWindow,
-    UnderlyingQuote,
+    UnderlyingObservation,
 )
 from app.options.process import run_option_process
 from app.options.protection import (
@@ -529,7 +530,7 @@ class OptionExecution:
         proposal = OptionProposal.model_validate(proposal.model_dump(warnings=False))
         quote = OptionQuote.model_validate(quote.model_dump(warnings=False)) if quote else None
         underlying = (
-            UnderlyingQuote.model_validate(underlying.model_dump(warnings=False))
+            parse_underlying(underlying.model_dump(warnings=False))
             if underlying
             else None
         )
@@ -1225,7 +1226,7 @@ class OptionExecution:
         now = clock(now)
         quote = OptionQuote.model_validate(quote.model_dump(warnings=False))
         underlying = (
-            UnderlyingQuote.model_validate(underlying.model_dump(warnings=False))
+            parse_underlying(underlying.model_dump(warnings=False))
             if underlying
             else None
         )
@@ -1764,7 +1765,7 @@ class OptionExecution:
         now = clock(now)
         quote = OptionQuote.model_validate(quote.model_dump(warnings=False)) if quote else None
         underlying = (
-            UnderlyingQuote.model_validate(underlying.model_dump(warnings=False))
+            parse_underlying(underlying.model_dump(warnings=False))
             if underlying
             else None
         )

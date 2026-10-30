@@ -138,6 +138,9 @@ class Evidence(OptionRecord):
             or type(self).__name__ not in {
                 "OptionQuote", "UnderlyingQuote", "OptionGreekObservation",
                 "ContractMetadata", "OptionInventory", "DegenHistory", "StockQuote",
+                "StockDailyHistory", "SwingHistory", "SwingBaseHistory", "SwingMAHistory",
+                "SwingLevelHistory", "SwingBatchHistory", "SwingHourlyHistory",
+                "ScopeHistory", "ScopeEvidence", "IndexReference",
             }
         ):
             raise ValueError("Observed simulation requires supported original Robinhood market evidence")
@@ -157,6 +160,9 @@ def paper_market_evidence(value):
         and type(value).__name__ in {
             "OptionQuote", "UnderlyingQuote", "OptionGreekObservation",
             "ContractMetadata", "OptionInventory", "DegenHistory", "StockQuote",
+            "StockDailyHistory", "SwingHistory", "SwingBaseHistory", "SwingMAHistory",
+            "SwingLevelHistory", "SwingBatchHistory", "SwingHourlyHistory",
+            "ScopeHistory", "ScopeEvidence", "IndexReference",
         }
     )
 
@@ -195,6 +201,59 @@ class UnderlyingQuote(Evidence):
     symbol: Symbol
     bid: Money = Field(gt=0)
     ask: Money = Field(gt=0)
+
+
+class IndexReference(Evidence):
+    """Non-executable SPX value for PAPER option barrier/protection arithmetic.
+
+    Numerical bid/ask aliases support the existing conservative-reference math;
+    they are properties, never serialized quotes, prices for SPX fills or sizes.
+    """
+    version: Literal["robinhood-spx-index-reference-v1"] = "robinhood-spx-index-reference-v1"
+    instrument_id: Name
+    symbol: Literal["SPX"] = "SPX"
+    value: Money = Field(gt=0)
+    original_source_time: str
+    provider_updated_at: str | None
+    receipt_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    source: Literal["robinhood-mcp"] = "robinhood-mcp"
+    entitlement: Literal["UNKNOWN"] = "UNKNOWN"
+    complete: Literal[True] = True
+    simulation_basis: Literal["ROBINHOOD_OBSERVED_V1"] = "ROBINHOOD_OBSERVED_V1"
+    executable_book: Literal[False] = False
+
+    @model_validator(mode="after")
+    def original_clock(self):
+        source = datetime.fromisoformat(self.original_source_time)
+        if source.tzinfo is None or source != self.source_at or self.source_at > self.received_at:
+            raise ValueError("Original aware SPX venue clock must match reference")
+        return self
+
+    @property
+    def bid(self):
+        return self.value
+
+    @property
+    def ask(self):
+        return self.value
+
+    @property
+    def bid_size(self):
+        return None
+
+    @property
+    def ask_size(self):
+        return None
+
+
+UnderlyingObservation = UnderlyingQuote | IndexReference
+
+
+def parse_underlying(value):
+    if isinstance(value, (UnderlyingQuote, IndexReference)):
+        value = value.model_dump()
+    cls = IndexReference if isinstance(value, dict) and value.get("version") == "robinhood-spx-index-reference-v1" else UnderlyingQuote
+    return cls.model_validate(value)
 
 
 class SessionWindow(OptionRecord):

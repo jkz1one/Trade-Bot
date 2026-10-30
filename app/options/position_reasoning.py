@@ -1,5 +1,6 @@
 """Tool-less position plans and pure review. No mutation, reservation or dispatch."""
 
+from app.options.models import parse_underlying
 from datetime import datetime, timedelta
 from typing import Literal
 
@@ -22,7 +23,7 @@ from app.options.models import (
     OptionRecord,
     PositiveCount,
     SessionWindow,
-    UnderlyingQuote,
+    UnderlyingObservation,
 )
 from app.options.protection import assess_position
 from app.options.scope_context import ScopeContextScan
@@ -97,7 +98,7 @@ class PositionPacket(OptionRecord):
     carry_context: CarryPositionContext | None = Field(default=None, exclude_if=lambda v: v is None)
     account: OptionAccount
     quote: OptionQuote
-    underlying: UnderlyingQuote
+    underlying: UnderlyingObservation
     scope_context: ScopePositionContext | None = Field(default=None, exclude_if=lambda v: v is None)
     scan: DegenScan | ScopeContextScan
     session: SessionWindow
@@ -321,7 +322,7 @@ def review_position_plan(
         OptionQuote.model_validate(quote.model_dump(warnings=False)) if quote is not None else None
     )
     underlying = (
-        UnderlyingQuote.model_validate(underlying.model_dump(warnings=False))
+        parse_underlying(underlying.model_dump(warnings=False))
         if underlying is not None
         else None
     )

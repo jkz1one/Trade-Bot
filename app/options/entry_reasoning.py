@@ -1,5 +1,6 @@
 """Offline entry-plan contract and deterministic review; never execution authority."""
 
+from app.options.models import parse_underlying
 from datetime import datetime, timedelta
 from decimal import Context, Decimal, localcontext
 from typing import Annotated, Literal
@@ -21,7 +22,7 @@ from app.options.models import (
     OptionQuote,
     OptionRecord,
     SessionWindow,
-    UnderlyingQuote,
+    UnderlyingObservation,
 )
 from app.options.scope_reasoning import ScopeReasoningEvidence
 from app.options.selection import DegenCandidate, SwingCandidate
@@ -75,7 +76,7 @@ class EntryOpportunity(OptionRecord):
     candidate: DegenCandidate | SwingCandidate
     scan: DegenScan | SwingScan
     quote: OptionQuote
-    underlying: UnderlyingQuote
+    underlying: UnderlyingObservation
     session: SessionWindow
     evidence_ids: tuple[Digest, Digest, Digest]
 
@@ -519,7 +520,7 @@ def review_entry_plan(packet, plan, *, quote, underlying, account, now):
     if not set(opportunity.evidence_ids) <= set(plan.evidence_ids):
         return result("REJECTED", "SELECTED_EVIDENCE_REQUIRED")
     quote = OptionQuote.model_validate(quote.model_dump(warnings=False))
-    underlying = UnderlyingQuote.model_validate(underlying.model_dump(warnings=False))
+    underlying = parse_underlying(underlying.model_dump(warnings=False))
     account = OptionAccount.model_validate(account.model_dump(warnings=False))
     if (
         quote.instrument != opportunity.quote.instrument

@@ -310,3 +310,29 @@ def test_resume_requires_review_binding_and_reaches_bounded_container(host, monk
     m.apply(plan)
     invocation = next(c for c in calls if c[:2] == ("run", "-d"))
     assert invocation[invocation.index("--resume-flat-reviewed-revision") + 1] == "1"
+
+
+def test_swing_preparation_uses_separate_readonly_capture_mount(tmp_path, monkeypatch):
+    m = load()
+    captures, swing = tmp_path / 'degen', tmp_path / 'swing'
+    for folder in (captures, swing):
+        folder.mkdir(mode=0o700)
+        for name in ('contracts.json', 'quotes-1.json', 'quotes-2.json', 'quotes-3.json'):
+            path = folder / name
+            path.write_text('{}')
+            path.chmod(0o600)
+    monkeypatch.setattr(m, 'image', lambda release: IMAGE)
+    monkeypatch.setattr(m, 'bundle', lambda image: None)
+    monkeypatch.setattr(m, 'no_active_session', lambda: None)
+    monkeypatch.setattr(m, 'config_mounts', lambda: [])
+    seen = []
+    monkeypatch.setattr(m, 'execute', lambda *args: seen.append(args) or {})
+    args = SimpleNamespace(operation='prepare-session', target_session='2026-10-30',
+        next_policy=str(tmp_path / 'proposal/policy.json'), capture_directory=str(captures),
+        swing_capture_directory=str(swing), observed_swing_history=True)
+    m.run(args, RELEASE)
+    call = seen[0]
+    assert '--observed-swing-history' in call[2]
+    assert call[2][call[2].index('--swing-capture-directory')+1] == '/swing-captures'
+    assert f'type=bind,src={swing},dst=/swing-captures,readonly' in call[3]
+    assert not any('/auth' in value or 'model_key' in value for value in call[3])

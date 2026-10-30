@@ -1,5 +1,18 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Robinhood price/options Swing and Scope implementation: 2026-10-30 UTC
+
+Explicit strategy variants now connect observed Swing history/catalogs and bounded
+SPX index reads to native PAPER lifecycle paths. A reviewed recoverable amendment
+preserves the existing untraded owner rather than resetting it. Scope uses one
+reviewed exact SPXW/session/pattern binding. Legacy policies retain their rules.
+
+This is not a market acceptance result: actual saved Swing and SPX originals remain
+incomplete or stale. Host amendment, fresh session evidence, market-hours lifecycle
+and dashboard activation are still pending. See [rollout and data boundary](SWING_SCOPE_ROBINHOOD.md).
+
+Previous status (historical):
+
 ## Host configuration packaging and bounded launcher completed: 2026-10-26 EDT
 
 Starting feature HEAD 9156e45b7505423098f866afedd21962268293bb. Added a reviewed

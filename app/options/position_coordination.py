@@ -1,5 +1,6 @@
 """Opt-in durable management on one native PAPER owner. No broker transport."""
 
+from app.options.models import parse_underlying
 import json
 from datetime import datetime, timedelta
 from uuid import uuid4
@@ -9,7 +10,7 @@ from app.options import position_judgment as judgment
 from app.options.degen import scan_degen
 from app.options.engine import clock, exact, fingerprint
 from app.options.lifecycle import OptionIntent, OptionPosition, PositionExitProtection
-from app.options.models import OptionQuote, UnderlyingQuote
+from app.options.models import OptionQuote, UnderlyingObservation
 from app.options.position_reasoning import PositionPacket, review_position_plan
 
 
@@ -84,7 +85,7 @@ def review_for_execution(engine, db, key, request, result, quote, underlying, no
         OptionQuote.model_validate(quote.model_dump(warnings=False)) if quote is not None else None
     )
     underlying = (
-        UnderlyingQuote.model_validate(underlying.model_dump(warnings=False))
+        parse_underlying(underlying.model_dump(warnings=False))
         if underlying is not None
         else None
     )

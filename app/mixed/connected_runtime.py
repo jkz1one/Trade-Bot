@@ -88,11 +88,14 @@ def inspect_owner(directory, settings, *, clock_source=utc_now):
     return observer, result
 
 
-def check(directory, feed_directory, policy_file, schemas_file, *, clock_source=utc_now):
+def check(directory, feed_directory, policy_file, schemas_file, *, clock_source=utc_now, _upgrade_review=None):
     paths = tuple(Path(p) for p in (directory, feed_directory, policy_file, schemas_file))
     if any(not p.is_absolute() for p in paths):
         raise ValueError("Absolute existing-owner and feed paths required")
     directory, feed_directory, policy_file, schemas_file = paths
+    pending = directory.parent / "price-options-upgrade.json"
+    if pending.exists() and (_upgrade_review is None or json.loads(read(pending, 512 * 1024)).get("review_sha256") != _upgrade_review):
+        raise ValueError("Complete the pending strategy amendment before starting a runtime")
     settings = load(directory / "runtime.json")
     policy = FeedPolicy.model_validate_json(read(policy_file, 256 * 1024))
     schemas = ReadSchemas.model_validate_json(read(schemas_file, 256 * 1024))
@@ -110,6 +113,8 @@ def check(directory, feed_directory, policy_file, schemas_file, *, clock_source=
     # Execution freezes the venue's absolute path at enrollment. A second bind
     # mount may expose identical files but is only valid as a display source.
     with observer.read() as db:
+        from app.mixed.strategy_upgrade import accepted_owner_hashes
+        accepted = accepted_owner_hashes(db, state["owner_configuration_sha256"])
         frozen = json.loads(
             db.execute("SELECT config_json FROM execution_control WHERE id=1").fetchone()[0]
         )
@@ -128,7 +133,7 @@ def check(directory, feed_directory, policy_file, schemas_file, *, clock_source=
 
         try:
             rows = load_rollovers(db, policy, schemas)
-            verify_owner(rows, state["owner_configuration_sha256"])
+            verify_owner(rows, state["owner_configuration_sha256"], accepted)
         except ValueError:
             raise ValueError("Collector settings differ or rollover evidence is invalid") from None
         target = clock_source().astimezone(ZoneInfo("America/New_York")).date()
@@ -141,6 +146,7 @@ def check(directory, feed_directory, policy_file, schemas_file, *, clock_source=
             directory=feed_directory,
             now=clock_source(),
         )
+        result["accepted_owner_hashes"] = accepted
         result["rollover_sessions"] = [r.target_session.isoformat() for r in rows]
         result["effective_policy_sha256"] = fingerprint(effective)
     result.update(
@@ -380,12 +386,15 @@ async def run(
             async def collect(stop):
                 if not await await_ready(ready, stop):
                     return
+                from app.mixed.scope_feed import owner_state as scope_owner_state
                 operation = feed.run(
                     stop,
                     clock_source=clock_source,
                     held_source=lambda: held_from_observer(observer),
                     calendar=XNYSCalendar(),
                     source_settings=enrolled,
+                    **({"scope_state": lambda binding: scope_owner_state(observer, binding)}
+                       if feed.policy.scope_binding or any(r.policy.scope_binding for r in feed.rollovers) else {}),
                 )
                 if resume_flat_reviewed_revision is None:
                     await operation

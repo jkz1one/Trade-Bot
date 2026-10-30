@@ -190,3 +190,45 @@ def test_collector_budget_survives_restart_and_conflicting_identity_rejected(tmp
             planned(p, (altered,), AT, None, cycle=False)
     finally:
         feed.close()
+
+
+def test_eight_candidates_and_two_held_options_have_complete_bounded_delivery(tmp_path, schemas):
+    from uuid import NAMESPACE_URL, uuid5
+    from app.options.models import OptionInstrument
+    catalog = []
+    for n in range(10):
+        value = instrument().model_dump()
+        value['instrument_id'] = str(uuid5(NAMESPACE_URL, f'bounded-option-{n}'))
+        value['contract']['strike'] += n
+        value['contract'].update(expiration=AT.date(), last_trading_at=AT+timedelta(hours=6),
+                                 expires_at=AT+timedelta(hours=7), settles_at=AT+timedelta(days=1))
+        catalog.append(OptionInstrument.model_validate(value))
+    p = FeedPolicy.model_validate(policy().model_dump() | {'candidates': catalog[:8]})
+    seen = []
+
+    async def capture(config, *, schemas, plan):
+        seen.append(plan)
+        rows = []
+        for call in plan.calls:
+            if call.tool == 'get_equity_quotes':
+                values = [{'quote': equity(s)} for s in call.arguments['symbols']]
+            else:
+                values = [{'quote': option() | {'instrument_id': identity}}
+                          for identity in call.arguments['instrument_ids']]
+            rows.append({'label': call.label, 'tool': call.tool, 'completed': True, 'raw': envelope(values)})
+        return CaptureResult(request_id='c'*32, operation='CAPTURE', policy_sha256=policy_digest(config),
+            started_at=AT, collected_at=AT+timedelta(seconds=1), elapsed_seconds=1,
+            status='COMPLETE', schemas=schemas, plan=plan, observations=rows)
+
+    feed = ContinuousFeed(tmp_path / 'feed', p, schemas, create=True)
+    try:
+        result = asyncio.run(feed.tick(now=AT, held=tuple(catalog[8:]), reader=capture))
+        assert result['status'] == 'DELIVERED', result
+        calls = [c for c in seen[0].calls if c.tool == 'get_option_quotes']
+        assert [len(c.arguments['instrument_ids']) for c in calls] == [8, 2]
+        assert len(seen[0].instrument_ids) == 10
+        packet = read_packet(tmp_path / 'feed/feed.json')
+        assert len(packet.frame.quotes) == 8 and len(packet.frame.held_quotes) == 2
+        assert {q.instrument.instrument_id for q in (*packet.frame.quotes, *packet.frame.held_quotes)} == {i.instrument_id for i in catalog}
+    finally:
+        feed.close()

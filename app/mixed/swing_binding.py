@@ -10,7 +10,7 @@ from app.mixed.sources import StockDailyHistory, StockSwingPolicy, StockSwingSou
 from app.mixed.stock_models import StockInstrument
 from app.mixed.swing_feed import SwingHistorySnapshot
 from app.options.engine import fingerprint
-from app.options.models import OptionInstrument, OptionRecord
+from app.options.models import OptionInstrument, OptionRecord, paper_market_evidence
 from app.options.read_mapping import instant
 from app.options.swing import (
     SwingBaseHistory,
@@ -31,6 +31,7 @@ from app.robinhood.schedule import XNYSCalendar
 class SwingBindingPolicy(OptionRecord):
     version: Literal["native-swing-source-binding-v1"] = "native-swing-source-binding-v1"
     runtime_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    observed_simulation: Literal["robinhood-observed-v1"] | None = Field(default=None, exclude_if=lambda v: v is None)
     stocks: tuple[StockInstrument, ...] = Field(min_length=1, max_length=2)
     stock_policy: StockSwingPolicy | None = None
     option_policy: SwingPolicy | None = None
@@ -58,7 +59,9 @@ class BoundSwingSources(OptionRecord):
     live_enabled: Literal[False] = False
 
 
-def policy_from_settings(settings, candidates, carry_intent=None):
+def policy_from_settings(settings, candidates, carry_intent=None, *, observed_simulation=None):
+    if observed_simulation is not None and settings.limits.mode != "PAPER":
+        raise ValueError("Observed Swing histories require PAPER runtime settings")
     if carry_intent is not None:
         carry_intent = SwingCarryIntent.model_validate(carry_intent.model_dump())
         if (
@@ -82,6 +85,7 @@ def policy_from_settings(settings, candidates, carry_intent=None):
             raise ValueError("Carry intent requires matching native asset enrollment")
     return SwingBindingPolicy(
         runtime_hash=fingerprint(settings),
+        observed_simulation=observed_simulation,
         stocks=settings.stock_policy.instruments,
         stock_policy=settings.stock_policy.swing,
         option_policy=settings.swing_policy,
@@ -110,6 +114,11 @@ def bind_sources(snapshot, policy, *, created_at):
     """Use exact original bars and native validators; unknown evidence stays blocked."""
     snapshot = SwingHistorySnapshot.model_validate(snapshot.model_dump())
     policy = SwingBindingPolicy.model_validate(policy.model_dump())
+    original_history_hash = fingerprint(snapshot)
+    if policy.observed_simulation is not None:
+        from app.mixed.observed_simulation import annotate
+
+        snapshot = annotate(snapshot)
     created_at = instant(created_at)
     calendar = XNYSCalendar()
     symbols = tuple(i.symbol for i in policy.stocks)
@@ -168,7 +177,7 @@ def bind_sources(snapshot, policy, *, created_at):
         )
     )
     for h in (*snapshot.daily, *(snapshot.hourly if needs_hourly else ())):
-        if h.entitlement != "REALTIME":
+        if not paper_market_evidence(h) or (h.simulation_basis is not None and policy.observed_simulation is None):
             blockers.append("SWING_HISTORY_ENTITLEMENT_REQUIRED:" + h.symbol)
         if not h.complete or not h.source_at <= h.received_at <= snapshot.captured_at:
             blockers.append("SWING_ORIGINAL_HISTORY_CLOCK_OR_COVERAGE:" + h.symbol)
@@ -290,7 +299,7 @@ def bind_sources(snapshot, policy, *, created_at):
         target_session=snapshot.target_session,
         created_at=created_at,
         policy_hash=fingerprint(policy),
-        history_hash=fingerprint(snapshot),
+        history_hash=original_history_hash,
         status="BLOCKED" if blockers else "PREPARED",
         blockers=tuple(sorted(set(blockers))),
         stocks=tuple(stocks) if not blockers else (),

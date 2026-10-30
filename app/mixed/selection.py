@@ -211,7 +211,7 @@ def collect(c, key, frame, evidence):
             ):
                 raise ValueError("STOCK_SWING_NOT_ENROLLED")
             if c.stock_policy.swing is not None and not frame.swing_unavailable:
-                if item.swing is None or item.catalyst is None:
+                if item.swing is None or (item.catalyst is None and c.stock_policy.swing.input_basis is None):
                     raise ValueError("STOCK_COMPLETE_SWING_SOURCE_REQUIRED")
                 lock(c, db, item)
             proposed, issues, terminals = candidates(

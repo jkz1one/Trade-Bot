@@ -7,7 +7,7 @@ from pydantic import Field, model_validator
 
 from app.execution.engine import ExecutionBlocked
 from app.options.engine import fingerprint
-from app.options.models import Name, OptionRecord, UnderlyingQuote
+from app.options.models import Name, OptionRecord, UnderlyingObservation
 from app.options.scope import ScopePreflightInput
 from app.options.scope_context import ScopeContextInput
 from app.options.scope_watch import ScopeWatchPolicy
@@ -42,7 +42,7 @@ class ScopeCycleInput(OptionRecord):
     play_key: Name
     frame: ScopePreflightInput
     context: ScopeContextInput
-    underlying: UnderlyingQuote
+    underlying: UnderlyingObservation
 
 
 def configuration(db):

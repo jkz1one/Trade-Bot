@@ -15,7 +15,7 @@ from app.options.models import (
     OptionQuote,
     OptionRecord,
     SessionWindow,
-    UnderlyingQuote,
+    UnderlyingObservation,
 )
 from app.options.scope_entry import ScopeEntryBinding
 from app.options.scope_management import ScopeManagementReview
@@ -30,7 +30,7 @@ class ScopeReasoningEvidence(OptionRecord):
     geometry: ScopeGeometry
     instrument: OptionInstrument
     quote: OptionQuote
-    underlying: UnderlyingQuote
+    underlying: UnderlyingObservation
     proposal: OptionProposal
     admission: OptionAdmission
     management: ScopeManagementReview

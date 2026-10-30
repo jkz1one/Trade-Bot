@@ -423,9 +423,14 @@ def stored_policy(db, limits, read_json):
         "SELECT occurred_at FROM execution_events WHERE kind='SCOPE_WATCH_ACTION' "
         "ORDER BY sequence DESC LIMIT 1"
     ).fetchone()
+    from app.mixed.strategy_upgrade import amendment
+    changed = amendment(db)
+    original_policy = changed['old_settings']['scope_policy']['watch'] if changed else policy.model_dump(mode="json")
+    if changed and changed['new_settings']['scope_policy']['watch'] != policy.model_dump(mode="json"):
+        raise ValueError('Scope amendment differs from the current watch policy')
     if (
         len(enrollment) != 1
-        or read_json(enrollment[0]["payload"]) != policy.model_dump(mode="json")
+        or read_json(enrollment[0]["payload"]) != original_policy
         or last_action != _stamp((latest or enrollment[0])["occurred_at"])
     ):
         raise ValueError("Stored Scope policy/action clock lost its enrollment binding")

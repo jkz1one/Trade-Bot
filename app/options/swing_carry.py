@@ -25,7 +25,7 @@ from app.options.models import (
     OptionQuote,
     OptionRecord,
     SessionWindow,
-    UnderlyingQuote,
+    UnderlyingObservation,
 )
 from app.options.selection import ContractReadPlan, ContractSelectionPolicy
 from app.options.swing import (
@@ -55,7 +55,7 @@ class SwingCarryRequest(OptionRecord):
     item: SwingInput
     history: DegenHistory
     quote: OptionQuote | None
-    underlying: UnderlyingQuote | None
+    underlying: UnderlyingObservation | None
     account: OptionAccount
     retained_terminal: SwingTerminal | None = None
 
@@ -90,7 +90,7 @@ def _calendar_path(r, calendar):
         r.item.seed.instrument.contract,
         r.execution.expiry_guard_seconds,
     )
-    if deadline is not None and r.item.catalyst.valid_through < deadline:
+    if deadline is not None and (r.item.catalyst is None or r.item.catalyst.valid_through < deadline):
         reasons += ("SWING_CARRY_CATALYST_HORIZON",)
     return path, deadline, reasons
 

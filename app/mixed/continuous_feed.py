@@ -20,6 +20,7 @@ from app.mixed.carry import SwingCarryIntent
 from app.mixed.sources import StockCycleInput
 from app.mixed.stock_models import StockInstrument
 from app.mixed.swing_feed import SwingHistoryPolicy
+from app.mixed.scope_feed import ScopeFeedBinding
 from app.options.coordinator import DegenFrame
 from app.options.earnings_context import CompanyEarningsBinding, for_delivery
 from app.options.engine import clock, fingerprint
@@ -45,12 +46,15 @@ class FeedPolicy(OptionRecord):
         default=None, exclude_if=lambda v: v is None
     )
     stocks: tuple[StockInstrument, ...] = Field(min_length=1, max_length=2)
-    candidates: tuple[OptionInstrument, ...] = Field(default=(), max_length=6)
+    candidates: tuple[OptionInstrument, ...] = Field(default=(), max_length=8)
     poll_seconds: int = Field(default=10, strict=True, ge=5, le=30)
     calls_per_minute: int = Field(default=24, strict=True, ge=1, le=120)
     capture: CapturePolicy
     swing_history: SwingHistoryPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
     company_earnings: CompanyEarningsBinding | None = Field(default=None, exclude_if=lambda v: v is None)
+    swing_observed_simulation: Literal["robinhood-observed-v1"] | None = Field(default=None, exclude_if=lambda v: v is None)
+
+    scope_binding: ScopeFeedBinding | None = Field(default=None, exclude_if=lambda v: v is None)
 
     carry_intents: tuple[SwingCarryIntent, ...] = Field(
         default=(), max_length=32, exclude_if=lambda v: not v
@@ -58,8 +62,12 @@ class FeedPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def carry_schedule(self):
+        if self.swing_observed_simulation is not None and (self.observed_simulation is None or self.swing_history is None):
+            raise ValueError("Observed Swing requires explicit PAPER data basis and history enrollment")
         if any(i.simulation_terms is not None for i in self.candidates) and self.observed_simulation is None:
             raise ValueError("Simulated contract terms require explicit observed simulation")
+        if self.scope_binding is not None and (self.observed_simulation is None or len(self.candidates) > 7):
+            raise ValueError("Scope requires observed PAPER data and one reserved candidate slot")
         sessions = tuple(i.target_session for i in self.carry_intents)
         if len(set(sessions)) != len(sessions) or (sessions and self.swing_history is None):
             raise ValueError("Unique carry sessions and explicit Swing history enrollment required")
@@ -79,29 +87,33 @@ def planned(policy, held, now, window, *, cycle):
         raise ValueError("Reviewed Robinhood instrument identities required")
     stock_ids = {i.instrument_id: i for i in policy.stocks}
     options = {i.instrument_id: i for i in policy.candidates if now < i.contract.last_trading_at}
+    scope = policy.scope_binding
+    if scope is not None and now < scope.instrument.contract.last_trading_at:
+        options[scope.instrument.instrument_id] = scope.instrument
     for i in held:
         if isinstance(i, StockInstrument):
             if stock_ids.get(i.instrument_id) != i:
                 raise ValueError("Held stock missing from reviewed feed universe")
         else:
-            if i.contract.underlying not in symbols:
+            if i.contract.underlying not in symbols and not (scope is not None and i.contract.underlying == "SPX" and i.contract.root == "SPXW"):
                 # Keep supported peers updating. The normalized envelope records
                 # this exact held contract as unavailable; no quote is invented.
                 continue
             if i.instrument_id in options and options[i.instrument_id] != i:
                 raise ValueError("Held option metadata conflicts with reviewed catalog")
             options[i.instrument_id] = i
-    if len(options) > 8:
+    if len(options) > 10:
         raise ValueError("Held plus candidate read capacity exceeded")
     calls = [
         ReadSample(label="equities", tool="get_equity_quotes", arguments={"symbols": list(symbols)})
     ]
-    if options:
+    ids = sorted(options)
+    for offset in range(0, len(ids), 8):
         calls.append(
             ReadSample(
-                label="options",
+                label="options" if offset == 0 else "options-held-overflow",
                 tool="get_option_quotes",
-                arguments={"instrument_ids": sorted(options)},
+                arguments={"instrument_ids": ids[offset:offset + 8]},
             )
         )
     if cycle and window is not None:
@@ -142,6 +154,8 @@ def normalize(
     source_settings=None,
     swing_sources=None,
     swing_evidence=None,
+    scope_capture=None,
+    scope_record=None,
 ):
     """A successful transport never upgrades unknown data into execution authority."""
     captured = CaptureResult.model_validate(captured.model_dump())
@@ -164,7 +178,7 @@ def normalize(
             or (
                 policy.swing_history is not None
                 and c.label.startswith("swing-")
-                and c.arguments.get("interval") in {"day", "hour"}
+                and c.arguments.get("interval") in {"day", "hour", "30minute"}
             )
         )
     )
@@ -205,16 +219,20 @@ def normalize(
                 unavailable(call)
                 continue
             raise ValueError("Required original market read incomplete")
+        from app.options.read_mapping import instant
+        received = instant(receipt.get("received_at", captured.collected_at))
+        if not captured.started_at <= received <= captured.collected_at:
+            raise ValueError("Original receipt outside capture clocks")
         args = (schemas, call, receipt["raw"])
         if call.tool == "get_equity_quotes":
             for one, raw in available_quotes(*args, issues=issues):
                 try:
-                    u = equity_quotes(schemas, one, raw, received_at=captured.collected_at)
+                    u = equity_quotes(schemas, one, raw, received_at=received)
                     s = stock_quotes(
                         schemas,
                         one,
                         raw,
-                        received_at=captured.collected_at,
+                        received_at=received,
                         instruments=tuple(
                             i for i in policy.stocks if i.symbol in one.arguments["symbols"]
                         ),
@@ -230,10 +248,10 @@ def normalize(
                 )
                 try:
                     q = option_quotes(
-                        schemas, one, raw, received_at=captured.collected_at, instruments=items
+                        schemas, one, raw, received_at=received, instruments=items
                     )
                     m = option_metadata(
-                        schemas, one, raw, received_at=captured.collected_at, instruments=items
+                        schemas, one, raw, received_at=received, instruments=items
                     )
                     quotes += q
                     metadata += m
@@ -245,7 +263,7 @@ def normalize(
                 # pre-open cache. It is not a current intraday strategy frame.
                 continue
             try:
-                histories = equity_history(*args, received_at=captured.collected_at)
+                histories = equity_history(*args, received_at=received)
             except (ValueError, TypeError, ArithmeticError, SchemaError):
                 if call not in optional:
                     raise
@@ -256,6 +274,8 @@ def normalize(
         issues.append("CAPTURE_INCOMPLETE")
     held_ids = {i.instrument_id for i in held}
     candidate_ids = {i.instrument_id for i in policy.candidates}
+    if policy.scope_binding is not None:
+        candidate_ids.add(policy.scope_binding.instrument.instrument_id)
     candidate_quotes = tuple(q for q in quotes if q.instrument.instrument_id in candidate_ids)
     held_quotes = tuple(
         q
@@ -281,7 +301,7 @@ def normalize(
                     expiration=items[0].instrument.contract.expiration,
                     source=items[0].source,
                     source_at=min(m.source_at for m in items),
-                    received_at=captured.collected_at,
+                    received_at=max(m.received_at for m in items),
                     entitlement="UNKNOWN",
                     complete=all(m.complete for m in items),
                     contracts=items,
@@ -296,6 +316,7 @@ def normalize(
         histories=histories,
         inventories=tuple(inventories),
     )
+    scope_action = None
     if source_settings is not None:
         if (
             source_settings.limits.population_id != policy.population_id
@@ -317,6 +338,7 @@ def normalize(
                     source_settings,
                     policy.candidates,
                     carry_intent_for(policy, now.astimezone(ZoneInfo("America/New_York")).date()),
+                    observed_simulation=policy.swing_observed_simulation,
                 ),
                 metadata,
                 swing_evidence,
@@ -330,6 +352,17 @@ def normalize(
                         "stocks": tuple(StockCycleInput(quote=x.quote) for x in frame.stocks),
                     }
                 )
+        if policy.scope_binding is not None:
+            from app.mixed.scope_feed import deliver
+            try:
+                frame, scope_action, scope_issues = deliver(
+                    policy.scope_binding, scope_capture, frame, metadata, now=now,
+                    settings=source_settings, sequence=sequence, record=scope_record)
+            except (ValueError, KeyError, TypeError, ArithmeticError):
+                # Reject this optional strategy's evidence, not its usable peers.
+                # No provider payload or inferred substitute enters the packet.
+                scope_action, scope_issues = None, ('SCOPE_INPUT_REJECTED',)
+            issues.extend(scope_issues)
         if source_settings.scope_policy is not None and frame.scope is None:
             issues.append("SCOPE_CURRENT_INPUT_UNAVAILABLE")
     elif swing_sources is not None or swing_evidence is not None:
@@ -339,14 +372,14 @@ def normalize(
     # block the cycle; active Scope watches retain their native coverage guard.
     cycle_issues = [
         issue for issue in issues
-        if issue != "SCOPE_CURRENT_INPUT_UNAVAILABLE"
+        if not issue.startswith(("SCOPE_", "SPX_"))
         and not (
             frame.swing_unavailable
             and (issue.startswith("SWING_") or issue in history_issues)
         )
     ]
     cycle = bool(histories) and len(stocks) == len(policy.stocks) and not cycle_issues
-    if not cycle:
+    if not cycle or scope_action is not None:
         frame = market_frame(frame)
     if policy.observed_simulation is not None:
         if source_settings is None or source_settings.limits.mode != "PAPER":
@@ -358,14 +391,15 @@ def normalize(
         population_id=policy.population_id,
         sequence=sequence,
         recorded_at=now,
-        kind="CYCLE" if cycle else "MARKET",
+        kind="WATCH" if scope_action else ("CYCLE" if cycle else "MARKET"),
+        action=scope_action,
         company_earnings=for_delivery(policy.company_earnings, now),
         coverage_issues=tuple(issues)
         + tuple(
             "UNREVIEWED_HELD_MAPPING:" + i.instrument_id
             for i in held
             if isinstance(i, OptionInstrument)
-            and i.contract.underlying not in {s.symbol for s in policy.stocks}
+            and i.contract.underlying not in {*[s.symbol for s in policy.stocks], *( ["SPX"] if policy.scope_binding else [])}
         ),
         frame=frame,
     )
@@ -588,6 +622,7 @@ class ContinuousFeed:
         reader=collect,
         source_settings=None,
         swing_evidence=None,
+        scope_state=None,
     ):
         now = clock(now)
         last = self.db.execute("SELECT * FROM attempts ORDER BY sequence DESC LIMIT 1").fetchone()
@@ -610,12 +645,15 @@ class ContinuousFeed:
         )
         target_day = now.astimezone(ZoneInfo("America/New_York")).date()
         effective = self.policy_for(target_day)
-        plan, catalog = planned(effective, held, now, window, cycle=cycle)
+        scope_binding = effective.scope_binding
+        scope_enabled = scope_binding is not None and scope_binding.session.opens_at <= now < scope_binding.session.closes_at
+        plan, catalog = planned(effective, held, now, window, cycle=cycle or scope_enabled)
+        extra_calls = 3 if scope_enabled else 0
         used = self.db.execute(
             "SELECT COALESCE(SUM(calls),0) FROM attempts WHERE started_at>?",
             ((now - timedelta(minutes=1)).isoformat(),),
         ).fetchone()[0]
-        if used + len(plan.calls) > self.policy.calls_per_minute:
+        if used + len(plan.calls) + extra_calls > self.policy.calls_per_minute:
             return {"status": "RATE_LIMITED"}
         history_calls = ()
         if self.policy.swing_history is not None:
@@ -640,7 +678,8 @@ class ContinuousFeed:
             if (
                 target is not None
                 and self.swing_snapshot(target) is None
-                and used + len(plan.calls) + len(proposed) <= self.policy.calls_per_minute
+                and used + len(plan.calls) + len(proposed) + extra_calls <= self.policy.calls_per_minute
+                and len(plan.calls) + len(proposed) + extra_calls <= 8
                 and history_used + len(proposed) <= self.policy.calls_per_minute - quote_reserve
             ):
                 history_calls = proposed
@@ -650,7 +689,7 @@ class ContinuousFeed:
         sequence = (last["sequence"] if last else 0) + 1
         self.db.execute(
             "INSERT INTO attempts VALUES(?,?,?,'STARTED',?,NULL,NULL,NULL)",
-            (sequence, now.isoformat(), len(plan.calls), fingerprint(plan)),
+            (sequence, now.isoformat(), len(plan.calls) + extra_calls, fingerprint(plan)),
         )
         if history_calls:
             self.db.execute(
@@ -658,7 +697,30 @@ class ContinuousFeed:
             )
         self.db.commit()
         try:
-            captured = await reader(self.policy.capture, schemas=self.schemas, plan=plan)
+            scope_capture = None
+            scope_record = None
+            if scope_enabled:
+                if scope_state is None:
+                    raise ValueError("Connected Scope requires native watch state")
+                scope_record = scope_state(scope_binding)
+                if scope_record is None:
+                    sent = self.db.execute("SELECT 1 FROM attempts WHERE json_extract(packet_json, '$.action.kind')='CALL' AND json_extract(packet_json, '$.action.play_key')=? LIMIT 1", (scope_binding.play_key(),)).fetchone()
+                    if sent:
+                        scope_record = {'status': 'CALL_ALREADY_DELIVERED'}
+            captured = await reader(self.policy.capture, schemas=self.schemas, plan=plan,
+                                    **({"scope_input": True} if scope_enabled else {}))
+            if scope_enabled:
+                if not captured.scope_requested:
+                    raise ValueError("Combined Scope capture missing its requested evidence")
+                scope_capture = CaptureResult(
+                    request_id=captured.request_id, policy_sha256=captured.policy_sha256,
+                    operation="SCOPE_INPUT", started_at=captured.started_at,
+                    collected_at=captured.collected_at, elapsed_seconds=captured.elapsed_seconds,
+                    status="FAILED" if captured.scope_error_class else "COMPLETE",
+                    error_class=captured.scope_error_class, observations=captured.scope_observations)
+                self.db.execute("CREATE TABLE IF NOT EXISTS scope_read_receipts(sequence INTEGER PRIMARY KEY, capture_json TEXT NOT NULL)")
+                self.db.execute("INSERT INTO scope_read_receipts VALUES(?,?)", (sequence, scope_capture.model_dump_json()))
+                self.db.commit()
             self.db.execute(
                 "UPDATE attempts SET raw_json=? WHERE sequence=?",
                 (captured.model_dump_json(), sequence),
@@ -707,10 +769,11 @@ class ContinuousFeed:
                 source_settings=source_settings,
                 swing_sources=bound,
                 swing_evidence=swing_evidence,
+                scope_capture=scope_capture, scope_record=scope_record,
             )
 
             def quotes(frame):
-                return {
+                result = {
                     q.instrument.instrument_id: q
                     for q in (
                         *frame.quotes,
@@ -718,6 +781,11 @@ class ContinuousFeed:
                         *(s.quote for s in frame.stocks),
                     )
                 }
+                from app.options.models import IndexReference
+                for ref in (*frame.underlyings, *frame.held_underlyings):
+                    if isinstance(ref, IndexReference):
+                        result['INDEX:' + ref.symbol] = ref
+                return result
 
             unchecked = quotes(packet.frame)
             # Missing deliveries never erase a subject's last original source
@@ -736,8 +804,8 @@ class ContinuousFeed:
                         q.source_at < old.source_at
                         or (
                             q.source_at == old.source_at
-                            and q.model_dump(exclude={"received_at"})
-                            != old.model_dump(exclude={"received_at"})
+                            and q.model_dump(exclude={"received_at", "receipt_sha256", "provider_updated_at"})
+                            != old.model_dump(exclude={"received_at", "receipt_sha256", "provider_updated_at"})
                         )
                     ):
                         raise ValueError("Source evidence regressed or changed at the same clock")
@@ -797,7 +865,8 @@ class ContinuousFeed:
         bound = BoundSwingSources.model_validate_json(row["payload_json"])
         effective = self.policy_for(target)
         policy = policy_from_settings(
-            settings, effective.candidates, carry_intent_for(effective, target)
+            settings, effective.candidates, carry_intent_for(effective, target),
+            observed_simulation=effective.swing_observed_simulation,
         )
         if (
             bound.created_at > clock(now)
@@ -849,7 +918,8 @@ class ContinuousFeed:
             }
         effective = self.policy_for(target.date())
         policy = policy_from_settings(
-            settings, effective.candidates, carry_intent_for(effective, target.date())
+            settings, effective.candidates, carry_intent_for(effective, target.date()),
+            observed_simulation=effective.swing_observed_simulation,
         )
         # Additive, derived evidence only. Existing history enrollment and raw
         # captures are untouched; no execution or fixture database is migrated.
@@ -876,7 +946,7 @@ class ContinuousFeed:
             "trading_ready": False,
         }
 
-    async def run(self, stop, *, clock_source, held_source, calendar, source_settings=None):
+    async def run(self, stop, *, clock_source, held_source, calendar, source_settings=None, scope_state=None):
         while not stop.is_set():
             now = clock(clock_source())
             await self.tick(
@@ -884,6 +954,7 @@ class ContinuousFeed:
                 held=held_source(),
                 window=calendar.current_window(now),
                 source_settings=source_settings,
+                scope_state=scope_state,
             )
             if source_settings is not None and self.policy.swing_history is not None:
                 self.bind_swing_sources(source_settings, now=clock_source())

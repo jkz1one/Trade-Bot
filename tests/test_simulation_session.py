@@ -104,3 +104,50 @@ def test_catalog_proposal_reports_stale_analytic_drift_without_promoting_it(capt
     assert not evidence['all_fresh_at_capture'] and not evidence['source_clock_advanced']
     assert not report['trading_ready'] and report['entitlement'] == 'UNKNOWN'
     assert len(policy.candidates) == 4
+
+
+def test_observed_swing_history_is_an_explicit_rollover_change(captures):
+    from app.options.engine import fingerprint
+    _, base = configuration()
+    original = fingerprint(base)
+    target = date(2026, 10, 28)
+    default, _ = proposal(base, captures[0], captures[1:], target)
+    proposed, report = proposal(base, captures[0], captures[1:], target, observed_swing_history=True)
+    assert default.swing_observed_simulation is None
+    assert proposed.swing_observed_simulation == 'robinhood-observed-v1'
+    assert proposed.swing_history.bar_mapping == 'utc-day-halfhour-v1'
+    assert not report['trading_ready'] and 'Reviewed price/options-only owner policy or complete legacy catalyst evidence' in report['swing_remaining']
+    assert fingerprint(base) == original
+    assert validate_policy(base, proposed, target, datetime(2026, 10, 28, 12, tzinfo=UTC))
+
+
+def future_catalog(captures, expiration='2026-11-06'):
+    # Deliberately synthetic future-contract evidence; never market acceptance.
+    import json
+    from uuid import NAMESPACE_URL, uuid5
+    from app.mixed.contract_catalog import review
+    value = json.dumps(captures).replace('2026-10-28', expiration)
+    for row in review(captures[0], captures[1:])['contracts']:
+        identity = row['provider_record']['id']
+        value = value.replace(identity, str(uuid5(NAMESPACE_URL, 'synthetic-swing:' + identity)))
+    return json.loads(value)
+
+
+def test_reviewed_future_swing_and_same_day_degen_share_session(captures):
+    _, base = configuration()
+    target = date(2026, 10, 28)
+    swing = future_catalog(captures)
+    policy, report = proposal(base, captures[0], captures[1:], target,
+        observed_swing_history=True, swing_contracts=swing[0], swing_samples=swing[1:])
+    assert len(policy.candidates) == 8
+    assert sum(i.contract.expiration == target for i in policy.candidates) == 4
+    assert len(report['swing_catalog']['contracts']) == 4
+    assert all(i.contract.last_trading_at.date() == i.contract.expiration for i in policy.candidates)
+    assert not report['swing_catalog']['overnight_carry'] and not report['trading_ready']
+    assert validate_policy(base, policy, target, datetime(2026, 10, 28, 12, tzinfo=UTC))
+    with pytest.raises(ValueError, match='explicit observed history'):
+        proposal(base, captures[0], captures[1:], target, swing_contracts=swing[0], swing_samples=swing[1:])
+    bad = future_catalog(captures, '2026-10-30')
+    with pytest.raises(ValueError, match='7-45 DTE'):
+        proposal(base, captures[0], captures[1:], target, observed_swing_history=True,
+                 swing_contracts=bad[0], swing_samples=bad[1:])

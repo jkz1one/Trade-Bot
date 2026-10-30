@@ -29,6 +29,7 @@ ScopePattern = Literal[
     "trap_reversal",
 ]
 PATTERNS = get_args(ScopePattern)
+PRICE_PATTERNS = ("opening_range_break_hold", "compression_expansion", "failed_break_reversal", "trap_reversal")
 REVERSALS = frozenset(PATTERNS[5:])
 
 
@@ -158,19 +159,20 @@ def _scan(frame, policy, base):
     bars = histories["SPX"].bars
     if len(bars) < 5:
         issues.append("FIVE_COMPLETED_SPX_BARS_REQUIRED")
-    if any(b.volume <= 0 for b in bars):
+    price_only = policy.preflight.input_basis is not None
+    if not price_only and any(b.volume is None or b.volume <= 0 for b in bars):
         issues.append("COMPLETE_VOLUME_BACKED_SPX_VWAP_REQUIRED")
     if issues:
         return ScopeStructureScan(**base, issues=tuple(issues))
-    vwap = sum(((b.high + b.low + b.close) * b.volume for b in bars), Decimal(0)) / (
+    vwap = None if price_only else sum(((b.high + b.low + b.close) * b.volume for b in bars), Decimal(0)) / (
         3 * sum(b.volume for b in bars)
     )
     high, low = max(b.high for b in bars[:3]), min(b.low for b in bars[:3])
     changes = {s: h.bars[-1].close / h.bars[0].open - 1 for s, h in histories.items()}
-    pattern_values = _patterns(bars, high, low, vwap, policy)
+    pattern_values = _price_patterns(bars, high, low, policy) if price_only else _patterns(bars, high, low, vwap, policy)
     observations = []
     c = frame.metadata.instrument.contract
-    for pattern in PATTERNS:
+    for pattern in PRICE_PATTERNS if price_only else PATTERNS:
         for right, sign in (("CALL", 1), ("PUT", -1)):
             geometry, reasons = None, []
             values = pattern_values.get((pattern, right))
@@ -179,6 +181,12 @@ def _scan(frame, policy, base):
                 status = "WATCHING"
             else:
                 reference, stop, neutral_pending = values
+                if price_only:
+                    # This variant confirms completed price patterns. Freeze its
+                    # risk ladder from the confirmation close, not the already
+                    # crossed breakout/reclaim level. Current admission still
+                    # checks remaining reward and all intervening known levels.
+                    reference = bars[-1].close
                 risk = (reference - stop) * sign
                 if risk <= 0:
                     reasons.append("INVALID_STRUCTURAL_RISK")
@@ -225,10 +233,40 @@ def _scan(frame, policy, base):
         completed_through=bars[-1].ends_at,
         opening_high=high,
         opening_low=low,
-        vwap=_metric(vwap, ROUND_HALF_EVEN),
+        vwap=_metric(vwap, ROUND_HALF_EVEN) if vwap is not None else None,
         changes={s: _metric(v, ROUND_HALF_EVEN) for s, v in changes.items()},
         observations=tuple(observations),
     )
+
+
+def _price_patterns(bars, opening_high, opening_low, policy):
+    """Price-only rules: no fabricated index volume, VWAP or external context."""
+    rows = bars[-8:]
+    latest, previous = rows[-1], rows[-2]
+    close, prev = latest.close, previous.close
+    lows, highs = min(b.low for b in rows[-3:]), max(b.high for b in rows[-3:])
+    prior_high, prior_low = max(b.high for b in rows[-4:-1]), min(b.low for b in rows[-4:-1])
+    values = {}
+    for right, sign in (("CALL", 1), ("PUT", -1)):
+        boundary = opening_high if sign == 1 else opening_low
+        stop = lows if sign == 1 else highs
+        if (close - boundary) * sign > 0 and (prev - boundary) * sign >= 0:
+            values["opening_range_break_hold", right] = boundary, stop, False
+        edge = prior_high if sign == 1 else prior_low
+        if (prior_high - prior_low <= (opening_high - opening_low) * policy.compression_fraction
+                and (close - edge) * sign > 0):
+            values["compression_expansion", right] = close, prior_low if sign == 1 else prior_high, False
+        opposite = opening_low if sign == 1 else opening_high
+        excursion = previous.low < opposite if sign == 1 else previous.high > opposite
+        if excursion and (prev - opposite) * sign <= 0 and (close - opposite) * sign > 0:
+            values["failed_break_reversal", right] = opposite, stop, True
+        if len(rows) >= 6:
+            trapped = rows[-3].low < opposite if sign == 1 else rows[-3].high > opposite
+            if (trapped and (rows[-3].close - opposite) * sign <= 0
+                    and (prev - opposite) * sign > 0 and (close - prev) * sign > 0):
+                for pattern in ("trap_reversal", "failed_break_reversal"):
+                    values[pattern, right] = opposite, stop, False
+    return values
 
 
 def _patterns(bars, opening_high, opening_low, vwap, policy):

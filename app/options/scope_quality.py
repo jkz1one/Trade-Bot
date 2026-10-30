@@ -54,6 +54,9 @@ class ScopeQualityPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def ordered_scores(self):
+        if (self.context.structure.preflight.input_basis is not None
+                and self.structural_path != "completed-spx-plateaus-v2"):
+            raise ValueError("Price/options Scope requires completed structural path review")
         if not self.observe_score <= self.watching_score <= self.arm_score <= self.convexity_score:
             raise ValueError("Ordered Scope quality thresholds required")
         return self
@@ -188,9 +191,11 @@ def _review(o, frame, context, policy, scan):
     )
     add("CROSS_MARKET_CONFIRMATION", 4 if confirmations == 2 else 3)
     aligned = "BULLISH" if sign == 1 else "BEARISH"
-    add("OPTIONS_FLOW", 2 if context.flow.state == aligned else 0)
-    add("BROAD_MARKET_NEWS", 1 if context.news.state == aligned else 0)
-    add("ECONOMIC_EVENTS", 2 if context.events.state == "CLEAR" else -2)
+    price_only = policy.context.structure.preflight.input_basis is not None
+    if not price_only:
+        add("OPTIONS_FLOW", 2 if context.flow.state == aligned else 0)
+        add("BROAD_MARKET_NEWS", 1 if context.news.state == aligned else 0)
+        add("ECONOMIC_EVENTS", 2 if context.events.state == "CLEAR" else -2)
     risk = abs(g.reference - g.invalidation)
     reward = abs(g.target_one - g.reference)
     reasons = []
@@ -199,12 +204,13 @@ def _review(o, frame, context, policy, scan):
         reasons.append("FIRST_TARGET_REWARD_BELOW_MINIMUM")
     add("FIRST_TARGET_REWARD", 2 if reward >= 2 * risk else 0)
     spot = next(h.bars[-1].close for h in frame.histories if h.symbol == "SPX")
-    consumed = (
-        abs(spot - (scan.structure.opening_high + scan.structure.opening_low) / 2)
-        / context.moves.atm_straddle_move
-    )
-    add("EXPECTED_MOVE_REMAINING", 3 if consumed <= Decimal(".5") else 1)
-    add("DEALER_CONTEXT_PRESENT", 1)
+    if not price_only:
+        consumed = (
+            abs(spot - (scan.structure.opening_high + scan.structure.opening_low) / 2)
+            / context.moves.atm_straddle_move
+        )
+        add("EXPECTED_MOVE_REMAINING", 3 if consumed <= Decimal(".5") else 1)
+        add("DEALER_CONTEXT_PRESENT", 1)
     score = max(0, min(100, base + sum(c.points for c in components)))
     grade = next(
         (
@@ -242,15 +248,17 @@ def _review(o, frame, context, policy, scan):
 def _known_path(frame, context, g, policy, spot, now):
     """Shared level set after bound coverage passes, from an explicit price origin."""
     sign = 1 if g.right == "CALL" else -1
-    levels = [("DEALER_NODE", n) for n in context.dealer.nodes]
-    levels.extend(
-        (
-            ("PRIOR_HIGH", context.prior.high),
-            ("PRIOR_LOW", context.prior.low),
-            ("ATM_UPPER", context.moves.reference_spot + context.moves.atm_straddle_move),
-            ("ATM_LOWER", context.moves.reference_spot - context.moves.atm_straddle_move),
+    price_only = policy.context.structure.preflight.input_basis is not None
+    levels = [] if price_only else [("DEALER_NODE", n) for n in context.dealer.nodes]
+    if not price_only:
+        levels.extend(
+            (
+                ("PRIOR_HIGH", context.prior.high),
+                ("PRIOR_LOW", context.prior.low),
+                ("ATM_UPPER", context.moves.reference_spot + context.moves.atm_straddle_move),
+                ("ATM_LOWER", context.moves.reference_spot - context.moves.atm_straddle_move),
+            )
         )
-    )
     path = tuple(
         ScopePathLevel(
             kind=kind, level=value, at_or_before_first_target=(value - g.target_one) * sign <= 0
@@ -263,7 +271,7 @@ def _known_path(frame, context, g, policy, spot, now):
             sorted(
                 (
                     *path,
-                    *_structural_path(frame, g, sign, spot=spot),
+                    *_structural_path(frame, g, sign, spot=spot, include_vwap=not price_only),
                     *(
                         _plateau_path(frame, g, sign, spot=spot)
                         if policy.structural_path == "completed-spx-plateaus-v2"
@@ -280,7 +288,7 @@ def _known_path(frame, context, g, policy, spot, now):
     return path
 
 
-def _structural_path(frame, geometry, sign, *, spot=None):
+def _structural_path(frame, geometry, sign, *, spot=None, include_vwap=True):
     """Only called after complete, hash-bound context/structure coverage passes.
 
     Exact rational comparisons keep displayed VWAP rounding out of every gate.
@@ -291,7 +299,9 @@ def _structural_path(frame, geometry, sign, *, spot=None):
     levels = [
         ("OPENING_HIGH", Fraction(max(b.high for b in bars[:3])), bars[2].ends_at),
         ("OPENING_LOW", Fraction(min(b.low for b in bars[:3])), bars[2].ends_at),
-        (
+    ]
+    if include_vwap:
+        levels.append((
             "SESSION_VWAP",
             sum(
                 (Fraction(b.high) + Fraction(b.low) + Fraction(b.close)) * Fraction(b.volume)
@@ -299,8 +309,7 @@ def _structural_path(frame, geometry, sign, *, spot=None):
             )
             / (3 * sum(Fraction(b.volume) for b in bars)),
             bars[-1].ends_at,
-        ),
-    ]
+        ))
     for left, center, right in zip(bars, bars[1:], bars[2:]):
         if center.high > max(left.high, right.high):
             levels.append(("PIVOT_HIGH", Fraction(center.high), right.ends_at))

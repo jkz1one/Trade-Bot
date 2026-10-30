@@ -21,7 +21,7 @@ from app.options.models import (
     OptionRecord,
     PositiveCount,
     Symbol,
-    UnderlyingQuote,
+    UnderlyingObservation,
 )
 
 ZERO = Decimal(0)
@@ -491,7 +491,7 @@ class OptionFill(OptionRecord):
     occurred_at: datetime
     quote_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
     quote: OptionQuote
-    underlying: UnderlyingQuote | None = Field(default=None, exclude_if=lambda v: v is None)
+    underlying: UnderlyingObservation | None = Field(default=None, exclude_if=lambda v: v is None)
 
 
 class OptionObservation(OptionRecord):

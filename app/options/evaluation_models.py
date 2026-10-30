@@ -16,7 +16,7 @@ from app.options.lifecycle import (
     OptionReceipt,
 )
 from app.options.loss_evidence import LossControlEvidence
-from app.options.models import Money, Name, OptionLimits, OptionRecord, UnderlyingQuote
+from app.options.models import Money, Name, OptionLimits, OptionRecord, UnderlyingObservation
 from app.robinhood.schedule import XNYSCalendar
 
 Arm = Literal["A", "B", "C", "D"]
@@ -212,8 +212,8 @@ class ArmSession(OptionRecord):
 
 class BenchmarkSession(OptionRecord):
     session_key: Name
-    start: UnderlyingQuote
-    end: UnderlyingQuote
+    start: UnderlyingObservation
+    end: UnderlyingObservation
 
 
 class EvaluationBundle(OptionRecord):

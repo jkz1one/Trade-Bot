@@ -1,5 +1,35 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.167. Integrate explicit Robinhood price/options Swing and Scope PAPER paths, 2026-10-30 UTC.
+
+The operator explicitly selected price/options-only Swing and Scope variants.
+Swing no longer requires a catalyst verdict in this variant; legacy requirements
+remain. Original complete pre-open histories, separate 7–45 DTE option catalogs,
+fresh quotes and native risk/protection remain mandatory.
+
+Scope now connects schema-pinned index reads, original completed histories and a
+non-executable IndexReference to native watch/arming/admission, option fills and
+protection. Four price patterns freeze risk from the completed confirmation close.
+No absent VWAP/dealer/news/macro/flow evidence earns points. Sampled arming allows
+30-second observation gaps without extending quote freshness or entry validity.
+One reviewed exact SPXW/session/pattern binding is required; it is not automatic
+whole-chain discovery or invented contract terms.
+
+A reviewed, restore-fenced, recoverable amendment upgrades the existing untraded
+PAPER owner in place. It preserves bankroll, journals, historical events, limits,
+budgets, simulator state and halt; no re-enrollment or automatic resume occurs.
+Combined reads stay within existing call/response bounds, retain original evidence
+and preserve usable peer quotes when optional strategy inputs fail.
+
+The final installed-package focused regression passes 173 tests, including native
+synthetic CALL/PUT lifecycles and interrupted-upgrade recovery. All 311 installed
+application files match source. Actual Swing placeholders, stale SPX values and unknown/interpolated
+SPX bars remain rejected. Exact SPXW evidence and current market acceptance are
+still missing. No host upgrade/deployment or connected dashboard activation was
+performed here. LIVE stays disabled. See [integration and rollout](SWING_SCOPE_ROBINHOOD.md).
+
+Previous version notes (historical):
+
 Version 1.166. Carry reviewed company calendars into connected runtime observations, 2026-10-29 EDT.
 
 The company-earnings mapper now has an explicit session integration path.

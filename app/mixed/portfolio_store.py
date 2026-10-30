@@ -199,7 +199,7 @@ def verify_order(engine, db, policy, row):
     from app.mixed.models import StockProposal
     from app.mixed.portfolio_admission import admit_portfolio_option
     from app.mixed.stock_models import StockQuote
-    from app.options.models import OptionProposal, OptionQuote, SessionWindow, UnderlyingQuote
+    from app.options.models import OptionProposal, OptionQuote, SessionWindow, parse_underlying
 
     i = intent(row)
     approval = json.loads(row["approval_json"])
@@ -244,7 +244,7 @@ def verify_order(engine, db, policy, row):
         reviewed = admit_portfolio_option(
             OptionProposal.model_validate(inputs["proposal"]),
             OptionQuote.model_validate(inputs["quote"]),
-            UnderlyingQuote.model_validate(inputs["underlying"]) if inputs["underlying"] else None,
+            parse_underlying(inputs["underlying"]) if inputs["underlying"] else None,
             h,
             window,
             now=i.prepared_at,

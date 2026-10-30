@@ -1,5 +1,6 @@
 """Dedicated durable local option venue. Scripted outcomes are not broker operations."""
 
+from app.options.models import parse_underlying
 import hashlib
 import json
 import os
@@ -35,7 +36,7 @@ from app.options.models import (
     OptionLimits,
     OptionQuote,
     OptionRecord,
-    UnderlyingQuote,
+    UnderlyingObservation,
 )
 
 
@@ -353,7 +354,7 @@ class DurableOptionVenue:
         if underlying is not None:
             from app.options.fill_evidence import validate_underlying
 
-            underlying = UnderlyingQuote.model_validate(underlying.model_dump(warnings=False))
+            underlying = parse_underlying(underlying.model_dump(warnings=False))
             validate_underlying(self.limits, intent, quote, underlying, at)
 
         def fill(state):

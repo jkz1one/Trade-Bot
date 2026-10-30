@@ -1,5 +1,6 @@
 """Exact-play option review and reservation on the common portfolio owner."""
 
+from app.options.models import parse_underlying
 import json
 from contextlib import nullcontext
 from datetime import datetime, timedelta
@@ -13,7 +14,7 @@ from app.mixed.portfolio_protection import entry_guard
 from app.mixed.portfolio_store import history, reserve
 from app.options.engine import clock, exact, fingerprint
 from app.options.lifecycle import OptionIntent
-from app.options.models import OptionProposal, OptionQuote, UnderlyingQuote
+from app.options.models import OptionProposal, OptionQuote, UnderlyingObservation
 
 
 @exact
@@ -42,7 +43,7 @@ def prepare(
     p = policy(engine)
     proposal = OptionProposal.model_validate(proposal.model_dump())
     quote = OptionQuote.model_validate(quote.model_dump()) if quote else None
-    underlying = UnderlyingQuote.model_validate(underlying.model_dump()) if underlying else None
+    underlying = parse_underlying(underlying.model_dump()) if underlying else None
     from app.options.lifecycle import (
         EntryPremiumProtection,
         EntryTimeProtection,
@@ -588,7 +589,7 @@ async def dispatch(engine, client_id, quote, underlying=None, *, now):
     started = time.monotonic()
     now = clock(now)
     quote = OptionQuote.model_validate(quote.model_dump())
-    underlying = UnderlyingQuote.model_validate(underlying.model_dump()) if underlying else None
+    underlying = parse_underlying(underlying.model_dump()) if underlying else None
     value = begin(engine, client_id, quote, underlying, now)
     if not isinstance(value, OptionIntent):
         return value

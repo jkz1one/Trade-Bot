@@ -168,6 +168,8 @@ def review_shared_entry(engine, db, key, proposal, quote, underlying, now):
     ):
         raise ExecutionBlocked("SWING_SEED_LOCK_REQUIRED")
     catalyst = scan.catalyst
+    if scan.input_basis != policy.input_basis:
+        raise ExecutionBlocked("SWING_INPUT_BASIS_CHANGED")
     if policy.unfilled_lifecycle in ("observed-invalidation-v2", "observed-lifecycle-v3"):
         from app.options.swing_lifecycle import quote_terminal, retain_owned_terminal
 
@@ -175,7 +177,10 @@ def review_shared_entry(engine, db, key, proposal, quote, underlying, now):
         if terminal is not None:
             retain_owned_terminal(engine, db, seed, terminal, now)
             raise ExecutionBlocked("SWING_SEED_TERMINAL")
-    if not _fresh(
+    if policy.input_basis is not None:
+        if catalyst is not None or scan.carry_terms is not None:
+            raise ExecutionBlocked("SWING_PRICE_OPTIONS_CATALYST_OR_CARRY")
+    elif catalyst is None or not _fresh(
         catalyst.source_at,
         catalyst.received_at,
         now,

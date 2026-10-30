@@ -1,5 +1,6 @@
 """Durable Scope watches and explicit native PAPER execution enrollment."""
 
+from app.options.models import parse_underlying
 import json
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -16,7 +17,7 @@ from app.options.models import (
     OptionProposal,
     OptionRecord,
     SessionWindow,
-    UnderlyingQuote,
+    UnderlyingObservation,
 )
 from app.options.scope import ScopePreflightInput
 from app.options.scope_admission import (
@@ -45,7 +46,14 @@ class ScopeDirectionResetPolicy(OptionRecord):
 class ScopeArmingPolicy(OptionRecord):
     version: Literal["scope-sampled-arming-v1"] = "scope-sampled-arming-v1"
     confirmation_hold_seconds: int = Field(strict=True, ge=60, le=600)
-    max_sample_gap_seconds: int = Field(strict=True, ge=1, le=10)
+    max_sample_gap_seconds: int = Field(strict=True, ge=1, le=30)
+    sampling_basis: Literal["robinhood-price-options-v1"] | None = Field(default=None, exclude_if=lambda v: v is None)
+
+    @model_validator(mode="after")
+    def explicit_sampling(self):
+        if self.max_sample_gap_seconds > 10 and self.sampling_basis is None:
+            raise ValueError("Legacy arming requires gaps of at most ten seconds")
+        return self
 
 
 class ScopeWatchPolicy(OptionRecord):
@@ -83,6 +91,8 @@ class ScopeWatchPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def matching_quality_context(self):
+        if self.arming and self.arming.sampling_basis is not None and self.context.structure.preflight.input_basis is None:
+            raise ValueError("Longer sampled gaps require the explicit observed price/options variant")
         if self.native_execution is not None and (
             self.entry_binding is None or self.direction_reset is None
         ):
@@ -673,7 +683,8 @@ class ScopeWatchBook:
     def _observe_quote(self, record, underlying, now):
         from app.options.scope_quote import TERMINALS, review_quote
 
-        result = review_quote(record, underlying, self.engine.limits, now)
+        result = review_quote(record, underlying, self.engine.limits, now,
+                              price_options=self.policy.context.structure.preflight.input_basis is not None)
         record["quote_review"] = result.model_dump(mode="json")
         if result.status not in {"REJECTED", "EXPIRED_UNFILLED"}:
             record["last_observed_quote"] = underlying.model_dump(mode="json")
@@ -690,7 +701,7 @@ class ScopeWatchBook:
         action = _Action(key=key, expected_revision=expected_revision)
         play_key = _Action(key=play_key, expected_revision=0).key
         if underlying is not None:
-            underlying = UnderlyingQuote.model_validate(underlying.model_dump(warnings=False))
+            underlying = parse_underlying(underlying.model_dump(warnings=False))
         request = {
             "kind": "OBSERVE_QUOTE",
             "action": action,
@@ -741,7 +752,9 @@ class ScopeWatchBook:
         if context is not None:
             context = ScopeContextInput.model_validate(context.model_dump(warnings=False))
         if underlying is not None:
-            underlying = UnderlyingQuote.model_validate(underlying.model_dump(warnings=False))
+            underlying = parse_underlying(underlying.model_dump(warnings=False))
+        if frame is not None and frame.index_reference is not None and frame.index_reference != underlying:
+            raise ExecutionBlocked("SCOPE_INDEX_REFERENCE_CONFLICT")
         request = {
             "kind": "REVIEW_ADMISSION",
             "action": action,
@@ -945,7 +958,7 @@ class ScopeWatchBook:
             entry_source(play_key, packet["binding"]["action_key"]),
             OptionProposal.model_validate(packet["proposal"]),
             OptionQuote.model_validate(packet["quote"]),
-            UnderlyingQuote.model_validate(packet["underlying"]),
+            parse_underlying(packet["underlying"]),
             ceiling=OptionAdmission.model_validate(packet["admission"]),
             target_exit_schedule=TargetExitSchedule.model_validate(
                 packet["management"]["target_exit_schedule"]
@@ -1017,17 +1030,21 @@ class ScopeWatchBook:
             result["contract_scan"] = contract_scan.model_dump(mode="json")
             if not self._contract_passed(contract_scan, record["choice"]):
                 raise ExecutionBlocked("SCOPE_WATCH_CONTRACT_BLOCKED")
-        # Every current stream must advance its source clock. Receipt-only refresh
-        # and repeated completed bars cannot stand in for new provider observations.
-        items = {"group:" + e.kind: e for e in frame.evidence}
-        items.update({"history:" + h.symbol: h for h in frame.histories})
-        items.update({"metadata": frame.metadata, "quote": frame.quote})
-        items.update(
-            {
-                "context:" + k: getattr(context, k)
-                for k in ("dealer", "moves", "flow", "news", "events")
-            }
-        )
+        # Historical bars advance only at completed interval boundaries. The
+        # explicit price variant instead samples new index and option clocks;
+        # preflight and prefix checks still require exact completed history.
+        price_only = self.policy.context.structure.preflight.input_basis is not None
+        if price_only:
+            if frame.index_reference is None:
+                raise ExecutionBlocked("SCOPE_WATCH_CURRENT_INDEX_REFERENCE_REQUIRED")
+            items = {"index_reference": frame.index_reference,
+                     "metadata": frame.metadata, "quote": frame.quote}
+        else:
+            items = {"group:" + e.kind: e for e in frame.evidence}
+            items.update({"history:" + h.symbol: h for h in frame.histories})
+            items.update({"metadata": frame.metadata, "quote": frame.quote})
+            items.update({"context:" + k: getattr(context, k)
+                          for k in ("dealer", "moves", "flow", "news", "events")})
         clocks = {k: item.source_at.isoformat() for k, item in items.items()}
         before = record.get("arming", {})
         watermark = before.get("source_clocks", {})
@@ -1048,6 +1065,8 @@ class ScopeWatchBook:
                 "quote": preflight.max_contract_age_seconds,
             }
         )
+        if price_only:
+            ages = {k: preflight.max_contract_age_seconds for k in items}
         # Limit sampling to genuinely current observations even if a source's
         # normal coverage policy permits much older data.
         if any(now - item.source_at > gap for item in items.values()):
@@ -1057,7 +1076,8 @@ class ScopeWatchBook:
         if (
             before.get("status") in ("HOLDING", "ARMED")
             and now > datetime.fromisoformat(before["evaluated_at"])
-            and now <= datetime.fromisoformat(before["valid_until"])
+            and now <= (datetime.fromisoformat(before["evaluated_at"]) + gap if price_only
+                        else datetime.fromisoformat(before["valid_until"]))
         ):
             started = datetime.fromisoformat(before["started_at"])
             count = before["sample_count"] + 1
@@ -1066,9 +1086,7 @@ class ScopeWatchBook:
             old.session.entry_cutoff_at,
             *(item.source_at + gap for item in items.values()),
             *(items[k].source_at + timedelta(seconds=age) for k, age in ages.items()),
-            context.flow.valid_through,
-            context.news.valid_through,
-            context.events.valid_through,
+            *(x.valid_through for x in (context.flow, context.news, context.events) if x is not None),
         )
         if valid_until <= now:
             raise ExecutionBlocked("SCOPE_WATCH_ARMING_SAMPLE_TOO_OLD")

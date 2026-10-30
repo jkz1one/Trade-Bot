@@ -22,7 +22,7 @@ from app.options.models import (
     OptionProposal,
     OptionQuote,
     OptionRecord,
-    UnderlyingQuote,
+    UnderlyingObservation,
 )
 from app.options.operator import OptionsControl, sign
 from app.options.operator_models import OptionsCommand
@@ -45,7 +45,7 @@ class ScopeNativeStep(OptionRecord):
     frame: ScopePreflightInput | None = None
     context: ScopeContextInput | None = None
     quote: OptionQuote | None = None
-    underlying: UnderlyingQuote | None = None
+    underlying: UnderlyingObservation | None = None
     quantity: int | None = Field(default=None, strict=True, ge=1, le=4)
     terminal: Literal["CANCELED", "EXPIRED", "REJECTED"] | None = None
     receipt: OptionReceipt | None = None

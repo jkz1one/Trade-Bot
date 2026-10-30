@@ -17,7 +17,8 @@ from app.options.models import (
     OptionInstrument,
     OptionRecord,
     Symbol,
-    UnderlyingQuote,
+    UnderlyingObservation,
+    paper_market_evidence,
 )
 from app.options.selection import ContractMetadata, ContractReadPlan, OptionInventory, _plan
 from app.options.swing_base_models import SwingBaseEvidence, SwingBasePolicy, SwingFamily
@@ -33,6 +34,7 @@ from app.options.swing_target_models import SwingTargetGeometry
 
 class SwingPolicy(OptionRecord):
     version: Literal["swing-next-session-v1"] = "swing-next-session-v1"
+    input_basis: Literal["robinhood-price-options-v1"] | None = Field(default=None, exclude_if=lambda v: v is None)
     history_source: Name
     catalyst_source: Name
     daily_lookback: int = Field(ge=3, le=260, strict=True)
@@ -60,6 +62,8 @@ class SwingPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def coherent(self):
+        if self.input_basis is not None and (self.carry is not None or self.holding_policy != "SESSION_CLOSE"):
+            raise ValueError("Price/options Swing is an intraday PAPER variant without catalyst-based carry")
         if self.family_batch is not None:
             if (
                 not any((self.daily_base, self.ma_pullback, self.higher_levels))
@@ -178,7 +182,7 @@ class CatalystEvidence(Evidence):
 class SwingInput(OptionRecord):
     seed: SwingSeed
     metadata: ContractMetadata
-    catalyst: CatalystEvidence
+    catalyst: CatalystEvidence | None
 
 
 class SwingObservation(OptionRecord):
@@ -198,7 +202,7 @@ class SwingTerminal(OptionRecord):
     invalidation: Money | None = Field(default=None, gt=0)
     history_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     first_target: Money | None = Field(default=None, gt=0, exclude_if=lambda v: v is None)
-    quote: UnderlyingQuote | None = Field(default=None, exclude_if=lambda v: v is None)
+    quote: UnderlyingObservation | None = Field(default=None, exclude_if=lambda v: v is None)
 
     @model_validator(mode="after")
     def coherent(self):
@@ -220,6 +224,7 @@ class SwingTerminal(OptionRecord):
 
 class SwingScan(OptionRecord):
     version: Literal["swing-next-session-v1"] = "swing-next-session-v1"
+    input_basis: Literal["robinhood-price-options-v1"] | None = Field(default=None, exclude_if=lambda v: v is None)
     symbol: Symbol
     evaluated_at: datetime
     completed_through: datetime | None
@@ -229,7 +234,7 @@ class SwingScan(OptionRecord):
     base_evidence: SwingBaseEvidence | None = Field(default=None, exclude_if=lambda v: v is None)
     level_evidence: SwingLevelEvidence | None = Field(default=None, exclude_if=lambda v: v is None)
     ma_evidence: SwingMAEvidence | None = Field(default=None, exclude_if=lambda v: v is None)
-    catalyst: CatalystEvidence
+    catalyst: CatalystEvidence | None
     holding_policy: Literal["SESSION_CLOSE", "BOUNDED_CARRY_V1"] = "SESSION_CLOSE"
     carry_terms: SwingCarryTerms | None = Field(default=None, exclude_if=lambda v: v is None)
     observations: tuple[SwingObservation, ...] = Field(min_length=1, max_length=1)
@@ -259,7 +264,7 @@ def seed_issues(seed, policy, calendar, symbols):
         h.symbol not in symbols
         or h.source != policy.history_source
         or not h.complete
-        or h.entitlement != "REALTIME"
+        or not paper_market_evidence(h)
         or len(h.bars) != policy.daily_lookback
     ):
         issues.append("SWING_DAILY_HISTORY_BINDING_OR_COVERAGE")
@@ -316,8 +321,12 @@ def scan_swing(item, policy, intraday, history, calendar, symbols, *, now, recei
             or intraday.evaluated_at != now
         ):
             issues.append("SWING_CURRENT_COMPLETED_STRUCTURE_REQUIRED")
-        if (
-            catalyst.symbol != seed.history.symbol
+        if policy.input_basis is not None:
+            if catalyst is not None:
+                issues.append("SWING_PRICE_OPTIONS_CATALYST_MUST_BE_ABSENT")
+        elif (
+            catalyst is None
+            or catalyst.symbol != seed.history.symbol
             or catalyst.source != policy.catalyst_source
             or catalyst.status != "CLEAR"
             or not catalyst.complete
@@ -334,7 +343,7 @@ def scan_swing(item, policy, intraday, history, calendar, symbols, *, now, recei
         ):
             issues.append("SWING_CATALYST_CLEARANCE_REQUIRED")
         carry_terms = None
-        if policy.carry is not None:
+        if policy.carry is not None and catalyst is not None:
             from app.options.swing_execution import scan_carry_terms
 
             carry_terms, carry_issues = scan_carry_terms(seed, policy, catalyst, calendar)
@@ -398,6 +407,7 @@ def scan_swing(item, policy, intraday, history, calendar, symbols, *, now, recei
         ):
             reasons.append("SWING_CHASE_LIMIT")
         scan = SwingScan(
+            input_basis=policy.input_basis,
             symbol=seed.history.symbol,
             evaluated_at=now,
             completed_through=intraday.completed_through,

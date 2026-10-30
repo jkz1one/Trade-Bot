@@ -5,6 +5,7 @@ from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
 
 from app.options.degen import _metric
 from app.options.engine import exact
+from app.options.models import paper_market_evidence
 from app.options.swing_base_models import SwingBaseEvidence
 
 D = Decimal
@@ -55,7 +56,7 @@ def input_issues(seed, policy, calendar):
         hourly.symbol != daily.symbol
         or hourly.source != family.hourly_source
         or not hourly.complete
-        or hourly.entitlement != "REALTIME"
+        or not paper_market_evidence(hourly)
         or len(hourly.bars) != family.hourly_lookback
         or not daily.bars[-1].closes_at <= hourly.source_at <= hourly.received_at <= seed.created_at
     ):

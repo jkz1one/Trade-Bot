@@ -16,7 +16,7 @@ from pydantic import Field, model_validator
 from app.execution.engine import ExecutionBlocked
 from app.options.engine import OptionExecution, fingerprint
 from app.options.lifecycle import OptionExecutionPolicy
-from app.options.models import Name, OptionLimits, OptionRecord, UnderlyingQuote
+from app.options.models import Name, OptionLimits, OptionRecord, UnderlyingObservation
 from app.options.observer import OptionObserver
 from app.options.replay import _save
 from app.options.scope import ScopePreflightInput
@@ -37,7 +37,7 @@ class ScopeReplayStep(OptionRecord):
     choice: ScopeWatchChoice | None = None
     frame: ScopePreflightInput | None = None
     context: ScopeContextInput | None = None
-    underlying: UnderlyingQuote | None = None
+    underlying: UnderlyingObservation | None = None
 
     @model_validator(mode="after")
     def action_inputs(self):

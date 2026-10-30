@@ -6,7 +6,7 @@ import sys
 import pytest
 
 
-@pytest.mark.parametrize("module", ["app.options.read_worker", "app.execution.market_read_worker", "app.options.earnings_mapping", "app.options.earnings_context"])
+@pytest.mark.parametrize("module", ["app.options.read_worker", "app.execution.market_read_worker", "app.options.earnings_mapping", "app.options.earnings_context", "app.options.scope_read"])
 def test_installed_market_read_child_does_not_import_execution_engines(module):
     script = """
 import importlib.abc, importlib, sys

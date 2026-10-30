@@ -163,6 +163,14 @@ def scan_scope_context(frame, context, policy, *, now):
     }
     if structure.issues:
         return ScopeContextScan(**base, issues=("SCOPE_STRUCTURE_BLOCKED",))
+    if policy.structure.preflight.input_basis is not None:
+        if any(getattr(context, key) is not None for key in ("dealer", "moves", "flow", "news", "events", "prior")):
+            return ScopeContextScan(**base, issues=("PRICE_OPTIONS_CONTEXT_MUST_BE_ABSENT",))
+        return ScopeContextScan(**base, observations=tuple(
+            ScopeContextObservation(**o.model_dump(), parent_pattern=o.pattern,
+                                    notes=("ROBINHOOD_PRICE_OPTIONS_ONLY",))
+            for o in structure.observations
+        ))
     with localcontext(Context(prec=192)):
         try:
             return _scan(frame, context, policy, base)

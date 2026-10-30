@@ -1,5 +1,6 @@
 """Pure, tool-less long-option admission. It cannot reserve, submit or cancel orders."""
 
+from app.options.models import parse_underlying
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_CEILING, ROUND_FLOOR, Context, Decimal, localcontext
 
@@ -13,7 +14,7 @@ from app.options.models import (
     OptionProposal,
     OptionQuote,
     SessionWindow,
-    UnderlyingQuote,
+    UnderlyingObservation,
 )
 
 ONE = Decimal(1)
@@ -63,7 +64,7 @@ def _tick_price(price, contract, rounding):
 def admit_option(
     proposal: OptionProposal,
     quote: OptionQuote | None,
-    underlying: UnderlyingQuote | None,
+    underlying: UnderlyingObservation | None,
     account: OptionAccount,
     limits: OptionLimits,
     session: SessionWindow | None,
@@ -88,7 +89,7 @@ def admit_option(
         OptionQuote.model_validate(quote.model_dump(warnings=False)) if quote is not None else None
     )
     underlying = (
-        UnderlyingQuote.model_validate(underlying.model_dump(warnings=False))
+        parse_underlying(underlying.model_dump(warnings=False))
         if underlying is not None and proposal.action == "OPEN_LONG"
         else None
     )

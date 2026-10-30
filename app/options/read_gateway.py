@@ -78,7 +78,7 @@ class ReadSample(OptionRecord):
 class CapturePlan(OptionRecord):
     purpose: Literal["SCHEMA_MAPPING_EVIDENCE"]
     symbols: tuple[Literal["SPY", "QQQ"], ...] = Field(min_length=1, max_length=2)
-    instrument_ids: tuple[Name, ...] = Field(default=(), max_length=8)
+    instrument_ids: tuple[Name, ...] = Field(default=(), max_length=10)
     calls: tuple[ReadSample, ...] = Field(min_length=1, max_length=8)
 
     @model_validator(mode="after")

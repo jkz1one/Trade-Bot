@@ -56,7 +56,7 @@ def configuration_hash(policy, schemas, *, rolled):
 
 
 def validate_policy(base, proposed, target, created_at):
-    immutable = {"candidates", "carry_intents", "swing_history", "observed_simulation", "company_earnings"}
+    immutable = {"candidates", "carry_intents", "swing_history", "observed_simulation", "company_earnings", "swing_observed_simulation", "scope_binding"}
     if base.model_dump(exclude=immutable) != proposed.model_dump(exclude=immutable):
         raise ValueError("Rollover cannot change frozen transport, universe or history settings")
     if base.swing_history != proposed.swing_history:
@@ -65,6 +65,8 @@ def validate_policy(base, proposed, target, created_at):
                 != proposed.swing_history.model_dump(exclude={"bar_mapping"})):
             raise ValueError("Rollover may change history mapping only, not history enrollment or lookbacks")
     now = clock(created_at)
+    if proposed.scope_binding is not None and proposed.scope_binding.session.session_date != target:
+        raise ValueError("Scope binding must name the exact target session")
     if proposed.company_earnings is not None:
         evidence = proposed.company_earnings.observation()
         if evidence.target_session != target or evidence.received_at > now:
@@ -167,8 +169,8 @@ def policy_for(base, rows, target):
     return next((r.policy for r in rows if r.target_session == target), base)
 
 
-def verify_owner(rows, owner_hash):
-    if any(r.owner_configuration_sha256 != owner_hash for r in rows):
+def verify_owner(rows, owner_hash, accepted=None):
+    if any(r.owner_configuration_sha256 not in (accepted or (owner_hash,)) for r in rows):
         raise ValueError("Rollover belongs to another native owner")
 
 
@@ -249,7 +251,7 @@ def review(
                 )
     with OptionObserver(feed_directory / "collector.db", base.population_id).read() as db:
         rows = load_rollovers(db, base, schemas)
-        verify_owner(rows, state["owner_configuration_sha256"])
+        verify_owner(rows, state["owner_configuration_sha256"], result.get("accepted_owner_hashes"))
         if len(rows) >= MAX_ROLLOVERS or any(r.target_session == target for r in rows):
             raise ValueError("Session rollover already enrolled or capacity reached")
         if rows and now < rows[-1].created_at:

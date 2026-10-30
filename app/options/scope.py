@@ -10,7 +10,7 @@ from pydantic import Field, model_validator
 from app.options.degen import DegenBar
 from app.options.engine import fingerprint
 from app.options.governor import _fresh, _supported
-from app.options.models import Evidence, Money, Name, OptionQuote, OptionRecord
+from app.options.models import Evidence, IndexReference, Money, Name, OptionQuote, OptionRecord, paper_market_evidence
 from app.options.selection import ContractMetadata
 
 ScopeGroup = Literal[
@@ -25,6 +25,7 @@ ScopeGroup = Literal[
     "spxw_contracts",
 ]
 SCOPE_GROUPS = get_args(ScopeGroup)
+PRICE_GROUPS = ("provider_readiness", "technical_structure", "cross_market_agreement", "spxw_contracts")
 MARKETS = ("SPX", "SPY", "QQQ")
 NY = ZoneInfo("America/New_York")
 
@@ -42,8 +43,9 @@ class ScopeHistorySource(OptionRecord):
 
 class ScopePreflightPolicy(OptionRecord):
     version: Literal["scope-preflight-v1"] = "scope-preflight-v1"
+    input_basis: Literal["robinhood-price-options-v1"] | None = Field(default=None, exclude_if=lambda v: v is None)
     # Explicit fixture/research enrollment; no unmeasured provider defaults.
-    sources: tuple[ScopeSource, ...] = Field(min_length=9, max_length=9)
+    sources: tuple[ScopeSource, ...] = Field(min_length=4, max_length=9)
     history_sources: tuple[ScopeHistorySource, ...] = Field(min_length=3, max_length=3)
     session_source: Name
     provider: Name
@@ -57,11 +59,12 @@ class ScopePreflightPolicy(OptionRecord):
 
     @model_validator(mode="after")
     def complete_bindings(self):
-        if {s.kind for s in self.sources} != set(SCOPE_GROUPS) or {
+        required = PRICE_GROUPS if self.input_basis else SCOPE_GROUPS
+        if len(self.sources) != len(required) or {s.kind for s in self.sources} != set(required) or {
             s.symbol for s in self.history_sources
         } != set(MARKETS):
             raise ValueError(
-                "All nine unique Scope sources and three unique history sources required"
+                "Exact Scope source groups and three unique history sources required"
             )
         return self
 
@@ -105,15 +108,36 @@ class ScopeEvidence(Evidence):
     payload_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
     status: Literal["AVAILABLE", "UNAVAILABLE", "UNKNOWN"]
 
+    @model_validator(mode="after")
+    def observed_groups(self):
+        if self.simulation_basis is not None and self.kind not in PRICE_GROUPS:
+            raise ValueError("Observed Scope coverage is limited to price/options groups")
+        return self
+
+
+class ScopePriceBar(DegenBar):
+    """Index OHLC with absent volume, never a synthetic zero-volume observation."""
+
+    volume: None = Field(default=None, exclude_if=lambda v: v is None)
+
 
 class ScopeHistory(Evidence):
     symbol: Literal["SPX", "SPY", "QQQ"]
     interval_seconds: Literal[300] = 300
     bounds: Literal["regular"] = "regular"
-    bars: tuple[DegenBar, ...] = Field(max_length=96)
+    bars: tuple[DegenBar | ScopePriceBar, ...] = Field(max_length=96)
+
+    @model_validator(mode="after")
+    def index_volume(self):
+        if any(b.volume is None for b in self.bars) and (
+            self.symbol != "SPX" or self.simulation_basis != "ROBINHOOD_OBSERVED_V1"
+        ):
+            raise ValueError("Absent volume is limited to explicitly observed SPX index history")
+        return self
 
 
 class ScopePreflightInput(OptionRecord):
+    index_reference: IndexReference | None = Field(default=None, exclude_if=lambda v: v is None)
     session: ScopeSession | None
     evidence: tuple[ScopeEvidence, ...] = Field(max_length=18)
     histories: tuple[ScopeHistory, ...] = Field(max_length=6)
@@ -135,6 +159,7 @@ class ScopePreflight(OptionRecord):
     authority: Literal[False] = False
     live_enabled: Literal[False] = False
     blockers: tuple[ScopeBlocker, ...]
+    input_basis: Literal["robinhood-price-options-v1"] | None = Field(default=None, exclude_if=lambda v: v is None)
 
 
 def preflight_scope(frame, policy, *, now):
@@ -154,15 +179,26 @@ def _preflight(frame, policy, now):
     def block(subject, code):
         blockers.append(ScopeBlocker(subject=subject, code=code))
 
-    def current(item, source, age):
+    def current(item, source, age, *, completed_history=False):
+        # A completed five-minute bar is not a current quote. Its original end
+        # clock can precede receipt by most of an interval. Exact expected bar
+        # coverage is checked below; a missing next bar cannot extend validity.
+        freshness = (
+            item.source_at <= item.received_at <= now
+            and now - item.source_at < timedelta(seconds=policy.max_history_age_seconds)
+        ) if completed_history and policy.input_basis else _fresh(
+            item.source_at, item.received_at, now, age, policy.max_receive_lag_seconds
+        )
         return (
             item.source == source
             and item.complete
-            and item.entitlement == "REALTIME"
-            and _fresh(item.source_at, item.received_at, now, age, policy.max_receive_lag_seconds)
+            and (paper_market_evidence(item) if policy.input_basis else item.entitlement == "REALTIME")
+            and freshness
         )
 
     session = frame.session
+    if policy.input_basis and any(e.kind not in PRICE_GROUPS for e in frame.evidence):
+        block("coverage", "PRICE_OPTIONS_UNEXPECTED_CONTEXT_ATTESTATION")
     if session is None:
         block("session", "MISSING_INDEX_SESSION")
     elif (
@@ -177,7 +213,8 @@ def _preflight(frame, policy, now):
         if len(items) != 1:
             block(binding.kind, "MISSING_EVIDENCE" if not items else "DUPLICATE_EVIDENCE")
         elif items[0].status != "AVAILABLE" or not current(
-            items[0], binding.source, binding.max_age_seconds
+            items[0], binding.source, binding.max_age_seconds,
+            completed_history=binding.kind in {"technical_structure", "cross_market_agreement"},
         ):
             block(binding.kind, "EVIDENCE_BINDING_COVERAGE_OR_FRESHNESS")
 
@@ -188,7 +225,7 @@ def _preflight(frame, policy, now):
             block(binding.symbol, "MISSING_HISTORY" if not histories else "DUPLICATE_HISTORY")
             continue
         h = histories[0]
-        if not current(h, binding.source, policy.max_history_age_seconds):
+        if not current(h, binding.source, policy.max_history_age_seconds, completed_history=True):
             block(binding.symbol, "HISTORY_BINDING_COVERAGE_OR_FRESHNESS")
         market_clocks.append(h.source_at)
         if session is None:
@@ -208,6 +245,11 @@ def _preflight(frame, policy, now):
         ):
             block(binding.symbol, "COMPLETED_SESSION_HISTORY_REQUIRED")
 
+    if frame.index_reference is not None:
+        ref = frame.index_reference
+        if (not policy.input_basis or not current(ref, 'robinhood-mcp', policy.max_contract_age_seconds)
+                or (frame.quote is not None and abs(ref.source_at - frame.quote.source_at) > timedelta(seconds=policy.max_evidence_skew_seconds))):
+            block('index_reference', 'CURRENT_INDEX_OPTION_CLOCK_OR_FRESHNESS')
     metadata, quote = frame.metadata, frame.quote
     if metadata is None:
         block("contract", "MISSING_EXACT_SPXW_METADATA")
@@ -243,7 +285,8 @@ def _preflight(frame, policy, now):
             block("quote", "EXACT_INSTRUMENT_MISMATCH")
         if not current(quote, policy.quote_source, policy.max_contract_age_seconds):
             block("quote", "QUOTE_BINDING_COVERAGE_OR_FRESHNESS")
-        market_clocks.append(quote.source_at)
+        if not policy.input_basis:
+            market_clocks.append(quote.source_at)
         if (
             quote.bid is None
             or quote.ask is None
@@ -262,12 +305,13 @@ def _preflight(frame, policy, now):
                 for price in (quote.bid, quote.ask)
             ):
                 block("quote", "QUOTE_PRICE_OFF_CONTRACT_TICK")
-    if len(market_clocks) == 4 and max(market_clocks) - min(market_clocks) > timedelta(
+    if len(market_clocks) == (3 if policy.input_basis else 4) and max(market_clocks) - min(market_clocks) > timedelta(
         seconds=policy.max_evidence_skew_seconds
     ):
         block("markets", "SPX_CONFIRMATION_QUOTE_CLOCK_SKEW")
 
     return ScopePreflight(
+        input_basis=policy.input_basis,
         evaluated_at=now,
         policy_hash=fingerprint(policy),
         input_hash=fingerprint(frame),
