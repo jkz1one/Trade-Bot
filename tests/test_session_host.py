@@ -208,6 +208,54 @@ def test_enrollment_and_run_mounts_keep_offline_stages_without_broker_auth(host)
     assert not any(c[0] in ("rm", "rename", "start") for c in calls)
 
 
+def test_upgraded_owner_gets_separate_bound_snapshot_for_create_review_and_run(host):
+    m, calls, _, _, manifest = host
+    manifest['strategy_amendment_sha256'] = '7' * 64
+    old = m.EXPORTS / 'connected-v1'
+    old.mkdir(mode=0o711)
+    evidence = old / 'original'; evidence.write_bytes(b'retain old snapshot')
+    m.snapshot(IMAGE)
+    create = next(c for c in calls if 'app.mixed.dashboard_snapshot' in c)
+    assert create[create.index('--destination') + 1] == '/exports/connected-price-options-v1'
+    assert create[create.index('--network') + 1] == 'none'
+    assert f'type=bind,src={m.STATE}/owner,dst=/source,readonly' in create
+    assert not any('/auth' in a or '/run/secrets' in a for a in create)
+    checks = [c for c in calls if 'app.mixed.connected_runtime' in c]
+    assert checks and all('--snapshot-directory' not in c for c in checks)
+    plan = m.review(IMAGE, 'run', 60, 'upgraded')
+    assert plan['binding']['snapshot_directory'] == '/exports/connected-price-options-v1'
+    m.apply(plan)
+    check = [c for c in calls if 'app.mixed.connected_runtime' in c and 'check' in c][-1]
+    live = next(c for c in calls if c[:2] == ('run', '-d'))
+    for call in (check, live):
+        assert call[call.index('--snapshot-directory') + 1] == plan['binding']['snapshot_directory']
+    assert evidence.read_bytes() == b'retain old snapshot'
+    assert not any(c[0] in ('rm', 'rename', 'start') for c in calls)
+
+
+def test_snapshot_destination_change_cannot_reuse_run_review(host):
+    m, calls, _, _, manifest = host
+    plan = m.review(IMAGE, 'run', 60, 'changed-snapshot')
+    manifest['strategy_amendment_sha256'] = '7' * 64
+    with pytest.raises(ValueError, match='snapshot destination changed'):
+        m.apply(plan)
+    assert not any(c[:2] == ('run', '-d') for c in calls)
+
+
+def test_incomplete_upgraded_owner_does_not_create_snapshot(host, monkeypatch):
+    m, calls, _, _, manifest = host
+    manifest['strategy_amendment_sha256'] = '7' * 64
+    original = m.execute
+    def execute(image, module, *args, **kwargs):
+        if module == 'app.mixed.connected_runtime':
+            raise ValueError('Pending amendment')
+        return original(image, module, *args, **kwargs)
+    monkeypatch.setattr(m, 'execute', execute)
+    with pytest.raises(ValueError, match='Pending amendment'):
+        m.snapshot(IMAGE)
+    assert not any('app.mixed.dashboard_snapshot' in c for c in calls)
+
+
 def test_changed_cpu_capacity_requires_a_new_review_before_launch(host, monkeypatch):
     m, calls, _, _, _ = host
     monkeypatch.setattr(m.os, "sched_getaffinity", lambda pid: {0, 1})

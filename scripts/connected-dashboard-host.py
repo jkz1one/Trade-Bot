@@ -20,6 +20,7 @@ FAILED = "trade-bot-dashboard-connected-failed-v1"
 RETIRED = "trade-bot-dashboard-connected-retired-v1"
 OLD_IMAGE = "trade-bot-dashboard:a653cc7e79d178c5ab2de6afb3311829282a7544"
 SNAPSHOT = Path("/var/lib/trade-bot-dashboard-publish/connected-v1")
+SNAPSHOT_NAME = "connected-v1"
 SECRET = "/etc/trade-bot/dashboard_password"
 FROZEN = "/var/lib/trade-bot-dashboard/ui-review-v3"
 LABEL = "trade-bot.connected-dashboard-v1"
@@ -166,7 +167,7 @@ def binding():
         raise ValueError("Existing publisher/reader identities required")
     if (
         value["source_journal"] != "/source/options.db"
-        or value["destination"] != "/exports/connected-v1"
+        or value["destination"] != "/exports/" + SNAPSHOT_NAME
     ):
         raise ValueError("Expected the host-helper publisher binding")
     return value
@@ -365,10 +366,15 @@ def apply(plan):
 
 
 def main(argv=None):
+    global SNAPSHOT, SNAPSHOT_NAME
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("operation", choices=("review", "activate", "review-rollback", "rollback"))
     parser.add_argument("--review-sha256")
+    parser.add_argument("--snapshot-name", choices=("connected-v1", "connected-price-options-v1"),
+                        default="connected-v1")
     args = parser.parse_args(argv)
+    SNAPSHOT_NAME = args.snapshot_name
+    SNAPSHOT = SNAPSHOT.parent / SNAPSHOT_NAME
     if (args.operation in ("activate", "rollback")) != (args.review_sha256 is not None):
         parser.error("Only activate/rollback require the exact reviewed --review-sha256")
     lock_fd = None

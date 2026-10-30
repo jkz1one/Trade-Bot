@@ -60,6 +60,44 @@ def test_preserves_balance_identity_all_old_events_and_reopens(tmp_path, schemas
         upgrade.review(state, clock_source=lambda: AT)
 
 
+def test_new_snapshot_after_upgrade_preserves_old_publication_and_owner(tmp_path, schemas, monkeypatch):
+    import os
+    from app.mixed.dashboard_snapshot import DashboardPublisher, check as snapshot_check, published
+    state, _ = prepared(tmp_path, schemas, monkeypatch)
+    owner = state / 'owner'
+    exports = tmp_path / 'exports'; exports.mkdir(mode=0o700)
+    old = exports / 'connected-v1'
+    args = (os.getuid(), os.getgid())
+    publisher = DashboardPublisher(owner, old, *args, create=True, clock_source=lambda: AT)
+    try:
+        publisher.publish()
+        old_binding = publisher.binding
+    finally:
+        publisher.close()
+    old_files = {p.name: p.read_bytes() for p in old.iterdir()}
+    report, _ = upgrade.review(state, clock_source=lambda: AT)
+    upgrade.apply(state, expected_review=report['review_sha256'], clock_source=lambda: AT)
+    with pytest.raises(ValueError, match='binding changed'):
+        snapshot_check(owner, old, *args, clock_source=lambda: AT)
+    source_before = (owner / 'options.db').read_bytes()
+    new = exports / 'connected-price-options-v1'
+    publisher = DashboardPublisher(owner, new, *args, create=True, clock_source=lambda: AT)
+    try:
+        outcome = publisher.publish()
+    finally:
+        publisher.close()
+    assert outcome['status'] == 'PUBLISHED' and not outcome['source_modified']
+    checked = snapshot_check(owner, new, *args, clock_source=lambda: AT)
+    assert checked['binding_sha256'] != fingerprint(old_binding)
+    assert (owner / 'options.db').read_bytes() == source_before
+    assert {p.name: p.read_bytes() for p in old.iterdir()} == old_files
+    assert published(old, old_binding) is not None
+    new_files = {p.name: p.read_bytes() for p in new.iterdir()}
+    with pytest.raises(FileExistsError):
+        DashboardPublisher(owner, new, *args, create=True, clock_source=lambda: AT)
+    assert {p.name: p.read_bytes() for p in new.iterdir()} == new_files
+
+
 @pytest.mark.parametrize("failure_at", [1, 2, 3])
 def test_interrupted_publication_requires_original_review_and_recovers(tmp_path, schemas, monkeypatch, failure_at):
     state, _ = prepared(tmp_path, schemas, monkeypatch)

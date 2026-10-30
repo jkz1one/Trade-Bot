@@ -328,16 +328,19 @@ def test_changed_review_between_final_checks_never_switches(host, monkeypatch):
 @pytest.mark.parametrize(
     "damage", ["none", "public_binding", "symlink", "public_parent", "wrong_source", "wrong_uid"]
 )
-def test_real_binding_file_checks(tmp_path, monkeypatch, damage):
+@pytest.mark.parametrize('name', ['connected-v1', 'connected-price-options-v1'])
+def test_real_binding_file_checks(tmp_path, monkeypatch, damage, name):
     if os.geteuid() != 0:
         pytest.skip("Root-owned publisher preflight")
     h = load()
     parent = tmp_path / "exports"
     parent.mkdir(mode=0o700)
-    directory = parent / "connected-v1"
+    directory = parent / name
     directory.mkdir(mode=0o711)
     monkeypatch.setattr(h, "SNAPSHOT", directory)
+    monkeypatch.setattr(h, "SNAPSHOT_NAME", name)
     value = copy.deepcopy(BINDING)
+    value['destination'] = '/exports/' + name
     if damage == "wrong_source":
         value["source_journal"] = "/other/options.db"
     elif damage == "wrong_uid":
@@ -355,7 +358,7 @@ def test_real_binding_file_checks(tmp_path, monkeypatch, damage):
         path.symlink_to(target)
     before = path.read_bytes()
     if damage == "none":
-        assert h.binding() == BINDING
+        assert h.binding() == value
     else:
         with pytest.raises((ValueError, OSError)):
             h.binding()

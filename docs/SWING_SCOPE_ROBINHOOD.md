@@ -196,3 +196,33 @@ unchanged strict/native rejection, capture-to-catalog reporting, original large
 book retention within the worker envelope, size-limit failures, isolated captures,
 observed PAPER fills, session preparation and guarded flat recovery. Host data
 acceptance remains pending; these tests do not certify the provider clocks.
+
+## Snapshot publication after the owner amendment
+
+The October 30 combined session enrollment succeeded, but run review exposed an
+old dashboard binding: `connected-v1` still names owner configuration `7d9540cf…`,
+while the amended owner is `1f17034e…`. No pending snapshot was present. Neither
+repeating session enrollment nor editing the old binding is a repair.
+
+For a bundle with the strategy amendment, the host launcher now selects
+`/exports/connected-price-options-v1`. The existing `snapshot` command first checks
+the amended owner/collector without consulting the stale snapshot, then creates
+and publishes the new directory. It mounts the account read-only, has no network
+or credential mounts, and retains every original `connected-v1` file. Creation
+refuses an existing destination, including retained partial publication evidence.
+Run review binds the exact new destination and snapshot hash; startup must use the
+same destination. Unamended owners continue using `connected-v1`.
+
+After building this release, run `python3 scripts/connected-session-host.py snapshot`,
+then repeat `review-run` with the intended run ID, duration and `--resume-flat`.
+Do not repeat the completed strategy upgrade or session enrollment. Creating the
+snapshot does not start trading or switch the public dashboard. A later explicit
+dashboard review/activation must pass
+`--snapshot-name connected-price-options-v1` to `connected-dashboard-host.py`.
+
+Validation: 84 tests pass; one existing cross-UID test is skipped because reader
+UID/GID 10001 is not mapped in this environment. Native coverage reproduces the
+old-binding failure after amendment, publishes and checks the new snapshot,
+preserves original snapshot/account bytes, and rejects duplicate creation. Host
+tests cover identical destination selection for creation, review and launch,
+changed-review refusal, offline read-only account mounts and pending-owner refusal.

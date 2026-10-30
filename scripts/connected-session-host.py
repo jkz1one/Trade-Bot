@@ -229,7 +229,15 @@ def owner_args():
     ]
 
 
-def runtime_args():
+def snapshot_name(manifest):
+    # The amendment changes the frozen owner identity. Preserve the original
+    # publication and create a separate publisher with the new exact binding.
+    return "connected-price-options-v1" if manifest.get("strategy_amendment_sha256") else "connected-v1"
+
+
+def runtime_args(snapshot="connected-v1"):
+    if snapshot not in {"connected-v1", "connected-price-options-v1"}:
+        raise ValueError("Unknown reviewed snapshot destination")
     return [
         "--directory",
         "/state/owner",
@@ -242,7 +250,7 @@ def runtime_args():
         "--schemas",
         "/state/config/schemas.json",
         "--snapshot-directory",
-        "/exports/connected-v1",
+        "/exports/" + snapshot,
         "--reader-uid",
         "10001",
         "--reader-gid",
@@ -279,7 +287,7 @@ def review(image_id, phase, seconds=None, run_id=None, *, resume_flat=False):
         native = execute(
             image_id,
             "app.mixed.connected_runtime",
-            ["check", *runtime_args()],
+            ["check", *runtime_args(snapshot_name(manifest))],
             config_mounts(source=True, exports=True),
             copies=True,
         )
@@ -287,6 +295,7 @@ def review(image_id, phase, seconds=None, run_id=None, *, resume_flat=False):
             "owner_state": native["owner_state"],
             "policy_sha256": native["effective_policy_sha256"],
             "snapshot_binding_sha256": native["dashboard_snapshot"]["binding_sha256"],
+            "snapshot_directory": "/exports/" + snapshot_name(manifest),
             "seconds": seconds,
             "container_name": name,
             "resources": session_resources(),
@@ -324,6 +333,15 @@ def review(image_id, phase, seconds=None, run_id=None, *, resume_flat=False):
 
 
 def snapshot(image_id):
+    manifest = bundle(image_id)
+    name = snapshot_name(manifest)
+    if manifest.get("strategy_amendment_sha256"):
+        # Verify the completed owner amendment and enrolled collector before
+        # creating a replacement. This check deliberately has no snapshot input.
+        execute(image_id, "app.mixed.connected_runtime", [
+            "check", "--directory", "/state/owner", "--feed-directory", "/state/collector",
+            "--policy", "/state/config/policy.json", "--schemas", "/state/config/schemas.json",
+        ], config_mounts())
     parent(EXPORTS)
     # The publisher's own create-only checks retain all previous failure evidence.
     mounts = config_mounts(source=True) + mount(EXPORTS, "/exports", False)
@@ -335,7 +353,7 @@ def snapshot(image_id):
             "--owner",
             "/source",
             "--destination",
-            "/exports/connected-v1",
+            "/exports/" + name,
             "--reader-uid",
             "10001",
             "--reader-gid",
@@ -362,6 +380,9 @@ def apply(plan):
         if plan["workers"] != h.workers():
             raise ValueError("Existing SHADOW identities changed")
         return result | {"dashboard_snapshot_created": True}
+    name = snapshot_name(manifest)
+    if plan["binding"]["snapshot_directory"] != "/exports/" + name:
+        raise ValueError("Reviewed snapshot destination changed")
     private(AUTH, True)
     private(AUTH / "robinhood-oauth.json")
     private(AUTH / "discovery.json")
@@ -404,7 +425,7 @@ def apply(plan):
         "-m",
         "app.mixed.connected_runtime",
         "run",
-        *runtime_args(),
+        *runtime_args(snapshot_name(manifest)),
         "--seconds",
         str(plan["binding"]["seconds"]),
         *(["--resume-flat-reviewed-revision", str(plan["binding"]["resume_flat_reviewed_revision"])]
