@@ -154,3 +154,29 @@ unavailable-versus-empty distinction. A one-day result does not establish seven-
 or complete catalyst coverage. Historical seven-day captures remain replayable;
 the parent requires the one-day binding for any new probe. Response limits remain
 unchanged and a still-oversized day will be reported explicitly.
+
+## Original earnings mapping
+
+The successful one-day capture `f3b17e1630584cf9ab94fa8a79f0330e` contains 334
+rows (112983 encoded bytes). The original earnings receipt and full capture hash
+are in `tests/fixtures/robinhood_earnings_20261029.json`. The normalized mapper is
+`app/options/earnings_mapping.py`; `input-probe` and offline `input-probe-report`
+include its compact summary. Full normalized records can be exported privately:
+
+```sh
+python -m app.options.read_cli export-earnings   --source /absolute/private/probe.json   --output /absolute/private/earnings.json
+```
+
+This command does not open credentials, contact the provider or modify runtime
+state. It requires a private source file and private output directory, creates a
+new file with mode 0600, and refuses overwrite. All original records/hashes remain
+linked. Source update time is unavailable; report dates and am/pm indicators are
+not synthesized into exact release timestamps. A tentative date stays tentative.
+
+Observed mapping: 333 unique company-quarter identities; 19 tentative dates;
+3 missing timings; 309 actual EPS values; 25 missing actual EPS values. TTE has
+two records with different timing (missing versus am), retained as a conflict.
+No SPY/QQQ rows appear, and no ETF constituent mapping is inferred. Missing or
+empty company events never become complete native CatalystEvidence/CLEAR status.
+The mapper is ready as an evidence component; complete Swing catalyst coverage,
+Scope economic/news/flow/dealer inputs and actual strategy admission remain separate.

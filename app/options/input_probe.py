@@ -185,12 +185,19 @@ async def run(client, inventory, at, observations):
 
 
 def summary(rows):
+    from app.options.earnings_mapping import map_calendar, mapping_summary
+
     by_name = {r["tool"]: r for r in rows}
     books = data_of(by_name.get("get_equity_price_book", {}))
     earnings = data_of(by_name.get("get_earnings_calendar", {}))
     indexes = data_of(by_name.get("get_indexes", {}))
     quotes = data_of(by_name.get("get_index_quotes", {}))
     history = data_of(by_name.get("get_index_historicals", {}))
+    try:
+        mapped = mapping_summary(map_calendar(by_name.get("get_earnings_calendar", {})))
+    except (ValueError, KeyError, TypeError):
+        mapped = {"status": "MAPPING_UNAVAILABLE", "trading_ready": False,
+                  "complete_catalyst_coverage": False}
     # Raw market responses remain in the private artifact. No promotion to native inputs.
     return {
         "version": "remaining-input-probe-v1", "trading_ready": False,
@@ -211,6 +218,7 @@ def summary(rows):
         "earnings_window": {k: by_name.get("get_earnings_calendar", {}).get("arguments", {}).get(k)
                             for k in ("start_date", "days")},
         "earnings_is_complete_catalyst_coverage": False,
+        "earnings_mapping": mapped,
         "spx_identity_resolved": index_id(indexes) is not None,
         "index_quotes": [{k: q[k] for k in ("instrument_id", "symbol", "value", "venue_timestamp")}
                          for q in quotes.get("quotes") or [] if q],

@@ -84,11 +84,41 @@ def export_schemas(source, output, expected_sha):
     return {"status": "EXPORTED", "schema_sha256": schemas.sha256, "network_calls": False}
 
 
+def export_earnings(source, output):
+    from app.options.earnings_mapping import map_calendar, mapping_summary
+    from app.options.input_probe import validate_observations
+
+    artifact = private_json(source)
+    result = CaptureResult.model_validate(artifact["result"])
+    if result.operation != "INPUT_PROBE" or artifact.get("operation") != "input-probe":
+        raise ValueError("Original input probe required")
+    validate_observations(result.observations, result.started_at)
+    matches = [r for r in result.observations if r["tool"] == "get_earnings_calendar"]
+    if len(matches) != 1:
+        raise ValueError("Exactly one original earnings receipt required")
+    mapped = map_calendar(matches[0])
+    destination = Path(output)
+    info = destination.parent.stat()
+    if (not destination.is_absolute() or not stat.S_ISDIR(info.st_mode)
+            or info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) != 0o700):
+        raise ValueError("Existing private export directory required")
+    fd = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    try:
+        _save(fd, mapped)
+    finally:
+        os.close(fd)
+    return {"status": "EXPORTED", "mapping": mapping_summary(mapped), "provider_reads": False,
+            "credentials_opened": False, "runtime_state_modified": False, "live_enabled": False}
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="operation", required=True)
     report = sub.add_parser("input-probe-report")
     report.add_argument("--source", required=True)
+    earnings = sub.add_parser("export-earnings")
+    earnings.add_argument("--source", required=True)
+    earnings.add_argument("--output", required=True)
     export = sub.add_parser("export-schemas")
     export.add_argument("--source", required=True)
     export.add_argument("--output", required=True)
@@ -103,6 +133,15 @@ def main(argv=None):
             cmd.add_argument("--schema-sha256", required=True)
             cmd.add_argument("--plan", required=True)
     args = parser.parse_args(argv)
+    if args.operation == "export-earnings":
+        try:
+            output = export_earnings(args.source, args.output)
+        except (OSError, ValueError, KeyError, TypeError):
+            print(json.dumps({"status": "UNAVAILABLE", "reason": "EARNINGS_EXPORT_UNAVAILABLE",
+                              "provider_reads": False, "live_enabled": False}))
+            return 1
+        print(json.dumps(output))
+        return 0
     if args.operation == "input-probe-report":
         try:
             from app.options.input_probe import summary, validate_observations

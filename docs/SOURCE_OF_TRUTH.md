@@ -1,5 +1,33 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.165. Map original company earnings with explicit incomplete coverage, 2026-10-29 EDT.
+
+The operator's one-day capture f3b17e1630584cf9ab94fa8a79f0330e completed all
+five reads. The earnings response is 112983 bytes and contains 334 rows for
+October 29. Offline mapping preserves all rows and decimal EPS: 333 unique
+company/fiscal-year/quarter identities, 315 verified versus 19 tentative dates,
+3 unknown timings, 309 actual EPS values and 25 missing actual values. Two TTE
+rows share an identity but differ in timing (null versus am); both remain present
+and explicitly conflicting. Fiscal years are retained as supplied, not rewritten.
+No SPY or QQQ company record appears, which does not clear ETF catalyst risk.
+
+Added a deterministic source-bound earnings mapper, original-response fixture,
+compact probe/report mapping summary and create-only private export-earnings CLI.
+It preserves original receipt/row hashes, exact requested date coverage, receive
+time, duplicate/conflicting identities, unknown timing, tentative verification,
+null records and missing schedules. Provider update time and entitlement remain
+unknown. Empty/null/failed results remain distinct. No exact release timestamp,
+ETF constituent exposure, broad-news/economic coverage or CLEAR catalyst status
+is fabricated. The mapper is evidence-only and does not change entry eligibility,
+account state, strategy policy, LIVE settings or the separate event-awareness branch.
+
+The native Swing catalyst requirement is not fulfilled by this one component.
+Next input validation requires populated market-hours stock books/fresh index
+observations. The original capture is sufficient for this earnings mapping;
+no new network reads were made during implementation or tests.
+
+Previous version notes (historical):
+
 Version 1.164. Narrow earnings probe after observed response-size rejection, 2026-10-29 EDT.
 
 Host capture b9b459fb615a466e91be642db14d6228 from
