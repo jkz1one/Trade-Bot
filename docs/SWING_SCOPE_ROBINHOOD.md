@@ -354,3 +354,40 @@ refusal to inspect unrelated or still-running containers. The next investigation
 is the saved no-order decision evidence; another market capture is unnecessary
 for diagnosing those completed cycles. No specific rejection is claimed before
 that host report is returned.
+
+## Completed-bar clock correction and offline host replay
+
+The returned paper-oct30-4 report shows both actual decisions HOLD with
+NO_ADMITTED_CONTRACT. Every SPY/QQQ DEGEN setup was BLOCKED by
+HISTORY_UNAVAILABLE_DELAYED_OR_STALE; these were not evaluated no-signal outcomes.
+The native profile requires a two-second source-to-receipt lag, but the history
+mapper assigns source_at to the last completed five-minute interval end. A bar
+received 26 seconds after its close was therefore rejected despite meeting the
+separate 300-second bar-age limit. The supplied summary does not contain the
+actual history clocks; their exact contribution still needs saved-input replay.
+
+The mapper now explicitly marks COMPLETED_BAR_END and validates its equality to
+the original final bar end. Only explicitly opted-in Robinhood observed PAPER
+history uses that basis: source <= receipt <= evaluation and the original
+max_bar_age_seconds remain mandatory. Actual provider publication/delivery lag
+is unknown and is not inferred from interval-close time. The two-second
+source-to-receipt check remains for unmarked/legacy histories and all quote books.
+Original OHLCV, timestamps, UNKNOWN entitlement, completeness, interpolation,
+session and continuity checks remain unchanged. Missing clock-basis fields are
+omitted from serialization, preserving old stored evidence hashes.
+
+After building, `connected-session-host.py history-report --run-id paper-oct30-4`
+replays the saved scans at their original evaluation times. It verifies each
+stored opportunity fingerprint, validates the original Robinhood bar-end equality,
+and applies the corrected history interpretation to a copy. Output includes
+original/replayed issues and actual bar-close/receipt/evaluation gaps. The container
+is offline with only the owner directory mounted read-only, and no auth/model key.
+There are no provider/model calls, orders, state writes, enrollments or resumes.
+This is historical setup replay, not fresh market or fill acceptance.
+
+Validation: 149 focused tests pass across history mapping, native DEGEN selection,
+observed simulation, combined feed and host command boundaries. New tests reproduce
+the false 26-second rejection, retain bad-history/quote rejection, preserve original
+clocks and verify fingerprint-fenced read-only replay. All 314 installed application
+files pass installed-release verification. Swing/Scope inputs and a connected
+simulated fill lifecycle remain outstanding.

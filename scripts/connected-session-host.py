@@ -475,12 +475,19 @@ def run(args, release):
             command += ["--expected-review", args.expected_review]
         return execute(image_id, "app.mixed.strategy_upgrade", command,
                        config_mounts(writable=apply_upgrade, amend_strategy=apply_upgrade))
-    if args.operation in ("status", "stop"):
+    if args.operation in ("status", "stop", "history-report"):
         if not re.fullmatch("[a-z0-9][a-z0-9-]{0,39}", args.run_id or ""):
             raise ValueError("Session ID required")
         item = h.container("trade-bot-connected-" + args.run_id)
         if not (item["Config"].get("Labels") or {}).get(LABEL):
             raise ValueError("Not a connected session")
+        if args.operation == "history-report":
+            if item["State"]["Status"] != "exited":
+                raise ValueError("Saved history report requires a finished session")
+            return execute(image(release), "app.mixed.history_clock_replay", [
+                "--owner", "/state/owner", "--since", item["State"]["StartedAt"],
+                "--until", item["State"]["FinishedAt"],
+            ], mount(STATE / "owner", "/state/owner"))
         if args.operation == "stop":
             if item["Id"] != args.expected_container:
                 raise ValueError("Exact inspected container ID required")
@@ -641,6 +648,7 @@ def main(argv=None):
             "review-run",
             "run",
             "status",
+            "history-report",
             "stop",
         ),
     )

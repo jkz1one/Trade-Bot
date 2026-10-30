@@ -15,6 +15,28 @@ IMAGE = "sha256:" + "a" * 64
 RELEASE = "b" * 40
 
 
+def test_history_report_is_offline_read_only_without_restart(monkeypatch):
+    m = load()
+    monkeypatch.setattr(m, "image", lambda _: IMAGE)
+    monkeypatch.setattr(m.h, "container", lambda _: {
+        "Config": {"Labels": {m.LABEL: "yes"}},
+        "State": {"Status": "exited", "StartedAt": "2026-10-30T18:30:22Z",
+                  "FinishedAt": "2026-10-30T18:40:34Z"},
+    })
+    calls = []
+    def docker(*args, **kwargs):
+        calls.append(args)
+        return subprocess.CompletedProcess(args, 0, '{}', '')
+    monkeypatch.setattr(m.h, "docker", docker)
+    m.run(SimpleNamespace(operation="history-report", run_id="paper-oct30-4"), RELEASE)
+    assert len(calls) == 1
+    command = calls[0]
+    assert command[command.index("--network") + 1] == "none"
+    assert "app.mixed.history_clock_replay" in command
+    assert "type=bind,src=/var/lib/trade-bot-connected/owner,dst=/state/owner,readonly" in command
+    assert not any('/auth' in item or '/run/secrets' in item for item in command)
+
+
 def test_execute_reports_only_fixed_rollover_failure_codes(monkeypatch):
     m = load()
     for payload, expected in (({"reason": "SESSION_CLOSED"}, "SESSION_CLOSED"),

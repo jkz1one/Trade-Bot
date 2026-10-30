@@ -1,5 +1,24 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.170. Distinguish observed completed-bar age from quote delivery lag, 2026-10-30 EDT.
+
+Host paper-oct30-4 completed successfully but both decisions were blocked before
+setup selection by HISTORY_UNAVAILABLE_DELAYED_OR_STALE for SPY/QQQ. The pinned
+history mapper uses the last completed interval end as source_at, while native
+history validation treated it as a provider publication clock with a two-second
+delivery limit. A regression reproduces this false rejection.
+
+Explicitly marked Robinhood observed PAPER bars now retain their frozen 300-second
+bar-age limit without claiming publication latency from interval-close timestamps.
+Original clocks, completeness, session, interpolation and continuity checks remain;
+quote and unmarked-history lag limits are unchanged. A network-free read-only host
+history-report replays saved opportunities at original times to check the actual
+host evidence without another collection/run. It cannot submit orders or alter
+the account. All 149 focused tests pass; actual saved-input replay is pending.
+Swing/Scope input completion and a connected simulated fill remain unverified.
+
+Previous version notes (historical):
+
 Version 1.169. Remove cold trading imports from frequent PAPER snapshot reads, 2026-10-30 EDT.
 
 Host evidence confirms the combined eight-contract collector fix: nine packets

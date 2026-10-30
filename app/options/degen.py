@@ -62,11 +62,23 @@ class DegenBar(OptionRecord):
 
 
 class DegenHistory(Evidence):
+    source_clock_basis: Literal["COMPLETED_BAR_END"] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
     symbol: Symbol
     interval_seconds: Literal[300] = 300
     bounds: Literal["regular"] = "regular"
     adjustment: Literal["split"] = "split"
     bars: tuple[DegenBar, ...] = Field(max_length=96)
+
+    @model_validator(mode="after")
+    def bar_close_clock(self):
+        if self.source_clock_basis is not None and (
+            self.source != "robinhood-mcp" or not self.bars
+            or self.source_at != self.bars[-1].ends_at
+        ):
+            raise ValueError("Completed-bar clock requires exact original Robinhood bar end")
+        return self
 
 
 class SetupObservation(OptionRecord):
@@ -123,12 +135,20 @@ def _scan(h, p, w, now):
         issues.append("MARKET_CLOSED")
     if h.symbol not in p.symbols or h.source != p.history_source:
         issues.append("HISTORY_BINDING_MISMATCH")
+    if h.source_clock_basis == "COMPLETED_BAR_END" and h.simulation_basis == "ROBINHOOD_OBSERVED_V1":
+        # A completed interval end is not a provider publication timestamp.
+        # Observed PAPER bars use the frozen bar-age limit; actual provider
+        # delivery lag remains unknown. Never apply this rule to quote books or
+        # unmarked/REALTIME history, and never rewrite original clocks.
+        fresh = (h.source_at <= h.received_at <= now
+                 and now - h.source_at < timedelta(seconds=p.max_bar_age_seconds))
+    else:
+        fresh = _fresh(h.source_at, h.received_at, now,
+                       p.max_bar_age_seconds, p.max_receive_lag_seconds)
     if (
         not h.complete
         or not paper_market_evidence(h)
-        or not _fresh(
-            h.source_at, h.received_at, now, p.max_bar_age_seconds, p.max_receive_lag_seconds
-        )
+        or not fresh
     ):
         issues.append("HISTORY_UNAVAILABLE_DELAYED_OR_STALE")
     bars = list(h.bars)

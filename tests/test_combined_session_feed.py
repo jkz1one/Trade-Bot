@@ -77,6 +77,7 @@ def test_combined_eight_contracts_deliver_without_optional_swing_history(tmp_pat
         if cycle:
             assert len(packet.frame.inventories) == 2
             assert sum(len(i.contracts) for i in packet.frame.inventories) == 4
+            assert all(h.source_clock_basis == 'COMPLETED_BAR_END' for h in packet.frame.histories)
         assert feed.db.execute('SELECT status FROM attempts').fetchone()[0] == 'DELIVERED'
     finally:
         feed.close()

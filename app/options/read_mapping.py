@@ -295,6 +295,7 @@ def equity_history(schemas, call, raw, *, received_at):
         result.append(
             DegenHistory(
                 symbol=row["symbol"],
+                source_clock_basis="COMPLETED_BAR_END",
                 source=SOURCE,
                 source_at=bars[-1].ends_at,
                 received_at=received,
