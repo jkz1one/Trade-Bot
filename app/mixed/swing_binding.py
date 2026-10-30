@@ -35,7 +35,10 @@ class SwingBindingPolicy(OptionRecord):
     stocks: tuple[StockInstrument, ...] = Field(min_length=1, max_length=2)
     stock_policy: StockSwingPolicy | None = None
     option_policy: SwingPolicy | None = None
-    candidates: tuple[OptionInstrument, ...] = Field(default=(), max_length=6)
+    # This is the shared feed catalog, including same-day DEGEN contracts.
+    # Native Swing selection below still requires its exact CALL/PUT pair per
+    # symbol and its configured DTE range. Match the feed's bounded eight IDs.
+    candidates: tuple[OptionInstrument, ...] = Field(default=(), max_length=8)
     carry_exit_session: date | None = None
     carry_intent: SwingCarryIntent | None = Field(default=None, exclude_if=lambda v: v is None)
     stock_carry: StockCarryPolicy | None = Field(default=None, exclude_if=lambda v: v is None)

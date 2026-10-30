@@ -226,3 +226,34 @@ old-binding failure after amendment, publishes and checks the new snapshot,
 preserves original snapshot/account bytes, and rejects duplicate creation. Host
 tests cover identical destination selection for creation, review and launch,
 changed-review refusal, offline read-only account mounts and pending-owner refusal.
+
+## Eight-contract collector correction
+
+Host `paper-oct30-1` published the new snapshot and started, but failed after about
+157 seconds with `FixtureProcessTimeout` (5.096 seconds against a 5-second limit).
+The owner remained at accepted feed sequence 65, with no reviewed entry resumes
+and zero fills. Collector attempts 67–74 all retained COMPLETE provider captures
+but failed before producing a packet. Transport success was not usable-feed proof.
+
+The shared catalog permits eight contracts (four same-day DEGEN plus four Swing),
+but `SwingBindingPolicy` still permitted six. Every normalization constructs that
+policy even when original Swing histories are absent. Regression tests reproduced
+FAILED delivery for both market-only polls and history cycles with the combined
+profile. The source-binding catalog now matches the existing eight-contract bound;
+ninth-contract rejection, exact Swing CALL/PUT/DTE selection, two-play limits,
+freshness checks and missing-history blockers are unchanged.
+
+Collector failures now append stage/class/application-frame metadata to
+`attempt_failures`, keyed by attempt sequence, and include that metadata in the
+tick result. No exception messages, provider payloads, credentials or local
+variables are logged there. Original capture/packet fields and failed attempt
+statuses are retained, including across restart. Existing failures are not
+retroactively assigned a cause.
+
+Validation: 129 focused tests pass. New end-to-end collector tests verify all eight
+quotes, both stock quotes, four same-day DEGEN inventory contracts on history
+cycles, unavailable Swing/Scope inputs, durable delivery and bounded diagnostics.
+The independent simulator timeout remains unresolved; no deadline, risk limit or
+halt behavior was relaxed. Build the correction and obtain a fresh run review
+under a new run ID against the already-enrolled session; do not re-enroll, reset
+the owner or recreate the already-published snapshot.

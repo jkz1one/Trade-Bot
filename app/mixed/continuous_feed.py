@@ -696,6 +696,7 @@ class ContinuousFeed:
                 "INSERT INTO swing_read_budget VALUES(?,?)", (sequence, len(history_calls))
             )
         self.db.commit()
+        stage = "CAPTURE"
         try:
             scope_capture = None
             scope_record = None
@@ -728,6 +729,7 @@ class ContinuousFeed:
             self.db.commit()
             from app.options.read_capture import policy_digest
 
+            stage = "SOURCE_BINDING"
             if (
                 captured.plan != plan
                 or captured.policy_sha256 != policy_digest(self.policy.capture)
@@ -757,6 +759,7 @@ class ContinuousFeed:
                 )
             if captured.collected_at.astimezone(ZoneInfo("America/New_York")).date() != target_day:
                 history_issues = (*history_issues, "SESSION_BOUNDARY_DURING_CAPTURE")
+            stage = "NORMALIZE"
             packet = normalize(
                 effective,
                 self.schemas,
@@ -787,6 +790,7 @@ class ContinuousFeed:
                         result['INDEX:' + ref.symbol] = ref
                 return result
 
+            stage = "SOURCE_CLOCK_CHECK"
             unchecked = quotes(packet.frame)
             # Missing deliveries never erase a subject's last original source
             # clock. Walk retained envelopes until each current subject is found.
@@ -809,6 +813,7 @@ class ContinuousFeed:
                         )
                     ):
                         raise ValueError("Source evidence regressed or changed at the same clock")
+            stage = "PUBLISH"
             self.db.execute(
                 "UPDATE attempts SET status='NORMALIZED',packet_json=?,packet_hash=? WHERE sequence=?",
                 (packet.model_dump_json(), fingerprint(packet), sequence),
@@ -833,13 +838,22 @@ class ContinuousFeed:
                 "entitlement": "UNKNOWN",
                 "stock_sizes": "MISSING",
             }
-        except (OSError, ValueError, TypeError, SchemaError):
+        except (OSError, ValueError, TypeError, SchemaError) as exc:
+            import json
+            from app.execution.failure import failure_details
+
+            # Append bounded public metadata; preserve original raw/packet data.
+            details = {"stage": stage, **failure_details(exc)}
+            self.db.execute(
+                "CREATE TABLE IF NOT EXISTS attempt_failures(sequence INTEGER PRIMARY KEY,details_json TEXT NOT NULL)"
+            )
+            self.db.execute("INSERT INTO attempt_failures VALUES(?,?)", (sequence, json.dumps(details)))
             self.db.execute(
                 "UPDATE attempts SET status='FAILED' WHERE sequence=? AND status='STARTED'",
                 (sequence,),
             )
             self.db.commit()
-            return {"status": "FAILED", "sequence": sequence}
+            return {"status": "FAILED", "sequence": sequence, "failure": details}
 
     def load_swing_sources(self, settings, target, *, now):
         """Read and rebuild the full typed original, without inserting or refreshing it."""
