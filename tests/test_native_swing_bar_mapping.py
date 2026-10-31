@@ -58,7 +58,8 @@ def test_native_collector_retains_original_mapping_on_restart(tmp_path,schemas,b
                 row=observations[0]['raw']['structuredContent']['data']['results'][0]['bars'][-1]
                 row.update(interpolated=True,volume=0)
             out=out.model_copy(update={'plan':plan,'observations':out.observations+observations})
-        return out
+        return out.model_copy(update={
+            'schemas': schemas.model_copy(update={'captured_at': PREOPEN + timedelta(seconds=1)})})
     with_feed=ContinuousFeed(tmp_path/'feed',p,schemas,create=True)
     try:
         result=asyncio.run(with_feed.tick(now=PREOPEN,reader=capture))

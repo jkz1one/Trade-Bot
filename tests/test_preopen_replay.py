@@ -31,6 +31,7 @@ def test_saved_preopen_reports_each_series_without_new_reads(tmp_path, captures,
         result = await market_reader(AT)(cp, schemas=schemas, plan=market)
         times[0] = AT + timedelta(seconds=2)
         return result.model_copy(update={'plan': plan,
+            'schemas': schemas.model_copy(update={'captured_at': AT + timedelta(seconds=1)}),
             'observations': result.observations + artifact['result']['observations']})
     prepared = asyncio.run(prepare(*args, AT.date(), clock_source=lambda: times[0], reader=reader))
     sequence = prepared['collection']['sequence']
@@ -48,6 +49,7 @@ def test_saved_preopen_reports_each_series_without_new_reads(tmp_path, captures,
     else:
         result = report(args[1], args[2], args[3], sequence)
         assert result['history_mapped'] == (damage == 'none')
+        assert result['capture_schema_discovered_at'] != result['enrolled_schema_discovered_at']
         assert len(result['histories']) == 4
         assert all(x['status'] == 'MAPPED' for x in result['histories'][1:])
         assert result['provider_calls'] is result['state_modified'] is result['live_enabled'] is False

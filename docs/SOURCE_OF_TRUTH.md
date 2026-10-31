@@ -1,5 +1,32 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.174. Match pinned schema contracts across fresh authenticated discovery, 2026-10-31 UTC.
+
+Host 6e592cd refreshed the existing snapshot successfully (revision 805, feed 130,
+generation 7, zero held plays/fills), then activated the real connected dashboard.
+No trader or collector was started by that switch. Do not repeat activation.
+
+Saved pre-open replay failed its capture-binding check. Inspection found that the
+worker rediscovers schemas on every call and retains a new captured_at, while
+Swing mapping, retained-history recovery and the replay helper compared whole
+ReadSchemas records to the original enrollment. They now revalidate both records
+and compare every contract field except the independent discovery timestamp.
+Tool/schema hashes, endpoint, missing capability lists and metadata must still
+match; original discovery, market and capture clocks remain untouched. Regression
+captures now use fresh discovery times through mapping, binding, replay and restart.
+
+The host helper retains bounded native replay failures, including individual
+binding-check results, rather than hiding them behind docker run. The offline
+report also exposes both original discovery times. Actual attempt 132 mapping
+must still be replayed; accepted original history, Scope evidence and connected
+fills are not claimed. Existing owner, policy, limits and LIVE=false are preserved.
+
+Validation: 205 installed-package schema, native history collection/binding,
+restart/delivery, rollover and host-report tests passed. All 316 installed files
+verified; changed-module lint and whitespace checks passed. Host replay is next.
+
+Previous version notes (historical):
+
 Version 1.173. Repair repeat snapshot publication and replay retained pre-open evidence, 2026-10-31 UTC.
 
 Actual host af5e0de built and captured both catalogs, then enrolled the November 2

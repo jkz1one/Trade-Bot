@@ -13,7 +13,7 @@ from pydantic import Field
 from app.mixed.sources import StockDailyHistory
 from app.options.engine import fingerprint
 from app.options.models import OptionRecord
-from app.options.read_gateway import ReadSample
+from app.options.read_gateway import ReadSample, same_schema_contract
 from app.options.read_mapping import SOURCE, exact_rows, instant, response
 from app.options.swing import SwingDailyBar, SwingHourlyHistory
 from app.robinhood.schedule import XNYSCalendar
@@ -178,7 +178,7 @@ def snapshot(policy, symbols, schemas, captured):
     """Bind one complete original capture to one immutable target-session source."""
     if (
         captured.plan is None
-        or captured.schemas != schemas
+        or not same_schema_contract(captured.schemas, schemas)
         or captured.started_at > captured.collected_at
     ):
         raise ValueError("Original history capture clocks and schemas required")

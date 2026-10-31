@@ -551,6 +551,7 @@ class ContinuousFeed:
             return None
         from app.mixed.swing_feed import SwingHistorySnapshot, snapshot
         from app.options.read_capture import policy_digest
+        from app.options.read_gateway import same_schema_contract
 
         value = SwingHistorySnapshot.model_validate_json(row["payload_json"])
         attempt = self.db.execute(
@@ -563,7 +564,7 @@ class ContinuousFeed:
             value.target_session != target
             or fingerprint(value) != row["payload_hash"]
             or captured.policy_sha256 != policy_digest(self.policy.capture)
-            or captured.schemas != self.schemas
+            or not same_schema_contract(captured.schemas, self.schemas)
             or captured.plan is None
             or fingerprint(captured.plan) != attempt["request_hash"]
             or value

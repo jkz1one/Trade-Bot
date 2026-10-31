@@ -16,7 +16,7 @@ from app.mixed.swing_feed import map_history, planned_history, snapshot, target_
 from app.options.engine import fingerprint
 from app.options.operator_inbox import read
 from app.options.read_capture import MAX_RESPONSE_BYTES, CaptureResult, policy_digest
-from app.options.read_gateway import ReadSchemas
+from app.options.read_gateway import ReadSchemas, same_schema_contract
 from app.options.venue import private_path
 from app.robinhood.schedule import XNYSCalendar
 
@@ -44,11 +44,15 @@ def report(feed_directory, policy_file, schemas_file, sequence):
         if saved is None or saved["raw_json"] is None:
             raise ValueError("Bounded original capture required")
         captured = CaptureResult.model_validate_json(saved["raw_json"])
-        if (captured.plan is None or fingerprint(captured.plan) != saved["request_hash"]
-                or captured.schemas != schemas or captured.operation != "CAPTURE"
-                or captured.policy_sha256 != policy_digest(base.capture)
-                or captured.started_at > captured.collected_at):
-            raise ValueError("Original capture binding mismatch")
+        checks = {
+            "plan": captured.plan is not None and fingerprint(captured.plan) == saved["request_hash"],
+            "schema_contract": same_schema_contract(captured.schemas, schemas),
+            "operation": captured.operation == "CAPTURE",
+            "capture_policy": captured.policy_sha256 == policy_digest(base.capture),
+            "capture_clocks": captured.started_at <= captured.collected_at,
+        }
+        if not all(checks.values()):
+            raise CaptureBindingMismatch(checks)
         target = target_session(captured.started_at, XNYSCalendar())
         if target is None:
             raise ValueError("Original pre-open window required")
@@ -92,11 +96,19 @@ def report(feed_directory, policy_file, schemas_file, sequence):
         return {"version": "saved-preopen-history-v1", "status": "SAVED_PREOPEN_REPLAY",
                 "sequence": sequence, "target_session": target.isoformat(),
                 "captured_at": captured.collected_at.isoformat(), "capture_sha256": fingerprint(captured),
+                "enrolled_schema_discovered_at": schemas.captured_at.isoformat(),
+                "capture_schema_discovered_at": captured.schemas.captured_at.isoformat(),
                 "policy_sha256": fingerprint(policy), "history_mapped": mapped, "histories": results,
                 "state_modified": False, "provider_calls": False, "model_calls": 0,
                 "orders_submitted": 0, "live_enabled": False, "trading_ready": False}
     finally:
         db.close()
+
+
+class CaptureBindingMismatch(ValueError):
+    def __init__(self, checks):
+        super().__init__("Original capture binding mismatch")
+        self.checks = checks
 
 
 def main(argv=None):
@@ -107,9 +119,14 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         result = report(args.feed_directory, args.policy, args.schemas, args.sequence)
-    except (OSError, ValueError, RuntimeError, sqlite3.Error, KeyError, TypeError):
-        print(json.dumps({"status": "UNAVAILABLE", "reason": "SAVED_PREOPEN_REPLAY_UNAVAILABLE",
-                          "state_modified": False, "provider_calls": False, "live_enabled": False}))
+    except (OSError, ValueError, RuntimeError, sqlite3.Error, KeyError, TypeError) as exc:
+        from app.execution.failure import failure_details
+        result = {"status": "UNAVAILABLE", "reason": "SAVED_PREOPEN_REPLAY_UNAVAILABLE",
+                  "state_modified": False, "provider_calls": False, "live_enabled": False,
+                  "failure": failure_details(exc)}
+        if isinstance(exc, CaptureBindingMismatch):
+            result["binding_checks"] = exc.checks
+        print(json.dumps(result))
         return 2
     print(json.dumps(result, sort_keys=True))
     return 0

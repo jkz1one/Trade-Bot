@@ -10,21 +10,23 @@ completed a ten-minute session and accepted live packets, but no connected model
 call or simulated fill has yet been observed. A successful preparation is not
 market acceptance or a promise that a setup will qualify.
 
-## Recover the existing Monday preparation
+## Existing Monday preparation and active dashboard
 
 The actual `monday-ready` host attempt enrolled the November 2 policy successfully
 (`7242ac53faf4977e5430c3c49ea124df901d6a660703e3380bcdfc80e718c236`).
 Its receipt remains under
 `/etc/trade-bot-connected/sessions/2026-11-02-monday-ready/prepared.json`.
-The subsequent snapshot failed because the host helper always requested a new
-directory even when its bound publication already existed. Do not repeat the
-captures or enrollment. With the repaired release built, run:
+The snapshot refresh was repaired and the actual host published revision 805,
+feed 130, generation 7 with zero held plays/fills. Dashboard activation then
+succeeded on `6e592cd`; do not switch the already connected reader again.
+Do not repeat the catalogs or enrollment. The saved pre-open report exposed
+another defect: the original schema-discovery timestamp differed from enrollment,
+although authenticated discovery pins the schema contract. Replay, initial Swing
+mapping and retained history recovery now compare validated contract fields while
+preserving both original discovery timestamps. With the repaired release built:
 
 ```bash
-python3 scripts/connected-session-host.py snapshot &&
-python3 scripts/connected-session-host.py preopen-report --sequence 132 &&
-python3 scripts/connected-dashboard-host.py switch \
-  --snapshot-name connected-price-options-v1
+python3 scripts/connected-session-host.py preopen-report --sequence 132
 ```
 
 Snapshot refresh now uses the existing publisher, preserving its binding, receipt

@@ -50,6 +50,15 @@ def test_execute_reports_only_fixed_rollover_failure_codes(monkeypatch):
         assert "private" not in str(caught.value)
 
 
+def test_preopen_failure_returns_native_bounded_diagnostic_without_stderr(monkeypatch):
+    m = load()
+    payload = {'status': 'UNAVAILABLE', 'reason': 'SAVED_PREOPEN_REPLAY_UNAVAILABLE',
+               'binding_checks': {'schema_contract': False}, 'live_enabled': False}
+    monkeypatch.setattr(m.h, 'docker', lambda *a, **k:
+        subprocess.CompletedProcess(a, 2, json.dumps(payload), 'private-stderr'))
+    assert m.execute(IMAGE, 'app.mixed.preopen_replay', [], []) == payload
+
+
 def load():
     spec = importlib.util.spec_from_file_location("session_under_test", SCRIPT)
     m = importlib.util.module_from_spec(spec)

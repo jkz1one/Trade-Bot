@@ -184,6 +184,11 @@ def execute(image_id, module, args, mounts, *, copies=False):
     )
     if result.returncode:
         # Only fixed public reason codes cross this boundary, never raw stderr.
+        if module == "app.mixed.preopen_replay" and len(result.stdout) <= 65536:
+            report = json.loads(result.stdout)
+            if (report.get("status") == "UNAVAILABLE"
+                    and report.get("reason") == "SAVED_PREOPEN_REPLAY_UNAVAILABLE"):
+                return report
         try:
             reason = json.loads(result.stdout).get("reason")
         except (ValueError, AttributeError):
@@ -761,6 +766,7 @@ def main(argv=None):
         result = run(a, release)
         print(json.dumps(result, sort_keys=True))
         return 2 if ((a.operation == "preopen-inputs" and result.get("status") != "PREOPEN_INPUTS_PREPARED")
+                     or (a.operation == "preopen-report" and result.get("status") != "SAVED_PREOPEN_REPLAY")
                      or result.get("status") == "CAPTURE_FAILED") else 0
     except (
         OSError,

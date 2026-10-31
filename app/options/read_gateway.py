@@ -63,6 +63,15 @@ class ReadSchemas(OptionRecord):
         return self
 
 
+def same_schema_contract(left, right):
+    """Compare validated wire contracts, retaining independent discovery clocks."""
+    if left is None or right is None:
+        return False
+    left = ReadSchemas.model_validate(left.model_dump(warnings=False))
+    right = ReadSchemas.model_validate(right.model_dump(warnings=False))
+    return left.model_dump(exclude={"captured_at"}) == right.model_dump(exclude={"captured_at"})
+
+
 class ReadSample(OptionRecord):
     label: Name
     tool: ReadTool

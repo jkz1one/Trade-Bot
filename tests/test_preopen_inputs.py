@@ -50,7 +50,9 @@ def test_preopen_preserves_owner_and_retains_original_history(tmp_path, captures
         market = CapturePlan.model_validate(plan.model_dump() | {'calls': tuple(c for c in plan.calls if not c.label.startswith('swing-'))})
         result = await market_reader(AT)(cp, schemas=schemas, plan=market)
         times[0] = AT + timedelta(seconds=2)
-        return result.model_copy(update={'plan': plan, 'observations': result.observations + artifact['result']['observations']})
+        return result.model_copy(update={'plan': plan,
+            'schemas': schemas.model_copy(update={'captured_at': AT + timedelta(seconds=1)}),
+            'observations': result.observations + artifact['result']['observations']})
     result = asyncio.run(prepare(*args, AT.date(), clock_source=lambda: times[0], reader=reader))
     assert len(calls) == 1
     assert result['collection']['status'] == 'DELIVERED', result
