@@ -1,5 +1,35 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.175. Bind retained original Swing history independently of quote delivery, 2026-10-31 UTC.
+
+Actual host replay on 7bcc91a mapped all four series in attempt 132: 56 daily
+and 54 hourly bars each for SPY/QQQ, target November 2. Original schema discovery
+and capture clocks remain preserved. A subsequent collection (133) failed the
+quote SOURCE_CLOCK_CHECK before history installation. It did not modify the owner.
+
+The existing preopen-inputs operation now accepts --sequence for offline adoption.
+It takes the stopped flat owner's existing lock, revalidates original request,
+schema contract, capture policy, receipt identities, complete original bars and
+retained session rollovers, and installs only derived Swing history before native
+source binding. Target and current enrolled policy must match; future captures
+and replacement of different installed history are rejected. A repeat verifies
+the same evidence/binding. Attempts, their failures, normalized packets, quote
+clocks, owner/account/journal/limits and LIVE=false remain unchanged.
+
+The host command uses --network none with no OAuth or model secrets mounted.
+The existing collector is writable for derived history and its source receipt;
+the entire owner remains read-only. No collection, quote acceptance, runtime
+resume, model call or order is performed. Actual host adoption and subsequent
+market-hours acceptance remain pending. Scope's separate input gaps remain.
+
+Validation: 170 targeted installed-package tests passed across the final test
+runs, including a real same-clock book-change rejection followed by offline
+history binding, damaged/missing receipt rejection, target mismatch, idempotence,
+owner/packet preservation and offline host isolation. All 316 installed application
+files verified; changed production modules/new test lint and whitespace passed.
+
+Previous version notes (historical):
+
 Version 1.174. Match pinned schema contracts across fresh authenticated discovery, 2026-10-31 UTC.
 
 Host 6e592cd refreshed the existing snapshot successfully (revision 805, feed 130,

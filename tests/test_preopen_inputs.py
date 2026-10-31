@@ -1,18 +1,21 @@
 """Native collection/binding without opening a writable execution owner."""
 import asyncio
+import json
+import sqlite3
 from datetime import UTC, date, datetime, timedelta
 
 import pytest
-from test_contract_catalog import captures as captures
-from test_robinhood_read_mapping import schemas as schemas
-from test_combined_session_feed import combined, reader as market_reader
+from test_combined_session_feed import combined
+from test_combined_session_feed import reader as market_reader
 from test_connected_runtime import digest
+from test_contract_catalog import captures as captures  # noqa: PLC0414
+from test_robinhood_read_mapping import schemas as schemas  # noqa: PLC0414
 from test_swing_bar_mapping_proof import synthetic
 
 from app.execution.runtime import runtime_lease
 from app.mixed.continuous_feed import ContinuousFeed
 from app.mixed.preopen_inputs import prepare
-from app.mixed.swing_feed import planned_history, SwingHistoryPolicy
+from app.mixed.swing_feed import SwingHistoryPolicy, planned_history
 from app.options.read_gateway import CapturePlan
 from app.options.runtime_cli import initialize
 
@@ -91,3 +94,84 @@ def test_weekend_date_keys_include_friday_without_future_bounds():
         if call.arguments['interval'] == 'day':
             assert call.arguments['end_time'] == '2026-10-31T00:00:00+00:00'
     assert planned_history(policy, ('SPY',), datetime(2026, 10, 30, 22, tzinfo=UTC)) == (None, ())
+
+
+@pytest.mark.parametrize('failure', ['mapping', 'clock'])
+@pytest.mark.parametrize('damage', ['none', 'interpolation', 'binding', 'receipt', 'missing'])
+def test_install_saved_history_without_accepting_packet_or_reading_provider(
+        tmp_path, captures, schemas, monkeypatch, failure, damage):
+    args = enrolled(tmp_path, captures, schemas)
+    before_owner = digest(args[0])
+    _, _, artifact = synthetic(schemas, at=AT)
+
+    async def reader(cp, *, schemas, plan):
+        market = CapturePlan.model_validate(plan.model_dump() | {
+            'calls': tuple(c for c in plan.calls if not c.label.startswith('swing-'))})
+        result = await market_reader(AT)(cp, schemas=schemas, plan=market)
+        return result.model_copy(update={'plan': plan,
+            'schemas': schemas.model_copy(update={'captured_at': AT + timedelta(seconds=1)}),
+            'observations': result.observations + artifact['result']['observations']})
+
+    def old_failure(*a, **k):
+        raise ValueError('Earlier mapping or unrelated packet rejection')
+
+    with monkeypatch.context() as patch:
+        patch.setattr('app.mixed.swing_feed.snapshot', old_failure)
+        first = asyncio.run(prepare(*args, AT.date(), clock_source=lambda: AT, reader=reader))
+    if failure == 'clock':
+        async def changed_book(cp, *, schemas, plan):
+            result = await reader(cp, schemas=schemas, plan=plan)
+            result = result.model_copy(deep=True)
+            for observation in result.observations:
+                observation['received_at'] = (AT + timedelta(seconds=21)).isoformat()
+            receipt = next(x for x in result.observations if x['tool'] == 'get_option_quotes')
+            receipt['raw']['structuredContent']['data']['results'][0]['quote']['bid_size'] += 1
+            return result.model_copy(update={'started_at': AT + timedelta(seconds=20),
+                                             'collected_at': AT + timedelta(seconds=21)})
+        first = asyncio.run(prepare(*args, AT.date(), clock_source=lambda: AT + timedelta(seconds=20),
+                                    reader=changed_book))
+        assert first['collection']['failure']['stage'] == 'SOURCE_CLOCK_CHECK'
+    sequence = first['collection']['sequence']
+    assert first['status'] == 'PREOPEN_INPUTS_BLOCKED'
+    assert first['collection']['status'] == ('DELIVERED' if failure == 'mapping' else 'FAILED')
+    with sqlite3.connect(args[1] / 'collector.db') as db:
+        if damage == 'binding':
+            db.execute('UPDATE attempts SET request_hash=? WHERE sequence=?', ('0' * 64, sequence))
+        elif damage in ('interpolation', 'receipt'):
+            raw = json.loads(db.execute('SELECT raw_json FROM attempts WHERE sequence=?', (sequence,)).fetchone()[0])
+            receipt = next(x for x in raw['observations'] if x['label'].startswith('swing-'))
+            if damage == 'receipt':
+                receipt['label'] = 'wrong-source'
+            else:
+                receipt['raw']['structuredContent']['data']['results'][0]['bars'][-1]['interpolated'] = True
+            db.execute('UPDATE attempts SET raw_json=? WHERE sequence=?', (json.dumps(raw), sequence))
+        attempts = db.execute('SELECT * FROM attempts').fetchall()
+    feed_file = args[1] / 'feed.json'
+    original_packet = feed_file.read_bytes() if feed_file.exists() else None
+
+    async def forbidden(*a, **k):
+        raise AssertionError('Saved history must not read provider')
+
+    def install():
+        return asyncio.run(prepare(*args, AT.date(), sequence=sequence if damage != 'missing' else 999,
+                                  clock_source=lambda: AT + timedelta(seconds=30), reader=forbidden))
+
+    if damage == 'none':
+        accepted = install()
+        assert accepted['status'] == 'PREOPEN_INPUTS_PREPARED', accepted
+        assert accepted['collection']['status'] == 'SAVED_HISTORY_INSTALLED'
+        assert accepted['collection']['provider_calls'] is False
+        repeated = install()
+        assert repeated['collection']['status'] == 'RETAINED_HISTORY'
+        assert repeated['swing_binding'] == accepted['swing_binding']
+        with pytest.raises(ValueError, match='SAVED_HISTORY_SESSION_MISMATCH'):
+            asyncio.run(prepare(*args, date(2026, 10, 29), sequence=sequence,
+                                clock_source=lambda: AT + timedelta(days=1), reader=forbidden))
+    else:
+        with pytest.raises(ValueError):
+            install()
+    with sqlite3.connect(args[1] / 'collector.db') as db:
+        assert db.execute('SELECT * FROM attempts').fetchall() == attempts
+        assert db.execute('SELECT COUNT(*) FROM swing_history').fetchone()[0] == (damage == 'none')
+    assert (feed_file.read_bytes() if feed_file.exists() else None) == original_packet
+    assert digest(args[0]) == before_owner

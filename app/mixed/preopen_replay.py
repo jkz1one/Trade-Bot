@@ -21,6 +21,41 @@ from app.options.venue import private_path
 from app.robinhood.schedule import XNYSCalendar
 
 
+def saved_capture(db, base, schemas, sequence):
+    """Validate original evidence and its enrolled session inside caller transaction."""
+    if type(sequence) is not int or sequence < 1:
+        raise ValueError("Positive saved collector sequence required")
+    rows = load_rollovers(db, base, schemas)
+    saved = db.execute(
+        "SELECT request_hash,raw_json FROM attempts WHERE sequence=? "
+        "AND length(CAST(raw_json AS BLOB))<=?", (sequence, MAX_RESPONSE_BYTES),
+    ).fetchone()
+    if saved is None or saved["raw_json"] is None:
+        raise ValueError("Bounded original capture required")
+    captured = CaptureResult.model_validate_json(saved["raw_json"])
+    checks = {
+        "plan": captured.plan is not None and fingerprint(captured.plan) == saved["request_hash"],
+        "schema_contract": same_schema_contract(captured.schemas, schemas),
+        "operation": captured.operation == "CAPTURE",
+        "capture_policy": captured.policy_sha256 == policy_digest(base.capture),
+        "capture_clocks": captured.started_at <= captured.collected_at,
+    }
+    if not all(checks.values()):
+        raise CaptureBindingMismatch(checks)
+    target = target_session(captured.started_at, XNYSCalendar())
+    if target is None:
+        raise ValueError("Original pre-open window required")
+    policy = policy_for(base, rows, target)
+    if policy.swing_history is None:
+        raise ValueError("History policy unavailable")
+    symbols = tuple(i.symbol for i in policy.stocks)
+    selected, calls = planned_history(policy.swing_history, symbols, captured.started_at)
+    actual = tuple(c for c in captured.plan.calls if c.label.startswith("swing-"))
+    if selected != target or actual != calls or not calls:
+        raise ValueError("Original history request mismatch")
+    return captured, policy, target, calls
+
+
 def report(feed_directory, policy_file, schemas_file, sequence):
     if type(sequence) is not int or sequence < 1:
         raise ValueError("Positive saved collector sequence required")
@@ -36,34 +71,8 @@ def report(feed_directory, policy_file, schemas_file, sequence):
         db.execute("PRAGMA query_only=ON")
         db.execute("PRAGMA trusted_schema=OFF")
         db.execute("BEGIN")
-        rows = load_rollovers(db, base, schemas)
-        saved = db.execute(
-            "SELECT request_hash,raw_json FROM attempts WHERE sequence=? "
-            "AND length(CAST(raw_json AS BLOB))<=?", (sequence, MAX_RESPONSE_BYTES),
-        ).fetchone()
-        if saved is None or saved["raw_json"] is None:
-            raise ValueError("Bounded original capture required")
-        captured = CaptureResult.model_validate_json(saved["raw_json"])
-        checks = {
-            "plan": captured.plan is not None and fingerprint(captured.plan) == saved["request_hash"],
-            "schema_contract": same_schema_contract(captured.schemas, schemas),
-            "operation": captured.operation == "CAPTURE",
-            "capture_policy": captured.policy_sha256 == policy_digest(base.capture),
-            "capture_clocks": captured.started_at <= captured.collected_at,
-        }
-        if not all(checks.values()):
-            raise CaptureBindingMismatch(checks)
-        target = target_session(captured.started_at, XNYSCalendar())
-        if target is None:
-            raise ValueError("Original pre-open window required")
-        policy = policy_for(base, rows, target)
-        if policy.swing_history is None:
-            raise ValueError("History policy unavailable")
+        captured, policy, target, calls = saved_capture(db, base, schemas, sequence)
         symbols = tuple(i.symbol for i in policy.stocks)
-        selected, calls = planned_history(policy.swing_history, symbols, captured.started_at)
-        actual = tuple(c for c in captured.plan.calls if c.label.startswith("swing-"))
-        if selected != target or actual != calls or not calls:
-            raise ValueError("Original history request mismatch")
         results = []
         for call, receipt in zip(captured.plan.calls, captured.observations, strict=True):
             if call not in calls:

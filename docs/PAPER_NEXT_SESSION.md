@@ -19,23 +19,23 @@ Its receipt remains under
 The snapshot refresh was repaired and the actual host published revision 805,
 feed 130, generation 7 with zero held plays/fills. Dashboard activation then
 succeeded on `6e592cd`; do not switch the already connected reader again.
-Do not repeat the catalogs or enrollment. The saved pre-open report exposed
-another defect: the original schema-discovery timestamp differed from enrollment,
-although authenticated discovery pins the schema contract. Replay, initial Swing
-mapping and retained history recovery now compare validated contract fields while
-preserving both original discovery timestamps. With the repaired release built:
+Do not repeat the catalogs or enrollment. Actual replay on 7bcc91a verified all
+four original histories in attempt 132 (56 daily and 54 hourly bars per symbol).
+Attempt 133 then failed quote-clock validation before it could install history.
+Use the saved original history directly with the repaired release:
 
 ```bash
-python3 scripts/connected-session-host.py preopen-report --sequence 132
+python3 scripts/connected-session-host.py preopen-inputs \
+  --target-session 2026-11-02 --sequence 132
 ```
 
-Snapshot refresh now uses the existing publisher, preserving its binding, receipt
-checks, atomic replacement and retained failure files. The saved-history report
-revalidates attempt 132 offline, at its original capture time and enrolled policy,
-and reports all four series independently. Missing source coverage includes exact
-counts and up to eight missing/unexpected bar labels. It neither fetches again nor
-installs history. `history_mapped: false` still requires original usable history;
-the report succeeding is not Swing acceptance.
+This runs offline without authentication mounts. It revalidates the original
+capture and current enrolled session, installs only derived history and invokes
+native source binding. It preserves failed quote attempts, original timestamps,
+the owner halt and execution state. A repeat verifies the same binding; it never
+replaces different already installed history. Expected success is
+`PREOPEN_INPUTS_PREPARED`; this is source preparation, not market acceptance.
+No further collection, enrollment or dashboard activation is needed for this step.
 
 The reader permits old **halted STOPPED/FAILED records**, with their original
 timestamps and existing stale-account/last-available-records notice. Running and

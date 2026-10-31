@@ -482,13 +482,16 @@ def test_swing_preparation_uses_separate_readonly_capture_mount(tmp_path, monkey
     assert not any('/auth' in value or 'model_key' in value for value in call[3])
 
 
-def test_preopen_collection_mounts_owner_read_only_without_model_or_publisher(tmp_path, monkeypatch):
+@pytest.mark.parametrize('sequence', [None, 132])
+def test_preopen_collection_mounts_owner_read_only_without_model_or_publisher(tmp_path, monkeypatch, sequence):
     m = load()
     state, auth = tmp_path / 'state', tmp_path / 'auth'
-    for path in (state, state / 'config', state / 'collector', auth):
+    for path in (state, state / 'config', state / 'collector'):
         path.mkdir(mode=0o700)
-    for name in ('robinhood-oauth.json', 'discovery.json'):
-        path = auth / name; path.write_text('{}'); path.chmod(0o600)
+    if sequence is None:
+        auth.mkdir(mode=0o700)
+        for name in ('robinhood-oauth.json', 'discovery.json'):
+            path = auth / name; path.write_text('{}'); path.chmod(0o600)
     monkeypatch.setattr(m, 'STATE', state)
     monkeypatch.setattr(m, 'AUTH', auth)
     monkeypatch.setattr(m, 'image', lambda _: IMAGE)
@@ -499,10 +502,13 @@ def test_preopen_collection_mounts_owner_read_only_without_model_or_publisher(tm
         calls.append(args)
         return subprocess.CompletedProcess(args, 2, '{"status":"PREOPEN_INPUTS_BLOCKED","live_enabled":false}', '')
     monkeypatch.setattr(m.h, 'docker', docker)
-    result = m.run(SimpleNamespace(operation='preopen-inputs', target_session='2026-11-02'), RELEASE)
+    result = m.run(SimpleNamespace(operation='preopen-inputs', target_session='2026-11-02', sequence=sequence), RELEASE)
     assert result['status'] == 'PREOPEN_INPUTS_BLOCKED'
     command = calls[0]
-    assert command[command.index('--network') + 1] == 'bridge'
+    assert command[command.index('--network') + 1] == ('bridge' if sequence is None else 'none')
+    if sequence is not None:
+        assert not any('/auth' in x for x in command)
+        assert command[command.index('--sequence') + 1] == '132'
     assert f'type=bind,src={state},dst=/state,readonly' in command
     assert f'type=bind,src={state / "collector"},dst=/state/collector' in command
     assert not any('/run/secrets' in x or '/exports' in x for x in command)

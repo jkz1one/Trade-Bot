@@ -550,17 +550,24 @@ def run(args, release):
         bundle(image_id)
         no_active_session()
         private(STATE / "collector", True)
-        private(AUTH, True)
-        private(AUTH / "robinhood-oauth.json")
-        private(AUTH / "discovery.json")
+        sequence = getattr(args, "sequence", None)
+        auth_mounts = []
+        if sequence is None:
+            private(AUTH, True)
+            private(AUTH / "robinhood-oauth.json")
+            private(AUTH / "discovery.json")
+            auth_mounts = [*mount(AUTH, "/auth", False), *mount(AUTH / "discovery.json", "/auth/discovery.json")]
+        elif type(sequence) is not int or sequence < 1:
+            raise ValueError("Positive saved collector sequence required")
         result = h.docker(
-            "run", "--rm", "--network", "bridge", *isolation(),
+            "run", "--rm", "--network", "none" if sequence is not None else "bridge", *isolation(),
             *config_mounts(), *mount(STATE / "collector", "/state/collector", False),
-            *mount(AUTH, "/auth", False), *mount(AUTH / "discovery.json", "/auth/discovery.json"),
+            *auth_mounts,
             image_id, "python", "-I", "-W", "error", "-m", "app.mixed.preopen_inputs",
             "--directory", "/state/owner", "--feed-directory", "/state/collector",
             "--policy", "/state/config/policy.json", "--schemas", "/state/config/schemas.json",
-            "--target-session", target, timeout=180, allow_failure=True,
+            "--target-session", target, *(["--sequence", str(sequence)] if sequence is not None else []),
+            timeout=180, allow_failure=True,
         )
         if len(result.stdout) > 65536:
             raise RuntimeError("PREOPEN_REPORT_UNAVAILABLE")
@@ -730,8 +737,10 @@ def main(argv=None):
     p.add_argument("--seconds", type=int)
     p.add_argument("--sequence", type=int)
     a = p.parse_args(argv)
-    if (a.operation == "preopen-report") != (a.sequence is not None):
-        p.error("Only preopen-report requires --sequence")
+    if a.operation == "preopen-report" and a.sequence is None:
+        p.error("preopen-report requires --sequence")
+    if a.sequence is not None and a.operation not in ("preopen-report", "preopen-inputs"):
+        p.error("--sequence is only for preopen-report or preopen-inputs")
     if a.scope_binding is not None and a.operation != "prepare-session":
         p.error("--scope-binding is only for prepare-session")
     if a.earnings_probe is not None and a.operation != "prepare-session":
