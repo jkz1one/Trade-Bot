@@ -1,0 +1,105 @@
+/* Local presentation only. No fetch, timers, provider SDKs or execution actions. */
+(() => {
+  'use strict';
+  let bindings;
+  function setup(event) {
+  if (bindings) bindings.abort();
+  bindings = new AbortController();
+  const root = document.body;
+  const key = 'trade-bot:desk:' + root.dataset.population;
+  let saved = {};
+  try { saved = JSON.parse(sessionStorage.getItem(key) || '{}') || {}; } catch (_) {}
+  if (typeof saved !== 'object' || Array.isArray(saved)) saved = {};
+  const save = () => { try { sessionStorage.setItem(key, JSON.stringify(saved)); } catch (_) {} };
+  const groups = [];
+  document.querySelectorAll('[data-tabs]').forEach(nav => {
+    const buttons = Array.from(nav.querySelectorAll('button[data-panel]'));
+    const panels = buttons.map(button => document.getElementById(button.dataset.panel));
+    if (panels.some(panel => !panel)) return;
+    const name = nav.dataset.tabs;
+    nav.setAttribute('role', 'tablist');
+    const select = (index, focus = false) => {
+      buttons.forEach((button, i) => {
+        button.setAttribute('aria-selected', String(i === index));
+        button.tabIndex = i === index ? 0 : -1;
+        panels[i].hidden = i !== index;
+      });
+      saved[name] = buttons[index].dataset.panel;
+      save();
+      if (focus) buttons[index].focus();
+    };
+    buttons.forEach((button, i) => {
+      button.id = 'tab-' + button.dataset.panel;
+      button.setAttribute('role', 'tab');
+      button.setAttribute('aria-controls', panels[i].id);
+      panels[i].setAttribute('role', 'tabpanel');
+      panels[i].setAttribute('aria-labelledby', button.id);
+      panels[i].tabIndex = 0;
+      button.addEventListener('click', () => select(i));
+      button.addEventListener('keydown', event => {
+        let next;
+        if (event.key === 'ArrowRight') next = (i + 1) % buttons.length;
+        if (event.key === 'ArrowLeft') next = (i + buttons.length - 1) % buttons.length;
+        if (event.key === 'Home') next = 0;
+        if (event.key === 'End') next = buttons.length - 1;
+        if (next !== undefined) { event.preventDefault(); select(next, true); }
+      });
+    });
+    select(Math.max(0, buttons.findIndex(button => button.dataset.panel === saved[name])));
+    groups.push({panels, select});
+  });
+  function revealHash() {
+    let id;
+    try { id = decodeURIComponent(location.hash.slice(1)); } catch (_) { return; }
+    const target = document.getElementById(id);
+    if (!target) return;
+    groups.forEach(({panels, select}) => {
+      const index = panels.findIndex(panel => panel === target || panel.contains(target));
+      if (index >= 0) select(index);
+    });
+    target.scrollIntoView({block: 'nearest'});
+  }
+  addEventListener('hashchange', revealHash, {signal: bindings.signal});
+  document.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', () => {
+    if (link.hash === location.hash) revealHash();
+  }));
+  if (!event) revealHash();
+  const chart = document.querySelector('svg[data-sessions]');
+  if (chart) {
+    const sessions = JSON.parse(chart.dataset.sessions);
+    const lines = Array.from(chart.querySelectorAll('polyline')).map(line => ({
+      line, points: line.getAttribute('points').trim().split(/\s+/).map(point => point.split(',').map(Number))
+    }));
+    const ranges = Array.from(document.querySelectorAll('[data-range]'));
+    const range = value => {
+      const count = value === 'all' ? sessions.length : Number(value);
+      const start = Math.max(0, sessions.length - count);
+      const width = sessions.length - start;
+      lines.forEach(({line, points}) => {
+        line.setAttribute('points', points.slice(start).map((point, i) =>
+          (60 + 620 * i / Math.max(1, width)).toFixed(2) + ',' + point[1]
+        ).join(' '));
+      });
+      chart.querySelector('[data-axis="start"]').textContent = start ? sessions[start - 1] : 'Initial';
+      const first = chart.querySelector('[data-axis="first"]');
+      if (first) first.style.display = start ? 'none' : '';
+      ranges.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.range === value)));
+      saved.range = value; save();
+    };
+    ranges.forEach(button => button.addEventListener('click', () => range(button.dataset.range)));
+    range(['5', '20', 'all'].includes(saved.range) ? saved.range : 'all');
+    document.querySelectorAll('[data-series]').forEach(input => {
+      const name = input.dataset.series;
+      const apply = () => {
+        chart.querySelectorAll('.' + name).forEach(line => { line.style.display = input.checked ? '' : 'none'; });
+        saved[name] = input.checked; save();
+      };
+      if (typeof saved[name] === 'boolean') input.checked = saved[name];
+      apply(); input.addEventListener('change', apply);
+    });
+  }
+  root.classList.add('desk-ready');
+  }
+  setup();
+  document.addEventListener('desk:updated', setup);
+})();

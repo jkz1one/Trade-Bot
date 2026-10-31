@@ -1,0 +1,281 @@
+"""Private headless schema/sample capture. No engine, model or deployment handle."""
+
+import argparse
+import asyncio
+import json
+import os
+import stat
+from pathlib import Path
+from uuid import uuid4
+
+from app.execution.market_reads import private_oauth
+from app.options.capability_inventory import summary as inventory_summary
+from app.options.read_capture import CapturePolicy, CaptureResult, collect, failure_evidence
+from app.options.read_gateway import CapturePlan, ReadSchemas, encoded
+
+
+def _pairs(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("Duplicate JSON key")
+        result[key] = value
+    return result
+
+
+def private_json(path, limit=1024 * 1024):
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    try:
+        info = os.fstat(fd)
+        if (
+            not stat.S_ISREG(info.st_mode)
+            or info.st_uid != os.geteuid()
+            or stat.S_IMODE(info.st_mode) != 0o600
+            or not 0 < info.st_size <= limit
+        ):
+            raise ValueError("Private bounded current-owner JSON required")
+        data = os.read(fd, limit + 1)
+        if len(data) > limit:
+            raise ValueError("JSON exceeds bound")
+        result = json.loads(data, object_pairs_hook=_pairs)
+        encoded(result)
+        return result
+    finally:
+        os.close(fd)
+
+
+def _save(fd, payload):
+    data = encoded(payload) + b"\n"
+    os.lseek(fd, 0, os.SEEK_SET)
+    os.ftruncate(fd, 0)
+    while data:
+        count = os.write(fd, data)
+        if count <= 0:
+            raise OSError("Capture write failed")
+        data = data[count:]
+    os.fsync(fd)
+
+
+def export_schemas(source, output, expected_sha):
+    """Export only previously captured tool schemas, without opening credentials."""
+    artifact = private_json(source)
+    if artifact.get("status") != "COMPLETE":
+        raise ValueError("Completed discovery required")
+    result = CaptureResult.model_validate(artifact["result"])
+    if result.operation != "DISCOVER" or result.status != "COMPLETE" or result.schemas is None:
+        raise ValueError("Completed discovery schemas required")
+    schemas = result.schemas
+    if schemas.sha256 != expected_sha:
+        raise ValueError("Reviewed schema pin mismatch")
+    destination = Path(output)
+    info = destination.parent.stat()
+    if (
+        not destination.is_absolute()
+        or not stat.S_ISDIR(info.st_mode)
+        or info.st_uid != os.geteuid()
+        or stat.S_IMODE(info.st_mode) != 0o700
+    ):
+        raise ValueError("Existing private export directory required")
+    fd = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    try:
+        _save(fd, schemas.model_dump(mode="json"))
+    finally:
+        os.close(fd)
+    return {"status": "EXPORTED", "schema_sha256": schemas.sha256, "network_calls": False}
+
+
+def export_earnings(source, output):
+    from app.options.earnings_mapping import map_calendar, mapping_summary
+    from app.options.input_probe import validate_observations
+
+    artifact = private_json(source)
+    result = CaptureResult.model_validate(artifact["result"])
+    if result.operation != "INPUT_PROBE" or artifact.get("operation") != "input-probe":
+        raise ValueError("Original input probe required")
+    validate_observations(result.observations, result.started_at)
+    matches = [r for r in result.observations if r["tool"] == "get_earnings_calendar"]
+    if len(matches) != 1:
+        raise ValueError("Exactly one original earnings receipt required")
+    mapped = map_calendar(matches[0])
+    destination = Path(output)
+    info = destination.parent.stat()
+    if (not destination.is_absolute() or not stat.S_ISDIR(info.st_mode)
+            or info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) != 0o700):
+        raise ValueError("Existing private export directory required")
+    fd = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    try:
+        _save(fd, mapped)
+    finally:
+        os.close(fd)
+    return {"status": "EXPORTED", "mapping": mapping_summary(mapped), "provider_reads": False,
+            "credentials_opened": False, "runtime_state_modified": False, "live_enabled": False}
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    sub = parser.add_subparsers(dest="operation", required=True)
+    report = sub.add_parser("input-probe-report")
+    report.add_argument("--source", required=True)
+    earnings = sub.add_parser("export-earnings")
+    earnings.add_argument("--source", required=True)
+    earnings.add_argument("--output", required=True)
+    export = sub.add_parser("export-schemas")
+    export.add_argument("--source", required=True)
+    export.add_argument("--output", required=True)
+    export.add_argument("--schema-sha256", required=True)
+    for name in ("discover", "capture", "inventory", "input-probe"):
+        cmd = sub.add_parser(name)
+        cmd.add_argument("--oauth-file", required=True)
+        cmd.add_argument("--output", required=True)
+        cmd.add_argument("--timeout-seconds", type=float, default=30)
+        if name == "capture":
+            cmd.add_argument("--schemas", required=True)
+            cmd.add_argument("--schema-sha256", required=True)
+            cmd.add_argument("--plan", required=True)
+    args = parser.parse_args(argv)
+    if args.operation == "export-earnings":
+        try:
+            output = export_earnings(args.source, args.output)
+        except (OSError, ValueError, KeyError, TypeError):
+            print(json.dumps({"status": "UNAVAILABLE", "reason": "EARNINGS_EXPORT_UNAVAILABLE",
+                              "provider_reads": False, "live_enabled": False}))
+            return 1
+        print(json.dumps(output))
+        return 0
+    if args.operation == "input-probe-report":
+        try:
+            from app.options.input_probe import summary, validate_observations
+
+            artifact = private_json(args.source)
+            result = CaptureResult.model_validate(artifact["result"])
+            if result.operation != "INPUT_PROBE" or artifact.get("operation") != "input-probe":
+                raise ValueError("Original input probe required")
+            validate_observations(result.observations, result.started_at)
+            if not result.observations:
+                raise ValueError("No saved probe observations")
+            output = {
+                "status": "SAVED_PROBE_REPORT", "original_capture_status": result.status,
+                "original_error_class": result.error_class,
+                "input_probe": summary(result.observations), "provider_reads": False,
+                "credentials_opened": False, "state_modified": False, "live_enabled": False,
+            }
+        except (OSError, ValueError, KeyError, TypeError):
+            print(json.dumps({"status": "UNAVAILABLE", "reason": "SAVED_PROBE_REPORT_UNAVAILABLE",
+                              "provider_reads": False, "live_enabled": False}))
+            return 1
+        print(json.dumps(output))
+        return 0
+    if args.operation == "export-schemas":
+        try:
+            result = export_schemas(args.source, args.output, args.schema_sha256)
+        except (OSError, ValueError, KeyError, TypeError):
+            result = {
+                "status": "UNAVAILABLE",
+                "reason": "SCHEMA_EXPORT_UNAVAILABLE",
+                "network_calls": False,
+            }
+            print(json.dumps(result))
+            return 1
+        print(json.dumps(result))
+        return 0
+    fd = None
+    admission = {
+        "capture_id": uuid4().hex,
+        "operation": args.operation,
+        "status": "INCOMPLETE",
+        "execution_authority": False,
+        "normalized_data_verified": False,
+    }
+    try:
+        policy = CapturePolicy(oauth_file=args.oauth_file, timeout_seconds=args.timeout_seconds)
+        private_oauth(policy.oauth_file)
+        schemas, plan = None, None
+        if args.operation == "capture":
+            artifact = private_json(args.schemas)
+            if (
+                artifact.get("status") != "COMPLETE"
+                or artifact.get("result", {}).get("operation") != "DISCOVER"
+            ):
+                raise ValueError("Completed discovery artifact required")
+            discovery = CaptureResult.model_validate(artifact["result"])
+            if discovery.status != "COMPLETE" or discovery.schemas is None:
+                raise ValueError("Completed discovery result required")
+            schemas = ReadSchemas.model_validate(discovery.schemas.model_dump(warnings=False))
+            if schemas.sha256 != args.schema_sha256:
+                raise ValueError("Reviewed schema pin mismatch")
+            plan = CapturePlan.model_validate(private_json(args.plan, 64 * 1024))
+        output = Path(args.output).absolute()
+        parent = output.parent
+        info = parent.stat()
+        if (
+            not stat.S_ISDIR(info.st_mode)
+            or info.st_uid != os.geteuid()
+            or stat.S_IMODE(info.st_mode) != 0o700
+        ):
+            raise ValueError("Existing private current-owner capture directory required")
+        fd = os.open(output, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        _save(fd, admission)
+        parent_fd = os.open(parent, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(parent_fd)
+        finally:
+            os.close(parent_fd)
+        extra = {"input_probe": True} if args.operation == "input-probe" else {}
+        result = asyncio.run(collect(policy, schemas=schemas, plan=plan,
+                                    include_inventory=args.operation == "inventory", **extra))
+        _save(fd, {**admission, "status": result.status, "result": result.model_dump(mode="json")})
+        print(
+            json.dumps(
+                {
+                    "capture_id": admission["capture_id"],
+                    "status": result.status,
+                    "schema_sha256": result.schemas.sha256 if result.schemas else None,
+                    "completed_reads": sum(o.get("completed") is True for o in result.observations),
+                    "missing_tools": list(result.schemas.missing_tools) if result.schemas else [],
+                    "missing_input_schemas": list(result.schemas.missing_input_schemas)
+                    if result.schemas
+                    else [],
+                    "missing_output_schemas": list(result.schemas.missing_output_schemas)
+                    if result.schemas
+                    else [],
+                    "execution_authority": False,
+                    "normalized_data_verified": False,
+                    **({"input_probe": result.input_probe} if result.input_probe is not None else {}),
+                    **({"capability_inventory": inventory_summary(result.inventory)}
+                       if result.inventory is not None else {}),
+                    **(
+                        {
+                            "error_class": result.error_class,
+                            "failure": result.failure.model_dump(mode="json"),
+                        }
+                        if result.failure is not None
+                        else {}
+                    ),
+                }
+            )
+        )
+        return 0 if result.status == "COMPLETE" else 1
+    except Exception as exc:  # noqa: BLE001 -- never print OAuth, arguments or provider errors
+        failure = {
+            **admission,
+            "status": "FAILED",
+            "error_class": type(exc).__name__,
+            "failure": failure_evidence(exc, "PARENT").model_dump(mode="json"),
+        }
+        if fd is not None:
+            try:
+                _save(fd, failure)
+            except OSError:
+                failure["artifact_finalized"] = False
+        print(json.dumps(failure))
+        return 1
+    except KeyboardInterrupt:
+        print(json.dumps({**admission, "status": "INTERRUPTED"}))
+        return 130
+    finally:
+        if fd is not None:
+            os.close(fd)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

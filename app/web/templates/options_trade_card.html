@@ -1,0 +1,13 @@
+<section id="trade-card" aria-labelledby="trade-title"><div class="head"><h2 id="trade-title">Active trade</h2><span class="tag">NATIVE RECORD</span></div>
+{% if data.position %}{% set p = data.position %}
+<p class="trade-symbol">{{ p.contract.underlying }} <span class="muted">{{ p.contract.right }} {{ p.contract.strike }}</span></p>
+<p class="muted">{{ p.contract.expiration }} · {{ p.quantity }} contracts · {{ p.quote_status }}</p>
+<div class="trade-metrics"><div><span class="label">Entry basis</span><strong>${{ p.cost_basis|dollars }}</strong></div><div><span class="label">Gross bid value</span><strong>{{ '$' ~ (p.gross_bid_mark|dollars) if p.gross_bid_mark is not none else 'Unavailable' }}</strong></div></div>
+<p class="muted">{{ p.mark_note }}</p>
+<div class="trade-checkpoints" aria-label="Retained protection checkpoints"><div><span class="label">Original invalidation</span><strong>{{ p.original_invalidation }}</strong></div><div><span class="label">Native tightened invalidation</span><strong>{{ p.tightened_invalidation if p.tightened_invalidation is not none else 'Not recorded' }}</strong></div><div><span class="label">Required exit</span><strong>{{ p.exit_at }}</strong></div></div>
+<p class="{{ 'warn' if p.exit_reason or p.supervision_issue else 'muted' }}">{{ p.exit_reason or p.supervision_issue or 'No retained exit requirement' }}</p>
+<details><summary>Original thesis</summary><p class="thesis">{{ p.thesis }}</p></details>
+<p class="muted">Stored protection is not proof of a running worker or a guaranteed exit. Target touches are not fills.</p>
+{% else %}<div class="empty-state"><span class="eyebrow">{{ data.account.position_state }}</span><h3>No owned trade recorded</h3><p>{{ data.active_orders }} unresolved orders. Missing or unresolved evidence does not establish a flat account.</p></div>{% endif %}
+<a href="#position">Inspect contract &amp; protection</a>
+</section>

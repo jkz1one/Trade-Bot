@@ -1,0 +1,36 @@
+<section id="briefing" aria-labelledby="briefing-title">
+  <div class="head"><h2 id="briefing-title">At a glance</h2><span class="tag">SAVED EVIDENCE</span></div>
+  <div class="briefing-grid">
+    <article class="briefing-item">
+      <h3>Entry &amp; evidence</h3>
+      {% if data.entry.halted %}<p class="signal bad">Entry halted</p><p class="bad">{{ data.entry.halt_reason or 'No halt reason recorded' }}</p>
+      {% elif data.entry.recorded_blockers %}<p class="signal warn">Recorded entry blockers</p>
+      {% else %}<p class="signal">No recorded entry blockers</p>{% endif %}
+      {% if data.entry.recorded_blockers %}<ul class="blocker-list">{% for reason in data.entry.recorded_blockers %}<li>{{ reason }}</li>{% endfor %}</ul>{% endif %}
+      <p class="muted">This snapshot grants no approval. A fresh record does not prove a running worker.</p>
+      <dl class="facts compact-facts"><dt>Account age</dt><dd>{{ data.account.age_seconds if data.account.age_seconds is not none else 'Unknown' }}{% if data.account.age_seconds is not none %} seconds{% endif %}</dd><dt>Supervision age</dt><dd>{{ data.supervision.age_seconds if data.supervision.age_seconds is not none else 'Unknown' }}{% if data.supervision.age_seconds is not none %} seconds{% endif %}</dd></dl>
+    </article>
+    <article class="briefing-item">
+      <h3>Owned position &amp; protection</h3>
+      {% if data.position %}{% set p = data.position %}
+      <p class="signal">{{ p.contract.underlying }} <span class="muted">{{ p.contract.right }} {{ p.contract.strike }}</span></p>
+      <p>{{ p.quantity }} contracts · {{ p.contract.expiration }}</p>
+      <dl class="facts compact-facts"><dt>Stored quote</dt><dd class="{{ 'warn' if p.gross_bid_mark is none else '' }}">{{ p.quote_status }}</dd><dt>Effective invalidation</dt><dd>{{ p.tightened_invalidation }}</dd><dt>Required exit</dt><dd>{{ p.exit_at }}</dd></dl>
+      {% if p.exit_reason %}<p class="bad">Retained exit: {{ p.exit_reason }}</p>{% endif %}
+      <p class="muted">Protection is a stored record, not a guaranteed exit or sale price.</p>
+      {% else %}<p class="signal">{{ data.account.position_state|replace('_', ' ')|title }}</p><p class="muted">No owned position is recorded. Missing or unresolved evidence does not establish a flat account.</p>{% endif %}
+      <a href="#position">Position and protection details</a>
+    </article>
+    <article class="briefing-item">
+      <h3>Decision on this page</h3>
+      <p class="muted">Newest in this selected family/page. May be historical.</p>
+      {% if data.opportunities and family != 'SCOPE' %}{% set item = data.opportunities[0] %}{% set a = item.attribution %}
+      <p class="signal">{{ a.proposal_action or 'Not recorded' if a else item.model_choice.action if item.model_choice else 'Not recorded' }}</p>
+      <p>{{ item.family }} · {{ item.status }}</p><small>{{ item.started_at }} · Cycle {{ item.id }}</small>
+      <p class="brief-thesis" tabindex="0" aria-label="Scrollable recorded thesis">{{ a.thesis if a and a.thesis else item.model_choice.thesis if item.model_choice else item.reason or 'No thesis recorded' }}</p>
+      {% if a and a.uncertainty %}<p class="warn brief-thesis" tabindex="0" aria-label="Scrollable recorded uncertainty">Uncertainty: {{ a.uncertainty }}</p>{% endif %}
+      <a href="#decision-{{ item.id }}">Proposal, native review and fill evidence</a>
+      {% else %}<p class="signal">No decision shown</p><p class="muted">No model action or order is inferred for this selection.</p><a href="#opportunities">View recorded history</a>{% endif %}
+    </article>
+  </div>
+</section>

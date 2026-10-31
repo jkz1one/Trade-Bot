@@ -1,0 +1,66 @@
+/* Signed operator inbox transport. The native owner applies each reviewed revision. */
+(() => {
+  'use strict';
+  let review = null, busy = false, generation = 0;
+  const el = id => document.getElementById(id);
+  const status = message => { if (el('admin-status')) el('admin-status').textContent = message; };
+  async function request(url, options = {}) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    try {
+      const response = await fetch(url, {credentials: 'same-origin', cache: 'no-store', signal: controller.signal, ...options});
+      const text = await response.text();
+      if (text.length > 32768) throw new Error('Response too large');
+      const data = JSON.parse(text);
+      if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Request rejected');
+      return data;
+    } finally { clearTimeout(timeout); }
+  }
+  document.addEventListener('click', async event => {
+    if (event.target.closest('#admin-close')) { generation++; review = null; el('admin-dialog')?.close(); return; }
+    if (event.target.closest('#admin-open')) {
+      const dialog = el('admin-dialog');
+      if (!dialog || busy) return;
+      dialog.showModal(); review = null; const token = ++generation;
+      el('admin-submit').disabled = true;
+      status('Reviewing the current revision.');
+      try {
+        const data = await request('/admin/review');
+        if (token !== generation || !dialog.open) return;
+        review = data.review;
+        el('admin-max-plays').value = String(data.max_plays);
+        el('admin-current').textContent = data.occupied_plays + ' occupied plays · limit ' + data.max_plays + ' · revision ' + data.revision;
+        el('admin-submit').disabled = false;
+        status('This review expires in 60 seconds.');
+      } catch (error) { if (token === generation) status(error.message); }
+      return;
+    }
+    if (!event.target.closest('#admin-submit') || busy || !review) return;
+    const reason = el('admin-reason').value.trim();
+    if (!reason) { status('Enter a reason for this change.'); return; }
+    const token = generation;
+    busy = true; el('admin-submit').disabled = true;
+    try {
+      const result = await request('/admin/max-plays', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Portfolio-Review': '1'},
+        body: JSON.stringify({review, max_plays: Number(el('admin-max-plays').value), reason})});
+      review = null;
+      if (token !== generation) return;
+      status('Queued. Waiting for the account owner to apply the change.');
+      let attempts = 0;
+      const check = async () => {
+        if (token !== generation) return;
+        try {
+          const receipt = await request('/admin/receipts/' + result.command_id);
+          if (token !== generation) return;
+          const outcome = receipt.result;
+          if (outcome.status === 'PENDING' && ++attempts < 15 && el('admin-dialog')?.open) { setTimeout(check, 2000); return; }
+          status(outcome.status === 'APPLIED' ? 'Applied: maximum ' + outcome.max_plays + ' plays.'
+            : outcome.status === 'PENDING' ? 'Still queued. The account owner has not applied this change.'
+            : 'Not applied: ' + (outcome.reason || 'Review the current account again.'));
+        } catch (error) { if (token === generation) status('Receipt unavailable. The change may still be queued.'); }
+      };
+      await check();
+    } catch (error) { if (token === generation) { status(error.message + '. Close and reopen to review current state.'); review = null; } }
+    finally { busy = false; }
+  });
+})();

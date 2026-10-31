@@ -1,0 +1,558 @@
+"""Explicit existing-owner simulation runner. Check is read-only; run starts reads.
+
+No enrollment, automatic resume, balance reset, migration or dashboard replacement.
+The native execution gates remain authoritative even when wiring checks pass.
+"""
+
+import argparse
+import asyncio
+import json
+import signal
+import sqlite3
+from datetime import datetime
+from pathlib import Path
+
+from app.domain.models import utc_now
+from app.execution.failure import failure_details
+from app.mixed.connected_check import connection_report
+from app.mixed.continuous_feed import ContinuousFeed, FeedPolicy, held_from_observer
+from app.mixed.observer import MixedObserver
+from app.options.engine import fingerprint
+from app.options.operator_inbox import private_directory, read
+from app.options.read_gateway import ReadSchemas
+from app.options.runtime_cli import existing_runtime, load, strategy_identity
+from app.options.venue import private_path
+from app.robinhood.schedule import XNYSCalendar
+
+
+class ComponentFailure(RuntimeError):
+    """A component stopped unexpectedly or exceeded graceful shutdown time."""
+
+    def __init__(self, reason, details):
+        super().__init__(reason)
+        self.details = details
+
+
+def inspect_owner(directory, settings, *, clock_source=utc_now):
+    """Reject replay populations before opening writable state or credentials."""
+    private_directory(directory)
+    private_path(directory / "venue.db")
+    observer = MixedObserver(
+        directory / "options.db", settings.limits.population_id, clock=clock_source
+    )
+    with observer.read() as db:
+        row = db.execute("SELECT * FROM execution_option_runtime WHERE id=1").fetchone()
+        control = db.execute("SELECT * FROM execution_control WHERE id=1").fetchone()
+        if row is None or control is None:
+            raise ValueError("Existing native runtime enrollment required")
+        if (
+            (row["reason"] or "").startswith("FROZEN_")
+            or (control["halt_reason"] or "").startswith("FROZEN_")
+            or db.execute(
+                "SELECT 1 FROM execution_events WHERE kind='PORTFOLIO_REPLAY_STARTED' LIMIT 1"
+            ).fetchone()
+        ):
+            raise ValueError("Frozen offline replay cannot become a connected owner")
+        frozen = json.loads(row["config_json"])
+        if frozen["runtime"] != settings.runtime.model_dump(mode="json"):
+            raise ValueError("Runtime settings differ from the enrolled owner")
+        config = json.loads(control["config_json"])
+        if config["limits"] != settings.limits.model_dump(mode="json") or config[
+            "policy"
+        ] != settings.execution.model_dump(mode="json"):
+            raise ValueError("Execution settings differ from the enrolled owner")
+        strategy = db.execute(
+            "SELECT policy_json FROM execution_option_strategy WHERE id=1"
+        ).fetchone()
+        expected_strategy = json.loads(strategy_identity(settings))
+        if (
+            strategy is None
+            or json.loads(strategy[0]) != expected_strategy
+            or frozen["strategy"] != expected_strategy
+            or frozen["engine"] != config
+        ):
+            raise ValueError("Strategy or runtime owner settings differ from enrollment")
+        result = {
+            "owner_configuration_sha256": fingerprint(frozen),
+            "owner_revision": db.execute(
+                "SELECT COALESCE(MAX(sequence),0) FROM execution_events"
+            ).fetchone()[0],
+            "runtime_status": row["status"],
+            "runtime_generation": row["generation"],
+            "feed_sequence": row["feed_sequence"],
+            "entry_halted": bool(control["halted"]),
+            "halt_reason": control["halt_reason"],
+        }
+    # A crash may leave a durable venue fill awaiting journal reconciliation.
+    # The owner's first tick runs before the collector requests held coverage.
+    return observer, result
+
+
+def check(directory, feed_directory, policy_file, schemas_file, *, clock_source=utc_now, _upgrade_review=None):
+    paths = tuple(Path(p) for p in (directory, feed_directory, policy_file, schemas_file))
+    if any(not p.is_absolute() for p in paths):
+        raise ValueError("Absolute existing-owner and feed paths required")
+    directory, feed_directory, policy_file, schemas_file = paths
+    pending = directory.parent / "price-options-upgrade.json"
+    if pending.exists() and (_upgrade_review is None or json.loads(read(pending, 512 * 1024)).get("review_sha256") != _upgrade_review):
+        raise ValueError("Complete the pending strategy amendment before starting a runtime")
+    settings = load(directory / "runtime.json")
+    policy = FeedPolicy.model_validate_json(read(policy_file, 256 * 1024))
+    schemas = ReadSchemas.model_validate_json(read(schemas_file, 256 * 1024))
+    result = connection_report(
+        settings,
+        policy,
+        schemas,
+        journal=directory / "options.db",
+        directory=feed_directory,
+        now=clock_source(),
+    )
+    if not result["collector_can_start"]:
+        raise ValueError("Collector and runtime wiring differ")
+    observer, state = inspect_owner(directory, settings, clock_source=clock_source)
+    # Execution freezes the venue's absolute path at enrollment. A second bind
+    # mount may expose identical files but is only valid as a display source.
+    with observer.read() as db:
+        from app.mixed.strategy_upgrade import accepted_owner_hashes
+        accepted = accepted_owner_hashes(db, state["owner_configuration_sha256"])
+        frozen = json.loads(
+            db.execute("SELECT config_json FROM execution_control WHERE id=1").fetchone()[0]
+        )
+    if frozen["venue_path"] != str(directory / "venue.db"):
+        raise ValueError("Execution owner path differs from enrollment")
+    private_directory(feed_directory)
+    private_path(feed_directory / "collector.db")
+    # Reuse the bounded read-only database reader, without opening the collector
+    # lease or performing interrupted-attempt recovery during a check.
+    from app.options.observer import OptionObserver
+
+    with OptionObserver(feed_directory / "collector.db", policy.population_id).read() as db:
+        from zoneinfo import ZoneInfo
+
+        from app.mixed.feed_rollover import load_rollovers, policy_for, verify_owner
+
+        try:
+            rows = load_rollovers(db, policy, schemas)
+            verify_owner(rows, state["owner_configuration_sha256"], accepted)
+        except ValueError:
+            raise ValueError("Collector settings differ or rollover evidence is invalid") from None
+        target = clock_source().astimezone(ZoneInfo("America/New_York")).date()
+        effective = policy_for(policy, rows, target)
+        result = connection_report(
+            settings,
+            effective,
+            schemas,
+            journal=directory / "options.db",
+            directory=feed_directory,
+            now=clock_source(),
+        )
+        result["accepted_owner_hashes"] = accepted
+        result["rollover_sessions"] = [r.target_session.isoformat() for r in rows]
+        result["effective_policy_sha256"] = fingerprint(effective)
+    result.update(
+        version="connected-runtime-check-v1",
+        owner_state=state,
+        state_modified=False,
+        workers_started=False,
+        dashboard_journal=str(directory / "options.db"),
+        dashboard_population_id=settings.limits.population_id,
+    )
+    return result, settings, policy, schemas, observer
+
+
+async def supervise(runtime_run, collector_run, stop, *, shutdown_seconds=30.0, publisher_run=None):
+    """Drain both components before releasing either native ownership lease."""
+    if type(stop) is not asyncio.Event or not 0 < shutdown_seconds <= 60:
+        raise ValueError("Explicit shutdown event and bounded grace required")
+    if stop.is_set():
+        return
+    unexpected = []
+
+    async def component(name, operation):
+        try:
+            await operation(stop)
+            if not stop.is_set():
+                unexpected.append(name)
+        finally:
+            # Fence native entry immediately, before another scheduled task can
+            # act on a component's unexpected return or failure.
+            stop.set()
+
+    tasks = {
+        "RUNTIME": asyncio.create_task(component("RUNTIME", runtime_run), name="connected-runtime"),
+        "COLLECTOR": asyncio.create_task(
+            component("COLLECTOR", collector_run), name="connected-collector"
+        ),
+    }
+    if publisher_run is not None:
+        tasks["PUBLISHER"] = asyncio.create_task(
+            component("PUBLISHER", publisher_run), name="connected-publisher"
+        )
+    waiter = asyncio.create_task(stop.wait(), name="connected-shutdown")
+    forced = []
+    try:
+        await asyncio.wait([*tasks.values(), waiter], return_when=asyncio.FIRST_COMPLETED)
+    finally:
+        stop.set()
+        waiter.cancel()
+        await asyncio.gather(waiter, return_exceptions=True)
+        _, pending = await asyncio.wait(tasks.values(), timeout=shutdown_seconds)
+        forced = [name for name, task in tasks.items() if task in pending]
+        for task in pending:
+            task.cancel()
+        # Cancellation must finish provider/model child cleanup before leases close.
+        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+    failures = [name for name, value in zip(tasks, results) if isinstance(value, BaseException)]
+    if unexpected or forced or failures:
+        details = [
+            {"component": name, **failure_details(value)}
+            for name, value in zip(tasks, results)
+            if isinstance(value, BaseException)
+        ]
+        details.extend(
+            {"component": name, "error_class": "UNEXPECTED_RETURN"} for name in unexpected
+        )
+        details.extend({"component": name, "error_class": "SHUTDOWN_TIMEOUT"} for name in forced)
+        raise ComponentFailure(
+            "CONNECTED_COMPONENT_STOPPED:" + ",".join(sorted(set(unexpected + forced + failures))),
+            details,
+        )
+
+
+def dashboard_source(directory, snapshot_owner):
+    """Allow a display alias only when it exposes the same native owner files."""
+    if snapshot_owner is None:
+        return Path(directory)
+    owner, source = Path(directory), Path(snapshot_owner)
+    if any(not p.is_absolute() or p.resolve() != p for p in (owner, source)):
+        raise ValueError("Canonical absolute execution and display owner paths required")
+    private_directory(owner)
+    private_directory(source)
+    for name in ("runtime.json", "options.db", "venue.db"):
+        private_path(owner / name)
+        private_path(source / name)
+        if not (owner / name).samefile(source / name):
+            raise ValueError("Dashboard source must alias the same execution owner files")
+    return source
+
+
+def dashboard_check(
+    directory,
+    snapshot_directory,
+    reader_uid,
+    reader_gid,
+    *,
+    clock_source=utc_now,
+    snapshot_owner=None,
+):
+    if snapshot_directory is None:
+        if reader_uid is not None or reader_gid is not None or snapshot_owner is not None:
+            raise ValueError("Reader identity requires an enrolled snapshot directory")
+        return None
+    from app.mixed.dashboard_snapshot import check as snapshot_check
+
+    result = snapshot_check(
+        dashboard_source(directory, snapshot_owner),
+        snapshot_directory,
+        reader_uid,
+        reader_gid,
+        clock_source=clock_source,
+    )
+    pending = Path(snapshot_directory) / ".pending.db"
+    if pending.exists() or pending.is_symlink():
+        raise ValueError("Retained failed snapshot requires inspection")
+    return result
+
+
+async def publish_async(publisher):
+    # SQLite backup/validation must not block native supervision. Cancellation
+    # drains the bounded copy before any owning lease or descriptor can close.
+    task = asyncio.create_task(asyncio.to_thread(publisher.publish), name="connected-snapshot-copy")
+    try:
+        return await asyncio.shield(task)
+    except asyncio.CancelledError:
+        while not task.done():
+            try:
+                await asyncio.shield(task)
+            except asyncio.CancelledError:
+                pass
+            except Exception:  # noqa: BLE001 -- consume copy failure, preserve cancellation
+                break
+        if not task.cancelled():
+            task.exception()  # Consume any copy failure while retaining cancellation.
+        raise
+
+
+async def await_ready(ready, stop):
+    waits = [asyncio.create_task(ready.wait()), asyncio.create_task(stop.wait())]
+    try:
+        await asyncio.wait(waits, return_when=asyncio.FIRST_COMPLETED)
+    finally:
+        for task in waits:
+            task.cancel()
+        await asyncio.gather(*waits, return_exceptions=True)
+    return not stop.is_set()
+
+
+
+def session_counts(engine):
+    with engine.journal.read() as db:
+        queries = {
+            "delivered_packets": "SELECT COUNT(*) FROM execution_mixed_runtime_inputs WHERE status='DELIVERED'",
+            "completed_cycles": "SELECT COUNT(*) FROM execution_option_runtime_slots WHERE status='COMPLETE'",
+            "simulated_orders": "SELECT COUNT(*) FROM execution_portfolio_orders",
+            "model_calls": "SELECT COUNT(*) FROM execution_model_calls",
+            "reviewed_entry_resumes": "SELECT COUNT(*) FROM execution_events WHERE kind='OPTION_REVIEWED_RESUME'",
+        }
+        return {key: db.execute(sql).fetchone()[0] for key, sql in queries.items()}
+
+
+def resume_flat(engine, now, *, fresh_startup_feed=False):
+    """Explicit startup recovery only after native reconciliation, never held exposure."""
+    from app.mixed.portfolio_controls import recoverable
+
+    with engine.journal.write() as db:
+        control = engine._control(db)
+        allowed = {"OPTION_RUNTIME_STOPPED", "OPTION_RUNTIME_FAILED"}
+        if fresh_startup_feed:
+            allowed.add("OPTION_RUNTIME_FEED_UNAVAILABLE")
+        if not control["halted"] or control["halt_reason"] not in allowed:
+            raise ValueError("Only a reviewed runtime stop/failure may resume")
+        recoverable(engine, db, now, flat=True)
+        engine._resume(db, "Explicit reviewed flat connected simulation restart",
+                       expected_revision=engine.journal.revision(db), now=now)
+
+async def run(
+    directory,
+    feed_directory,
+    policy_file,
+    schemas_file,
+    stop,
+    *,
+    clock_source=utc_now,
+    snapshot_directory=None,
+    reader_uid=None,
+    reader_gid=None,
+    snapshot_owner=None,
+    resume_flat_reviewed_revision=None,
+):
+    report, settings, policy, schemas, observer = check(
+        directory, feed_directory, policy_file, schemas_file, clock_source=clock_source
+    )
+    if resume_flat_reviewed_revision is not None and (
+        type(resume_flat_reviewed_revision) is not int
+        or report["owner_state"]["owner_revision"] != resume_flat_reviewed_revision
+        or report["owner_state"]["halt_reason"] not in {"OPTION_RUNTIME_STOPPED", "OPTION_RUNTIME_FAILED"}
+    ):
+        raise ValueError("Exact stopped owner review required for explicit flat recovery")
+    dashboard_check(
+        directory,
+        snapshot_directory,
+        reader_uid,
+        reader_gid,
+        clock_source=clock_source,
+        snapshot_owner=snapshot_owner,
+    )
+    if stop.is_set():
+        return {"status": "NOT_STARTED", "live_enabled": False}
+    # The owner lease and native recovery are acquired before collector recovery.
+    # Both must succeed before either asynchronous component can read or trade.
+    with existing_runtime(directory, clock=clock_source) as (runtime, enrolled):
+        if settings != enrolled:
+            raise ValueError("Runtime settings changed during startup")
+        # Recheck under the owner lease, including the retained replay event.
+        _, locked_owner = inspect_owner(Path(directory), enrolled, clock_source=clock_source)
+        if resume_flat_reviewed_revision is not None and locked_owner["owner_revision"] != resume_flat_reviewed_revision:
+            raise ValueError("Owner changed before reviewed recovery")
+        feed = ContinuousFeed(feed_directory, policy, schemas)
+        before_counts = session_counts(runtime.c.engine)
+        publisher = None
+        try:
+            if snapshot_directory is not None:
+                from app.mixed.dashboard_snapshot import DashboardPublisher
+
+                publisher = DashboardPublisher(
+                    dashboard_source(directory, snapshot_owner),
+                    snapshot_directory,
+                    reader_uid,
+                    reader_gid,
+                    clock_source=clock_source,
+                )
+            ready = asyncio.Event()
+
+            async def trade(stop):
+                await runtime.run(stop, ready=ready)
+
+            async def collect(stop):
+                if not await await_ready(ready, stop):
+                    return
+                from app.mixed.scope_feed import owner_state as scope_owner_state
+                operation = feed.run(
+                    stop,
+                    clock_source=clock_source,
+                    held_source=lambda: held_from_observer(observer),
+                    calendar=XNYSCalendar(),
+                    source_settings=enrolled,
+                    **({"scope_state": lambda binding: scope_owner_state(observer, binding)}
+                       if feed.policy.scope_binding or any(r.policy.scope_binding for r in feed.rollovers) else {}),
+                )
+                if resume_flat_reviewed_revision is None:
+                    await operation
+                    return
+                collector = asyncio.create_task(operation)
+                try:
+                    while not stop.is_set() and not collector.done():
+                        at = clock_source()
+                        with runtime.c.engine.journal.read() as db:
+                            current = runtime._bound(db)
+                            fresh = (
+                                current["status"] == "RUNNING"
+                                and current["feed_sequence"] > locked_owner["feed_sequence"]
+                                and current["feed_recorded_at"] is not None
+                                and 0 <= (at - datetime.fromisoformat(current["feed_recorded_at"])).total_seconds()
+                                < runtime.policy.feed_max_age_seconds
+                            )
+                        if fresh:
+                            resume_flat(runtime.c.engine, at, fresh_startup_feed=True)
+                            break
+                        await asyncio.sleep(0.1)
+                    await collector
+                finally:
+                    if not collector.done():
+                        collector.cancel()
+                    await asyncio.gather(collector, return_exceptions=True)
+
+            async def publish(stop):
+                if not await await_ready(ready, stop):
+                    return
+                while not stop.is_set():
+                    dashboard_source(directory, snapshot_owner)
+                    await publish_async(publisher)
+                    try:
+                        await asyncio.wait_for(stop.wait(), timeout=5)
+                    except TimeoutError:
+                        pass
+
+            await supervise(trade, collect, stop, publisher_run=publish if publisher else None)
+            after_counts = session_counts(runtime.c.engine)
+            if publisher is not None:
+                # All runtime/collector cleanup has finished. Publish the stopped
+                # native state once, still under all three ownership leases.
+                dashboard_source(directory, snapshot_owner)
+                await publish_async(publisher)
+        finally:
+            try:
+                if publisher is not None:
+                    publisher.close()
+            finally:
+                feed.close()
+    return {
+        "status": "STOPPED",
+        "session_activity": {key: after_counts[key] - before_counts[key] for key in before_counts},
+        "population_id": settings.limits.population_id,
+        "live_enabled": False,
+        "entry_blockers": report["entry_blockers"],
+        "automatic_resume": False,
+        "dashboard_published": snapshot_directory is not None,
+    }
+
+
+async def serve(args):
+    stop = asyncio.Event()
+    loop = asyncio.get_running_loop()
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(sig, stop.set)
+    timer = loop.call_later(args.seconds, stop.set)
+    try:
+        return await run(
+            args.directory,
+            args.feed_directory,
+            args.policy,
+            args.schemas,
+            stop,
+            snapshot_directory=args.snapshot_directory,
+            reader_uid=args.reader_uid,
+            reader_gid=args.reader_gid,
+            snapshot_owner=args.snapshot_owner,
+            resume_flat_reviewed_revision=args.resume_flat_reviewed_revision,
+        )
+    finally:
+        timer.cancel()
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            loop.remove_signal_handler(sig)
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("operation", choices=("check", "run"))
+    for name in ("directory", "feed-directory", "policy", "schemas"):
+        parser.add_argument("--" + name, required=True)
+    parser.add_argument("--resume-flat-reviewed-revision", type=int)
+    parser.add_argument("--seconds", type=int, help="Required run duration, 1..86400 seconds")
+    parser.add_argument(
+        "--snapshot-directory", help="Existing enrolled dashboard snapshot; never created by run"
+    )
+    parser.add_argument("--reader-uid", type=int)
+    parser.add_argument("--reader-gid", type=int)
+    parser.add_argument("--snapshot-owner", help="Verified alias for the enrolled display source")
+    args = parser.parse_args(argv)
+    if args.snapshot_directory is None:
+        if (
+            args.reader_uid is not None
+            or args.reader_gid is not None
+            or args.snapshot_owner is not None
+        ):
+            parser.error("Reader UID/GID require --snapshot-directory")
+    elif args.reader_uid is None or args.reader_gid is None:
+        parser.error("Snapshot directory requires explicit reader UID and GID")
+    if args.operation == "run" and (args.seconds is None or not 1 <= args.seconds <= 86400):
+        parser.error("Explicit bounded run duration required")
+    if args.operation == "check" and args.resume_flat_reviewed_revision is not None:
+        parser.error("Recovery is only available during an explicitly reviewed run")
+    if args.operation == "check" and args.seconds is not None:
+        parser.error("Check does not start workers")
+    try:
+        if args.operation == "check":
+            result = check(args.directory, args.feed_directory, args.policy, args.schemas)[0]
+            snapshot = dashboard_check(
+                args.directory,
+                args.snapshot_directory,
+                args.reader_uid,
+                args.reader_gid,
+                snapshot_owner=args.snapshot_owner,
+            )
+            if snapshot is not None:
+                result["dashboard_snapshot"] = snapshot
+        else:
+            result = asyncio.run(serve(args))
+    except ComponentFailure as exc:
+        print(
+            json.dumps(
+                {
+                    "status": "UNAVAILABLE",
+                    "reason": str(exc),
+                    "failures": exc.details,
+                    "live_enabled": False,
+                }
+            )
+        )
+        return 2
+    except (OSError, ValueError, RuntimeError, sqlite3.Error, KeyError, TypeError) as exc:
+        # Never echo provider exceptions, private configuration or credentials.
+        print(
+            json.dumps(
+                {
+                    "status": "UNAVAILABLE",
+                    "reason": "CONNECTED_RUNTIME_UNAVAILABLE",
+                    "failure": failure_details(exc),
+                    "live_enabled": False,
+                }
+            )
+        )
+        return 2
+    print(json.dumps(result, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,755 @@
+{
+  "get_earnings_calendar": {
+    "annotations": {
+      "destructiveHint": null,
+      "idempotentHint": null,
+      "openWorldHint": null,
+      "readOnlyHint": true,
+      "title": null
+    },
+    "description": "List earnings reports scheduled across the market over a date window (up to 31 days), optionally limited to high-market-cap names. Returns one entry per report event \u2014 estimated/actual EPS, report date and timing (am/pm), and company-verification status. Use this for market-wide discovery (\"what large-caps report this week?\"). For a specific known ticker, use get_earnings_results instead. Read-only.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "days": {
+          "description": "Window length in days, measured from start_date. Defaults to 7. Positive = forward window (e.g. 7 = the next 7 days, inclusive of start_date); negative = look-back window (e.g. -7 = the 7 days ending at start_date). Must be a non-zero value between -31 and 31 \u2014 windows wider than 31 days are rejected.",
+          "type": "integer"
+        },
+        "filter": {
+          "description": "Optional result filter. Set to 'high_market_cap' to limit the calendar to high-market-cap names (market cap over $1B) \u2014 useful for 'what large-caps report this week' style questions. Omit for all names.",
+          "type": "string"
+        },
+        "start_date": {
+          "description": "Window anchor, YYYY-MM-DD. Defaults to today (US/Eastern) when omitted.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "name": "get_earnings_calendar",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "additionalProperties": false,
+          "description": "Tool-specific result payload; see the inner properties for fields.",
+          "properties": {
+            "results": {
+              "description": "Earnings report events in the window, one per company-quarter, sorted ascending by report date. Empty array when no reports fall in the window.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "eps": {
+                    "additionalProperties": false,
+                    "description": "Estimated and actual earnings per share for the quarter. Both sides may be null \u2014 see field docs.",
+                    "properties": {
+                      "actual": {
+                        "description": "Reported EPS for the quarter. Null for upcoming quarters (not yet reported) \u2014 pair with report.date to tell the two apart.",
+                        "type": [
+                          "null",
+                          "string"
+                        ]
+                      },
+                      "estimate": {
+                        "description": "Expected (estimated) EPS for the quarter. Null when no estimate is available for this quarter.",
+                        "type": [
+                          "null",
+                          "string"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "estimate",
+                      "actual"
+                    ],
+                    "type": "object"
+                  },
+                  "quarter": {
+                    "description": "Fiscal quarter of the report (1-4).",
+                    "type": "integer"
+                  },
+                  "report": {
+                    "additionalProperties": false,
+                    "description": "Report scheduling \u2014 date, am/pm timing, company-verification flag. Null when upstream has no scheduled event for this quarter yet.",
+                    "properties": {
+                      "date": {
+                        "description": "YYYY-MM-DD report date. Present whenever the parent report block is non-null \u2014 use the parent's null/non-null state, not this field, to detect 'no scheduled event'.",
+                        "type": [
+                          "null",
+                          "string"
+                        ]
+                      },
+                      "timing": {
+                        "description": "'am' (before market) or 'pm' (after market). Null when timing is not yet known \u2014 only distinguishes before/after market, not an exact time.",
+                        "type": [
+                          "null",
+                          "string"
+                        ]
+                      },
+                      "verified": {
+                        "description": "True when the company has confirmed the report date. False when the date is tentative (not yet company-confirmed).",
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "date",
+                      "timing",
+                      "verified"
+                    ],
+                    "type": [
+                      "null",
+                      "object"
+                    ]
+                  },
+                  "symbol": {
+                    "description": "Ticker symbol the earnings event belongs to.",
+                    "type": "string"
+                  },
+                  "year": {
+                    "description": "Fiscal year of the report (e.g. 2026).",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "symbol",
+                  "year",
+                  "quarter",
+                  "eps",
+                  "report"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            }
+          },
+          "required": [
+            "results"
+          ],
+          "type": "object"
+        },
+        "guide": {
+          "description": "Each entry is one company's report event within the window, sorted ascending by report date. The window spans days from start_date (positive = forward, negative = look-back). Distinguish \"upcoming\" from \"already reported\" by eps.actual: null means not yet reported. When report.verified is false, present the date as tentative rather than confirmed. An empty results array means no reports fall in the window (with filter=high_market_cap, no high-market-cap names do) \u2014 not an error. This tool does NOT return an \"expected move\" \u2014 pair with options data for implied-volatility-based moves.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data",
+        "guide"
+      ],
+      "type": "object"
+    }
+  },
+  "get_equity_price_book": {
+    "annotations": {
+      "destructiveHint": null,
+      "idempotentHint": null,
+      "openWorldHint": null,
+      "readOnlyHint": true,
+      "title": null
+    },
+    "description": "Get a real-time bid/ask order book (Level 2) snapshot for one or more equity symbols (max 4), showing the ladder of price levels and resting share size on each side. Use to read supply/demand depth before entering or exiting a position.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "symbols": {
+          "description": "One or more stock symbols, max 4 per call.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        }
+      },
+      "required": [
+        "symbols"
+      ],
+      "type": "object"
+    },
+    "name": "get_equity_price_book",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "additionalProperties": false,
+          "description": "Tool-specific result payload; see the inner properties for fields.",
+          "properties": {
+            "books": {
+              "description": "One order-book snapshot per successfully fetched symbol, in request order. A symbol that failed appears in errors instead.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "asks": {
+                    "description": "Ask (sell-side) levels, ascending by price (best/lowest ask first). Empty when the book is unavailable.",
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "price": {
+                          "description": "Limit price at this level, as a decimal string.",
+                          "type": "string"
+                        },
+                        "quantity": {
+                          "description": "Aggregate shares resting at this price level.",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "price",
+                        "quantity"
+                      ],
+                      "type": "object"
+                    },
+                    "type": [
+                      "null",
+                      "array"
+                    ]
+                  },
+                  "bids": {
+                    "description": "Bid (buy-side) levels, descending by price (best/highest bid first). Empty when the book is unavailable.",
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "price": {
+                          "description": "Limit price at this level, as a decimal string.",
+                          "type": "string"
+                        },
+                        "quantity": {
+                          "description": "Aggregate shares resting at this price level.",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "price",
+                        "quantity"
+                      ],
+                      "type": "object"
+                    },
+                    "type": [
+                      "null",
+                      "array"
+                    ]
+                  },
+                  "symbol": {
+                    "description": "Ticker symbol this book is for.",
+                    "type": "string"
+                  },
+                  "updated_at": {
+                    "description": "Time the snapshot was taken.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "symbol",
+                  "updated_at",
+                  "asks",
+                  "bids"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            },
+            "errors": {
+              "description": "Per-symbol failures. A symbol appears here or in books, never both. Empty when every requested symbol succeeded.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "error": {
+                    "description": "Why this symbol's book is unavailable: it did not resolve to an equity, the market is closed, or the snapshot request failed.",
+                    "type": "string"
+                  },
+                  "symbol": {
+                    "description": "Requested symbol that could not be returned.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "symbol",
+                  "error"
+                ],
+                "type": "object"
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            }
+          },
+          "required": [
+            "books"
+          ],
+          "type": "object"
+        },
+        "guide": {
+          "description": "Each book in books is one symbol's snapshot: asks are sell-side levels (lowest/best ask first) and bids are buy-side levels (highest/best bid first), so the inside market is asks[0] vs bids[0]. quantity is the resting share size at a level \u2014 a level with outsized size relative to its neighbors is a wall (support on the bid side, resistance on the ask side). A requested symbol appears in books OR in errors, never both: surface anything in errors (a symbol that did not resolve to an equity, or whose book was unavailable because the market is closed) rather than implying its book was empty. An empty asks or bids array means no resting liquidity on that side right now, not an error.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data",
+        "guide"
+      ],
+      "type": "object"
+    }
+  },
+  "get_index_historicals": {
+    "annotations": {
+      "destructiveHint": null,
+      "idempotentHint": null,
+      "openWorldHint": null,
+      "readOnlyHint": true,
+      "title": null
+    },
+    "description": "Get OHLC value bars for one or more market indexes (by instrument UUID) across an explicit time range. Use this for charting an index's history and \"recent movement\" questions. If the bar's interpolated field is true, bar was synthesized to fill a gap and carry no new information.\n\nParameter rules:\n- instrument_ids are index instrument UUIDs from get_indexes. Resolve symbols there first; this tool does not accept ticker symbols.\n- interval is required; pick the coarsest interval that answers the question. If the requested interval would produce too many bars for the range, the call is rejected \u2014 narrow the range or coarsen the interval.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "end_time": {
+          "description": "End of the range (RFC3339 UTC). Optional \u2014 when omitted, defaults to the current time.",
+          "type": "string"
+        },
+        "instrument_ids": {
+          "description": "Index instrument UUIDs (from get_indexes). Up to 10 per call.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        },
+        "interval": {
+          "description": "Bar interval. Required \u2014 there is no server auto-select for indexes. Intraday: 5second, 15second, 30second, minute, 5minute, 10minute, 30minute, hour, 4hour. Interday: day, week, month, 3month, 6month, year, 5year, 10year, 20year, 50year. Note: the 1-minute bar is named 'minute' (not '1minute').",
+          "type": "string"
+        },
+        "start_time": {
+          "description": "Start of the range (RFC3339 UTC, e.g. '2026-01-01T00:00:00Z'). Required.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "instrument_ids",
+        "start_time",
+        "interval"
+      ],
+      "type": "object"
+    },
+    "name": "get_index_historicals",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "additionalProperties": false,
+          "description": "Tool-specific result payload; see the inner properties for fields.",
+          "properties": {
+            "not_found": {
+              "description": "Requested instrument_ids that did not resolve (invalid or unknown). Absent when every requested id resolved.",
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            },
+            "restricted": {
+              "description": "Requested indexes whose historical data is not licensed for this channel. No bars are ever returned for these. Absent when none were requested.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "instrument_id": {
+                    "description": "UUID of the restricted index instrument, as requested.",
+                    "type": "string"
+                  },
+                  "symbol": {
+                    "description": "Index ticker whose historical data is not licensed for this channel.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "instrument_id",
+                  "symbol"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            },
+            "results": {
+              "description": "One entry per requested index that resolved upstream. Empty if no instrument_id resolved.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "bars": {
+                    "description": "Bars in ascending time order. May be empty if no values were published in the window.",
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "begins_at": {
+                          "description": "Start of the bar (RFC3339 UTC). Bars are left-edge labeled.",
+                          "type": "string"
+                        },
+                        "close_value": {
+                          "description": "Index level at the end of the bar, as a decimal string. NOT an official close; for the live level use get_index_quotes.",
+                          "type": "string"
+                        },
+                        "high_value": {
+                          "description": "Highest index level in the bar, as a decimal string.",
+                          "type": "string"
+                        },
+                        "interpolated": {
+                          "description": "True when the bar was synthesized to fill a gap (no values were published); its levels are filled from a nearby bar and carry no new information.",
+                          "type": "boolean"
+                        },
+                        "low_value": {
+                          "description": "Lowest index level in the bar, as a decimal string.",
+                          "type": "string"
+                        },
+                        "open_value": {
+                          "description": "Index level at the start of the bar, as a decimal string.",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "begins_at",
+                        "open_value",
+                        "high_value",
+                        "low_value",
+                        "close_value"
+                      ],
+                      "type": [
+                        "null",
+                        "object"
+                      ]
+                    },
+                    "type": [
+                      "null",
+                      "array"
+                    ]
+                  },
+                  "instrument_id": {
+                    "description": "UUID of the index instrument.",
+                    "type": "string"
+                  },
+                  "interval": {
+                    "description": "Bar interval echoed from the request.",
+                    "type": "string"
+                  },
+                  "symbol": {
+                    "description": "Index ticker (e.g. SPX, NDX).",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "instrument_id",
+                  "symbol",
+                  "interval",
+                  "bars"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            }
+          },
+          "required": [
+            "results"
+          ],
+          "type": "object"
+        },
+        "guide": {
+          "description": "Bars are left-edge labeled in UTC; convert to the user's timezone for presentation. Treat interpolated=true bars as gap-fill \u2014 they carry no new information and should usually be hidden in charts and ignored for analytics. Bars carry index values, not trade prices \u2014 there is no volume. For the current level use get_index_quotes; for a multi-bar move, compute the change from the first bar's open_value to the last bar's close_value. Match results to your request by instrument_id; requested ids that did not resolve are listed in not_found, and ids under restricted are unavailable for licensing reasons \u2014 tell the user that rather than retrying.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data",
+        "guide"
+      ],
+      "type": "object"
+    }
+  },
+  "get_index_quotes": {
+    "annotations": {
+      "destructiveHint": null,
+      "idempotentHint": null,
+      "openWorldHint": null,
+      "readOnlyHint": true,
+      "title": null
+    },
+    "description": "Get real-time values for one or more market indexes by instrument ID. Returns current index level, state, and timestamps.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "instrument_ids": {
+          "description": "One or more index instrument IDs (UUIDs) to fetch current values for. Obtain IDs from the get_indexes tool.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        }
+      },
+      "required": [
+        "instrument_ids"
+      ],
+      "type": "object"
+    },
+    "name": "get_index_quotes",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "additionalProperties": false,
+          "description": "Tool-specific result payload; see the inner properties for fields.",
+          "properties": {
+            "quotes": {
+              "description": "One entry per requested instrument_id with a current value. May be empty if no instrument_id resolved to an active index.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "instrument_id": {
+                    "description": "UUID identifying this index instrument. Match against the IDs returned by get_indexes.",
+                    "type": "string"
+                  },
+                  "state": {
+                    "description": "Trading state of the index. Empty string when the upstream did not populate it; otherwise an exchange-supplied status string. Surface to the user only if non-empty and not 'active'.",
+                    "type": "string"
+                  },
+                  "symbol": {
+                    "description": "Index ticker (e.g. SPX, NDX, DJI).",
+                    "type": "string"
+                  },
+                  "updated_at": {
+                    "description": "When marketdata last updated the record (RFC3339). May trail venue_timestamp by a small delta.",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "Current index level as a decimal string (e.g. \"5200.00\" for the S&P 500). Quoted to preserve precision.",
+                    "type": "string"
+                  },
+                  "venue_timestamp": {
+                    "description": "When the exchange last published this value (RFC3339).",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "instrument_id",
+                  "symbol",
+                  "value",
+                  "state",
+                  "venue_timestamp",
+                  "updated_at"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            },
+            "restricted": {
+              "description": "Requested indexes whose values are not available through this channel. No value is ever returned for these. Absent when none were requested.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "instrument_id": {
+                    "description": "UUID of the restricted index instrument, as requested.",
+                    "type": "string"
+                  },
+                  "message": {
+                    "description": "User-facing explanation for why no value is returned. Relay verbatim; do not retry.",
+                    "type": "string"
+                  },
+                  "symbol": {
+                    "description": "Index ticker whose values are not available through this channel.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "instrument_id",
+                  "symbol",
+                  "message"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            }
+          },
+          "required": [
+            "quotes"
+          ],
+          "type": "object"
+        },
+        "guide": {
+          "description": "Match quotes[] entries to your requested instrument_ids by instrument_id (NOT symbol \u2014 multiple instruments could theoretically share a symbol). value is the current index level as a decimal string; quote precision is preserved. Surface symbol and value first; only mention state when it is non-empty and not 'active'. venue_timestamp reflects when the exchange published the level; updated_at reflects when marketdata last refreshed the record. Requested ids under restricted have no value available \u2014 relay their message to the user verbatim; do not retry or estimate a value.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data",
+        "guide"
+      ],
+      "type": "object"
+    }
+  },
+  "get_indexes": {
+    "annotations": {
+      "destructiveHint": null,
+      "idempotentHint": null,
+      "openWorldHint": null,
+      "readOnlyHint": true,
+      "title": null
+    },
+    "description": "Get index data for market indexes by symbol.\nOptionally pass a comma-separated list of symbols (e.g. 'SPX,NDX,DJI') to filter results. Omit symbols to return all available indexes.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "symbols": {
+          "description": "Comma-separated list of index symbols to look up (e.g. 'SPX,NDX'). Omit to return all available indexes.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "name": "get_indexes",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "additionalProperties": false,
+          "description": "Tool-specific result payload; see the inner properties for fields.",
+          "properties": {
+            "indexes": {
+              "description": "One entry per index in the current page. May be empty when filtering by a symbol that does not match any indexes.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "current_value": {
+                    "description": "Latest known index level as a decimal string. Snapshot only \u2014 for live values prefer get_index_quotes.",
+                    "type": "string"
+                  },
+                  "id": {
+                    "description": "UUID identifying this index instrument. Pass to get_index_quotes to fetch the current value.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Human-readable index name (e.g. \"S&P 500 Index\").",
+                    "type": "string"
+                  },
+                  "symbol": {
+                    "description": "Index ticker (e.g. SPX, NDX, DJI).",
+                    "type": "string"
+                  },
+                  "trade_halted": {
+                    "description": "True when trading on the index is currently halted.",
+                    "type": "boolean"
+                  },
+                  "updated_at": {
+                    "description": "When this record was last updated (RFC3339).",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "symbol",
+                  "name",
+                  "current_value",
+                  "trade_halted",
+                  "updated_at"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            },
+            "restricted": {
+              "description": "Explicitly requested indexes whose values are not available through this channel. No value is ever returned for these. Absent when none were requested.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "instrument_id": {
+                    "description": "UUID of the restricted index instrument, as requested.",
+                    "type": "string"
+                  },
+                  "message": {
+                    "description": "User-facing explanation for why no value is returned. Relay verbatim; do not retry.",
+                    "type": "string"
+                  },
+                  "symbol": {
+                    "description": "Index ticker whose values are not available through this channel.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "instrument_id",
+                  "symbol",
+                  "message"
+                ],
+                "type": [
+                  "null",
+                  "object"
+                ]
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            }
+          },
+          "required": [
+            "indexes"
+          ],
+          "type": "object"
+        },
+        "guide": {
+          "description": "Each indexes[] entry identifies one index by id and symbol. current_value is a snapshot \u2014 for live values, pass id to get_index_quotes. Entries under restricted have no values available through this channel \u2014 relay their message to the user verbatim; do not retry or estimate a value.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data",
+        "guide"
+      ],
+      "type": "object"
+    }
+  }
+}

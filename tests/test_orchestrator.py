@@ -1,4 +1,5 @@
 from decimal import Decimal
+from app.agent.prompts import TRADER_PROMPT_VERSION
 from app.agent.trader import StubTraderAgent
 from app.domain.models import Action, Horizon, TradeDecision
 from app.engine.orchestrator import Orchestrator
@@ -13,6 +14,7 @@ def test_complete_cycle_is_persisted(settings, repo, broker):
     assert x.status == "SKIPPED"
     rows=repo.recent_cycles()
     assert len(rows)==1
+    assert rows[0].prompt_version == TRADER_PROMPT_VERSION
     assert rows[0].decision_json and rows[0].risk_json and rows[0].execution_json and rows[0].packet_json
 
 def test_agent_proposal_passes_governor_before_paper_fill(settings,repo,broker):

@@ -1,0 +1,41 @@
+{
+  "version": "swing-daily-placeholder-proof-v1",
+  "archive_sha256": "c2c136a669183f9c3b386bcdbaf6bd80e0e3b1d02ebce88932ce9a0fba780df1",
+  "capture_sha256": "00931c82ebacfcc5e5c3c423ff9a93cf1b850dee45bc1035e1204785348ef3ae",
+  "status": "CANDIDATE_HISTORY_MAPPING_UNAVAILABLE",
+  "series_validation": {
+    "daily_bars": {},
+    "hourly_bars": {
+      "SPY": 54,
+      "QQQ": 54
+    },
+    "failures": [
+      {
+        "reason": "INTERPOLATED_BAR",
+        "label": "swing-SPY-day",
+        "expected_begins_at": "2026-10-27T00:00:00+00:00",
+        "observed_begins_at": "2026-10-27T00:00:00+00:00"
+      },
+      {
+        "reason": "INTERPOLATED_BAR",
+        "label": "swing-QQQ-day",
+        "expected_begins_at": "2026-10-27T00:00:00+00:00",
+        "observed_begins_at": "2026-10-27T00:00:00+00:00"
+      }
+    ]
+  },
+  "installed_tests_passed": 100,
+  "failed": 0,
+  "provider_calls": false,
+  "model_calls": 0,
+  "live_enabled": false,
+  "production_mapper_changed": false,
+  "account_state_modified": false,
+  "entitlement": "UNKNOWN",
+  "remaining": [
+    "Noninterpolated completed daily source bars",
+    "Entitlement evidence",
+    "Versioned collector integration",
+    "Swing catalyst and Scope source integrations"
+  ]
+}

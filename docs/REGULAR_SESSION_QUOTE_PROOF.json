@@ -1,0 +1,173 @@
+{
+  "version": "regular-session-quote-proof-v1",
+  "date": "2026-10-26",
+  "source_file": "sample-3.json",
+  "source_sha256": "12922ab55470cdfb6768b926227af81beedce693aa206520a6cd8e154f2bce29",
+  "host_directory": "/root/trade-bot-market-proof-01Ccjk",
+  "schema_sha256": "d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15",
+  "collected_at": "2026-10-26T13:33:03.607209+00:00",
+  "timezone": "America/New_York",
+  "checks": {
+    "complete_original_capture": true,
+    "exact_original_plan": true,
+    "pinned_input_output_schemas": true,
+    "exact_quote_subjects": true,
+    "positive_uncrossed_books": true,
+    "nonfuture_original_source_clocks": true,
+    "all_quotes_under_30_seconds_old_at_capture": true,
+    "regular_session_calendar": true,
+    "supplied_report_hash_match": true
+  },
+  "quotes": [
+    {
+      "subject": "SPY",
+      "label": "SPY",
+      "asset": "STOCK",
+      "bid": "762.200000",
+      "ask": "762.220000",
+      "bid_size": null,
+      "ask_size": null,
+      "source_at": "2026-10-26T13:33:02.482834+00:00",
+      "original_source_times": [
+        "2026-10-26T13:33:02.482834113Z",
+        "2026-10-26T13:33:02.482834113Z"
+      ],
+      "received_at": "2026-10-26T13:33:03.607209+00:00",
+      "age_seconds_at_capture": 1.124,
+      "fresh_book": true,
+      "entitlement": "UNKNOWN"
+    },
+    {
+      "subject": "QQQ",
+      "label": "QQQ",
+      "asset": "STOCK",
+      "bid": "706.750000",
+      "ask": "706.840000",
+      "bid_size": null,
+      "ask_size": null,
+      "source_at": "2026-10-26T13:33:03.133969+00:00",
+      "original_source_times": [
+        "2026-10-26T13:33:03.133969063Z",
+        "2026-10-26T13:33:03.133969063Z"
+      ],
+      "received_at": "2026-10-26T13:33:03.607209+00:00",
+      "age_seconds_at_capture": 0.473,
+      "fresh_book": true,
+      "entitlement": "UNKNOWN"
+    },
+    {
+      "subject": "0eb7725e-bf00-4817-8e47-0092d1910f75",
+      "label": "SPY 2026-10-26 760 CALL",
+      "asset": "OPTION",
+      "bid": "3.230000",
+      "ask": "3.250000",
+      "bid_size": 10,
+      "ask_size": 85,
+      "source_at": "2026-10-26T13:33:02.839787+00:00",
+      "original_source_times": [
+        "2026-10-26T13:33:02.83978719Z"
+      ],
+      "received_at": "2026-10-26T13:33:03.607209+00:00",
+      "age_seconds_at_capture": 0.767,
+      "fresh_book": true,
+      "entitlement": "UNKNOWN"
+    },
+    {
+      "subject": "6058511b-ce40-4dd6-8ef9-8f5a3736ed90",
+      "label": "QQQ 2026-10-26 705 CALL",
+      "asset": "OPTION",
+      "bid": "3.980000",
+      "ask": "4.000000",
+      "bid_size": 20,
+      "ask_size": 1,
+      "source_at": "2026-10-26T13:33:02.999705+00:00",
+      "original_source_times": [
+        "2026-10-26T13:33:02.999705677Z"
+      ],
+      "received_at": "2026-10-26T13:33:03.607209+00:00",
+      "age_seconds_at_capture": 0.608,
+      "fresh_book": true,
+      "entitlement": "UNKNOWN"
+    }
+  ],
+  "underlying_mapping": [
+    {
+      "source": "robinhood-mcp",
+      "source_at": "2026-10-26T13:33:02.482834Z",
+      "received_at": "2026-10-26T13:33:03.607209Z",
+      "entitlement": "UNKNOWN",
+      "complete": true,
+      "symbol": "SPY",
+      "bid": "762.200000",
+      "ask": "762.220000"
+    },
+    {
+      "source": "robinhood-mcp",
+      "source_at": "2026-10-26T13:33:03.133969Z",
+      "received_at": "2026-10-26T13:33:03.607209Z",
+      "entitlement": "UNKNOWN",
+      "complete": true,
+      "symbol": "QQQ",
+      "bid": "706.750000",
+      "ask": "706.840000"
+    }
+  ],
+  "option_observations": [
+    {
+      "instrument_id": "0eb7725e-bf00-4817-8e47-0092d1910f75",
+      "bid_price": "3.230000",
+      "ask_price": "3.250000",
+      "bid_size": 10,
+      "ask_size": 85,
+      "updated_at": "2026-10-26T13:33:02.83978719Z",
+      "delta": "0.677138",
+      "theta": "-1.050000",
+      "implied_volatility": "0.230446",
+      "volume": 680,
+      "open_interest": 6386
+    },
+    {
+      "instrument_id": "6058511b-ce40-4dd6-8ef9-8f5a3736ed90",
+      "bid_price": "3.980000",
+      "ask_price": "4.000000",
+      "bid_size": 20,
+      "ask_size": 1,
+      "updated_at": "2026-10-26T13:33:02.999705677Z",
+      "delta": "0.596340",
+      "theta": "-2.215000",
+      "implied_volatility": "0.386015",
+      "volume": 495,
+      "open_interest": 3062
+    }
+  ],
+  "three_sample_continuity": {
+    "source": "operator-supplied report; only sample-3 raw artifact supplied",
+    "reported_samples": 3,
+    "reported_fresh_and_advancing_all_subjects": true,
+    "independently_revalidated_samples": 1
+  },
+  "remaining": {
+    "stock_sizes": "ABSENT_IN_WIRE_RESPONSE",
+    "entitlement": "NO_EXPLICIT_DECLARATION_IN_RESPONSE; mapper retains UNKNOWN",
+    "option_contract_terms": "NOT_CONTAINED_IN_QUOTE_RESPONSE",
+    "scope_spx": "NOT_COVERED_BY_THIS_PLAN",
+    "connected_simulator": "NOT_ACTIVATED"
+  },
+  "host_dashboard": {
+    "source": "operator-supplied deployment output",
+    "release": "a653cc7e79d178c5ab2de6afb3311829282a7544",
+    "container_id": "f82e3bdc75b8ce9167d2e4dba180d49decc4046f4bd414f3e76b93064829cbcf",
+    "installed_files_match": 283,
+    "health": "OK",
+    "authenticated": true,
+    "mode": "FROZEN_OFFLINE_UI_FIXTURE",
+    "native_fill_receipts": 2,
+    "preserved_previous_container": "trade-bot-dashboard-before-price-format",
+    "rounding_fix_deployed": true
+  },
+  "workspace_provider_calls": 0,
+  "real_orders": 0,
+  "model_calls": 0,
+  "live_enabled": false,
+  "proof_is_not_current_quote_or_trading_authority": true
+}

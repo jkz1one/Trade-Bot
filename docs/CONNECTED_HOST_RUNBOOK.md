@@ -1,0 +1,262 @@
+# Connected simulation host runbook
+
+The host launcher is implemented. Its native offline integration test packages
+configuration, enrolls one owner/collector, publishes a snapshot, consumes captured
+feed packets, serves authenticated current dashboard data, shuts down and restarts
+the same account. Existing two-held-play restart tests run alongside it.
+
+This is not a deployment receipt. The server is still on frozen a653cc7, and no
+connected worker has been started there. Actual Docker, UID/GID 10001, login,
+latency and current-feed acceptance must run on the host.
+
+## Required inputs, with no hidden policy defaults
+
+For the user's selected $1,000 virtual balance and $1/day AI ceiling, the new
+[simulation profile](CONNECTED_SIMULATION_PROFILE.md) now creates explicit native
+inputs after review. Its additional limits and modeled expenses are displayed
+assumptions; unavailable contracts/eligibility stay blocked. Use its host sequence
+instead of inventing input JSON or copying a UI fixture.
+
+The launcher accepts a complete native `RuntimeSettings` JSON and `FeedPolicy`
+JSON. These must be reviewed inputs for the intended population,
+capital, strategies, risk/cost limits and candidate catalog. The first simulation
+profile retains all three families but is not complete market eligibility or LIVE
+configuration. The stored UI fixture is not a deployment configuration; the helper
+rejects its `ui-review-` identity. Tests use synthetic policies and are not approvals
+of those policies for the server.
+
+Packaging changes only the deployment paths: feed delivery, broker OAuth path,
+and optional model/operator secret mount paths. It preserves every other setting,
+including family selection, capital, costs, risk, contract metadata, entitlement
+and carry intent. Missing strategies are not silently added; existing strategies
+are not silently removed. No test credentials, prices, stock sizes, contracts or
+catalyst CLEAR flags are copied into production configuration. The review prints
+capital, play limit, families, configured model/operator flags and entry blockers.
+
+Existing server inputs:
+
+- Broker read auth directory: `/var/lib/trade-bot-read-auth`.
+- Exported schemas: `discovery.json` within that directory.
+- That file may contain the completed discovery report; the profile/bundle loaders
+  validate it and extract `result.schemas` without changing the source file.
+- OAuth file: `robinhood-oauth.json` within that directory.
+- Optional model/operator keys: existing paths explicitly named in the supplied
+  runtime settings. They must be private root-owned files for the native root
+  owner. The helper does not create, move, copy, print or change their permissions.
+
+Source JSON must be canonical absolute root-owned 0600 files. Prepared state and
+parent directories are private root-owned 0700. Do not share auth files.
+
+## Fixed layout
+
+| Host path | Container path | Purpose |
+|---|---|---|
+| `/var/lib/trade-bot-connected` | `/state` | One native owner, collector and frozen config |
+| `/var/lib/trade-bot-connected/owner` | `/source` | Same owner's journal alias for existing publisher binding |
+| `/var/lib/trade-bot-connected/config` | `/state/config` | Read-only configuration, including during a run |
+| `/var/lib/trade-bot-dashboard-publish` | `/exports` | Existing dashboard publisher layout |
+| `/var/lib/trade-bot-read-auth` | `/auth` | Existing read-only broker capability; token refresh/read leases need directory writes |
+| Explicit existing key file | `/run/secrets/model` or `/run/secrets/operator` | Optional read-only native key mount |
+
+The `/source` alias points at the same owner directory under `/state`; it is not
+a copied ledger. The collector's delivery path is `/state/collector/feed.json`.
+The snapshot destination is `/exports/connected-v1`, matching the dashboard switch.
+Discovery is mounted read-only inside the writable OAuth directory. No broker
+order capability is introduced; the gateway retains its six fixed market-read tools.
+
+## Offline preparation on the host
+
+Use the clean pinned feature checkout under `/opt/trade-bot-dashboard`. Building
+may download the existing image/dependencies; it makes no market/model calls.
+
+```bash
+cd /opt/trade-bot-dashboard
+python3 scripts/connected-session-host.py build
+python3 scripts/connected-session-host.py review-config \
+  --settings ABSOLUTE_REVIEWED_RUNTIME_JSON --policy ABSOLUTE_REVIEWED_FEED_JSON
+```
+
+Review prints the configuration hash. After inspecting those supplied settings,
+pass its exact hash to create the frozen bundle:
+
+```text
+python3 scripts/connected-session-host.py prepare \
+  --settings ABSOLUTE_REVIEWED_RUNTIME_JSON --policy ABSOLUTE_REVIEWED_FEED_JSON \
+  --expected-review CONFIG_REVIEW_SHA256
+python3 scripts/connected-session-host.py review-enroll
+python3 scripts/connected-session-host.py enroll --expected-review ENROLL_REVIEW_SHA256
+```
+
+Each action is separate from its review; never substitute a guessed hash. The
+native enrollment review and host review use different hashes; the launcher
+passes the correct native hash internally. Enrollment creates the native owner,
+collector and first dashboard copy. It never starts runtime, provider or model
+workers. Config/preflight/enrollment containers have no network and no OAuth mount.
+Optional configured model/operator files are mounted only for native enrollment
+validation, not read-only review. Source JSON is never modified.
+
+Existing state or a changed hash blocks creation. If native enrollment succeeds
+but snapshot creation fails, retain everything and inspect the failure. The
+explicit `snapshot` operation can create the still-absent first snapshot from the
+existing owner; it cannot overwrite or repair an existing failed destination.
+Never reenroll to reset a partially created account or delivery history.
+
+## First bounded connected session
+
+Once enrollment and cross-user snapshot creation succeed, review a short session:
+
+```bash
+python3 scripts/connected-session-host.py review-run --run-id first-check --seconds 600
+```
+
+Inspect its exact configuration/entry blockers, then start that reviewed session:
+
+```text
+python3 scripts/connected-session-host.py run \
+  --run-id first-check --seconds 600 --expected-review RUN_REVIEW_SHA256
+```
+
+**This is the first operation that mounts broker OAuth and permits network reads.**
+It can also invoke native model workers if the supplied configuration explicitly
+enrolled them; model flags and budgets must be reviewed. Execution remains the
+local virtual-money venue and LIVE remains disabled. Unknown eligibility continues
+to block entries. A started container is not proof of ongoing health or trades.
+
+The container is detached so terminal disconnect does not end the test. It has
+no exposed ports, no restart policy and an explicit 1..86400-second duration.
+There is no scheduled or automatic restart after a crash or server reboot. The
+native runtime, collector and publisher share graceful shutdown. The launcher
+checks that the original SHADOW identities remain unchanged and never starts,
+stops or renames those services or the dashboard.
+
+While the bounded session is running and snapshots are current, use the separate
+[dashboard review/activation](CONNECTED_DASHBOARD_HOST.md) to switch the existing
+login/URL. That helper retains the frozen dashboard for rollback. Switching the
+display does not start a runtime, and display rollback does not stop this session.
+
+## Status, stop and restart
+
+```bash
+python3 scripts/connected-session-host.py status --run-id first-check
+```
+
+To stop early, pass the exact container ID returned by status:
+
+```text
+python3 scripts/connected-session-host.py stop \
+  --run-id first-check --expected-container EXACT_CONTAINER_ID
+```
+
+Stop sends native termination with a 45-second Docker allowance. It does not
+remove the container, logs or state. Status/stop do not require a release image
+or configuration to still be available. Each completed attempt retains its name;
+use a new run ID for a new reviewed session against the same owner. A currently
+running labeled session blocks a second launch, and native leases independently
+fence duplicate workers. Restart does not automatically clear entry halts.
+
+For diagnosis, inspect the retained named container's exit state and bounded logs.
+Do not delete failed evidence or create a new owner to recover. Native operator
+commands retain their existing guards; dashboard operator-command transport is
+still separate unfinished work.
+
+## Acceptance boundary
+
+`CONNECTED_HOST_LAUNCH_PROOF.json` records offline installed-wheel evidence. The
+host coordinator is exercised against a stateful Docker recorder. Native pipeline
+integration uses real journals, collector normalization, runtime consumption,
+publication and authenticated ASGI reads with synthetic capture, never the broker.
+The cross-user publisher test remains skipped because this workspace maps only UID 0.
+
+The requested preparation/launch block is implemented. Next are reviewed real
+configuration/catalog inputs and host acceptance, not another missing launcher.
+Fresh stock/option quote capture was already demonstrated on October 26; it does
+not need repeating to prove that earlier fact. New connected acceptance needs a
+current feed. Full contract terms, entitlement, executable stock sizes and eligible
+catalyst/Scope sources remain unresolved. No successful simulated entry is promised
+until its native eligibility gates pass. Operator transport and other broader
+strategy/data work are not declared complete by this runbook.
+
+## Recovery from the first host startup path failure
+
+On e2e97ff, enrollment used `/state/owner` but the launcher passed `/source` as
+its runtime directory. Although both mounts expose the same files, the native
+execution configuration freezes the venue path at enrollment and refuses the
+alias. Offline reproduction confirms the immutable-configuration error; host
+read-only evidence shows the owner stayed ENROLLED at generation/feed sequence 0.
+
+The corrected launcher keeps `--directory /state/owner` and adds
+`--snapshot-owner /source`. The latter is exclusively a display source: private
+runtime settings, journal and venue files must have the same filesystem identities
+as the execution owner. Copies, changed files and symlink paths are rejected.
+Alias identity is checked before startup and each publication. The runtime still
+opens and leases the original execution path. Read-only preflight also verifies
+the enrolled venue path. Existing snapshot bindings remain unchanged.
+
+Build the corrected release, then use `review-run --run-id first-check-2 --seconds
+600` and the resulting review hash for `run`. Do not rerun profile creation,
+key staging, bundle preparation or enrollment. Preserve the original first-check
+container, account and snapshot. This repair does not establish eligible market
+inputs or successful host collection; inspect the new session after launch.
+
+## Diagnosing a stopped component
+
+A SESSION_STARTED receipt confirms launch only. Inspect retained container status
+and bounded logs before selecting another run ID. A reused name is rejected even
+when its earlier container exited; this preserves the failed run's evidence.
+
+Connected failures now include `failures` with component, allowlisted `error_class`
+and up to eight application file/line locations. Unexpected returns and forced
+shutdowns have explicit codes. Startup failures use a single `failure` field.
+No exception message, traceback source text, local variable, credential or provider
+response is logged. The native FIXTURE_READ_FAILED event additionally records
+`operation`, `timeout_seconds` and `elapsed_seconds`; its event time retains the
+original operation timestamp. Earlier empty failure payloads cannot be recovered.
+
+The first corrected host run delivered 26 updates and consumed through sequence 25
+before a local fixture-read failure. Later offline probes passed in 1.358–1.831s.
+Do not infer a confirmed timeout or healthy sustained runtime from those probes.
+Deploy the diagnostic release and review a new bounded session, e.g.
+`review-run --run-id first-check-3 --seconds 600`, against the same enrolled owner.
+The existing failure halt remains in force. This is a collection/runtime diagnosis;
+it does not enable entries, clear eligibility blockers or reset the account.
+
+## Connected-session CPU allowance
+
+The native runtime, collector, publisher and their subprocesses previously shared
+the offline helper's one-CPU ceiling. Host first-check-3 confirmed a local snapshot
+FixtureProcessTimeout at the unchanged five-second deadline, while three isolated
+reads had passed in 1.358–1.831 seconds. Quota contention is a hypothesis, not an
+established root cause.
+
+Connected sessions now use up to two available CPUs. The review's `binding.resources`
+includes `cpus: min(2, available_logical_cpus)` and the host process affinity count.
+The resource record is bound by the expected review hash, rechecked before launch,
+and repeated in SESSION_STARTED. Offline helpers remain limited to one CPU.
+This does not reserve capacity, modify other containers, increase the five-second
+deadline or clear an existing entry halt. A one-CPU host cannot provide two CPUs
+of execution even with a higher quota; inspect its reported capacity before
+interpreting the next test. Host load or synchronous work may still cause delays.
+
+Build this release, then review `first-check-4` for 600 seconds and launch with
+its new hash. Preserve the enrolled account and all earlier containers. Confirm
+runtime/feed progression and the final container state; do not call the timeout
+resolved until the connected host test passes.
+
+## Single-CPU read-worker startup optimization
+
+The b78133d review confirmed one available logical CPU. Do not treat a quota of
+two as extra hardware or evidence that contention is resolved. The current
+launcher caps its reviewed allowance at the available logical CPU count.
+
+The read worker previously imported both execution engines and SQLAlchemy through
+clock helpers used only by parent orchestration. These imports are now deferred
+until the parent collection functions execute; request/result models, native
+clock validation, read authorization and every deadline are unchanged. The parent
+already loads this execution machinery for the native runtime. Read children do
+not load it merely to decode their protocol.
+
+A one-CPU local cold-import benchmark (five fresh processes per version) measured
+median CPU time of 0.5673s before and 0.2296s after. This is an import-cost reduction,
+not a complete host capture benchmark or proof the snapshot timeout is fixed.
+Rebuild, then freshly review the unused first-check-4 name for 600 seconds.
+Keep the existing account and halt; do not reuse the previous release's review hash.
