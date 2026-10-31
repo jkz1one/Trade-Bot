@@ -107,3 +107,17 @@ def test_running_or_unrelated_container_never_reads_account(monkeypatch):
             returncode=0, stdout=json.dumps({"label": label, "state": {"Status": state}})))
         with pytest.raises(ValueError, match=reason):
             module.main()
+
+
+def test_runtime_failure_report_keeps_timing_without_private_payload():
+    with sqlite3.connect(':memory:') as db:
+        db.row_factory = sqlite3.Row
+        db.execute('CREATE TABLE execution_events(kind,occurred_at,payload)')
+        for at in ('2026-10-30T17:00:00+00:00', '2026-10-30T18:00:00+00:00'):
+            db.execute('INSERT INTO execution_events VALUES(?,?,?)', ('FIXTURE_READ_FAILED', at,
+                json.dumps({'error_class':'FixtureProcessTimeout','timeout_seconds':5,'elapsed_seconds':5.1,
+                            'stderr':'PRIVATE_VALUE','venue':'PRIVATE_PATH'})))
+        rows = module.runtime_failures(db, '2026-10-30T17:30:00+00:00', '2026-10-30T18:30:00+00:00')
+        assert len(rows) == 1 and rows[0]['elapsed_seconds'] == 5.1
+        assert rows[0]['error_class'] == 'FixtureProcessTimeout'
+        assert 'PRIVATE' not in json.dumps(rows)

@@ -152,7 +152,7 @@ def test_scope_worker_pins_before_calls_and_rejects_extra_calls(monkeypatch):
 
 
 @pytest.mark.parametrize('scope_fault', [None, 'failed', 'identity'])
-def test_collector_retains_pinned_reads_counts_quota_and_delivers_native_watch(tmp_path, schemas, scope_fault):
+def test_collector_retains_pinned_reads_counts_quota_and_delivers_native_watch(tmp_path, schemas, scope_fault, monkeypatch):
     from test_portfolio_feed import policy
     from test_robinhood_read_mapping import envelope, equity, option
     from app.mixed.continuous_feed import ContinuousFeed, FeedPolicy
@@ -194,6 +194,13 @@ def test_collector_retains_pinned_reads_counts_quota_and_delivers_native_watch(t
             started_at=cap.started_at, collected_at=AT+timedelta(seconds=1), elapsed_seconds=2, status='COMPLETE',
             plan=plan, schemas=schemas, observations=rows, scope_requested=True, scope_observations=cap.observations,
             scope_error_class='RuntimeError' if scope_fault == 'failed' else None)
+    if scope_fault is None:
+        def checked_deliver(*args, **kwargs):
+            try:
+                return deliver(*args, **kwargs)
+            except (ValueError, KeyError, TypeError, ArithmeticError) as exc:
+                raise AssertionError('Valid Scope capture rejected') from exc
+        monkeypatch.setattr('app.mixed.scope_feed.deliver', checked_deliver)
     feed = ContinuousFeed(tmp_path / 'feed', feed_policy, schemas, create=True)
     try:
         result = asyncio.run(feed.tick(now=cap.started_at, window=XNYSCalendar().current_window(AT),
@@ -215,3 +222,22 @@ def test_collector_retains_pinned_reads_counts_quota_and_delivers_native_watch(t
 
 
 from test_robinhood_read_mapping import schemas as schemas
+
+
+def test_completed_bar_marker_survives_scope_assembly_without_restamping():
+    from app.options.scope import ScopeHistory
+    binding, cap, frame, metadata, settings = setup()
+    histories = tuple(DegenHistory.model_validate(h.model_dump() | {
+        'source_clock_basis': 'COMPLETED_BAR_END', 'source_at': h.bars[-1].ends_at})
+                      for h in frame.histories)
+    frame = frame.model_copy(update={'histories': histories})
+    original = frame.model_dump_json()
+    out, action, issues = deliver(binding, cap, frame, (metadata,), now=AT, settings=settings, sequence=1)
+    assert not issues and action.kind == 'CALL'
+    for h in histories:
+        converted = next(v for v in out.scope.frame.histories if v.symbol == h.symbol)
+        assert converted.source_clock_basis == 'COMPLETED_BAR_END'
+        assert (converted.source_at, converted.received_at, converted.bars) == (h.source_at, h.received_at, h.bars)
+        with pytest.raises(ValueError, match='exact original'):
+            ScopeHistory.model_validate(converted.model_dump() | {'source_at': h.source_at + timedelta(seconds=1)})
+    assert frame.model_dump_json() == original

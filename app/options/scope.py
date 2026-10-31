@@ -122,6 +122,9 @@ class ScopePriceBar(DegenBar):
 
 
 class ScopeHistory(Evidence):
+    source_clock_basis: Literal["COMPLETED_BAR_END"] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
     symbol: Literal["SPX", "SPY", "QQQ"]
     interval_seconds: Literal[300] = 300
     bounds: Literal["regular"] = "regular"
@@ -129,6 +132,11 @@ class ScopeHistory(Evidence):
 
     @model_validator(mode="after")
     def index_volume(self):
+        if self.source_clock_basis is not None and (
+            self.source != "robinhood-mcp" or not self.bars
+            or self.source_at != self.bars[-1].ends_at
+        ):
+            raise ValueError("Completed-bar clock requires exact original Robinhood bar end")
         if any(b.volume is None for b in self.bars) and (
             self.symbol != "SPX" or self.simulation_basis != "ROBINHOOD_OBSERVED_V1"
         ):

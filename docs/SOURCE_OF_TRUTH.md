@@ -1,5 +1,35 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.172. Prepare the next PAPER session without manual review-hash handoffs, 2026-10-31 UTC.
+
+The host launcher now captures and prepares combined future catalogs, retains a
+policy-bound preparation receipt, refreshes snapshots before startup, uses unique
+default run IDs, preserves structured failure reasons and optionally waits for a
+saved decision report. It starts the existing account only on the prepared target
+date with a fresh exact review; it never resets the account or automatically retries.
+
+A separate bounded preopen-inputs operation collects and binds original Swing
+history with the execution owner mounted read-only and its existing native lock
+held. Repeats reuse retained originals. The date-key mapper can prepare Monday
+from completed Friday bars over the weekend without requesting future boundaries;
+missing/interpolated history remains blocked and its mapping diagnostic is exposed.
+The dashboard has an explicit one-command switch retaining the repeated review,
+authentication checks and rollback. Runtime reports expose bounded failure timing.
+
+Expanded strategy checks caught a cross-family integration defect: normalized
+SPY/QQQ histories carried COMPLETED_BAR_END but ScopeHistory rejected that field.
+Scope now preserves and validates the exact original bar-end marker; old unmarked
+histories serialize unchanged. No clock is rewritten and no gate is relaxed.
+
+See PAPER_NEXT_SESSION.md for one build, weekend preparation, dashboard handoff,
+and the November 2 09:30 New York / 14:30 UTC bounded run. All 473 focused tests pass, including native Scope delivery and the production-
+profile two-play lifecycle; the launcher checks also pass after receipt hardening.
+This release has not been executed on the host. Actual Swing history acceptance, original Scope inputs
+and connected model/fill acceptance remain unverified. Stocks still require their
+executable size/catalog wiring. All original account limits and LIVE=false remain.
+
+Previous version notes (historical):
+
 Version 1.171. Verify observed PAPER lifecycle and count portfolio fill receipts, 2026-10-30 EDT.
 
 Actual host replay on 7f73c75 clears all four saved SPY/QQQ history rejections.

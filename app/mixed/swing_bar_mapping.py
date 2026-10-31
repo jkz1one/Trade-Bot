@@ -15,8 +15,13 @@ def planned(policy, symbols, now, *, calendar=None):
     target, calls = planned_history(legacy, symbols, now, calendar=calendar)
     if target is None:
         return None, ()
-    boundary = datetime.combine(target, time(), UTC)
-    if instant(now) < boundary:
+    # The last completed UTC date is enough for date-keyed daily bars. Waiting
+    # for the target date unnecessarily prevents weekend/holiday preparation.
+    boundary = min(datetime.combine(target, time(), UTC),
+                   datetime.combine(instant(now).date(), time(), UTC))
+    from app.mixed.swing_feed import windows
+    previous_open = windows("day", 1, target, calendar or XNYSCalendar())[0][0]
+    if boundary <= datetime.combine(previous_open.date(), time(), UTC):
         return None, ()
     result = []
     for call in calls:

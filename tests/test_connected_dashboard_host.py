@@ -363,3 +363,26 @@ def test_real_binding_file_checks(tmp_path, monkeypatch, damage, name):
         with pytest.raises((ValueError, OSError)):
             h.binding()
     assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize('change', [False, True])
+def test_one_command_switch_retains_second_review_and_rollback_boundary(host, monkeypatch, capsys, change):
+    h, fake = host
+    real = h.review
+    count = [0]
+    def review(*args, **kwargs):
+        count[0] += 1
+        if change and count[0] == 2:
+            fake.items[h.ACTIVE]['State']['StartedAt'] = 'changed'
+        return real(*args, **kwargs)
+    monkeypatch.setattr(h, 'review', review)
+    assert h.main(['switch']) == (2 if change else 0)
+    assert count[0] == 2
+    lines = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    assert lines[0]['operation'] == 'activate'
+    if change:
+        assert not mutations(fake)
+    else:
+        assert lines[-1]['status'] == 'DASHBOARD_SWITCHED'
+        assert fake.items[h.ACTIVE]['Id'] == 'new-id'
+        assert fake.items[h.BACKUP]['Id'] == OLD_ID

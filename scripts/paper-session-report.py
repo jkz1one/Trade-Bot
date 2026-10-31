@@ -90,6 +90,28 @@ def fill_count(db):
     return count, 'LEGACY_FILL_TABLES'
 
 
+def runtime_failures(db, start, end):
+    if 'payload' not in {r[1] for r in db.execute('PRAGMA table_info(execution_events)')}:
+        return []
+    failures = []
+    for row in db.execute(
+        "SELECT occurred_at,CASE WHEN length(payload)<=65536 THEN payload END AS payload "
+        "FROM execution_events WHERE kind='FIXTURE_READ_FAILED' AND occurred_at>=? "
+        "AND occurred_at<=? ORDER BY occurred_at DESC LIMIT 10", (start, end)
+    ):
+        value = json.loads(row['payload']) if row['payload'] else {}
+        item = {'occurred_at': row['occurred_at']}
+        error = value.get('error_class')
+        if isinstance(error, str) and re.fullmatch(r'[A-Z][A-Za-z0-9]{0,63}', error):
+            item['error_class'] = error
+        for key in ('timeout_seconds', 'elapsed_seconds'):
+            number = value.get(key)
+            if type(number) in (int, float) and 0 <= number <= 86400:
+                item[key] = number
+        failures.append(item)
+    return failures
+
+
 def report(directory, started, finished):
     start = datetime.fromisoformat(started).astimezone(timezone.utc).isoformat()
     end = datetime.fromisoformat(finished).astimezone(timezone.utc).isoformat()
@@ -120,6 +142,7 @@ def report(directory, started, finished):
         result["current_control"] = [dict(r) for r in db.execute(
             "SELECT halted,halt_reason FROM execution_control WHERE id=1")]
         result["account_total_fills"], result["fill_count_source"] = fill_count(db)
+        result["runtime_failures"] = runtime_failures(db, start, end)
     finally:
         db.close()
     db = connection(directory / "collector/collector.db")
@@ -128,6 +151,13 @@ def report(directory, started, finished):
             "SELECT status,COUNT(*) AS attempts,MIN(sequence) AS first_sequence,"
             "MAX(sequence) AS last_sequence FROM attempts WHERE started_at>=? "
             "AND started_at<=? GROUP BY status", (start, end))]
+        if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='attempt_failures'").fetchone():
+            result['collector_failures'] = [{
+                'sequence': row['sequence'], 'codes': codes(json.loads(row['details'] or '{}')),
+            } for row in db.execute(
+                'SELECT f.sequence,CASE WHEN length(f.details_json)<=65536 THEN f.details_json END AS details '
+                'FROM attempt_failures f JOIN attempts a USING(sequence) '
+                'WHERE a.started_at>=? AND a.started_at<=? ORDER BY f.sequence DESC LIMIT 10', (start, end))]
     finally:
         db.close()
     return result

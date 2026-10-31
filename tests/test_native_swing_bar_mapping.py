@@ -82,8 +82,10 @@ def test_future_session_mapping_change_only():
         **proposed.swing_history.model_dump(),'daily_bars':57}})
     with pytest.raises(ValueError,match='lookbacks'):
         validate_policy(original,changed,date(2026,12,1),PREOPEN)
+    # Current-session enrollment is supported until close; expired dates are not.
+    validate_policy(original,proposed,PREOPEN.date(),PREOPEN)
     with pytest.raises(ValueError,match='future'):
-        validate_policy(original,proposed,PREOPEN.date(),PREOPEN)
+        validate_policy(original,proposed,PREOPEN.date()-timedelta(days=3),PREOPEN)
 
 
 def test_after_midnight_utc_uses_next_ny_session_policy(tmp_path, schemas, monkeypatch):

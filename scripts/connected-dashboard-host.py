@@ -368,7 +368,7 @@ def apply(plan):
 def main(argv=None):
     global SNAPSHOT, SNAPSHOT_NAME
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("operation", choices=("review", "activate", "review-rollback", "rollback"))
+    parser.add_argument("operation", choices=("review", "activate", "switch", "review-rollback", "rollback"))
     parser.add_argument("--review-sha256")
     parser.add_argument("--snapshot-name", choices=("connected-v1", "connected-price-options-v1"),
                         default="connected-v1")
@@ -397,6 +397,11 @@ def main(argv=None):
         if not re.fullmatch("[a-f0-9]{40}", release):
             raise ValueError("Pinned release required")
         plan = review(release, rollback=args.operation in ("rollback", "review-rollback"))
+        if args.operation == "switch":
+            # Explicit one-command switch, retaining the same complete review
+            # and second identity check as the manual review/activate workflow.
+            print(json.dumps(plan, sort_keys=True), flush=True)
+            args.review_sha256 = plan["review_sha256"]
         if args.review_sha256 is None:
             print(json.dumps(plan, sort_keys=True))
             return 0

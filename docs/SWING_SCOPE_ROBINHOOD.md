@@ -432,3 +432,25 @@ Validation: 136 focused tests passed, including both complete profile lifecycles
 portfolio selection/model admission, quote fills, history mapping, entry worker
 response validation and the standalone reporting helper. No application source
 changed, so the already-built 7f73c75 runtime image remains applicable.
+
+
+## Next-session operational preparation (2026-10-31 UTC)
+
+Use [PAPER_NEXT_SESSION.md](PAPER_NEXT_SESSION.md) for the consolidated workflow.
+The launcher now forwards combined Swing/Scope inputs, supports future preparation
+and later policy-bound startup, refreshes snapshots, prints structured errors,
+uses unique default run IDs and can wait for the saved report. The standalone
+pre-open collector takes the native owner lock with the owner mounted read-only;
+only collector evidence/read-auth state can change. It does not import a model
+secret, run an execution engine, clear a halt or submit an order. Repeated source
+binding reuses the exact original history. Weekend requests end at the last
+completed UTC date, not a future target-day boundary.
+
+The expanded native Scope feed regression exposed a schema handoff bug after the
+completed-bar clock change: ScopeHistory rejected the new marker carried by real
+normalized SPY/QQQ histories. Scope now accepts the optional marker only with
+Robinhood provenance and an exact last-bar-end source timestamp, preserves it in
+the native watch input and keeps old unmarked serialization unchanged. The
+synthetic valid combined capture now reaches WATCH; invalid index captures still
+leave peer books usable and Scope blocked. This does not repair the actual saved
+interpolated/unknown SPX history or create a reviewed SPXW binding.

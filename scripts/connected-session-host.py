@@ -9,6 +9,7 @@ import os
 import re
 import stat
 import sys
+import tempfile
 from pathlib import Path
 
 spec = importlib.util.spec_from_file_location(
@@ -501,6 +502,54 @@ def run(args, release):
             "trading_ready": False,
         }
     image_id = image(release)
+    if args.operation == "capture-session":
+        from datetime import date
+        target = date.fromisoformat(args.target_session).isoformat()
+        no_active_session()
+        private(AUTH, True)
+        private(AUTH / "robinhood-oauth.json")
+        private(AUTH / "discovery.json")
+        destination = Path(tempfile.mkdtemp(prefix="trade-bot-options-proof-", dir="/root"))
+        result = h.docker(
+            "run", "--rm", "--network", "bridge", *isolation(),
+            *mount(AUTH, "/auth", False), *mount(AUTH / "discovery.json", "/auth/discovery.json"),
+            *mount(destination, "/out", False), image_id,
+            "python", "-I", "-W", "error", "-m", "app.mixed.session_capture",
+            "--target-session", target, "--directory", "/out", "--schemas", "/auth/discovery.json",
+            "--oauth-file", "/auth/robinhood-oauth.json", timeout=210, allow_failure=True,
+        )
+        report_path = destination / "report.json"
+        if result.returncode or not report_path.is_file() or report_path.stat().st_size > 65536:
+            return {"status": "CAPTURE_FAILED", "evidence_directory": str(destination), "live_enabled": False}
+        private(report_path)
+        report = json.loads(report_path.read_text())
+        if report.get("status") != "CATALOG_CAPTURED" or report.get("target_session") != target:
+            raise RuntimeError("CAPTURE_REPORT_UNAVAILABLE")
+        return report | {"evidence_directory": str(destination)}
+    if args.operation == "preopen-inputs":
+        from datetime import date
+        target = date.fromisoformat(args.target_session).isoformat()
+        bundle(image_id)
+        no_active_session()
+        private(STATE / "collector", True)
+        private(AUTH, True)
+        private(AUTH / "robinhood-oauth.json")
+        private(AUTH / "discovery.json")
+        result = h.docker(
+            "run", "--rm", "--network", "bridge", *isolation(),
+            *config_mounts(), *mount(STATE / "collector", "/state/collector", False),
+            *mount(AUTH, "/auth", False), *mount(AUTH / "discovery.json", "/auth/discovery.json"),
+            image_id, "python", "-I", "-W", "error", "-m", "app.mixed.preopen_inputs",
+            "--directory", "/state/owner", "--feed-directory", "/state/collector",
+            "--policy", "/state/config/policy.json", "--schemas", "/state/config/schemas.json",
+            "--target-session", target, timeout=180, allow_failure=True,
+        )
+        if len(result.stdout) > 65536:
+            raise RuntimeError("PREOPEN_REPORT_UNAVAILABLE")
+        report = json.loads(result.stdout)
+        if report.get("status") not in ("PREOPEN_INPUTS_PREPARED", "PREOPEN_INPUTS_BLOCKED", "UNAVAILABLE"):
+            raise RuntimeError("PREOPEN_REPORT_UNAVAILABLE")
+        return report
     if args.operation in ("review-profile", "prepare-profile"):
         private(AUTH / "discovery.json")
         mounts = mount(AUTH / "discovery.json", "/input/schemas.json")
@@ -642,7 +691,9 @@ def main(argv=None):
             "review-enroll",
             "enroll",
             "snapshot",
+            "preopen-inputs",
             "prepare-session",
+            "capture-session",
             "review-session",
             "enroll-session",
             "review-run",
@@ -690,8 +741,10 @@ def main(argv=None):
         release = h.command(["git", "rev-parse", "HEAD"]).stdout.strip()
         if not re.fullmatch("[a-f0-9]{40}", release):
             raise ValueError("Pinned release required")
-        print(json.dumps(run(a, release), sort_keys=True))
-        return 0
+        result = run(a, release)
+        print(json.dumps(result, sort_keys=True))
+        return 2 if ((a.operation == "preopen-inputs" and result.get("status") != "PREOPEN_INPUTS_PREPARED")
+                     or result.get("status") == "CAPTURE_FAILED") else 0
     except (
         OSError,
         ValueError,

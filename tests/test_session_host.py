@@ -440,3 +440,58 @@ def test_swing_preparation_uses_separate_readonly_capture_mount(tmp_path, monkey
     assert call[2][call[2].index('--swing-capture-directory')+1] == '/swing-captures'
     assert f'type=bind,src={swing},dst=/swing-captures,readonly' in call[3]
     assert not any('/auth' in value or 'model_key' in value for value in call[3])
+
+
+def test_preopen_collection_mounts_owner_read_only_without_model_or_publisher(tmp_path, monkeypatch):
+    m = load()
+    state, auth = tmp_path / 'state', tmp_path / 'auth'
+    for path in (state, state / 'config', state / 'collector', auth):
+        path.mkdir(mode=0o700)
+    for name in ('robinhood-oauth.json', 'discovery.json'):
+        path = auth / name; path.write_text('{}'); path.chmod(0o600)
+    monkeypatch.setattr(m, 'STATE', state)
+    monkeypatch.setattr(m, 'AUTH', auth)
+    monkeypatch.setattr(m, 'image', lambda _: IMAGE)
+    monkeypatch.setattr(m, 'bundle', lambda _: {})
+    monkeypatch.setattr(m, 'no_active_session', lambda: None)
+    calls = []
+    def docker(*args, **kwargs):
+        calls.append(args)
+        return subprocess.CompletedProcess(args, 2, '{"status":"PREOPEN_INPUTS_BLOCKED","live_enabled":false}', '')
+    monkeypatch.setattr(m.h, 'docker', docker)
+    result = m.run(SimpleNamespace(operation='preopen-inputs', target_session='2026-11-02'), RELEASE)
+    assert result['status'] == 'PREOPEN_INPUTS_BLOCKED'
+    command = calls[0]
+    assert command[command.index('--network') + 1] == 'bridge'
+    assert f'type=bind,src={state},dst=/state,readonly' in command
+    assert f'type=bind,src={state / "collector"},dst=/state/collector' in command
+    assert not any('/run/secrets' in x or '/exports' in x for x in command)
+    assert 'app.mixed.preopen_inputs' in command
+
+
+@pytest.mark.parametrize('failed', [False, True])
+def test_capture_session_retains_private_evidence_without_owner_mount(tmp_path, monkeypatch, failed):
+    m = load()
+    auth, destination = tmp_path / 'auth', tmp_path / 'captures'
+    auth.mkdir(mode=0o700); destination.mkdir(mode=0o700)
+    for name in ('robinhood-oauth.json', 'discovery.json'):
+        path = auth / name; path.write_text('{}'); path.chmod(0o600)
+    monkeypatch.setattr(m, 'AUTH', auth)
+    monkeypatch.setattr(m, 'image', lambda _: IMAGE)
+    monkeypatch.setattr(m, 'no_active_session', lambda: None)
+    monkeypatch.setattr(m.tempfile, 'mkdtemp', lambda **kwargs: str(destination))
+    calls = []
+    def docker(*args, **kwargs):
+        calls.append(args)
+        if not failed:
+            path = destination / 'report.json'
+            path.write_text(json.dumps({'status':'CATALOG_CAPTURED','target_session':'2026-11-02','live_enabled':False}))
+            path.chmod(0o600)
+        return subprocess.CompletedProcess(args, 2 if failed else 0, '', 'PRIVATE_RAW_ERROR')
+    monkeypatch.setattr(m.h, 'docker', docker)
+    result = m.run(SimpleNamespace(operation='capture-session', target_session='2026-11-02'), RELEASE)
+    assert result['status'] == ('CAPTURE_FAILED' if failed else 'CATALOG_CAPTURED')
+    assert result['evidence_directory'] == str(destination)
+    assert 'PRIVATE' not in json.dumps(result)
+    assert not any('/state' in x or '/exports' in x or '/run/secrets' in x for x in calls[0])
+    assert 'app.mixed.session_capture' in calls[0]

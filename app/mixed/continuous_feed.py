@@ -736,7 +736,7 @@ class ContinuousFeed:
                 or captured.started_at < now
             ):
                 raise ValueError("Collector response plan changed")
-            swing, history_issues = None, ()
+            swing, history_issues, history_diagnostic = None, (), None
             if history_calls:
                 from app.mixed.swing_feed import snapshot
 
@@ -747,9 +747,12 @@ class ContinuousFeed:
                         self.schemas,
                         captured,
                     )
-                except (ValueError, TypeError, ArithmeticError, SchemaError):
+                except (ValueError, TypeError, ArithmeticError, SchemaError) as exc:
                     # Unavailable history must not discard usable held quotes.
                     history_issues = ("SWING_HISTORY_UNAVAILABLE",)
+                    from app.mixed.swing_bar_mapping import HistoryBarError
+                    history_diagnostic = (exc.detail if isinstance(exc, HistoryBarError) else
+                                          {"reason": "HISTORY_MAPPING_UNAVAILABLE", "error_class": type(exc).__name__})
             bound = None
             if source_settings is not None and self.policy.swing_history is not None:
                 bound = self.load_swing_sources(
@@ -837,6 +840,10 @@ class ContinuousFeed:
                 "sequence": sequence,
                 "entitlement": "UNKNOWN",
                 "stock_sizes": "MISSING",
+                **({"history_preparation": {
+                    "status": "CAPTURED" if swing is not None else "BLOCKED",
+                    "diagnostic": history_diagnostic,
+                }} if history_calls else {}),
             }
         except (OSError, ValueError, TypeError, SchemaError) as exc:
             import json
