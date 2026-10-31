@@ -192,6 +192,8 @@ def execute(image_id, module, args, mounts, *, copies=False):
             "SESSION_CLOSED", "FEED_ROLLOVER_UNAVAILABLE"
         }:
             raise RuntimeError(reason)
+        if module == "app.mixed.dashboard_snapshot" and reason == "DASHBOARD_SNAPSHOT_UNAVAILABLE":
+            raise RuntimeError(reason)
         raise RuntimeError("Host command failed: docker run")
     return json.loads(result.stdout)
 
@@ -344,13 +346,17 @@ def snapshot(image_id):
             "--policy", "/state/config/policy.json", "--schemas", "/state/config/schemas.json",
         ], config_mounts())
     parent(EXPORTS)
-    # The publisher's own create-only checks retain all previous failure evidence.
+    # Refresh an existing bound publication. The native publisher still verifies
+    # its binding, prior receipt, permissions and absence of retained failure files.
+    # A dangling symlink is existing evidence too, never a reason to create over it.
+    destination = EXPORTS / name
+    operation = "publish" if destination.exists() or destination.is_symlink() else "create"
     mounts = config_mounts(source=True) + mount(EXPORTS, "/exports", False)
     return execute(
         image_id,
         "app.mixed.dashboard_snapshot",
         [
-            "create",
+            operation,
             "--owner",
             "/source",
             "--destination",
@@ -526,6 +532,13 @@ def run(args, release):
         if report.get("status") != "CATALOG_CAPTURED" or report.get("target_session") != target:
             raise RuntimeError("CAPTURE_REPORT_UNAVAILABLE")
         return report | {"evidence_directory": str(destination)}
+    if args.operation == "preopen-report":
+        if type(args.sequence) is not int or args.sequence < 1:
+            raise ValueError("Positive saved collector sequence required")
+        return execute(image_id, "app.mixed.preopen_replay", [
+            "--feed-directory", "/state/collector", "--policy", "/state/config/policy.json",
+            "--schemas", "/state/config/schemas.json", "--sequence", str(args.sequence),
+        ], config_mounts())
     if args.operation == "preopen-inputs":
         from datetime import date
         target = date.fromisoformat(args.target_session).isoformat()
@@ -692,6 +705,7 @@ def main(argv=None):
             "enroll",
             "snapshot",
             "preopen-inputs",
+            "preopen-report",
             "prepare-session",
             "capture-session",
             "review-session",
@@ -709,7 +723,10 @@ def main(argv=None):
     p.add_argument("--resume-flat", action="store_true")
     p.add_argument("--observed-swing-history", action="store_true")
     p.add_argument("--seconds", type=int)
+    p.add_argument("--sequence", type=int)
     a = p.parse_args(argv)
+    if (a.operation == "preopen-report") != (a.sequence is not None):
+        p.error("Only preopen-report requires --sequence")
     if a.scope_binding is not None and a.operation != "prepare-session":
         p.error("--scope-binding is only for prepare-session")
     if a.earnings_probe is not None and a.operation != "prepare-session":

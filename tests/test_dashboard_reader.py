@@ -185,3 +185,40 @@ def test_reader_requires_verified_native_account_and_installed_release(tmp_path,
     monkeypatch.setattr(reader.MixedObserver, "report", lambda _self: {"status": "UNAVAILABLE"})
     with pytest.raises(ValueError, match="accounting"):
         reader.inspect(directory, binding, clock_source=lambda: AT + timedelta(seconds=3))
+
+
+@pytest.mark.parametrize('status,halted,allowed', [
+    ('STOPPED', 1, True), ('FAILED', 1, True), ('STOPPED', 0, False),
+    ('RUNNING', 1, False), ('ENROLLED', 1, False),
+])
+def test_terminal_halted_records_remain_viewable_without_claiming_current_feed(tmp_path, status, halted, allowed):
+    source, directory, binding, secret = setup(tmp_path)
+    with sqlite3.connect(source / 'options.db') as db:
+        db.execute('UPDATE execution_option_runtime SET status=? WHERE id=1', (status,))
+        db.execute('UPDATE execution_control SET halted=?,halt_reason=? WHERE id=1',
+                   (halted, 'OPTION_RUNTIME_STOPPED' if halted else None))
+    p = publisher(source, directory, create=False)
+    try:
+        p.publish()
+    finally:
+        p.close()
+    before = digest(tmp_path)
+    now = AT + timedelta(days=3)
+    if not allowed:
+        with pytest.raises(ValueError, match='Recent snapshot'):
+            reader.inspect(directory, binding, clock_source=lambda: now)
+    else:
+        result = reader.inspect(directory, binding, clock_source=lambda: now)
+        assert result['publication_state'] == 'STOPPED_RECORDS'
+        assert result['stored_runtime'] == {'status': status, 'halted': True}
+        assert result['publication_age_seconds'] > 30
+        with TestClient(reader.create_app(directory, binding, str(secret), clock_source=lambda: now)) as client:
+            assert client.get('/api/mixed').status_code == 401
+            client.auth = ('trader', PASSWORD)
+            data = client.get('/api/mixed').json()
+            assert data['halted'] and data['age_seconds'] > 30
+            assert data['health'] != 'FRESH'
+            assert 'Showing the last available records.' in client.get('/').text
+        with pytest.raises(ValueError, match='Recent snapshot'):
+            reader.guard(directory, binding, clock_source=lambda: AT)
+    assert digest(tmp_path) == before

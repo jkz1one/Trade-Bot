@@ -36,14 +36,20 @@ def planned(policy, symbols, now, *, calendar=None):
     return target, tuple(result)
 
 
-class HistoryBarError(ValueError):
+class HistoryMappingError(ValueError):
+    """Only fixed codes and bounded numeric/clock evidence leave the mapper."""
+
+    def __init__(self, reason, **detail):
+        super().__init__(reason)
+        self.detail = {"reason": reason, **detail}
+
+
+class HistoryBarError(HistoryMappingError):
     """Bounded, public bar diagnostics; never exception text or transport payloads."""
 
     def __init__(self, reason, label, expected, observed):
-        super().__init__(reason)
-        self.detail = {"reason": reason, "label": label,
-                       "expected_begins_at": expected.isoformat(),
-                       "observed_begins_at": observed.isoformat()}
+        super().__init__(reason, label=label, expected_begins_at=expected.isoformat(),
+                         observed_begins_at=observed.isoformat())
 
 
 def map_history(schemas, call, raw, *, received_at, target, count, calendar=None):
@@ -74,9 +80,25 @@ def map_history(schemas, call, raw, *, received_at, target, count, calendar=None
     histories = []
     for row in exact_rows(data["results"], call.arguments["symbols"], lambda r: r["symbol"]):
         raw_bars = row["bars"]
-        if (row["interval"] != interval or row["bounds"] != "regular"
-                or not isinstance(raw_bars, list) or len(raw_bars) != len(labels)):
-            raise ValueError("Exact complete source coverage required")
+        if row["interval"] != interval or row["bounds"] != "regular":
+            raise HistoryMappingError("SOURCE_INTERVAL_OR_BOUNDS_MISMATCH", label=call.label)
+        if not isinstance(raw_bars, list):
+            raise HistoryMappingError("SOURCE_BARS_UNAVAILABLE", label=call.label)
+        if len(raw_bars) != len(labels):
+            observed = [instant(b["begins_at"]) for b in raw_bars]
+            missing = sorted(set(labels) - set(observed))
+            unexpected = sorted(set(observed) - set(labels))
+            raise HistoryMappingError(
+                "SOURCE_COVERAGE_MISMATCH", label=call.label,
+                expected_bars=len(labels), observed_bars=len(observed),
+                missing_bars=len(missing), unexpected_bars=len(unexpected),
+                duplicate_bars=len(observed) - len(set(observed)),
+                first_expected=labels[0].isoformat(), last_expected=labels[-1].isoformat(),
+                first_observed=min(observed).isoformat() if observed else None,
+                last_observed=max(observed).isoformat() if observed else None,
+                missing_begins_at=[x.isoformat() for x in missing[:8]],
+                unexpected_begins_at=[x.isoformat() for x in unexpected[:8]],
+            )
         source_bars = iter(raw_bars)
         bars = []
         for group in groups:

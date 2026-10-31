@@ -51,15 +51,18 @@ def parse_binding(raw):
 
 def guard(directory, binding, *, clock_source=utc_now):
     try:
-        receipt = published(Path(directory), binding)
+        receipt = published(Path(directory), binding, include_runtime=True)
         if receipt is None:
             raise ValueError("Completed snapshot required")
         age = (
             clock(clock_source()) - datetime.fromisoformat(receipt["published_at"])
         ).total_seconds()
-        if not 0 <= age <= MAX_PUBLICATION_AGE:
+        terminal = (receipt["stored_runtime"]["status"] in ("STOPPED", "FAILED")
+                    and receipt["stored_runtime"]["halted"])
+        if age < 0 or (age > MAX_PUBLICATION_AGE and not terminal):
             raise ValueError("Recent snapshot publication required")
-        return receipt
+        return receipt | {"publication_age_seconds": age,
+                          "publication_state": "STOPPED_RECORDS" if terminal else "CURRENT"}
     except sqlite3.Error as exc:
         raise ValueError("Snapshot receipt unavailable") from exc
 
@@ -80,6 +83,9 @@ def inspect(directory, binding, *, clock_source=utc_now):
         "binding_sha256": receipt["binding_sha256"],
         "published_at": receipt["published_at"],
         "checkpoint": receipt["checkpoint"],
+        "publication_state": receipt["publication_state"],
+        "publication_age_seconds": receipt["publication_age_seconds"],
+        "stored_runtime": receipt["stored_runtime"],
         "held_plays": len(report["positions"]),
         "fills": report["fill_count"],
         "installed_files": release.file_count,

@@ -1,5 +1,35 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.173. Repair repeat snapshot publication and replay retained pre-open evidence, 2026-10-31 UTC.
+
+Actual host af5e0de built and captured both catalogs, then enrolled the November 2
+policy 7242ac53faf4977e5430c3c49ea124df901d6a660703e3380bcdfc80e718c236.
+The existing monday-ready preparation receipt must be reused. Snapshot publication
+failed because the helper requested create on its existing bound directory. It now
+selects native publish for existing destinations, retaining all permission,
+binding, accounting, atomicity and failed-temporary checks. No owner reset occurs.
+
+Dashboard reader freshness also prevented viewing normally stopped sessions after
+30 seconds. Verified halted STOPPED/FAILED records may now remain viewable with
+their original timestamps, stale valuation and last-available-records notice.
+Running/unhalted publications still expire after 30 seconds, and future or damaged
+receipts remain rejected. No trading freshness rule is changed.
+
+Host preopen attempt 132 was delivered but Swing mapping failed. A new offline
+preopen-report verifies its original plan, schemas, capture policy and enrolled
+rollover chain, and checks all four saved series independently. Coverage mismatch
+diagnostics now include bounded missing/extra labels and counts; original bars
+remain unchanged, and no source binding is installed by replay. Actual host Swing
+acceptance, Scope original inputs, stock wiring and connected fills remain pending.
+
+Validation: 168 installed-package publication, reader, launcher, collector and
+history tests passed; one cross-UID capability-dependent check was skipped.
+All 316 installed application files verified and changed-module lint passed.
+The repaired release still requires the host snapshot/report/dashboard commands;
+no provider read, host mutation or trading session was performed during this repair.
+
+Previous version notes (historical):
+
 Version 1.172. Prepare the next PAPER session without manual review-hash handoffs, 2026-10-31 UTC.
 
 The host launcher now captures and prepares combined future catalogs, retains a

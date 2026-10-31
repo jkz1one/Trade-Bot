@@ -278,6 +278,37 @@ def test_incomplete_upgraded_owner_does_not_create_snapshot(host, monkeypatch):
     assert not any('app.mixed.dashboard_snapshot' in c for c in calls)
 
 
+@pytest.mark.parametrize('symlink', [False, True])
+def test_existing_snapshot_uses_native_publish_without_recreating(host, symlink):
+    m, calls, _, _, manifest = host
+    manifest['strategy_amendment_sha256'] = '7' * 64
+    destination = m.EXPORTS / 'connected-price-options-v1'
+    if symlink:
+        destination.symlink_to(m.EXPORTS / 'missing')
+    else:
+        destination.mkdir(mode=0o711)
+        (destination / '.pending.db').write_bytes(b'keep failed evidence')
+    m.snapshot(IMAGE)
+    command = next(c for c in calls if 'app.mixed.dashboard_snapshot' in c)
+    assert command[command.index('app.mixed.dashboard_snapshot') + 1] == 'publish'
+    if symlink:
+        assert destination.is_symlink()
+    else:
+        assert (destination / '.pending.db').read_bytes() == b'keep failed evidence'
+
+
+def test_saved_preopen_report_is_read_only_and_offline(host, monkeypatch):
+    m, calls, _, _, _ = host
+    monkeypatch.setattr(m, 'image', lambda _: IMAGE)
+    seen = []
+    monkeypatch.setattr(m, 'execute', lambda *a, **k: seen.append(a) or {})
+    m.run(SimpleNamespace(operation='preopen-report', sequence=132), RELEASE)
+    assert len(seen) == 1 and seen[0][1] == 'app.mixed.preopen_replay'
+    assert seen[0][2][-2:] == ['--sequence', '132']
+    assert seen[0][3] == m.mount(m.STATE, '/state', True)
+    assert not any('/auth' in x or '/exports' in x or '/secrets' in x for x in seen[0][3])
+
+
 def test_changed_cpu_capacity_requires_a_new_review_before_launch(host, monkeypatch):
     m, calls, _, _, _ = host
     monkeypatch.setattr(m.os, "sched_getaffinity", lambda pid: {0, 1})

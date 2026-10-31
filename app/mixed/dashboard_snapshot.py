@@ -105,7 +105,7 @@ def checkpoint(db, binding):
     return {"owner_revision": revision, "runtime_generation": generation, "feed_sequence": sequence}
 
 
-def published(directory, binding):
+def published(directory, binding, *, include_runtime=False):
     path = directory / "options.db"
     if not path.exists() and not path.is_symlink():
         return None
@@ -126,6 +126,14 @@ def published(directory, binding):
         ):
             raise ValueError("Snapshot publication receipt changed")
         clock(datetime.fromisoformat(receipt["published_at"]))
+        if include_runtime:
+            # Read terminal state in the same transaction as the verified receipt.
+            # This is derived evidence, not a change to the persisted receipt/hash.
+            runtime = db.execute("SELECT status FROM execution_option_runtime WHERE id=1").fetchone()
+            control = db.execute("SELECT halted FROM execution_control WHERE id=1").fetchone()
+            if runtime is None or control is None:
+                raise ValueError("Snapshot runtime state unavailable")
+            receipt = receipt | {"stored_runtime": {"status": runtime[0], "halted": control[0] == 1}}
         if file_identity(path, binding["reader_uid"], binding["reader_gid"]) != identity:
             raise ValueError("Snapshot changed while reading")
         return receipt

@@ -10,6 +10,37 @@ completed a ten-minute session and accepted live packets, but no connected model
 call or simulated fill has yet been observed. A successful preparation is not
 market acceptance or a promise that a setup will qualify.
 
+## Recover the existing Monday preparation
+
+The actual `monday-ready` host attempt enrolled the November 2 policy successfully
+(`7242ac53faf4977e5430c3c49ea124df901d6a660703e3380bcdfc80e718c236`).
+Its receipt remains under
+`/etc/trade-bot-connected/sessions/2026-11-02-monday-ready/prepared.json`.
+The subsequent snapshot failed because the host helper always requested a new
+directory even when its bound publication already existed. Do not repeat the
+captures or enrollment. With the repaired release built, run:
+
+```bash
+python3 scripts/connected-session-host.py snapshot &&
+python3 scripts/connected-session-host.py preopen-report --sequence 132 &&
+python3 scripts/connected-dashboard-host.py switch \
+  --snapshot-name connected-price-options-v1
+```
+
+Snapshot refresh now uses the existing publisher, preserving its binding, receipt
+checks, atomic replacement and retained failure files. The saved-history report
+revalidates attempt 132 offline, at its original capture time and enrolled policy,
+and reports all four series independently. Missing source coverage includes exact
+counts and up to eight missing/unexpected bar labels. It neither fetches again nor
+installs history. `history_mapped: false` still requires original usable history;
+the report succeeding is not Swing acceptance.
+
+The reader permits old **halted STOPPED/FAILED records**, with their original
+timestamps and existing stale-account/last-available-records notice. Running and
+unhalted snapshots still require publication within 30 seconds; future snapshots
+are always rejected. This permits viewing a stopped account over the weekend
+without claiming current feed or valuation.
+
 ## Before Monday, November 2, 2026
 
 Deploy the reviewed commit and build **once**, using the pinned command supplied

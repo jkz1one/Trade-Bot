@@ -115,6 +115,44 @@ def test_consistent_snapshot_keeps_native_account_and_two_plays(tmp_path, monkey
         publisher(source, destination)
 
 
+def test_host_refresh_reuses_native_snapshot_and_preserves_owner(tmp_path, monkeypatch):
+    from test_session_host import load, IMAGE
+    source, settings = owner(tmp_path, positions=True)
+    before = digest(source)
+    host = load()
+    exports = tmp_path / 'exports'
+    exports.mkdir(mode=0o700)
+    monkeypatch.setattr(host, 'EXPORTS', exports)
+    monkeypatch.setattr(host, 'bundle', lambda _: {'strategy_amendment_sha256': 'a' * 64})
+    monkeypatch.setattr(host, 'config_mounts', lambda **kw: [])
+    operations = []
+    def execute(image, module, args, mounts, **kw):
+        if module == 'app.mixed.connected_runtime':
+            return {}
+        assert module == 'app.mixed.dashboard_snapshot'
+        operations.append(args[0])
+        p = publisher(source, exports / 'connected-price-options-v1', create=args[0] == 'create')
+        try:
+            return p.publish()
+        finally:
+            p.close()
+    monkeypatch.setattr(host, 'execute', execute)
+    for _ in range(3):
+        result = host.snapshot(IMAGE)
+        assert result['status'] == 'PUBLISHED'
+        assert result['held_plays'] == result['fills'] == 2
+    assert operations == ['create', 'publish', 'publish']
+    assert digest(source) == before
+    # Refresh must retain a failed temporary and the last complete publication.
+    pending = exports / 'connected-price-options-v1' / '.pending.db'
+    pending.write_bytes(b'failed evidence')
+    old = (pending.parent / 'options.db').read_bytes()
+    with pytest.raises(ValueError, match='Retained failed snapshot'):
+        host.snapshot(IMAGE)
+    assert pending.read_bytes() == b'failed evidence'
+    assert (pending.parent / 'options.db').read_bytes() == old
+
+
 def test_existing_native_owner_lease_does_not_block_stored_snapshot(tmp_path):
     source, settings = owner(tmp_path)
     destination = tmp_path / "dashboard"
