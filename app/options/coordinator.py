@@ -1112,7 +1112,11 @@ class DegenCoordinator:
                 len(expected) != len(planned["instruments"])
                 or len(quotes) != len(frame.quotes)
                 or (
-                    not set(expected) <= set(quotes) if frame.swing_unavailable
+                    # A portfolio feed carries the reviewed catalog and held
+                    # books across families, not only this scan's shortlist.
+                    # Every requested book must still match exactly; extra
+                    # books cannot enter admission, which uses each read plan.
+                    not set(expected) <= set(quotes) if self.engine.portfolio_policy is not None
                     else set(quotes) != set(expected)
                 )
                 or any(quotes[k].instrument != i for k, i in expected.items())

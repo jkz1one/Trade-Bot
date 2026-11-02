@@ -1,5 +1,43 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.177. Match portfolio shortlist quotes within full catalog delivery, 2026-11-02 UTC.
+
+The corrected actual report for paper-1102-144657-33b957 exposed a 600,755-byte
+completed result: HOLD / EXACT_REQUESTED_QUOTE_COVERAGE_REQUIRED. Both underlying
+scans at 09:50 New York had COMPLETED_STRUCTURE_INSUFFICIENT; the native minimum
+is six completed five-minute bars, so that early session did not yet meet it.
+Swing reached its scanners from the prepared source binding, with current
+structure, geometry, invalidation and setup-specific reasons. No candidate or
+fill is claimed. There was only one delivered CYCLE packet (140); the other 32
+packets were MARKET. The missing 09:55 cycle still needs its retained coverage
+reasons inspected rather than another blind runtime attempt.
+
+The portfolio collector supplies the complete candidate catalog while the
+coordinator's entry check compared its quote set to the selected shortlist when
+Swing was present. Portfolio admission now requires every requested instrument
+and exact metadata within that catalog, matching the prior unavailable-Swing
+behavior. Extra books are not passed to per-plan admission or selected merely
+because they are present. Duplicate requested instruments/books and changed
+requested identities remain rejected; legacy nonportfolio exact-set behavior,
+protection, freshness, setup and risk gates are unchanged.
+
+The report formerly discarded entire machine-code strings with colon-suffixed
+provider IDs/symbols. It now reports the validated uppercase code prefix only,
+never the identifying suffix. This exposes the retained packet issues behind
+apparently identical MARKET groups. Reports also state total scans and how many
+were omitted by the existing twelve-scan output bound. The next operation is a
+host-only saved report; it requires neither an image rebuild nor a new collection.
+The application quote-matching change needs a new built image before a later run.
+
+Validation: 88 installed-package tests passed, including complete-Swing portfolio
+catalog surplus, missing/duplicate/changed requested books, unchanged legacy
+exact-set rejection, shared Swing/Scope arbitration, production-profile CALL/PUT
+two-play entry/fill/independent exit/restart, and host reports. All 316 installed
+application files verified. Scoped lint and whitespace checks passed. The actual
+host has not run the revised coordinator yet.
+
+Previous version notes (historical):
+
 Version 1.176. Project saved decision summaries without discarding large Swing evidence, 2026-11-02 UTC.
 
 Actual ed19a52 host preparation verified PREOPEN_INPUTS_PREPARED for November 2:

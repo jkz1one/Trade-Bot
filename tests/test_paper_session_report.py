@@ -110,6 +110,8 @@ def test_legacy_mixed_owner_counts_stock_and_option_fills():
 def test_reason_extraction_is_bounded_and_does_not_print_prose():
     assert module.codes(["FRESHNESS_FAILED", "private message /some/path", "x" * 1000]) == ["FRESHNESS_FAILED"]
     assert len(module.codes([f"REASON_{i}" for i in range(200)])) == 100
+    assert module.codes(['MISSING_QUOTE:private-provider-id', 'SWING_OPTION_QUOTE_UNAVAILABLE:SPY',
+                         'private prose:do not print']) == ['MISSING_QUOTE', 'SWING_OPTION_QUOTE_UNAVAILABLE']
 
 
 @pytest.mark.parametrize('raw,issue', [(None, 'MISSING'), ('invalid', 'INVALID_JSON'),

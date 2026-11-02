@@ -26,6 +26,49 @@ def test_unavailable_marker_cannot_hide_supplied_swing_or_legacy_frame(tmp_path)
             DegenFrame.model_validate({"swing_unavailable": True})
 
 
+@pytest.mark.parametrize('damage', ['none', 'missing', 'duplicate', 'changed_identity'])
+def test_complete_swing_portfolio_accepts_catalog_surplus_but_requires_exact_requested_books(tmp_path, damage):
+    with shared(tmp_path, priority=("SWING", "DEGEN", "SCOPE"), portfolio=True) as (c, v, _, frame):
+        assert not frame.swing_unavailable and frame.swing
+        asyncio.run(c.supervise())
+        planned = c.quote_plan(frame.histories, frame.inventories, frame.swing)
+        expected = {i.instrument_id for i in planned['instruments']}
+        assert expected
+        original = next(q for q in frame.quotes if q.instrument.instrument_id in expected)
+        extra = original.model_copy(update={'instrument': original.instrument.model_copy(update={
+            'instrument_id': 'unselected-catalog-contract',
+            'contract': original.instrument.contract.model_copy(update={
+                'strike': original.instrument.contract.strike + 1})})})
+        quotes = (*frame.quotes, extra)
+        if damage == 'missing':
+            quotes = tuple(q for q in quotes if q.instrument.instrument_id != original.instrument.instrument_id)
+        elif damage == 'duplicate':
+            quotes = (*quotes, original)
+        elif damage == 'changed_identity':
+            changed = original.model_copy(update={'instrument': original.instrument.model_copy(update={
+                'provider': 'different-provider'})})
+            quotes = tuple(changed if q is original else q for q in quotes)
+        result = asyncio.run(c._cycle_once(frame.model_copy(update={'quotes': quotes}), portfolio_slot=0))
+        if damage == 'none':
+            assert result['status'] == 'OPEN', result
+            assert v.submit_count == 1
+        else:
+            assert result['reason'] in ('EXACT_REQUESTED_QUOTE_COVERAGE_REQUIRED', 'DEGEN_CYCLE_FAILED'), result
+            assert v.submit_count == 0
+
+
+def test_legacy_shared_cycle_still_rejects_unrequested_catalog_book(tmp_path):
+    with shared(tmp_path, priority=("SWING", "DEGEN", "SCOPE"), portfolio=False) as (c, v, _, frame):
+        original = frame.quotes[0]
+        extra = original.model_copy(update={'instrument': original.instrument.model_copy(update={
+            'instrument_id': 'unselected-catalog-contract',
+            'contract': original.instrument.contract.model_copy(update={
+                'strike': original.instrument.contract.strike + 1})})})
+        result = asyncio.run(c.cycle(frame.model_copy(update={'quotes': (*frame.quotes, extra)})))
+        assert result['reason'] == 'EXACT_REQUESTED_QUOTE_COVERAGE_REQUIRED', result
+        assert v.submit_count == 0
+
+
 def test_stock_degen_survives_absent_swing_without_inventing_clearance(tmp_path):
     from test_degen_options import frame, policies, AT
     from test_mixed_selection import source_fixture, stock_policy

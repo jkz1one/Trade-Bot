@@ -10,6 +10,22 @@ completed a ten-minute session and accepted live packets, but no connected model
 call or simulated fill has yet been observed. A successful preparation is not
 market acceptance or a promise that a setup will qualify.
 
+## Latest saved decision evidence
+
+The corrected report exposed 600,755 bytes of original evidence for the 09:50
+cycle: HOLD / EXACT_REQUESTED_QUOTE_COVERAGE_REQUIRED. Swing did reach the native
+scanners. DEGEN lacked the six completed five-minute bars required by its policy;
+09:50 is too early for that minimum. This is separate from the portfolio quote
+catalog/shortlist mismatch now repaired in code. Requested books still require
+exact identities; surplus catalog books cannot become admitted candidates.
+
+Only packet 140 was CYCLE. The remaining MARKET packets had coverage issues whose
+colon-suffixed identifiers were hidden by the old report filter. Re-report the
+same run with the latest host script to expose the machine reasons without IDs.
+Do not infer a clean no-setup session or launch another test before inspecting
+those reasons. Updating the host report alone requires no image rebuild. The
+coordinator fix must be built before it can affect a subsequent session.
+
 ## Monday run observed
 
 Host preparation succeeded on ed19a52: Swing source binding PREPARED with two

@@ -23,8 +23,10 @@ def codes(value):
     def visit(item, depth=0):
         if depth > 8 or len(found) >= 100:
             return
-        if isinstance(item, str) and CODE.fullmatch(item):
-            found.add(item)
+        if isinstance(item, str) and CODE.fullmatch(item.partition(':')[0]):
+            # Native coverage codes may suffix a symbol or provider ID. Keep
+            # the machine reason without publishing the identifying suffix.
+            found.add(item.partition(':')[0])
         elif isinstance(item, dict):
             for child in list(item.values())[:100]:
                 visit(child, depth + 1)
@@ -115,7 +117,8 @@ def decision_evidence(db, key):
                             for name in ('issues', 'exclusions')}
                            for index in range(min(count('$.read_plans'), 12))]
     summary = outcome(json.dumps(value))
-    summary.update(option_candidates=count('$.candidates'), stock_candidates=count('$.stock_candidates'))
+    summary.update(option_candidates=count('$.candidates'), stock_candidates=count('$.stock_candidates'),
+                   total_scans=count('$.scans'), scans_omitted=max(0, count('$.scans') - 12))
     return {'evidence_available': True, 'evidence_bytes': size,
             'omitted_summary_fields': omitted, **summary}
 
