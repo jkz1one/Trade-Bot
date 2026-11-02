@@ -14,7 +14,8 @@ module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 
-def test_saved_report_scopes_cycles_and_extracts_rejections_without_writes(tmp_path):
+@pytest.mark.parametrize('large', [False, True])
+def test_saved_report_scopes_cycles_and_extracts_rejections_without_writes(tmp_path, large):
     owner = tmp_path / "owner/options.db"
     collector = tmp_path / "collector/collector.db"
     owner.parent.mkdir()
@@ -41,18 +42,33 @@ def test_saved_report_scopes_cycles_and_extracts_rejections_without_writes(tmp_p
                         "scans": [{"symbol": "SPY", "issues": [], "observations": [
                             {"family": "BREAKOUT", "status": "WATCHING", "reasons": ["NO_BREAKOUT"]}]}],
                         "read_plans": [{"exclusions": {"private-id": ["SPREAD_TOO_WIDE"]}}]}
+            if large:
+                evidence['original_history'] = 'PRIVATE_HISTORY' * 50000
+                evidence['scans'][0]['original_history'] = 'PRIVATE_HISTORY' * 50000
+                evidence['candidates'] = [{'private_payload': 'PRIVATE_CANDIDATE' * 40000}]
             db.execute("INSERT INTO execution_option_opportunities VALUES(?,?,'COMPLETE',?)",
                        (str(hour), at, json.dumps(evidence)))
             db.execute("INSERT INTO execution_events VALUES('OPTION_REVIEWED_RESUME',?)", (at,))
     with sqlite3.connect(collector) as db:
-        db.execute("CREATE TABLE attempts(sequence,started_at,status)")
-        db.execute("INSERT INTO attempts VALUES(90,'2026-10-30T18:35:01+00:00','DELIVERED')")
+        db.execute("CREATE TABLE attempts(sequence,started_at,status,packet_json)")
+        db.execute("INSERT INTO attempts VALUES(90,'2026-10-30T18:35:01+00:00','DELIVERED',?)",
+                   (json.dumps({'kind': 'CYCLE', 'coverage_issues': ['SCOPE_CURRENT_INPUT_UNAVAILABLE'],
+                                'frame': {'private': 'DO_NOT_EXPOSE_PRIVATE_FRAME'}}),))
     before = (owner.read_bytes(), collector.read_bytes())
     report = module.report(tmp_path, "2026-10-30T18:30:22.407711551Z", "2026-10-30T18:40:34.899702954Z")
     assert len(report["cycles"]) == len(report["decisions"]) == 1
     assert report["reviewed_entry_resumes"] == 1
     assert report["collection"][0]["attempts"] == 1
+    assert report['packet_summary'] == [{'kind': ['CYCLE'], 'coverage_issues': ['SCOPE_CURRENT_INPUT_UNAVAILABLE'],
+                                       'packets': 1, 'first_sequence': 90, 'last_sequence': 90}]
     assert report["decisions"][0]["rejections"] == ["ENTRY_DEBIT_LIMIT"]
+    assert report['decisions'][0]['evidence_available'] is True
+    assert report['decisions'][0]['option_candidates'] == int(large)
+    assert report['decisions'][0]['omitted_summary_fields'] == []
+    if large:
+        assert report['decisions'][0]['evidence_bytes'] > 524288
+        assert 'PRIVATE_HISTORY' not in json.dumps(report)
+        assert 'PRIVATE_CANDIDATE' not in json.dumps(report)
     assert report["decisions"][0]["contract_exclusions"] == ["SPREAD_TOO_WIDE"]
     assert report["decisions"][0]["scans"][0]["setups"][0]["reasons"] == ["NO_BREAKOUT"]
     assert "DO_NOT_EXPOSE" not in json.dumps(report)
@@ -94,6 +110,32 @@ def test_legacy_mixed_owner_counts_stock_and_option_fills():
 def test_reason_extraction_is_bounded_and_does_not_print_prose():
     assert module.codes(["FRESHNESS_FAILED", "private message /some/path", "x" * 1000]) == ["FRESHNESS_FAILED"]
     assert len(module.codes([f"REASON_{i}" for i in range(200)])) == 100
+
+
+@pytest.mark.parametrize('raw,issue', [(None, 'MISSING'), ('invalid', 'INVALID_JSON'),
+                                    ('"' + 'x' * module.MAX_DECISION_BYTES + '"', 'TOO_LARGE')])
+def test_unavailable_decision_does_not_invent_empty_scan_or_zero_candidates(raw, issue):
+    with sqlite3.connect(':memory:') as db:
+        db.execute('CREATE TABLE execution_option_opportunities(cycle_key,result_json)')
+        db.execute('INSERT INTO execution_option_opportunities VALUES(?,?)', ('test', raw))
+        result = module.decision_evidence(db, 'test')
+        assert result['evidence_available'] is False and result['evidence_issue'] == issue
+        assert result['option_candidates'] is result['stock_candidates'] is None
+        assert 'scans' not in result and 'status' not in result
+
+
+def test_oversized_summary_field_is_explicit_without_hiding_other_evidence():
+    with sqlite3.connect(':memory:') as db:
+        db.execute('CREATE TABLE execution_option_opportunities(cycle_key,result_json)')
+        db.execute('INSERT INTO execution_option_opportunities VALUES(?,?)', ('test', json.dumps({
+            'status': 'HOLD', 'reason': 'NO_ADMITTED_CONTRACT', 'rejections': ['X' * 70000],
+            'stock_candidates': [1, 2], 'scans': [{'symbol': 'QQQ', 'observations': [
+                {'family': 'SWING', 'status': 'WATCHING', 'reasons': ['NO_BREAKOUT']}]}]})))
+        result = module.decision_evidence(db, 'test')
+        assert result['status'] == ['HOLD']
+        assert result['stock_candidates'] == 2
+        assert result['omitted_summary_fields'] == ['$.rejections']
+        assert result['scans'][0]['setups'][0]['reasons'] == ['NO_BREAKOUT']
 
 
 def test_running_or_unrelated_container_never_reads_account(monkeypatch):

@@ -10,6 +10,18 @@ completed a ten-minute session and accepted live packets, but no connected model
 call or simulated fill has yet been observed. A successful preparation is not
 market acceptance or a promise that a setup will qualify.
 
+## Monday run observed
+
+Host preparation succeeded on ed19a52: Swing source binding PREPARED with two
+option batches and no blockers. Run `paper-1102-144657-33b957` completed at
+09:58 New York with exit zero, 33 delivered packets, one entry resume, one complete
+cycle and no fills or runtime/collector failures. Its original report hid the
+completed decision evidence; the reporter's 512 KiB whole-record cutoff could
+cause this for large combined Swing records. The corrected host report projects
+only summary fields and prints the retained byte count and any omissions.
+Re-report that saved run before launching another test. No Docker rebuild is
+needed for this host-only script; preserve the existing deployed image/checkout.
+
 ## Existing Monday preparation and active dashboard
 
 The actual `monday-ready` host attempt enrolled the November 2 policy successfully

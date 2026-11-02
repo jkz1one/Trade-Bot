@@ -6,11 +6,14 @@ import json
 import re
 import sqlite3
 import subprocess
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
 CODE = re.compile(r"[A-Z][A-Z0-9_]{1,95}\Z")
 STATE = Path("/var/lib/trade-bot-connected")
+MAX_DECISION_BYTES = 16 * 1024 * 1024
+MAX_SUMMARY_FIELD = 65536
 
 
 def codes(value):
@@ -57,6 +60,64 @@ def outcome(raw):
         for code in codes([plan.get("issues"), plan.get("exclusions")])
     ))
     return result
+
+
+def decision_evidence(db, key):
+    """Project only summary fields; large original histories never enter Python."""
+    row = db.execute(
+        "SELECT length(CAST(result_json AS BLOB)),CASE "
+        "WHEN length(CAST(result_json AS BLOB))<=? THEN json_valid(result_json) ELSE 0 END "
+        "FROM execution_option_opportunities WHERE cycle_key=?", (MAX_DECISION_BYTES, key),
+    ).fetchone()
+    size, valid = row
+    if not valid:
+        reason = ('MISSING' if size is None else 'TOO_LARGE' if size > MAX_DECISION_BYTES else 'INVALID_JSON')
+        return {'evidence_available': False, 'evidence_issue': reason, 'evidence_bytes': size,
+                'option_candidates': None, 'stock_candidates': None}
+    omitted = []
+    deadline = time.monotonic() + 15
+
+    def bounded():
+        if time.monotonic() > deadline:
+            raise ValueError('DECISION_SUMMARY_TIMEOUT')
+
+    def field(path):
+        bounded()
+        value, kind, length = db.execute(
+            "SELECT CASE WHEN length(json_extract(result_json,?))<=? "
+            "THEN json_extract(result_json,?) END,json_type(result_json,?),"
+            "length(json_extract(result_json,?)) FROM execution_option_opportunities WHERE cycle_key=?",
+            (path, MAX_SUMMARY_FIELD, path, path, path, key),
+        ).fetchone()
+        if length is not None and length > MAX_SUMMARY_FIELD:
+            omitted.append(path)
+        return json.loads(value) if value is not None and kind in ('object', 'array') else value
+
+    def count(path):
+        bounded()
+        return db.execute(
+            "SELECT CASE WHEN json_type(result_json,?)='array' THEN json_array_length(result_json,?) "
+            "ELSE 0 END FROM execution_option_opportunities WHERE cycle_key=?", (path, path, key),
+        ).fetchone()[0]
+
+    value = {name: field('$.' + name) for name in (
+        'status', 'reason', 'issues', 'blocker', 'unavailable_families',
+        'rejections', 'stock_rejections', 'scope_rejections')}
+    value['scans'] = []
+    for index in range(min(count('$.scans'), 12)):
+        prefix = f'$.scans[{index}]'
+        scan = {name: field(prefix + '.' + name) for name in ('symbol', 'issues')}
+        scan['observations'] = [{name: field(f'{prefix}.observations[{n}].{name}')
+                                 for name in ('family', 'status', 'reasons')}
+                                for n in range(min(count(prefix + '.observations'), 12))]
+        value['scans'].append(scan)
+    value['read_plans'] = [{name: field(f'$.read_plans[{index}].{name}')
+                            for name in ('issues', 'exclusions')}
+                           for index in range(min(count('$.read_plans'), 12))]
+    summary = outcome(json.dumps(value))
+    summary.update(option_candidates=count('$.candidates'), stock_candidates=count('$.stock_candidates'))
+    return {'evidence_available': True, 'evidence_bytes': size,
+            'omitted_summary_fields': omitted, **summary}
 
 
 def connection(path):
@@ -126,14 +187,12 @@ def report(directory, started, finished):
             "WHERE started_at>=? AND started_at<=? ORDER BY slot LIMIT 25", (start, end))]
         result["decisions"] = []
         for row in db.execute(
-            "SELECT cycle_key,started_at,status,CASE WHEN length(result_json)<=524288 "
-            "THEN result_json ELSE NULL END AS result_json FROM execution_option_opportunities "
+            "SELECT cycle_key,started_at,status FROM execution_option_opportunities "
             "WHERE started_at>=? AND started_at<=? ORDER BY started_at LIMIT 25", (start, end)
         ):
             result["decisions"].append({"cycle_key": row["cycle_key"],
                 "started_at": row["started_at"], "stored_status": row["status"],
-                "evidence_available": row["result_json"] is not None,
-                **outcome(row["result_json"])})
+                **decision_evidence(db, row["cycle_key"])})
         result["reviewed_entry_resumes"] = db.execute(
             "SELECT COUNT(*) FROM execution_events WHERE kind='OPTION_REVIEWED_RESUME' "
             "AND occurred_at>=? AND occurred_at<=?", (start, end)).fetchone()[0]
@@ -151,6 +210,18 @@ def report(directory, started, finished):
             "SELECT status,COUNT(*) AS attempts,MIN(sequence) AS first_sequence,"
             "MAX(sequence) AS last_sequence FROM attempts WHERE started_at>=? "
             "AND started_at<=? GROUP BY status", (start, end))]
+        if 'packet_json' in {r[1] for r in db.execute('PRAGMA table_info(attempts)')}:
+            result['packet_summary'] = [{
+                'kind': codes(row['kind']), 'coverage_issues': codes(json.loads(row['issues'] or '[]')),
+                'packets': row['packets'], 'first_sequence': row['first_sequence'],
+                'last_sequence': row['last_sequence'],
+            } for row in db.execute(
+                "SELECT json_extract(packet_json,'$.kind') AS kind,"
+                "CASE WHEN length(json_extract(packet_json,'$.coverage_issues'))<=65536 "
+                "THEN json_extract(packet_json,'$.coverage_issues') END AS issues,"
+                "COUNT(*) AS packets,MIN(sequence) AS first_sequence,MAX(sequence) AS last_sequence "
+                "FROM attempts WHERE started_at>=? AND started_at<=? AND packet_json IS NOT NULL "
+                "AND json_valid(packet_json) GROUP BY kind,issues ORDER BY first_sequence LIMIT 25", (start, end))]
         if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='attempt_failures'").fetchone():
             result['collector_failures'] = [{
                 'sequence': row['sequence'], 'codes': codes(json.loads(row['details'] or '{}')),

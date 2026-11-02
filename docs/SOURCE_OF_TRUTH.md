@@ -1,5 +1,40 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.176. Project saved decision summaries without discarding large Swing evidence, 2026-11-02 UTC.
+
+Actual ed19a52 host preparation verified PREOPEN_INPUTS_PREPARED for November 2:
+retained capture 132, two option batches/two stock sources, no source blockers,
+binding 3dcff9b126ef174572ce6de5f6bdd7391b1d462c53ab0603d28c8f7af9759db7.
+Owner revision 805 and its halt remained unchanged. Monday's
+paper-1102-144657-33b957 then exited zero after ten minutes, delivered 33 packets
+(134 through 166), resumed entry once and recorded one complete cycle. There were
+zero portfolio fills and no retained runtime/collector failures. The owner stopped
+and halted normally. This does not yet prove an eligible setup or model call.
+
+Its host report showed evidence_available=false and empty decision summaries.
+Inspection found the reporter silently converts any result above 512 KiB to null,
+then presents zero candidates/empty scans. The report now projects allowlisted
+summary fields in SQLite without loading large original histories or candidate
+payloads into Python. It preserves status/reasons, bounded scan setup reasons,
+contract exclusions and actual candidate array counts. Missing, malformed or
+oversized evidence is explicit with unknown counts rather than invented zeros.
+Per-field omissions and total evidence bytes are reported. The original record
+limit is 16 MiB, summary fields 64 KiB, scan/plan limits unchanged, and projection
+has a deadline. Collector packet kinds/coverage summaries are also reported.
+
+This is a host report-only change: no application, eligibility, source freshness,
+model policy or execution behavior changed. Re-report the saved run before drawing
+conclusions about its absent trades or second cycle. No new runtime or image build
+is needed. The static review's Swing requirement is not proof that the separately
+verified source binding is missing. Scope's independent input requirements remain.
+
+Validation: 12 host report tests passed, including multi-megabyte histories and
+candidate payloads, exact summary counts/reasons, explicit omissions, bounded
+invalid records, run scoping, owner/collector byte preservation and private-field
+exclusion. Scoped lint and whitespace checks passed.
+
+Previous version notes (historical):
+
 Version 1.175. Bind retained original Swing history independently of quote delivery, 2026-10-31 UTC.
 
 Actual host replay on 7bcc91a mapped all four series in attempt 132: 56 daily
