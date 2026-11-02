@@ -26,7 +26,7 @@ def combined(captures):
     return settings, policy
 
 
-def reader(at):
+def reader(at, *, unusable=False, history_requests=None):
     async def capture(policy, *, schemas, plan):
         observations = []
         for call in plan.calls:
@@ -40,8 +40,12 @@ def reader(at):
             elif call.tool == 'get_option_quotes':
                 rows = [{'quote': option() | {'instrument_id': i, 'updated_at': at.isoformat()}}
                         for i in call.arguments['instrument_ids']]
+                if unusable:
+                    rows[0]['quote']['updated_at'] = (at + timedelta(minutes=1)).isoformat()
             else:
                 assert call.label == 'history'
+                if history_requests is not None:
+                    history_requests.append(at)
                 start = datetime.fromisoformat(call.arguments['start_time'])
                 end = datetime.fromisoformat(call.arguments['end_time'])
                 template = history()[1]['structuredContent']['data']['results'][0]['bars'][0]
@@ -57,6 +61,72 @@ def reader(at):
                              collected_at=at + timedelta(seconds=1), elapsed_seconds=1,
                              status='COMPLETE', schemas=schemas, plan=plan, observations=observations)
     return capture
+
+
+def test_transient_unusable_quote_retries_scan_after_restart(tmp_path, captures, schemas):
+    settings, policy = combined(captures)
+    at = datetime(2026, 10, 28, 15, tzinfo=UTC)
+    directory = tmp_path / 'feed'
+    history_requests = []
+    for index in range(4):
+        current = at + timedelta(seconds=policy.poll_seconds * index)
+        feed = ContinuousFeed(directory, policy, schemas, create=index == 0)
+        try:
+            result = asyncio.run(feed.tick(
+                now=current, reader=reader(current, unusable=index < 2,
+                                           history_requests=history_requests),
+                source_settings=settings, window=XNYSCalendar().current_window(current)))
+            assert result['status'] == 'DELIVERED'
+            packet = read_packet(directory / 'feed.json')
+            assert packet.kind == ('CYCLE' if index == 2 else 'MARKET')
+            if index < 2:
+                assert any(i.startswith('UNUSABLE_OPTION:') for i in packet.coverage_issues)
+                assert len(packet.frame.quotes) == 7
+            else:
+                assert len(packet.frame.quotes) == 8
+                assert all(q.source_at == current for q in packet.frame.quotes)
+            if index == 2:
+                assert packet.frame.histories
+        finally:
+            feed.close()
+    assert len(history_requests) == 3
+
+
+@pytest.mark.parametrize('capture_failure', [False, True])
+def test_scan_retry_cap_preserves_quote_polls_and_resets_next_slot(tmp_path, captures, schemas, capture_failure):
+    settings, policy = combined(captures)
+    at = datetime(2026, 10, 28, 15, tzinfo=UTC)
+    directory = tmp_path / 'feed'
+    history_requests = []
+    times = [at + timedelta(seconds=policy.poll_seconds * i) for i in range(4)]
+    times.append(at + timedelta(minutes=5))
+    for index, current in enumerate(times):
+        feed = ContinuousFeed(directory, policy, schemas, create=index == 0)
+        try:
+            async def capture(configuration, *, schemas, plan, index=index, current=current):
+                if capture_failure and index < 3:
+                    assert any(call.label == 'history' for call in plan.calls)
+                    history_requests.append(current)
+                    raise OSError('Synthetic unavailable capture')
+                return await reader(current, unusable=index < 3,
+                                    history_requests=history_requests)(configuration, schemas=schemas, plan=plan)
+            result = asyncio.run(feed.tick(
+                now=current, reader=capture,
+                source_settings=settings, window=XNYSCalendar().current_window(current)))
+            if capture_failure and index < 3:
+                assert result['status'] == 'FAILED'
+            else:
+                assert result['status'] == 'DELIVERED'
+                packet = read_packet(directory / 'feed.json')
+                assert packet.kind == ('CYCLE' if index == 4 else 'MARKET')
+                if index == 3:
+                    assert len(packet.frame.quotes) == 8
+            # Even retrying histories must retain the normal poll limit.
+            limited = asyncio.run(feed.tick(now=current + timedelta(seconds=1)))
+            assert limited['status'] == 'RATE_LIMITED'
+        finally:
+            feed.close()
+    assert history_requests == times[:3] + times[4:]
 
 
 @pytest.mark.parametrize('cycle', [False, True])

@@ -19,12 +19,26 @@ scanners. DEGEN lacked the six completed five-minute bars required by its policy
 catalog/shortlist mismatch now repaired in code. Requested books still require
 exact identities; surplus catalog books cannot become admitted candidates.
 
-Only packet 140 was CYCLE. The remaining MARKET packets had coverage issues whose
-colon-suffixed identifiers were hidden by the old report filter. Re-report the
-same run with the latest host script to expose the machine reasons without IDs.
-Do not infer a clean no-setup session or launch another test before inspecting
-those reasons. Updating the host report alone requires no image rebuild. The
-coordinator fix must be built before it can affect a subsequent session.
+Only packet 140 was CYCLE. The updated report exposes intermittent UNUSABLE_OPTION
+and SWING_EXACT_CONTRACT_EVIDENCE_UNAVAILABLE. The collector previously tried
+history only on the first poll of an interval, so a rejected first poll could
+prevent a scan for that whole interval. It now retries at most three attempts
+per interval, stops after a delivered CYCLE, retains the existing poll and call
+limits, and continues quote polling after exhaustion. Rejected evidence remains
+rejected. The grouped report does not identify the exact offending 09:55 poll.
+
+Build the revised release once and reuse the already enrolled Monday receipt:
+
+```bash
+python3 scripts/paper-session-start.py \
+  --prepared-session /etc/trade-bot-connected/sessions/2026-11-02-monday-ready \
+  --seconds 600 --wait
+```
+
+The launcher chooses a new run ID and preserves the account. Do not recapture,
+re-enroll, or switch the active dashboard. Inspect the returned saved report for
+accepted cycles and decision reasons; a completed run alone does not establish
+model-call or simulated-fill acceptance.
 
 ## Monday run observed
 

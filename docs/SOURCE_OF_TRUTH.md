@@ -1,5 +1,31 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.178. Retry bounded scan collection after unusable option polls, 2026-11-02 UTC.
+
+The updated actual Monday report confirms intermittent UNUSABLE_OPTION and
+SWING_EXACT_CONTRACT_EVIDENCE_UNAVAILABLE packets, one CYCLE (140), 30 recorded
+scans, no collector/runtime failures and zero fills. Grouped packets alone do
+not identify the exact offending 09:55 poll. Code inspection establishes that
+history was requested only on the first attempt of each five-minute interval:
+a failed or MARKET-only first attempt prevented another scan for that interval.
+
+The collector now retries at the existing poll cadence until a CYCLE is delivered,
+with at most three attempts per five-minute interval. Persisted attempt counts
+include failed captures and MARKET downgrades and survive restart. A successful
+CYCLE stops retries; exhausted retries leave quote polling active. The existing
+per-minute call budget, quote clocks, identity, freshness, native strategy and
+risk checks remain enforced. No rejected quote is reused or treated as fresh.
+This release also includes version 1.177's portfolio catalog/shortlist correction.
+
+Validation: 95 installed-package collector, rollover, Scope, Swing and delivery
+tests passed; the final seven-test combined-feed run additionally covers failed
+captures consuming the retry cap. All 316 installed application files verified.
+Scoped lint and whitespace checks passed. These are synthetic regressions, not
+actual connected fill acceptance. Deploy once and reuse the existing prepared
+Monday session, source binding, account and dashboard for the next bounded run.
+
+Previous version notes (historical):
+
 Version 1.177. Match portfolio shortlist quotes within full catalog delivery, 2026-11-02 UTC.
 
 The corrected actual report for paper-1102-144657-33b957 exposed a 600,755-byte

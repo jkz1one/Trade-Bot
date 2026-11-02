@@ -640,10 +640,18 @@ class ContinuousFeed:
             if (now - previous).total_seconds() < self.policy.poll_seconds:
                 return {"status": "RATE_LIMITED"}
         slot = int(now.timestamp()) // 300
-        cycle = (
-            last is None
-            or int(datetime.fromisoformat(last["started_at"]).timestamp()) // 300 != slot
-        )
+        # A quote rejected on the first poll must not consume the entire scan
+        # interval. Retry at the normal poll cadence, at most three attempts,
+        # stopping once a CYCLE is delivered. Persisted attempts bound retries
+        # across restart, including failed captures and MARKET downgrades.
+        slot_start = datetime.fromtimestamp(slot * 300, tz=now.tzinfo)
+        attempts, delivered_cycles = self.db.execute(
+            "SELECT COUNT(*), COALESCE(SUM(status='DELIVERED' AND "
+            "json_extract(packet_json, '$.kind')='CYCLE'),0) FROM attempts "
+            "WHERE started_at>=? AND started_at<?",
+            (slot_start.isoformat(), (slot_start + timedelta(minutes=5)).isoformat()),
+        ).fetchone()
+        cycle = attempts < 3 and delivered_cycles == 0
         target_day = now.astimezone(ZoneInfo("America/New_York")).date()
         effective = self.policy_for(target_day)
         scope_binding = effective.scope_binding
