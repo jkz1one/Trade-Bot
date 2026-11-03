@@ -1,5 +1,44 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.179. Report and recover pre-open history independently of rejected quote clocks, 2026-11-03 UTC.
+
+Actual Tuesday preparation completed on f1b96e6 with the existing account:
+receipt /etc/trade-bot-connected/sessions/2026-11-03-tuesday-ready/prepared.json,
+policy 8136af394ef61ac8546010d7d69811110f417b7b800a3b7191535e13688c4f51.
+Snapshot revision 1032/feed 166/generation 8 is STOPPED and halted with zero fills.
+Attempt 167 delivered but history mapping rejected an interpolated November 2
+daily bar. Attempt 168 failed SOURCE_CLOCK_CHECK; offline replay showed BOTH SPY
+and QQQ daily bars interpolated while their 54 hourly bars each mapped. Attempt
+169 again failed SOURCE_CLOCK_CHECK; its history content has not been inspected.
+No Tuesday worker or simulated trade has been observed. Scope remains blocked.
+
+Pre-open preparation now automatically runs the existing validated saved-history
+installation path after SOURCE_CLOCK_CHECK failure. Capture/session/schema/plan
+bindings and original bar validation remain mandatory. A valid history can bind
+while the original quote attempt remains FAILED, with no new packet publication.
+Invalid history stays blocked and its bounded mapping diagnostic is returned
+alongside the quote failure. Explicit --sequence recovery also reports precise
+bar blockers instead of hiding them behind a generic unavailable result. Other
+binding errors still refuse; different existing history is never overwritten.
+The owner remains read-only, halted and flat; no model or order worker starts.
+
+This removes the manual collect/report/recover loop for quote-clock failures. It
+does not make interpolated provider bars valid or complete all strategy inputs.
+Use --sequence 169 offline after deployment to reuse the saved attempt without
+another provider call; a later original daily-bar capture is still necessary if
+that attempt also contains interpolation. Do not recapture catalogs, re-enroll
+Tuesday or switch the connected dashboard again.
+
+Validation: 87 installed-package tests passed across pre-open preparation/replay,
+Swing feed/bar mapping, combined delivery, host bundles and session launch. The
+new regressions reproduce a same-clock changed book with valid and interpolated
+history, verify owner/feed immutability, preserve the FAILED attempt, and prevent
+repeat provider reads after recovery. All 316 installed application files
+verified; scoped lint and whitespace checks passed. Host deployment and attempt
+169's result remain unverified.
+
+Previous version notes (historical):
+
 Version 1.178. Retry bounded scan collection after unusable option polls, 2026-11-02 UTC.
 
 The updated actual Monday report confirms intermittent UNUSABLE_OPTION and

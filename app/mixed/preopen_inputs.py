@@ -32,6 +32,37 @@ def stopped_owner(directory):
         os.close(fd)
 
 
+def install_history(feed, policy, schemas, effective, target, sequence, now):
+    """Install validated history only; retain failed quotes and packet state."""
+    from app.mixed.preopen_replay import saved_capture
+    from app.mixed.swing_feed import snapshot
+
+    # Only derived history is installed. Original attempts and quote
+    # failures remain unchanged; no packet is accepted or published.
+    feed.db.execute("BEGIN IMMEDIATE")
+    try:
+        original, saved_policy, saved_target, _ = saved_capture(
+            feed.db, policy, schemas, sequence)
+        if (saved_target != target or saved_policy != effective
+                or original.collected_at > now):
+            raise ValueError("SAVED_HISTORY_SESSION_MISMATCH")
+        history = snapshot(effective.swing_history,
+                           tuple(i.symbol for i in policy.stocks), schemas, original)
+        existing = feed.swing_snapshot(target)
+        if existing is not None and existing != history:
+            raise ValueError("SAVED_HISTORY_ALREADY_BOUND")
+        if existing is None:
+            feed.db.execute("INSERT INTO swing_history VALUES(?,?,?,?)", (
+                target.isoformat(), sequence, history.model_dump_json(), fingerprint(history)))
+        feed.db.commit()
+    except Exception:
+        feed.db.rollback()
+        raise
+    return {"status": "SAVED_HISTORY_INSTALLED" if existing is None else "RETAINED_HISTORY",
+            "sequence": sequence, "capture_sha256": fingerprint(original),
+            "captured_at": original.collected_at.isoformat(), "provider_calls": False}
+
+
 async def prepare(directory, feed_directory, policy_file, schemas_file, target,
                   *, clock_source=utc_now, reader=collect, sequence=None):
     now = clock_source()
@@ -57,35 +88,32 @@ async def prepare(directory, feed_directory, policy_file, schemas_file, target,
             # or spending another provider call.
             captured = {"status": "RETAINED_HISTORY"}
             if sequence is not None:
-                from app.mixed.preopen_replay import saved_capture
-                from app.mixed.swing_feed import snapshot
+                from app.mixed.swing_bar_mapping import HistoryMappingError
 
-                # Only derived history is installed. Original attempts and quote
-                # failures remain unchanged; no packet is accepted or published.
-                feed.db.execute("BEGIN IMMEDIATE")
                 try:
-                    original, saved_policy, saved_target, _ = saved_capture(
-                        feed.db, policy, schemas, sequence)
-                    if (saved_target != target or saved_policy != effective
-                            or original.collected_at > now):
-                        raise ValueError("SAVED_HISTORY_SESSION_MISMATCH")
-                    history = snapshot(effective.swing_history,
-                                       tuple(i.symbol for i in policy.stocks), schemas, original)
-                    existing = feed.swing_snapshot(target)
-                    if existing is not None and existing != history:
-                        raise ValueError("SAVED_HISTORY_ALREADY_BOUND")
-                    if existing is None:
-                        feed.db.execute("INSERT INTO swing_history VALUES(?,?,?,?)", (
-                            target.isoformat(), sequence, history.model_dump_json(), fingerprint(history)))
-                    feed.db.commit()
-                except Exception:
-                    feed.db.rollback()
-                    raise
-                captured = {"status": "SAVED_HISTORY_INSTALLED" if existing is None else "RETAINED_HISTORY",
-                            "sequence": sequence, "capture_sha256": fingerprint(original),
-                            "captured_at": original.collected_at.isoformat(), "provider_calls": False}
+                    captured = install_history(feed, policy, schemas, effective, target, sequence, now)
+                except HistoryMappingError as exc:
+                    captured = {"status": "SAVED_HISTORY_BLOCKED", "sequence": sequence,
+                                "provider_calls": False, "history_preparation": {
+                                    "status": "BLOCKED", "diagnostic": exc.detail}}
             elif feed.swing_snapshot(target) is None:
                 captured = await feed.tick(now=now, reader=reader, source_settings=settings)
+                if (captured.get("status") == "FAILED"
+                        and captured.get("failure", {}).get("stage") == "SOURCE_CLOCK_CHECK"):
+                    from jsonschema.exceptions import ValidationError as SchemaError
+
+                    from app.mixed.swing_bar_mapping import HistoryMappingError
+
+                    # A rejected market packet cannot bless its quotes. Its
+                    # original pre-open history has a separate validation path.
+                    try:
+                        recovery = install_history(feed, policy, schemas, effective, target,
+                                                   captured["sequence"], clock_source())
+                        captured["history_preparation"] = {"status": "CAPTURED", "recovery": recovery}
+                    except (ValueError, TypeError, ArithmeticError, SchemaError) as exc:
+                        captured["history_preparation"] = {"status": "BLOCKED", "diagnostic": (
+                            exc.detail if isinstance(exc, HistoryMappingError) else {
+                                "reason": "SAVED_HISTORY_VALIDATION_FAILED", "error_class": type(exc).__name__})}
             bound = feed.bind_swing_sources(settings, now=clock_source())
             if bound is None or bound["target_session"] != target.isoformat():
                 raise ValueError("PREOPEN_BINDING_UNAVAILABLE")

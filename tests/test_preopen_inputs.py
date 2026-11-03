@@ -167,6 +167,10 @@ def test_install_saved_history_without_accepting_packet_or_reading_provider(
         with pytest.raises(ValueError, match='SAVED_HISTORY_SESSION_MISMATCH'):
             asyncio.run(prepare(*args, date(2026, 10, 29), sequence=sequence,
                                 clock_source=lambda: AT + timedelta(days=1), reader=forbidden))
+    elif damage == 'interpolation':
+        blocked = install()
+        assert blocked['status'] == 'PREOPEN_INPUTS_BLOCKED'
+        assert blocked['collection']['history_preparation']['diagnostic']['reason'] == 'INTERPOLATED_BAR'
     else:
         with pytest.raises(ValueError):
             install()
@@ -175,3 +179,67 @@ def test_install_saved_history_without_accepting_packet_or_reading_provider(
         assert db.execute('SELECT COUNT(*) FROM swing_history').fetchone()[0] == (damage == 'none')
     assert (feed_file.read_bytes() if feed_file.exists() else None) == original_packet
     assert digest(args[0]) == before_owner
+
+
+@pytest.mark.parametrize('interpolated', [False, True])
+def test_quote_clock_failure_reports_and_recovers_history_automatically(
+        tmp_path, captures, schemas, monkeypatch, interpolated):
+    args = enrolled(tmp_path, captures, schemas)
+    before_owner = digest(args[0])
+    _, _, artifact = synthetic(schemas, at=AT)
+    current = [AT]
+    reads = []
+
+    async def reader(cp, *, schemas, plan):
+        at = current[0]
+        reads.append(at)
+        market = CapturePlan.model_validate(plan.model_dump() | {
+            'calls': tuple(c for c in plan.calls if not c.label.startswith('swing-'))})
+        result = await market_reader(AT)(cp, schemas=schemas, plan=market)
+        result = result.model_copy(deep=True)
+        if at != AT:
+            receipt = next(x for x in result.observations if x['tool'] == 'get_option_quotes')
+            receipt['raw']['structuredContent']['data']['results'][0]['quote']['bid_size'] += 1
+        for receipt in result.observations:
+            receipt['received_at'] = (at + timedelta(seconds=1)).isoformat()
+        current[0] = at + timedelta(seconds=2)
+        return result.model_copy(update={'plan': plan, 'started_at': at,
+            'collected_at': at + timedelta(seconds=1),
+            'observations': result.observations + artifact['result']['observations']})
+
+    def unavailable(*a, **k):
+        raise ValueError('PRIVATE synthetic earlier mapping failure')
+
+    with monkeypatch.context() as patch:
+        patch.setattr('app.mixed.swing_feed.snapshot', unavailable)
+        first = asyncio.run(prepare(*args, AT.date(), clock_source=lambda: current[0], reader=reader))
+    assert first['status'] == 'PREOPEN_INPUTS_BLOCKED'
+    original_packet = (args[1] / 'feed.json').read_bytes()
+    if interpolated:
+        artifact['result']['observations'][0]['raw']['structuredContent']['data']['results'][0]['bars'][-1]['interpolated'] = True
+    current[0] = AT + timedelta(seconds=20)
+    second = asyncio.run(prepare(*args, AT.date(), clock_source=lambda: current[0], reader=reader))
+    assert len(reads) == 2
+    assert second['collection']['status'] == 'FAILED'
+    assert second['collection']['failure']['stage'] == 'SOURCE_CLOCK_CHECK'
+    history = second['collection']['history_preparation']
+    if interpolated:
+        assert second['status'] == 'PREOPEN_INPUTS_BLOCKED'
+        assert history['diagnostic']['reason'] == 'INTERPOLATED_BAR'
+    else:
+        assert second['status'] == 'PREOPEN_INPUTS_PREPARED', second
+        assert history['recovery']['status'] == 'SAVED_HISTORY_INSTALLED'
+        assert history['recovery']['sequence'] == 2
+        assert history['recovery']['provider_calls'] is False
+    with sqlite3.connect(args[1] / 'collector.db') as db:
+        failed = db.execute('SELECT status,raw_json,packet_json FROM attempts WHERE sequence=2').fetchone()
+        assert failed[0] == 'FAILED' and failed[1] and failed[2] is None
+        assert db.execute('SELECT COUNT(*) FROM swing_history').fetchone()[0] == (not interpolated)
+    assert (args[1] / 'feed.json').read_bytes() == original_packet
+    assert digest(args[0]) == before_owner
+    assert 'PRIVATE' not in json.dumps(second)
+    if not interpolated:
+        async def forbidden(*a, **k):
+            raise AssertionError('Prepared history must not recollect')
+        repeated = asyncio.run(prepare(*args, AT.date(), clock_source=lambda: current[0], reader=forbidden))
+        assert repeated['swing_binding'] == second['swing_binding']

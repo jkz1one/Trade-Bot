@@ -10,6 +10,41 @@ completed a ten-minute session and accepted live packets, but no connected model
 call or simulated fill has yet been observed. A successful preparation is not
 market acceptance or a promise that a setup will qualify.
 
+## Tuesday November 3 preparation
+
+The host has already enrolled `2026-11-03-tuesday-ready`, refreshed the snapshot,
+and retained the same account (revision 1032/feed 166, no fills). Do not repeat
+catalog capture or enrollment. The two November 2 daily bars in saved attempt
+168 were interpolated, although both hourly series mapped. Attempt 169 failed
+quote-clock validation and its history has not yet been inspected.
+
+The revised pre-open command automatically validates retained history after a
+quote-clock failure and returns the actual history blocker if validation fails.
+Quotes remain rejected and the owner remains unchanged. After deploying this
+release, reuse attempt 169 offline:
+
+```bash
+python3 scripts/connected-session-host.py preopen-inputs \
+  --target-session 2026-11-03 --sequence 169
+```
+
+`PREOPEN_INPUTS_PREPARED` means validated Swing history is bound. An interpolated
+bar diagnostic means fresh original history is still required; another build
+cannot fix provider data. A later `preopen-inputs --target-session 2026-11-03`
+can collect updated history before the open and automatically perform recovery.
+
+The prepared Tuesday receipt can launch a bounded DEGEN run independently of
+Swing availability. After the six completed five-minute bars are available:
+
+```bash
+python3 scripts/paper-session-start.py \
+  --prepared-session /etc/trade-bot-connected/sessions/2026-11-03-tuesday-ready \
+  --seconds 600 --wait
+```
+
+Nothing is scheduled automatically; full connected trade lifecycle acceptance
+and Scope inputs remain outstanding.
+
 ## Latest saved decision evidence
 
 The corrected report exposed 600,755 bytes of original evidence for the 09:50
