@@ -97,9 +97,12 @@ def test_paid_scope_uses_full_original_receipt_and_shared_native_owner(tmp_path,
         assert c.engine.reconcile(v.snapshot(times[0]), now=times[0])["reconciled"]
 
 
-@pytest.mark.parametrize("action", ["MAINTAIN", "TIGHTEN", "EXIT_ALL"])
+@pytest.mark.parametrize(
+    "action,production_worker",
+    [("MAINTAIN", False), ("TIGHTEN", False), ("EXIT_ALL", False), ("MAINTAIN", True)],
+)
 def test_scope_management_retains_full_original_packet_and_exact_cost_owner(
-    tmp_path, monkeypatch, action
+    tmp_path, monkeypatch, action, production_worker
 ):
     from test_option_scope_ai import ai_owner
     from test_option_scope_position import fake_model, management_frame
@@ -112,7 +115,15 @@ def test_scope_management_retains_full_original_packet_and_exact_cost_owner(
         scope_management="scope-fixed-position-v1",
         mixed_management="mixed-stock-position-v1",
     )
-    with ai_owner(tmp_path, monkeypatch, portfolio=True, position_policy=policy) as (
+    limits = None
+    if production_worker:
+        from app.mixed.simulation_profile import configuration
+
+        settings, _ = configuration()
+        policy, limits = settings.position_policy, settings.judgment_limits
+    with ai_owner(
+        tmp_path, monkeypatch, portfolio=True, position_policy=policy, judgment_limits=limits
+    ) as (
         c,
         v,
         times,
@@ -126,6 +137,7 @@ def test_scope_management_retains_full_original_packet_and_exact_cost_owner(
         u = changed(frame.scope.underlying, source_at=times[0], received_at=times[0])
         v.fill(entry, entry.quantity, q, times[0], fill_id="entry", underlying=u)
         assert c.engine.reconcile(v.snapshot(times[0]), now=times[0])["reconciled"]
+        original_watch = c.scope_book.snapshot()["watches"][0]
         times[0] = times[0].replace(second=0, microsecond=0) + timedelta(minutes=5)
         current = management_frame(frame, times[0])
         calls = fake_model(monkeypatch, action)
@@ -136,12 +148,23 @@ def test_scope_management_retains_full_original_packet_and_exact_cost_owner(
             == {"MAINTAIN": "MAINTAIN", "TIGHTEN": "TIGHTENED", "EXIT_ALL": "OPEN"}[action]
         ), {k: v for k, v in result.items() if k in {"status", "reason", "error_class"}}
         packet = calls[0][0].packet
+        assert len(calls) == 1
+        assert v.submit_count == (2 if action == "EXIT_ALL" else 1)
+        assert out["entries"][0]["scope_candidate"] is None
+        assert out["entries"][0]["scope_owned"]["client_id"] == entry.client_id
+        current_watch = c.scope_book.snapshot()["watches"][0]
+        assert current_watch["arming"] == original_watch["arming"]
+        assert current_watch["admission_review"] == original_watch["admission_review"]
         assert (
             packet.play_id == entry.client_id
             and packet.original_context["binding"]["play_key"] == "first"
         )
         assert packet.original_decision["scope"] is True
         with c.engine.journal.read() as db:
+            assert not db.execute("SELECT halted FROM execution_control WHERE id=1").fetchone()[0]
+            assert (
+                db.execute("SELECT count(*) FROM execution_option_scope_entries").fetchone()[0] == 1
+            )
             assert len(records(db, c.engine.policy)) == 2
             assert all(r.entry_client_id == entry.client_id for r in records(db, c.engine.policy))
         if action == "EXIT_ALL":
@@ -166,3 +189,87 @@ def test_scope_management_retains_full_original_packet_and_exact_cost_owner(
                 assert Decimal(completed[0]["model_cost"]) == sum(
                     r.amount for r in records(db, c.engine.policy)
                 )
+        if production_worker:
+            # Exercise the installed SDK worker with the existing production
+            # budgets (15s process, 20s management lease). The separate legacy
+            # five-second test and all native quote gates stay unchanged.
+            import sys
+            from pathlib import Path
+
+            from test_execution_judgment import response
+            from test_option_scope_position import REAL_WORKER
+            from app.options import position_judgment as judgment
+
+            request = calls[0][0]
+            assert request.configuration.limits == limits
+            assert packet.policy == policy
+            output = response()
+            output["output"][0]["content"][0]["text"] = judgment.maintain(packet).model_dump_json()
+            real_spawn = asyncio.create_subprocess_exec
+            source = (
+                f"import sys\nsys.path[:0]=[{str(Path(__file__).parent.parent)!r},{str(Path(__file__).parent)!r}]\n"
+                "import app.options.position_judgment_worker as worker\n"
+                "from test_execution_judgment import sdk_client\n"
+                f"output={output!r}\n"
+                "def factory(**kw):\n"
+                " assert kw['base_url']=='https://api.openai.com/v1' and kw['max_retries']==0\n"
+                " return sdk_client(output=output)[0]\n"
+                "worker.OpenAI=factory\nraise SystemExit(worker.main())\n"
+            )
+
+            async def spawn(*args, **kwargs):
+                assert args == (sys.executable, "-I", "-m", "app.options.position_judgment_worker")
+                return await real_spawn(sys.executable, "-I", "-c", source, **kwargs)
+
+            monkeypatch.setattr(asyncio, "create_subprocess_exec", spawn)
+            renewed = judgment.create_request(
+                packet, request.configuration, request_id="d" * 32, now=packet.as_of
+            )
+            result = asyncio.run(REAL_WORKER(renewed, "fixture-never-transmitted"))
+            assert result.error is None and result.plan.action == "MAINTAIN"
+
+
+@pytest.mark.parametrize("coverage", ["missing", "foreign"])
+def test_owned_scope_context_cannot_be_reused_as_an_entry(tmp_path, monkeypatch, coverage):
+    from test_option_scope_ai import ai_owner
+    from test_option_scope_position import management_frame
+
+    with ai_owner(tmp_path, monkeypatch, portfolio=True) as (c, v, times, frame, _):
+        out = asyncio.run(c.cycle(frame))
+        assert out["entries"][0]["status"] == "OPEN", out
+        entry = get_intent(c.engine, out["entries"][0]["client_id"])
+        clocks = {"source_at": times[0], "received_at": times[0]}
+        v.fill(
+            entry,
+            entry.quantity,
+            changed(frame.scope.frame.quote, **clocks),
+            times[0],
+            fill_id="entry",
+            underlying=changed(frame.scope.underlying, **clocks),
+        )
+        assert c.engine.reconcile(v.snapshot(times[0]), now=times[0])["reconciled"]
+        times[0] = times[0].replace(second=0, microsecond=0) + timedelta(minutes=5)
+        current = management_frame(frame, times[0])
+        scope = current.scope
+        current = changed(
+            current,
+            scope=None if coverage == "missing" else changed(scope, play_key="foreign"),
+            held_quotes=(scope.frame.quote,) if coverage == "missing" else (),
+            held_underlyings=(scope.underlying,) if coverage == "missing" else (),
+        )
+        out = asyncio.run(c.cycle(current))
+        decision = out["entries"][0]
+        if coverage == "missing":
+            assert decision["scope_candidate"] is None
+            assert decision["scope_owned"]["client_id"] == entry.client_id
+        else:
+            assert decision["blocker"] == "EXACT_SCOPE_WATCH_COVERAGE_REQUIRED"
+        assert v.submit_count == 1
+        with c.engine.journal.read() as db:
+            assert bool(db.execute("SELECT halted FROM execution_control").fetchone()[0]) == (
+                coverage == "foreign"
+            )
+            assert db.execute("SELECT count(*) FROM execution_model_calls").fetchone()[0] == 1
+            assert (
+                db.execute("SELECT count(*) FROM execution_option_scope_entries").fetchone()[0] == 1
+            )

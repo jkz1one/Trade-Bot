@@ -140,13 +140,13 @@ def test_oversized_summary_field_is_explicit_without_hiding_other_evidence():
         assert result['scans'][0]['setups'][0]['reasons'] == ['NO_BREAKOUT']
 
 
-def test_running_or_unrelated_container_never_reads_account(monkeypatch):
+def test_unstarted_or_unrelated_container_never_reads_account(monkeypatch):
     from types import SimpleNamespace
 
     monkeypatch.setattr(module, "report", lambda *a: pytest.fail("Unexpected database read"))
     monkeypatch.setattr("sys.argv", ["report", "--run-id", "test-run"])
     for label, state, reason in [(None, "exited", "NOT_A_CONNECTED_SESSION"),
-                                 ("bound", "running", "SESSION_NOT_FINISHED")]:
+                                 ("bound", "created", "SESSION_NOT_RUNNING_OR_FINISHED")]:
         monkeypatch.setattr(module.subprocess, "run", lambda *a, **k: SimpleNamespace(
             returncode=0, stdout=json.dumps({"label": label, "state": {"Status": state}})))
         with pytest.raises(ValueError, match=reason):
@@ -165,3 +165,96 @@ def test_runtime_failure_report_keeps_timing_without_private_payload():
         assert len(rows) == 1 and rows[0]['elapsed_seconds'] == 5.1
         assert rows[0]['error_class'] == 'FixtureProcessTimeout'
         assert 'PRIVATE' not in json.dumps(rows)
+
+
+def live_result():
+    return {'current_runtime': [{'status': 'RUNNING'}], 'current_control': [{'halted': 0}],
+            'runtime_evidence': {'heartbeat': 'FRESH', 'feed': 'FRESH'},
+            'accepted_packet': {'kind': ['CYCLE'], 'coverage_issues': ['SCOPE_CURRENT_INPUT_UNAVAILABLE',
+                              'SWING_EXACT_CONTRACT_EVIDENCE_UNAVAILABLE']},
+            'decisions': [{'evidence_available': True, 'status': ['HOLD'], 'reason': ['NO_ADMITTED_CONTRACT'],
+                           'started_at': '2026-11-03T15:05:00+00:00', 'scans': [{'issues': [],
+                            'setups': [{'status': ['WATCHING'], 'reasons': ['NO_BREAKOUT']}]}]}]}
+
+
+@pytest.mark.parametrize('mode,expected', [
+    ('waiting', 'WAITING_FOR_SETUP'), ('running', 'RUNNING'), ('stale', 'MISSING_INPUTS'),
+    ('no_heartbeat', 'MISSING_INPUTS'), ('halted', 'MISSING_INPUTS'), ('history', 'MISSING_INPUTS'),
+    ('quote', 'MISSING_INPUTS'), ('failed', 'FAILED'), ('stopped', 'STOPPED'),
+    ('container_failed', 'FAILED')])
+def test_live_operation_keeps_process_setup_and_family_gaps_distinct(mode, expected):
+    value = live_result()
+    state = {'Status': 'running'}
+    if mode == 'running': value['decisions'] = []
+    if mode == 'stale': value['runtime_evidence']['feed'] = 'STALE'
+    if mode == 'no_heartbeat': value['runtime_evidence']['heartbeat'] = 'MISSING'
+    if mode == 'halted': value['current_control'] = [{'halted': 1, 'halt_reason': 'OPTION_RUNTIME_STOPPED'}]
+    if mode == 'history': value['decisions'][0]['scans'][0]['issues'] = ['HISTORY_UNAVAILABLE_DELAYED_OR_STALE']
+    if mode == 'quote': value['accepted_packet']['coverage_issues'].append('UNUSABLE_OPTION')
+    if mode == 'failed': value['current_runtime'][0] = {'status': 'FAILED', 'reason': 'OPTION_RUNTIME_FAILED'}
+    if mode in {'stopped', 'container_failed'}:
+        state = {'Status': 'exited', 'ExitCode': 0 if mode == 'stopped' else 2}
+        # Current owner may have a different run; historical process status wins.
+        value['current_runtime'][0] = {'status': 'RUNNING'}
+    result = module.operation(value, state)
+    assert result['state'] == expected
+    assert result['family_input_issues']['SCOPE'] == ['SCOPE_CURRENT_INPUT_UNAVAILABLE']
+    assert result['trading_ready'] is False
+
+
+def test_runtime_clocks_use_frozen_thresholds_and_keep_original_timestamps():
+    from datetime import datetime, timezone
+    with sqlite3.connect(':memory:') as db:
+        db.row_factory = sqlite3.Row
+        db.execute('CREATE TABLE execution_option_runtime(id,heartbeat_at,feed_recorded_at,config_json)')
+        db.execute('INSERT INTO execution_option_runtime VALUES(1,?,?,?)', (
+            '2026-11-03T15:00:00+00:00', '2026-11-03T14:59:51+00:00', json.dumps({
+                'runtime': {'heartbeat_max_age_seconds': 10, 'feed_max_age_seconds': 20}})))
+        result = module.runtime_evidence(db, datetime(2026, 11, 3, 15, 0, 10, tzinfo=timezone.utc))
+        assert result['heartbeat'] == 'STALE' and result['feed'] == 'FRESH'
+        assert result['heartbeat_at'] == '2026-11-03T15:00:00+00:00'
+        assert result['feed_age_seconds'] == 19
+        assert module.runtime_evidence(db, datetime(2026, 11, 3, 14, 59, tzinfo=timezone.utc))['feed'] == 'FUTURE'
+
+
+def test_running_container_uses_current_window_without_wait_or_mutation(monkeypatch, capsys):
+    from types import SimpleNamespace
+    monkeypatch.setattr('sys.argv', ['report', '--run-id', 'running-test'])
+    monkeypatch.setattr(module.subprocess, 'run', lambda *a, **k: SimpleNamespace(
+        returncode=0, stdout=json.dumps({'label': 'bound', 'state': {'Status': 'running',
+            'StartedAt': '2026-11-03T15:00:00Z', 'FinishedAt': '0001-01-01T00:00:00Z'}})))
+    seen = []
+    def report(directory, start, end):
+        seen.append((start, end))
+        return live_result()
+    monkeypatch.setattr(module, 'report', report)
+    module.main()
+    result = json.loads(capsys.readouterr().out)
+    assert result['status'] == 'CURRENT_SESSION_REPORT'
+    assert result['container_exit_code'] is None
+    assert result['operation']['state'] == 'WAITING_FOR_SETUP'
+    assert seen[0][1] != '0001-01-01T00:00:00Z'
+
+
+@pytest.mark.parametrize('field,value,reason', [
+    ('entry_timely', False, 'ENTRY_RESPONSE_EXPIRED'),
+    ('scope_admission_reasons', ['SCOPE_WATCH_NEW_SOURCE_OBSERVATIONS_REQUIRED'],
+     'SCOPE_WATCH_NEW_SOURCE_OBSERVATIONS_REQUIRED')])
+def test_expired_or_unchanged_paid_evidence_is_not_a_no_setup_claim(field, value, reason):
+    result = live_result()
+    result['decisions'][0][field] = value
+    current = module.operation(result, {'Status': 'running'})
+    assert current['state'] == 'MISSING_INPUTS' and current['reasons'] == [reason]
+
+
+def test_projected_paid_timing_is_boolean_and_preserves_scope_input_reason():
+    with sqlite3.connect(':memory:') as db:
+        db.execute('CREATE TABLE execution_option_opportunities(cycle_key,result_json)')
+        db.execute('INSERT INTO execution_option_opportunities VALUES(?,?)', ('test', json.dumps({
+            'status': 'HOLD', 'entry_timely': False, 'scope_fresh_review': {'admission_review': {
+                'reasons': ['SCOPE_WATCH_NEW_SOURCE_OBSERVATIONS_REQUIRED'],
+                'private': 'DO_NOT_EXPOSE'}}})))
+        result = module.decision_evidence(db, 'test')
+        assert result['entry_timely'] is False
+        assert result['scope_admission_reasons'] == ['SCOPE_WATCH_NEW_SOURCE_OBSERVATIONS_REQUIRED']
+        assert 'DO_NOT_EXPOSE' not in json.dumps(result)

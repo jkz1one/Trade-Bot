@@ -1,249 +1,121 @@
-# Prepare and run the next PAPER session
+# Daily PAPER operation
 
-This workflow keeps the existing `local-simulation` account, its $1,000 starting
-capital, two-play ceiling, journals and $1/day AI budget. It uses Robinhood reads
-and local simulated orders. It never enables LIVE or resets the account.
+Use the existing `local-simulation` account and population
+`connected-simulation-1000-v1`: $1,000 initial virtual capital, maximum two plays,
+$1/day and $5 total AI spending. Balances, positions, journals, halts and enrollment
+persist. Robinhood supplies read-only data; execution is local simulation. LIVE
+remains disabled. No separate broker paper account is used.
 
-The current software has passed synthetic two-play entry, fill, independent exit,
-restart and accounting tests using the production profile. The actual host has
-completed a ten-minute session and accepted live packets, but no connected model
-call or simulated fill has yet been observed. A successful preparation is not
-market acceptance or a promise that a setup will qualify.
+## Current November 3 preparation
 
-## Tuesday November 3 preparation
+Already enrolled:
+`/etc/trade-bot-connected/sessions/2026-11-03-tuesday-ready`.
+Policy SHA: `8136af394ef61ac8546010d7d69811110f417b7b800a3b7191535e13688c4f51`.
+The last operator-reported owner was revision 1032, generation 8, feed 166,
+STOPPED with `OPTION_RUNTIME_STOPPED` and zero fills. No Tuesday worker was reported.
+The connected dashboard is already active; do not switch it again.
 
-The host has already enrolled `2026-11-03-tuesday-ready`, refreshed the snapshot,
-and retained the same account (revision 1032/feed 166, no fills). Do not repeat
-catalog capture or enrollment. The two November 2 daily bars in saved attempt
-168 were interpolated, although both hourly series mapped. Attempt 169 failed
-quote-clock validation and its history has not yet been inspected.
+Attempts 168–170 establish the original daily-history blocker. Attempt 168 had
+54 mapped hourly bars per SPY/QQQ but both November 2 daily bars were interpolated.
+169 independently confirmed the SPY daily blocker; 170 failed SOURCE_CLOCK_CHECK
+and independently returned INTERPOLATED_BAR. The quote-clock recovery is deployed
+in dfe3bf0. Replaying these attempts, rebuilding, or repeating overnight collection
+cannot make their daily bars original. The required input is valid original daily
+history. DEGEN can run independently while Swing remains blocked.
 
-The revised pre-open command automatically validates retained history after a
-quote-clock failure and returns the actual history blocker if validation fails.
-Quotes remain rejected and the owner remains unchanged. After deploying this
-release, reuse attempt 169 offline:
+## Deploy once, with connected workers stopped
+
+Use the tested release SHA supplied with the release, on a clean working branch:
 
 ```bash
-python3 scripts/connected-session-host.py preopen-inputs \
-  --target-session 2026-11-03 --sequence 169
+cd /opt/trade-bot-dashboard &&
+git fetch origin slice2/robinhood-read-shadow &&
+git switch slice2/robinhood-read-shadow &&
+git merge --ff-only TESTED_RELEASE_SHA &&
+python3 scripts/connected-session-host.py build
 ```
 
-`PREOPEN_INPUTS_PREPARED` means validated Swing history is bound. An interpolated
-bar diagnostic means fresh original history is still required; another build
-cannot fix provider data. A later `preopen-inputs --target-session 2026-11-03`
-can collect updated history before the open and automatically perform recovery.
+Replace `TESTED_RELEASE_SHA` with the supplied full SHA. This deliberately refuses
+a divergent checkout rather than discarding newer work. Do not reset, clean,
+re-enroll, recapture contracts or recreate the account. A build does not start a
+worker or refresh provider data. The new image is used on the next explicit run.
 
-The prepared Tuesday receipt can launch a bounded DEGEN run independently of
-Swing availability. After the six completed five-minute bars are available:
+After **10:00 a.m. New York on November 3**, the pending ten-minute check remains:
 
 ```bash
+cd /opt/trade-bot-dashboard &&
 python3 scripts/paper-session-start.py \
   --prepared-session /etc/trade-bot-connected/sessions/2026-11-03-tuesday-ready \
   --seconds 600 --wait
 ```
 
-Nothing is scheduled automatically; full connected trade lifecycle acceptance
-and Scope inputs remain outstanding.
+DEGEN requires six completed five-minute bars; time alone does not prove that the
+provider delivered them. The launcher refreshes the snapshot, verifies the exact
+prepared policy, performs bounded reviewed flat recovery and chooses a new run ID.
+It does not bypass held-position, unknown-cost, order or halt checks.
 
-## Latest saved decision evidence
+Prepared receipts are date-specific. **On November 4 or later, do not reuse this
+November 3 directory.** Prepare/review that day's explicit catalog/session using
+[session preparation](SWING_SCOPE_ROBINHOOD.md#session-inputs) and the existing
+`--prepare-only` workflow. Previously captured exact inputs can be supplied; an
+unrelated date's receipt cannot be relabeled.
 
-The corrected report exposed 600,755 bytes of original evidence for the 09:50
-cycle: HOLD / EXACT_REQUESTED_QUOTE_COVERAGE_REQUIRED. Swing did reach the native
-scanners. DEGEN lacked the six completed five-minute bars required by its policy;
-09:50 is too early for that minimum. This is separate from the portfolio quote
-catalog/shortlist mismatch now repaired in code. Requested books still require
-exact identities; surplus catalog books cannot become admitted candidates.
+## Status, stop and longer runs
 
-Only packet 140 was CYCLE. The updated report exposes intermittent UNUSABLE_OPTION
-and SWING_EXACT_CONTRACT_EVIDENCE_UNAVAILABLE. The collector previously tried
-history only on the first poll of an interval, so a rejected first poll could
-prevent a scan for that whole interval. It now retries at most three attempts
-per interval, stops after a delivered CYCLE, retains the existing poll and call
-limits, and continues quote polling after exhaustion. Rejected evidence remains
-rejected. The grouped report does not identify the exact offending 09:55 poll.
-
-Build the revised release once and reuse the already enrolled Monday receipt:
-
-```bash
-python3 scripts/paper-session-start.py \
-  --prepared-session /etc/trade-bot-connected/sessions/2026-11-02-monday-ready \
-  --seconds 600 --wait
-```
-
-The launcher chooses a new run ID and preserves the account. Do not recapture,
-re-enroll, or switch the active dashboard. Inspect the returned saved report for
-accepted cycles and decision reasons; a completed run alone does not establish
-model-call or simulated-fill acceptance.
-
-## Monday run observed
-
-Host preparation succeeded on ed19a52: Swing source binding PREPARED with two
-option batches and no blockers. Run `paper-1102-144657-33b957` completed at
-09:58 New York with exit zero, 33 delivered packets, one entry resume, one complete
-cycle and no fills or runtime/collector failures. Its original report hid the
-completed decision evidence; the reporter's 512 KiB whole-record cutoff could
-cause this for large combined Swing records. The corrected host report projects
-only summary fields and prints the retained byte count and any omissions.
-Re-report that saved run before launching another test. No Docker rebuild is
-needed for this host-only script; preserve the existing deployed image/checkout.
-
-## Existing Monday preparation and active dashboard
-
-The actual `monday-ready` host attempt enrolled the November 2 policy successfully
-(`7242ac53faf4977e5430c3c49ea124df901d6a660703e3380bcdfc80e718c236`).
-Its receipt remains under
-`/etc/trade-bot-connected/sessions/2026-11-02-monday-ready/prepared.json`.
-The snapshot refresh was repaired and the actual host published revision 805,
-feed 130, generation 7 with zero held plays/fills. Dashboard activation then
-succeeded on `6e592cd`; do not switch the already connected reader again.
-Do not repeat the catalogs or enrollment. Actual replay on 7bcc91a verified all
-four original histories in attempt 132 (56 daily and 54 hourly bars per symbol).
-Attempt 133 then failed quote-clock validation before it could install history.
-Use the saved original history directly with the repaired release:
-
-```bash
-python3 scripts/connected-session-host.py preopen-inputs \
-  --target-session 2026-11-02 --sequence 132
-```
-
-This runs offline without authentication mounts. It revalidates the original
-capture and current enrolled session, installs only derived history and invokes
-native source binding. It preserves failed quote attempts, original timestamps,
-the owner halt and execution state. A repeat verifies the same binding; it never
-replaces different already installed history. Expected success is
-`PREOPEN_INPUTS_PREPARED`; this is source preparation, not market acceptance.
-No further collection, enrollment or dashboard activation is needed for this step.
-
-The reader permits old **halted STOPPED/FAILED records**, with their original
-timestamps and existing stale-account/last-available-records notice. Running and
-unhalted snapshots still require publication within 30 seconds; future snapshots
-are always rejected. This permits viewing a stopped account over the weekend
-without claiming current feed or valuation.
-
-## Before Monday, November 2, 2026
-
-Deploy the reviewed commit and build **once**, using the pinned command supplied
-with the release. These commands require that clean checkout and its built image.
-Existing connected runtime sessions must be stopped.
-
-Prepare the November 2 DEGEN catalog and a November 13 Swing catalog together:
-
-```bash
-cd /opt/trade-bot-dashboard &&
-python3 scripts/paper-session-start.py \
-  --capture-contracts \
-  --target-session 2026-11-02 \
-  --swing-expiration 2026-11-13 \
-  --observed-swing-history \
-  --prepare-only \
-  --run-id monday-ready
-```
-
-This performs two bounded catalog captures (eight provider tool calls each), keeps
-both original evidence directories, prepares/reviews/enrolls the combined policy,
-and publishes the current real simulated-account snapshot. No model or trading
-worker starts. Weekend quotes are retained catalog evidence; Monday's runtime
-must independently accept fresh inputs. The chosen strikes are based on the
-observed underlying midpoint; spread, affordability and setup gates still apply.
-
-The final `SESSION_PREPARED` result identifies:
-`/etc/trade-bot-connected/sessions/2026-11-02-monday-ready`.
-The `prepared.json` receipt is saved immediately after enrollment. If snapshot
-publication subsequently fails, preserve this directory; starting the prepared
-session republishes the snapshot without trying to enroll the policy twice.
-Do not repeat preparation with the same ID or delete old evidence.
-
-Collect and bind original pre-open Swing history separately:
-
-```bash
-python3 scripts/connected-session-host.py preopen-inputs \
-  --target-session 2026-11-02
-```
-
-This takes the native owner lock through a read-only descriptor and mounts the
-entire owner read-only. Only the collector evidence and read-auth state are
-writable; model secrets and dashboard exports are not mounted. It makes at most
-one bounded native collection attempt, respecting the existing quota. A repeat
-with retained history verifies the original binding without new provider reads.
-
-`PREOPEN_INPUTS_PREPARED` means the source binding was prepared, not that a trade
-was admitted. `PREOPEN_INPUTS_BLOCKED` retains the original attempt and identifies
-the missing history/binding. Interpolated, missing, post-open or malformed bars
-remain blocked. This is usable on the weekend after Friday's UTC daily date has
-completed; no future time boundary is requested. The source must actually contain
-the completed Friday daily bar and the full requested lookback.
-
-Switch the public dashboard from its old frozen example to the real account:
-
-```bash
-python3 scripts/connected-dashboard-host.py switch \
-  --snapshot-name connected-price-options-v1
-```
-
-This explicit switch prints its exact review and rechecks it before changing the
-reader. It retains the old dashboard for rollback and verifies authentication,
-accounting and the connected reader. It starts no collector, model or trader.
-Until a market run publishes updates, the account correctly shows stopped state
-and its recorded balance/positions. This command is for the first frozen-to-
-connected switch; it does not silently replace an already connected reader.
-
-## At Monday's open
-
-The exchange calendar gives November 2 open as **9:30 a.m. New York / 14:30 UTC**
-after the daylight-saving change. Launch the prepared session during regular
-hours; setup evaluation needs completed bars, so an immediate fill is not expected:
-
-```bash
-cd /opt/trade-bot-dashboard &&
-python3 scripts/paper-session-start.py \
-  --prepared-session /etc/trade-bot-connected/sessions/2026-11-02-monday-ready \
-  --seconds 600 \
-  --wait
-```
-
-The run ID is generated uniquely. The launcher refreshes the snapshot, obtains a
-fresh exact run review, verifies the effective policy matches the preparation
-receipt, and starts a bounded run with reviewed flat recovery. It prints the
-saved decisions after the container finishes, including when the container fails.
-No review hash needs hand-copying. No run is automatically resumed or retried.
-An interrupted terminal does not remove the bounded container or its evidence.
-
-The resulting report distinguishes accepted feed, reviewed entry recovery,
-completed cycles, setup/contract rejection reasons, cumulative actual portfolio
-fills and bounded runtime/collector failure diagnostics. `WATCHING` or a specific
-risk/contract rejection is a strategy result; `FAILED`, no accepted input, or a
-missing required source is a remaining operational/input problem.
-
-For an already-created run, inspect it rather than launching its ID again:
+The launcher prints the exact status and stop commands for its run. The same
+report works while running and after exit, without a build or provider request:
 
 ```text
-python3 scripts/connected-session-host.py status --run-id RETURNED_RUN_ID
 python3 scripts/paper-session-report.py --run-id RETURNED_RUN_ID
 ```
 
-The report requires a finished container. Existing explicit `review-run` / `run`,
-`review-session` / `enroll-session`, and dashboard `review` / `activate` commands
-remain available for manual review.
+| `operation.state` | Meaning |
+| --- | --- |
+| RUNNING | Fresh native heartbeat/input evidence; first scan pending or active processing. No readiness or fill claim. |
+| WAITING_FOR_SETUP | Fresh accepted input and a completed HOLD decision without a reported input blocker. Specific setup/contract reasons remain visible. |
+| MISSING_INPUTS | Missing/stale/future heartbeat or feed, incomplete history/quotes, or a retained entry halt. Read the reasons and family issues. |
+| STOPPED | Container ended successfully or the current native worker is stopping/stopped. |
+| FAILED | Container exited nonzero or native runtime recorded FAILED. |
 
-## Remaining evidence boundaries
+Scope/Swing input issues are separate from DEGEN's decision. The report distinguishes
+the latest collected packet from the packet actually accepted by the native owner.
+It preserves original timestamps and frozen freshness bounds, shows the latest
+five detailed decisions and 25 cycle records, and explicitly counts omitted older
+records. Account-total fills are cumulative, not new fills attributed to this run.
+The two databases are read-only snapshots taken independently; this is observation,
+never a trading authority or an atomic cross-database checkpoint.
 
-- DEGEN: the saved replay now passes completed-bar history freshness; its two
-  recorded cycles did not qualify for entry. Monday must validate the corrected
-  path with current quotes and, when an eligible setup exists, the real model
-  service and simulated fill lifecycle.
-- Swing: original complete pre-open histories and the derived session binding
-  must be accepted. This variant uses price/options evidence, not a fabricated
-  catalyst clearance. A Nov13 contract catalog alone does not supply history.
-- Scope: the saved SPX histories contained interpolated or unclassified bars.
-  An original usable history and reviewed exact SPXW contract/session/watch binding
-  are still required. A fresh SPX reference quote alone does not satisfy them.
-  No ETF is substituted for SPXW and no contract terms are invented.
-- Stock trades: the populated book probe is evidence, not installed executable
-  size/catalog wiring. Its blockers are separate from the option simulation path.
+Stop early using the exact `stop_command` returned by the launcher. It includes
+the inspected container ID, requests orderly shutdown, and preserves state and
+evidence. An interrupted terminal does not delete or restart the container. If
+waiting/reporting fails after startup, inspect that run; do not start another one
+just to retrieve its report.
 
-If valid Scope evidence becomes available, preparation accepts `--scope-binding`
-with the original reviewed JSON and a catalog leaving one of the eight candidate
-slots for Scope. The full eight-contract DEGEN/Swing catalog above cannot add that
-extra slot unchanged; no family is silently dropped. Existing retained captures can be supplied with
-`--capture-directory` and `--swing-capture-directory` instead of making new reads.
-The workflow does not weaken gates to force a demonstration trade.
+The launcher now accepts an explicit bounded duration of **60–23,400 seconds**
+(up to 6.5 hours). The existing 600-second default is unchanged. For a longer
+supervised run after reviewing the short run, change only `--seconds`; omit
+`--wait` to return immediately. Native calendar/cutoff/protection gates remain in
+force, including shortened sessions. Duration is an upper bound, not an extension
+of entry hours or a guarantee that positions are flat at shutdown. There is no
+scheduler, automatic restart, daily enrollment or automatic resume loop.
+
+## Remaining work and evidence
+
+| Area | Implemented / offline evidence | Remaining requirement |
+| --- | --- | --- |
+| Shared owner / DEGEN | Production-profile raw collection, scanning, two paid entries, later fills, independent exits, restart and accounting fixtures. | Authentic qualifying setup, real model response and complete connected simulated lifecycle. No connected fill has been observed. |
+| Swing | Source preparation/recovery and native shared scanning/execution fixtures; missing family remains isolated. | Valid original daily history and complete connected lifecycle. Saved interpolated bars remain rejected. |
+| Scope | Collector-to-native watch routing corrected; native sampled arming, exact paid admission, later-quote fill, restart and exit regression. Owned plays stay out of new-entry admission while exact-play management remains available. Terminal watches cannot be revived by retained ARMED evidence. | Original usable SPX history, exact reviewed SPXW terms/session/pattern binding, a catalog with a reserved slot, and connected lifecycle. No SPY substitution or invented contract terms. |
+| Scope timing | Original five-second admission and fresh advancing post-cost evidence remain enforced; late scripted responses retain their cost and cannot enter. | Post-cost delivery under the real continuous run-loop cadence remains unresolved. The favorable synthetic test drives explicit tick times; ten-second polling does not guarantee delivery inside five seconds. Valid history alone does not fix this integration limitation. |
+| Daily operation | Unique bounded launches, current/saved status, exact stop, retained reports, unchanged recovery and budgets. | Longer host run, actual model timing and lifecycle evidence; daily preparations remain explicit. |
+
+Scope bindings consume one of the **eight** candidate slots. The current eight
+DEGEN/Swing contracts cannot silently gain a ninth contract or drop a family.
+Scope execution/watch/management code already exists; missing reviewed evidence
+and session configuration are distinct from the corrected delivery defect.
+
+[Offline verification](PAPER_SCOPE_OPERATION_PROOF.json) records 237 passing
+installed cases and an unresolved legacy five-second worker timeout in this
+environment. A separate real SDK-worker test passed with the unchanged production
+15-second process budget and 20-second management lease. Neither result establishes
+real model latency or timely connected admission.

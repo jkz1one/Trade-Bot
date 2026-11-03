@@ -28,6 +28,7 @@ def ai_owner(
     carry=False,
     later_entry=False,
     portfolio=False,
+    judgment_limits=None,
 ):
     state = {}
 
@@ -64,7 +65,8 @@ def ai_owner(
                 ),
             }
         ),
-        "judgment_limits": JudgmentLimits(process_timeout_seconds=5, request_timeout_seconds=3),
+        "judgment_limits": judgment_limits
+        or JudgmentLimits(process_timeout_seconds=5, request_timeout_seconds=3),
         "key_file": path / "private-model-key",
         "scope_refresh": scope_refresh,
         "position_policy": position_policy,

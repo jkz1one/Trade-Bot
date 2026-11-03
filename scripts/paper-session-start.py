@@ -34,6 +34,8 @@ def save(path, value):
 
 
 def run_prepared(receipt, run_id, seconds, *, invoke, today):
+    if type(seconds) is not int or not 60 <= seconds <= 23400:
+        raise ValueError("Simulation run must be bounded to 60..23400 seconds")
     if receipt["target_session"] != today:
         raise ValueError("A prepared session can only run on its target date")
     invoke(["snapshot"])
@@ -43,7 +45,14 @@ def run_prepared(receipt, run_id, seconds, *, invoke, today):
             or plan.get("live_enabled") is not False
             or plan.get("binding", {}).get("policy_sha256") != receipt["policy_sha256"]):
         raise ValueError("Session option configuration is still blocked or differs from preparation")
-    return invoke(["run", *run, "--expected-review", plan["review_sha256"]])
+    result = invoke(["run", *run, "--expected-review", plan["review_sha256"]])
+    result['run_id'] = run_id
+    result['status_command'] = 'python3 scripts/paper-session-report.py --run-id ' + run_id
+    identity = result.get('container_id', '')
+    if isinstance(identity, str) and re.fullmatch(r'[a-f0-9]{64}', identity):
+        result['stop_command'] = ('python3 scripts/connected-session-host.py stop --run-id ' + run_id
+                                  + ' --expected-container ' + identity)
+    return result
 
 
 def launch(captures, target, run_id, seconds, *, invoke, session_root, today,
@@ -51,8 +60,8 @@ def launch(captures, target, run_id, seconds, *, invoke, session_root, today,
            swing_capture_directory=None, scope_binding=None, earnings_probe=None):
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,39}", run_id):
         raise ValueError("A new simple run ID is required")
-    if type(seconds) is not int or not 60 <= seconds <= 3600:
-        raise ValueError("Simulation run must be bounded to 60..3600 seconds")
+    if type(seconds) is not int or not 60 <= seconds <= 23400:
+        raise ValueError("Simulation run must be bounded to 60..23400 seconds")
     if prepared_session:
         path = Path(prepared_session)
         if (not path.is_absolute() or path.resolve() != path or path.stat().st_mode & 0o077
@@ -190,12 +199,13 @@ def main(argv=None):
     if session_root.is_symlink() or session_root.stat().st_mode & 0o077 or session_root.stat().st_uid != 0:
         p.error("Private, nonsymlink session directory required")
     run_id = args.run_id or ("paper-" + datetime.now(ZoneInfo("UTC")).strftime("%m%d-%H%M%S-") + uuid4().hex[:6])
+    started = False
     try:
         today = datetime.now(ZoneInfo("America/New_York")).date().isoformat()
         if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,39}", run_id):
             raise ValueError("A new simple run ID is required")
-        if not 60 <= args.seconds <= 3600:
-            raise ValueError("Simulation run must be bounded to 60..3600 seconds")
+        if not 60 <= args.seconds <= 23400:
+            raise ValueError("Simulation run must be bounded to 60..23400 seconds")
         if not args.prepared_session and (date.fromisoformat(args.target_session) < date.fromisoformat(today)
                                           or (not args.prepare_only and args.target_session != today)):
             raise ValueError("Use --prepare-only for a future session; expired sessions cannot run")
@@ -220,12 +230,14 @@ def main(argv=None):
                         swing_capture_directory=args.swing_capture_directory,
                         scope_binding=args.scope_binding, earnings_probe=args.earnings_probe)
         print(json.dumps(result, sort_keys=True), flush=True)
+        started = result.get("status") == "SESSION_STARTED"
         if args.wait:
             wait_report(root, run_id, args.seconds)
     except (OSError, ValueError, KeyError, StepFailed, subprocess.SubprocessError) as exc:
-        print(json.dumps({"status": "NOT_STARTED_OR_INCOMPLETE",
+        print(json.dumps({"status": "SESSION_STARTED_REPORT_INCOMPLETE" if started else "NOT_STARTED_OR_INCOMPLETE",
                           "reason": str(exc) if isinstance(exc, (ValueError, StepFailed)) else type(exc).__name__,
-                          "run_id": run_id, "live_enabled": False}))
+                          "run_id": run_id, "live_enabled": False,
+                          "status_command": "python3 scripts/paper-session-report.py --run-id " + run_id}))
         return 2
     return 0
 

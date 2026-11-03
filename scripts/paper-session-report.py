@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read a retained session's decision reasons without a build, run or provider call."""
+"""Read running or stopped PAPER status without a build, run or provider call."""
 
 import argparse
 import json
@@ -46,6 +46,8 @@ def outcome(raw):
         selected = codes(value.get(field))
         if selected:
             result[field] = selected
+    result['entry_timely'] = value.get('entry_timely') if type(value.get('entry_timely')) is bool else None
+    result['scope_admission_reasons'] = codes(value.get('scope_admission_reasons'))
     result["option_candidates"] = len(value.get("candidates") or [])
     result["stock_candidates"] = len(value.get("stock_candidates") or [])
     result["scans"] = []
@@ -93,6 +95,8 @@ def decision_evidence(db, key):
         ).fetchone()
         if length is not None and length > MAX_SUMMARY_FIELD:
             omitted.append(path)
+        if kind in ('true', 'false'):
+            return kind == 'true'
         return json.loads(value) if value is not None and kind in ('object', 'array') else value
 
     def count(path):
@@ -105,6 +109,8 @@ def decision_evidence(db, key):
     value = {name: field('$.' + name) for name in (
         'status', 'reason', 'issues', 'blocker', 'unavailable_families',
         'rejections', 'stock_rejections', 'scope_rejections')}
+    value['entry_timely'] = field('$.entry_timely')
+    value['scope_admission_reasons'] = field('$.scope_fresh_review.admission_review.reasons')
     value['scans'] = []
     for index in range(min(count('$.scans'), 12)):
         prefix = f'$.scans[{index}]'
@@ -176,6 +182,85 @@ def runtime_failures(db, start, end):
     return failures
 
 
+def runtime_evidence(db, now):
+    """Current stored clocks and their enrolled bounds; never refresh a heartbeat."""
+    columns = {r[1] for r in db.execute('PRAGMA table_info(execution_option_runtime)')}
+    if not {'heartbeat_at', 'feed_recorded_at', 'config_json'} <= columns:
+        return {'heartbeat': 'UNKNOWN', 'feed': 'UNKNOWN'}
+    row = db.execute("SELECT heartbeat_at,feed_recorded_at,CASE WHEN length(config_json)<=262144 "
+                     "THEN config_json END AS config FROM execution_option_runtime WHERE id=1").fetchone()
+    if row is None or row['config'] is None:
+        return {'heartbeat': 'UNKNOWN', 'feed': 'UNKNOWN'}
+    policy = json.loads(row['config'])['runtime']
+    result = {}
+    for key, field, limit in (('heartbeat', 'heartbeat_at', 'heartbeat_max_age_seconds'),
+                              ('feed', 'feed_recorded_at', 'feed_max_age_seconds')):
+        stamp, bound = row[field], policy[limit]
+        if type(bound) not in (int, float) or not 0 < bound <= 86400:
+            raise ValueError('INVALID_RUNTIME_FRESHNESS_BOUND')
+        age = (now - datetime.fromisoformat(stamp)).total_seconds() if stamp else None
+        result.update({key: 'MISSING' if age is None else 'FUTURE' if age < 0 else
+                       'FRESH' if age < bound else 'STALE', key + '_at': stamp,
+                       key + '_age_seconds': age, key + '_max_age_seconds': bound})
+    return result
+
+
+def operation(result, state):
+    """Separate container lifetime, current input health and last setup decision.
+
+    Family gaps are additive: missing Scope/Swing never turns an evaluated DEGEN
+    no-setup result into a global failure. No state here grants entry authority.
+    """
+    runtime = next(iter(result.get('current_runtime', [])), {})
+    control = next(iter(result.get('current_control', [])), {})
+    clocks = result.get('runtime_evidence', {})
+    packet = result.get('accepted_packet') or {}
+    decision = next(iter(reversed(result.get('decisions', []))), {})
+    issues = packet.get('coverage_issues', [])
+    families = {name: sorted(c for c in issues if c.startswith(prefixes))
+                for name, prefixes in (('SCOPE', ('SCOPE_', 'SPX_')), ('SWING', ('SWING_',)))}
+    reasons = codes([decision.get('reason'), decision.get('issues'), decision.get('blocker'),
+                     decision.get('rejections'), decision.get('contract_exclusions')])
+    if state['Status'] == 'exited':
+        status = 'STOPPED' if state.get('ExitCode') == 0 else 'FAILED'
+        why = ['BOUNDED_SESSION_ENDED' if status == 'STOPPED' else 'CONTAINER_EXIT_NONZERO']
+    elif runtime.get('status') == 'FAILED':
+        status, why = 'FAILED', codes(runtime.get('reason'))
+    elif clocks.get('heartbeat') != 'FRESH':
+        status, why = 'MISSING_INPUTS', ['RUNTIME_HEARTBEAT_' + clocks.get('heartbeat', 'UNKNOWN')]
+    elif runtime.get('status') in {'STOPPED', 'STOPPING'}:
+        status, why = 'STOPPED', codes(runtime.get('reason'))
+    elif control.get('halted'):
+        status, why = 'MISSING_INPUTS', codes(control.get('halt_reason')) or ['ENTRIES_HALTED']
+    elif clocks.get('feed') != 'FRESH':
+        status, why = 'MISSING_INPUTS', ['RUNTIME_FEED_' + clocks.get('feed', 'UNKNOWN')]
+    elif runtime.get('status') == 'BLOCKED':
+        status, why = 'MISSING_INPUTS', codes(runtime.get('reason'))
+    elif any(not c.startswith(('SCOPE_', 'SPX_', 'SWING_')) for c in issues):
+        status, why = 'MISSING_INPUTS', issues
+    elif not packet:
+        status, why = 'MISSING_INPUTS', ['ACCEPTED_INPUT_NOT_RECORDED']
+    elif decision.get('entry_timely') is False:
+        status, why = 'MISSING_INPUTS', ['ENTRY_RESPONSE_EXPIRED']
+    elif 'SCOPE_WATCH_NEW_SOURCE_OBSERVATIONS_REQUIRED' in decision.get('scope_admission_reasons', []):
+        status, why = 'MISSING_INPUTS', decision['scope_admission_reasons']
+    elif decision.get('evidence_available') and decision.get('status') == ['HOLD']:
+        # A completed HOLD with missing history/quotes is not a no-setup claim.
+        missing = codes([decision.get('issues'), decision.get('blocker'),
+                         [scan.get('issues') for scan in decision.get('scans', [])]])
+        setup_reasons = codes([setup.get('reasons') for scan in decision.get('scans', [])
+                              for setup in scan.get('setups', [])])
+        missing = sorted(set(missing + [r for r in setup_reasons if r in {
+            'COMPLETED_STRUCTURE_INSUFFICIENT', 'HISTORY_UNAVAILABLE_DELAYED_OR_STALE'}]))
+        status, why = ('MISSING_INPUTS', missing) if missing else ('WAITING_FOR_SETUP', reasons)
+    else:
+        status, why = 'RUNNING', ['AWAITING_FIRST_SCAN'] if not decision else reasons
+    return {'state': status, 'reasons': why, 'family_input_issues': families,
+            'last_decision_at': decision.get('started_at'),
+            'last_decision_reasons': reasons, 'container_running': state['Status'] == 'running',
+            'trading_ready': False}
+
+
 def report(directory, started, finished):
     start = datetime.fromisoformat(started).astimezone(timezone.utc).isoformat()
     end = datetime.fromisoformat(finished).astimezone(timezone.utc).isoformat()
@@ -187,20 +272,43 @@ def report(directory, started, finished):
     try:
         result["cycles"] = [dict(r) for r in db.execute(
             "SELECT slot,status,reason,started_at,completed_at FROM execution_option_runtime_slots "
-            "WHERE started_at>=? AND started_at<=? ORDER BY slot LIMIT 25", (start, end))]
+            "WHERE started_at>=? AND started_at<=? ORDER BY slot DESC LIMIT 25", (start, end))]
         result["decisions"] = []
         for row in db.execute(
             "SELECT cycle_key,started_at,status FROM execution_option_opportunities "
-            "WHERE started_at>=? AND started_at<=? ORDER BY started_at LIMIT 25", (start, end)
+            "WHERE started_at>=? AND started_at<=? ORDER BY started_at DESC LIMIT 5", (start, end)
         ):
             result["decisions"].append({"cycle_key": row["cycle_key"],
                 "started_at": row["started_at"], "stored_status": row["status"],
                 **decision_evidence(db, row["cycle_key"])})
+        result['cycle_count'] = db.execute(
+            'SELECT COUNT(*) FROM execution_option_runtime_slots WHERE started_at>=? AND started_at<=?',
+            (start, end)).fetchone()[0]
+        result['decision_count'] = db.execute(
+            'SELECT COUNT(*) FROM execution_option_opportunities WHERE started_at>=? AND started_at<=?',
+            (start, end)).fetchone()[0]
+        result['cycles_omitted'] = max(0, result['cycle_count'] - len(result['cycles']))
+        result['decisions_omitted'] = max(0, result['decision_count'] - len(result['decisions']))
+        result["cycles"].reverse()
+        result["decisions"].reverse()
+        result["runtime_evidence"] = runtime_evidence(db, datetime.fromisoformat(end))
         result["reviewed_entry_resumes"] = db.execute(
             "SELECT COUNT(*) FROM execution_events WHERE kind='OPTION_REVIEWED_RESUME' "
             "AND occurred_at>=? AND occurred_at<=?", (start, end)).fetchone()[0]
         result["current_runtime"] = [dict(r) for r in db.execute(
             "SELECT status,reason,feed_sequence FROM execution_option_runtime WHERE id=1")]
+        result['accepted_packet'] = None
+        if db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_mixed_runtime_inputs'").fetchone():
+            accepted = db.execute(
+                "SELECT sequence,accepted_at,json_extract(packet_json,'$.kind') AS kind,"
+                "CASE WHEN length(json_extract(packet_json,'$.coverage_issues'))<=65536 "
+                "THEN json_extract(packet_json,'$.coverage_issues') END AS issues "
+                "FROM execution_mixed_runtime_inputs WHERE status='DELIVERED' AND sequence="
+                "(SELECT feed_sequence FROM execution_option_runtime WHERE id=1) "
+                "AND accepted_at>=? AND accepted_at<=? AND json_valid(packet_json)", (start, end)).fetchone()
+            if accepted:
+                result['accepted_packet'] = {'sequence': accepted['sequence'], 'accepted_at': accepted['accepted_at'],
+                    'kind': codes(accepted['kind']), 'coverage_issues': codes(json.loads(accepted['issues'] or '[]'))}
         result["current_control"] = [dict(r) for r in db.execute(
             "SELECT halted,halt_reason FROM execution_control WHERE id=1")]
         result["account_total_fills"], result["fill_count_source"] = fill_count(db)
@@ -214,6 +322,15 @@ def report(directory, started, finished):
             "MAX(sequence) AS last_sequence FROM attempts WHERE started_at>=? "
             "AND started_at<=? GROUP BY status", (start, end))]
         if 'packet_json' in {r[1] for r in db.execute('PRAGMA table_info(attempts)')}:
+            latest = db.execute(
+                "SELECT sequence,started_at,status,json_extract(packet_json,'$.kind') AS kind,"
+                "CASE WHEN length(json_extract(packet_json,'$.coverage_issues'))<=65536 "
+                "THEN json_extract(packet_json,'$.coverage_issues') END AS issues "
+                "FROM attempts WHERE started_at>=? AND started_at<=? AND status='DELIVERED' "
+                "AND json_valid(packet_json) ORDER BY sequence DESC LIMIT 1", (start, end)).fetchone()
+            result['latest_packet'] = ({'sequence': latest['sequence'], 'started_at': latest['started_at'],
+                'kind': codes(latest['kind']), 'coverage_issues': codes(json.loads(latest['issues'] or '[]'))}
+                if latest else None)
             result['packet_summary'] = [{
                 'kind': codes(row['kind']), 'coverage_issues': codes(json.loads(row['issues'] or '[]')),
                 'packets': row['packets'], 'first_sequence': row['first_sequence'],
@@ -254,11 +371,14 @@ def main():
     if not container.get("label"):
         raise ValueError("NOT_A_CONNECTED_SESSION")
     state = container["state"]
-    if state["Status"] != "exited":
-        raise ValueError("SESSION_NOT_FINISHED")
-    result = report(STATE, state["StartedAt"], state["FinishedAt"])
-    result.update(run_id=args.run_id, container_exit_code=state["ExitCode"],
-                  status="SAVED_SESSION_REPORT")
+    if state['Status'] not in {'running', 'exited'}:
+        raise ValueError('SESSION_NOT_RUNNING_OR_FINISHED')
+    active = state['Status'] == 'running'
+    end = datetime.now(timezone.utc).isoformat() if active else state['FinishedAt']
+    result = report(STATE, state['StartedAt'], end)
+    result.update(run_id=args.run_id, container_exit_code=None if active else state['ExitCode'],
+                  status='CURRENT_SESSION_REPORT' if active else 'SAVED_SESSION_REPORT',
+                  operation=operation(result, state))
     print(json.dumps(result, indent=2))
 
 

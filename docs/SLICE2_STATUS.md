@@ -1,5 +1,66 @@
 # Slice 2 — Robinhood READ / SHADOW Status
 
+## Scope collector handoff and daily operation: 2026-11-03
+
+Started from verified remote dfe3bf0b8586fbf13e2960dac2164d7dcca1ca5e,
+tree 306f9faae1eadd31b8f759994b34c9ac42b5652f. No applicable AGENTS.md was
+present. Main remained b5359aaf396e692d2142d7e02908f1544e045ee6 and
+feat/event-awareness-baseline remained 22567f9f1eac0b8c380e9593f080228ef5da2de2;
+PR #1 was open/draft. No subagents, host connection, credentials, provider/model
+calls, real orders, account migrations or dependency changes were used.
+
+Implemented the reproduced Scope reference-channel correction and terminal-state
+precedence. A subsequent existing Scope management test reproduced re-admission of
+an already-owned watch, an unnecessary duplicate-submission halt, and blocked
+management. Shared selection now verifies the original native receipt, excludes
+the owned watch from entry candidates, and preserves its original arming/admission
+evidence. Maintain/tighten/full exit, missing held context and foreign binding are
+covered; duplicate-entry and quote validation guards remain intact.
+Existing native watch/execution code is substantial; connected inputs
+and exact session configuration are separate blockers. Added a production-profile
+collector/native lifecycle test, including native paid receipt accounting and an
+explicit late-response rejection. One favorable bounded synthetic capture includes
+a later source timestamp so the next delivered quote arrives before original
+approval expiry. No source clocks are altered in application code. Actual Scope
+collector/model timing and original input acceptance remain unverified.
+
+The current/saved session report now distinguishes running, waiting for setup,
+missing inputs, stopped and failed, keeps family gaps separate, and binds current
+coverage to the native accepted packet. It includes retained halts and actual
+freshness bounds; container success does not imply a trade. The launcher exposes
+exact status/stop commands and a 60–23,400-second explicit duration while retaining
+the 600-second default and all reviewed recovery/account safeguards. Replaced the
+accumulated historical command list with [one current runbook](PAPER_NEXT_SESSION.md).
+
+Verification: 237 distinct installed-package cases passed across the recorded
+runs. The unchanged legacy five-second Scope worker test timed out in both the
+broad run and its isolated rerun; it remains a recorded failure, not a waived
+pass. Cold SDK worker imports measured about 3.3–4.4 seconds in this environment.
+A separate real installed SDK-worker case passed using the existing production
+15-second process budget and 20-second management lease. All nine final Scope
+portfolio cases passed, including maintain/tighten/full exit, original receipt
+retention, missing context and foreign binding. No application deadlines changed.
+The report/start tests, collector/input/preparation/replay tests, connected native
+runtime, production-profile lifecycle, quote fills, session host and Scope
+arbitration/position suites account for the remaining verification. No real model
+HTTP traffic occurred; the SDK transport is a fixture.
+
+All 316 application files match source, wheel and installed bytes; all 60 runtime
+dependency pins match. Copied changed tests/host scripts, scoped lint, formatting
+of the lifecycle/portfolio tests and whitespace checks passed. The
+[machine-readable proof](PAPER_SCOPE_OPERATION_PROOF.json) records the wheel hash,
+individual case outcomes, failure history and source hashes. Earlier overlapping
+or interrupted runs are not added to the passing-case count.
+
+Implementation and fixture proof do not close market acceptance. No connected
+fill or full entry-to-exit lifecycle has been
+observed. Swing needs original daily history; Scope needs original SPX history,
+exact reviewed SPXW/session/pattern terms, a reserved catalog slot and timely
+post-cost delivery. The already-enrolled November 3 run can proceed independently
+on DEGEN after six completed five-minute bars are actually available.
+
+Previous status (historical):
+
 ## Robinhood price/options Swing and Scope implementation: 2026-10-30 UTC
 
 Explicit strategy variants now connect observed Swing history/catalogs and bounded

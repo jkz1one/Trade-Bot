@@ -84,7 +84,7 @@ def test_incomplete_spx_keeps_peer_books_and_index_reference_only():
     out, action, issues = deliver(binding, cap, frame, (metadata,), now=AT, settings=settings, sequence=1)
     assert 'SPX_INTERPOLATION_STATUS_UNKNOWN' in issues
     assert out.quotes == frame.quotes and out.scope is None and action is None
-    assert len(out.held_underlyings) == 1
+    assert not out.held_underlyings  # No owned SPX play; reference cannot enter held-only channel.
 
 
 def test_current_index_can_invalidate_watch_without_replacing_missing_history():
@@ -241,3 +241,42 @@ def test_completed_bar_marker_survives_scope_assembly_without_restamping():
         with pytest.raises(ValueError, match='exact original'):
             ScopeHistory.model_validate(converted.model_dump() | {'source_at': h.source_at + timedelta(seconds=1)})
     assert frame.model_dump_json() == original
+
+
+def test_terminal_watch_with_retained_armed_history_never_reappears():
+    binding, cap, frame, metadata, settings = setup()
+    out, action, issues = deliver(binding, cap, frame, (metadata,), now=AT, settings=settings,
+        sequence=2, record={'status': 'INVALIDATED_UNFILLED', 'arming': {'status': 'ARMED'}})
+    assert out.scope is None and action is None
+    assert issues == ('SCOPE_PLAY_TERMINAL',)
+
+
+def test_owned_scope_keeps_protection_reference_when_history_is_missing():
+    binding, cap, frame, metadata, settings = setup()
+    raw = copy.deepcopy(cap.observations)
+    raw[2]['raw']['structuredContent']['data']['results'][0]['bars'][0]['interpolated'] = True
+    out, action, issues = deliver(binding, cap.model_copy(update={'observations': raw}), frame,
+        (metadata,), now=AT, settings=settings, sequence=2,
+        record={'status': 'POSITION_OPEN', 'native_client_id': 'owned-scope'})
+    assert out.scope is None and action is None
+    assert len(out.held_underlyings) == 1 and not out.held_underlyings[0].executable_book
+    assert 'SPX_INTERPOLATED_HISTORY' in issues
+
+
+def test_scope_preflight_reports_original_blocker_without_enabling_entry():
+    binding, cap, frame, metadata, settings = setup()
+    stale = frame.quotes[0].model_copy(update={'source_at': AT-timedelta(seconds=31),
+                                              'received_at': AT-timedelta(seconds=31)})
+    out, action, issues = deliver(binding, cap, frame.model_copy(update={'quotes': (stale,)}),
+        (metadata,), now=AT, settings=settings, sequence=1)
+    assert action is None and out.scope is None
+    assert 'SCOPE_PREFLIGHT_BLOCKED' in issues and len(issues) > 1
+    assert all(i.startswith('SCOPE_') for i in issues)
+
+
+def test_delivered_call_waiting_for_owner_is_not_a_terminal_watch_or_replayed_call():
+    binding, cap, frame, metadata, settings = setup()
+    out, action, issues = deliver(binding, cap, frame, (metadata,), now=AT, settings=settings,
+                                  sequence=2, record={'status': 'CALL_ALREADY_DELIVERED'})
+    assert action is None and out.scope is None
+    assert issues == ('SCOPE_CALL_AWAITING_OWNER',)

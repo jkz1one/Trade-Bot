@@ -378,14 +378,34 @@ def collect(c, key, frame, evidence):
             "SELECT play_key,record_json FROM execution_option_scope_watches WHERE active_lock=1"
         ).fetchall()
         revision = c.engine.journal.revision(db)
+        submitted = None
+        if len(rows) == 1:
+            from app.options.scope_execution import ACTIVE, stored_entry
+
+            record = json.loads(rows[0]["record_json"])
+            submitted = stored_entry(db, play_key=rows[0]["play_key"])
+            if (record["status"] in ACTIVE) != (submitted is not None):
+                raise ExecutionBlocked("SCOPE_NATIVE_OWNERSHIP_CHANGED")
     if len(rows) > 1:
         raise ValueError("Shared owner has multiple Scope watches")
-    if rows and (frame.scope is None or rows[0]["play_key"] != frame.scope.play_key):
+    if rows and (
+        (frame.scope is None and submitted is None)
+        or (frame.scope is not None and rows[0]["play_key"] != frame.scope.play_key)
+    ):
         raise ExecutionBlocked("EXACT_SCOPE_WATCH_COVERAGE_REQUIRED")
     if not rows and frame.scope is not None:
         raise ExecutionBlocked("SCOPE_WATCH_NOT_ACTIVE")
     evidence["scope_candidate"] = None
-    if rows:
+    if submitted is not None:
+        # A held/pending play supplies protection and management context, never
+        # a second entry admission. Re-review would overwrite its original
+        # arming state and eventually trip the duplicate-submission guard.
+        evidence["scope_owned"] = {
+            "play_key": rows[0]["play_key"],
+            "client_id": submitted["client_id"],
+            "status": record["status"],
+        }
+    elif rows:
         item = frame.scope
         result = c.scope_book.review_admission(
             "shared:" + key,

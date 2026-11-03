@@ -70,8 +70,20 @@ def deliver(binding, captured, frame, metadata, *, now, settings, sequence, reco
     if not captured.started_at <= captured.collected_at <= now:
         raise ValueError('Scope capture clocks invalid')
     ref, history, report = map_index(*captured.observations, binding.session, now=now)
-    # A valid current index value remains protection evidence even if bar provenance fails.
-    frame = DegenFrame.model_validate(frame.model_dump() | {'held_underlyings': (ref,)})
+    # Candidate references travel inside ScopeCycleInput. The held-only channel
+    # must not contain an unowned SPX reference: the mixed runtime correctly
+    # rejects it. Preserve an owned/pending play's protection even if bars fail.
+    if record is not None and record.get('native_client_id') and record.get('status') in {
+        'ORDER_WORKING', 'POSITION_OPEN'
+    }:
+        frame = DegenFrame.model_validate(frame.model_dump() | {
+            'held_underlyings': (*[u for u in frame.held_underlyings if u.symbol != 'SPX'], ref)})
+    if record is not None and record.get('status') == 'CALL_ALREADY_DELIVERED':
+        return frame, None, ('SCOPE_CALL_AWAITING_OWNER',)
+    if record is not None and record.get('status') not in {
+        'WATCHING', 'ARMING', 'ARMED', 'ORDER_WORKING', 'POSITION_OPEN'
+    }:
+        return frame, None, ('SCOPE_PLAY_TERMINAL',)
     if record is not None and record.get('status') == 'WATCHING' and record.get('geometry'):
         from app.options.scope_quote import price_status
         from app.options.scope_structure import ScopeGeometry
@@ -97,8 +109,10 @@ def deliver(binding, captured, frame, metadata, *, now, settings, sequence, reco
         return frame, None, ('SCOPE_EXACT_MARKET_COVERAGE_UNAVAILABLE',)
     supplied, context = assemble(binding.session, history, frame.histories, metas[0], matches[0],
                                 previous_session=binding.previous_session, index_reference=ref)
-    if preflight_scope(supplied, policy, now=now).blockers:
-        return frame, None, ('SCOPE_PREFLIGHT_BLOCKED',)
+    preflight = preflight_scope(supplied, policy, now=now)
+    if preflight.blockers:
+        return frame, None, ('SCOPE_PREFLIGHT_BLOCKED', *(
+            'SCOPE_' + reason.code for reason in preflight.blockers))
     frame = DegenFrame.model_validate(frame.model_dump() | {
         'quotes': tuple(supplied.quote if q.instrument == binding.instrument else q for q in frame.quotes),
         'held_quotes': tuple(supplied.quote if q.instrument == binding.instrument else q for q in frame.held_quotes)})
@@ -119,4 +133,8 @@ def deliver(binding, captured, frame, metadata, *, now, settings, sequence, reco
     else:
         # A consumed or terminal play is never re-created after a restart.
         return frame, None, ()
-    return DegenFrame.model_validate(frame.model_dump() | {'scope': item}), action, ()
+    # The nested observation already supplies native protection. Avoid a second
+    # held-only copy becoming foreign when this same packet closes the position.
+    return DegenFrame.model_validate(frame.model_dump() | {
+        'scope': item, 'held_underlyings': tuple(u for u in frame.held_underlyings if u.symbol != 'SPX')
+    }), action, ()

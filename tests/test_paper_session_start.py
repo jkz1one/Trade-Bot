@@ -126,3 +126,33 @@ def test_wait_reports_even_failed_runtime_and_does_not_restart(exit_code, capsys
         m.wait_report(Path('/repo'), 'paper-first', 600, runner=runner)
     assert len(calls) == 2 and calls[0][1] == 'wait'
     assert 'SAVED_SESSION_REPORT' in capsys.readouterr().out
+
+
+@pytest.mark.parametrize('seconds', [60, 600, 21600, 23400])
+def test_daily_duration_stays_bounded_and_reuses_existing_preparation(seconds):
+    m = loader()
+    calls = []
+    result = m.run_prepared({'target_session': '2026-11-03', 'policy_sha256': 'a'*64},
+        'daily', seconds, invoke=helper(calls), today='2026-11-03')
+    assert [c[0] for c in calls] == ['snapshot', 'review-run', 'run']
+    assert calls[-1][calls[-1].index('--seconds') + 1] == str(seconds)
+    assert result['status_command'].endswith('--run-id daily')
+
+
+@pytest.mark.parametrize('seconds', [59, 23401, True])
+def test_out_of_bound_daily_duration_cannot_start(seconds, tmp_path):
+    m = loader()
+    with pytest.raises(ValueError, match='bounded'):
+        m.launch('/captures', '2026-11-03', 'daily', seconds, invoke=lambda a: pytest.fail('Unexpected action'),
+                 session_root=tmp_path, today='2026-11-03')
+
+
+def test_start_returns_exact_stop_command_without_stopping():
+    m = loader()
+    calls = []
+    def invoke(args):
+        return helper(calls)(args) | {'container_id': 'b'*64}
+    result = m.run_prepared({'target_session': '2026-11-03', 'policy_sha256': 'a'*64},
+        'daily', 600, invoke=invoke, today='2026-11-03')
+    assert result['stop_command'].endswith('--run-id daily --expected-container ' + 'b'*64)
+    assert 'stop' not in [c[0] for c in calls]

@@ -1,5 +1,70 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.180. Scope delivery and daily PAPER status, 2026-11-03.
+
+The collector-to-native Scope regression reproduced an implementation defect:
+an unowned SPX index reference was put in held_underlyings, where the mixed owner
+correctly rejected it before watch creation. Current candidates now carry the
+reference inside their exact Scope input. Only owned/pending Scope protection may
+use the held-only fallback when original history is unavailable. Valid nested
+inputs avoid a duplicate held reference after the same packet closes a position.
+Terminal watches cannot be revived by an old ARMED subrecord. Preflight output
+now preserves individual bounded Scope blockers. No ownership or quote gate was
+relaxed, and index values remain non-executable references.
+
+An existing management regression exposed a second routing defect: shared
+selection re-admitted an already-submitted Scope watch on a later five-minute
+cycle, hit SCOPE_PLAY_ALREADY_SUBMITTED and halted the account. Selection now
+verifies the native receipt and keeps owned/pending plays out of entry admission.
+Original arming/admission evidence survives; maintain, tighten and full-exit
+management retain exact-play accounting. Missing held Scope history leaves
+independent quote protection active without granting a new Scope entry; a foreign
+play binding still fails closed. The native duplicate-submission guard is unchanged.
+
+A new synthetic collector/native-owner regression uses the production $1,000,
+two-play, $1/day/$5-total profile and explicit fixture SPXW/session terms. It covers
+watch creation, sampled arming, a scripted paid entry with newly delivered
+post-cost evidence, later-quote fill, collector/owner restart, independent premium
+exit, duplicate delivery and actual stored reporting. Restart retains its entry
+halt while allowing protection; status correctly reports that retained halt.
+A late model response remains charged and cannot enter. Favorable synthetic
+capture timing is not a promise that real ten-second polling can deliver a newer
+quote inside the original five-second approval. The fixture drives explicit tick
+times; it does not prove the continuous run loop's cadence. That timing remains
+unresolved and is a separate operational integration limitation, not something
+valid SPX history alone fixes.
+
+The host-only reporter now supports running and stopped containers, separates
+process state from setup/input reasons, reads original heartbeat/feed clocks and
+the enrolled freshness bounds, and distinguishes collected from owner-accepted
+packets. Missing Scope/Swing inputs stay separate from an evaluated DEGEN HOLD.
+Expired paid responses and unchanged required Scope observations remain input
+blockers. Long runs report the latest five detailed decisions/25 cycle records
+with explicit omission counts. Reads cannot refresh data or modify the owner.
+The launcher retains its 600-second default and adds explicit bounded runs up to
+23,400 seconds, exact status/stop commands, and truthful post-start report errors.
+No scheduler, automatic retry/resume, reset or startup authorization change.
+
+Operator evidence in this handoff supersedes the older attempt-169 uncertainty:
+168 had both daily bars interpolated with 54 mapped hourly bars per symbol; 169
+confirmed SPY's daily blocker; 170 failed SOURCE_CLOCK_CHECK and independently
+reported INTERPOLATED_BAR. dfe3bf0 is deployed. The same November 3 receipt and
+policy remain enrolled; account revision 1032/generation 8/feed 166 is reported
+STOPPED, halted and at zero fills. Dashboard connected-price-options-v1 is already
+active. Do not recapture/re-enroll or repeat activation. No Tuesday worker was
+reported. Valid original daily history, usable SPX history, reviewed exact Scope
+binding/catalog capacity and connected model/fill/exit acceptance remain open.
+
+See [daily operation and remaining-work table](PAPER_NEXT_SESSION.md). This release
+is offline verification only, not host deployment or full trading readiness.
+Verification records 237 passing installed cases and one unchanged legacy
+five-second SDK-worker timeout, reproduced in isolation. The real worker passed
+separately under the existing production 15-second process/20-second management
+limits; no deadline was relaxed. All 316 application files match source, wheel
+and installation. See [proof and retained limitations](PAPER_SCOPE_OPERATION_PROOF.json).
+
+Previous version notes (historical):
+
 Version 1.179. Report and recover pre-open history independently of rejected quote clocks, 2026-11-03 UTC.
 
 Actual Tuesday preparation completed on f1b96e6 with the existing account:
