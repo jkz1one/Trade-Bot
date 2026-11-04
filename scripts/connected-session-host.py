@@ -271,7 +271,10 @@ def no_active_session():
         raise ValueError("A connected session is already running")
 
 
-def review(image_id, phase, seconds=None, run_id=None, *, resume_flat=False):
+def review(image_id, phase, seconds=None, run_id=None, *, resume_flat=False, max_feed_recoveries=0):
+    if (type(max_feed_recoveries) is not int or not 0 <= max_feed_recoveries <= 3
+            or (max_feed_recoveries and (phase != "run" or not resume_flat))):
+        raise ValueError("Bounded feed recovery requires a reviewed flat run")
     manifest = bundle(image_id)
     no_active_session()
     before = h.workers()
@@ -314,6 +317,8 @@ def review(image_id, phase, seconds=None, run_id=None, *, resume_flat=False):
         }:
             raise ValueError("Reviewed runtime stop/failure required for flat restart")
         binding["resume_flat_reviewed_revision"] = native["owner_state"]["owner_revision"]
+    if max_feed_recoveries:
+        binding["max_feed_recoveries"] = max_feed_recoveries
     plan = {
         "version": "connected-host-review-v1",
         "phase": phase,
@@ -442,6 +447,8 @@ def apply(plan):
         str(plan["binding"]["seconds"]),
         *(["--resume-flat-reviewed-revision", str(plan["binding"]["resume_flat_reviewed_revision"])]
           if "resume_flat_reviewed_revision" in plan["binding"] else []),
+        *(["--max-feed-recoveries", str(plan["binding"]["max_feed_recoveries"])]
+          if plan["binding"].get("max_feed_recoveries") else []),
     )
     container_id = result.stdout.strip()
     item = h.container(name)
@@ -456,7 +463,8 @@ def apply(plan):
         "container_name": name,
         "container_id": container_id,
         "seconds": plan["binding"]["seconds"],
-        "automatic_resume": False,
+        "automatic_resume": bool(plan["binding"].get("max_feed_recoveries")),
+        "max_feed_recoveries": plan["binding"].get("max_feed_recoveries", 0),
         "trading_ready": False,
         "live_enabled": False,
     }
@@ -690,12 +698,14 @@ def run(args, release):
         no_active_session()
         return snapshot(image_id)
     phase = "enroll" if args.operation in ("review-enroll", "enroll") else "run"
-    plan = review(image_id, phase, args.seconds, args.run_id, resume_flat=getattr(args, "resume_flat", False))
+    plan = review(image_id, phase, args.seconds, args.run_id, resume_flat=getattr(args, "resume_flat", False),
+                  max_feed_recoveries=getattr(args, "max_feed_recoveries", 0))
     if args.operation.startswith("review-"):
         return plan
     if plan["review_sha256"] != args.expected_review:
         raise ValueError("Host review changed")
-    if review(image_id, phase, args.seconds, args.run_id, resume_flat=getattr(args, "resume_flat", False)) != plan:
+    if review(image_id, phase, args.seconds, args.run_id, resume_flat=getattr(args, "resume_flat", False),
+                  max_feed_recoveries=getattr(args, "max_feed_recoveries", 0)) != plan:
         raise ValueError("Host review changed before action")
     return apply(plan)
 
@@ -733,6 +743,7 @@ def main(argv=None):
                  "capture-directory", "target-session", "next-policy", "earnings-probe", "swing-capture-directory", "scope-binding"):
         p.add_argument("--" + name)
     p.add_argument("--resume-flat", action="store_true")
+    p.add_argument("--max-feed-recoveries", type=int, default=0, choices=range(4))
     p.add_argument("--observed-swing-history", action="store_true")
     p.add_argument("--seconds", type=int)
     p.add_argument("--sequence", type=int)
@@ -759,6 +770,8 @@ def main(argv=None):
         p.error("Duration is only for session review/run")
     if a.resume_flat and a.operation not in ("review-run", "run"):
         p.error("--resume-flat requires review-run or run")
+    if a.max_feed_recoveries and (a.operation not in ("review-run", "run") or not a.resume_flat):
+        p.error("--max-feed-recoveries requires a reviewed --resume-flat run")
     fd = None
     try:
         if os.geteuid() != 0:

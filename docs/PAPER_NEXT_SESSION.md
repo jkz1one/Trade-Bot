@@ -31,11 +31,14 @@ git switch --detach TESTED_RELEASE_SHA &&
 python3 scripts/paper-session-report.py --run-id paper-1103-174343-7ae3b7
 ```
 
-The exact underlying normalization failure and historical account-health gate
-are not established by the old report. The owner stores a generic
-`ENTRY_HEALTH_BLOCKED` result; retained halt/model evidence may explain it, but
-cannot reconstruct a missing historical account snapshot. The new report does
-not itself fix collection or unblock entries.
+The expanded b51d64c host report establishes four `NO_ADMITTED_CONTRACT` decisions,
+then a read timeout at 13:10 New York that latched `OPTION_RUNTIME_FEED_UNAVAILABLE`.
+Eleven later decisions stayed health-blocked. Model attempts and unsettled costs
+are both zero. Later failures point to missing/changed original schema evidence,
+before price/bar normalization. The newest report projects the saved upstream
+`source_capture` stage/class/status from old raw receipts. Read that remaining
+cause before rebuilding or running again; it has not been established as an
+authentication failure. The read-only command above remains the immediate step.
 
 ## Historical November 3 preparation
 
@@ -137,7 +140,28 @@ supervised run after reviewing the short run, change only `--seconds`; omit
 `--wait` to return immediately. Native calendar/cutoff/protection gates remain in
 force, including shortened sessions. Duration is an upper bound, not an extension
 of entry hours or a guarantee that positions are flat at shutdown. There is no
-scheduler, automatic restart, daily enrollment or automatic resume loop.
+scheduler, automatic restart or daily enrollment. Mid-run recovery is disabled
+unless explicitly included in that launch's review as described below.
+
+## Optional bounded recovery during one run
+
+After building the runtime update, `--max-feed-recoveries 1` (or 2 or 3) on
+`paper-session-start.py` explicitly authorizes that many successful recoveries
+from temporary native feed halts within the reviewed run. The default is **0**;
+existing commands retain their behavior. This option does not alter or re-enroll
+the prepared session. The host review binds the allowance and the launch output
+truthfully sets `automatic_resume` to true only for a nonzero allowance. There
+is no automatic process restart or reuse on another date.
+
+Recovery requires two newly accepted packets with fresh, advancing original
+underlying source clocks, fresh native heartbeat and account reconciliation, a
+flat account, no pending orders and no unknown costs. Existing quote, setup,
+budget and loss gates still control every entry. Manual/other halts, unresolved
+feed faults and an exhausted allowance stay blocked. Held-play protection keeps
+running; this option never clears a halt while positions or pending orders exist.
+Each successful recovery remains in the journal and the host report's
+`flat_feed_recoveries` count. The supplied stop command ends the run and leaves
+the normal stop halt in place.
 
 ## Remaining work and evidence
 
@@ -147,7 +171,7 @@ scheduler, automatic restart, daily enrollment or automatic resume loop.
 | Swing | Source preparation/recovery and native shared scanning/execution fixtures; missing family remains isolated. | Valid original daily history and complete connected lifecycle. Saved interpolated bars remain rejected. |
 | Scope | Collector-to-native watch routing corrected; native sampled arming, exact paid admission, later-quote fill, restart and exit regression. Owned plays stay out of new-entry admission while exact-play management remains available. Terminal watches cannot be revived by retained ARMED evidence. | Original usable SPX history, exact reviewed SPXW terms/session/pattern binding, a catalog with a reserved slot, and connected lifecycle. No SPY substitution or invented contract terms. |
 | Scope timing | Original five-second admission and fresh advancing post-cost evidence remain enforced; late scripted responses retain their cost and cannot enter. | Post-cost delivery under the real continuous run-loop cadence remains unresolved. The favorable synthetic test drives explicit tick times; ten-second polling does not guarantee delivery inside five seconds. Valid history alone does not fix this integration limitation. |
-| Daily operation | Unique bounded launches, current/saved status, exact stop, retained reports, unchanged recovery and budgets. Two-hour detached host run stopped on schedule. | Diagnose retained NORMALIZE failures and ENTRY_HEALTH_BLOCKED before another run; actual model timing and lifecycle remain unverified. Daily preparations remain explicit. |
+| Daily operation | Unique bounded launches, exact stop, retained reports and optional reviewed flat feed recovery capped at three per run; native timeout/recovery/stop/restart fixtures. Two-hour host run stopped on schedule. | Read the saved upstream capture error and resolve its actual cause before another run. Deploy the runtime update once with any required capture fix. Actual model timing and lifecycle remain unverified. |
 
 Scope bindings consume one of the **eight** candidate slots. The current eight
 DEGEN/Swing contracts cannot silently gain a ninth contract or drop a family.
@@ -163,3 +187,8 @@ real model latency or timely connected admission.
 The November 4 host-only diagnostic update separately passes 51 report/launcher
 tests, including failure-window scoping, early/late evidence, private-field
 exclusion and read-only database preservation. It changes no application file.
+
+That earlier host-only update is followed by the optional runtime recovery and
+original-capture diagnostics release. Its tests and installed-file verification
+are recorded in [PAPER_FEED_RECOVERY_PROOF.json](PAPER_FEED_RECOVERY_PROOF.json).
+Neither synthetic recovery nor a clean process exit establishes trading readiness.

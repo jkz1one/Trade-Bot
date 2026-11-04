@@ -541,3 +541,34 @@ def test_capture_session_retains_private_evidence_without_owner_mount(tmp_path, 
     assert 'PRIVATE' not in json.dumps(result)
     assert not any('/state' in x or '/exports' in x or '/run/secrets' in x for x in calls[0])
     assert 'app.mixed.session_capture' in calls[0]
+
+
+@pytest.mark.parametrize('maximum', [0, 1, 3])
+def test_feed_recovery_cap_is_in_exact_host_review_and_container(host, monkeypatch, maximum):
+    m, calls, _, _, _ = host
+    original = m.execute
+    def execute(image, module, args, mounts, **kwargs):
+        result = original(image, module, args, mounts, **kwargs)
+        if module == 'app.mixed.connected_runtime':
+            result['owner_state']['halt_reason'] = 'OPTION_RUNTIME_STOPPED'
+        return result
+    monkeypatch.setattr(m, 'execute', execute)
+    plan = m.review(IMAGE, 'run', 600, 'bounded-feed', resume_flat=True, max_feed_recoveries=maximum)
+    default = m.review(IMAGE, 'run', 600, 'bounded-feed', resume_flat=True)
+    assert (plan['review_sha256'] == default['review_sha256']) is (maximum == 0)
+    result = m.apply(plan)
+    invocation = next(c for c in calls if c[:2] == ('run', '-d'))
+    assert result['automatic_resume'] is bool(maximum)
+    assert result['max_feed_recoveries'] == maximum
+    if maximum:
+        assert invocation[invocation.index('--max-feed-recoveries') + 1] == str(maximum)
+    else:
+        assert '--max-feed-recoveries' not in invocation
+
+
+@pytest.mark.parametrize('maximum', [-1, 4, True, 1])
+def test_feed_recovery_without_valid_explicit_flat_review_is_refused(host, maximum):
+    m, calls, _, _, _ = host
+    with pytest.raises(ValueError, match='reviewed'):
+        m.review(IMAGE, 'run', 600, 'bad-recovery', max_feed_recoveries=maximum)
+    assert not calls

@@ -706,6 +706,7 @@ class ContinuousFeed:
             )
         self.db.commit()
         stage = "CAPTURE"
+        captured = None
         try:
             scope_capture = None
             scope_record = None
@@ -745,6 +746,12 @@ class ContinuousFeed:
                 or captured.started_at < now
             ):
                 raise ValueError("Collector response plan changed")
+            stage = "CAPTURE"
+            if captured.schemas is None or captured.schemas.sha256 != self.schemas.sha256:
+                # A failed connection/discovery is not a market normalization error.
+                # Never substitute the enrolled schema for missing original evidence.
+                raise ValueError("Original schema-bound capture required")
+            stage = "SOURCE_BINDING"
             swing, history_issues, history_diagnostic = None, (), None
             if history_calls:
                 from app.mixed.swing_feed import snapshot
@@ -860,6 +867,8 @@ class ContinuousFeed:
 
             # Append bounded public metadata; preserve original raw/packet data.
             details = {"stage": stage, **failure_details(exc)}
+            if captured is not None and captured.failure is not None:
+                details['capture_failure'] = captured.failure.model_dump(mode='json')
             self.db.execute(
                 "CREATE TABLE IF NOT EXISTS attempt_failures(sequence INTEGER PRIMARY KEY,details_json TEXT NOT NULL)"
             )

@@ -342,3 +342,29 @@ def test_two_hour_failure_report_preserves_start_and_end_without_writes(tmp_path
     assert module.operation(result, {'Status': 'exited', 'ExitCode': 0})['state'] == 'STOPPED'
     assert 'PRIVATE' not in json.dumps(result) and 'FOREIGN_DAY' not in json.dumps(result)
     assert before == (owner.read_bytes(), collector.read_bytes())
+
+
+def test_old_failed_capture_reveals_only_bounded_worker_cause():
+    with sqlite3.connect(':memory:') as db:
+        db.execute('CREATE TABLE attempts(sequence,raw_json)')
+        raw = {'status': 'FAILED', 'schemas': None, 'request_id': 'PRIVATE_REQUEST',
+               'observations': [{'raw': 'PRIVATE_PROVIDER_DATA'}], 'failure': {
+                   'stage': 'CONNECT', 'message': 'PRIVATE_MESSAGE', 'causes': [
+                       {'error_class': 'ExceptionGroup'},
+                       {'error_class': 'OAuthTokenError', 'message': 'PRIVATE_TOKEN'},
+                       {'error_class': 'HTTPStatusError', 'http_status': 401,
+                        'oauth_error': 'invalid_grant', 'url': 'PRIVATE_URL'},
+                       {'error_class': 'PRIVATE_CLASS', 'http_status': True,
+                        'oauth_error': 'PRIVATE_OAUTH'}]}}
+        db.execute('INSERT INTO attempts VALUES(1,?)', (json.dumps(raw),))
+        result = module.source_capture(db, 1)
+        assert result == {'evidence_available': True, 'status': ['FAILED'], 'schemas_present': False,
+                          'stage': 'CONNECT', 'truncated': False, 'causes': [
+                              {'error_class': 'ExceptionGroup'},
+                              {'error_class': 'OAuthTokenError'},
+                              {'error_class': 'HTTPStatusError', 'http_status': 401, 'oauth_error': 'invalid_grant'},
+                              {'error_class': 'OTHER_ERROR'}]}
+        assert 'PRIVATE' not in json.dumps(result)
+        db.execute("UPDATE attempts SET raw_json='{broken'")
+        assert not module.source_capture(db, 1)['evidence_available']
+        assert not module.source_capture(db, 2)['evidence_available']

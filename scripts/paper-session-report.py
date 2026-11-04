@@ -233,6 +233,11 @@ def owner_diagnostics(db, start, end):
     ):
         result['decision_reason_counts'].append({**dict(row), 'reason': codes(row['reason'])})
     if 'payload' in {r[1] for r in db.execute('PRAGMA table_info(execution_events)')}:
+        result['flat_feed_recoveries'] = db.execute(
+            "SELECT COUNT(*) FROM execution_events WHERE kind='OPTION_REVIEWED_RESUME' "
+            "AND occurred_at>=? AND occurred_at<=? AND CASE WHEN length(payload)<=65536 "
+            "AND json_valid(payload) THEN json_extract(payload,'$.reason') END="
+            "'CONNECTED_FLAT_FEED_RECOVERY'", (start, end)).fetchone()[0]
         for row in db.execute(
             "SELECT occurred_at,CASE WHEN length(payload)<=65536 AND json_valid(payload) "
             "THEN json_extract(payload,'$.reason') END AS reason FROM execution_events "
@@ -247,6 +252,55 @@ def owner_diagnostics(db, start, end):
             row = db.execute("SELECT COUNT(*) AS attempts,COALESCE(SUM(cost IS NULL),0) AS unsettled "
                              "FROM execution_model_calls " + where, args).fetchone()
             result['model_calls'][name] = dict(row)
+    return result
+
+
+def source_capture(db, sequence):
+    """Project saved worker diagnostics only, including captures from older releases."""
+    if 'raw_json' not in {r[1] for r in db.execute('PRAGMA table_info(attempts)')}:
+        return {'evidence_available': False}
+    row = db.execute(
+        "SELECT CASE WHEN length(raw_json)<=1048576 AND json_valid(raw_json) THEN "
+        "json_object('status',json_extract(raw_json,'$.status'),"
+        "'failure',json_extract(raw_json,'$.failure'),"
+        "'schemas_present',json_type(raw_json,'$.schemas')='object') END "
+        "FROM attempts WHERE sequence=?", (sequence,)).fetchone()
+    if row is None or row[0] is None or len(row[0]) > 65536:
+        return {'evidence_available': False}
+    value = json.loads(row[0])
+    result = {'evidence_available': True, 'status': codes(value.get('status')),
+              'schemas_present': bool(value.get('schemas_present'))}
+    failure = value.get('failure')
+    if not isinstance(failure, dict):
+        return result
+    stage = failure.get('stage')
+    if isinstance(stage, str) and stage in {
+        'PRIVATE_AUTH', 'CONNECT', 'DISCOVER', 'VALIDATE_PLAN', 'MARKET_READ', 'CLOSE', 'PARENT'}:
+        result['stage'] = stage
+    result['causes'] = []
+    for cause in failure.get('causes', [])[:16] if isinstance(failure.get('causes'), list) else []:
+        if not isinstance(cause, dict):
+            continue
+        error = cause.get('error_class')
+        known = {'ReadAuthorizationRequired', 'HTTPStatusError', 'ExceptionGroup', 'BaseExceptionGroup',
+                 'OAuthFlowError', 'OAuthTokenError', 'OAuthRegistrationError',
+                 'InvalidScopeError', 'InvalidRedirectUriError',
+                 'ValueError', 'TypeError', 'KeyError', 'RuntimeError', 'TimeoutError', 'OSError',
+                 'PermissionError', 'FileNotFoundError', 'ValidationError', 'McpError',
+                 'ConnectError', 'ReadError', 'WriteError', 'ConnectTimeout', 'ReadTimeout',
+                 'WriteTimeout', 'PoolTimeout', 'RemoteProtocolError', 'LocalProtocolError',
+                 'EndOfStream', 'BrokenResourceError', 'ClosedResourceError', 'CancelledError'}
+        item = {'error_class': error if isinstance(error, str) and error in known else 'OTHER_ERROR'}
+        status, oauth = cause.get('http_status'), cause.get('oauth_error')
+        if type(status) is int and 100 <= status <= 599:
+            item['http_status'] = status
+        if isinstance(oauth, str) and oauth in {
+            'invalid_request', 'invalid_client', 'invalid_grant', 'unauthorized_client',
+            'unsupported_grant_type', 'invalid_scope', 'access_denied', 'server_error',
+            'temporarily_unavailable'}:
+            item['oauth_error'] = oauth
+        result['causes'].append(item)
+    result['truncated'] = failure.get('truncated') is True
     return result
 
 
@@ -417,6 +471,7 @@ def report(directory, started, finished):
             result['collector_failures'] = [{
                 'sequence': row['sequence'], 'started_at': row['started_at'],
                 **failure_evidence(row['details']),
+                'source_capture': source_capture(db, row['sequence']),
             } for row in db.execute(
                 'SELECT f.sequence,a.started_at,CASE WHEN length(f.details_json)<=65536 THEN f.details_json END AS details '
                 'FROM attempt_failures f JOIN attempts a USING(sequence) '

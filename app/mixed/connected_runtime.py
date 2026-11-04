@@ -1,6 +1,7 @@
 """Explicit existing-owner simulation runner. Check is read-only; run starts reads.
 
-No enrollment, automatic resume, balance reset, migration or dashboard replacement.
+No enrollment, balance reset, migration or dashboard replacement. In-run flat
+feed recovery requires an explicit bounded allowance in the reviewed launch.
 The native execution gates remain authoritative even when wiring checks pass.
 """
 
@@ -322,6 +323,107 @@ def resume_flat(engine, now, *, fresh_startup_feed=False):
         engine._resume(db, "Explicit reviewed flat connected simulation restart",
                        expected_revision=engine.journal.revision(db), now=now)
 
+
+class FlatFeedRecovery:
+    """Per-run opt-in; two advancing accepted packets and native flat recovery."""
+
+    def __init__(self, maximum, generation, started_at, *, start_revision=0):
+        if type(maximum) is not int or not 0 <= maximum <= 3:
+            raise ValueError("Flat feed recovery allowance must be 0..3")
+        self.maximum, self.generation, self.started_at = maximum, generation, started_at
+        self.used, self.halt, self.first = 0, None, None
+        self.start_revision, self.fenced = start_revision, False
+
+    def observe(self, runtime, now):
+        if self.used >= self.maximum or self.fenced:
+            return False
+        from zoneinfo import ZoneInfo
+        from app.execution.engine import ExecutionBlocked
+        from app.mixed.portfolio_controls import recoverable
+        from app.options.coordinator import DegenFrame
+        from app.options.governor import _fresh
+
+        engine = runtime.c.engine
+        with engine.journal.write() as db:
+            current = runtime._bound(db)
+            if current['generation'] != self.generation:
+                raise ValueError("Feed recovery cannot cross runtime generations")
+            # A later feed error can overwrite the control row's halt reason.
+            # Retained operator/other halt evidence must still veto this allowance.
+            if db.execute(
+                "SELECT 1 FROM execution_events WHERE sequence>? AND ("
+                "(kind='MANUAL_HALT' AND json_extract(payload,'$.reason')!='OPTION_RUNTIME_FEED_UNAVAILABLE') "
+                "OR (kind='OPTIONS_OPERATOR_COMMAND' AND json_extract(payload,'$.result.status')='APPLIED' "
+                "AND json_extract(payload,'$.command.action') IN ('HALT','REVOKE_KEY'))) LIMIT 1",
+                (self.start_revision,),
+            ).fetchone():
+                self.fenced = True
+                return False
+            control = engine._control(db)
+            if not control['halted'] or control['halt_reason'] != 'OPTION_RUNTIME_FEED_UNAVAILABLE':
+                self.halt, self.first = None, None
+                return False
+            event = db.execute("SELECT sequence,occurred_at FROM execution_events "
+                               "WHERE kind='MANUAL_HALT' ORDER BY sequence DESC LIMIT 1").fetchone()
+            if event is None or datetime.fromisoformat(event['occurred_at']) < self.started_at:
+                return False
+            halted_at = datetime.fromisoformat(event['occurred_at'])
+            if self.halt is None or self.halt[0] != event['sequence']:
+                # Arm only while the native runtime itself reports the feed fault.
+                # A manually retained halt on an otherwise healthy runtime is not ours.
+                if current['status'] != 'BLOCKED' or current['reason'] != control['halt_reason']:
+                    return False
+                self.halt = (event['sequence'], current['feed_sequence'])
+                self.first = None
+            if current['status'] != 'RUNNING' or current['reason'] is not None:
+                self.first = None
+                return False
+            if (now.astimezone(ZoneInfo('America/New_York')).date()
+                    != self.started_at.astimezone(ZoneInfo('America/New_York')).date()
+                    or engine.calendar.current_window(now) is None):
+                return False
+            for field, bound in (('feed_recorded_at', runtime.policy.feed_max_age_seconds),
+                                  ('heartbeat_at', runtime.policy.heartbeat_max_age_seconds)):
+                if current[field] is None or not 0 <= (now - datetime.fromisoformat(current[field])).total_seconds() < bound:
+                    self.first = None
+                    return False
+            stamp = datetime.fromisoformat(current['feed_recorded_at'])
+            sequence = current['feed_sequence']
+            if sequence <= self.halt[1] or stamp <= halted_at:
+                return False
+            if self.first is not None and (sequence, stamp) == self.first[:2]:
+                # A sample valid when accepted stays historical evidence while
+                # awaiting the next poll. It cannot resume entry or be re-stamped.
+                # A renewed feed/heartbeat fault above still clears the proof.
+                return False
+            frame = DegenFrame.model_validate_json(current['frame_json'])
+            clocks = {q.symbol: q.source_at for q in frame.underlyings}
+            if (set(clocks) != set(runtime.c.policy.symbols)
+                    or len(clocks) != len(frame.underlyings)
+                    or any(not _fresh(q.source_at, q.received_at, now,
+                                      engine.limits.quote_max_age_seconds,
+                                      engine.limits.max_receive_lag_seconds)
+                           for q in frame.underlyings)):
+                self.first = None
+                return False
+            try:
+                recoverable(engine, db, now, flat=True)
+                if self.first is None:
+                    self.first = (sequence, stamp, clocks)
+                    return False
+                if (sequence <= self.first[0] or stamp <= self.first[1]
+                        or any(clocks[symbol] <= self.first[2][symbol] for symbol in clocks)):
+                    return False
+                engine._resume(db, 'CONNECTED_FLAT_FEED_RECOVERY',
+                               expected_revision=engine.journal.revision(db), now=now)
+            except ExecutionBlocked:
+                self.first = None
+                return False
+            self.used += 1
+            self.halt, self.first = None, None
+            return True
+
+
 async def run(
     directory,
     feed_directory,
@@ -335,7 +437,11 @@ async def run(
     reader_gid=None,
     snapshot_owner=None,
     resume_flat_reviewed_revision=None,
+    max_feed_recoveries=0,
 ):
+    if (type(max_feed_recoveries) is not int or not 0 <= max_feed_recoveries <= 3
+            or (max_feed_recoveries and resume_flat_reviewed_revision is None)):
+        raise ValueError("Bounded feed recovery requires an explicitly reviewed flat launch")
     report, settings, policy, schemas, observer = check(
         directory, feed_directory, policy_file, schemas_file, clock_source=clock_source
     )
@@ -365,6 +471,8 @@ async def run(
         if resume_flat_reviewed_revision is not None and locked_owner["owner_revision"] != resume_flat_reviewed_revision:
             raise ValueError("Owner changed before reviewed recovery")
         feed = ContinuousFeed(feed_directory, policy, schemas)
+        recovery = FlatFeedRecovery(max_feed_recoveries, locked_owner['runtime_generation'] + 1,
+                                    clock_source(), start_revision=locked_owner['owner_revision'])
         before_counts = session_counts(runtime.c.engine)
         publisher = None
         try:
@@ -401,8 +509,13 @@ async def run(
                     return
                 collector = asyncio.create_task(operation)
                 try:
+                    startup_resumed = False
                     while not stop.is_set() and not collector.done():
                         at = clock_source()
+                        if startup_resumed:
+                            recovery.observe(runtime, at)
+                            await asyncio.sleep(0.25)
+                            continue
                         with runtime.c.engine.journal.read() as db:
                             current = runtime._bound(db)
                             fresh = (
@@ -414,7 +527,9 @@ async def run(
                             )
                         if fresh:
                             resume_flat(runtime.c.engine, at, fresh_startup_feed=True)
-                            break
+                            startup_resumed = True
+                            if not max_feed_recoveries:
+                                break
                         await asyncio.sleep(0.1)
                     await collector
                 finally:
@@ -452,7 +567,9 @@ async def run(
         "population_id": settings.limits.population_id,
         "live_enabled": False,
         "entry_blockers": report["entry_blockers"],
-        "automatic_resume": False,
+        "automatic_resume": bool(max_feed_recoveries),
+        "max_feed_recoveries": max_feed_recoveries,
+        "feed_recoveries": recovery.used,
         "dashboard_published": snapshot_directory is not None,
     }
 
@@ -475,6 +592,7 @@ async def serve(args):
             reader_gid=args.reader_gid,
             snapshot_owner=args.snapshot_owner,
             resume_flat_reviewed_revision=args.resume_flat_reviewed_revision,
+            max_feed_recoveries=args.max_feed_recoveries,
         )
     finally:
         timer.cancel()
@@ -488,6 +606,7 @@ def main(argv=None):
     for name in ("directory", "feed-directory", "policy", "schemas"):
         parser.add_argument("--" + name, required=True)
     parser.add_argument("--resume-flat-reviewed-revision", type=int)
+    parser.add_argument("--max-feed-recoveries", type=int, default=0, choices=range(4))
     parser.add_argument("--seconds", type=int, help="Required run duration, 1..86400 seconds")
     parser.add_argument(
         "--snapshot-directory", help="Existing enrolled dashboard snapshot; never created by run"
@@ -509,6 +628,8 @@ def main(argv=None):
         parser.error("Explicit bounded run duration required")
     if args.operation == "check" and args.resume_flat_reviewed_revision is not None:
         parser.error("Recovery is only available during an explicitly reviewed run")
+    if args.max_feed_recoveries and (args.operation != 'run' or args.resume_flat_reviewed_revision is None):
+        parser.error("Feed recovery requires a reviewed flat run")
     if args.operation == "check" and args.seconds is not None:
         parser.error("Check does not start workers")
     try:

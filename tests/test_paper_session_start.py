@@ -156,3 +156,25 @@ def test_start_returns_exact_stop_command_without_stopping():
         'daily', 600, invoke=invoke, today='2026-11-03')
     assert result['stop_command'].endswith('--run-id daily --expected-container ' + 'b'*64)
     assert 'stop' not in [c[0] for c in calls]
+
+
+@pytest.mark.parametrize('maximum', [0, 1, 3])
+def test_launch_carries_exact_optional_recovery_allowance(maximum):
+    m, calls = loader(), []
+    def invoke(args):
+        result = helper(calls)(args)
+        if '--max-feed-recoveries' in args:
+            result['binding']['max_feed_recoveries'] = int(args[args.index('--max-feed-recoveries')+1])
+        return result
+    m.run_prepared({'target_session': '2026-11-04', 'policy_sha256': 'a'*64},
+                   'bounded', 600, invoke=invoke, today='2026-11-04', max_feed_recoveries=maximum)
+    assert ('--max-feed-recoveries' in calls[-1]) is bool(maximum)
+    assert calls[-2][1:] == calls[-1][1:-2]
+
+
+def test_launch_rejects_unbound_recovery_allowance():
+    m, calls = loader(), []
+    with pytest.raises(ValueError, match='configuration'):
+        m.run_prepared({'target_session': '2026-11-04', 'policy_sha256': 'a'*64},
+                       'bounded', 600, invoke=helper(calls), today='2026-11-04', max_feed_recoveries=1)
+    assert 'run' not in [c[0] for c in calls]

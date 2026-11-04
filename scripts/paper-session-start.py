@@ -33,17 +33,22 @@ def save(path, value):
         os.close(fd)
 
 
-def run_prepared(receipt, run_id, seconds, *, invoke, today):
+def run_prepared(receipt, run_id, seconds, *, invoke, today, max_feed_recoveries=0):
+    if type(max_feed_recoveries) is not int or not 0 <= max_feed_recoveries <= 3:
+        raise ValueError("Flat feed recovery allowance must be 0..3")
     if type(seconds) is not int or not 60 <= seconds <= 23400:
         raise ValueError("Simulation run must be bounded to 60..23400 seconds")
     if receipt["target_session"] != today:
         raise ValueError("A prepared session can only run on its target date")
     invoke(["snapshot"])
     run = ["--run-id", run_id, "--seconds", str(seconds), "--resume-flat"]
+    if max_feed_recoveries:
+        run += ["--max-feed-recoveries", str(max_feed_recoveries)]
     plan = invoke(["review-run", *run])
     if (not plan.get("degen_option_configuration_ready")
             or plan.get("live_enabled") is not False
-            or plan.get("binding", {}).get("policy_sha256") != receipt["policy_sha256"]):
+            or plan.get("binding", {}).get("policy_sha256") != receipt["policy_sha256"]
+            or plan.get("binding", {}).get("max_feed_recoveries", 0) != max_feed_recoveries):
         raise ValueError("Session option configuration is still blocked or differs from preparation")
     result = invoke(["run", *run, "--expected-review", plan["review_sha256"]])
     result['run_id'] = run_id
@@ -57,7 +62,10 @@ def run_prepared(receipt, run_id, seconds, *, invoke, today):
 
 def launch(captures, target, run_id, seconds, *, invoke, session_root, today,
            prepare_only=False, prepared_session=None, observed_swing_history=False,
-           swing_capture_directory=None, scope_binding=None, earnings_probe=None):
+           swing_capture_directory=None, scope_binding=None, earnings_probe=None, max_feed_recoveries=0):
+    if (type(max_feed_recoveries) is not int or not 0 <= max_feed_recoveries <= 3
+            or (prepare_only and max_feed_recoveries)):
+        raise ValueError("Bounded feed recovery is a run-only option")
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,39}", run_id):
         raise ValueError("A new simple run ID is required")
     if type(seconds) is not int or not 60 <= seconds <= 23400:
@@ -75,7 +83,8 @@ def launch(captures, target, run_id, seconds, *, invoke, session_root, today,
         if (not isinstance(receipt, dict) or receipt.get("version") != "paper-session-preparation-v1"
                 or receipt.get("live_enabled") is not False):
             raise ValueError("Preparation receipt version mismatch")
-        return run_prepared(receipt, run_id, seconds, invoke=invoke, today=today)
+        return run_prepared(receipt, run_id, seconds, invoke=invoke, today=today,
+                            max_feed_recoveries=max_feed_recoveries)
     if date.fromisoformat(target) < date.fromisoformat(today) or (not prepare_only and target != today):
         raise ValueError("Use --prepare-only for a future session; expired sessions cannot run")
     for value in (captures, swing_capture_directory, scope_binding, earnings_probe):
@@ -111,7 +120,8 @@ def launch(captures, target, run_id, seconds, *, invoke, session_root, today,
         return {"status": "SESSION_PREPARED", "prepared_session": str(destination),
                 "target_session": target, "workers_started": False,
                 "trading_ready": False, "live_enabled": False}
-    return run_prepared(receipt, run_id, seconds, invoke=invoke, today=today)
+    return run_prepared(receipt, run_id, seconds, invoke=invoke, today=today,
+                            max_feed_recoveries=max_feed_recoveries)
 
 
 def invoke_host(root, arguments, *, runner=subprocess.run):
@@ -174,6 +184,8 @@ def main(argv=None):
     p.add_argument("--target-session")
     p.add_argument("--run-id", default=None)
     p.add_argument("--seconds", type=int, default=600)
+    p.add_argument("--max-feed-recoveries", type=int, default=0, choices=range(4),
+                   help="Explicit per-run flat feed recovery cap; default 0 disables recovery")
     p.add_argument("--prepare-only", action="store_true")
     p.add_argument("--wait", action="store_true", help="Wait for the bounded run and print its saved decision report")
     p.add_argument("--observed-swing-history", action="store_true")
@@ -181,6 +193,8 @@ def main(argv=None):
     for flag in ("swing-capture-directory", "scope-binding", "earnings-probe"):
         p.add_argument("--" + flag)
     args = p.parse_args(argv)
+    if args.max_feed_recoveries and args.prepare_only:
+        p.error("Feed recovery is a run-only option")
     if args.wait and args.prepare_only:
         p.error("--wait is only for a session run")
     if args.swing_expiration and (not args.capture_contracts or not args.observed_swing_history or args.swing_capture_directory):
@@ -228,7 +242,8 @@ def main(argv=None):
                         prepare_only=args.prepare_only, prepared_session=args.prepared_session,
                         observed_swing_history=args.observed_swing_history,
                         swing_capture_directory=args.swing_capture_directory,
-                        scope_binding=args.scope_binding, earnings_probe=args.earnings_probe)
+                        scope_binding=args.scope_binding, earnings_probe=args.earnings_probe,
+                        max_feed_recoveries=args.max_feed_recoveries)
         print(json.dumps(result, sort_keys=True), flush=True)
         started = result.get("status") == "SESSION_STARTED"
         if args.wait:

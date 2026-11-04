@@ -232,3 +232,30 @@ def test_eight_candidates_and_two_held_options_have_complete_bounded_delivery(tm
         assert {q.instrument.instrument_id for q in (*packet.frame.quotes, *packet.frame.held_quotes)} == {i.instrument_id for i in catalog}
     finally:
         feed.close()
+
+
+def test_failed_connection_keeps_original_cause_and_never_publishes_missing_schema(tmp_path, schemas):
+    from app.options.read_capture import CaptureFailure, FailureCause
+    import json
+    p = policy()
+    feed = ContinuousFeed(tmp_path / 'feed', p, schemas, create=True)
+    async def failure(config, *, schemas, plan):
+        return CaptureResult(request_id='d'*32, operation='CAPTURE', policy_sha256=policy_digest(config),
+            started_at=AT+timedelta(seconds=10), collected_at=AT+timedelta(seconds=11), elapsed_seconds=1,
+            status='FAILED', error_class='ExceptionGroup', plan=plan,
+            failure=CaptureFailure(stage='CONNECT', causes=(FailureCause(error_class='ExceptionGroup'),
+                FailureCause(error_class='HTTPStatusError', http_status=401, oauth_error='invalid_grant'))))
+    try:
+        assert asyncio.run(feed.tick(now=AT, reader=reader(AT, [])))['status'] == 'DELIVERED'
+        before = (tmp_path / 'feed/feed.json').read_bytes()
+        result = asyncio.run(feed.tick(now=AT+timedelta(seconds=10), reader=failure))
+        assert result['status'] == 'FAILED' and result['failure']['stage'] == 'CAPTURE'
+        assert result['failure']['capture_failure']['stage'] == 'CONNECT'
+        assert result['failure']['capture_failure']['causes'][1]['http_status'] == 401
+        assert (tmp_path / 'feed/feed.json').read_bytes() == before
+        raw = json.loads(feed.db.execute('SELECT raw_json FROM attempts WHERE sequence=2').fetchone()[0])
+        assert raw['schemas'] is None and raw['observations'] == []
+        at = AT+timedelta(seconds=20)
+        assert asyncio.run(feed.tick(now=at, reader=reader(at, [], source_shift=20)))['status'] == 'DELIVERED'
+    finally:
+        feed.close()

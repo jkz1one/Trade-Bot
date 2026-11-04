@@ -1,5 +1,63 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.182. Explicit bounded flat feed recovery and original capture diagnostics, 2026-11-04.
+
+The expanded report from host checkout b51d64c resolves the entry-health cause
+for paper-1103-174343-7ae3b7. Four decisions at 12:50–13:05 New York reported
+NO_ADMITTED_CONTRACT. A capture timeout at 13:10 triggered the persistent native
+OPTION_RUNTIME_FEED_UNAVAILABLE halt; eleven later decisions were health-blocked
+even after delivery returned. There were zero model attempts, zero unsettled
+model calls and zero fills. Two more recorded capture timeouts occurred around
+14:00 and 14:05. The ten latest NORMALIZE failures point to the original-schema
+check at continuous_feed.py:167 in image 0a4e4e4, not a price/bar parser. Missing
+or changed capture schema evidence is established; the original connection,
+discovery or schema-change cause still requires retained raw failure metadata.
+Do not infer expired authorization from this evidence alone.
+
+Connected launch now accepts an explicit --max-feed-recoveries allowance of 0–3,
+default zero. A nonzero allowance is part of the exact host review and requires
+the existing reviewed flat startup. Only a newly observed native feed halt in
+the same runtime generation and New York session can recover. It requires two
+advancing accepted packets, fresh advancing original SPY/QQQ source clocks,
+fresh heartbeat/account reconciliation, no pending orders, no held positions
+and no unknown costs. The native revision/recovery gates run in the same write
+transaction. Successful recoveries are journaled as OPTION_REVIEWED_RESUME with
+reason CONNECTED_FLAT_FEED_RECOVERY and count against the run's cap. Other halts,
+exhausted allowances, session changes and restart remain halted. Stop still
+drains the runtime/collector and retains OPTION_RUNTIME_STOPPED. This does not
+change enrollment, limits, balances, quote validity or loss locks.
+Any other halt or applied operator HALT/REVOKE_KEY during the run permanently
+vetoes its recovery allowance, even if a later feed fault overwrites the current
+halt reason. The retained journal, not just the displayed reason, is checked.
+
+The concurrent native run-loop fixture found an observation timing issue during
+development: a previously valid first sample must remain historical evidence
+while awaiting the next poll, without becoming fresh again or authorizing entry.
+Repeated observations cannot satisfy the second sample. A new invalid packet,
+feed/heartbeat failure or failed recovery gate clears that evidence. The fixture
+keeps native heartbeats advancing between polls and uses unchanged deadlines.
+
+Collector connection/discovery/schema-binding failures now remain at CAPTURE
+with their original bounded worker cause, instead of being mislabeled NORMALIZE.
+No missing schema is filled in from enrollment. The host report also projects
+those original causes from older raw captures, including safe stage, exception
+class, HTTP status and allowlisted OAuth error codes; it excludes messages,
+tokens, URLs and provider payloads. Its recovery count reads the native journal.
+The synthetic HTTP-401/invalid_grant case is a regression fixture, not a claim
+about the host's actual cause.
+
+See [current operation and remaining work](PAPER_NEXT_SESSION.md) and
+[offline verification](PAPER_FEED_RECOVERY_PROOF.json): 266 distinct installed
+cases pass; all 316 application files match source, wheel and installation, and
+60 pinned runtime dependencies are verified. Scoped correctness lint and
+whitespace checks pass. Runtime recovery needs a
+new image before use; inspecting the old run needs only the updated host script.
+No new market capture or market-hours run is requested for this diagnosis.
+Connected entry/fill/exit acceptance, Scope evidence/timing and valid original
+Swing history remain open. November 3 preparation cannot run on November 4.
+
+Previous version notes (historical):
+
 Version 1.181. Preserve saved PAPER failure evidence, 2026-11-04.
 
 The operator deployed 0a4e4e4 in the detached dashboard worktree and built image
