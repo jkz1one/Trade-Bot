@@ -6,39 +6,66 @@ $1/day and $5 total AI spending. Balances, positions, journals, halts and enroll
 persist. Robinhood supplies read-only data; execution is local simulation. LIVE
 remains disabled. No separate broker paper account is used.
 
-## Current next step: inspect the completed November 3 run
+## Current next step: deploy once and check read authorization
 
-The host built release `0a4e4e4`, image
-`sha256:29df9b86c2874a930166aaffef4118e74d37eec45b3c4f9728b6fa4615102cdb`.
-The ten-minute run completed two DEGEN scan cycles without collector/runtime
-failures or fills. The later two-hour run `paper-1103-174343-7ae3b7` ended on
-schedule at 14:45 New York, with zero fills, 266 delivered captures and 127 failed
-captures. The latest five decisions were `ENTRY_HEALTH_BLOCKED`; feed delivery
-stopped around 14:11 and stayed stale for the final 34 minutes. Exit code zero
-establishes an orderly process stop, not successful trading or healthy collection.
+The saved report from checkout `1922b0e` now identifies the latest ten failed
+captures (587–596): `CONNECT` → `ReadAuthorizationRequired`, with no schemas.
+The headless worker was asked to enter interactive authorization. This does not
+prove a revoked/expired refresh token. No market read was reached in those attempts.
 
-The report update exposes saved collector exception classes/application locations,
-early decisions, whole-run reason counts, halt history and unsettled model-call
-counts. Read this evidence before another market run. **No image build, provider
-capture or new session is needed for this step.** Update the host scripts using
-the release SHA supplied with the update:
+An offline reproduction using the pinned MCP 2.3.0 SDK found a restart defect:
+a saved access token rejected with 401 goes through issuer discovery and then
+straight to login, without attempting its saved refresh grant. The application
+now attempts that grant once, after the SDK validates the resource/issuer and
+credential binding. Rejected grants still require login; changed issuers and
+403 scope escalation retain native authorization checks. Token rotation and
+omitted refresh-token/scope handling use the SDK's existing private persistence.
+This fixes a reproducible implementation gap; only a host check can establish
+whether the currently saved grant is still usable.
+
+With connected workers stopped, use the tested release SHA supplied with this
+update. This builds the accumulated runtime fixes once, then performs one bounded
+headless **schema-only** discovery. No market bars, quote capture, model call,
+trader start, account mutation or current-day preparation is involved:
 
 ```bash
 cd /opt/trade-bot-dashboard &&
 git fetch origin slice2/robinhood-read-shadow &&
 git merge-base --is-ancestor HEAD TESTED_RELEASE_SHA &&
 git switch --detach TESTED_RELEASE_SHA &&
-python3 scripts/paper-session-report.py --run-id paper-1103-174343-7ae3b7
+python3 scripts/connected-session-host.py build &&
+python3 scripts/connected-session-host.py check-read-auth
 ```
 
-The expanded b51d64c host report establishes four `NO_ADMITTED_CONTRACT` decisions,
-then a read timeout at 13:10 New York that latched `OPTION_RUNTIME_FEED_UNAVAILABLE`.
-Eleven later decisions stayed health-blocked. Model attempts and unsettled costs
-are both zero. Later failures point to missing/changed original schema evidence,
-before price/bar normalization. The newest report projects the saved upstream
-`source_capture` stage/class/status from old raw receipts. Read that remaining
-cause before rebuilding or running again; it has not been established as an
-authentication failure. The read-only command above remains the immediate step.
+- `READ_AUTH_VERIFIED`: the saved/refreshed authorization completed headless
+  discovery. No manual login is needed. This is not trading readiness.
+- `READ_AUTHORIZATION_REQUIRED`: run the following explicit operator login once.
+  It backs up the current OAuth file privately under the native read lease,
+  performs interactive discovery, then checks headless discovery automatically.
+- `READ_AUTH_CHECK_FAILED`: inspect the new private discovery receipt; do not
+  assume a transport or schema failure is fixed by login.
+
+```bash
+python3 scripts/connected-session-host.py login-read-auth
+```
+
+Complete the printed Robinhood login URL in your browser. If the localhost
+callback page does not load, paste its full address into the waiting **server
+terminal**, never chat. Keep the URLs, credential backup, private output directory
+and login log private. Share only the final JSON status. The login has a ten-minute
+human-input limit; the headless check retains its 30-second limit. Both helpers
+refuse an active connected session, mount no owner/model keys and leave the
+existing discovery/enrollment unchanged. They do not schedule or start trading.
+
+The November 3 two-hour run `paper-1103-174343-7ae3b7` ended on schedule at 14:45
+New York with zero fills, 266 delivered captures and 127 failed captures. A 13:10
+read timeout latched the native feed halt; eleven later decisions were health
+blocked. The separate bounded flat-feed recovery fix is included in this build,
+but remains explicitly opt-in. Model attempts and unsettled costs were zero.
+The host's last built image was `0a4e4e4` /
+`sha256:29df9b86c2874a930166aaffef4118e74d37eec45b3c4f9728b6fa4615102cdb`.
+The deployed image hash above is historical; use the new build's returned hash.
+See [authorization regression proof](PAPER_AUTH_REFRESH_PROOF.json).
 
 ## Historical November 3 preparation
 

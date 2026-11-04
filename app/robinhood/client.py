@@ -138,7 +138,7 @@ class RobinhoodMcpConnection:
         try:
             import httpx2
             from mcp import Client
-            from mcp.client.auth import OAuthClientProvider
+            from app.robinhood.oauth import RestartRefreshOAuthClientProvider
             from mcp.client.streamable_http import streamable_http_client
             from mcp.shared.auth import OAuthClientMetadata
             from pydantic import AnyUrl
@@ -148,7 +148,7 @@ class RobinhoodMcpConnection:
                 "Install the project dependencies before running schema discovery."
             ) from exc
 
-        oauth = OAuthClientProvider(
+        oauth = RestartRefreshOAuthClientProvider(
             server_url=self.url,
             client_metadata=OAuthClientMetadata(
                 client_name="Trade-Bot",

@@ -343,6 +343,9 @@ def operation(result, state):
                 for name, prefixes in (('SCOPE', ('SCOPE_', 'SPX_')), ('SWING', ('SWING_',)))}
     reasons = codes([decision.get('reason'), decision.get('issues'), decision.get('blocker'),
                      decision.get('rejections'), decision.get('contract_exclusions')])
+    last_failure = next(iter(reversed(result.get('collector_failures', []))), {})
+    auth_blocked = (authorization_required(last_failure)
+                    and last_failure.get('sequence', 0) > (result.get('latest_packet') or {}).get('sequence', 0))
     if state['Status'] == 'exited':
         status = 'STOPPED' if state.get('ExitCode') == 0 else 'FAILED'
         why = ['BOUNDED_SESSION_ENDED' if status == 'STOPPED' else 'CONTAINER_EXIT_NONZERO']
@@ -352,6 +355,8 @@ def operation(result, state):
         status, why = 'MISSING_INPUTS', ['RUNTIME_HEARTBEAT_' + clocks.get('heartbeat', 'UNKNOWN')]
     elif runtime.get('status') in {'STOPPED', 'STOPPING'}:
         status, why = 'STOPPED', codes(runtime.get('reason'))
+    elif auth_blocked:
+        status, why = 'MISSING_INPUTS', ['READ_AUTHORIZATION_REQUIRED']
     elif control.get('halted'):
         status, why = 'MISSING_INPUTS', codes(control.get('halt_reason')) or ['ENTRIES_HALTED']
     elif clocks.get('feed') != 'FRESH':
@@ -383,6 +388,11 @@ def operation(result, state):
             'last_decision_at': decision.get('started_at'),
             'last_decision_reasons': reasons, 'container_running': state['Status'] == 'running',
             'trading_ready': False}
+
+
+def authorization_required(failure):
+    return any(c.get('error_class') == 'ReadAuthorizationRequired'
+               for c in failure.get('source_capture', {}).get('causes', []))
 
 
 def report(directory, started, finished):
@@ -491,6 +501,8 @@ def report(directory, started, finished):
         concerns.append('FEED_' + result['runtime_evidence']['feed'])
     if any(row['status'] == 'FAILED' and row['attempts'] for row in result['collection']):
         concerns.append('COLLECTOR_FAILURES_RECORDED')
+    if any(authorization_required(f) for f in result.get('collector_failures', [])):
+        concerns.append('READ_AUTHORIZATION_REQUIRED_RECORDED')
     if result['runtime_failures']:
         concerns.append('RUNTIME_READ_FAILURES_RECORDED')
     if any('ENTRY_HEALTH_BLOCKED' in row['reason'] for row in result['decision_reason_counts']):

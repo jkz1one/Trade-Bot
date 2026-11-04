@@ -26,6 +26,86 @@ PROFILE_HOME = Path("/etc/trade-bot-connected")
 MODEL_SOURCE = Path("/etc/trade-bot/openai_api_key")
 MODEL_SOURCE_UID = 10001
 
+# Explicit operator-only login. The enclosing host lock excludes connected
+# launches; the native OAuth lease also excludes other credential readers.
+READ_LOGIN = r'''
+import contextlib, os, runpy, signal
+from pathlib import Path
+from app.execution.market_reads import market_read_lease, private_oauth
+os.umask(0o077)
+signal.alarm(600)  # Container-side bound survives loss of the host terminal.
+with market_read_lease('/auth/robinhood-oauth.json'):
+    private_oauth('/auth/robinhood-oauth.json')
+    with Path('/out/oauth-before.json').open('xb') as backup:
+        backup.write(Path('/auth/robinhood-oauth.json').read_bytes())
+    with Path('/out/login-stderr.log').open('x') as errors, contextlib.redirect_stderr(errors):
+        runpy.run_module('app.robinhood.cli', run_name='__main__')
+'''
+
+
+def read_auth(image_id, *, login=False):
+    """Schema discovery only, independent of market dates and enrolled state."""
+    if login and not sys.stdin.isatty():
+        raise ValueError("Interactive server terminal required for read login")
+    no_active_session()
+    private(AUTH, True)
+    for name in ("robinhood-oauth.json", "discovery.json"):
+        private(AUTH / name)
+    destination = Path(tempfile.mkdtemp(prefix="trade-bot-read-auth-", dir="/root"))
+    name = destination.name
+    command = ["run", "--rm", "--name", name, "--network", "bridge", *isolation(),
+               *mount(AUTH, "/auth", False),
+               *mount(AUTH / "discovery.json", "/auth/discovery.json"),
+               *mount(destination, "/out", False)]
+    if login:
+        command += ["-it", "-e", "TRADER_ROBINHOOD_INTERACTIVE_AUTH=true",
+                    "-e", "TRADER_ROBINHOOD_OAUTH_STORAGE=/auth/robinhood-oauth.json",
+                    image_id, "python", "-I", "-W", "error", "-c", READ_LOGIN,
+                    "discover", "--output", "/out/login-schemas.json",
+                    "--required-output", "/out/login-required-schemas.json"]
+        print("Complete Robinhood login in your browser; paste its callback URL only into this terminal.",
+              flush=True)
+        try:
+            with (destination / "docker-stderr.log").open("x") as errors:
+                os.chmod(errors.name, 0o600)
+                result = h.subprocess.run(["docker", *command], stderr=errors, timeout=600)
+        finally:
+            # Also stop a still-running login after interrupt/timeout.
+            h.docker("stop", "--time", "5", name, timeout=15, allow_failure=True)
+        if result.returncode:
+            return {"status": "READ_LOGIN_FAILED", "private_directory": str(destination),
+                    "live_enabled": False, "trading_ready": False}
+        return read_auth(image_id)  # Independent bounded headless discovery after login.
+    command += [image_id, "python", "-I", "-W", "error", "-m", "app.options.read_cli",
+                "discover", "--oauth-file", "/auth/robinhood-oauth.json",
+                "--output", "/out/headless-discovery.json", "--timeout-seconds", "30"]
+    try:
+        result = h.docker(*command, timeout=45, allow_failure=True)
+    finally:
+        h.docker("stop", "--time", "5", name, timeout=15, allow_failure=True)
+    try:
+        summary = json.loads(result.stdout)
+    except (ValueError, TypeError):
+        summary = {}
+    if not isinstance(summary, dict):
+        summary = {}
+    failure = summary.get("failure")
+    causes = failure.get("causes", []) if isinstance(failure, dict) else []
+    causes = causes[:16] if isinstance(causes, list) else []
+    requires_login = any(isinstance(c, dict) and c.get("error_class") == "ReadAuthorizationRequired"
+                         for c in causes)
+    schema = summary.get("schema_sha256")
+    verified = (result.returncode == 0 and summary.get("status") == "COMPLETE"
+                and summary.get("completed_reads") == 0 and isinstance(schema, str)
+                and re.fullmatch("[a-f0-9]{64}", schema))
+    status = ("READ_AUTH_VERIFIED" if verified else
+              "READ_AUTHORIZATION_REQUIRED" if requires_login else "READ_AUTH_CHECK_FAILED")
+    return {"status": status, "schema_sha256": schema if verified else None,
+            "private_directory": str(destination), "market_reads": 0, "model_calls": 0,
+            "execution_authority": False, "live_enabled": False, "trading_ready": False,
+            "next_command": "python3 scripts/connected-session-host.py login-read-auth"
+            if requires_login else None}
+
 
 def prepare_model_key():
     """Explicit host-only copy; leave the original SHADOW key and permissions intact."""
@@ -521,6 +601,8 @@ def run(args, release):
             "trading_ready": False,
         }
     image_id = image(release)
+    if args.operation in ("check-read-auth", "login-read-auth"):
+        return read_auth(image_id, login=args.operation == "login-read-auth")
     if args.operation == "capture-session":
         from datetime import date
         target = date.fromisoformat(args.target_session).isoformat()
@@ -716,6 +798,8 @@ def main(argv=None):
         "operation",
         choices=(
             "build",
+            "check-read-auth",
+            "login-read-auth",
             "review-profile",
             "prepare-profile",
             "prepare-model-key",
@@ -789,7 +873,9 @@ def main(argv=None):
         print(json.dumps(result, sort_keys=True))
         return 2 if ((a.operation == "preopen-inputs" and result.get("status") != "PREOPEN_INPUTS_PREPARED")
                      or (a.operation == "preopen-report" and result.get("status") != "SAVED_PREOPEN_REPLAY")
-                     or result.get("status") == "CAPTURE_FAILED") else 0
+                     or result.get("status") == "CAPTURE_FAILED"
+                     or (a.operation in ("check-read-auth", "login-read-auth")
+                         and result.get("status") != "READ_AUTH_VERIFIED")) else 0
     except (
         OSError,
         ValueError,

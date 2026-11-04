@@ -285,7 +285,8 @@ def test_failure_evidence_retains_native_location_without_private_fields():
     assert 'error_class' not in module.failure_evidence('{"error_class":[]}')
 
 
-def test_two_hour_failure_report_preserves_start_and_end_without_writes(tmp_path):
+@pytest.mark.parametrize('auth_failure', [False, True])
+def test_two_hour_failure_report_preserves_start_and_end_without_writes(tmp_path, auth_failure):
     owner, collector = tmp_path / 'owner/options.db', tmp_path / 'collector/collector.db'
     owner.parent.mkdir()
     collector.parent.mkdir()
@@ -326,6 +327,11 @@ def test_two_hour_failure_report_preserves_start_and_end_without_writes(tmp_path
                 'message': 'PRIVATE_MESSAGE'})))
         db.execute("INSERT INTO attempts VALUES(99,'2026-11-04T19:00:00+00:00','FAILED',NULL)")
         db.execute("INSERT INTO attempt_failures VALUES(99,'{}')")
+        if auth_failure:
+            db.execute('ALTER TABLE attempts ADD COLUMN raw_json')
+            db.execute('UPDATE attempts SET raw_json=? WHERE sequence=21', (json.dumps({
+                'status': 'FAILED', 'schemas': None, 'private': 'PRIVATE_TOKEN',
+                'failure': {'stage': 'CONNECT', 'causes': [{'error_class': 'ReadAuthorizationRequired'}]}}),))
     before = owner.read_bytes(), collector.read_bytes()
     result = module.report(tmp_path, '2026-11-03T17:45:00Z', '2026-11-03T19:45:24Z')
     assert [r['cycle_key'] for r in result['first_decisions']] == ['0', '1', '2']
@@ -338,7 +344,8 @@ def test_two_hour_failure_report_preserves_start_and_end_without_writes(tmp_path
     assert [r['sequence'] for r in result['collector_failures']] == [0, 1, 2, *range(12, 22)]
     assert result['collector_failures'][0]['codes'] == ['CAPTURE']
     assert result['collector_failures'][-1]['frames'][0]['line'] == 775
-    assert result['run_issues'] == ['COLLECTOR_FAILURES_RECORDED', 'ENTRY_HEALTH_BLOCKED']
+    assert result['run_issues'] == ['COLLECTOR_FAILURES_RECORDED',
+        *(['READ_AUTHORIZATION_REQUIRED_RECORDED'] if auth_failure else []), 'ENTRY_HEALTH_BLOCKED']
     assert module.operation(result, {'Status': 'exited', 'ExitCode': 0})['state'] == 'STOPPED'
     assert 'PRIVATE' not in json.dumps(result) and 'FOREIGN_DAY' not in json.dumps(result)
     assert before == (owner.read_bytes(), collector.read_bytes())
@@ -368,3 +375,15 @@ def test_old_failed_capture_reveals_only_bounded_worker_cause():
         db.execute("UPDATE attempts SET raw_json='{broken'")
         assert not module.source_capture(db, 1)['evidence_available']
         assert not module.source_capture(db, 2)['evidence_available']
+
+
+def test_live_auth_block_is_specific_but_later_delivery_clears_current_diagnosis():
+    result = {'runtime_evidence': {'heartbeat': 'FRESH', 'feed': 'STALE'},
+              'current_runtime': [{'status': 'BLOCKED'}],
+              'collector_failures': [{'sequence': 596, 'source_capture': {
+                  'causes': [{'error_class': 'ReadAuthorizationRequired'}]}}],
+              'latest_packet': {'sequence': 472}}
+    assert module.operation(result, {'Status': 'running'})['reasons'] == ['READ_AUTHORIZATION_REQUIRED']
+    result['latest_packet']['sequence'] = 597
+    assert module.operation(result, {'Status': 'running'})['reasons'] == ['RUNTIME_FEED_STALE']
+    assert module.operation(result, {'Status': 'exited', 'ExitCode': 0})['state'] == 'STOPPED'

@@ -1,9 +1,13 @@
 # Read authorization blocker
 
-**Resolved for the observed capture:** the operator reported login exit 0, then
+**Historical October 25 recovery:** the operator reported login exit 0, then
 supplied successful headless schema discovery and four completed market reads.
 [Current sample acceptance and next step](ROBINHOOD_SAMPLE_ACCEPTANCE.md). Keep
 these prior failures; do not rerun the login/diagnostic commands below automatically.
+
+For the separate November 3 CONNECT / ReadAuthorizationRequired failures, use the
+[current bounded authorization workflow](PAPER_NEXT_SESSION.md). The older image
+and auth directory commands below are retained history, not current deployment instructions.
 
 ## Schema-only diagnostic result
 

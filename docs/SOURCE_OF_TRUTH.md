@@ -1,5 +1,45 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.183. Restart-safe read authorization and bounded host verification, 2026-11-04.
+
+The saved host report from checkout 1922b0e identifies CONNECT /
+ReadAuthorizationRequired in failed captures 587–596 of the November 3 run.
+No schemas were returned. This proves that the headless connection requested
+interactive authorization; it does not prove why the grant was rejected or
+whether its refresh token remains usable. No new provider call was needed to
+read this evidence. The earlier connection-cause uncertainty is now resolved.
+
+A closed HTTP fixture reproduces an application integration gap with pinned
+MCP 2.3.0: a restarted client loads its saved access token without absolute expiry
+and, after a resource 401, requests login without trying the saved refresh grant.
+The new adapter preserves the SDK's validated discovery and issuer binding,
+attempts that existing grant once per connection, and uses native token response
+validation/rotation/persistence. Changed issuers, invalid metadata, scope step-up,
+missing/rejected grants, transport failure and cancellation remain fail-closed.
+No broker tool, scope grant, dependency upgrade or quote/history gate is added.
+The fix is an offline reproduction, not proof that the host grant can recover.
+
+The host now provides check-read-auth: one bounded headless schema discovery,
+with no owner/model mounts or market reads. Explicit login-read-auth privately
+backs up the credential under the read lease, runs interactive discovery and
+then verifies the headless path. Existing enrollment and discovery stay unchanged.
+The helpers reject active connected sessions; login is bounded to ten minutes
+inside the container and headless discovery retains its 30-second limit.
+Reports identify current READ_AUTHORIZATION_REQUIRED separately from historical
+READ_AUTHORIZATION_REQUIRED_RECORDED, retaining STOPPED on a normal process exit.
+
+Build the accumulated application updates once and run the authorization check;
+only log in if it requests authorization. No new market-hours run is required
+for that check. See [the exact sequence](PAPER_NEXT_SESSION.md) and
+[installed verification](PAPER_AUTH_REFRESH_PROOF.json): 363 distinct cases pass,
+all 317 application files match the wheel/installation, and 60 runtime pins are
+verified. Actual connected fills
+and entry-to-exit acceptance remain absent. Scope original history/exact bindings
+and continuous timing remain open; Swing interpolated daily bars remain invalid.
+The historical November 3 session receipt cannot start a November 4 run.
+
+Previous version notes (historical):
+
 Version 1.182. Explicit bounded flat feed recovery and original capture diagnostics, 2026-11-04.
 
 The expanded report from host checkout b51d64c resolves the entry-health cause

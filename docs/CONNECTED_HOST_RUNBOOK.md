@@ -5,9 +5,10 @@ configuration, enrolls one owner/collector, publishes a snapshot, consumes captu
 feed packets, serves authenticated current dashboard data, shuts down and restarts
 the same account. Existing two-held-play restart tests run alongside it.
 
-This is not a deployment receipt. The server is still on frozen a653cc7, and no
-connected worker has been started there. Actual Docker, UID/GID 10001, login,
-latency and current-feed acceptance must run on the host.
+This section records the initial host workflow. Connected workers have since run;
+use [current deployment, authorization and run status](PAPER_NEXT_SESSION.md) for
+the latest verified state. A successful bounded run has not yet produced a
+connected simulated fill or complete entry-to-exit lifecycle.
 
 ## Required inputs, with no hidden policy defaults
 
