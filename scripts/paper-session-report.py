@@ -182,6 +182,74 @@ def runtime_failures(db, start, end):
     return failures
 
 
+def failure_evidence(raw):
+    """Retain safe native failure locations, never exception messages or locals."""
+    try:
+        value = json.loads(raw) if raw else {}
+    except json.JSONDecodeError:
+        return {'codes': [], 'evidence_available': False, 'evidence_issue': 'INVALID_JSON'}
+    if not isinstance(value, dict):
+        return {'codes': [], 'evidence_available': False}
+    result = {'codes': codes(value.get('stage')), 'evidence_available': raw is not None}
+    error = value.get('error_class')
+    if isinstance(error, str) and error in {
+        'ValueError', 'TypeError', 'KeyError', 'RuntimeError', 'TimeoutError',
+        'OSError', 'PermissionError', 'FileNotFoundError', 'MemoryError',
+        'FixtureProcessTimeout', 'FixtureProcessFailed', 'FixtureProcessProtocolError',
+        'OperationalError', 'DatabaseError', 'IntegrityError', 'ProgrammingError',
+        'CancelledError', 'ExecutionBlocked', 'OTHER_ERROR',
+    }:
+        result['error_class'] = error
+    result['frames'] = []
+    frames = value.get('frames')
+    for frame in frames[-8:] if isinstance(frames, list) else []:
+        if not isinstance(frame, dict):
+            continue
+        path, line = frame.get('file'), frame.get('line')
+        if (isinstance(path, str) and len(path) <= 240
+                and re.fullmatch(r'app/(?:[A-Za-z0-9_]+/)*[A-Za-z0-9_]+\.py', path)
+                and type(line) is int and 0 < line <= 1000000):
+            result['frames'].append({'file': path, 'line': line})
+    return result
+
+
+def owner_diagnostics(db, start, end):
+    result = {'first_decisions': [], 'decision_reason_counts': [], 'halt_history': []}
+    for row in db.execute(
+        "SELECT cycle_key,started_at,status FROM execution_option_opportunities "
+        "WHERE started_at>=? AND started_at<=? ORDER BY started_at,cycle_key LIMIT 3", (start, end)
+    ):
+        result['first_decisions'].append({'cycle_key': row['cycle_key'], 'started_at': row['started_at'],
+                                         'stored_status': row['status'],
+                                         **decision_evidence(db, row['cycle_key'])})
+    for row in db.execute(
+        "SELECT CASE WHEN length(result_json)<=? AND json_valid(result_json) THEN "
+        "CASE WHEN json_type(result_json,'$.reason')='text' "
+        "AND length(json_extract(result_json,'$.reason'))<=128 "
+        "THEN json_extract(result_json,'$.reason') END END AS reason,"
+        "COUNT(*) AS decisions,MIN(started_at) AS first_at,MAX(started_at) AS last_at "
+        "FROM execution_option_opportunities WHERE started_at>=? AND started_at<=? "
+        "GROUP BY reason ORDER BY first_at LIMIT 25", (MAX_DECISION_BYTES, start, end)
+    ):
+        result['decision_reason_counts'].append({**dict(row), 'reason': codes(row['reason'])})
+    if 'payload' in {r[1] for r in db.execute('PRAGMA table_info(execution_events)')}:
+        for row in db.execute(
+            "SELECT occurred_at,CASE WHEN length(payload)<=65536 AND json_valid(payload) "
+            "THEN json_extract(payload,'$.reason') END AS reason FROM execution_events "
+            "WHERE kind='MANUAL_HALT' AND occurred_at>=? AND occurred_at<=? "
+            "ORDER BY occurred_at LIMIT 20", (start, end)
+        ):
+            result['halt_history'].append({'occurred_at': row['occurred_at'], 'reason': codes(row['reason'])})
+    if db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_model_calls'").fetchone():
+        result['model_calls'] = {}
+        for name, where, args in (('run', 'WHERE started_at>=? AND started_at<=?', (start, end)),
+                                  ('account_total', '', ())):
+            row = db.execute("SELECT COUNT(*) AS attempts,COALESCE(SUM(cost IS NULL),0) AS unsettled "
+                             "FROM execution_model_calls " + where, args).fetchone()
+            result['model_calls'][name] = dict(row)
+    return result
+
+
 def runtime_evidence(db, now):
     """Current stored clocks and their enrolled bounds; never refresh a heartbeat."""
     columns = {r[1] for r in db.execute('PRAGMA table_info(execution_option_runtime)')}
@@ -242,6 +310,8 @@ def operation(result, state):
         status, why = 'MISSING_INPUTS', ['ACCEPTED_INPUT_NOT_RECORDED']
     elif decision.get('entry_timely') is False:
         status, why = 'MISSING_INPUTS', ['ENTRY_RESPONSE_EXPIRED']
+    elif 'ENTRY_HEALTH_BLOCKED' in decision.get('reason', []):
+        status, why = 'MISSING_INPUTS', ['ENTRY_HEALTH_BLOCKED']
     elif 'SCOPE_WATCH_NEW_SOURCE_OBSERVATIONS_REQUIRED' in decision.get('scope_admission_reasons', []):
         status, why = 'MISSING_INPUTS', decision['scope_admission_reasons']
     elif decision.get('evidence_available') and decision.get('status') == ['HOLD']:
@@ -313,6 +383,7 @@ def report(directory, started, finished):
             "SELECT halted,halt_reason FROM execution_control WHERE id=1")]
         result["account_total_fills"], result["fill_count_source"] = fill_count(db)
         result["runtime_failures"] = runtime_failures(db, start, end)
+        result.update(owner_diagnostics(db, start, end))
     finally:
         db.close()
     db = connection(directory / "collector/collector.db")
@@ -344,13 +415,32 @@ def report(directory, started, finished):
                 "AND json_valid(packet_json) GROUP BY kind,issues ORDER BY first_sequence LIMIT 25", (start, end))]
         if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='attempt_failures'").fetchone():
             result['collector_failures'] = [{
-                'sequence': row['sequence'], 'codes': codes(json.loads(row['details'] or '{}')),
+                'sequence': row['sequence'], 'started_at': row['started_at'],
+                **failure_evidence(row['details']),
             } for row in db.execute(
-                'SELECT f.sequence,CASE WHEN length(f.details_json)<=65536 THEN f.details_json END AS details '
+                'SELECT f.sequence,a.started_at,CASE WHEN length(f.details_json)<=65536 THEN f.details_json END AS details '
                 'FROM attempt_failures f JOIN attempts a USING(sequence) '
-                'WHERE a.started_at>=? AND a.started_at<=? ORDER BY f.sequence DESC LIMIT 10', (start, end))]
+                'WHERE a.started_at>=? AND a.started_at<=? AND f.sequence IN ('
+                'SELECT f.sequence FROM attempt_failures f JOIN attempts a USING(sequence) '
+                'WHERE a.started_at>=? AND a.started_at<=? ORDER BY f.sequence ASC LIMIT 3) '
+                'UNION SELECT f.sequence,a.started_at,CASE WHEN length(f.details_json)<=65536 '
+                'THEN f.details_json END FROM attempt_failures f JOIN attempts a USING(sequence) '
+                'WHERE a.started_at>=? AND a.started_at<=? AND f.sequence IN ('
+                'SELECT f.sequence FROM attempt_failures f JOIN attempts a USING(sequence) '
+                'WHERE a.started_at>=? AND a.started_at<=? ORDER BY f.sequence DESC LIMIT 10) '
+                'ORDER BY sequence', (start, end, start, end, start, end, start, end))]
     finally:
         db.close()
+    concerns = []
+    if result.get('runtime_evidence', {}).get('feed') in {'MISSING', 'STALE', 'FUTURE'}:
+        concerns.append('FEED_' + result['runtime_evidence']['feed'])
+    if any(row['status'] == 'FAILED' and row['attempts'] for row in result['collection']):
+        concerns.append('COLLECTOR_FAILURES_RECORDED')
+    if result['runtime_failures']:
+        concerns.append('RUNTIME_READ_FAILURES_RECORDED')
+    if any('ENTRY_HEALTH_BLOCKED' in row['reason'] for row in result['decision_reason_counts']):
+        concerns.append('ENTRY_HEALTH_BLOCKED')
+    result['run_issues'] = concerns
     return result
 
 

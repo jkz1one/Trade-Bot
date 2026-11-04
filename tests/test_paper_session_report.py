@@ -258,3 +258,87 @@ def test_projected_paid_timing_is_boolean_and_preserves_scope_input_reason():
         assert result['entry_timely'] is False
         assert result['scope_admission_reasons'] == ['SCOPE_WATCH_NEW_SOURCE_OBSERVATIONS_REQUIRED']
         assert 'DO_NOT_EXPOSE' not in json.dumps(result)
+
+
+def test_health_block_is_not_reported_as_waiting_for_a_setup():
+    value = live_result()
+    value['decisions'][0].update(reason=['ENTRY_HEALTH_BLOCKED'], scans=[])
+    result = module.operation(value, {'Status': 'running'})
+    assert result['state'] == 'MISSING_INPUTS'
+    assert result['reasons'] == ['ENTRY_HEALTH_BLOCKED']
+
+
+def test_failure_evidence_retains_native_location_without_private_fields():
+    result = module.failure_evidence(json.dumps({
+        'stage': 'NORMALIZE', 'error_class': 'ValueError', 'message': 'SECRET_MESSAGE',
+        'locals': {'token': 'PRIVATE_TOKEN'}, 'frames': [
+            {'file': '/private/secret.py', 'line': 1},
+            {'file': 'app/../secret.py', 'line': 1},
+            {'file': 'app/mixed/continuous_feed.py', 'line': True},
+            {'file': 'app/mixed/continuous_feed.py', 'line': 775, 'source': 'PRIVATE_SOURCE'}]}))
+    assert result == {'codes': ['NORMALIZE'], 'evidence_available': True,
+                      'error_class': 'ValueError',
+                      'frames': [{'file': 'app/mixed/continuous_feed.py', 'line': 775}]}
+    assert module.failure_evidence(None)['evidence_available'] is False
+    assert module.failure_evidence('{broken')['evidence_issue'] == 'INVALID_JSON'
+    assert module.failure_evidence('[]')['evidence_available'] is False
+    assert 'error_class' not in module.failure_evidence('{"error_class":[]}')
+
+
+def test_two_hour_failure_report_preserves_start_and_end_without_writes(tmp_path):
+    owner, collector = tmp_path / 'owner/options.db', tmp_path / 'collector/collector.db'
+    owner.parent.mkdir()
+    collector.parent.mkdir()
+    with sqlite3.connect(owner) as db:
+        db.executescript('''
+        CREATE TABLE execution_option_runtime_slots(slot,status,reason,started_at,completed_at);
+        CREATE TABLE execution_option_opportunities(cycle_key,started_at,status,result_json);
+        CREATE TABLE execution_events(kind,occurred_at,payload);
+        CREATE TABLE execution_option_runtime(id,status,reason,feed_sequence);
+        INSERT INTO execution_option_runtime VALUES(1,'STOPPED','OPTION_RUNTIME_STOPPED',472);
+        CREATE TABLE execution_control(id,halted,halt_reason);
+        INSERT INTO execution_control VALUES(1,1,'OPTION_RUNTIME_STOPPED');
+        CREATE TABLE execution_fills(id);
+        CREATE TABLE execution_model_calls(started_at,cost);
+        ''')
+        for n in range(15):
+            reason = 'NO_ADMITTED_CONTRACT' if n < 2 else 'ENTRY_HEALTH_BLOCKED'
+            at = f'2026-11-03T18:{n:02}:00+00:00'
+            db.execute('INSERT INTO execution_option_opportunities VALUES(?,?,?,?)',
+                       (str(n), at, 'COMPLETE', json.dumps({'status': 'HOLD', 'reason': reason})))
+        db.executemany('INSERT INTO execution_events VALUES(?,?,?)', [
+            ('MANUAL_HALT', '2026-11-03T18:02:00+00:00', json.dumps({'reason': 'OPTION_MODEL_COST_UNKNOWN',
+                                                                   'message': 'PRIVATE_MESSAGE'})),
+            ('MANUAL_HALT', '2026-11-03T19:45:00+00:00', json.dumps({'reason': 'OPTION_RUNTIME_STOPPED'})),
+            ('MANUAL_HALT', '2026-11-04T18:00:00+00:00', json.dumps({'reason': 'FOREIGN_DAY'}))])
+        db.executemany('INSERT INTO execution_model_calls VALUES(?,?)', [
+            ('2026-11-03T18:01:00+00:00', '.001'), ('2026-11-03T18:02:00+00:00', None),
+            ('2026-11-02T18:00:00+00:00', None)])
+    with sqlite3.connect(collector) as db:
+        db.executescript('CREATE TABLE attempts(sequence,started_at,status,packet_json);'
+                         'CREATE TABLE attempt_failures(sequence,details_json);')
+        for n in range(22):
+            at = f'2026-11-03T19:{n:02}:00+00:00'
+            db.execute('INSERT INTO attempts VALUES(?,?,?,NULL)', (n, at, 'FAILED'))
+            db.execute('INSERT INTO attempt_failures VALUES(?,?)', (n, json.dumps({
+                'stage': 'CAPTURE' if n == 0 else 'NORMALIZE', 'error_class': 'ValueError',
+                'frames': [{'file': 'app/mixed/continuous_feed.py', 'line': 775}],
+                'message': 'PRIVATE_MESSAGE'})))
+        db.execute("INSERT INTO attempts VALUES(99,'2026-11-04T19:00:00+00:00','FAILED',NULL)")
+        db.execute("INSERT INTO attempt_failures VALUES(99,'{}')")
+    before = owner.read_bytes(), collector.read_bytes()
+    result = module.report(tmp_path, '2026-11-03T17:45:00Z', '2026-11-03T19:45:24Z')
+    assert [r['cycle_key'] for r in result['first_decisions']] == ['0', '1', '2']
+    assert [r['cycle_key'] for r in result['decisions']] == ['10', '11', '12', '13', '14']
+    assert [r['decisions'] for r in result['decision_reason_counts']] == [2, 13]
+    assert [r['reason'] for r in result['halt_history']] == [
+        ['OPTION_MODEL_COST_UNKNOWN'], ['OPTION_RUNTIME_STOPPED']]
+    assert result['model_calls'] == {'run': {'attempts': 2, 'unsettled': 1},
+                                      'account_total': {'attempts': 3, 'unsettled': 2}}
+    assert [r['sequence'] for r in result['collector_failures']] == [0, 1, 2, *range(12, 22)]
+    assert result['collector_failures'][0]['codes'] == ['CAPTURE']
+    assert result['collector_failures'][-1]['frames'][0]['line'] == 775
+    assert result['run_issues'] == ['COLLECTOR_FAILURES_RECORDED', 'ENTRY_HEALTH_BLOCKED']
+    assert module.operation(result, {'Status': 'exited', 'ExitCode': 0})['state'] == 'STOPPED'
+    assert 'PRIVATE' not in json.dumps(result) and 'FOREIGN_DAY' not in json.dumps(result)
+    assert before == (owner.read_bytes(), collector.read_bytes())

@@ -1,5 +1,45 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.181. Preserve saved PAPER failure evidence, 2026-11-04.
+
+The operator deployed 0a4e4e4 in the detached dashboard worktree and built image
+sha256:29df9b86c2874a930166aaffef4118e74d37eec45b3c4f9728b6fa4615102cdb.
+The November 3 ten-minute run completed with 33 delivered packets, two DEGEN
+scan cycles, no collector/runtime failures and zero fills. DEGEN's six-bar
+minimum is not sufficient for every setup: VWAP_PULLBACK requires 25 completed
+current-session five-minute bars (earliest 11:35 New York on a normal session).
+
+The later two-hour run paper-1103-174343-7ae3b7 ran 12:45–14:45 New York and
+exited zero, but did not establish healthy operation. It recorded 266 delivered
+captures, 127 failed captures, 15 decisions and zero account-total fills. The
+latest five decisions were HOLD / ENTRY_HEALTH_BLOCKED with no scans. Last
+accepted feed sequence 472 arrived at 19:11:29 UTC; the feed clock was 2,038
+seconds old at shutdown. The last seven five-minute slots were skipped for
+OPTION_RUNTIME_FEED_UNAVAILABLE. Recent collector failures showed NORMALIZE;
+the old report discarded their stored exception class and application location.
+Scope and Swing remained unavailable. SSH disconnection did not prevent the
+detached container from running to its bounded stop.
+
+The host-only report now retains the first three and latest ten collector
+failures with bounded native exception classes and application file/line frames.
+It also includes the first three decisions, grouped decision reasons across the
+run, retained halt reasons and model-call/unsettled counts. Exception messages,
+locals, provider payloads and model text are excluded. ENTRY_HEALTH_BLOCKED is an
+input-health blocker, not waiting for a setup. Persistent run_issues keep feed
+and collection problems visible alongside a successful process exit.
+
+Validation: 51 report/launcher tests passed, including a two-hour failure fixture
+that preserves early and late evidence, excludes other dates/private fields and
+verifies both SQLite databases remain byte-identical. Scoped lint and whitespace
+checks passed. No application or image change is required for this report update.
+The underlying normalization failure and exact historical entry-health cause
+remain unproven; inspect retained host evidence before requesting another run.
+No new capture, account reset, spending change or gate relaxation is authorized
+by this diagnostic. November 3 preparation is now historical and cannot launch
+a November 4 session. See [the consolidated next step](PAPER_NEXT_SESSION.md).
+
+Previous version notes (historical):
+
 Version 1.180. Scope delivery and daily PAPER status, 2026-11-03.
 
 The collector-to-native Scope regression reproduced an implementation defect:

@@ -6,13 +6,44 @@ $1/day and $5 total AI spending. Balances, positions, journals, halts and enroll
 persist. Robinhood supplies read-only data; execution is local simulation. LIVE
 remains disabled. No separate broker paper account is used.
 
-## Current November 3 preparation
+## Current next step: inspect the completed November 3 run
+
+The host built release `0a4e4e4`, image
+`sha256:29df9b86c2874a930166aaffef4118e74d37eec45b3c4f9728b6fa4615102cdb`.
+The ten-minute run completed two DEGEN scan cycles without collector/runtime
+failures or fills. The later two-hour run `paper-1103-174343-7ae3b7` ended on
+schedule at 14:45 New York, with zero fills, 266 delivered captures and 127 failed
+captures. The latest five decisions were `ENTRY_HEALTH_BLOCKED`; feed delivery
+stopped around 14:11 and stayed stale for the final 34 minutes. Exit code zero
+establishes an orderly process stop, not successful trading or healthy collection.
+
+The report update exposes saved collector exception classes/application locations,
+early decisions, whole-run reason counts, halt history and unsettled model-call
+counts. Read this evidence before another market run. **No image build, provider
+capture or new session is needed for this step.** Update the host scripts using
+the release SHA supplied with the update:
+
+```bash
+cd /opt/trade-bot-dashboard &&
+git fetch origin slice2/robinhood-read-shadow &&
+git merge-base --is-ancestor HEAD TESTED_RELEASE_SHA &&
+git switch --detach TESTED_RELEASE_SHA &&
+python3 scripts/paper-session-report.py --run-id paper-1103-174343-7ae3b7
+```
+
+The exact underlying normalization failure and historical account-health gate
+are not established by the old report. The owner stores a generic
+`ENTRY_HEALTH_BLOCKED` result; retained halt/model evidence may explain it, but
+cannot reconstruct a missing historical account snapshot. The new report does
+not itself fix collection or unblock entries.
+
+## Historical November 3 preparation
 
 Already enrolled:
 `/etc/trade-bot-connected/sessions/2026-11-03-tuesday-ready`.
 Policy SHA: `8136af394ef61ac8546010d7d69811110f417b7b800a3b7191535e13688c4f51`.
-The last operator-reported owner was revision 1032, generation 8, feed 166,
-STOPPED with `OPTION_RUNTIME_STOPPED` and zero fills. No Tuesday worker was reported.
+The last reported runtime is STOPPED with `OPTION_RUNTIME_STOPPED`, accepted
+feed sequence 472 and zero fills after the two-hour run.
 The connected dashboard is already active; do not switch it again.
 
 Attempts 168–170 establish the original daily-history blocker. Attempt 168 had
@@ -25,13 +56,15 @@ history. DEGEN can run independently while Swing remains blocked.
 
 ## Deploy once, with connected workers stopped
 
-Use the tested release SHA supplied with the release, on a clean working branch:
+For future application changes, use the supplied tested release SHA on a clean
+checkout. `/opt/trade-bot-dashboard` is a detached worktree; the working branch is
+already checked out at `/opt/trade-bot`:
 
 ```bash
 cd /opt/trade-bot-dashboard &&
 git fetch origin slice2/robinhood-read-shadow &&
-git switch slice2/robinhood-read-shadow &&
-git merge --ff-only TESTED_RELEASE_SHA &&
+git merge-base --is-ancestor HEAD TESTED_RELEASE_SHA &&
+git switch --detach TESTED_RELEASE_SHA &&
 python3 scripts/connected-session-host.py build
 ```
 
@@ -40,17 +73,19 @@ a divergent checkout rather than discarding newer work. Do not reset, clean,
 re-enroll, recapture contracts or recreate the account. A build does not start a
 worker or refresh provider data. The new image is used on the next explicit run.
 
-After **10:00 a.m. New York on November 3**, the pending ten-minute check remains:
+For a later day's reviewed preparation, an explicit ten-minute check is:
 
 ```bash
 cd /opt/trade-bot-dashboard &&
 python3 scripts/paper-session-start.py \
-  --prepared-session /etc/trade-bot-connected/sessions/2026-11-03-tuesday-ready \
+  --prepared-session /etc/trade-bot-connected/sessions/REVIEWED_CURRENT_DATE_SESSION \
   --seconds 600 --wait
 ```
 
-DEGEN requires six completed five-minute bars; time alone does not prove that the
-provider delivered them. The launcher refreshes the snapshot, verifies the exact
+Replace the directory placeholder with that day's reviewed receipt. DEGEN requires
+at least six completed five-minute bars; VWAP_PULLBACK requires 25 (earliest
+11:35 New York on a normal session). Time alone does not prove that the provider
+delivered them. The launcher refreshes the snapshot, verifies the exact
 prepared policy, performs bounded reviewed flat recovery and chooses a new run ID.
 It does not bypass held-position, unknown-cost, order or halt checks.
 
@@ -73,7 +108,7 @@ python3 scripts/paper-session-report.py --run-id RETURNED_RUN_ID
 | --- | --- |
 | RUNNING | Fresh native heartbeat/input evidence; first scan pending or active processing. No readiness or fill claim. |
 | WAITING_FOR_SETUP | Fresh accepted input and a completed HOLD decision without a reported input blocker. Specific setup/contract reasons remain visible. |
-| MISSING_INPUTS | Missing/stale/future heartbeat or feed, incomplete history/quotes, or a retained entry halt. Read the reasons and family issues. |
+| MISSING_INPUTS | Missing/stale/future heartbeat or feed, incomplete history/quotes, ENTRY_HEALTH_BLOCKED, or a retained entry halt. Read the reasons and family issues. |
 | STOPPED | Container ended successfully or the current native worker is stopping/stopped. |
 | FAILED | Container exited nonzero or native runtime recorded FAILED. |
 
@@ -81,7 +116,12 @@ Scope/Swing input issues are separate from DEGEN's decision. The report distingu
 the latest collected packet from the packet actually accepted by the native owner.
 It preserves original timestamps and frozen freshness bounds, shows the latest
 five detailed decisions and 25 cycle records, and explicitly counts omitted older
-records. Account-total fills are cumulative, not new fills attributed to this run.
+records. First decisions and collector failures are also retained in bounded
+summaries, with run-wide decision reason counts and halt history. `run_issues`
+survives terminal STOPPED status: a process can end normally after input failures.
+Model-call counts distinguish the selected run from the current account total;
+an unsettled call is a stored NULL cost, not permission to clear it or retry.
+Account-total fills are cumulative, not new fills attributed to this run.
 The two databases are read-only snapshots taken independently; this is observation,
 never a trading authority or an atomic cross-database checkpoint.
 
@@ -107,7 +147,7 @@ scheduler, automatic restart, daily enrollment or automatic resume loop.
 | Swing | Source preparation/recovery and native shared scanning/execution fixtures; missing family remains isolated. | Valid original daily history and complete connected lifecycle. Saved interpolated bars remain rejected. |
 | Scope | Collector-to-native watch routing corrected; native sampled arming, exact paid admission, later-quote fill, restart and exit regression. Owned plays stay out of new-entry admission while exact-play management remains available. Terminal watches cannot be revived by retained ARMED evidence. | Original usable SPX history, exact reviewed SPXW terms/session/pattern binding, a catalog with a reserved slot, and connected lifecycle. No SPY substitution or invented contract terms. |
 | Scope timing | Original five-second admission and fresh advancing post-cost evidence remain enforced; late scripted responses retain their cost and cannot enter. | Post-cost delivery under the real continuous run-loop cadence remains unresolved. The favorable synthetic test drives explicit tick times; ten-second polling does not guarantee delivery inside five seconds. Valid history alone does not fix this integration limitation. |
-| Daily operation | Unique bounded launches, current/saved status, exact stop, retained reports, unchanged recovery and budgets. | Longer host run, actual model timing and lifecycle evidence; daily preparations remain explicit. |
+| Daily operation | Unique bounded launches, current/saved status, exact stop, retained reports, unchanged recovery and budgets. Two-hour detached host run stopped on schedule. | Diagnose retained NORMALIZE failures and ENTRY_HEALTH_BLOCKED before another run; actual model timing and lifecycle remain unverified. Daily preparations remain explicit. |
 
 Scope bindings consume one of the **eight** candidate slots. The current eight
 DEGEN/Swing contracts cannot silently gain a ninth contract or drop a family.
@@ -119,3 +159,7 @@ installed cases and an unresolved legacy five-second worker timeout in this
 environment. A separate real SDK-worker test passed with the unchanged production
 15-second process budget and 20-second management lease. Neither result establishes
 real model latency or timely connected admission.
+
+The November 4 host-only diagnostic update separately passes 51 report/launcher
+tests, including failure-window scoping, early/late evidence, private-field
+exclusion and read-only database preservation. It changes no application file.
