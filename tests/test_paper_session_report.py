@@ -83,6 +83,54 @@ def test_missing_database_is_not_created(tmp_path):
     assert not (tmp_path / "missing.db").exists()
 
 
+def test_short_report_has_exact_ny_spending_and_preserves_unknown_charges():
+    with sqlite3.connect(':memory:') as db:
+        db.execute('CREATE TABLE execution_model_calls(started_at,cost)')
+        db.execute('CREATE TABLE execution_cost_policy(id,policy_json)')
+        db.execute('INSERT INTO execution_cost_policy VALUES(1,?)',
+                   (json.dumps({'daily_budget':'1','total_budget':'5','private':'PRIVATE_KEY'}),))
+        db.executemany('INSERT INTO execution_model_calls VALUES(?,?)', [
+            ('2026-11-05T04:59:00Z','0.1'), ('2026-11-05T05:01:00Z','0.000000001'),
+            ('2026-11-05T05:02:00Z',None), ('2026-11-05T05:03:00Z','NaN'),
+            ('2026-11-05T05:20:00Z','0.2')])
+        before = db.total_changes
+        paid = module.spending(db, '2026-11-05T05:00:00Z', '2026-11-05T05:10:00Z')
+        assert paid['day']=='2026-11-05' and paid['status']=='INCOMPLETE'
+        assert paid['costs']['run']=={'settled_cost':'0.000000001','unknown_calls':2}
+        assert paid['costs']['day']['settled_cost']=='0.200000001'
+        assert paid['costs']['account_total']['settled_cost']=='0.300000001'
+        assert before == db.total_changes
+    value = live_result()
+    value.update(run_id='paper-example', account_total_fills=0, cycle_count=3,
+                 model_spending=paid, private='PRIVATE_KEY', run_issues=['COLLECTOR_FAILURES_RECORDED'])
+    value['operation'] = module.operation(value, {'Status':'exited','ExitCode':0})
+    text = module.short_report(value)
+    assert 'STOPPED' in text and 'Fills (account total): 0' in text
+    assert 'run $0.000000001' in text and '/ $1' in text and '/ $5' in text
+    assert 'unsettled/invalid calls (account): 2' in text
+    assert 'PRIVATE' not in text and len(text)<8192
+    assert 'COLLECTOR_FAILURES_RECORDED' in text
+
+
+@pytest.mark.parametrize('reason', ['SCOPE_REFRESH_READ_BUDGET_UNAVAILABLE','SCOPE_REFRESH_COLLECTOR_BUSY'])
+def test_short_report_exposes_scope_budget_rejection_without_overstating_peer_status(reason):
+    value = live_result()
+    value['decisions'][0]['scope_rejections'] = [reason]
+    value['operation'] = module.operation(value, {'Status':'running'})
+    text = module.short_report(value)
+    assert reason in next(line for line in text.splitlines() if line.startswith('SCOPE:'))
+    assert value['operation']['state']=='MISSING_INPUTS'
+    assert 'AI spending: unavailable' in text and 'No trading-readiness claim' in text
+
+
+def test_unknown_or_invalid_cost_clock_is_not_zero_spending():
+    with sqlite3.connect(':memory:') as db:
+        assert module.spending(db, '', '') == {'status':'UNAVAILABLE'}
+        db.execute('CREATE TABLE execution_model_calls(started_at,cost)')
+        db.execute("INSERT INTO execution_model_calls VALUES('bad','0.01')")
+        assert module.spending(db, '2026-11-05T05:00:00Z','2026-11-05T06:00:00Z')['status']=='UNAVAILABLE'
+
+
 def test_portfolio_receipts_are_authoritative_even_with_empty_legacy_tables():
     with sqlite3.connect(':memory:') as db:
         db.executescript('CREATE TABLE execution_fills(id); CREATE TABLE execution_stock_fills(id);'

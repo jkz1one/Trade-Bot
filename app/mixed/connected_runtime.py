@@ -483,6 +483,7 @@ async def run(
                     raise ValueError('Reviewed paid Scope refresh requires the native Scope runtime')
                 scope_refresh = ConnectedScopeRefresh(runtime, feed, stop)
                 runtime.c.scope_refresh = scope_refresh.fresh
+                runtime.c.scope_entry_blockers = scope_refresh.entry_blockers
             if snapshot_directory is not None:
                 from app.mixed.dashboard_snapshot import DashboardPublisher
 

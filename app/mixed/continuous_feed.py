@@ -638,7 +638,8 @@ class ContinuousFeed:
             previous = datetime.fromisoformat(last["started_at"])
             if now < previous:
                 raise ValueError("Collector clock regressed")
-            if paid_scope_refresh is None and (now - previous).total_seconds() < self.policy.poll_seconds:
+            from app.mixed.scope_schedule import spacing
+            if paid_scope_refresh is None and (now - previous).total_seconds() < spacing(self, now):
                 return {"status": "RATE_LIMITED"}
         slot = int(now.timestamp()) // 300
         # A quote rejected on the first poll must not consume the entire scan
@@ -666,7 +667,9 @@ class ContinuousFeed:
         if used + len(plan.calls) + extra_calls > self.policy.calls_per_minute:
             return {"status": "RATE_LIMITED"}
         history_calls = ()
-        if self.policy.swing_history is not None and paid_scope_refresh is None:
+        from app.mixed.scope_refresh import paced
+        if (self.policy.swing_history is not None and paid_scope_refresh is None
+                and not (scope_enabled and paced(scope_binding))):
             from app.robinhood.schedule import XNYSCalendar
             from app.mixed.swing_feed import planned_history, target_session
 
@@ -1011,7 +1014,13 @@ class ContinuousFeed:
             if source_settings is not None and self.policy.swing_history is not None:
                 self.bind_swing_sources(source_settings, now=clock_source())
             if scope_refresh is not None:
-                await scope_refresh.wait(self.policy.poll_seconds)
+                from app.mixed.scope_refresh import paced
+                binding = self.policy_for(clock_source().astimezone(ZoneInfo('America/New_York')).date()).scope_binding
+                if paced(binding):
+                    from app.mixed.scope_schedule import wait_seconds
+                    await scope_refresh.wait(wait_seconds(self, clock(clock_source())))
+                else:
+                    await scope_refresh.wait(self.policy.poll_seconds)
             else:
                 try:
                     await asyncio.wait_for(stop.wait(), timeout=self.policy.poll_seconds)

@@ -20,10 +20,10 @@ from app.options.runtime import read_packet
 from app.robinhood.schedule import XNYSCalendar
 
 
-def fixture(tmp_path, schemas):
+def fixture(tmp_path, schemas, mode='bounded-paid-refresh-v1'):
     binding, _, _, _, settings = setup()
     binding = type(binding).model_validate(binding.model_dump() | {
-        'post_cost_refresh': 'bounded-paid-refresh-v1'})
+        'post_cost_refresh': mode})
     p = FeedPolicy.model_validate(policy().model_dump() | {
         'scope_binding': binding, 'observed_simulation': 'robinhood-observed-v1'})
     settings.limits.population_id = p.population_id
@@ -198,3 +198,82 @@ def test_explicit_binding_review_keeps_frozen_transport_and_account(tmp_path, sc
         assert getattr(reviewed, field) == getattr(base, field)
     with pytest.raises(ValueError, match='frozen transport'):
         validate_policy(base, reviewed.model_copy(update={'poll_seconds': 5}), binding.session.session_date, AT)
+
+
+@pytest.mark.parametrize('mode', ['bounded-paid-refresh-v1', 'paced-paid-refresh-v2'])
+def test_actual_loop_pacing_and_one_paid_read_stay_in_frozen_quota(tmp_path, schemas, mode):
+    feed, bridge, binding, settings, ticket = fixture(tmp_path, schemas, mode)
+    times, starts, paid = [AT], [], []
+    async def scenario():
+        async def reader(p, **kwargs):
+            starts.append(times[0])
+            result = await scope_reader(times[0], binding)(p, **kwargs)
+            times[0] = result.collected_at
+            return result
+        async def wait(seconds):
+            if len(starts) >= 8:
+                bridge.stop.set()
+            elif mode == 'paced-paid-refresh-v2' and len(starts) == 3 and not paid:
+                ticket.update(requested_at=times[0].isoformat(),
+                              valid_until=(times[0] + timedelta(seconds=4)).isoformat())
+                feed.db.execute('UPDATE scope_refresh_requests SET payload_json=?,payload_hash=?',
+                                (json.dumps(ticket), fingerprint(ticket)))
+                feed.db.commit()
+                future = asyncio.get_running_loop().create_future()
+                paid.append(future)
+                bridge.pending = ticket, future
+                bridge.wake.set()
+            else:
+                times[0] += timedelta(seconds=seconds)
+            await asyncio.sleep(0)
+        bridge.wait = wait
+        await feed.run(bridge.stop, clock_source=lambda: times[0], held_source=lambda: (),
+                      calendar=XNYSCalendar(), source_settings=settings,
+                      scope_state=lambda _: {'status': 'WATCHING', 'arming': {'status': 'ARMED'}},
+                      scope_refresh=bridge, reader=reader)
+        for at in starts:
+            assert sum(6 for t in starts if at - timedelta(minutes=1) < t <= at) <= 24
+        gaps = [(b-a).total_seconds() for a,b in zip(starts, starts[1:])]
+        if mode == 'paced-paid-refresh-v2':
+            assert paid[0].result()['status'] == 'DELIVERED'
+            assert starts[:4] == [AT + timedelta(seconds=s) for s in (0,20,40,41)]
+            assert max(gaps) <= 20
+        else:
+            assert max(gaps) > 30  # Reproduces the unpaced quota-starvation gap.
+    try:
+        asyncio.run(scenario())
+        assert feed.policy.calls_per_minute == 24 and feed.policy.poll_seconds == 10
+    finally:
+        feed.close()
+
+
+def test_budget_check_counts_failed_reads_and_rechecks_after_restart(tmp_path, schemas):
+    from app.mixed.scope_schedule import budget
+    feed, _, _, _, _ = fixture(tmp_path, schemas, 'paced-paid-refresh-v2')
+    try:
+        feed.db.execute("INSERT INTO attempts VALUES(1,?,21,'FAILED',?,NULL,NULL,NULL)",
+                        (AT.isoformat(), 'a'*64))
+        feed.db.commit()
+        p, directory = feed.policy, feed.directory
+        feed.close()
+        feed = ContinuousFeed(directory, p, schemas)
+        assert budget(feed, AT + timedelta(seconds=59), 6) == (False, AT + timedelta(seconds=60))
+        assert budget(feed, AT + timedelta(seconds=60), 6)[0]
+        assert not budget(feed, AT + timedelta(seconds=60), 25)[0]
+    finally:
+        feed.close()
+
+
+def test_underestimated_held_book_cost_does_not_busy_poll(tmp_path, schemas):
+    from app.mixed.scope_schedule import budget, wait_seconds
+    feed, _, _, _, _ = fixture(tmp_path, schemas, 'paced-paid-refresh-v2')
+    try:
+        for sequence, seconds in enumerate((0, 20, 21), 1):
+            feed.db.execute("INSERT INTO attempts VALUES(?,?,6,'FAILED',?,NULL,NULL,NULL)",
+                            (sequence, (AT + timedelta(seconds=seconds)).isoformat(), 'a'*64))
+        feed.db.commit()
+        now = AT + timedelta(seconds=41)
+        assert budget(feed, now, 6)[0] and not budget(feed, now, 7)[0]
+        assert wait_seconds(feed, now) == 1
+    finally:
+        feed.close()

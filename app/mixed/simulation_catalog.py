@@ -17,7 +17,7 @@ from app.robinhood.schedule import XNYSCalendar
 
 
 def proposal(policy, contracts, samples, target, *, earnings_probe=None, observed_swing_history=False,
-             swing_contracts=None, swing_samples=None, scope_binding=None):
+             swing_contracts=None, swing_samples=None, scope_binding=None, candidate_ids=None):
     policy = FeedPolicy.model_validate(policy.model_dump())
     from app.options.earnings_context import from_probe
 
@@ -31,6 +31,14 @@ def proposal(policy, contracts, samples, target, *, earnings_probe=None, observe
     selected = instruments(policy, reviewed, target, cal)
     if not 1 <= len(selected) <= 6:
         raise ValueError("One to six captured simulation contracts required")
+    available = tuple(selected)
+    if candidate_ids is not None:
+        if (not candidate_ids or len(candidate_ids) != len(set(candidate_ids))
+                or not set(candidate_ids) <= {i.instrument_id for i in available}):
+            raise ValueError('Explicit unique captured DEGEN candidate IDs required')
+        selected = [i for i in available if i.instrument_id in candidate_ids]
+        if {i.contract.underlying for i in selected} != {s.symbol for s in policy.stocks}:
+            raise ValueError('Explicit selection must retain DEGEN coverage for every enrolled symbol')
     swing_review = None
     if (swing_contracts is None) != (swing_samples is None):
         raise ValueError("Swing discovery and original quote samples must be supplied together")
@@ -51,6 +59,8 @@ def proposal(policy, contracts, samples, target, *, earnings_probe=None, observe
         scope_binding = ScopeFeedBinding.model_validate(scope_binding)
         if scope_binding.session.session_date != target:
             raise ValueError("Scope terms/calendar must name the exact session")
+        if scope_binding.instrument.instrument_id in {i.instrument_id for i in selected}:
+            raise ValueError('Scope identity cannot overlap the ETF candidate catalog')
     proposed = FeedPolicy.model_validate(policy.model_dump() | {
         "candidates": tuple(selected), "observed_simulation": "robinhood-observed-v1",
         "company_earnings": earnings,
@@ -82,6 +92,11 @@ def proposal(policy, contracts, samples, target, *, earnings_probe=None, observe
             }),
         } for item in reviewed["contracts"]],
         "option_candidates": [i.instrument_id for i in selected],
+        **({'candidate_selection': {
+            'selected_degen_ids': [i.instrument_id for i in selected if i in available],
+            'omitted_degen_ids': [i.instrument_id for i in available if i not in selected],
+            'explicit': True,
+        }} if candidate_ids is not None else {}),
         **({"swing_catalog": {
             "capture_hashes": swing_review["capture_hashes"],
             "future_quote_samples": [{"instrument_id": item["provider_record"]["id"],
@@ -151,6 +166,7 @@ def main(argv=None):
     p.add_argument("--observed-swing-history", action="store_true", help="Review original RH day/half-hour histories for PAPER Swing; does not supply catalysts")
     p.add_argument("--scope-binding", help="Explicit reviewed ScopeFeedBinding: SPXW terms, index session and watch choice")
     p.add_argument("--swing-capture-directory", help="Separate original 7-45 DTE ETF catalog and three quote samples")
+    p.add_argument('--candidate-id', action='append', help='Explicit DEGEN subset; repeat for each retained ID. Swing contracts stay intact.')
     a = p.parse_args(argv)
     load = lambda path: json.loads(read(Path(path), 8 * 1024 * 1024))
     proposed, report = proposal(FeedPolicy.model_validate(load(a.policy)), load(a.contracts),
@@ -158,6 +174,7 @@ def main(argv=None):
                                 earnings_probe=json.loads(read(Path(a.earnings_probe), 1024 * 1024)) if a.earnings_probe else None,
                                 observed_swing_history=a.observed_swing_history,
                                 scope_binding=load(a.scope_binding) if a.scope_binding else None,
+                                candidate_ids=a.candidate_id,
                                 swing_contracts=load(Path(a.swing_capture_directory) / "contracts.json") if a.swing_capture_directory else None,
                                 swing_samples=[load(Path(a.swing_capture_directory) / f"quotes-{n}.json") for n in (1, 2, 3)] if a.swing_capture_directory else None)
     if len(proposed.model_dump_json().encode()) > 256 * 1024:

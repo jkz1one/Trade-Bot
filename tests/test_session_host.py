@@ -482,6 +482,30 @@ def test_swing_preparation_uses_separate_readonly_capture_mount(tmp_path, monkey
     assert not any('/auth' in value or 'model_key' in value for value in call[3])
 
 
+def test_scope_setup_review_is_readonly_and_never_requires_stopping_workers(tmp_path, monkeypatch):
+    m = load()
+    captures = tmp_path/'captures'
+    captures.mkdir(mode=0o700)
+    for name in ('contracts.json','quotes-1.json','quotes-2.json','quotes-3.json'):
+        p = captures/name
+        p.write_text('{}'); p.chmod(0o600)
+    evidence = tmp_path/'scope.json'; evidence.write_text('{}'); evidence.chmod(0o600)
+    monkeypatch.setattr(m, 'image', lambda _: IMAGE)
+    monkeypatch.setattr(m, 'bundle', lambda _: None)
+    monkeypatch.setattr(m, 'no_active_session', lambda: pytest.fail('Read-only review attempted to stop/check workers'))
+    monkeypatch.setattr(m, 'config_mounts', lambda: [])
+    calls = []
+    monkeypatch.setattr(m, 'execute', lambda *args: calls.append(args) or {})
+    m.run(SimpleNamespace(operation='review-scope-setup', target_session='2026-11-05',
+        capture_directory=str(captures), scope_binding=str(evidence), scope_input=str(evidence),
+        scope_contract_capture=str(evidence), candidate_id=['explicit-id']), RELEASE)
+    call = calls[0]
+    assert call[1]=='app.mixed.scope_setup' and '--candidate-id=explicit-id' in call[2]
+    assert '--output' not in call[2] and '--report' not in call[2]
+    assert all(x.endswith(',readonly') for x in call[3] if x.startswith('type=bind'))
+    assert not any('/auth' in x or '/owner' in x or 'model_key' in x for x in call[3])
+
+
 @pytest.mark.parametrize('sequence', [None, 132])
 def test_preopen_collection_mounts_owner_read_only_without_model_or_publisher(tmp_path, monkeypatch, sequence):
     m = load()

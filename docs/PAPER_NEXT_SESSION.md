@@ -19,31 +19,23 @@ model call. The original directory is `/root/trade-bot-options-proof-nxgh8bvl`.
 `all_fresh_at_capture` is false, with no future quote samples. These are historical
 contract/quote receipts, not executable prices or a readiness claim.
 
-Tuesday's original operator log establishes the retained Swing directory as
-`/root/trade-bot-options-proof-zm26sb07`, with four November 13 contracts. They are
-eight calendar days from November 5 and remain within the native 7–45-day range.
-Reuse this original evidence; do not recapture it or reuse November 3's same-day
-DEGEN contracts. The following command was supplied; completion is not yet observed:
+The November 5 session is now **enrolled and prepared**. The operator's retained
+output confirms `SESSION_ROLLOVER_ENROLLED`, snapshot `PUBLISHED`, and
+`SESSION_PREPARED`. Do not repeat capture, preparation or enrollment.
 
-```bash
-cd /opt/trade-bot-dashboard &&
-python3 scripts/paper-session-start.py \
-  --capture-directory /root/trade-bot-options-proof-nxgh8bvl \
-  --target-session 2026-11-05 \
-  --observed-swing-history \
-  --swing-capture-directory /root/trade-bot-options-proof-zm26sb07 \
-  --prepare-only \
-  --run-id thursday-ready
-```
+- Receipt: `/etc/trade-bot-connected/sessions/2026-11-05-thursday-ready`
+- Policy: `b8835e39b001ad8dbea7af6a9926121327f2df0b06e944d45039aa24c43ca8ad`
+- Review: `e8d3a6a7c0a42bae4ee71fa752a621c82458c666f250549e988fb00aedd2a626`
+- Rollover: `50c60dd6af6e65a53e9063e85d55a4bcd2e8b79be0dcf528f32038d0260ada81`
+- Snapshot: owner revision 2945, runtime generation 10, feed sequence 472;
+  STOPPED with `OPTION_RUNTIME_STOPPED`, zero fills and zero held plays.
 
-This reviews/enrolls the new session through the existing append-only path and
-publishes its snapshot. It starts no worker, makes no provider/model request and
-preserves the existing account, balances, journals, halts, limits and population.
-It selects the observed Swing mapping; it does not supply missing original history.
-Do not repeat preparation after `SESSION_PREPARED`. If publication fails after
-`prepared.json` was saved, use that receipt rather than re-enrolling.
+The catalog retains four November 13 Swing contracts from
+`/root/trade-bot-options-proof-zm26sb07`, plus the four November 5 DEGEN contracts.
+No worker started, no model/provider call was made by preparation, and LIVE remains
+disabled. Swing original history and Scope inputs are still independently blocked.
 
-Only after successful preparation, on **November 5 after 10:00 a.m. New York**:
+On **November 5 after 10:00 a.m. New York**:
 
 ```bash
 cd /opt/trade-bot-dashboard &&
@@ -59,38 +51,112 @@ independently. Never reuse the receipt on November 6 or later.
 
 ## Optional Scope paid-read handoff
 
-The new code adds `post_cost_refresh: "bounded-paid-refresh-v1"` to an explicitly
-reviewed `ScopeFeedBinding`. The default is absent and preserves old serialized
-bindings and play identities. Opting in changes the binding/play hash and must be
-part of a new exact-session review. Do not edit an enrolled binding in place.
-No current host Scope binding or spare catalog slot has been established.
+The original reviewed `post_cost_refresh: "bounded-paid-refresh-v1"` binding keeps
+its one-shot handoff and ordinary cadence. The new
+`post_cost_refresh: "paced-paid-refresh-v2"` selection explicitly adds twenty-second
+ordinary capture **start spacing** and a read-budget check before Scope is offered
+to the paid selector. Neither mode is added to an existing binding implicitly.
+Absent fields preserve legacy serialization; changing modes changes the play/hash
+and requires a new exact-session review. Do not edit enrolled bindings in place.
 
-After one complete settled, timely Scope ENTER decision, the connected runtime
-queues one durable read request for that cycle. The existing collector is the only
-writer and wakes from its normal sleep to serve it. This is a narrowly reviewed
-exception to the ordinary minimum poll spacing, not a change to `poll_seconds`.
-The same frozen per-minute quota and eight-call capture limit remain enforced;
-requests that cannot fit the quota produce a paid HOLD without increasing limits.
-No Swing backfill is added to this urgent read. Successful delivery is MARKET-only,
-never another scan or a producer-supplied watch/admission action.
+The actual collector loop reproduced a greater-than-30-second gap with ordinary
+polling under six reads/capture and 24 reads/minute. Paced fixtures collect at
+0, 20 and 40 seconds, leaving six reads for one paid refresh. The request wakes the
+same sole writer immediately and remains MARKET-only. Every read, including failed
+reads and held-overflow requests, still consumes the original persisted sliding
+quota. The eight-call capture ceiling and frozen `poll_seconds` are unchanged.
+Optional Swing backfill is omitted while this paced Scope session is active; its
+pre-open source preparation remains separate.
 
-The caller waits for native acceptance and completion of independent protection.
-Raw clocks, source advancement, original five-second admission deadline, exact
-terms, post-cost account checks and unknown-cost blocks remain unchanged. Slow or
-invalid reads cannot enter. A timed-out caller cannot cancel independent collection
-or protection; the bounded read may finish as original evidence. Interrupted read
-requests cannot be replayed on restart. Expected quota/failure/expiry conditions
-are specific HOLD/input reasons, not automatic global entry recovery.
+The native Scope candidate is withheld before model spending when the collector
+is busy, its accepted packet differs, or its known next read cannot fit the quota.
+The rejection is retained in `scope_rejections`; independent DEGEN selection can
+continue. This is a conservative restriction, not a quota reservation or admission
+permission. Holdings and elapsed time can still change before the actual read,
+which repeats the quota check. Seven-read captures may not leave a refresh allowance;
+held-book overflow must be considered when selecting the catalog. If a new held
+book costs more than the last capture, ordinary quota retries wait at least one
+second; paid-request and stop signals still wake immediately.
 
-This completes an offline-tested collection/delivery handoff, not measured Robinhood
-latency or full connected Scope readiness. The success fixture has spare read quota;
-the saturated-quota fixture refuses. Actual read plus model plus native acceptance
-must still fit the original deadline. Exact SPXW/session/pattern evidence, usable
-original SPX bars and seven candidates plus one Scope slot remain required.
-Validation covers 457 distinct passing installed-package cases after a fixture
-correction; 318 application files and 60 runtime pins match. See
-[the proof](PAPER_SCOPE_REFRESH_PROOF.json). The already deployed image can
-continue the next DEGEN check; do not rebuild it solely for this unconfigured path.
+Native acceptance and independent protection still precede the paid admission.
+Original source advancement, quote/size checks, exact terms, budgets and the
+five-second original deadline remain enforced. Failed, stale, delayed or unfundable
+reads cannot enter. Caller timeout does not cancel independent collection, and
+interrupted requests cannot replay on restart. No automatic entry recovery is added.
+
+The full scheduled fixture runs native supervision between captures and exercises
+paid entry, a later fill, restart and exit. A second fixture refuses Scope before
+any model call when quota is exhausted. These are synthetic offline proofs; variable
+Robinhood latency, usable original SPX history, exact SPXW/session/pattern bindings
+and a connected lifecycle remain unverified. See [validation](PAPER_DAILY_TOOLS_PROOF.json).
+
+## Read-only Scope setup review
+
+After deploying the new release once, the helper can inspect retained evidence
+without stopping workers, opening credentials, collecting data or enrolling:
+
+```bash
+python3 scripts/connected-session-host.py review-scope-setup \
+  --target-session 2026-11-05 \
+  --capture-directory /root/trade-bot-options-proof-nxgh8bvl \
+  --observed-swing-history \
+  --swing-capture-directory /root/trade-bot-options-proof-zm26sb07
+```
+
+It lists the original contracts, selected/omitted IDs, missing Scope binding fields,
+original contract/index evidence and slot requirements. It also estimates the
+regular-session read cost flat and with one additional held contract; it does not
+inspect or change holdings. The current eight candidates leave no ninth slot.
+
+When actual evidence is available, optional inputs are `--scope-binding`,
+`--scope-contract-capture` and `--scope-input`. The binding must name exact reviewed
+SPXW cash/European/PM terms, session, previous session, pattern/right and refresh mode.
+The contract file is compared using its canonical JSON fingerprint with
+`contract_capture_sha256`; **hash equality does not verify brokerage terms**. Inspect
+the original document against the binding. Index input accepts original `SCOPE_INPUT`
+or combined `CAPTURE` receipts and uses the existing pinned SPX validator/mapper.
+Historical mapping time and current source age are reported separately; stale
+originals remain stale. Missing fields never receive invented defaults.
+
+To make room, repeat `--candidate-id ACTUAL_ID` for every retained DEGEN contract.
+The subset must contain only unique original DEGEN IDs and retain each enrolled
+symbol. All four supplied Swing contracts remain intact. Omissions are explicit;
+there is no automatic ranking, substitution or truncation. The same flags pass
+through `paper-session-start.py --prepare-only` to the existing review/enroll path.
+They cannot alter `--prepared-session`. Do not change November 5's enrolled receipt
+merely to try this helper. `INPUTS_REVIEWED` is not trading readiness or term verification.
+
+## Compact operator report
+
+Detailed JSON remains the default. Read the same running/stopped evidence as
+bounded text with:
+
+```text
+python3 scripts/paper-session-report.py --run-id RETURNED_RUN_ID --format text
+```
+
+It shows operation state/reason, original heartbeat/feed freshness, collected versus
+accepted sequence, each family's blockers, last decision, account-total fills,
+run cycles and settled AI costs. Run costs, New York calendar-day costs and account
+costs are separate; daily/total limits come from the enrolled cost policy. Unknown
+or invalid charges remain counted explicitly. Missing cost evidence is unavailable,
+not zero. Account totals may include other runs; source snapshots are independent.
+
+After this release is installed, append `--report-format text` to a launch using
+`--wait` for the same short report at exit. Stop/failed-run reporting still retains
+its error status and never starts a replacement worker. Use `--format json` for
+full retained diagnostics. A normal stop, no reported family blocker, or a passing
+fixture is not a trading-readiness claim.
+
+## Deployment for these three tools
+
+Deploy the exact tested release supplied with the update using the detached
+`/opt/trade-bot-dashboard` checkout, then run `connected-session-host.py build`
+**once while connected workers are stopped**. Do not switch the branch already owned
+by `/opt/trade-bot`. No auth refresh, owner reset, strategy upgrade, dashboard
+activation or repeat November 5 preparation is required. The already-deployed image
+can still perform the planned DEGEN check; adopting these tools is a separate build.
+The new Scope pacing remains inactive without its explicitly reviewed binding.
 
 ## Historical November 3 preparation
 
@@ -222,8 +288,8 @@ the normal stop halt in place.
 | Shared owner / DEGEN | Production-profile raw collection, scanning, two paid entries, later fills, independent exits, restart and accounting fixtures. | Authentic qualifying setup, real model response and complete connected simulated lifecycle. No connected fill has been observed. |
 | Swing | Source preparation/recovery and native shared scanning/execution fixtures; missing family remains isolated. | Valid original daily history and complete connected lifecycle. Saved interpolated bars remain rejected. |
 | Scope | Collector-to-native watch routing corrected; native sampled arming, exact paid admission, later-quote fill, restart and exit regression. Owned plays stay out of new-entry admission while exact-play management remains available. Terminal watches cannot be revived by retained ARMED evidence. | Original usable SPX history, exact reviewed SPXW terms/session/pattern binding, a catalog with a reserved slot, and connected lifecycle. No SPY substitution or invented contract terms. |
-| Scope timing | Reviewed one-shot paid-read handoff wakes the actual collector, charges its existing quota and waits for native acceptance. Offline success, quota, stale, late, failed and cancelled read cases retain the original deadline and model cost. | Actual Robinhood/model latency and sufficient quota inside the original five-second deadline remain unverified. |
-| Daily operation | Unique bounded launches, exact stop, retained reports and optional reviewed flat feed recovery capped at three per run; native timeout/recovery/stop/restart fixtures. Two-hour host run stopped on schedule. | Host authorization passes. Schema compatibility is deployed and November 5 contracts were captured. The combined preparation command was supplied but not yet confirmed; actual model timing and connected lifecycle remain unverified. |
+| Scope timing | Explicit paced mode tests the full collector schedule, native supervision, one-shot refresh and entry/fill/restart/exit. Unfundable Scope reads are excluded before paid selection; peers remain independent. | Actual Robinhood/model latency, held-overflow capacity and connected acceptance inside the original deadline. |
+| Daily operation | Unique bounded launches, exact stop, optional bounded recovery, read-only Scope setup review with explicit catalog selection, and compact reports with exact cost/unknown-charge handling. | Host authorization passes. Schema compatibility is deployed and November 5 contracts were captured. November 5 enrollment and snapshot publication are confirmed; no worker started. Actual model timing and connected lifecycle remain unverified. |
 
 Scope bindings consume one of the **eight** candidate slots. The current eight
 DEGEN/Swing contracts cannot silently gain a ninth contract or drop a family.

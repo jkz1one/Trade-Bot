@@ -431,6 +431,11 @@ def collect(c, key, frame, evidence):
             )
             if not packet["execution_blockers"]:
                 evidence["scope_candidate"] = packet
+    if evidence['scope_candidate'] is not None and getattr(c, 'scope_entry_blockers', None) is not None:
+        blockers = tuple(c.scope_entry_blockers(frame.scope.play_key))
+        if blockers:
+            evidence['scope_candidate'] = None
+            evidence['scope_rejections'] = blockers
     evidence["scope_arbitration"] = selection(c.scope_policy, key, evidence)
     selected = evidence["scope_arbitration"]["selected"]
     if selected and selected["family"] != "SCOPE":

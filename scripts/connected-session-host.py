@@ -711,22 +711,25 @@ def run(args, release):
             ],
             mounts + mount(STATE, "/state", False),
         )
-    if args.operation in ("prepare-session", "review-session", "enroll-session"):
+    if args.operation in ("prepare-session", "review-session", "enroll-session", "review-scope-setup"):
         bundle(image_id)
-        no_active_session()
-        if not args.target_session or not args.next_policy:
+        setup_review = args.operation == 'review-scope-setup'
+        if not setup_review:
+            no_active_session()
+        if not args.target_session or (not setup_review and not args.next_policy):
             raise ValueError("Explicit target session and next policy path required")
-        destination = Path(args.next_policy)
-        if not destination.is_absolute():
+        destination = Path(args.next_policy) if not setup_review else None
+        if destination is not None and not destination.is_absolute():
             raise ValueError("Absolute next policy path required")
-        if args.operation == "prepare-session":
+        if args.operation == "prepare-session" or setup_review:
             captures = Path(args.capture_directory or "")
             if not captures.is_absolute():
                 raise ValueError("Absolute original capture directory required")
             private(captures, True)
             for name in ("contracts.json", "quotes-1.json", "quotes-2.json", "quotes-3.json"):
                 private(captures / name)
-            parent(destination.parent)
+            if destination is not None:
+                parent(destination.parent)
             earnings_flags, earnings_mounts = [], []
             swing_flags, swing_mounts = [], []
             scope_flags, scope_mounts = [], []
@@ -737,6 +740,16 @@ def run(args, release):
                 private(scope_file)
                 scope_flags = ["--scope-binding", "/scope/binding.json"]
                 scope_mounts = mount(scope_file, "/scope/binding.json")
+            for name in ('scope_contract_capture', 'scope_input'):
+                value = getattr(args, name, None)
+                if value:
+                    path = Path(value)
+                    if not path.is_absolute():
+                        raise ValueError('Absolute original Scope evidence required')
+                    private(path)
+                    target = '/scope/' + name + '.json'
+                    scope_flags += ['--' + name.replace('_', '-'), target]
+                    scope_mounts += mount(path, target)
             if getattr(args, "swing_capture_directory", None):
                 swing = Path(args.swing_capture_directory)
                 if not swing.is_absolute() or not getattr(args, "observed_swing_history", False):
@@ -753,18 +766,20 @@ def run(args, release):
                 private(earnings)
                 earnings_flags = ["--earnings-probe", "/earnings/probe.json"]
                 earnings_mounts = mount(earnings, "/earnings/probe.json")
-            return execute(image_id, "app.mixed.simulation_catalog", [
+            return execute(image_id, 'app.mixed.scope_setup' if setup_review else "app.mixed.simulation_catalog", [
                 "--policy", "/state/config/policy.json", "--contracts", "/captures/contracts.json",
                 "--sample", "/captures/quotes-1.json", "--sample", "/captures/quotes-2.json",
                 "--sample", "/captures/quotes-3.json", "--target-session", args.target_session,
-                "--output", "/proposal/" + destination.name,
-                "--report", "/proposal/" + destination.name + ".review.json",
+                *([] if setup_review else ['--output', '/proposal/' + destination.name,
+                   '--report', '/proposal/' + destination.name + '.review.json']),
+                *['--candidate-id=' + i for i in (getattr(args, 'candidate_id', None) or [])],
                 *earnings_flags,
                 *swing_flags,
                 *scope_flags,
                 *(["--observed-swing-history"] if getattr(args, "observed_swing_history", False) else []),
             ], config_mounts() + mount(captures, "/captures")
-               + mount(destination.parent, "/proposal", False) + earnings_mounts + swing_mounts + scope_mounts)
+               + ([] if setup_review else mount(destination.parent, "/proposal", False))
+               + earnings_mounts + swing_mounts + scope_mounts)
         private(destination)
         flags = ["apply" if args.operation == "enroll-session" else "review",
                  "--directory", "/state/owner", "--feed-directory", "/state/collector",
@@ -813,6 +828,7 @@ def main(argv=None):
             "preopen-inputs",
             "preopen-report",
             "prepare-session",
+            "review-scope-setup",
             "capture-session",
             "review-session",
             "enroll-session",
@@ -824,8 +840,9 @@ def main(argv=None):
         ),
     )
     for name in ("settings", "policy", "expected-review", "run-id", "expected-container",
-                 "capture-directory", "target-session", "next-policy", "earnings-probe", "swing-capture-directory", "scope-binding"):
+                 "capture-directory", "target-session", "next-policy", "earnings-probe", "swing-capture-directory", "scope-binding", "scope-contract-capture", "scope-input"):
         p.add_argument("--" + name)
+    p.add_argument('--candidate-id', action='append')
     p.add_argument("--resume-flat", action="store_true")
     p.add_argument("--max-feed-recoveries", type=int, default=0, choices=range(4))
     p.add_argument("--observed-swing-history", action="store_true")
@@ -836,14 +853,16 @@ def main(argv=None):
         p.error("preopen-report requires --sequence")
     if a.sequence is not None and a.operation not in ("preopen-report", "preopen-inputs"):
         p.error("--sequence is only for preopen-report or preopen-inputs")
-    if a.scope_binding is not None and a.operation != "prepare-session":
-        p.error("--scope-binding is only for prepare-session")
+    if (a.scope_binding is not None or a.candidate_id is not None) and a.operation not in {'prepare-session', 'review-scope-setup'}:
+        p.error('Scope binding/candidate selection is only for session preparation or Scope review')
+    if (a.scope_contract_capture or a.scope_input) and a.operation != 'review-scope-setup':
+        p.error('Original Scope evidence is only for read-only Scope setup review')
     if a.earnings_probe is not None and a.operation != "prepare-session":
         p.error("--earnings-probe is only for prepare-session")
-    if a.observed_swing_history and a.operation != "prepare-session":
-        p.error("--observed-swing-history is only for prepare-session")
-    if a.swing_capture_directory and (a.operation != "prepare-session" or not a.observed_swing_history):
-        p.error("--swing-capture-directory requires prepare-session --observed-swing-history")
+    if a.observed_swing_history and a.operation not in {'prepare-session', 'review-scope-setup'}:
+        p.error("--observed-swing-history is only for preparation or Scope review")
+    if a.swing_capture_directory and (a.operation not in {'prepare-session', 'review-scope-setup'} or not a.observed_swing_history):
+        p.error("--swing-capture-directory requires preparation/review --observed-swing-history")
     if (a.operation in ("prepare-profile", "prepare", "enroll", "run", "enroll-session", "apply-strategy-upgrade")) != (
         a.expected_review is not None
     ):

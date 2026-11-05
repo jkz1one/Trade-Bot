@@ -8,6 +8,8 @@ import sqlite3
 import subprocess
 import time
 from datetime import datetime, timezone
+from decimal import Decimal, InvalidOperation, localcontext
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 CODE = re.compile(r"[A-Z][A-Z0-9_]{1,95}\Z")
@@ -135,6 +137,100 @@ def connection(path):
     db.execute("PRAGMA query_only=ON")
     db.execute("BEGIN")
     return db
+
+
+def amount(value):
+    if not isinstance(value, str) or len(value) > 128:
+        return None
+    try:
+        number = Decimal(value)
+        if number.is_finite() and 0 <= number <= Decimal('1e12') and number.as_tuple().exponent >= -30:
+            return number
+    except InvalidOperation:
+        pass
+    return None
+
+
+def spending(db, start, end):
+    """Exact settled costs only. Unknown charges stay visible, never become zero."""
+    if not db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_model_calls'").fetchone():
+        return {'status': 'UNAVAILABLE'}
+    first, last = datetime.fromisoformat(start), datetime.fromisoformat(end)
+    day = last.astimezone(ZoneInfo('America/New_York')).date()
+    totals = {k: {'settled_cost': Decimal(0), 'unknown_calls': 0} for k in ('run', 'day', 'account_total')}
+    with localcontext() as context:
+        context.prec = 192
+        for raw, at in db.execute('SELECT CASE WHEN length(cost)<=128 THEN cost END,started_at FROM execution_model_calls'):
+            try:
+                at = datetime.fromisoformat(at)
+                if at.tzinfo is None:
+                    raise ValueError('Unbound model clock')
+            except (ValueError, TypeError):
+                return {'status': 'UNAVAILABLE', 'reason': 'MODEL_COST_CLOCK_INVALID'}
+            groups = ['account_total']
+            if first <= at <= last:
+                groups.append('run')
+            if at.astimezone(ZoneInfo('America/New_York')).date() == day:
+                groups.append('day')
+            value = amount(raw)
+            for group in groups:
+                if value is None:
+                    totals[group]['unknown_calls'] += 1
+                else:
+                    totals[group]['settled_cost'] += value
+    budgets = {'daily_budget': None, 'total_budget': None}
+    if db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_cost_policy'").fetchone():
+        row = db.execute("SELECT CASE WHEN length(policy_json)<=65536 AND json_valid(policy_json) THEN "
+                         "json_extract(policy_json,'$.daily_budget') END,CASE WHEN length(policy_json)<=65536 "
+                         "AND json_valid(policy_json) THEN json_extract(policy_json,'$.total_budget') END "
+                         "FROM execution_cost_policy WHERE id=1").fetchone()
+        if row:
+            budgets = {key: format(amount(v), 'f') if amount(v) is not None else None
+                       for key, v in zip(budgets, row)}
+    return {'status': 'INCOMPLETE' if totals['account_total']['unknown_calls'] else 'COMPLETE',
+            'day': day.isoformat(), 'timezone': 'America/New_York', 'budgets': budgets,
+            'costs': {k: {**v, 'settled_cost': format(v['settled_cost'], 'f')} for k,v in totals.items()}}
+
+
+def short_report(result):
+    """Bounded public text projected from the same read-only structured report."""
+    def reasons(value):
+        values = codes(value)
+        return ', '.join(values[:5]) + (f' (+{len(values)-5} more)' if len(values)>5 else '')
+    operation = result.get('operation', {})
+    clocks = result.get('runtime_evidence', {})
+    decision = next(iter(reversed(result.get('decisions', []))), {})
+    accepted = (result.get('accepted_packet') or {}).get('sequence', 'unknown')
+    collected = (result.get('latest_packet') or {}).get('sequence', 'unknown')
+    run_id = result.get('run_id', 'unknown')
+    if not isinstance(run_id, str) or not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,39}', run_id):
+        run_id = 'unknown'
+    lines = [f"PAPER {run_id}: {reasons(operation.get('state')) or 'UNKNOWN'}",
+             'Reason: ' + (reasons(operation.get('reasons')) or 'not reported'),
+             f"Data: heartbeat {reasons(clocks.get('heartbeat')) or 'UNKNOWN'}; feed {reasons(clocks.get('feed')) or 'UNKNOWN'}; accepted {accepted}, collected {collected}"]
+    families = operation.get('family_input_issues', {})
+    for family in ('DEGEN', 'SWING', 'SCOPE'):
+        issues = list(families.get(family, []))
+        if family == 'SCOPE':
+            issues += codes([decision.get('scope_rejections'), decision.get('scope_admission_reasons')])
+        if family == 'DEGEN':
+            issues += codes([scan.get('issues') for scan in decision.get('scans', [])])
+        if family in decision.get('unavailable_families', []):
+            issues.append(family + '_INPUT_UNAVAILABLE')
+        lines.append(family + ': ' + (reasons(issues) or ('no input blocker reported' if result.get('accepted_packet') else 'input not established')))
+    lines.append('Last decision: ' + (reasons([decision.get('status'), decision.get('reason')]) or 'none recorded'))
+    lines.append(f"Fills (account total): {result.get('account_total_fills', 'unknown')}; cycles (run): {result.get('cycle_count', 'unknown')}")
+    paid = result.get('model_spending', {})
+    if 'costs' in paid:
+        values, limits = paid['costs'], paid['budgets']
+        lines.append(f"AI settled: run ${values['run']['settled_cost']}; {paid['day']} NY ${values['day']['settled_cost']} / ${limits['daily_budget'] or '?'}; account ${values['account_total']['settled_cost']} / ${limits['total_budget'] or '?'}")
+        lines.append(f"AI unsettled/invalid calls (account): {values['account_total']['unknown_calls']}")
+    else:
+        lines.append('AI spending: unavailable')
+    if result.get('run_issues'):
+        lines.append('Run issues: ' + reasons(result['run_issues']))
+    lines.append('LIVE disabled. No trading-readiness claim; --format json retains the detailed evidence.')
+    return '\n'.join(lines)
 
 
 def fill_count(db):
@@ -374,6 +470,9 @@ def operation(result, state):
     elif any(r.startswith('SCOPE_PAID_REFRESH_') or r == 'SCOPE_FRESH_EVIDENCE_TIMEOUT'
              for r in decision.get('reason', [])):
         status, why = 'MISSING_INPUTS', decision['reason']
+    elif decision.get('status') == ['HOLD'] and any(
+            r.startswith('SCOPE_REFRESH_') for r in decision.get('scope_rejections', [])):
+        status, why = 'MISSING_INPUTS', decision['scope_rejections']
     elif 'SCOPE_WATCH_NEW_SOURCE_OBSERVATIONS_REQUIRED' in decision.get('scope_admission_reasons', []):
         status, why = 'MISSING_INPUTS', decision['scope_admission_reasons']
     elif decision.get('evidence_available') and decision.get('status') == ['HOLD']:
@@ -449,6 +548,7 @@ def report(directory, started, finished):
         result["current_control"] = [dict(r) for r in db.execute(
             "SELECT halted,halt_reason FROM execution_control WHERE id=1")]
         result["account_total_fills"], result["fill_count_source"] = fill_count(db)
+        result['model_spending'] = spending(db, start, end)
         result["runtime_failures"] = runtime_failures(db, start, end)
         result.update(owner_diagnostics(db, start, end))
     finally:
@@ -517,6 +617,7 @@ def report(directory, started, finished):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-id", required=True)
+    parser.add_argument('--format', choices=('json', 'text'), default='json')
     args = parser.parse_args()
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,39}", args.run_id):
         raise ValueError("INVALID_RUN_ID")
@@ -539,7 +640,7 @@ def main():
     result.update(run_id=args.run_id, container_exit_code=None if active else state['ExitCode'],
                   status='CURRENT_SESSION_REPORT' if active else 'SAVED_SESSION_REPORT',
                   operation=operation(result, state))
-    print(json.dumps(result, indent=2))
+    print(short_report(result) if args.format == 'text' else json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":

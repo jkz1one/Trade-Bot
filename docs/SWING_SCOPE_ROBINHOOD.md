@@ -89,13 +89,23 @@ cannot substitute for SPXW cash/European/PM terms. This release handles one boun
 Scope watch, not autonomous whole-chain watch selection.
 
 For the paid Scope selection path, a new exact-session review can opt into
-`post_cost_refresh: "bounded-paid-refresh-v1"` on that binding. It changes the
-binding/play hash and enables one collector wakeup after a settled ENTER decision.
-Legacy bindings omit the field and retain their hashes. The original five-second
+`post_cost_refresh: "paced-paid-refresh-v2"`. It adds twenty-second ordinary capture
+start spacing and checks read capacity before offering Scope to the paid selector.
+The older `bounded-paid-refresh-v1` keeps its original cadence. Both modes enable
+one collector wakeup after a settled ENTER decision. Selecting a mode changes the
+binding/play hash; absent fields preserve legacy hashes. The original five-second
 deadline, source advancement and read quota still apply; exhausted quota or a late
 read yields HOLD. See [daily operation](PAPER_NEXT_SESSION.md#optional-scope-paid-read-handoff)
-and [offline validation](PAPER_SCOPE_REFRESH_PROOF.json). Do not amend an enrolled
+and [offline validation](PAPER_DAILY_TOOLS_PROOF.json). Do not amend an enrolled
 binding in place or assume this supplies the missing original Scope inputs.
+
+The read-only `review-scope-setup` host operation lists missing evidence and original
+contract choices before preparation. Its contract fingerprint comparison is not a
+brokerage term verifier. Repeat `--candidate-id ACTUAL_ID` to select an explicit
+DEGEN subset while retaining every enrolled symbol and all supplied Swing contracts.
+These flags are accepted by setup review and preparation only. The catalog still
+allows eight candidates total, including the Scope slot; no ninth contract or
+implicit omission is permitted. See [setup review](PAPER_NEXT_SESSION.md#read-only-scope-setup-review).
 
 ```text
 python3 scripts/connected-session-host.py prepare-session \

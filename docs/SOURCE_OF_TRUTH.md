@@ -1,5 +1,63 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.187. Scope pacing, setup review and compact PAPER reporting, 2026-11-05.
+
+Three offline-verifiable daily-operation items are implemented together. The new
+explicit Scope binding mode paced-paid-refresh-v2 spaces ordinary capture starts
+by at least twenty seconds and checks persisted read capacity before offering Scope
+to the paid selector. The actual loop reproduces the old greater-than-30-second
+quota gap; scheduled fixtures keep three six-read captures plus one paid refresh
+within the unchanged 24-read sliding minute. Failed reads count across restart.
+A busy/unfundable Scope candidate is withheld with a retained reason while independent
+DEGEN selection remains possible. Held-book overflow or variable provider latency
+can still refuse entry; this is not a reservation or timing guarantee. Optional
+Swing backfill is omitted during the paced Scope session. Original quote freshness,
+source advancement, native protection and the five-second admission deadline remain
+in force. Existing bindings, hashes and cadence are unchanged unless explicitly
+reviewed with the new mode. No host Scope binding was created.
+
+The read-only review-scope-setup host command lists retained contract choices,
+missing Scope fields, original index mapping/source age and catalog/read capacity.
+Its original contract fingerprint comparison is explicitly not term verification.
+An explicit --candidate-id subset may retain fewer DEGEN contracts while preserving
+every enrolled symbol and all supplied Swing contracts. Scope still needs one of
+eight slots; there is no silent substitution, omission or fabricated term. Setup
+review has no owner/auth/model mounts, writes no policy and starts no worker.
+
+paper-session-report.py --format text shows operation state, original freshness,
+accepted versus collected sequence, family blockers, decisions, account-total fills
+and exact settled AI costs for the run, New York day and account. Enrolled budgets
+are read without changes; unknown or invalid charges remain visible, and missing
+cost evidence is unavailable. Detailed JSON remains the default. The launcher can
+print the short report after --wait using --report-format text, retaining failed-run
+status without restarting. The account, enrollment, balances, journals, positions,
+halts, two-play cap, $1000 initial capital, $1/day and $5 total AI limits are preserved.
+Robinhood remains read-only; execution remains local simulation and LIVE is disabled.
+
+Installed-package evidence is recorded in PAPER_DAILY_TOOLS_PROOF.json: 501 distinct
+cases pass across a 500-case suite and 50 affected-case checks after the final bounded
+retry fix. All 320 application files match source/wheel/install; 60 runtime pins are
+verified. The full scheduled Scope fixture includes native supervision between captures, paid entry,
+a later fill, restart and exit. Exhausted-budget fixtures make no model call/order,
+and peer DEGEN selection is separately exercised. These are synthetic tests, not
+connected trading acceptance. Original usable SPX history, exact SPXW/session/pattern
+bindings, actual provider/model latency and a full connected lifecycle remain open.
+Saved interpolated Swing history remains rejected. No connected fill is claimed.
+
+The latest operator-supplied output confirms November 5 enrollment and preparation:
+/etc/trade-bot-connected/sessions/2026-11-05-thursday-ready, policy
+b8835e39b001ad8dbea7af6a9926121327f2df0b06e944d45039aa24c43ca8ad.
+Snapshot revision 2945, runtime generation 10, accepted feed 472 is STOPPED with
+OPTION_RUNTIME_STOPPED, zero fills and zero held plays. The prepared catalog combines
+four November 5 DEGEN contracts and four retained November 13 Swing contracts.
+No worker started during preparation. The host remains on adb453f/image e4171d8;
+this release has not been deployed there. Do not repeat auth, capture, enrollment,
+dashboard activation or preparation. PAPER_NEXT_SESSION.md consolidates the single
+optional deployment and November 5 ten-minute run. The existing host image can still
+perform the DEGEN check; new Scope pacing stays inactive until explicitly reviewed.
+
+Previous version notes (historical):
+
 Version 1.186. Reviewed bounded Scope post-cost collection, 2026-11-04.
 
 The host built adb453f as image

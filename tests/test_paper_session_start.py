@@ -37,6 +37,29 @@ def test_exact_reviews_flow_to_enrollment_snapshot_and_run(tmp_path):
                  invoke=helper(calls), session_root=tmp_path, today="2026-10-28")
 
 
+def test_explicit_catalog_selection_flows_only_to_preparation(tmp_path):
+    calls = []
+    result = loader().launch('/captures', '2026-11-05', 'selected', 600, invoke=helper(calls),
+        session_root=tmp_path, today='2026-11-04', prepare_only=True, candidate_ids=['one','two','three'])
+    assert result['status']=='SESSION_PREPARED'
+    assert [a for a in calls[0] if a.startswith('--candidate-id=')] == ['--candidate-id=one','--candidate-id=two','--candidate-id=three']
+    assert not any('candidate-id' in a for call in calls[1:] for a in call)
+    with pytest.raises(ValueError, match='already bind'):
+        loader().launch(None, None, 'changed', 600, invoke=helper(calls), session_root=tmp_path,
+                        today='2026-11-05', prepared_session=result['prepared_session'], candidate_ids=['other'])
+
+
+def test_wait_can_print_compact_text_without_restarting(capsys):
+    import subprocess
+    calls = []
+    def runner(args, **kwargs):
+        calls.append(args)
+        return subprocess.CompletedProcess(args, 0, '0' if args[0]=='docker' else 'PAPER example: STOPPED\n', '')
+    loader().wait_report(Path('/repo'), 'example', 600, runner=runner, report_format='text')
+    assert calls[-1][-2:] == ['--format','text'] and len(calls)==2
+    assert capsys.readouterr().out=='PAPER example: STOPPED\n'
+
+
 def test_future_combined_prepare_and_next_day_start_do_not_reenroll(tmp_path):
     calls = []
     m = loader()

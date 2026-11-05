@@ -175,6 +175,16 @@ def test_shared_ai_can_choose_degen_or_hold(tmp_path, monkeypatch):
             assert result["status"] == ("OPEN" if mode == "ENTER" else "HOLD"), result
 
 
+def test_unfundable_scope_read_keeps_independent_degen_selection(tmp_path, monkeypatch):
+    with ai_owner(tmp_path, monkeypatch, family='DEGEN') as (c, _, _, frame, state):
+        c.scope_entry_blockers = lambda _: ('SCOPE_REFRESH_READ_BUDGET_UNAVAILABLE',)
+        result = asyncio.run(c.cycle(frame))
+        assert result['status']=='OPEN'
+        assert result['scope_candidate'] is None
+        assert result['scope_rejections']==['SCOPE_REFRESH_READ_BUDGET_UNAVAILABLE']
+        assert state['request'].packet.scope is None
+
+
 @pytest.mark.parametrize("right", ["CALL", "PUT"])
 def test_paid_scope_full_cost_outcome_scales_export_and_observer(tmp_path, monkeypatch, right):
     from decimal import Decimal

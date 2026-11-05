@@ -62,7 +62,8 @@ def run_prepared(receipt, run_id, seconds, *, invoke, today, max_feed_recoveries
 
 def launch(captures, target, run_id, seconds, *, invoke, session_root, today,
            prepare_only=False, prepared_session=None, observed_swing_history=False,
-           swing_capture_directory=None, scope_binding=None, earnings_probe=None, max_feed_recoveries=0):
+           swing_capture_directory=None, scope_binding=None, earnings_probe=None, max_feed_recoveries=0,
+           candidate_ids=None):
     if (type(max_feed_recoveries) is not int or not 0 <= max_feed_recoveries <= 3
             or (prepare_only and max_feed_recoveries)):
         raise ValueError("Bounded feed recovery is a run-only option")
@@ -70,7 +71,14 @@ def launch(captures, target, run_id, seconds, *, invoke, session_root, today,
         raise ValueError("A new simple run ID is required")
     if type(seconds) is not int or not 60 <= seconds <= 23400:
         raise ValueError("Simulation run must be bounded to 60..23400 seconds")
+    if candidate_ids is not None and (not isinstance(candidate_ids, (list, tuple))
+            or not 1 <= len(candidate_ids) <= 6
+            or any(not isinstance(i, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,127}', i)
+                   for i in candidate_ids) or len(set(candidate_ids)) != len(candidate_ids)):
+        raise ValueError('Explicit unique bounded candidate IDs required')
     if prepared_session:
+        if candidate_ids is not None:
+            raise ValueError('Prepared sessions already bind their candidate selection')
         path = Path(prepared_session)
         if (not path.is_absolute() or path.resolve() != path or path.stat().st_mode & 0o077
                 or path.stat().st_uid != os.geteuid()):
@@ -97,6 +105,7 @@ def launch(captures, target, run_id, seconds, *, invoke, session_root, today,
     policy = str(destination / "policy.json")
     common = ["--target-session", target, "--next-policy", policy]
     options = ["--observed-swing-history"] if observed_swing_history else []
+    options += ['--candidate-id=' + i for i in (candidate_ids or [])]
     for flag, value in (("--swing-capture-directory", swing_capture_directory),
                         ("--scope-binding", scope_binding), ("--earnings-probe", earnings_probe)):
         if value:
@@ -161,16 +170,22 @@ def unused_run_id(run_id, *, runner=subprocess.run):
         raise ValueError("Session name already exists; inspect its report or use a new run ID")
 
 
-def wait_report(root, run_id, seconds, *, runner=subprocess.run):
+def wait_report(root, run_id, seconds, *, runner=subprocess.run, report_format='json'):
+    if report_format not in {'json', 'text'}:
+        raise ValueError('Report format must be json or text')
     finished = runner(["docker", "wait", "trade-bot-connected-" + run_id],
                       check=True, capture_output=True, text=True, timeout=seconds + 120)
     # Always show saved decisions, including when the runtime exited nonzero.
-    report = runner(["python3", str(root / "scripts/paper-session-report.py"), "--run-id", run_id],
+    report = runner(["python3", str(root / "scripts/paper-session-report.py"), "--run-id", run_id,
+                     *(['--format', 'text'] if report_format == 'text' else [])],
                     check=False, capture_output=True, text=True, timeout=30)
-    if len(report.stdout) > 262144:
+    if len(report.stdout) > (8192 if report_format == 'text' else 262144):
         raise StepFailed("Saved session report exceeded its output bound")
-    value = json.loads(report.stdout)
-    print(json.dumps(value, sort_keys=True), flush=True)
+    if report_format == 'text':
+        print(report.stdout.rstrip(), flush=True)
+    else:
+        value = json.loads(report.stdout)
+        print(json.dumps(value, sort_keys=True), flush=True)
     if report.returncode or finished.stdout.strip() != "0":
         raise StepFailed("Session stopped with an error; retained report shown above")
 
@@ -188,7 +203,9 @@ def main(argv=None):
                    help="Explicit per-run flat feed recovery cap; default 0 disables recovery")
     p.add_argument("--prepare-only", action="store_true")
     p.add_argument("--wait", action="store_true", help="Wait for the bounded run and print its saved decision report")
+    p.add_argument('--report-format', choices=('json', 'text'), default='json')
     p.add_argument("--observed-swing-history", action="store_true")
+    p.add_argument('--candidate-id', action='append', help='Repeat for each explicitly retained DEGEN candidate; preserves Swing catalog')
     p.add_argument("--swing-expiration", help="With --capture-contracts, capture the separate Swing expiry")
     for flag in ("swing-capture-directory", "scope-binding", "earnings-probe"):
         p.add_argument("--" + flag)
@@ -197,12 +214,14 @@ def main(argv=None):
         p.error("Feed recovery is a run-only option")
     if args.wait and args.prepare_only:
         p.error("--wait is only for a session run")
+    if args.report_format != 'json' and not args.wait:
+        p.error('--report-format requires --wait')
     if args.swing_expiration and (not args.capture_contracts or not args.observed_swing_history or args.swing_capture_directory):
         p.error("--swing-expiration requires --capture-contracts --observed-swing-history and no retained Swing directory")
     if not args.prepared_session and not args.target_session:
         p.error("--target-session is required with retained captures")
     if args.prepared_session and (args.prepare_only or args.target_session or args.observed_swing_history
-                                 or args.swing_capture_directory or args.scope_binding or args.earnings_probe):
+                                 or args.swing_capture_directory or args.scope_binding or args.earnings_probe or args.candidate_id):
         p.error("Prepared sessions already bind their target and inputs")
     if os.geteuid() != 0:
         p.error("Run on the Trade-Bot host as root")
@@ -243,11 +262,12 @@ def main(argv=None):
                         observed_swing_history=args.observed_swing_history,
                         swing_capture_directory=args.swing_capture_directory,
                         scope_binding=args.scope_binding, earnings_probe=args.earnings_probe,
+                        candidate_ids=args.candidate_id,
                         max_feed_recoveries=args.max_feed_recoveries)
         print(json.dumps(result, sort_keys=True), flush=True)
         started = result.get("status") == "SESSION_STARTED"
         if args.wait:
-            wait_report(root, run_id, args.seconds)
+            wait_report(root, run_id, args.seconds, report_format=args.report_format)
     except (OSError, ValueError, KeyError, StepFailed, subprocess.SubprocessError) as exc:
         print(json.dumps({"status": "SESSION_STARTED_REPORT_INCOMPLETE" if started else "NOT_STARTED_OR_INCOMPLETE",
                           "reason": str(exc) if isinstance(exc, (ValueError, StepFailed)) else type(exc).__name__,

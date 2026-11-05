@@ -16,7 +16,11 @@ class ScopeRefreshUnavailable(ExecutionBlocked):
 
 
 def enabled(binding):
-    return binding is not None and binding.post_cost_refresh == 'bounded-paid-refresh-v1'
+    return binding is not None and binding.post_cost_refresh is not None
+
+
+def paced(binding):
+    return binding is not None and binding.post_cost_refresh == 'paced-paid-refresh-v2'
 
 
 def validate_ticket(feed, ticket, now):
@@ -48,6 +52,27 @@ class ConnectedScopeRefresh:
         feed.db.execute("UPDATE scope_refresh_requests SET status='INTERRUPTED' "
                         "WHERE status IN ('QUEUED','CAPTURING')")
         feed.db.commit()
+
+    def entry_blockers(self, play_key):
+        """Restrict the paid shortlist; this check never grants native admission."""
+        from zoneinfo import ZoneInfo
+        from app.mixed.scope_schedule import budget
+
+        now = self.runtime.c.now()
+        binding = self.feed.policy_for(now.astimezone(ZoneInfo('America/New_York')).date()).scope_binding
+        if not paced(binding):
+            return ()
+        if self.stop.is_set() or self.pending is not None or binding.play_key() != play_key:
+            return ('SCOPE_REFRESH_COLLECTOR_UNAVAILABLE',)
+        row = self.feed.db.execute('SELECT sequence,status,calls FROM attempts ORDER BY sequence DESC LIMIT 1').fetchone()
+        packet = self.runtime.scope.latest
+        if (row is None or row['status'] != 'DELIVERED' or packet is None
+                or packet.sequence != row['sequence']):
+            return ('SCOPE_REFRESH_COLLECTOR_BUSY',)
+        # This is conservative if the prior capture had extra reads. Changed
+        # holdings or a later failure can still refuse the eventual fresh read.
+        available, _ = budget(self.feed, now, row['calls'])
+        return () if available else ('SCOPE_REFRESH_READ_BUDGET_UNAVAILABLE',)
 
     async def fresh(self, play_key):
         from zoneinfo import ZoneInfo

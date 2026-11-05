@@ -17,7 +17,7 @@ class ScopeFeedBinding(OptionRecord):
     instrument: OptionInstrument
     choice: ScopeWatchChoice
     contract_capture_sha256: str = Field(pattern=r'^[a-f0-9]{64}$')
-    post_cost_refresh: Literal['bounded-paid-refresh-v1'] | None = Field(
+    post_cost_refresh: Literal['bounded-paid-refresh-v1', 'paced-paid-refresh-v2'] | None = Field(
         default=None, exclude_if=lambda value: value is None)
 
     @model_validator(mode='after')

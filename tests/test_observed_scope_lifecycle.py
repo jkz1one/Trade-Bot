@@ -121,7 +121,7 @@ def scope_reader(at, binding, *, exit_price=False, duration=1):
     return capture
 
 
-@pytest.mark.parametrize("timing", ["fresh", "late", "demand", "demand_stale", "demand_quota", "demand_expired", "demand_failed", "demand_slow", "demand_timeout"])
+@pytest.mark.parametrize("timing", ["fresh", "late", "demand", "demand_stale", "demand_quota", "demand_expired", "demand_failed", "demand_slow", "demand_timeout", "scheduled", "scheduled_quota"])
 def test_production_scope_feed_lifecycle(tmp_path, schemas, monkeypatch, timing):
     settings, base = configuration()
     settings = proposal(settings)[0]
@@ -134,6 +134,7 @@ def test_production_scope_feed_lifecycle(tmp_path, schemas, monkeypatch, timing)
                 }
             ),
             **({'post_cost_refresh': 'bounded-paid-refresh-v1'} if timing.startswith('demand') else {}),
+            **({'post_cost_refresh': 'paced-paid-refresh-v2'} if timing.startswith('scheduled') else {}),
         }
     )
     policy = FeedPolicy.model_validate(
@@ -226,6 +227,80 @@ def test_production_scope_feed_lifecycle(tmp_path, schemas, monkeypatch, timing)
 
             async def enter():
                 signals.update(started=asyncio.Event(), release=asyncio.Event())
+                if timing.startswith('scheduled'):
+                    from app.mixed.scope_refresh import ConnectedScopeRefresh
+                    stop = asyncio.Event()
+                    refresh = ConnectedScopeRefresh(runtime, feed, stop)
+                    runtime.c.scope_refresh = refresh.fresh
+                    runtime.c.scope_entry_blockers = refresh.entry_blockers
+                    starts = []
+                    signals['release'].set()
+
+                    async def reader(p, **kwargs):
+                        starts.append(times[0])
+                        result = await scope_reader(times[0], binding)(p, **kwargs)
+                        times[0] = result.collected_at
+                        return result
+
+                    async def wait(seconds):
+                        packet = read_packet(directory / 'feed.json')
+                        if timing == 'scheduled_quota' and packet.kind == 'CYCLE':
+                            # Synthetic persisted consumption makes the next read
+                            # unfundable before any Scope model request is sent.
+                            feed.db.execute('UPDATE attempts SET calls=? WHERE sequence=?',
+                                            (policy.calls_per_minute, packet.sequence))
+                            feed.db.commit()
+                        for _ in range(1000):
+                            await runtime.tick()
+                            if refresh.pending is not None:
+                                return  # Actual loop wakes to serve its paid request.
+                            pending = runtime._scope_tick
+                            cycle = runtime.task
+                            if ((pending is None or pending.done()) and (cycle is None or cycle.done())):
+                                if pending is not None:
+                                    await pending
+                                if cycle is not None:
+                                    await cycle
+                                break
+                            await asyncio.sleep(.01)
+                        else:
+                            raise AssertionError('Native delivery did not complete')
+                        if runtime.c.engine.venue.snapshot(times[0]).positions:
+                            stop.set()
+                        elif timing == 'scheduled_quota' and packet.kind == 'CYCLE':
+                            stop.set()
+                        elif len(starts) >= 12:
+                            raise AssertionError('Scheduled Scope did not reach an entry')
+                        else:
+                            # Keep native supervision running between captures;
+                            # the fixture must not skip stale-book periods.
+                            remaining = seconds
+                            while remaining > 0:
+                                part = min(5, remaining)
+                                times[0] += timedelta(seconds=part)
+                                remaining -= part
+                                await runtime.tick()
+                                await asyncio.sleep(0)
+                        await asyncio.sleep(0)
+
+                    refresh.wait = wait
+                    await feed.run(stop, clock_source=lambda: times[0], held_source=lambda: (),
+                        calendar=XNYSCalendar(), source_settings=settings,
+                        scope_state=lambda b: owner_state(runtime.c.engine.journal, b),
+                        scope_refresh=refresh, reader=reader)
+                    with runtime.c.engine.journal.read() as db:
+                        decisions = [json.loads(r[0]) for r in db.execute(
+                            'SELECT result_json FROM execution_option_opportunities')]
+                        charges = db.execute('SELECT COUNT(*) FROM execution_model_calls').fetchone()[0]
+                    if timing == 'scheduled_quota':
+                        assert not requests and charges == 0 and runtime.c.engine.venue.submit_count == 0
+                        assert decisions[-1]['scope_rejections'] == ['SCOPE_REFRESH_READ_BUDGET_UNAVAILABLE']
+                        return None
+                    assert len(requests) == charges == runtime.c.engine.venue.submit_count == 1, decisions
+                    assert max((b-a).total_seconds() for a,b in zip(starts, starts[1:])) <= 20
+                    saved = runtime.c.engine.venue.snapshot(times[0])
+                    assert len(saved.positions) == 1
+                    return saved
                 for n in range(18):
                     prior_requests = len(requests)
                     # A later source read in the original bounded capture leaves a
@@ -376,7 +451,7 @@ def test_production_scope_feed_lifecycle(tmp_path, schemas, monkeypatch, timing)
                 return saved
 
             saved = asyncio.run(enter())
-            if timing == "late" or timing.startswith('demand_'):
+            if timing == "late" or timing.startswith('demand_') or timing == 'scheduled_quota':
                 return
 
         # Reopen both native owner and collector; original state and call budget survive.
