@@ -6,66 +6,52 @@ $1/day and $5 total AI spending. Balances, positions, journals, halts and enroll
 persist. Robinhood supplies read-only data; execution is local simulation. LIVE
 remains disabled. No separate broker paper account is used.
 
-## Current next step: deploy once and check read authorization
+## Current next step: review the already-saved read schemas
 
-The saved report from checkout `1922b0e` now identifies the latest ten failed
-captures (587–596): `CONNECT` → `ReadAuthorizationRequired`, with no schemas.
-The headless worker was asked to enter interactive authorization. This does not
-prove a revoked/expired refresh token. No market read was reached in those attempts.
+**Authorization passed on the host.** Release `d847857` built image
+`sha256:f06d883c1c5ed91c0a6833dd2186dd0a2ccf0856c9a114ff17f1546aa4e090f9`.
+`check-read-auth` returned `READ_AUTH_VERIFIED`, zero market reads and zero model
+calls. No manual login or repeat authorization check is required. The result
+proves headless discovery succeeded; it does not identify whether refresh was
+exercised or establish current prices, trading readiness or a connected fill.
+[Operator receipt](PAPER_AUTH_HOST_RECEIPT.json).
 
-An offline reproduction using the pinned MCP 2.3.0 SDK found a restart defect:
-a saved access token rejected with 401 goes through issuer discovery and then
-straight to login, without attempting its saved refresh grant. The application
-now attempts that grant once, after the SDK validates the resource/issuer and
-credential binding. Rejected grants still require login; changed issuers and
-403 scope escalation retain native authorization checks. Token rotation and
-omitted refresh-token/scope handling use the SDK's existing private persistence.
-This fixes a reproducible implementation gap; only a host check can establish
-whether the currently saved grant is still usable.
+The newly discovered schema digest is
+`77f5aaac0e67dd9fb194d35bdbfb3779a351f52db8c6594a90dadd4f3fc5e272`.
+The reader accepts only
+`d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15`.
+The digest covers read-tool schemas, descriptions and annotations; the hash alone
+cannot establish which changed or whether the change is semantic. The existing
+pin must remain enforced until the actual saved contents have been reviewed.
+Starting a catalog capture or worker now would encounter that mismatch.
 
-With connected workers stopped, use the tested release SHA supplied with this
-update. This builds the accumulated runtime fixes once, then performs one bounded
-headless **schema-only** discovery. No market bars, quote capture, model call,
-trader start, account mutation or current-day preparation is involved:
-
-```bash
-cd /opt/trade-bot-dashboard &&
-git fetch origin slice2/robinhood-read-shadow &&
-git merge-base --is-ancestor HEAD TESTED_RELEASE_SHA &&
-git switch --detach TESTED_RELEASE_SHA &&
-python3 scripts/connected-session-host.py build &&
-python3 scripts/connected-session-host.py check-read-auth
-```
-
-- `READ_AUTH_VERIFIED`: the saved/refreshed authorization completed headless
-  discovery. No manual login is needed. This is not trading readiness.
-- `READ_AUTHORIZATION_REQUIRED`: run the following explicit operator login once.
-  It backs up the current OAuth file privately under the native read lease,
-  performs interactive discovery, then checks headless discovery automatically.
-- `READ_AUTH_CHECK_FAILED`: inspect the new private discovery receipt; do not
-  assume a transport or schema failure is fixed by login.
+Use the existing built image to export only the six read-tool schema records
+from the completed discovery. This command has no network, OAuth or owner mount,
+starts no trader, preserves the source and refuses to overwrite its export:
 
 ```bash
-python3 scripts/connected-session-host.py login-read-auth
+docker run --rm --network none --read-only --user 0:0 \
+  --cap-drop ALL --security-opt no-new-privileges:true \
+  --tmpfs /tmp:size=64m,mode=1777 \
+  --mount type=bind,src=/root/trade-bot-read-auth-2j4m02qm,dst=/evidence \
+  sha256:f06d883c1c5ed91c0a6833dd2186dd0a2ccf0856c9a114ff17f1546aa4e090f9 \
+  python -I -W error -m app.options.read_cli export-schemas \
+  --source /evidence/headless-discovery.json \
+  --output /evidence/read-schemas.json \
+  --schema-sha256 77f5aaac0e67dd9fb194d35bdbfb3779a351f52db8c6594a90dadd4f3fc5e272
 ```
 
-Complete the printed Robinhood login URL in your browser. If the localhost
-callback page does not load, paste its full address into the waiting **server
-terminal**, never chat. Keep the URLs, credential backup, private output directory
-and login log private. Share only the final JSON status. The login has a ten-minute
-human-input limit; the headless check retains its 30-second limit. Both helpers
-refuse an active connected session, mount no owner/model keys and leave the
-existing discovery/enrollment unchanged. They do not schedule or start trading.
+Provide only `/root/trade-bot-read-auth-2j4m02qm/read-schemas.json` for offline
+comparison. Do not upload credentials or the entire private directory. The
+`--schema-sha256` argument binds this export to the observed artifact; it does not
+change the runtime's accepted schema or authorize re-enrollment.
+No fetch, rebuild, recapture, login or market-hours wait is needed for this step.
 
-The November 3 two-hour run `paper-1103-174343-7ae3b7` ended on schedule at 14:45
-New York with zero fills, 266 delivered captures and 127 failed captures. A 13:10
-read timeout latched the native feed halt; eleven later decisions were health
-blocked. The separate bounded flat-feed recovery fix is included in this build,
-but remains explicitly opt-in. Model attempts and unsettled costs were zero.
-The host's last built image was `0a4e4e4` /
-`sha256:29df9b86c2874a930166aaffef4118e74d37eec45b3c4f9728b6fa4615102cdb`.
-The deployed image hash above is historical; use the new build's returned hash.
-See [authorization regression proof](PAPER_AUTH_REFRESH_PROOF.json).
+After compatibility is resolved, prepare the next explicitly chosen session with
+that date's contracts. November 3's preparation remains historical and must not
+be relabeled. Preserve the reviewed Swing catalog when still applicable; the
+eight-contract cap and missing Scope evidence remain unchanged. Do not repeat
+collection of the known interpolated history as an authorization test.
 
 ## Historical November 3 preparation
 
@@ -198,7 +184,7 @@ the normal stop halt in place.
 | Swing | Source preparation/recovery and native shared scanning/execution fixtures; missing family remains isolated. | Valid original daily history and complete connected lifecycle. Saved interpolated bars remain rejected. |
 | Scope | Collector-to-native watch routing corrected; native sampled arming, exact paid admission, later-quote fill, restart and exit regression. Owned plays stay out of new-entry admission while exact-play management remains available. Terminal watches cannot be revived by retained ARMED evidence. | Original usable SPX history, exact reviewed SPXW terms/session/pattern binding, a catalog with a reserved slot, and connected lifecycle. No SPY substitution or invented contract terms. |
 | Scope timing | Original five-second admission and fresh advancing post-cost evidence remain enforced; late scripted responses retain their cost and cannot enter. | Post-cost delivery under the real continuous run-loop cadence remains unresolved. The favorable synthetic test drives explicit tick times; ten-second polling does not guarantee delivery inside five seconds. Valid history alone does not fix this integration limitation. |
-| Daily operation | Unique bounded launches, exact stop, retained reports and optional reviewed flat feed recovery capped at three per run; native timeout/recovery/stop/restart fixtures. Two-hour host run stopped on schedule. | Read the saved upstream capture error and resolve its actual cause before another run. Deploy the runtime update once with any required capture fix. Actual model timing and lifecycle remain unverified. |
+| Daily operation | Unique bounded launches, exact stop, retained reports and optional reviewed flat feed recovery capped at three per run; native timeout/recovery/stop/restart fixtures. Two-hour host run stopped on schedule. | Host authorization now passes on the deployed refresh/recovery image. Review the saved changed schema metadata before another capture/run. Actual model timing and lifecycle remain unverified. |
 
 Scope bindings consume one of the **eight** candidate slots. The current eight
 DEGEN/Swing contracts cannot silently gain a ninth contract or drop a family.
@@ -219,3 +205,64 @@ That earlier host-only update is followed by the optional runtime recovery and
 original-capture diagnostics release. Its tests and installed-file verification
 are recorded in [PAPER_FEED_RECOVERY_PROOF.json](PAPER_FEED_RECOVERY_PROOF.json).
 Neither synthetic recovery nor a clean process exit establishes trading readiness.
+
+## Authorization recovery reference (already deployed; do not repeat now)
+
+The saved report from checkout `1922b0e` now identifies the latest ten failed
+captures (587–596): `CONNECT` → `ReadAuthorizationRequired`, with no schemas.
+The headless worker was asked to enter interactive authorization. This does not
+prove a revoked/expired refresh token. No market read was reached in those attempts.
+
+An offline reproduction using the pinned MCP 2.3.0 SDK found a restart defect:
+a saved access token rejected with 401 goes through issuer discovery and then
+straight to login, without attempting its saved refresh grant. The application
+now attempts that grant once, after the SDK validates the resource/issuer and
+credential binding. Rejected grants still require login; changed issuers and
+403 scope escalation retain native authorization checks. Token rotation and
+omitted refresh-token/scope handling use the SDK's existing private persistence.
+This fixes a reproducible implementation gap; only a host check can establish
+whether the currently saved grant is still usable.
+
+With connected workers stopped, use the tested release SHA supplied with this
+update. This builds the accumulated runtime fixes once, then performs one bounded
+headless **schema-only** discovery. No market bars, quote capture, model call,
+trader start, account mutation or current-day preparation is involved:
+
+```bash
+cd /opt/trade-bot-dashboard &&
+git fetch origin slice2/robinhood-read-shadow &&
+git merge-base --is-ancestor HEAD TESTED_RELEASE_SHA &&
+git switch --detach TESTED_RELEASE_SHA &&
+python3 scripts/connected-session-host.py build &&
+python3 scripts/connected-session-host.py check-read-auth
+```
+
+- `READ_AUTH_VERIFIED`: the saved/refreshed authorization completed headless
+  discovery. No manual login is needed. This is not trading readiness.
+- `READ_AUTHORIZATION_REQUIRED`: run the following explicit operator login once.
+  It backs up the current OAuth file privately under the native read lease,
+  performs interactive discovery, then checks headless discovery automatically.
+- `READ_AUTH_CHECK_FAILED`: inspect the new private discovery receipt; do not
+  assume a transport or schema failure is fixed by login.
+
+```bash
+python3 scripts/connected-session-host.py login-read-auth
+```
+
+Complete the printed Robinhood login URL in your browser. If the localhost
+callback page does not load, paste its full address into the waiting **server
+terminal**, never chat. Keep the URLs, credential backup, private output directory
+and login log private. Share only the final JSON status. The login has a ten-minute
+human-input limit; the headless check retains its 30-second limit. Both helpers
+refuse an active connected session, mount no owner/model keys and leave the
+existing discovery/enrollment unchanged. They do not schedule or start trading.
+
+The November 3 two-hour run `paper-1103-174343-7ae3b7` ended on schedule at 14:45
+New York with zero fills, 266 delivered captures and 127 failed captures. A 13:10
+read timeout latched the native feed halt; eleven later decisions were health
+blocked. The separate bounded flat-feed recovery fix is included in this build,
+but remains explicitly opt-in. Model attempts and unsettled costs were zero.
+The host's last built image was `0a4e4e4` /
+`sha256:29df9b86c2874a930166aaffef4118e74d37eec45b3c4f9728b6fa4615102cdb`.
+The deployed image hash above is historical; use the new build's returned hash.
+See [authorization regression proof](PAPER_AUTH_REFRESH_PROOF.json).

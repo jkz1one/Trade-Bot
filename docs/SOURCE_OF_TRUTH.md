@@ -1,5 +1,35 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.184. Host authorization verified; changed read-schema metadata retained, 2026-11-04.
+
+The operator built d847857 as image
+sha256:f06d883c1c5ed91c0a6833dd2186dd0a2ccf0856c9a114ff17f1546aa4e090f9.
+check-read-auth returned READ_AUTH_VERIFIED with zero market reads/model calls,
+LIVE disabled and no execution authority. Headless schema discovery succeeded;
+manual login is not needed. The summary does not identify whether the refresh
+path was exercised, and it is not market-data or trading acceptance.
+
+The discovered digest 77f5aaac0e67dd9fb194d35bdbfb3779a351f52db8c6594a90dadd4f3fc5e272
+is different from the reader's accepted digest
+d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15.
+This digest includes descriptions/annotations as well as input/output schemas.
+The exact change is unknown until the already-saved six read-tool schemas are
+exported and compared. Existing native pin checks remain enforced; do not repin,
+re-enroll, recapture or start another run to diagnose the mismatch.
+
+The next action uses the already-built image with network disabled to export
+only saved schemas from /root/trade-bot-read-auth-2j4m02qm/headless-discovery.json.
+See [the offline export command](PAPER_NEXT_SESSION.md) and
+[the operator receipt](PAPER_AUTH_HOST_RECEIPT.json). This update changes only
+documentation; application and host scripts match d847857 exactly. No build or
+additional test run is required for this record. The prior 363 installed cases
+remain the application proof, not evidence about the new provider schemas.
+Account/enrollment/halts/budgets are unchanged. No connected fill or complete
+lifecycle has been observed; Scope original inputs/bindings/timing and valid
+original Swing history remain unresolved. November 3 preparation cannot be reused.
+
+Previous version notes (historical):
+
 Version 1.183. Restart-safe read authorization and bounded host verification, 2026-11-04.
 
 The saved host report from checkout 1922b0e identifies CONNECT /
