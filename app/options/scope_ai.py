@@ -67,6 +67,7 @@ async def choose_after_usage(c, key, evidence, request, result):
     from app.options.entry_judgment import request_content
     from app.options.scope_arbitration import ScopeCycleInput, execute_scope, selection
     from app.options.scope_reapproval import review_paid_scope
+    from app.mixed.scope_refresh import ScopeRefreshUnavailable
 
     # Validate even a forged local worker response before a refresh or selection.
     with c.engine.journal.read() as db:
@@ -87,6 +88,8 @@ async def choose_after_usage(c, key, evidence, request, result):
         return c._finish(
             key, {**evidence, "status": "HOLD", "reason": "SCOPE_FRESH_EVIDENCE_TIMEOUT"}
         )
+    except ScopeRefreshUnavailable as exc:
+        return c._finish(key, {**evidence, "status": "HOLD", "reason": str(exc)})
     fresh = ScopeCycleInput.model_validate(fresh.model_dump(warnings=False))
     if fresh.play_key != request.packet.scope.binding.play_key:
         raise ExecutionBlocked("SHARED_SCOPE_REFRESH_PLAY_CHANGED")

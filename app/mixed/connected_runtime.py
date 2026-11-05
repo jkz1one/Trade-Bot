@@ -471,11 +471,18 @@ async def run(
         if resume_flat_reviewed_revision is not None and locked_owner["owner_revision"] != resume_flat_reviewed_revision:
             raise ValueError("Owner changed before reviewed recovery")
         feed = ContinuousFeed(feed_directory, policy, schemas)
+        from app.mixed.scope_refresh import ConnectedScopeRefresh, enabled
+        scope_refresh = None
         recovery = FlatFeedRecovery(max_feed_recoveries, locked_owner['runtime_generation'] + 1,
                                     clock_source(), start_revision=locked_owner['owner_revision'])
         before_counts = session_counts(runtime.c.engine)
         publisher = None
         try:
+            if any(enabled(p.scope_binding) for p in (policy, *(r.policy for r in feed.rollovers))):
+                if runtime.scope is None:
+                    raise ValueError('Reviewed paid Scope refresh requires the native Scope runtime')
+                scope_refresh = ConnectedScopeRefresh(runtime, feed, stop)
+                runtime.c.scope_refresh = scope_refresh.fresh
             if snapshot_directory is not None:
                 from app.mixed.dashboard_snapshot import DashboardPublisher
 
@@ -503,6 +510,7 @@ async def run(
                     source_settings=enrolled,
                     **({"scope_state": lambda binding: scope_owner_state(observer, binding)}
                        if feed.policy.scope_binding or any(r.policy.scope_binding for r in feed.rollovers) else {}),
+                    **({'scope_refresh': scope_refresh} if scope_refresh is not None else {}),
                 )
                 if resume_flat_reviewed_revision is None:
                     await operation

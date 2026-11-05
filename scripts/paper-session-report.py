@@ -371,6 +371,9 @@ def operation(result, state):
         status, why = 'MISSING_INPUTS', ['ENTRY_RESPONSE_EXPIRED']
     elif 'ENTRY_HEALTH_BLOCKED' in decision.get('reason', []):
         status, why = 'MISSING_INPUTS', ['ENTRY_HEALTH_BLOCKED']
+    elif any(r.startswith('SCOPE_PAID_REFRESH_') or r == 'SCOPE_FRESH_EVIDENCE_TIMEOUT'
+             for r in decision.get('reason', [])):
+        status, why = 'MISSING_INPUTS', decision['reason']
     elif 'SCOPE_WATCH_NEW_SOURCE_OBSERVATIONS_REQUIRED' in decision.get('scope_admission_reasons', []):
         status, why = 'MISSING_INPUTS', decision['scope_admission_reasons']
     elif decision.get('evidence_available') and decision.get('status') == ['HOLD']:

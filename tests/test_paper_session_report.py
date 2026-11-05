@@ -177,6 +177,16 @@ def live_result():
                             'setups': [{'status': ['WATCHING'], 'reasons': ['NO_BREAKOUT']}]}]}]}
 
 
+@pytest.mark.parametrize('reason', ['SCOPE_PAID_REFRESH_RATE_LIMITED', 'SCOPE_PAID_REFRESH_EXPIRED',
+                                  'SCOPE_PAID_REFRESH_FAILED', 'SCOPE_FRESH_EVIDENCE_TIMEOUT'])
+def test_paid_scope_input_failure_is_not_waiting_for_a_setup(reason):
+    value = live_result()
+    value['decisions'][0]['reason'] = [reason]
+    current = module.operation(value, {'Status': 'running'})
+    assert current['state'] == 'MISSING_INPUTS' and current['reasons'] == [reason]
+    assert module.operation(value, {'Status': 'exited', 'ExitCode': 0})['state'] == 'STOPPED'
+
+
 @pytest.mark.parametrize('mode,expected', [
     ('waiting', 'WAITING_FOR_SETUP'), ('running', 'RUNNING'), ('stale', 'MISSING_INPUTS'),
     ('no_heartbeat', 'MISSING_INPUTS'), ('halted', 'MISSING_INPUTS'), ('history', 'MISSING_INPUTS'),

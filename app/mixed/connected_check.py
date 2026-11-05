@@ -83,6 +83,9 @@ def connection_report(settings, feed, schemas, *, journal, directory, now):
                 or settings.limits.mode != 'PAPER'):
             errors.append('SCOPE_PRICE_OPTIONS_BINDING_MISMATCH')
         blockers.append('SCOPE_ORIGINAL_MARKET_ACCEPTANCE_REQUIRED')
+        if (settings.scope_policy is not None and settings.scope_policy.version == 'shared-scope-entry-v1'
+                and feed.scope_binding.post_cost_refresh is None):
+            blockers.append('SCOPE_POST_COST_REFRESH_NOT_REVIEWED')
     if settings.swing_policy is not None or (
         settings.stock_policy is not None and settings.stock_policy.swing is not None
     ):

@@ -121,7 +121,7 @@ def scope_reader(at, binding, *, exit_price=False, duration=1):
     return capture
 
 
-@pytest.mark.parametrize("timing", ["fresh", "late"])
+@pytest.mark.parametrize("timing", ["fresh", "late", "demand", "demand_stale", "demand_quota", "demand_expired", "demand_failed", "demand_slow", "demand_timeout"])
 def test_production_scope_feed_lifecycle(tmp_path, schemas, monkeypatch, timing):
     settings, base = configuration()
     settings = proposal(settings)[0]
@@ -132,7 +132,8 @@ def test_production_scope_feed_lifecycle(tmp_path, schemas, monkeypatch, timing)
                 update={
                     "source": settings.scope_policy.watch.context.structure.preflight.session_source
                 }
-            )
+            ),
+            **({'post_cost_refresh': 'bounded-paid-refresh-v1'} if timing.startswith('demand') else {}),
         }
     )
     policy = FeedPolicy.model_validate(
@@ -230,7 +231,10 @@ def test_production_scope_feed_lifecycle(tmp_path, schemas, monkeypatch, timing)
                     # A later source read in the original bounded capture leaves a
                     # following delivered observation inside the five-second approval.
                     packet = await collect(
-                        AT + timedelta(seconds=10 * n),
+                        # Warm-up is explicit sampled evidence. Twenty-second
+                        # samples leave quota for the new read; the separate quota
+                        # case proves saturation refuses it without changing limits.
+                        AT + timedelta(seconds=(20 if timing.startswith('demand') else 10) * n),
                         duration=8 if n == 8 and timing == "fresh" else 1,
                     )
                     if packet is None:
@@ -244,6 +248,84 @@ def test_production_scope_feed_lifecycle(tmp_path, schemas, monkeypatch, timing)
                             break
                     elif packet.kind == "CYCLE":
                         await asyncio.wait_for(signals["started"].wait(), 15)
+                        if timing.startswith('demand'):
+                            from app.mixed.scope_refresh import ConnectedScopeRefresh
+                            stop = asyncio.Event()
+                            refresh = ConnectedScopeRefresh(runtime, feed, stop)
+                            runtime.c.scope_refresh = refresh.fresh
+                            reads = []
+
+                            async def demand_reader(p, **kwargs):
+                                reads.append(times[0])
+                                if timing == 'demand_timeout':
+                                    # Exceed the real caller timeout while the independent
+                                    # collector remains alive and retains its late evidence.
+                                    await asyncio.sleep(6)
+                                result = await scope_reader(times[0], binding,
+                                    duration=6 if timing in {'demand_slow', 'demand_timeout'} else 1)(p, **kwargs)
+                                if timing == 'demand_failed':
+                                    result = CaptureResult.model_validate(result.model_dump() | {
+                                        'status': 'FAILED', 'error_class': 'TimeoutError',
+                                        'schemas': None, 'observations': [],
+                                        'scope_observations': [], 'scope_error_class': 'TimeoutError'})
+                                if timing == 'demand_stale':
+                                    # Stocks/options advance, but the SPX venue clock does not.
+                                    # A new provider updated_at/receipt cannot replace that clock.
+                                    old = (packet.recorded_at - timedelta(seconds=1)).isoformat()
+                                    result.scope_observations[1]['raw']['structuredContent']['data']['quotes'][0]['venue_timestamp'] = old
+                                times[0] = result.collected_at
+                                return result
+
+                            async def protect():
+                                while not stop.is_set():
+                                    await runtime.tick()
+                                    await asyncio.sleep(.05)
+
+                            if timing == 'demand_quota':
+                                # Existing persisted reads consume the frozen quota; no new
+                                # provider read may occur to satisfy this paid response.
+                                last = feed.db.execute('SELECT MAX(sequence) FROM attempts').fetchone()[0]
+                                feed.db.execute('UPDATE attempts SET calls=? WHERE sequence=?',
+                                                (policy.calls_per_minute, last))
+                                feed.db.commit()
+                            signals['release'].set()
+                            # Let the model settle and queue the native request before starting
+                            # the real collector loop. No direct injected scope_refresh result.
+                            for _ in range(200):
+                                if refresh.pending is not None or runtime.task.done():
+                                    break
+                                await asyncio.sleep(.01)
+                            assert refresh.pending is not None
+                            if timing == 'demand_expired':
+                                times[0] = requests[0].packet.valid_until
+                            collector = asyncio.create_task(feed.run(
+                                stop, clock_source=lambda: times[0], held_source=lambda: (),
+                                calendar=XNYSCalendar(), source_settings=settings,
+                                scope_state=lambda b: owner_state(runtime.c.engine.journal, b),
+                                scope_refresh=refresh, reader=demand_reader))
+                            protector = asyncio.create_task(protect())
+                            cycle_task = runtime.task
+                            try:
+                                await asyncio.wait_for(asyncio.shield(cycle_task), 10)
+                            finally:
+                                stop.set()
+                                await asyncio.gather(collector, protector)
+                            assert len(reads) == (0 if timing in {'demand_quota', 'demand_expired'} else 1)
+                            row = feed.db.execute('SELECT * FROM scope_refresh_requests').fetchone()
+                            if timing == 'demand_timeout':
+                                assert row['status'] == 'CANCELLED'
+                                assert json.loads(row['result_json'])['status'] == 'DELIVERED'
+                            if reads:
+                                assert reads[0] < packet.recorded_at + timedelta(seconds=policy.poll_seconds)
+                                extra = feed.db.execute('SELECT * FROM attempts WHERE sequence=?',
+                                                        (row['capture_sequence'],)).fetchone()
+                                assert extra['calls'] == 6
+                                if timing == 'demand_failed':
+                                    assert extra['status'] == 'FAILED' and extra['packet_json'] is None
+                                else:
+                                    assert json.loads(extra['packet_json'])['kind'] == 'MARKET'
+                            if timing != 'demand':
+                                break
                     with runtime.c.engine.journal.read() as db:
                         actions = [
                             dict(r)
@@ -262,10 +344,23 @@ def test_production_scope_feed_lifecycle(tmp_path, schemas, monkeypatch, timing)
                         )
                     ]
                 assert len(requests) == 1, decisions
-                if timing == "late":
+                if timing == "late" or timing.startswith('demand_'):
                     assert runtime.c.engine.venue.submit_count == 0
-                    assert decisions[-1]["reason"] == "ENTRY_MODEL_HOLD_OR_REJECTED"
-                    assert decisions[-1]["entry_timely"] is False
+                    if timing == 'late':
+                        assert decisions[-1]["reason"] == "ENTRY_MODEL_HOLD_OR_REJECTED"
+                        assert decisions[-1]["entry_timely"] is False
+                    else:
+                        assert decisions[-1]['entry_timely'] is True
+                        assert decisions[-1]['reason'] == {
+                            'demand_stale': 'SCOPE_POST_COST_ADMISSION_REJECTED',
+                            'demand_quota': 'SCOPE_PAID_REFRESH_RATE_LIMITED',
+                            'demand_expired': 'SCOPE_PAID_REFRESH_EXPIRED',
+                            'demand_failed': 'SCOPE_PAID_REFRESH_FAILED',
+                            'demand_slow': 'SCOPE_PAID_REFRESH_DELIVERY_EXPIRED',
+                            'demand_timeout': 'SCOPE_FRESH_EVIDENCE_TIMEOUT',
+                        }[timing]
+                        with runtime.c.engine.journal.read() as db:
+                            assert not runtime.c.engine._control(db)['halted']
                     with runtime.c.engine.journal.read() as db:
                         assert (
                             db.execute(
@@ -281,7 +376,7 @@ def test_production_scope_feed_lifecycle(tmp_path, schemas, monkeypatch, timing)
                 return saved
 
             saved = asyncio.run(enter())
-            if timing == "late":
+            if timing == "late" or timing.startswith('demand_'):
                 return
 
         # Reopen both native owner and collector; original state and call budget survive.

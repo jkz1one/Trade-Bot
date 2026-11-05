@@ -1,5 +1,47 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.186. Reviewed bounded Scope post-cost collection, 2026-11-04.
+
+The host built adb453f as image
+e4171d8d03eacac853c5e7dfd1b13f8491d2eda548627ba5a072d455d8e2e66a.
+November 5 contract capture then succeeded with eight read-only provider calls,
+no model calls/workers, `all_fresh_at_capture: false` and no future samples.
+Its directory is /root/trade-bot-options-proof-nxgh8bvl. Tuesday's supplied log
+identifies /root/trade-bot-options-proof-zm26sb07 as the original November 13 Swing
+catalog; it remains eight DTE for November 5. The combined preparation command is
+in PAPER_NEXT_SESSION.md; its completion is not yet reported. No host account reset,
+Scope binding, connected fill or completed connected lifecycle is claimed.
+
+Scope previously could reread the same accepted packet after a paid response while
+the collector slept. A new optional ScopeFeedBinding.post_cost_refresh selection,
+bounded-paid-refresh-v1, now binds a one-shot collector wakeup to a complete settled
+Scope ENTER receipt and its original deadline. The reviewed mode is absent by
+default; old bindings/hashes and ordinary polling remain unchanged. Opting in must
+be reviewed with the exact new session/binding and changes its play identity.
+
+The sole collector writer persists the cycle/request binding before servicing the
+request, counts all reads under the original per-minute quota and capture capacity,
+and publishes only a MARKET packet. It does not add a Swing history backfill.
+Native delivery and independent protection must complete before the same paid
+selection can review admission. All original quote clocks, source advancement,
+terms, account/position/budget gates and five-second deadlines remain enforced.
+Interrupted requests are retained and cannot be replayed; cancellation never cancels
+independent collection/protection. Saturation, failed collection and expiry produce
+specific paid HOLD reasons. The host report distinguishes these from no setup.
+
+Installed-package validation is recorded in PAPER_SCOPE_REFRESH_PROOF.json: 457
+distinct cases pass after correcting the failed-connection test fixture. All 318
+application files match source/wheel/install, and 60 runtime pins are verified. Tests
+exercise the actual collector wakeup, production-profile paid entry, later fill,
+restart and exit, plus stale SPX clocks, quota exhaustion, failed and slow reads,
+expired requests, duplicate/restart refusal, stop/cancel and legacy serialization.
+The success fixture has available quota; it does not establish real provider speed.
+Original usable SPX history, reviewed exact SPXW/session/pattern terms, catalog space
+and connected timing/lifecycle remain unverified. The currently deployed image does
+not need rebuilding for the November 5 DEGEN check; this new path is opt-in only.
+
+Previous version notes (historical):
+
 Version 1.185. Reviewed description-only Robinhood schema compatibility, 2026-11-04.
 
 The operator supplied the exported schemas from the successful d847857 headless

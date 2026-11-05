@@ -621,8 +621,12 @@ class ContinuousFeed:
         source_settings=None,
         swing_evidence=None,
         scope_state=None,
+        paid_scope_refresh=None,
     ):
         now = clock(now)
+        if paid_scope_refresh is not None:
+            from app.mixed.scope_refresh import validate_ticket
+            validate_ticket(self, paid_scope_refresh, now)
         last = self.db.execute("SELECT * FROM attempts ORDER BY sequence DESC LIMIT 1").fetchone()
         from datetime import datetime
 
@@ -634,7 +638,7 @@ class ContinuousFeed:
             previous = datetime.fromisoformat(last["started_at"])
             if now < previous:
                 raise ValueError("Collector clock regressed")
-            if (now - previous).total_seconds() < self.policy.poll_seconds:
+            if paid_scope_refresh is None and (now - previous).total_seconds() < self.policy.poll_seconds:
                 return {"status": "RATE_LIMITED"}
         slot = int(now.timestamp()) // 300
         # A quote rejected on the first poll must not consume the entire scan
@@ -662,7 +666,7 @@ class ContinuousFeed:
         if used + len(plan.calls) + extra_calls > self.policy.calls_per_minute:
             return {"status": "RATE_LIMITED"}
         history_calls = ()
-        if self.policy.swing_history is not None:
+        if self.policy.swing_history is not None and paid_scope_refresh is None:
             from app.robinhood.schedule import XNYSCalendar
             from app.mixed.swing_feed import planned_history, target_session
 
@@ -697,6 +701,10 @@ class ContinuousFeed:
             "INSERT INTO attempts VALUES(?,?,?,'STARTED',?,NULL,NULL,NULL)",
             (sequence, now.isoformat(), len(plan.calls) + extra_calls, fingerprint(plan)),
         )
+        if paid_scope_refresh is not None:
+            self.db.execute("UPDATE scope_refresh_requests SET status='CAPTURING',capture_sequence=? "
+                            "WHERE cycle_key=? AND status='QUEUED'",
+                            (sequence, paid_scope_refresh['cycle_key']))
         if history_calls:
             self.db.execute(
                 "INSERT INTO swing_read_budget VALUES(?,?)", (sequence, len(history_calls))
@@ -790,6 +798,11 @@ class ContinuousFeed:
                 swing_evidence=swing_evidence,
                 scope_capture=scope_capture, scope_record=scope_record,
             )
+            if paid_scope_refresh is not None:
+                if packet.action is not None:
+                    raise ValueError('Paid refresh cannot create or advance a Scope watch')
+                packet = PortfolioRuntimePacket.model_validate(packet.model_dump() | {
+                    'kind': 'MARKET', 'frame': market_frame(packet.frame)})
 
             def quotes(frame):
                 result = {
@@ -982,22 +995,28 @@ class ContinuousFeed:
             "trading_ready": False,
         }
 
-    async def run(self, stop, *, clock_source, held_source, calendar, source_settings=None, scope_state=None):
+    async def run(self, stop, *, clock_source, held_source, calendar, source_settings=None, scope_state=None,
+                  scope_refresh=None, reader=collect):
         while not stop.is_set():
             now = clock(clock_source())
-            await self.tick(
-                now=now,
-                held=held_source(),
-                window=calendar.current_window(now),
-                source_settings=source_settings,
-                scope_state=scope_state,
-            )
+            async def capture(ticket=None):
+                return await self.tick(
+                    now=now, held=held_source(), window=calendar.current_window(now),
+                    source_settings=source_settings, scope_state=scope_state, reader=reader,
+                    **({'paid_scope_refresh': ticket} if ticket is not None else {}))
+            if scope_refresh is not None and scope_refresh.pending is not None:
+                await scope_refresh.collect(capture, now=now)
+            else:
+                await capture()
             if source_settings is not None and self.policy.swing_history is not None:
                 self.bind_swing_sources(source_settings, now=clock_source())
-            try:
-                await asyncio.wait_for(stop.wait(), timeout=self.policy.poll_seconds)
-            except TimeoutError:
-                pass
+            if scope_refresh is not None:
+                await scope_refresh.wait(self.policy.poll_seconds)
+            else:
+                try:
+                    await asyncio.wait_for(stop.wait(), timeout=self.policy.poll_seconds)
+                except TimeoutError:
+                    pass
 
 
 def held_from_observer(observer):

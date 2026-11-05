@@ -88,6 +88,15 @@ inspect the original contract evidence corresponding to its hash. ETF assumption
 cannot substitute for SPXW cash/European/PM terms. This release handles one bound
 Scope watch, not autonomous whole-chain watch selection.
 
+For the paid Scope selection path, a new exact-session review can opt into
+`post_cost_refresh: "bounded-paid-refresh-v1"` on that binding. It changes the
+binding/play hash and enables one collector wakeup after a settled ENTER decision.
+Legacy bindings omit the field and retain their hashes. The original five-second
+deadline, source advancement and read quota still apply; exhausted quota or a late
+read yields HOLD. See [daily operation](PAPER_NEXT_SESSION.md#optional-scope-paid-read-handoff)
+and [offline validation](PAPER_SCOPE_REFRESH_PROOF.json). Do not amend an enrolled
+binding in place or assume this supplies the missing original Scope inputs.
+
 ```text
 python3 scripts/connected-session-host.py prepare-session \
   --capture-directory /root/ACTUAL-SAME-DAY-CAPTURE \
