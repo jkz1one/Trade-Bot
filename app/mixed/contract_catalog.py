@@ -12,7 +12,7 @@ from jsonschema.exceptions import ValidationError as SchemaError
 from app.domain.models import utc_now
 from app.options.models import OptionInstrument
 from app.options.read_capture import CaptureResult
-from app.options.read_gateway import encoded
+from app.options.read_gateway import encoded, same_schema_contract
 from app.options.read_mapping import instant, option_metadata, quote_rows, response
 
 # These provider analytics can change while the quoted book's updated_at stays
@@ -108,7 +108,7 @@ def review(contracts, samples, *, retain_future_quotes=False):
             result.request_id in requests
             or result.started_at < previous
             or result.policy_sha256 != original.policy_sha256
-            or result.schemas.sha256 != original.schemas.sha256
+            or not same_schema_contract(result.schemas, original.schemas)
             or set(result.plan.symbols) != set(original.plan.symbols)
             or set(result.plan.instrument_ids) != set(catalog)
         ):

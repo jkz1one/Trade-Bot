@@ -1,5 +1,48 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.185. Reviewed description-only Robinhood schema compatibility, 2026-11-04.
+
+The operator supplied the exported schemas from the successful d847857 headless
+host check. Their computed metadata hash exactly matches
+77f5aaac0e67dd9fb194d35bdbfb3779a351f52db8c6594a90dadd4f3fc5e272.
+Comparing all six tools against the original d6a6d50 metadata finds one change:
+get_equity_historicals.description adds completed-bar/UTC interval guidance.
+All input schemas, output schemas, tool names and annotations are identical.
+The original schema fixture is preserved and the new export is retained separately.
+
+A narrow compatibility rule now accepts those two exact reviewed hashes. Every
+cross-version comparison validates each full digest, then requires identical
+contract metadata after removing only that known top-level description. It is
+not a generic description-ignore rule: unreviewed description, nested metadata,
+input/output schema, name or annotation changes still reject. Read-only capability,
+original clock, quote-quality, interpolation and history completeness checks are
+unchanged. Missing schemas cannot be filled from enrollment.
+
+The same rule covers gateway admission, parent capture validation, collector
+normalization/source checks, retained pre-open replay and multi-capture catalog
+review. Current raw captures retain the provider's actual new metadata and hash;
+the enrolled old schema and account/configuration hashes are not rewritten.
+New catalog captures pin their input artifact's exact reviewed revision rather
+than assuming that all reviewed exports use the original digest.
+
+The new wording agrees with the observed Swing planner's existing UTC day bounds;
+it cannot repair the interpolated November 2 bars. Scope's index schemas are not
+changed by this equity description update. Source evidence, exact reviewed Scope
+bindings/eight-slot capacity and continuous post-cost timing remain unresolved.
+No connected fill or complete entry-to-exit lifecycle has been observed.
+
+[Installed-package proof](PAPER_SCHEMA_COMPATIBILITY_PROOF.json): 553 cases pass;
+all 317 application files match source, wheel and installation, with 60 runtime
+dependency pins verified. Coverage includes both
+metadata revisions through quote/bar rejection tests, worker/parent collection,
+collector restart without enrollment changes, catalog transitions, Scope delivery
+and retained-history replay. The supplied file needed no new capture to review.
+Authorization is already verified; no login or schema replacement is requested.
+Deploy the application update once using [the current instructions](PAPER_NEXT_SESSION.md).
+November 3 preparation remains historical; the next run needs its own date's inputs.
+
+Previous version notes (historical):
+
 Version 1.184. Host authorization verified; changed read-schema metadata retained, 2026-11-04.
 
 The operator built d847857 as image

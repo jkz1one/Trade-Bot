@@ -152,7 +152,9 @@ def test_scope_worker_pins_before_calls_and_rejects_extra_calls(monkeypatch):
 
 
 @pytest.mark.parametrize('scope_fault', [None, 'failed', 'identity'])
-def test_collector_retains_pinned_reads_counts_quota_and_delivers_native_watch(tmp_path, schemas, scope_fault, monkeypatch):
+@pytest.mark.parametrize('updated_description', [False, True])
+def test_collector_retains_pinned_reads_counts_quota_and_delivers_native_watch(
+        tmp_path, schemas, scope_fault, monkeypatch, description_schemas, updated_description):
     from test_portfolio_feed import policy
     from test_robinhood_read_mapping import envelope, equity, option
     from app.mixed.continuous_feed import ContinuousFeed, FeedPolicy
@@ -192,7 +194,8 @@ def test_collector_retains_pinned_reads_counts_quota_and_delivers_native_watch(t
                          'raw': envelope(values), 'received_at': (AT + timedelta(seconds=1)).isoformat()})
         return CaptureResult(request_id='b'*32, policy_sha256=policy_digest(p), operation='CAPTURE',
             started_at=cap.started_at, collected_at=AT+timedelta(seconds=1), elapsed_seconds=2, status='COMPLETE',
-            plan=plan, schemas=schemas, observations=rows, scope_requested=True, scope_observations=cap.observations,
+            plan=plan, schemas=description_schemas if updated_description else schemas,
+            observations=rows, scope_requested=True, scope_observations=cap.observations,
             scope_error_class='RuntimeError' if scope_fault == 'failed' else None)
     if scope_fault is None:
         def checked_deliver(*args, **kwargs):
@@ -222,6 +225,7 @@ def test_collector_retains_pinned_reads_counts_quota_and_delivers_native_watch(t
 
 
 from test_robinhood_read_mapping import schemas as schemas
+from test_read_schema_contract import description_schemas as description_schemas
 
 
 def test_completed_bar_marker_survives_scope_assembly_without_restamping():

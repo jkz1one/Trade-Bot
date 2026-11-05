@@ -16,10 +16,15 @@ from app.options.read_gateway import CapturePlan, OptionReadGateway, ReadSample,
 
 AT = datetime(2026, 10, 23, 13, 30, tzinfo=UTC)
 ROOT = Path(__file__).resolve().parents[1]
+pytestmark = pytest.mark.parametrize('schemas', ['original', 'completed-bars-description'], indirect=True)
 
 
 @pytest.fixture
-def schemas():
+def schemas(request):
+    if getattr(request, 'param', 'original') == 'completed-bars-description':
+        path = ROOT / 'tests/fixtures/robinhood_read_schemas_20261104.json'
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == 'e9074baeab6da12df7db9376161678f026a5b69d5d074cd9d4964ac32704c68a'
+        return ReadSchemas.model_validate_json(path.read_bytes())
     path = ROOT / "tests/fixtures/robinhood_read_schemas.json"
     assert (
         hashlib.sha256(path.read_bytes()).hexdigest()
@@ -120,7 +125,8 @@ def history():
 
 
 def test_exact_reviewed_pin_and_initial_four_call_plan(schemas):
-    assert mapping.reviewed_schemas(schemas).sha256 == mapping.SCHEMA_SHA256
+    assert mapping.reviewed_schemas(schemas).sha256 == schemas.sha256
+    assert schemas.sha256 in mapping.REVIEWED_SCHEMA_DIGESTS
     assert (
         not schemas.missing_tools
         and not schemas.missing_input_schemas

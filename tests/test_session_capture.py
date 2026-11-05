@@ -5,8 +5,44 @@ from datetime import date
 import pytest
 from test_contract_catalog import captures as captures
 from test_robinhood_read_mapping import equity
+from test_robinhood_read_mapping import schemas as schemas
+from test_read_schema_contract import description_schemas as description_schemas
 
 from app.mixed.session_capture import collect, contract_plan, plan
+
+
+@pytest.mark.parametrize('updated_description', [False, True])
+def test_capture_cli_binds_each_call_to_actual_reviewed_discovery(
+        tmp_path, monkeypatch, schemas, description_schemas, updated_description):
+    import json
+    from datetime import datetime, UTC
+    from app.mixed import session_capture
+    from app.options import read_cli
+    from test_schema_artifact import artifact
+    selected = description_schemas if updated_description else schemas
+    source = tmp_path / 'discovery.json'
+    source.write_text(json.dumps(artifact(selected)))
+    source.chmod(0o600)
+    output = tmp_path / 'capture'
+    output.mkdir(mode=0o700)
+    monkeypatch.setattr('app.domain.models.utc_now', lambda: datetime(2026, 11, 4, 22, tzinfo=UTC))
+    calls = []
+    def capture(args):
+        calls.append(args)
+        assert args[args.index('--schema-sha256') + 1] == selected.sha256
+        assert args[args.index('--schemas') + 1] == str(source)
+        Path(args[args.index('--output') + 1]).write_text('{"fixture":true}')
+        return 0
+    from pathlib import Path
+    monkeypatch.setattr(read_cli, 'main', capture)
+    def catalog(target, capture):
+        assert target == date(2026, 11, 5)
+        assert capture('context', {}) == {'fixture': True}
+        return {'status': 'CATALOG_CAPTURED', 'fixture': True}
+    monkeypatch.setattr(session_capture, 'collect', catalog)
+    assert session_capture.main(['--target-session', '2026-11-05', '--directory', str(output),
+        '--schemas', str(source), '--oauth-file', '/never-opened']) == 0
+    assert len(calls) == 1
 
 
 def context(captures):

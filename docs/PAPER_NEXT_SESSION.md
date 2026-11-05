@@ -6,52 +6,55 @@ $1/day and $5 total AI spending. Balances, positions, journals, halts and enroll
 persist. Robinhood supplies read-only data; execution is local simulation. LIVE
 remains disabled. No separate broker paper account is used.
 
-## Current next step: review the already-saved read schemas
+## Current next step: deploy the reviewed schema compatibility fix
 
-**Authorization passed on the host.** Release `d847857` built image
+**Authorization already passed on the host.** The deployed `d847857` image is
 `sha256:f06d883c1c5ed91c0a6833dd2186dd0a2ccf0856c9a114ff17f1546aa4e090f9`.
-`check-read-auth` returned `READ_AUTH_VERIFIED`, zero market reads and zero model
-calls. No manual login or repeat authorization check is required. The result
-proves headless discovery succeeded; it does not identify whether refresh was
-exercised or establish current prices, trading readiness or a connected fill.
-[Operator receipt](PAPER_AUTH_HOST_RECEIPT.json).
+The operator exported its saved read schemas without network calls and supplied
+the complete definitions. No further login, discovery or schema export is needed.
 
-The newly discovered schema digest is
+Comparison found exactly one changed field inside the six tool definitions:
+`get_equity_historicals.description`. The added text explains completed bars,
+UTC interval boundaries and why a daily request ends at the next day's start.
+Every tool name, input schema, output schema and read-only annotation is unchanged.
+The observed `utc-day-halfhour-v1` Swing planner already uses those UTC daily
+boundaries. This wording does not make saved interpolated bars valid.
+
+The application now accepts exactly the two reviewed metadata digests:
+`d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15` and
 `77f5aaac0e67dd9fb194d35bdbfb3779a351f52db8c6594a90dadd4f3fc5e272`.
-The reader accepts only
-`d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15`.
-The digest covers read-tool schemas, descriptions and annotations; the hash alone
-cannot establish which changed or whether the change is semantic. The existing
-pin must remain enforced until the actual saved contents have been reviewed.
-Starting a catalog capture or worker now would encounter that mismatch.
+Cross-version comparisons additionally require identical contract metadata after
+removing that one description. Arbitrary description/schema/annotation changes
+still fail. Original discovery clocks, metadata, digests and market receipts
+remain intact. Existing enrollment keeps its original schema and configuration
+hashes; no schema-file replacement, owner re-enrollment or account reset is needed.
 
-Use the existing built image to export only the six read-tool schema records
-from the completed discovery. This command has no network, OAuth or owner mount,
-starts no trader, preserves the source and refuses to overwrite its export:
+Deploy the supplied tested release SHA using the command below. This application
+change is inside the image and therefore needs one build. It includes the already
+tested authorization and optional bounded flat-feed recovery changes:
 
 ```bash
-docker run --rm --network none --read-only --user 0:0 \
-  --cap-drop ALL --security-opt no-new-privileges:true \
-  --tmpfs /tmp:size=64m,mode=1777 \
-  --mount type=bind,src=/root/trade-bot-read-auth-2j4m02qm,dst=/evidence \
-  sha256:f06d883c1c5ed91c0a6833dd2186dd0a2ccf0856c9a114ff17f1546aa4e090f9 \
-  python -I -W error -m app.options.read_cli export-schemas \
-  --source /evidence/headless-discovery.json \
-  --output /evidence/read-schemas.json \
-  --schema-sha256 77f5aaac0e67dd9fb194d35bdbfb3779a351f52db8c6594a90dadd4f3fc5e272
+cd /opt/trade-bot-dashboard &&
+git fetch origin slice2/robinhood-read-shadow &&
+git merge-base --is-ancestor HEAD TESTED_RELEASE_SHA &&
+git switch --detach TESTED_RELEASE_SHA &&
+python3 scripts/connected-session-host.py build
 ```
 
-Provide only `/root/trade-bot-read-auth-2j4m02qm/read-schemas.json` for offline
-comparison. Do not upload credentials or the entire private directory. The
-`--schema-sha256` argument binds this export to the observed artifact; it does not
-change the runtime's accepted schema or authorize re-enrollment.
-No fetch, rebuild, recapture, login or market-hours wait is needed for this step.
+The detached checkout avoids the branch already in use at `/opt/trade-bot`.
+No trader is started by the build. Do not copy the schema export over the frozen
+configuration or repeat authentication just to test this metadata compatibility.
+See [the offline proof](PAPER_SCHEMA_COMPATIBILITY_PROOF.json), including both
+revisions through strict quote/bar mapping and original-pin/new-discovery tests
+through worker, collector/restart, catalog, Scope routing and pre-open replay.
 
-After compatibility is resolved, prepare the next explicitly chosen session with
-that date's contracts. November 3's preparation remains historical and must not
-be relabeled. Preserve the reviewed Swing catalog when still applicable; the
-eight-contract cap and missing Scope evidence remain unchanged. Do not repeat
-collection of the known interpolated history as an authorization test.
+The next required host inputs are contracts for the actual next session, valid
+original Swing daily history and reviewed Scope inputs as listed below. The
+November 3 receipt remains historical and cannot be relabeled. Still-applicable
+retained Swing contract evidence can be reused through the existing explicit
+capture-directory workflow; do not request the same known interpolated history
+again as a schema test. A build or successful metadata comparison does not prove
+fresh prices, a connected simulated fill or a complete entry-to-exit lifecycle.
 
 ## Historical November 3 preparation
 
@@ -184,7 +187,7 @@ the normal stop halt in place.
 | Swing | Source preparation/recovery and native shared scanning/execution fixtures; missing family remains isolated. | Valid original daily history and complete connected lifecycle. Saved interpolated bars remain rejected. |
 | Scope | Collector-to-native watch routing corrected; native sampled arming, exact paid admission, later-quote fill, restart and exit regression. Owned plays stay out of new-entry admission while exact-play management remains available. Terminal watches cannot be revived by retained ARMED evidence. | Original usable SPX history, exact reviewed SPXW terms/session/pattern binding, a catalog with a reserved slot, and connected lifecycle. No SPY substitution or invented contract terms. |
 | Scope timing | Original five-second admission and fresh advancing post-cost evidence remain enforced; late scripted responses retain their cost and cannot enter. | Post-cost delivery under the real continuous run-loop cadence remains unresolved. The favorable synthetic test drives explicit tick times; ten-second polling does not guarantee delivery inside five seconds. Valid history alone does not fix this integration limitation. |
-| Daily operation | Unique bounded launches, exact stop, retained reports and optional reviewed flat feed recovery capped at three per run; native timeout/recovery/stop/restart fixtures. Two-hour host run stopped on schedule. | Host authorization now passes on the deployed refresh/recovery image. Review the saved changed schema metadata before another capture/run. Actual model timing and lifecycle remain unverified. |
+| Daily operation | Unique bounded launches, exact stop, retained reports and optional reviewed flat feed recovery capped at three per run; native timeout/recovery/stop/restart fixtures. Two-hour host run stopped on schedule. | Host authorization passes. Description-only schema compatibility is implemented and tested; deploy it once. Current-session contracts, actual model timing and connected lifecycle remain unverified. |
 
 Scope bindings consume one of the **eight** candidate slots. The current eight
 DEGEN/Swing contracts cannot silently gain a ninth contract or drop a family.

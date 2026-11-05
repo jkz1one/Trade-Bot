@@ -5,6 +5,7 @@ import json
 import pytest
 from test_host_bundle import inputs
 from test_robinhood_read_mapping import schemas as schemas  # noqa: PLC0414
+from test_read_schema_contract import description_schemas as description_schemas
 
 from app.mixed import host_bundle, simulation_profile
 from app.options.read_gateway import schema_digest
@@ -42,7 +43,11 @@ def write(path, value):
     return path
 
 
-def test_both_host_consumers_accept_discovery_and_preserve_same_review(tmp_path, schemas, capsys):
+@pytest.mark.parametrize('updated_description', [False, True])
+def test_both_host_consumers_accept_discovery_and_preserve_same_review(
+        tmp_path, schemas, capsys, description_schemas, updated_description):
+    if updated_description:
+        schemas = description_schemas
     paths, _, _ = inputs(tmp_path, schemas)
     plain = host_bundle.prepared(*paths)[0]
     before = paths[2].read_bytes()

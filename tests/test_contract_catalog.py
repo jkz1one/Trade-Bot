@@ -9,6 +9,7 @@ import pytest
 
 from app.mixed.contract_catalog import bind, main, propose, review
 from app.mixed.simulation_profile import configuration
+from test_read_schema_contract import description_schemas as description_schemas
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -62,7 +63,11 @@ def terms(captures):
     ]
 
 
-def test_real_capture_review_preserves_clocks_and_unknowns(captures):
+@pytest.mark.parametrize('updated_description', [False, True])
+def test_real_capture_review_preserves_clocks_and_unknowns(captures, description_schemas, updated_description):
+    if updated_description:
+        # Synthetic revision transition; retained market payloads/clocks stay exact.
+        captures[-1]['result']['schemas'] = description_schemas.model_dump(mode='json')
     before = copy.deepcopy(captures)
     report = review(captures[0], captures[1:])
     assert len(report["contracts"]) == 4

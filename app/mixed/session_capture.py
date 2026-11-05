@@ -10,7 +10,8 @@ from pathlib import Path
 from app.mixed.contract_catalog import capture as inspect_capture, digest, review
 from app.options.operator_inbox import private_directory, read, save
 from app.options.read_capture import CaptureResult
-from app.options.read_mapping import SCHEMA_SHA256, quote_rows, response
+from app.options.read_mapping import quote_rows, response
+from app.options.schema_artifact import load_reviewed_schemas
 
 SYMBOLS = ("SPY", "QQQ")
 
@@ -130,12 +131,13 @@ def main(argv=None):
     if any(directory.iterdir()):
         raise ValueError("Empty private capture directory required; preserve existing evidence")
     from app.options.read_cli import main as capture_main
+    schemas = load_reviewed_schemas(a.schemas)
 
     def capture(name, request):
         request_path, output = directory / (name + "-plan.json"), directory / (name + ".json")
         save(request_path, request)
         code = capture_main(["capture", "--oauth-file", a.oauth_file, "--schemas", a.schemas,
-                             "--schema-sha256", SCHEMA_SHA256, "--plan", str(request_path),
+                             "--schema-sha256", schemas.sha256, "--plan", str(request_path),
                              "--output", str(output)])
         if code:
             raise ValueError("Provider capture failed; preserve original diagnostic")

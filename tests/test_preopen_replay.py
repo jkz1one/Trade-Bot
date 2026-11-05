@@ -10,6 +10,7 @@ from test_contract_catalog import captures as captures  # noqa: PLC0414
 from test_preopen_inputs import AT, enrolled
 from test_robinhood_read_mapping import schemas as schemas  # noqa: PLC0414
 from test_swing_bar_mapping_proof import synthetic
+from test_read_schema_contract import description_schemas as description_schemas
 
 from app.mixed.preopen_inputs import prepare
 from app.mixed.preopen_replay import report
@@ -17,7 +18,9 @@ from app.options.read_gateway import CapturePlan
 
 
 @pytest.mark.parametrize('damage', ['none', 'missing', 'interpolation', 'wrong_binding'])
-def test_saved_preopen_reports_each_series_without_new_reads(tmp_path, captures, schemas, monkeypatch, damage):
+@pytest.mark.parametrize('updated_description', [False, True])
+def test_saved_preopen_reports_each_series_without_new_reads(tmp_path, captures, schemas, monkeypatch, damage,
+                                                           description_schemas, updated_description):
     args = enrolled(tmp_path, captures, schemas)
     _, _, artifact = synthetic(schemas, at=AT)
     if damage == 'missing':
@@ -31,7 +34,8 @@ def test_saved_preopen_reports_each_series_without_new_reads(tmp_path, captures,
         result = await market_reader(AT)(cp, schemas=schemas, plan=market)
         times[0] = AT + timedelta(seconds=2)
         return result.model_copy(update={'plan': plan,
-            'schemas': schemas.model_copy(update={'captured_at': AT + timedelta(seconds=1)}),
+            'schemas': (description_schemas if updated_description else schemas).model_copy(
+                update={'captured_at': AT + timedelta(seconds=1)}),
             'observations': result.observations + artifact['result']['observations']})
     prepared = asyncio.run(prepare(*args, AT.date(), clock_source=lambda: times[0], reader=reader))
     sequence = prepared['collection']['sequence']

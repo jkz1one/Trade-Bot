@@ -20,11 +20,13 @@ from app.options.read_gateway import (
     OptionReadGateway,
     ReadSample,
     ReadSchemas,
+    REVIEWED_SCHEMA_DIGESTS,
+    REVIEWED_SCHEMA_SHA256,
     _validator,
     encoded,
 )
 
-SCHEMA_SHA256 = "d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15"
+SCHEMA_SHA256 = REVIEWED_SCHEMA_SHA256
 SOURCE = "robinhood-mcp"
 
 
@@ -37,7 +39,7 @@ def instant(value):
 
 def reviewed_schemas(schemas):
     schemas = ReadSchemas.model_validate(schemas.model_dump(warnings=False))
-    if schemas.sha256 != SCHEMA_SHA256:
+    if schemas.sha256 not in REVIEWED_SCHEMA_DIGESTS:
         raise ValueError("Unreviewed Robinhood wire contract")
     return schemas
 

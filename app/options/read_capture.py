@@ -16,7 +16,7 @@ from app.domain.models import utc_now
 from app.execution.market_reads import market_read_lease, private_oauth
 from app.execution.process import _cleanup
 from app.options.models import OptionRecord
-from app.options.read_gateway import ENDPOINT, CapturePlan, ReadSchemas, encoded
+from app.options.read_gateway import ENDPOINT, CapturePlan, ReadSchemas, encoded, same_schema_contract
 
 MAX_REQUEST_BYTES = 256 * 1024
 MAX_RESPONSE_BYTES = 1024 * 1024
@@ -298,7 +298,7 @@ async def _collect_owned(policy, *, schemas, plan, clock_source, include_invento
         if result.schemas is None or result.error_class is not None:
             raise ValueError("Completed capture lacks schema evidence")
         if plan is not None and (
-            result.schemas.sha256 != schemas.sha256 or len(result.observations) != len(plan.calls)
+            not same_schema_contract(result.schemas, schemas) or len(result.observations) != len(plan.calls)
         ):
             raise ValueError("Completed capture lacks exact call/schema coverage")
     if plan is not None:

@@ -26,7 +26,7 @@ from app.options.earnings_context import CompanyEarningsBinding, for_delivery
 from app.options.engine import clock, fingerprint
 from app.options.models import Name, OptionInstrument, OptionRecord
 from app.options.read_capture import CapturePolicy, CaptureResult, collect
-from app.options.read_gateway import CapturePlan, ReadSample
+from app.options.read_gateway import CapturePlan, ReadSample, same_schema_contract
 from app.options.read_mapping import (
     equity_history,
     equity_quotes,
@@ -160,8 +160,7 @@ def normalize(
     """A successful transport never upgrades unknown data into execution authority."""
     captured = CaptureResult.model_validate(captured.model_dump())
     if (
-        captured.schemas is None
-        or captured.schemas.sha256 != schemas.sha256
+        not same_schema_contract(captured.schemas, schemas)
         or captured.plan is None
     ):
         raise ValueError("Original schema-bound capture required")
@@ -551,8 +550,6 @@ class ContinuousFeed:
             return None
         from app.mixed.swing_feed import SwingHistorySnapshot, snapshot
         from app.options.read_capture import policy_digest
-        from app.options.read_gateway import same_schema_contract
-
         value = SwingHistorySnapshot.model_validate_json(row["payload_json"])
         attempt = self.db.execute(
             "SELECT * FROM attempts WHERE sequence=?", (row["attempt_sequence"],)
@@ -747,7 +744,7 @@ class ContinuousFeed:
             ):
                 raise ValueError("Collector response plan changed")
             stage = "CAPTURE"
-            if captured.schemas is None or captured.schemas.sha256 != self.schemas.sha256:
+            if not same_schema_contract(captured.schemas, self.schemas):
                 # A failed connection/discovery is not a market normalization error.
                 # Never substitute the enrolled schema for missing original evidence.
                 raise ValueError("Original schema-bound capture required")

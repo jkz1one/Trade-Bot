@@ -25,6 +25,12 @@ ReadTool = Literal[
 READ_TOOLS = frozenset(ReadTool.__args__)
 MAX_SCHEMA_BYTES = 128 * 1024
 MAX_SAMPLE_BYTES = 128 * 1024
+# Exact reviewed metadata revisions. The latter changes only the top-level
+# get_equity_historicals description (completed-bar timing documentation).
+# It does not change any input/output schema, tool identity or annotation.
+REVIEWED_SCHEMA_SHA256 = "d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15"
+COMPLETED_BARS_DESCRIPTION_SHA256 = "77f5aaac0e67dd9fb194d35bdbfb3779a351f52db8c6594a90dadd4f3fc5e272"
+REVIEWED_SCHEMA_DIGESTS = frozenset({REVIEWED_SCHEMA_SHA256, COMPLETED_BARS_DESCRIPTION_SHA256})
 
 
 def encoded(value):
@@ -64,12 +70,24 @@ class ReadSchemas(OptionRecord):
 
 
 def same_schema_contract(left, right):
-    """Compare validated wire contracts, retaining independent discovery clocks."""
+    """Keep exact pins, with one reviewed description-only metadata revision.
+
+    Never rewrite original schemas/digests, extend this exception to arbitrary
+    descriptions, or ignore annotations and nested schema metadata.
+    """
     if left is None or right is None:
         return False
     left = ReadSchemas.model_validate(left.model_dump(warnings=False))
     right = ReadSchemas.model_validate(right.model_dump(warnings=False))
-    return left.model_dump(exclude={"captured_at"}) == right.model_dump(exclude={"captured_at"})
+    a, b = (s.model_dump(exclude={"captured_at"}) for s in (left, right))
+    if a == b:
+        return True
+    if {left.sha256, right.sha256} != REVIEWED_SCHEMA_DIGESTS:
+        return False
+    for value in (a, b):
+        del value["sha256"]
+        value["tools"]["get_equity_historicals"].pop("description", None)
+    return a == b
 
 
 class ReadSample(OptionRecord):
@@ -163,12 +181,7 @@ class OptionReadGateway:
         return self.schemas
 
     def _pin(self, expected):
-        expected = ReadSchemas.model_validate(expected.model_dump(warnings=False))
-        if (
-            self.schemas is None
-            or self.schemas.sha256 != expected.sha256
-            or schema_digest(self.schemas.tools) != expected.sha256
-        ):
+        if not same_schema_contract(self.schemas, expected):
             raise ValueError("Authenticated read schemas changed or were not discovered")
 
     def _validate_call(self, call):
