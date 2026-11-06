@@ -1,0 +1,58 @@
+{
+  "version": "paper-daily-automation-offline-v1",
+  "base_commit": "b3d03e949382094298d8dab008f6e1e39078b2ce",
+  "application_files": 321,
+  "source_wheel_installed_bytes_match": true,
+  "runtime_pinned_dependencies_verified": 60,
+  "wheel_sha256": "f5108ed049654c681e8fe52ecda93a5e8626b59028d3916c5b8ed7ac02012d62",
+  "unique_passed_cases": 869,
+  "verification": [
+    {
+      "report": "installed.xml",
+      "passed": 866,
+      "sha256": "28d0ad3dc11e620d072522435ccc04e6744cad2ad60adb82757aefc8d12622e5"
+    },
+    {
+      "report": "final.xml",
+      "passed": 155,
+      "sha256": "5796f8ccfe0e18319a3217658e285df1c436614cadce53b73b95564b2e8dd3ea"
+    }
+  ],
+  "final_validation": "The final targeted run replaces overlapping broad-suite cases. After the broad suite, the daily check was tightened to require the full unresolved-order count; host stop/upgrade handling and associated daily tests were strengthened. Only app/mixed/daily_plan.py changed between the two installed wheels. All other application bytes were identical.",
+  "installed_testing": "Python 3.12 -I -W error; noneditable wheels; copied tests/scripts/examples outside checkout; plugin autoload disabled with explicit anyio; private host fixtures run in a user namespace mapping the current user to root.",
+  "systemd_unit_verification": "systemd-analyze verify accepted the generated service and timer (exit 0); no host service installed by the assistant.",
+  "coverage": [
+    "Exchange holidays, weekends, early closes, DST and weekly expiry selection",
+    "Actual production profile and immutable native owner/collector inspection",
+    "Reconstruct exact preparation receipt from validated rollover chain",
+    "Original catalog stages, bounded persisted retries and independent blocked preopen history",
+    "One launch per date; duplicate, manual, uncertain and failed launch handling",
+    "Pause during launch, exact ID/image stop even after checkout changes, paused upgrade and prior-image report adoption",
+    "Explicit resume validates stopped flat owner and retains same-day launch guard",
+    "Existing preparation, collection, scanning, paid decisions, fills, protective exits, restart, reporting and shared-owner regressions"
+  ],
+  "source_sha256": {
+    "app/mixed/daily_plan.py": "f6c694f92cdacc8c44374ae82faf7917ee2482a82ddb11b8e42e299f1762a6fd",
+    "scripts/paper-daily.py": "94029b3dd0e317269a390d7fb38e5a917469f62eb4828b9bbb9a605e280af4aa",
+    "scripts/connected-session-host.py": "acc3bfb493cbfb8369289c150185ae57d00064c34ebeda997023764e69154624",
+    "tests/test_paper_daily.py": "f94d203c36d3c1006505e55d51d4102e1be8d344d8b72984448ca80eef442b09"
+  },
+  "limits_preserved": [
+    "local-simulation / connected-simulation-1000-v1",
+    "$1000 initial capital; two simultaneous plays",
+    "$1/day and $5 total AI; original journals and model costs",
+    "Original quotes, histories, freshness and all entry/exit validation",
+    "Eight-contract capacity and exact SPX/Scope identity",
+    "No account reset, no real broker orders, LIVE disabled"
+  ],
+  "limitations": [
+    "Host installation has not been observed; no established SSH access",
+    "No connected simulated fill or entry-to-exit lifecycle yet observed",
+    "Original quote and provider latency repair needs connected confirmation",
+    "Swing original daily history and Scope original SPX history/exact reviewed session bindings remain unresolved",
+    "No guaranteed entries when real setups or validated inputs are absent"
+  ],
+  "live_enabled": false,
+  "provider_calls": false,
+  "host_changed_by_assistant": false
+}

@@ -1,5 +1,54 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.191. Persistent daily PAPER operation, 2026-11-06.
+
+The operator explicitly requested autonomous daily operation instead of repeated
+manual shell diagnostics and short sessions. The prior launcher had no daily
+controller. `scripts/paper-daily.py install` now builds/reuses the pinned release,
+checks the existing account read-only and installs a persistent systemd timer.
+It prepares at open minus thirty minutes, adopts exact existing enrollment without
+recapture, otherwise captures/reviews/enrolls original date-specific catalogs, makes
+one pre-open Swing source attempt, and launches at open plus thirty minutes through
+near the actual exchange close. It saves current and final native reports. The
+exchange calendar controls holidays, early closes and DST; no after-hours trading
+or scheduled fabricated fill is introduced. Routine operation needs no daily Bash
+commands after installation. SSH disconnects do not terminate the schedule.
+
+Preparation reservations, completed stages, launch intent and exact container ID
+persist separately from the existing owner. Preparation has at most three failed
+or interrupted stages per date. An uncertain launch is adopted by exact identity
+or blocked, never replayed. One launch per date, existing manual workers and an
+already-started manual session are respected. Pause survives restart and upgrade;
+a pause arriving during launch stops the exact worker before the controller exits.
+The controller never automatically clears non-stop halts, unresolved holdings/orders,
+unknown model costs, failure attention or budget exhaustion. Explicit schedule
+resume requires the native owner already to be normally stopped and flat, and does
+not replay a same-day launch. Existing bounded native feed recovery remains capped
+at two per scheduled run. No account reset, enrollment replacement, cost change or
+public dashboard activation is performed.
+
+Automatic new catalogs retain the existing SPY/QQQ DEGEN and enrolled Swing shape,
+with a genuine advertised weekly expiry at least seven days out. An exact existing
+Scope/earnings/carry binding is never silently discarded: automatic replacement
+blocks until an exact reviewed session exists. Eight-slot capacity, SPX identity,
+original timestamps and all native validation remain authoritative. Known invalid
+Swing history is not retried repeatedly; independent DEGEN may proceed if valid.
+The previous quote timing and schema reuse fixes are included in this deployment.
+
+Validation is recorded in PAPER_DAILY_AUTOMATION_PROOF.json: 869 distinct installed
+cases pass (866 broad, then 155 final targeted cases replacing overlaps), all 321
+application files match source/wheel/install, all 60 runtime pins match, and systemd
+accepts both generated units. This is offline
+software evidence, not proof of host installation or autonomous connected fills.
+The latest supplied host output remains the stopped November 6 session with zero
+fills, zero model cost and stale inventory at selection. No newer host result was
+provided. Scope originals/bindings and valid Swing daily history remain unresolved.
+The consolidated one-time install and exceptional stop/recovery instructions replace
+the old manual daily run sequence in docs/PAPER_NEXT_SESSION.md. Main and the event
+branch remain untouched; PR #1 stays draft with only its first paragraph replaced.
+
+## Previous release evidence
+
 Version 1.190. Preserve original quote age through PAPER selection, 2026-11-06.
 
 The operator updated the detached host checkout to b2436f3084563a3e0e231222b814e0ff42c7edbc

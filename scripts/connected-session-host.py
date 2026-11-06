@@ -551,6 +551,13 @@ def apply(plan):
 
 
 def run(args, release):
+    if args.operation == "daily-info":
+        image_id = image(release)
+        bundle(image_id)
+        return execute(image_id, "app.mixed.daily_plan", [
+            "--directory", "/state/owner", "--feed-directory", "/state/collector",
+            "--policy", "/state/config/policy.json", "--schemas", "/state/config/schemas.json",
+        ], config_mounts())
     if args.operation == "prepare-model-key":
         return prepare_model_key()
     if args.operation == "build":
@@ -812,6 +819,7 @@ def main(argv=None):
     p.add_argument(
         "operation",
         choices=(
+            "daily-info",
             "build",
             "check-read-auth",
             "login-read-auth",
