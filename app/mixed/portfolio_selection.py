@@ -6,18 +6,39 @@ from app.mixed.portfolio_protection import entry_guard
 from app.mixed.portfolio_store import history
 
 
-async def cycle(c, frame):
+async def cycle(c, frame, *, _protected_epoch=None):
     from app.options.coordinator import DegenFrame
     from app.options.scope_runtime import protection
 
     frame = DegenFrame.model_validate(frame.model_dump())
-    managed = await c.supervise(*protection(frame), stocks=stock_inputs(frame))
+    managed = None
+    if _protected_epoch is not None:
+        from app.mixed.portfolio_execution import fresh
+        from app.options.engine import fingerprint
+
+        try:
+            with c.engine.journal.read() as db:
+                c._bound(db)
+                fresh(c.engine, db, c.engine.portfolio_policy, c.now())
+                if _protected_epoch == (c.engine._epoch(db), fingerprint(frame)):
+                    managed = {"reconciled": True, "reused_runtime_protection": True}
+        except ExecutionBlocked:
+            pass
+    if managed is None:
+        managed = await c.supervise(*protection(frame), stocks=stock_inputs(frame))
     if not managed.get("reconciled"):
         return {"status": "HOLD", "reason": "PORTFOLIO_PROTECTION_REQUIRED", "management": managed}
     results = []
     paid = c.judgment_limits is not None or c.entry_policy is not None
     status, reason = "COMPLETE", None
     for slot in range(1 if paid else 2):
+        if slot:
+            # A preceding entry changed the shared book. Reconcile and protect
+            # that new state before considering the remaining capacity.
+            managed = await c.supervise(*protection(frame), stocks=stock_inputs(frame))
+            if not managed.get("reconciled"):
+                status, reason = "HOLD", "PORTFOLIO_PROTECTION_REQUIRED"
+                break
         try:
             with c.engine.journal.read() as db:
                 c._bound(db)
@@ -28,10 +49,13 @@ async def cycle(c, frame):
                     reason = "PLAY_CAPACITY"
                     break
                 entry_guard(c.engine, db, c.engine.portfolio_policy, c.now())
+                protected_epoch = c.engine._epoch(db)
         except ExecutionBlocked as exc:
             status, reason = "HOLD", str(exc)
             break
-        outcome = await c._cycle_once(frame, portfolio_slot=slot)
+        outcome = await c._cycle_once(
+            frame, portfolio_slot=slot, _protected_epoch=protected_epoch
+        )
         results.append(outcome)
         if outcome.get("status") not in {"OPEN", "FILLED", "PARTIAL"}:
             break

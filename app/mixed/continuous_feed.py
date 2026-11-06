@@ -119,7 +119,7 @@ def planned(policy, held, now, window, *, cycle):
     if cycle and window is not None:
         end = now - timedelta(seconds=now.timestamp() % 300)
         if end > window.opens_at:
-            calls.append(
+            calls.insert(0,
                 ReadSample(
                     label="history",
                     tool="get_equity_historicals",

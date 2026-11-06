@@ -147,10 +147,12 @@ class OptionRuntime:
             raise ExecutionBlocked("OPTION_RUNTIME_OWNER_CHANGED")
         return row
 
-    async def _cycle(self, slot, frame):
+    async def _cycle(self, slot, frame, protected_epoch=None):
         status, reason = "INTERRUPTED", "OPTION_RUNTIME_CYCLE_INTERRUPTED"
         try:
-            result = await self.c.cycle(frame)
+            result = await self.c.cycle(
+                frame, **({"_protected_epoch": protected_epoch} if protected_epoch else {})
+            )
             status, reason = "COMPLETE", result.get("reason")
         finally:
             with self.c.engine.journal.write() as db:
@@ -388,7 +390,11 @@ class OptionRuntime:
                     (slot, window.session_date, status, reason, self.c.now().isoformat(), completed),
                 )
         if reason is None:
-            self.task = asyncio.create_task(self._cycle(slot, frame))
+            protected_epoch = None
+            if self.c.engine.portfolio_policy is not None and result.get("reconciled"):
+                with self.c.engine.journal.read() as db:
+                    protected_epoch = (self.c.engine._epoch(db), fingerprint(frame))
+            self.task = asyncio.create_task(self._cycle(slot, frame, protected_epoch))
         return result
 
     async def run(self, stop, *, ready=None):

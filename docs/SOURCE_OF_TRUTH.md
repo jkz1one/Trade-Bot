@@ -1,5 +1,63 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.190. Preserve original quote age through PAPER selection, 2026-11-06.
+
+The operator updated the detached host checkout to b2436f3084563a3e0e231222b814e0ff42c7edbc
+and read the existing stopped run paper-1106-151939-cd07ea. Inventory SPY age was
+26.297 seconds, QQQ 25.798 seconds, against the enrolled strict <10-second maximum.
+Original receive lags were 0.696 and 0.196 seconds, with valid clock ordering. The
+stale-inventory entry blocker is confirmed. The report did not start a worker or
+build an image: the last built/running image remains the 8402551 image documented
+below. Zero connected fills and zero model cost remain the last observed totals.
+The two completed records still contain only one actual scan, with twelve WATCHING
+setups and no confirmed setup. A healthy feed alone cannot imply an entry signal.
+
+Offline elapsed-clock tests reproduced redundant native reconciliation expiring
+otherwise valid inventory. The first runtime portfolio selection previously required
+four account reads. Completed runtime protection is now handed to selection only
+for the same frame and exact unchanged owner epoch. Original account age, held-play
+protection and all downstream admission gates are rechecked. A changed or stale
+handoff requires new protection; a second play after submission also gets a new
+read/protection pass. No persistent account or enrollment schema is changed.
+Independent supervision continues while paid decisions await their result. Genuine
+state changes still reject superseded reads; no stale snapshot is force-accepted.
+
+CYCLE collection requests completed intraday history before current equity/option
+books, preventing history latency from aging those subsequently received books.
+An intraday history-call exception is retained as a failed original read while the
+remaining bounded quote reads continue. Normalization may deliver MARKET protection
+only when its required original quotes validate. No missing history is fabricated;
+no incomplete capture becomes a CYCLE. Optional pre-open history ordering, call
+counts, persisted quotas, capture deadlines and retry limits remain unchanged.
+The prior exact-schema-definition cache is included in this release.
+
+The actual native runtime fixture admits two option entries, fills them on later
+quotes, submits and fills independent protective exits, then reopens the owner and
+retains identical cash/orders with no replay. Delayed stale originals still cannot
+enter. Separate wire fixtures exercise slow and failed history through the actual
+capture worker and normalizer. Validation is recorded in PAPER_ENTRY_TIMING_PROOF.json.
+All 813 distinct final installed cases pass; all 320 application files match
+source/wheel/install and all 60 runtime pins match. Five old positional-history
+fixture assertions were corrected, including a separate legacy-capture test.
+These are synthetic offline proofs, not connected fill evidence or host benchmarks.
+The saved five timeouts (DISCOVER twice, SERIALIZE twice, CLOSE once) still require
+connected validation of the repaired processing path; their last reached phases do
+not establish the underlying elapsed time or cause.
+
+Deploy once with stopped workers; use the already enrolled November 6 receipt only
+on November 6. A bounded one-hour background run returns without holding SSH open,
+preserves the existing two-recovery cap, and schedules nothing automatically. See
+PAPER_NEXT_SESSION.md. No auth, contract recapture, enrollment or dashboard activation
+is requested. On a later date use a separately reviewed current-session catalog.
+Swing still needs valid original daily history. Scope still needs original usable
+SPX history plus exact reviewed contract/session bindings within eight catalog slots.
+Neither is claimed integrated-ready, and no connected entry-to-exit lifecycle has
+been established. Robinhood read-only, local-simulation/connected-simulation-1000-v1,
+$1000 initial capital, two plays, $1/day and $5 total AI limits, balances, journals,
+positions, halts and enrollment are preserved. LIVE remains disabled.
+
+Previous version notes (historical):
+
 Version 1.189. Reuse validated schema definitions and report actual scan evidence, 2026-11-06.
 
 The host deployed 840255127c8d895fd6bc22dab9410bb7f6ec48a0 as image

@@ -926,17 +926,23 @@ class DegenCoordinator:
             **({"stock_quotes": tuple(x.quote for x in frame.stocks)} if self.stock_policy else {}),
         )
 
-    async def cycle(self, frame):
+    async def cycle(self, frame, *, _protected_epoch=None):
         if self.engine.portfolio_policy is not None:
             from app.mixed.portfolio_selection import cycle
 
-            return await cycle(self, frame)
+            return await cycle(self, frame, _protected_epoch=_protected_epoch)
+        if _protected_epoch is not None:
+            raise ValueError("Protection handoff requires portfolio enrollment")
         return await self._cycle_once(frame)
 
-    async def _cycle_once(self, frame, *, portfolio_slot=None):
+    async def _cycle_once(self, frame, *, portfolio_slot=None, _protected_epoch=None):
         frame = DegenFrame.model_validate(frame.model_dump(warnings=False))
         if frame.portfolio_version is not None and self.engine.portfolio_policy is None:
             raise ValueError("Portfolio frame requires portfolio owner")
+        if _protected_epoch is not None and (
+            self.engine.portfolio_policy is None or portfolio_slot is None
+        ):
+            raise ValueError("Protection handoff requires sequential portfolio selection")
         if frame.stocks and self.stock_policy is None:
             raise ValueError("Stock frames require explicit mixed selection enrollment")
         if frame.swing_batches and (
@@ -977,22 +983,20 @@ class DegenCoordinator:
                 db, at, "DEGEN_CYCLE_STARTED", {"cycle_key": key, "input_hash": digest}
             )
         try:
-            reconciled = await self.engine.reconcile_fixture(now=at)
-            if not reconciled["reconciled"]:
-                return self._finish(
-                    key,
-                    {
-                        "status": "HOLD",
-                        "reason": "AUTHORITATIVE_RECONCILIATION_REQUIRED",
-                        "issues": reconciled["issues"],
-                    },
-                )
-            at = self.now()
             if self.engine.portfolio_policy is not None:
+                from app.mixed.portfolio_execution import fresh
                 from app.mixed.portfolio_selection import stock_inputs
                 from app.options.scope_runtime import protection
 
-                managed = await self.supervise(*protection(frame), stocks=stock_inputs(frame))
+                if _protected_epoch is None:
+                    managed = await self.supervise(*protection(frame), stocks=stock_inputs(frame))
+                else:
+                    # The sequential selector just completed protection for this
+                    # frame. No await intervenes. Reuse only that exact owner
+                    # epoch, with the original snapshot's age checked again.
+                    with self.engine.journal.read() as db:
+                        fresh(self.engine, db, self.engine.portfolio_policy, self.now())
+                        managed = {"reconciled": self.engine._epoch(db) == _protected_epoch}
                 if not managed.get("reconciled"):
                     return self._finish(
                         key,
@@ -1002,6 +1006,18 @@ class DegenCoordinator:
                             "management": managed,
                         },
                     )
+            else:
+                reconciled = await self.engine.reconcile_fixture(now=at)
+                if not reconciled["reconciled"]:
+                    return self._finish(
+                        key,
+                        {
+                            "status": "HOLD",
+                            "reason": "AUTHORITATIVE_RECONCILIATION_REQUIRED",
+                            "issues": reconciled["issues"],
+                        },
+                    )
+            at = self.now()
             with self.engine.journal.read() as db:
                 ledger = self._bound(db)
                 held = self._held_instrument(db, ledger)

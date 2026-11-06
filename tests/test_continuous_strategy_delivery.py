@@ -284,7 +284,7 @@ def test_collector_publishes_intervening_quote_poll_and_recovers_it_after_restar
         reopened.close()
 
 
-@pytest.mark.parametrize("failure", ["missing", "failed", "schema", "coverage", "close"])
+@pytest.mark.parametrize("failure", ["failed", "schema", "coverage", "close"])
 def test_intraday_failure_keeps_completed_books_and_original_failed_receipt(
     tmp_path, schemas, failure
 ):
@@ -296,13 +296,10 @@ def test_intraday_failure_keeps_completed_books_and_original_failed_receipt(
 
     policy, capture, _, held = captured_market(schemas)
     data = capture.model_dump()
-    observation = data["observations"][-1]
-    assert observation["tool"] == "get_equity_historicals"
-    if failure in {"missing", "failed", "close"}:
+    observation = next(r for r in data["observations"] if r["tool"] == "get_equity_historicals")
+    if failure in {"failed", "close"}:
         data.update(status="FAILED", error_class="ValueError")
-        if failure == "missing":
-            data["observations"].pop()
-        elif failure == "failed":
+        if failure == "failed":
             observation.update(completed=False, raw={"isError": True})
     elif failure == "schema":
         observation["raw"] = {"isError": False, "structuredContent": {"data": "invalid"}}
@@ -336,6 +333,27 @@ def test_intraday_failure_keeps_completed_books_and_original_failed_receipt(
         assert CaptureResult.model_validate_json(retained) == captured
     finally:
         collector.close()
+
+
+def test_legacy_quote_first_missing_history_still_preserves_original_books(schemas):
+    from test_swing_delivery import captured_market
+
+    policy, capture, catalog, held = captured_market(schemas)
+    data = capture.model_dump()
+    # Historical captures used quote-first ordering. Their absent trailing
+    # history remains readable; do not rewrite it into a current capture.
+    pairs = sorted(zip(data['plan']['calls'], data['observations']),
+                   key=lambda item: item[0]['tool'] == 'get_equity_historicals')
+    data['plan']['calls'] = [call for call, _ in pairs]
+    data['observations'] = [row for _, row in pairs[:-1]]
+    data.update(status='FAILED', error_class='ValueError')
+    original = CaptureResult.model_validate(data)
+    packet = normalize(policy, schemas, original, catalog, (held,),
+                       sequence=1, now=original.collected_at)
+    assert packet.kind == 'MARKET'
+    assert len(packet.frame.stocks) == 2 and len(packet.frame.quotes) == 2
+    assert packet.frame.held_quotes[0].instrument == held
+    assert packet.coverage_issues == ('INTRADAY_HISTORY_UNAVAILABLE',)
 
 
 def test_failed_required_quote_cannot_hide_behind_optional_intraday_history(tmp_path, schemas):

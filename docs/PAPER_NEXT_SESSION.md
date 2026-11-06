@@ -33,44 +33,78 @@ Ten skipped records are historical/unobserved; one active slot expired without f
 The slot repair enabled connected scan progress; contract admission and a connected
 entry-to-exit lifecycle remain unverified.
 
+The operator subsequently checked out b2436f3084563a3e0e231222b814e0ff42c7edbc
+and ran its reporter against this same stopped session. Original SPY inventory
+age was **26.297 seconds**, QQQ **25.798 seconds**, against the enrolled **<10
+seconds** limit. Receive lags were 0.696 and 0.196 seconds, with valid clock order.
+This establishes stale inventory at selection. It does not identify the duration
+of each host processing stage or prove all binding checks would otherwise pass.
+The image is still the older 8402551 image; the reporter did not rebuild or start it.
+
 The five timeout diagnostics show DISCOVER twice, SERIALIZE twice and CLOSE once.
-A last reached phase does not prove its elapsed time or root cause. The current
-code removes repeated checks of identical schema definitions and improves reports;
-it does not claim that those host timeouts or snapshot supersession are fixed.
-No freshness limit, deadline, recovery cap, risk check or enrollment is changed.
+A last reached phase does not prove its elapsed time or root cause.
 
-## Next action: inspect the existing run
+## Entry timing repair and consolidated deployment
 
-After updating the detached checkout to the supplied tested release, read the
-**same stopped run**, without collecting more data:
+Offline reproduction found four account snapshot reads before the first runtime
+portfolio selection: runtime protection, portfolio protection, explicit coordinator
+reconciliation and another protection pass. Four-second synthetic reads expired
+original inventory before admission. The runtime now hands completed protection to
+selection for the **same frame and exact unchanged owner epoch**. Original account
+freshness and held-play guards are checked again; changed/stale state requires new
+protection. A successful first entry gets a new reconciliation/protection pass
+before any second entry. Independent runtime protection continues during model work.
+No clock is renewed and no epoch, quote, risk or spending gate is loosened.
+
+Intraday historical reads now precede executable books in a CYCLE. A recoverable
+history-call exception remains a failed original receipt but does not suppress the
+remaining protection quote reads. Missing history can only deliver MARKET protection,
+never a fabricated CYCLE. The original process deadline, read quota and retry bounds
+still apply. Optional pre-open Swing backfill keeps its existing quote-first order.
+The earlier schema cache repair is included in this same deployment.
+
+Build this tested release once, with workers stopped, using the detached-checkout
+command below. Do not repeat the saved report, authorization, capture, preparation,
+enrollment or dashboard activation. During the November 6 market session, the
+existing receipt can be used for a bounded background run:
 
 ```bash
 cd /opt/trade-bot-dashboard &&
-python3 scripts/paper-session-report.py \
-  --run-id paper-1106-151939-cd07ea --format text
+python3 scripts/paper-session-start.py \
+  --prepared-session /etc/trade-bot-connected/sessions/2026-11-06-friday-ready \
+  --seconds 3600 --max-feed-recoveries 2
 ```
 
-The report now projects original inventory source/receive/evaluation clocks and
-its enrolled metadata-age limit from saved decision inputs. Missing clocks remain
-unavailable. It also shows entry blockers, actual scan evidence and all retained
-read-failure phases. This host-side reporting update needs no image rebuild.
-The schema optimization requires one build before a subsequent worker launch;
-combine it with the next deployment, with workers stopped. Do not launch another
-market run solely to reproduce these reporting or schema-overhead defects.
+The command returns after startup. The Docker worker continues independently of the
+SSH connection and stops after one hour; nothing is scheduled for another day.
+Keep its returned status/stop commands. A later status check is
+`python3 scripts/paper-session-report.py --run-id RETURNED_RUN_ID --format text`.
+On another date, do not use November 6's receipt. Do not infer a future Swing catalog
+from November 13 expiry: on November 9 that expiry has only four calendar days
+remaining and does not meet the current seven-day minimum.
 
 ## Remaining work and evidence
 
-- **Implemented offline:** current-slot recovery, bounded scan attempts across
-  restart, schema-definition reuse, explicit scan/input/stop/failure reporting,
-  retained-clock inspection, Scope owned-play routing, pacing and setup review.
-- **Still unresolved:** the host's snapshot supersession, exact inventory rejection
-  and variable read/processing latency. Use retained evidence first; this release
-  is not a claim that daily PAPER is dependable yet.
+- **Implemented offline:** one protection handoff per first runtime selection,
+  fresh review before a second play, history-before-book timing, failed-history
+  protection reads, current-slot recovery, bounded retries, schema-definition reuse,
+  truthful reporting, Scope owned-play routing, pacing and setup review.
+- **Offline acceptance:** original-clock tests reproduce the old stale-input path;
+  native runtime fixtures admit two option entries, fill them from later quotes,
+  submit protective exits, fill those exits and reopen the owner without duplicating
+  orders or changing balances. Stale originals and changed epochs remain blocked.
+  See [validation](PAPER_ENTRY_TIMING_PROOF.json). Synthetic inputs are test-only.
+- **Requires connected timing evidence:** provider/child timeout behavior, current
+  books arriving at admission within their unchanged limits, and stable operation
+  on the actual host. The old 26-second inventory cannot be reused as fresh evidence.
+  The repair removes duplicate-read race opportunities; actual state changes still
+  reject superseded reads. No claim that all host timeouts are fixed.
 - **Requires valid original inputs:** Swing daily history and usable SPX history,
   exact reviewed Scope contract/session/pattern terms and explicit catalog space.
   Saved interpolated Swing bars remain rejected. No SPY substitution or ninth slot.
 - **Requires connected acceptance:** an admitted simulated entry, fill, management
-  and exit. No such connected lifecycle or fill has been observed.
+  and exit. No such connected lifecycle or fill has been observed. A market setup
+  remains necessary: all twelve setups in the saved scan were still WATCHING.
 
 ## Optional Scope paid-read handoff
 
@@ -173,14 +207,6 @@ Append `--report-format text` to a launch using
 its error status and never starts a replacement worker. Use `--format json` for
 full retained diagnostics. A normal stop, no reported family blocker, or a passing
 fixture is not a trading-readiness claim.
-
-## Deployment of the current repair
-
-Update the detached dashboard checkout to the supplied tested commit. The report
-can immediately inspect saved runs. Build the schema-efficiency image once before
-its next worker launch, with connected workers stopped. Do not switch the branch
-already owned by `/opt/trade-bot`, reset the account or repeat enrollment. Scope
-pacing remains inactive without its explicitly reviewed exact-session binding.
 
 ## Historical November 3 preparation
 

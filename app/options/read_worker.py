@@ -76,6 +76,7 @@ async def collect(request, *, progress=None):
                 note('VALIDATE_PLAN')
                 plan = gateway.validate_plan(request.plan, request.schemas)
                 async def ordinary_reads():
+                    nonlocal error, failure
                     for call in plan.calls:
                         note('MARKET_READ')
                         at, tick = utc_now(), time.monotonic()
@@ -87,7 +88,20 @@ async def collect(request, *, progress=None):
                         }
                         observations.append(row)
                         try:
-                            raw, checked = await gateway.sample(call, request.schemas)
+                            try:
+                                raw, checked = await gateway.sample(call, request.schemas)
+                            except Exception as exc:
+                                # Intraday history is read before the books to
+                                # preserve their original age. A failed history
+                                # cannot suppress subsequent protection quotes.
+                                # The capture remains FAILED; normalization alone
+                                # decides whether complete market reads are usable.
+                                if call.tool != 'get_equity_historicals' or call.label != 'history':
+                                    raise
+                                if error is None:
+                                    error = type(exc).__name__
+                                    failure = failure_evidence(exc, stage)
+                                continue
                             if len(encoded([*observations, raw])) > 512 * 1024:
                                 raise ValueError("Aggregate samples exceed bound")
                             row.update(
