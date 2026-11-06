@@ -1,5 +1,63 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.189. Reuse validated schema definitions and report actual scan evidence, 2026-11-06.
+
+The host deployed 840255127c8d895fd6bc22dab9410bb7f6ec48a0 as image
+3b5a3344fc30b4d5450aa719450ef79554845063d24e4a705f862fa8f5e13bf6.
+November 6 preparation is enrolled at
+/etc/trade-bot-connected/sessions/2026-11-06-friday-ready with policy
+b511b0df3552f505c9d5c0e01385a9b2502976652a41f56c10b9fe308586f162.
+It retained four November 13 Swing contracts and captured four November 6 DEGEN
+contracts. No new enrollment, account reset, auth or dashboard activation is needed.
+
+The operator's saved report for paper-1106-151939-cd07ea covers 10:21:10–10:31:25
+New York. The run stopped with exit zero, accepted sequence 678 and collected 679,
+23 delivered packets, five capture timeouts, two reviewed feed recoveries, no fills,
+no model calls and no AI spending. Ten skipped slots were historical/unobserved;
+one current slot expired with missing feed. Two cycles completed, but only one
+decision contained scans: the earlier HOLD required authoritative reconciliation
+after PORTFOLIO_READ_SUPERSEDED. The later decision scanned SPY and QQQ with no
+history issues. All twelve setup observations were WATCHING; volume confirmation
+was absent throughout, and VWAP pullback lacked its 25-bar structure. It also
+retained INVENTORY_BINDING_COVERAGE_OR_FRESHNESS, separately from NO_CONFIRMED_SETUP.
+This is connected scan evidence, not successful contract admission or trading readiness.
+
+Timeout phases were DISCOVER twice, SERIALIZE twice and CLOSE once. The progress
+channel identifies the last reached phase, not how long was spent there or the
+root cause. No incomplete capture is accepted. Snapshot supersession, the specific
+inventory binding/clock cause and dependable provider/host latency remain unresolved.
+
+Offline profiling found repeated schema-definition checks in capture and mapping.
+A bounded cache now keys those checks by exact canonical schema bytes; every
+payload still receives a new validator and full validation. Nested changes cannot
+reuse an old definition, remote references remain forbidden, and cache entries
+contain no quote acceptance, market data, freshness or authorization decisions.
+No provider call, deadline, quote limit, prepared policy or account state changes.
+The local repeated-definition benchmark is not a host speed or timeout-fix claim.
+
+The short report now exposes contract blockers, actual scan counts and setup
+reasons, plus all retained timeout phases. A completed pre-scan HOLD is no longer
+called a successful scan or WAITING_FOR_SETUP. An inventory blocker is MISSING_INPUTS
+while running, with stopped/failed process status still taking precedence.
+Original saved inventory clocks can be projected from existing decision inputs;
+they remain original, including negative ages/future order, and missing evidence
+is not fabricated. This works on the supplied old run without another market read.
+Validation and limits are recorded in PAPER_READ_EFFICIENCY_PROOF.json.
+All 644 distinct installed cases pass after correcting copied-fixture omissions
+and an existing privacy-test marker collision with the allowed PRIVATE_AUTH phase.
+All 320 application files match source/wheel/install; all 60 runtime pins match.
+
+Remaining work: identify the retained inventory clock/binding failure and snapshot
+supersession, establish reliable connected read/entry timing, obtain valid original
+Swing daily history and usable original SPX history with exact reviewed Scope terms
+and session bindings within eight catalog slots, and observe a complete connected
+simulated entry-to-exit lifecycle. Synthetic fixtures and the schema optimization
+do not close those gates. The existing $1000 initial capital, two-play cap,
+$1/day and $5 total AI limits, account/population, balances, journals, positions,
+halts and enrollment remain intact. Robinhood remains read-only; LIVE is disabled.
+
+Previous version notes (historical):
+
 Version 1.188. Recoverable current-slot scan handoff and read timeout diagnostics, 2026-11-05.
 
 The operator deployed ab8d738 as image

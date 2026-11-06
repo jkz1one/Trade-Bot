@@ -124,9 +124,9 @@ import httpx2
 from app.options import read_worker
 @asynccontextmanager
 async def client():
-    req=httpx2.Request("POST","https://example.invalid/PRIVATE")
-    response=httpx2.Response(401,request=req,json={"error":"invalid_client","error_description":"PRIVATE"})
-    raise ExceptionGroup("PRIVATE",[httpx2.HTTPStatusError("PRIVATE",request=req,response=response)])
+    req=httpx2.Request("POST","https://example.invalid/PRIVATE_SENTINEL")
+    response=httpx2.Response(401,request=req,json={"error":"invalid_client","error_description":"PRIVATE_SENTINEL"})
+    raise ExceptionGroup("PRIVATE_SENTINEL",[httpx2.HTTPStatusError("PRIVATE_SENTINEL",request=req,response=response)])
     yield
 class Connection:
     client=staticmethod(client)
@@ -142,7 +142,7 @@ raise SystemExit(read_worker.main())
         timeout=10,
         check=False,
     )
-    assert result.returncode == 0 and "PRIVATE" not in result.stdout + result.stderr
+    assert result.returncode == 0 and "PRIVATE_SENTINEL" not in result.stdout + result.stderr
     value = CaptureResult.model_validate_json(result.stdout)
     assert value.failure.stage == "CONNECT" and value.failure.causes[1].http_status == 401
     assert not value.observations and value.schemas is None

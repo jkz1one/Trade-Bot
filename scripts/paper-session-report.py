@@ -116,7 +116,7 @@ def decision_evidence(db, key):
     value['scans'] = []
     for index in range(min(count('$.scans'), 12)):
         prefix = f'$.scans[{index}]'
-        scan = {name: field(prefix + '.' + name) for name in ('symbol', 'issues')}
+        scan = {name: field(prefix + '.' + name) for name in ('symbol', 'issues', 'evaluated_at')}
         scan['observations'] = [{name: field(f'{prefix}.observations[{n}].{name}')
                                  for name in ('family', 'status', 'reasons')}
                                 for n in range(min(count(prefix + '.observations'), 12))]
@@ -127,8 +127,61 @@ def decision_evidence(db, key):
     summary = outcome(json.dumps(value))
     summary.update(option_candidates=count('$.candidates'), stock_candidates=count('$.stock_candidates'),
                    total_scans=count('$.scans'), scans_omitted=max(0, count('$.scans') - 12))
+    summary['inventory_timing'] = inventory_timing(db, key, value['scans'])
     return {'evidence_available': True, 'evidence_bytes': size,
             'omitted_summary_fields': omitted, **summary}
+
+
+def inventory_timing(db, key, scans):
+    """Original saved clocks only, projected without contract IDs or private inputs.
+
+    These diagnostics are not a new inventory validation or a readiness claim.
+    They also work for old runs; no provider capture or owner mutation is needed.
+    """
+    if not scans or 'inputs_json' not in {
+            row[1] for row in db.execute('PRAGMA table_info(execution_option_opportunities)')}:
+        return []
+    valid = db.execute('SELECT CASE WHEN length(CAST(inputs_json AS BLOB))<=? '
+                       'THEN json_valid(inputs_json) ELSE 0 END '
+                       'FROM execution_option_opportunities WHERE cycle_key=?',
+                       (MAX_DECISION_BYTES, key)).fetchone()
+    if not valid or not valid[0]:
+        return []
+    columns = ['symbol', 'source_at', 'received_at']
+    projection = ','.join("CASE WHEN json_type(j.value,'$." + name + "')='text' "
+                         "AND length(json_extract(j.value,'$." + name + "'))<=128 "
+                         "THEN json_extract(j.value,'$." + name + "') END" for name in columns)
+    rows = db.execute('SELECT ' + projection + ' FROM execution_option_opportunities o, '
+                      "json_each(o.inputs_json,'$.inventories') j WHERE o.cycle_key=? "
+                      "AND j.type='object' LIMIT 12", (key,)).fetchall()
+    tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    age_limit = None
+    if 'execution_option_strategy' in tables:
+        row = db.execute("SELECT json_extract(policy_json,'$.selection.max_metadata_age_seconds') "
+                         "FROM execution_option_strategy WHERE id=1 AND json_valid(policy_json)").fetchone()
+        if row and type(row[0]) is int and 0 < row[0] <= 60:
+            age_limit = row[0]
+    results = []
+    for symbol, source, received in rows:
+        if symbol not in ('SPY', 'QQQ'):
+            continue
+        matching = [scan for scan in scans if scan.get('symbol') == symbol]
+        if len(matching) != 1:
+            continue
+        evaluated = matching[0].get('evaluated_at')
+        try:
+            times = [datetime.fromisoformat(s) for s in (source, received, evaluated)]
+            if any(t.tzinfo is None or t.utcoffset() is None for t in times):
+                continue
+        except (TypeError, ValueError):
+            continue
+        results.append({'symbol': symbol, 'source_at': source, 'received_at': received,
+                        'evaluated_at': evaluated,
+                        'source_age_seconds': (times[2]-times[0]).total_seconds(),
+                        'receive_lag_seconds': (times[1]-times[0]).total_seconds(),
+                        'clock_order_valid': times[0] <= times[1] <= times[2],
+                        'max_metadata_age_seconds': age_limit})
+    return results
 
 
 def connection(path):
@@ -192,6 +245,22 @@ def spending(db, start, end):
             'costs': {k: {**v, 'settled_cost': format(v['settled_cost'], 'f')} for k,v in totals.items()}}
 
 
+def decision_input_issues(decision):
+    """Retained blockers only; a HOLD or completed cycle alone proves no scan."""
+    missing = codes([decision.get('issues'), decision.get('blocker'),
+                     [scan.get('issues') for scan in decision.get('scans', [])]])
+    setup_reasons = codes([setup.get('reasons') for scan in decision.get('scans', [])
+                          for setup in scan.get('setups', [])])
+    missing += [r for r in setup_reasons if r in {
+        'COMPLETED_STRUCTURE_INSUFFICIENT', 'HISTORY_UNAVAILABLE_DELAYED_OR_STALE'}]
+    missing += [r for r in codes(decision.get('contract_exclusions')) if r in {
+        'INVENTORY_BINDING_COVERAGE_OR_FRESHNESS', 'INVENTORY_UNAVAILABLE',
+        'SCAN_TIME_OR_STRUCTURE_MISMATCH'}]
+    missing += [r for r in codes(decision.get('reason')) if r in {
+        'AUTHORITATIVE_RECONCILIATION_REQUIRED', 'PORTFOLIO_PROTECTION_REQUIRED'}]
+    return sorted(set(missing))
+
+
 def short_report(result):
     """Bounded public text projected from the same read-only structured report."""
     def reasons(value):
@@ -218,10 +287,45 @@ def short_report(result):
         if family in decision.get('unavailable_families', []):
             issues.append(family + '_INPUT_UNAVAILABLE')
         fallback = 'no input blocker reported' if result.get('accepted_packet') else 'input not established'
-        if family == 'DEGEN' and not result.get('decision_count', len(result.get('decisions', []))):
-            fallback = 'no decision recorded; scan not established'
+        if family == 'DEGEN':
+            if not result.get('decision_count', len(result.get('decisions', []))):
+                fallback = 'no decision recorded; scan not established'
+            elif not decision.get('scans'):
+                fallback = 'last decision did not record a scan'
+            else:
+                fallback = 'scan recorded; entry checks below'
         lines.append(family + ': ' + (reasons(issues) or fallback))
     lines.append('Last decision: ' + (reasons([decision.get('status'), decision.get('reason')]) or 'none recorded'))
+    checks = codes([decision.get('issues'), decision.get('blocker'),
+                    decision.get('rejections'), decision.get('contract_exclusions')])
+    if checks:
+        lines.append('Entry checks: ' + reasons(checks[:8]))
+    for timing in decision.get('inventory_timing', [])[:4]:
+        limit = timing['max_metadata_age_seconds']
+        lines.append(f"Inventory {timing['symbol']}: source age {timing['source_age_seconds']:.3f}s; "
+                     f"limit <{limit}s; receive lag {timing['receive_lag_seconds']:.3f}s; "
+                     f"clock order {'valid' if timing['clock_order_valid'] else 'invalid'}"
+                     if limit is not None else
+                     f"Inventory {timing['symbol']}: retained clocks available; age limit unavailable")
+    scans = decision.get('scans', [])
+    if scans:
+        setups = [s for scan in scans for s in scan.get('setups', [])]
+        symbols = reasons([scan.get('symbol') for scan in scans])
+        lines.append('Last scan: ' + symbols + '; ' + '; '.join(
+            f'{status.lower()} {sum(status in s.get("status", []) for s in setups)}'
+            for status in ('CONFIRMED', 'WATCHING', 'BLOCKED')))
+        counts = {}
+        for setup in setups:
+            for reason in codes(setup.get('reasons')):
+                counts[reason] = counts.get(reason, 0) + 1
+        if counts:
+            lines.append('Setup reasons (shown): ' + '; '.join(
+                f'{reason} ({count})' for reason, count in
+                sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))[:6]))
+    decisions = result.get('decisions', [])
+    if decisions:
+        scanned = sum(bool(d.get('scans')) for d in decisions)
+        lines.append(f'Decisions shown: {len(decisions)}; with scans {scanned}; without scans {len(decisions)-scanned}')
     lines.append(f"Fills (account total): {result.get('account_total_fills', 'unknown')}; cycles (run): {result.get('cycle_count', 'unknown')}")
     outcomes = result.get('cycle_outcomes')
     if outcomes is not None:
@@ -239,6 +343,12 @@ def short_report(result):
         last = result['collector_failures'][-1]
         phase = reasons((last.get('read_progress') or {}).get('stage')) or 'unavailable'
         lines.append(f"Last collection failure: {last.get('error_class', 'unknown')}; read phase {phase}")
+        phases = {}
+        for failure in result['collector_failures']:
+            phase = reasons((failure.get('read_progress') or {}).get('stage')) or 'unavailable'
+            phases[phase] = phases.get(phase, 0) + 1
+        lines.append('Read failure phases (shown): ' + '; '.join(
+            f'{phase} ({count})' for phase, count in sorted(phases.items())[:8]))
     paid = result.get('model_spending', {})
     if 'costs' in paid:
         values, limits = paid['costs'], paid['budgets']
@@ -501,13 +611,10 @@ def operation(result, state):
         status, why = 'MISSING_INPUTS', decision['scope_admission_reasons']
     elif decision.get('evidence_available') and decision.get('status') == ['HOLD']:
         # A completed HOLD with missing history/quotes is not a no-setup claim.
-        missing = codes([decision.get('issues'), decision.get('blocker'),
-                         [scan.get('issues') for scan in decision.get('scans', [])]])
-        setup_reasons = codes([setup.get('reasons') for scan in decision.get('scans', [])
-                              for setup in scan.get('setups', [])])
-        missing = sorted(set(missing + [r for r in setup_reasons if r in {
-            'COMPLETED_STRUCTURE_INSUFFICIENT', 'HISTORY_UNAVAILABLE_DELAYED_OR_STALE'}]))
-        status, why = ('MISSING_INPUTS', missing) if missing else ('WAITING_FOR_SETUP', reasons)
+        missing = decision_input_issues(decision)
+        status, why = (('MISSING_INPUTS', missing) if missing else
+                       ('WAITING_FOR_SETUP', reasons) if decision.get('scans') else
+                       ('RUNNING', ['SCAN_NOT_RECORDED']))
     else:
         status, why = 'RUNNING', ['AWAITING_FIRST_SCAN'] if not decision else reasons
     return {'state': status, 'reasons': why, 'family_input_issues': families,

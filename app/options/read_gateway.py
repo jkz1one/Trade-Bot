@@ -3,6 +3,7 @@
 import hashlib
 import json
 from datetime import datetime
+from functools import lru_cache
 from typing import Literal
 
 from jsonschema.validators import validator_for
@@ -122,6 +123,20 @@ class CapturePlan(OptionRecord):
 
 
 def _validator(schema):
+    # Cache only validation of the schema definition, never market responses or
+    # validation results. The canonical bytes bind nested changes too. Each
+    # caller still gets its own validator and validates its original payload.
+    serialized = encoded(schema)
+    if len(serialized) > MAX_SCHEMA_BYTES:
+        raise ValueError("Read schema exceeds bound")
+    cls = _checked_validator_type(serialized)
+    return cls(schema, registry=Registry())
+
+
+@lru_cache(maxsize=32)
+def _checked_validator_type(serialized):
+    # At most 32 * MAX_SCHEMA_BYTES of keys; exceptions are never cached.
+    schema = json.loads(serialized)
     # Explicit registry disables deprecated automatic remote reference retrieval.
     stack = [schema]
     while stack:
@@ -137,7 +152,7 @@ def _validator(schema):
             stack.extend(value)
     cls = validator_for(schema)
     cls.check_schema(schema)
-    return cls(schema, registry=Registry())
+    return cls
 
 
 class OptionReadGateway:

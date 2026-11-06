@@ -6,62 +6,71 @@ $1/day and $5 total AI spending. Balances, positions, journals, halts and enroll
 persist. Robinhood supplies read-only data; execution is local simulation. LIVE
 remains disabled. No separate broker paper account is used.
 
-## Current host and November 5 preparation
+## Current host and November 6 evidence
 
-The operator deployed `ab8d7384420e658b350d2c9f015f751a718e04fc` as image
-`sha256:44a57becb0fc566b43cac94c5320e93db3d2544e2f1f3fdf65a9a0d93ed97b26`.
-Authorization and November 5 preparation are already complete. Scope's optional
-code is installed, but no exact reviewed Scope binding was enrolled.
+The host has built `840255127c8d895fd6bc22dab9410bb7f6ec48a0` as image
+`sha256:3b5a3344fc30b4d5450aa719450ef79554845063d24e4a705f862fa8f5e13bf6`.
+The November 6 receipt is already enrolled:
+`/etc/trade-bot-connected/sessions/2026-11-06-friday-ready`, policy
+`b511b0df3552f505c9d5c0e01385a9b2502976652a41f56c10b9fe308586f162`.
+It combines four November 6 DEGEN contracts from
+`/root/trade-bot-options-proof-8zyypx4s` and four November 13 Swing contracts from
+`/root/trade-bot-options-proof-zm26sb07`. The eight-contract catalog is full.
+Do not repeat authorization, capture, preparation, enrollment or dashboard activation.
+This receipt must not run on another date.
 
-The two November 5 checks stopped normally without fills or AI spending. The later
-run `paper-1105-151627-dd1928` used both permitted feed recoveries, delivered 21
-packets and had six capture timeouts. All five slot records were skipped (two
-historical/unobserved, three feed-unavailable); no trading decision occurred. Its
-last accepted/collected sequence was 651. Final fresh data does not establish
-continuous health or a completed scan.
+Run `paper-1106-151939-cd07ea` stopped normally at 10:31 New York on November 6.
+It delivered 23 packets, had five read timeouts, used both bounded feed recoveries,
+and ended with zero fills and zero model calls/costs. Accepted sequence was 678;
+collected sequence was 679. Final fresh heartbeat/feed is a terminal observation.
 
-The current code repairs the unclaimed-slot handoff and expands the short report;
-it is not yet deployed on the host. See [offline proof](PAPER_CYCLE_HANDOFF_PROOF.json).
-No additional market run is needed to reproduce the slot defect. Deploy this fix
-once with workers stopped. Preserve the existing receipt for reporting; never use
-November 5 preparation on another date. The old timeout records cannot identify
-the child phase; new captures retain bounded phase diagnostics without changing
-the deadline or accepting incomplete evidence.
+Two cycle records completed, but only the second contained strategy scans. The
+first stopped at `AUTHORITATIVE_RECONCILIATION_REQUIRED / PORTFOLIO_READ_SUPERSEDED`.
+The second scanned SPY/QQQ: twelve WATCHING setups, none confirmed, with volume
+confirmation absent throughout. VWAP pullback also lacked 25 completed bars.
+`INVENTORY_BINDING_COVERAGE_OR_FRESHNESS` remained an independent entry blocker.
+Ten skipped records are historical/unobserved; one active slot expired without feed.
+The slot repair enabled connected scan progress; contract admission and a connected
+entry-to-exit lifecycle remain unverified.
 
-November 5 contract capture succeeded with eight Robinhood reads and no worker or
-model call. The original directory is `/root/trade-bot-options-proof-nxgh8bvl`.
-`all_fresh_at_capture` is false, with no future quote samples. These are historical
-contract/quote receipts, not executable prices or a readiness claim.
+The five timeout diagnostics show DISCOVER twice, SERIALIZE twice and CLOSE once.
+A last reached phase does not prove its elapsed time or root cause. The current
+code removes repeated checks of identical schema definitions and improves reports;
+it does not claim that those host timeouts or snapshot supersession are fixed.
+No freshness limit, deadline, recovery cap, risk check or enrollment is changed.
 
-The November 5 session is now **enrolled and prepared**. The operator's retained
-output confirms `SESSION_ROLLOVER_ENROLLED`, snapshot `PUBLISHED`, and
-`SESSION_PREPARED`. Do not repeat capture, preparation or enrollment.
+## Next action: inspect the existing run
 
-- Receipt: `/etc/trade-bot-connected/sessions/2026-11-05-thursday-ready`
-- Policy: `b8835e39b001ad8dbea7af6a9926121327f2df0b06e944d45039aa24c43ca8ad`
-- Review: `e8d3a6a7c0a42bae4ee71fa752a621c82458c666f250549e988fb00aedd2a626`
-- Rollover: `50c60dd6af6e65a53e9063e85d55a4bcd2e8b79be0dcf528f32038d0260ada81`
-- Snapshot: owner revision 2945, runtime generation 10, feed sequence 472;
-  STOPPED with `OPTION_RUNTIME_STOPPED`, zero fills and zero held plays.
-
-The catalog retains four November 13 Swing contracts from
-`/root/trade-bot-options-proof-zm26sb07`, plus the four November 5 DEGEN contracts.
-No worker started, no model/provider call was made by preparation, and LIVE remains
-disabled. Swing original history and Scope inputs are still independently blocked.
-
-Historical November 5 command (valid only on **November 5 during market hours**):
+After updating the detached checkout to the supplied tested release, read the
+**same stopped run**, without collecting more data:
 
 ```bash
 cd /opt/trade-bot-dashboard &&
-python3 scripts/paper-session-start.py \
-  --prepared-session /etc/trade-bot-connected/sessions/2026-11-05-thursday-ready \
-  --seconds 600 --max-feed-recoveries 2 --wait --report-format text
+python3 scripts/paper-session-report.py \
+  --run-id paper-1106-151939-cd07ea --format text
 ```
 
-This is a bounded ten-minute run, not a scheduled task or a two-hour wait. DEGEN
-still requires six delivered completed five-minute bars. Original quote validation
-and native risk limits remain authoritative. Swing and Scope may remain blocked
-independently. Never reuse the receipt on November 6 or later.
+The report now projects original inventory source/receive/evaluation clocks and
+its enrolled metadata-age limit from saved decision inputs. Missing clocks remain
+unavailable. It also shows entry blockers, actual scan evidence and all retained
+read-failure phases. This host-side reporting update needs no image rebuild.
+The schema optimization requires one build before a subsequent worker launch;
+combine it with the next deployment, with workers stopped. Do not launch another
+market run solely to reproduce these reporting or schema-overhead defects.
+
+## Remaining work and evidence
+
+- **Implemented offline:** current-slot recovery, bounded scan attempts across
+  restart, schema-definition reuse, explicit scan/input/stop/failure reporting,
+  retained-clock inspection, Scope owned-play routing, pacing and setup review.
+- **Still unresolved:** the host's snapshot supersession, exact inventory rejection
+  and variable read/processing latency. Use retained evidence first; this release
+  is not a claim that daily PAPER is dependable yet.
+- **Requires valid original inputs:** Swing daily history and usable SPX history,
+  exact reviewed Scope contract/session/pattern terms and explicit catalog space.
+  Saved interpolated Swing bars remain rejected. No SPY substitution or ninth slot.
+- **Requires connected acceptance:** an admitted simulated entry, fill, management
+  and exit. No such connected lifecycle or fill has been observed.
 
 ## Optional Scope paid-read handoff
 
@@ -111,8 +120,8 @@ without stopping workers, opening credentials, collecting data or enrolling:
 
 ```bash
 python3 scripts/connected-session-host.py review-scope-setup \
-  --target-session 2026-11-05 \
-  --capture-directory /root/trade-bot-options-proof-nxgh8bvl \
+  --target-session 2026-11-06 \
+  --capture-directory /root/trade-bot-options-proof-8zyypx4s \
   --observed-swing-history \
   --swing-capture-directory /root/trade-bot-options-proof-zm26sb07
 ```
@@ -137,7 +146,7 @@ The subset must contain only unique original DEGEN IDs and retain each enrolled
 symbol. All four supplied Swing contracts remain intact. Omissions are explicit;
 there is no automatic ranking, substitution or truncation. The same flags pass
 through `paper-session-start.py --prepare-only` to the existing review/enroll path.
-They cannot alter `--prepared-session`. Do not change November 5's enrolled receipt
+They cannot alter `--prepared-session`. Do not change November 6's enrolled receipt
 merely to try this helper. `INPUTS_REVIEWED` is not trading readiness or term verification.
 
 ## Compact operator report
@@ -167,13 +176,11 @@ fixture is not a trading-readiness claim.
 
 ## Deployment of the current repair
 
-Deploy the exact tested release supplied with the update using the detached
-`/opt/trade-bot-dashboard` checkout, then run `connected-session-host.py build`
-**once while connected workers are stopped**. Do not switch the branch already owned
-by `/opt/trade-bot`. No auth refresh, owner reset, strategy upgrade, dashboard
-activation or repeat November 5 preparation is required. The previous image retains
-the reproduced skipped-slot defect; deploy the repair before evaluating another session.
-The new Scope pacing remains inactive without its explicitly reviewed binding.
+Update the detached dashboard checkout to the supplied tested commit. The report
+can immediately inspect saved runs. Build the schema-efficiency image once before
+its next worker launch, with connected workers stopped. Do not switch the branch
+already owned by `/opt/trade-bot`, reset the account or repeat enrollment. Scope
+pacing remains inactive without its explicitly reviewed exact-session binding.
 
 ## Historical November 3 preparation
 

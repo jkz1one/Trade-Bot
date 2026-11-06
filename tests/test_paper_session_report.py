@@ -133,6 +133,91 @@ def test_short_report_explains_retained_all_skipped_run_and_successful_recoverie
     assert 'PRIVATE_TOKEN' not in json.dumps(sanitized)
 
 
+def test_inventory_blocker_remains_missing_inputs_even_when_setups_are_watching():
+    value = live_result()
+    decision = value['decisions'][0]
+    decision.update(reason=['NO_ADMITTED_CONTRACT'],
+                    contract_exclusions=['NO_CONFIRMED_SETUP', 'INVENTORY_BINDING_COVERAGE_OR_FRESHNESS'])
+    result = module.operation(value, {'Status': 'running'})
+    assert result['state'] == 'MISSING_INPUTS'
+    assert 'INVENTORY_BINDING_COVERAGE_OR_FRESHNESS' in result['reasons']
+    value['operation'] = module.operation(value, {'Status': 'exited', 'ExitCode': 0})
+    text = module.short_report(value)
+    assert 'INVENTORY_BINDING_COVERAGE_OR_FRESHNESS' in text
+    assert 'no input blocker reported' not in next(line for line in text.splitlines() if line.startswith('DEGEN:'))
+    assert value['operation']['state'] == 'STOPPED'
+
+
+@pytest.mark.parametrize('reason', ['AUTHORITATIVE_RECONCILIATION_REQUIRED', 'PORTFOLIO_PROTECTION_REQUIRED'])
+def test_pre_scan_hold_is_not_a_successful_scan_or_waiting_setup(reason):
+    value = live_result()
+    value['decisions'][0].update(reason=[reason], scans=[], issues=[])
+    value['operation'] = module.operation(value, {'Status': 'running'})
+    assert value['operation']['state'] == 'MISSING_INPUTS'
+    text = module.short_report(value)
+    assert 'last decision did not record a scan' in text
+    assert 'with scans 0; without scans 1' in text
+
+
+def test_short_report_distinguishes_scan_coverage_and_all_retained_timeout_phases():
+    value = live_result()
+    value['decisions'] = [
+        {'status':['HOLD'], 'reason':['AUTHORITATIVE_RECONCILIATION_REQUIRED'], 'scans':[]},
+        {'status':['HOLD'], 'reason':['NO_ADMITTED_CONTRACT'], 'evidence_available': True,
+         'contract_exclusions':['NO_CONFIRMED_SETUP', 'INVENTORY_BINDING_COVERAGE_OR_FRESHNESS'],
+         'scans':[{'symbol':[symbol], 'issues':[], 'setups':[
+             {'status':['WATCHING'], 'reasons':['VOLUME_CONFIRMATION_REQUIRED']} for _ in range(6)]}
+                  for symbol in ('SPY', 'QQQ')]}]
+    value['collector_failures'] = [{'error_class':'TimeoutError', 'read_progress':{'stage':phase}}
+                                  for phase in ('SERIALIZE','DISCOVER','SERIALIZE','DISCOVER','CLOSE')]
+    value['operation'] = module.operation(value, {'Status':'exited','ExitCode':0})
+    text = module.short_report(value)
+    for expected in ('with scans 1; without scans 1', 'confirmed 0; watching 12; blocked 0',
+                     'VOLUME_CONFIRMATION_REQUIRED (12)', 'CLOSE (1)', 'DISCOVER (2)', 'SERIALIZE (2)'):
+        assert expected in text
+    assert len(text) < 8192
+
+
+@pytest.mark.parametrize('clock_damage', [None, 'naive', 'future', 'invalid'])
+def test_old_run_inventory_timing_uses_original_clocks_without_private_inputs_or_writes(clock_damage):
+    source = '2026-11-06T15:30:10+00:00'
+    received = '2026-11-06T15:30:11+00:00'
+    evaluated = '2026-11-06T15:30:27+00:00'
+    if clock_damage == 'naive': source = '2026-11-06T15:30:10'
+    if clock_damage == 'future': source = '2026-11-06T15:30:30+00:00'
+    if clock_damage == 'invalid': source = 'PRIVATE_NON_TIMESTAMP'
+    with sqlite3.connect(':memory:') as db:
+        db.execute('CREATE TABLE execution_option_opportunities(cycle_key,result_json,inputs_json)')
+        db.execute('CREATE TABLE execution_option_strategy(id,policy_json)')
+        db.execute('INSERT INTO execution_option_strategy VALUES(1,?)',
+                   (json.dumps({'selection':{'max_metadata_age_seconds':10}, 'secret':'PRIVATE_KEY'}),))
+        result = {'status':'HOLD','reason':'NO_ADMITTED_CONTRACT',
+                  'scans':[{'symbol':'SPY','evaluated_at':evaluated,'issues':[],'observations':[]}],
+                  'read_plans':[{'issues':['INVENTORY_BINDING_COVERAGE_OR_FRESHNESS']}]}
+        inputs = {'inventories':[{'symbol':'SPY','source_at':source,'received_at':received,
+                                  'contracts':[{'instrument_id':'PRIVATE_ID'}]}], 'secret':'PRIVATE_KEY'}
+        db.execute('INSERT INTO execution_option_opportunities VALUES(?,?,?)',
+                   ('cycle',json.dumps(result),json.dumps(inputs)))
+        before = db.total_changes
+        saved = module.decision_evidence(db, 'cycle')
+        assert db.total_changes == before
+    assert 'PRIVATE' not in json.dumps(saved)
+    if clock_damage in ('naive', 'invalid'):
+        assert saved['inventory_timing'] == []
+    else:
+        timing, = saved['inventory_timing']
+        assert timing['source_at'] == source and timing['evaluated_at'] == evaluated
+        assert timing['source_age_seconds'] == (17 if clock_damage is None else -3)
+        assert timing['clock_order_valid'] is (clock_damage is None)
+        value = live_result()
+        value['decisions'] = [saved]
+        value['operation'] = module.operation(value, {'Status':'exited','ExitCode':0})
+        text = module.short_report(value)
+        assert 'limit <10s' in text
+        if clock_damage is None:
+            assert 'source age 17.000s' in text and 'receive lag 1.000s' in text
+
+
 @pytest.mark.parametrize('reason', ['SCOPE_REFRESH_READ_BUDGET_UNAVAILABLE','SCOPE_REFRESH_COLLECTOR_BUSY'])
 def test_short_report_exposes_scope_budget_rejection_without_overstating_peer_status(reason):
     value = live_result()
