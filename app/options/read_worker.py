@@ -15,6 +15,8 @@ from app.options.read_capture import (
     MAX_RESPONSE_BYTES,
     CaptureRequest,
     CaptureResult,
+    CaptureProgress,
+    PROGRESS_PREFIX,
     failure_evidence,
     policy_digest,
 )
@@ -36,18 +38,25 @@ def connection(policy):
     return result
 
 
-async def collect(request):
+async def collect(request, *, progress=None):
     started = time.monotonic()
     gateway, observations, error, failure = None, [], None, None
     probe_report = None
     scope_rows, scope_error = [], None
     stage = "PRIVATE_AUTH"
+    def note(value):
+        nonlocal stage
+        stage = value
+        if progress is not None:
+            progress(CaptureProgress(request_id=request.request_id, stage=stage,
+                     completed_reads=sum(r.get('completed') is True for r in (*observations, *scope_rows))))
     try:
+        note('PRIVATE_AUTH')
         private_oauth(request.policy.oauth_file)
-        stage = "CONNECT"
+        note('CONNECT')
         async with connection(request.policy).client() as client:
             gateway = OptionReadGateway(client)
-            stage = "DISCOVER"
+            note('DISCOVER')
             if request.include_inventory or request.scope_requested or request.operation in {"INPUT_PROBE", "SCOPE_INPUT"}:
                 await gateway.discover(include_inventory=True)
             else:
@@ -55,21 +64,20 @@ async def collect(request):
             if request.operation == "INPUT_PROBE":
                 from app.options.input_probe import run, InputProbeIncomplete
 
-                stage = "MARKET_READ"
+                note('MARKET_READ')
                 probe_report = await run(client, gateway.inventory, request.started_at, observations)
                 if any(not row["completed"] for row in observations):
                     raise InputProbeIncomplete
             if request.operation == "SCOPE_INPUT":
                 from app.options.scope_read import run
-                stage = "MARKET_READ"
+                note('MARKET_READ')
                 await run(client, gateway.inventory, request.started_at, observations)
             if request.operation == "CAPTURE":
-                stage = "VALIDATE_PLAN"
+                note('VALIDATE_PLAN')
                 plan = gateway.validate_plan(request.plan, request.schemas)
                 async def ordinary_reads():
-                    nonlocal stage
                     for call in plan.calls:
-                        stage = "MARKET_READ"
+                        note('MARKET_READ')
                         at, tick = utc_now(), time.monotonic()
                         row = {
                             "label": call.label,
@@ -90,6 +98,7 @@ async def collect(request):
                             )
                         finally:
                             row["elapsed_seconds"] = time.monotonic() - tick
+                            note('MARKET_READ')
                 async def index_reads():
                     nonlocal scope_error
                     from app.options.scope_read import run
@@ -103,7 +112,7 @@ async def collect(request):
                         group.create_task(ordinary_reads())
                 else:
                     await ordinary_reads()
-            stage = "CLOSE"
+            note('CLOSE')
     except Exception as exc:  # noqa: BLE001 -- sanitized failure evidence, never provider text
         error = type(exc).__name__
         failure = failure_evidence(exc, stage)
@@ -136,7 +145,12 @@ def main():
         if os.getppid() != request.parent_pid or time.monotonic() >= request.deadline_monotonic:
             return 1
         threading.Thread(target=_watch, args=(request,), daemon=True).start()
-        result = asyncio.run(collect(request))
+        def progress(value):
+            sys.stderr.buffer.write(PROGRESS_PREFIX + value.model_dump_json().encode() + b'\n')
+            sys.stderr.buffer.flush()
+        result = asyncio.run(collect(request, progress=progress))
+        progress(CaptureProgress(request_id=request.request_id, stage='SERIALIZE',
+                 completed_reads=sum(r.get('completed') is True for r in (*result.observations, *result.scope_observations))))
         data = result.model_dump_json().encode()
         if len(data) > MAX_RESPONSE_BYTES:
             return 1

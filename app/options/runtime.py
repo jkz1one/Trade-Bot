@@ -119,7 +119,7 @@ class OptionRuntime:
                     "UPDATE execution_option_runtime SET status='FAILED',reason='OPTION_RUNTIME_INTERRUPTED' WHERE id=1"
                 )
                 db.execute(
-                    "UPDATE execution_option_runtime_slots SET status='INTERRUPTED',reason='OPTION_RUNTIME_INTERRUPTED',completed_at=? WHERE status='STARTED'",
+                    "UPDATE execution_option_runtime_slots SET status='INTERRUPTED',reason='OPTION_RUNTIME_INTERRUPTED',completed_at=? WHERE status IN ('STARTED','WAITING_FOR_FEED')",
                     (self.c.now().isoformat(),),
                 )
         self.c.engine._option_runtime = self
@@ -159,6 +159,18 @@ class OptionRuntime:
                     "UPDATE execution_option_runtime_slots SET status=?,reason=?,completed_at=? WHERE slot=?",
                     (status, reason, self.c.now().isoformat(), slot),
                 )
+
+    def needs_cycle(self, at):
+        """Request current-slot strategy inputs; never grant entry or resume a halt."""
+        if self.task is not None or self.c.engine.calendar.current_window(at) is None:
+            return False
+        with self.c.engine.journal.read() as db:
+            current = self._bound(db)
+            control = self.c.engine._control(db)
+            slot = db.execute('SELECT status FROM execution_option_runtime_slots WHERE slot=?',
+                              (int(at.timestamp()) // 300,)).fetchone()
+            return (current['status'] == 'RUNNING' and current['reason'] is None
+                    and not control['halted'] and (slot is None or slot['status'] == 'WAITING_FOR_FEED'))
 
     async def tick(self):
         loss = self.c.engine.policy.loss_control
@@ -315,6 +327,15 @@ class OptionRuntime:
             self.scope.apply(packet, issue)
         if self.mixed is not None and packet is not None:
             self.mixed.complete(packet, issue)
+        # An unclaimed slot can wait for fresh input only within its original
+        # five-minute window. Never replay it after the window or a restart.
+        with self.c.engine.journal.write() as db:
+            self._bound(db)
+            db.execute(
+                "UPDATE execution_option_runtime_slots SET status='SKIPPED',completed_at=? "
+                "WHERE status='WAITING_FOR_FEED' AND (slot<? OR ?)",
+                (self.c.now().isoformat(), int(self.c.now().timestamp()) // 300, current is None),
+            )
         if (
             (self.scope is not None or self.mixed is not None)
             and packet is not None
@@ -339,22 +360,33 @@ class OptionRuntime:
                     "INSERT OR IGNORE INTO execution_option_runtime_slots VALUES(?,?,'SKIPPED','RUNTIME_SLOT_NOT_OBSERVED',?,?)",
                     (missing, window.session_date, at.isoformat(), self.c.now().isoformat()),
                 )
-            if db.execute(
-                "SELECT 1 FROM execution_option_runtime_slots WHERE slot=?", (slot,)
-            ).fetchone():
+            existing = db.execute(
+                "SELECT status FROM execution_option_runtime_slots WHERE slot=?", (slot,)
+            ).fetchone()
+            if existing and existing['status'] != 'WAITING_FOR_FEED':
                 return result
             reason = issue or ("MODEL_OR_CYCLE_IN_PROGRESS" if self.task else None)
-            db.execute(
-                "INSERT INTO execution_option_runtime_slots VALUES(?,?,?,?,?,?)",
-                (
-                    slot,
-                    window.session_date,
-                    "SKIPPED" if reason else "STARTED",
-                    reason,
-                    self.c.now().isoformat(),
-                    self.c.now().isoformat() if reason else None,
-                ),
-            )
+            control = self.c.engine._control(db)
+            if reason is None and control['halted'] and control['halt_reason'] == 'OPTION_RUNTIME_FEED_UNAVAILABLE':
+                reason = 'OPTION_RUNTIME_FEED_UNAVAILABLE'
+            waiting = reason == 'OPTION_RUNTIME_FEED_UNAVAILABLE' and self.task is None
+            status = 'WAITING_FOR_FEED' if waiting else ('SKIPPED' if reason else 'STARTED')
+            completed = self.c.now().isoformat() if reason and not waiting else None
+            if existing:
+                if waiting:
+                    return result
+                # Only a fresh CYCLE from this slot may claim deferred work.
+                if packet is None or int(packet.recorded_at.timestamp()) // 300 != slot:
+                    return result
+                db.execute(
+                    'UPDATE execution_option_runtime_slots SET status=?,reason=?,completed_at=? WHERE slot=?',
+                    (status, reason, completed, slot),
+                )
+            else:
+                db.execute(
+                    'INSERT INTO execution_option_runtime_slots VALUES(?,?,?,?,?,?)',
+                    (slot, window.session_date, status, reason, self.c.now().isoformat(), completed),
+                )
         if reason is None:
             self.task = asyncio.create_task(self._cycle(slot, frame))
         return result
@@ -419,7 +451,7 @@ class OptionRuntime:
                 with self.c.engine.journal.write() as db:
                     self._bound(db)
                     db.execute(
-                        "UPDATE execution_option_runtime_slots SET status='INTERRUPTED',reason='OPTION_RUNTIME_CYCLE_INTERRUPTED',completed_at=? WHERE status='STARTED'",
+                        "UPDATE execution_option_runtime_slots SET status='INTERRUPTED',reason='OPTION_RUNTIME_CYCLE_INTERRUPTED',completed_at=? WHERE status IN ('STARTED','WAITING_FOR_FEED')",
                         (self.c.now().isoformat(),),
                     )
                     db.execute(

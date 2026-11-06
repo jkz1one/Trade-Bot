@@ -1,0 +1,123 @@
+{
+  "version": "paper-current-slot-handoff-offline-v1",
+  "base_commit": "ab8d7384420e658b350d2c9f015f751a718e04fc",
+  "base_tree": "29c1722fe34630444b67c639ad1d5180d4aeb443",
+  "application_files": 320,
+  "source_wheel_installed_bytes_match": true,
+  "runtime_pinned_dependencies_verified": 60,
+  "wheel_sha256": "b26ef0fcb8fa8a25dbd200e44ced607d2350fbce5c39c128d7da89768784ec63",
+  "installed_testing": "Python 3.12 -I -W error; explicit anyio plugin, plugin autoload disabled; copied tests/scripts outside checkout, no app source in test directory. Native children use the installed wheel.",
+  "deployed_regression_reproduction": {
+    "report": "before.xml",
+    "tests": 1,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "sha256": "704b84e02c9edbe61b99472250b224c48b7a5c9a647f134603ec28450e49394f"
+  },
+  "reproduction_expected_failure": "The deployed wheel marked an unclaimed current slot SKIPPED immediately after a feed fault. The assertion requiring a current waiting slot fails on that wheel and passes in the repaired installed suite.",
+  "verification": [
+    {
+      "report": "installed.xml",
+      "tests": 469,
+      "failures": 27,
+      "errors": 0,
+      "skipped": 1,
+      "sha256": "f49086420264e0c99130949b4f88642d50262094ed24e61caf0066c90afc52f1"
+    },
+    {
+      "report": "host-root.xml",
+      "tests": 41,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "767fd15aff53022419c7de1789357c7d1977ea41589f8ca41ea40e62c86e9993"
+    }
+  ],
+  "unique_passed_cases": 469,
+  "environment_correction": "The broad run had 441 passes, 27 host-command failures and one root-only skip because this workspace now runs as uid 1000. All 41 unchanged host-command cases pass under unshare --user --map-root-user, an isolated namespace mapping only the current user to root. No production ownership check was weakened and no host/system privilege was acquired. Latest results supersede prior outcomes by exact test identity.",
+  "suites": {
+    "tests.test_connected_cycle_handoff": 7,
+    "tests.test_connected_feed_recovery": 21,
+    "tests.test_connected_publisher": 13,
+    "tests.test_connected_runtime": 19,
+    "tests.test_connected_scope_refresh": 20,
+    "tests.test_continuous_strategy_delivery": 15,
+    "tests.test_feed_rollover": 34,
+    "tests.test_mixed_runtime": 23,
+    "tests.test_observed_profile_lifecycle": 2,
+    "tests.test_observed_scope_lifecycle": 11,
+    "tests.test_option_read_capture": 63,
+    "tests.test_option_runtime": 38,
+    "tests.test_option_scope_ai": 36,
+    "tests.test_option_scope_runtime": 31,
+    "tests.test_paper_session_report": 42,
+    "tests.test_paper_session_start": 27,
+    "tests.test_portfolio_feed": 7,
+    "tests.test_portfolio_runtime": 1,
+    "tests.test_read_schema_contract": 13,
+    "tests.test_read_worker_imports": 5,
+    "tests.test_session_host": 41
+  },
+  "changed_tests_and_script_copies_match": true,
+  "source_sha256": {
+    "app/mixed/connected_runtime.py": "08271c42bc8d8be853634d620c4da77297bd9bcbee9a88a815d27a5c3fa30f73",
+    "app/mixed/continuous_feed.py": "f1a032c0e021851b1f1097d9ba3f8a6c230c487d9b776bbc2a6916baefb904f8",
+    "app/options/read_capture.py": "d40c2a9595cc2ea7d76c30dc534da5ce22e875c77c9a80cd87414356e8b8bfa1",
+    "app/options/read_worker.py": "10a02c7b44d318d4cc1be0a98f290ee1e696710526c1f62e83838132ec722ed3",
+    "app/options/runtime.py": "a31baa31cb0bd6f511fbb2cfec129a2e364caa37e0c26338442b562d36c186dc",
+    "scripts/paper-session-report.py": "ccdab8a46588e897cfec01de427ae83f2ea99d6852890684f2544808b95bb296",
+    "tests/test_connected_cycle_handoff.py": "8c7746aff6f203408b0599922d05846a3a26e29b01acd8bfb248f7850f10fe47",
+    "tests/test_option_read_capture.py": "c4af3c58f9f15b564f7ad2f96e04551b30dfa68bf50cf10d13d21d711f26cef0",
+    "tests/test_paper_session_report.py": "297be0f8a35304cd46c504b5d2dcda846b7a7f64cce01a0e34a1224014c539e9"
+  },
+  "fixture_corrections": "Initial new fixture assertions expected kind in the tick summary instead of the stored packet. The fixture was then corrected to provide the market window and completed synthetic bars after 10:00, rather than protection-only inputs at the open. These were fixture corrections, not relaxed production validation.",
+  "retained_host_report": {
+    "source": "Operator-supplied JSON; not a new host read or capture",
+    "run_id": "paper-1105-151627-dd1928",
+    "image_id": "sha256:44a57becb0fc566b43cac94c5320e93db3d2544e2f1f3fdf65a9a0d93ed97b26",
+    "window_start": "2026-11-05T15:18:06.295244+00:00",
+    "window_end": "2026-11-05T15:28:18.346480+00:00",
+    "container_exit_code": 0,
+    "accepted_and_collected_sequence": 651,
+    "delivered_packets": 21,
+    "capture_timeouts": 6,
+    "timeout_sequences": [
+      627,
+      630,
+      631,
+      633,
+      635,
+      643
+    ],
+    "cycle_records": 5,
+    "completed_cycles": 0,
+    "skipped_reasons": {
+      "RUNTIME_SLOT_NOT_OBSERVED": 2,
+      "OPTION_RUNTIME_FEED_UNAVAILABLE": 3
+    },
+    "flat_feed_recoveries": 2,
+    "reviewed_entry_resumes": 3,
+    "decisions": 0,
+    "fills": 0,
+    "model_calls": 0,
+    "settled_cost": "0",
+    "terminal_feed": "FRESH",
+    "terminal_heartbeat": "FRESH",
+    "read_phase_evidence_available": false,
+    "live_enabled": false
+  },
+  "acceptance_limits": [
+    "Unclaimed feed-fault slots wait only in their original five-minute window. Fresh native CYCLE validation and an already-cleared feed halt are required before one claim. Expired, completed, skipped, started and interrupted slots cannot replay.",
+    "The connected collector asks the native owner for current-slot scan demand. Protection-only polls continue during feed halts, then fresh strategy inputs follow existing reviewed recovery. Actual ordinary strategy attempts are capped at three per slot across restart, including failures and conservative legacy accounting.",
+    "Runtime scheduling does not resume any halt. Existing flat recovery still requires its reviewed allowance, advancing original sources, fresh heartbeat/reconciliation, no holdings/pending orders/unknown costs, and no overriding operator/other halt.",
+    "Native fixture covers missing-feed startup, reviewed resume, one completed decision, later outage, two fresh advancing MARKET packets, bounded recovery and a new current-slot CYCLE with one decision. No model call or simulated order is forced.",
+    "Separate tests preserve completed/started/skipped/interrupted slots, expire waiting slots, and retain scan attempt limits across restart while quote polls continue.",
+    "Read process deadline and cleanup are unchanged. Request-bound bounded phase/count diagnostics contain no provider text, credentials, arguments or usable quote data. Native connect/discover/read/close stalls retain phase and reap children; cancellation and oversized/foreign diagnostic cases remain bounded.",
+    "The historical six timeouts have no child phase evidence. Their network/provider/import/close cause cannot be inferred from parent TimeoutError. No claim is made that timeout incidence or real provider latency is fixed.",
+    "Text reports now show complete/skipped/waiting/interrupted counts, reasons, actual recoveries and collection failures. No recorded decision explicitly means scan not established; final fresh data does not establish continuous health.",
+    "No host, provider, model or brokerage action occurred during this validation. Robinhood read-only and local simulation remain the only data/execution path; LIVE disabled.",
+    "Account/population, balances, journals, positions, halts, enrollment, $1000 initial virtual capital, maximum two plays, $1/day and $5 total AI limits, quote clocks/validation, transport quota/capture ceilings and bounded stop are preserved.",
+    "November 5 prepared receipt and policy are preserved but cannot run on another date. Original valid Swing daily history, usable SPX history, exact reviewed SPXW/session/pattern bindings and a full connected lifecycle remain unresolved."
+  ]
+}

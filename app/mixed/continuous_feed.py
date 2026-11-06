@@ -486,6 +486,7 @@ class ContinuousFeed:
         if not self.directory.is_absolute():
             raise ValueError("Absolute dedicated feed directory required")
         self.policy = FeedPolicy.model_validate(policy.model_dump())
+        self.cycle_needed = None
         self.schemas = reviewed_schemas(schemas)
         if create:
             self.directory.mkdir(mode=0o700)
@@ -521,6 +522,7 @@ class ContinuousFeed:
             from app.mixed.feed_rollover import load_rollovers
 
             self.rollovers = load_rollovers(self.db, self.policy, self.schemas)
+            self.db.execute('CREATE TABLE IF NOT EXISTS cycle_requests(sequence INTEGER PRIMARY KEY,requested INTEGER NOT NULL)')
             self.db.execute("UPDATE attempts SET status='INTERRUPTED' WHERE status='STARTED'")
             self.db.commit()
             self.recover()
@@ -654,6 +656,18 @@ class ContinuousFeed:
             (slot_start.isoformat(), (slot_start + timedelta(minutes=5)).isoformat()),
         ).fetchone()
         cycle = attempts < 3 and delivered_cycles == 0
+        if self.cycle_needed is not None:
+            requested = self.cycle_needed(now)
+            if type(requested) is not bool:
+                raise ValueError('Native cycle request must be boolean')
+            # Count actual strategy attempts, not intervening protection-only
+            # polls. Unknown legacy attempts count conservatively across restart.
+            tried = self.db.execute(
+                'SELECT COUNT(*) FROM attempts a LEFT JOIN cycle_requests r USING(sequence) '
+                'WHERE a.started_at>=? AND a.started_at<? AND (r.requested=1 OR r.sequence IS NULL)',
+                (slot_start.isoformat(), (slot_start + timedelta(minutes=5)).isoformat()),
+            ).fetchone()[0]
+            cycle = requested and tried < 3
         target_day = now.astimezone(ZoneInfo("America/New_York")).date()
         effective = self.policy_for(target_day)
         scope_binding = effective.scope_binding
@@ -704,6 +718,7 @@ class ContinuousFeed:
             "INSERT INTO attempts VALUES(?,?,?,'STARTED',?,NULL,NULL,NULL)",
             (sequence, now.isoformat(), len(plan.calls) + extra_calls, fingerprint(plan)),
         )
+        self.db.execute('INSERT INTO cycle_requests VALUES(?,?)', (sequence, int(cycle)))
         if paid_scope_refresh is not None:
             self.db.execute("UPDATE scope_refresh_requests SET status='CAPTURING',capture_sequence=? "
                             "WHERE cycle_key=? AND status='QUEUED'",
@@ -880,6 +895,10 @@ class ContinuousFeed:
 
             # Append bounded public metadata; preserve original raw/packet data.
             details = {"stage": stage, **failure_details(exc)}
+            from app.options.read_capture import CaptureProgress
+            progress = getattr(exc, 'capture_progress', None)
+            if isinstance(progress, CaptureProgress):
+                details['read_progress'] = progress.model_dump(mode='json')
             if captured is not None and captured.failure is not None:
                 details['capture_failure'] = captured.failure.model_dump(mode='json')
             self.db.execute(

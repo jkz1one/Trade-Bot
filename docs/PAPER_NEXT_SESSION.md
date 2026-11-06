@@ -8,11 +8,25 @@ remains disabled. No separate broker paper account is used.
 
 ## Current host and November 5 preparation
 
-The operator deployed `adb453fabeb626e50a3ae6a372979e3b4e06483c` as image
-`sha256:e4171d8d03eacac853c5e7dfd1b13f8491d2eda548627ba5a072d455d8e2e66a`.
-Authorization already passed. The narrow reviewed schema compatibility fix is now
-on the host; no additional login, schema replacement, discovery or build is needed
-for the next DEGEN check. The optional Scope handoff below has not been deployed.
+The operator deployed `ab8d7384420e658b350d2c9f015f751a718e04fc` as image
+`sha256:44a57becb0fc566b43cac94c5320e93db3d2544e2f1f3fdf65a9a0d93ed97b26`.
+Authorization and November 5 preparation are already complete. Scope's optional
+code is installed, but no exact reviewed Scope binding was enrolled.
+
+The two November 5 checks stopped normally without fills or AI spending. The later
+run `paper-1105-151627-dd1928` used both permitted feed recoveries, delivered 21
+packets and had six capture timeouts. All five slot records were skipped (two
+historical/unobserved, three feed-unavailable); no trading decision occurred. Its
+last accepted/collected sequence was 651. Final fresh data does not establish
+continuous health or a completed scan.
+
+The current code repairs the unclaimed-slot handoff and expands the short report;
+it is not yet deployed on the host. See [offline proof](PAPER_CYCLE_HANDOFF_PROOF.json).
+No additional market run is needed to reproduce the slot defect. Deploy this fix
+once with workers stopped. Preserve the existing receipt for reporting; never use
+November 5 preparation on another date. The old timeout records cannot identify
+the child phase; new captures retain bounded phase diagnostics without changing
+the deadline or accepting incomplete evidence.
 
 November 5 contract capture succeeded with eight Robinhood reads and no worker or
 model call. The original directory is `/root/trade-bot-options-proof-nxgh8bvl`.
@@ -35,13 +49,13 @@ The catalog retains four November 13 Swing contracts from
 No worker started, no model/provider call was made by preparation, and LIVE remains
 disabled. Swing original history and Scope inputs are still independently blocked.
 
-On **November 5 after 10:00 a.m. New York**:
+Historical November 5 command (valid only on **November 5 during market hours**):
 
 ```bash
 cd /opt/trade-bot-dashboard &&
 python3 scripts/paper-session-start.py \
   --prepared-session /etc/trade-bot-connected/sessions/2026-11-05-thursday-ready \
-  --seconds 600 --wait
+  --seconds 600 --max-feed-recoveries 2 --wait --report-format text
 ```
 
 This is a bounded ten-minute run, not a scheduled task or a two-hour wait. DEGEN
@@ -92,7 +106,7 @@ and a connected lifecycle remain unverified. See [validation](PAPER_DAILY_TOOLS_
 
 ## Read-only Scope setup review
 
-After deploying the new release once, the helper can inspect retained evidence
+The installed helper can inspect retained evidence
 without stopping workers, opening credentials, collecting data or enrolling:
 
 ```bash
@@ -137,25 +151,28 @@ python3 scripts/paper-session-report.py --run-id RETURNED_RUN_ID --format text
 
 It shows operation state/reason, original heartbeat/feed freshness, collected versus
 accepted sequence, each family's blockers, last decision, account-total fills,
-run cycles and settled AI costs. Run costs, New York calendar-day costs and account
-costs are separate; daily/total limits come from the enrolled cost policy. Unknown
+run cycles and settled AI costs. Cycle outcomes distinguish complete, skipped,
+waiting, started and interrupted work, with retained reasons and recovery counts.
+Collection totals and the last available read phase remain visible. No decision
+means scan not established; terminal fresh data does not erase earlier outages.
+Run costs, New York calendar-day costs and account costs are separate; daily/total limits come from the enrolled cost policy. Unknown
 or invalid charges remain counted explicitly. Missing cost evidence is unavailable,
 not zero. Account totals may include other runs; source snapshots are independent.
 
-After this release is installed, append `--report-format text` to a launch using
+Append `--report-format text` to a launch using
 `--wait` for the same short report at exit. Stop/failed-run reporting still retains
 its error status and never starts a replacement worker. Use `--format json` for
 full retained diagnostics. A normal stop, no reported family blocker, or a passing
 fixture is not a trading-readiness claim.
 
-## Deployment for these three tools
+## Deployment of the current repair
 
 Deploy the exact tested release supplied with the update using the detached
 `/opt/trade-bot-dashboard` checkout, then run `connected-session-host.py build`
 **once while connected workers are stopped**. Do not switch the branch already owned
 by `/opt/trade-bot`. No auth refresh, owner reset, strategy upgrade, dashboard
-activation or repeat November 5 preparation is required. The already-deployed image
-can still perform the planned DEGEN check; adopting these tools is a separate build.
+activation or repeat November 5 preparation is required. The previous image retains
+the reproduced skipped-slot defect; deploy the repair before evaluating another session.
 The new Scope pacing remains inactive without its explicitly reviewed binding.
 
 ## Historical November 3 preparation
@@ -289,7 +306,7 @@ the normal stop halt in place.
 | Swing | Source preparation/recovery and native shared scanning/execution fixtures; missing family remains isolated. | Valid original daily history and complete connected lifecycle. Saved interpolated bars remain rejected. |
 | Scope | Collector-to-native watch routing corrected; native sampled arming, exact paid admission, later-quote fill, restart and exit regression. Owned plays stay out of new-entry admission while exact-play management remains available. Terminal watches cannot be revived by retained ARMED evidence. | Original usable SPX history, exact reviewed SPXW terms/session/pattern binding, a catalog with a reserved slot, and connected lifecycle. No SPY substitution or invented contract terms. |
 | Scope timing | Explicit paced mode tests the full collector schedule, native supervision, one-shot refresh and entry/fill/restart/exit. Unfundable Scope reads are excluded before paid selection; peers remain independent. | Actual Robinhood/model latency, held-overflow capacity and connected acceptance inside the original deadline. |
-| Daily operation | Unique bounded launches, exact stop, optional bounded recovery, read-only Scope setup review with explicit catalog selection, and compact reports with exact cost/unknown-charge handling. | Host authorization passes. Schema compatibility is deployed and November 5 contracts were captured. November 5 enrollment and snapshot publication are confirmed; no worker started. Actual model timing and connected lifecycle remain unverified. |
+| Daily operation | Unique bounded launches, exact stop, optional bounded recovery, read-only Scope setup review with explicit catalog selection, and compact reports with exact cost/unknown-charge handling. | Host authorization passes. Schema compatibility is deployed and November 5 contracts were captured. November 5 enrollment is confirmed. Two checks stopped without fills; the second recovered twice but skipped all slots. The handoff repair is offline-tested; actual timeout causes and connected lifecycle remain unverified. |
 
 Scope bindings consume one of the **eight** candidate slots. The current eight
 DEGEN/Swing contracts cannot silently gain a ninth contract or drop a family.

@@ -337,9 +337,14 @@ class Client:
    while True: await asyncio.sleep(1)
   return json.loads({json.dumps(metadata())!r})
  async def call_tool(self,name,arguments):
+  if {fault!r} == 'READ_STALL':
+   await asyncio.sleep(60)
   return {{'isError':False,'structuredContent':{{'rows':[]}}}}
 @asynccontextmanager
-async def client(): yield Client()
+async def client():
+ if {fault!r} == 'CONNECT_STALL': await asyncio.sleep(60)
+ yield Client()
+ if {fault!r} == 'CLOSE_STALL': await asyncio.sleep(60)
 class Connection: client=staticmethod(client)
 read_worker.connection=lambda policy: Connection()
 raise SystemExit(read_worker.main())
@@ -397,6 +402,42 @@ def test_native_stall_timeout_or_cancellation_reaps_child(tmp_path, monkeypatch,
     at = time.monotonic()
     asyncio.run(run())
     assert time.monotonic() - at < 5 and children[0].returncode is not None
+
+
+@pytest.mark.parametrize('fault,stage,completed', [
+    ('CONNECT_STALL','CONNECT',0), ('STALL','DISCOVER',0),
+    ('READ_STALL','MARKET_READ',0), ('CLOSE_STALL','CLOSE',1)])
+def test_native_timeout_keeps_only_bound_progress_and_reaps_child(tmp_path, monkeypatch, fault, stage, completed):
+    children = intercept_native(monkeypatch, native_connection_script(tmp_path, fault))
+    policy = CapturePolicy(oauth_file=str(oauth(tmp_path)), timeout_seconds=4)
+    schemas = asyncio.run(OptionReadGateway(Client()).discover())
+    started = time.monotonic()
+    with pytest.raises((TimeoutError, ValueError)) as caught:
+        asyncio.run(collect(policy, schemas=schemas, plan=plan()))
+    progress = caught.value.capture_progress
+    assert progress.stage == stage and progress.completed_reads == completed
+    assert 'PRIVATE-TOKEN' not in progress.model_dump_json()
+    assert time.monotonic()-started < 7 and children[0].returncode is not None
+
+
+def test_progress_channel_ignores_foreign_private_data_and_is_bounded():
+    from app.options.read_capture import CaptureProgress, PROGRESS_PREFIX, read_progress
+    async def exercise():
+        stream = asyncio.StreamReader()
+        good = CaptureProgress(request_id='a'*32,stage='DISCOVER',completed_reads=0)
+        foreign = good.model_copy(update={'request_id':'b'*32})
+        stream.feed_data(b'PRIVATE-TOKEN\n' + PROGRESS_PREFIX + foreign.model_dump_json().encode()+b'\n'
+                         + PROGRESS_PREFIX + good.model_dump_json().encode()+b'\n')
+        stream.feed_eof()
+        latest = []
+        await read_progress(stream, 'a'*32, latest)
+        assert latest == [good]
+        stream = asyncio.StreamReader()
+        stream.feed_data(b'x'*8193+b'\n')
+        stream.feed_eof()
+        with pytest.raises(ValueError, match='bound'):
+            await read_progress(stream, 'a'*32, [])
+    asyncio.run(exercise())
 
 
 @pytest.mark.parametrize("fault", ["request", "policy", "time", "plan", "calls"])

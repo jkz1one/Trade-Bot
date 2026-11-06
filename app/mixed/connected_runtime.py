@@ -471,6 +471,7 @@ async def run(
         if resume_flat_reviewed_revision is not None and locked_owner["owner_revision"] != resume_flat_reviewed_revision:
             raise ValueError("Owner changed before reviewed recovery")
         feed = ContinuousFeed(feed_directory, policy, schemas)
+        feed.cycle_needed = runtime.needs_cycle
         from app.mixed.scope_refresh import ConnectedScopeRefresh, enabled
         scope_refresh = None
         recovery = FlatFeedRecovery(max_feed_recoveries, locked_owner['runtime_generation'] + 1,

@@ -1,5 +1,62 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.188. Recoverable current-slot scan handoff and read timeout diagnostics, 2026-11-05.
+
+The operator deployed ab8d738 as image
+44a57becb0fc566b43cac94c5320e93db3d2544e2f1f3fdf65a9a0d93ed97b26.
+The second November 5 ten-minute run, paper-1105-151627-dd1928, completed at
+10:28 New York with exit code zero. It delivered 21 packets, failed six collections
+with parent TimeoutError, and successfully used both reviewed flat feed recoveries.
+All five cycle records were SKIPPED: two older unobserved slots and three feed-fault
+slots. There were no decisions, model calls, costs or fills. Final accepted/collected
+sequence 651 and fresh heartbeat/feed are terminal observations, not continuous
+health or trading readiness. Swing original sources and Scope current inputs remain
+unavailable. The earlier run without mid-run recovery delivered 26 packets and
+recorded one ENTRY_HEALTH_BLOCKED decision. No new host operation was requested here.
+
+Offline reproduction identifies a runtime scheduling defect: a transient missing
+feed permanently consumed the current five-minute slot before a later valid CYCLE
+could be used. Unclaimed slots now wait as WAITING_FOR_FEED within their original
+window. They require a current, freshly validated CYCLE after the existing reviewed
+startup/flat recovery clears the feed halt. Past waiting slots expire; terminal,
+started and interrupted slots never reopen. Stop/crash closes waiting work without
+replay. Other halts, ongoing model work, native protection, quote validation and all
+entry/cost/risk checks remain authoritative. This change does not clear a halt.
+
+The connected collector now asks the native owner whether that slot still needs
+strategy inputs. Protection-only polls continue during a feed halt; after recovery,
+fresh scan inputs can be collected. An additive collector ledger bounds actual
+strategy attempts to three per slot across restart, counting failed attempts and
+unknown legacy attempts conservatively. Quote polls do not spend that scan allowance.
+The original transport cadence, sliding read quota, capture limit and prepared
+policy remain unchanged. Active Scope history collection retains its existing rules.
+
+The hard read deadline remains unchanged. A separate bounded diagnostic channel
+retains only request-bound phase and completed-read count if the child stalls while
+connecting, discovering, reading or closing. It never returns partial evidence as a
+successful capture or records arguments, tokens, response text or invented clocks.
+Native process tests verify the phase diagnostics and child cleanup. The supplied
+historical timeouts lack that channel, so their internal/provider cause is still
+unknown; the scheduling repair does not claim to eliminate provider latency.
+
+The short report now includes completed/skipped/waiting/interrupted cycle counts,
+cycle reasons, successful recoveries, collection failures and available read phase.
+A run with no decision explicitly says its scan is not established. Detailed JSON
+adds cycle outcome totals and NO_DECISION_RECORDED without changing account state.
+Validation and the retained host summary are in PAPER_CYCLE_HANDOFF_PROOF.json.
+All 469 distinct installed cases pass after running the 41 root-host cases in an
+isolated root namespace; the initial non-root fixture failures are retained in the
+proof. All 320 application files match source/wheel/install; 60 runtime pins match.
+
+Account local-simulation, population connected-simulation-1000-v1, $1000 initial
+capital, two plays, $1/day and $5 total AI limits, balances, journals, positions,
+halts and enrollment remain intact. Robinhood is read-only; execution stays local
+simulation and LIVE stays disabled. No connected fill/lifecycle is claimed. No new
+capture, auth, enrollment or dashboard activation is required for deployment.
+The November 5 receipt remains date-bound and must not run on November 6 or later.
+
+Previous version notes (historical):
+
 Version 1.187. Scope pacing, setup review and compact PAPER reporting, 2026-11-05.
 
 Three offline-verifiable daily-operation items are implemented together. The new

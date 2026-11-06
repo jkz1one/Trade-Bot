@@ -20,6 +20,30 @@ from app.options.read_gateway import ENDPOINT, CapturePlan, ReadSchemas, encoded
 
 MAX_REQUEST_BYTES = 256 * 1024
 MAX_RESPONSE_BYTES = 1024 * 1024
+PROGRESS_PREFIX = b'TRADE_BOT_READ_PROGRESS '
+
+
+class CaptureProgress(OptionRecord):
+    """Diagnostic phases only: no arguments, provider text, tokens or market data."""
+    request_id: str = Field(pattern=r'^[a-f0-9]{32}$')
+    stage: Literal['PRIVATE_AUTH', 'CONNECT', 'DISCOVER', 'VALIDATE_PLAN',
+                   'MARKET_READ', 'CLOSE', 'SERIALIZE']
+    completed_reads: int = Field(ge=0, le=8, strict=True)
+
+
+async def read_progress(stream, request_id, latest):
+    total = 0
+    while line := await stream.readline():
+        total += len(line)
+        if total > 8192:
+            raise ValueError('Read diagnostics exceeded bound')
+        if line.startswith(PROGRESS_PREFIX):
+            try:
+                value = CaptureProgress.model_validate_json(line[len(PROGRESS_PREFIX):])
+            except ValueError:
+                continue
+            if value.request_id == request_id:
+                latest[:] = [value]
 
 OAuthFailure = Literal[
     "invalid_request",
@@ -202,15 +226,16 @@ async def _read(request):
             "app.options.read_worker",
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.PIPE,
             start_new_session=True,
             env={k: os.environ[k] for k in ("PATH", "LANG", "LC_ALL") if k in os.environ},
         )
     )
-    child = None
+    child, diagnostics, latest = None, None, []
     try:
         async with asyncio.timeout(max(0, request.deadline_monotonic - time.monotonic())):
             child = await asyncio.shield(spawn)
+            diagnostics = asyncio.create_task(read_progress(child.stderr, request.request_id, latest))
             child.stdin.write(payload)
             await child.stdin.drain()
             child.stdin.close()
@@ -220,9 +245,14 @@ async def _read(request):
                 if len(output) > MAX_RESPONSE_BYTES:
                     raise ValueError("Capture response exceeds protocol bound")
             await child.wait()
+            await diagnostics
             if child.returncode:
                 raise ValueError("Capture child failed")
             return CaptureResult.model_validate_json(output)
+    except Exception as exc:
+        if latest:
+            exc.capture_progress = latest[0]
+        raise
     finally:
         if child is None:
             while not spawn.done():
@@ -234,6 +264,9 @@ async def _read(request):
                 child = spawn.result()
         if child is not None:
             await _cleanup(child)
+        if diagnostics is not None:
+            diagnostics.cancel()
+            await asyncio.gather(diagnostics, return_exceptions=True)
 
 
 async def collect(policy, *, schemas=None, plan=None, clock_source=utc_now,

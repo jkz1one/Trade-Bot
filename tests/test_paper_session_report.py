@@ -112,6 +112,27 @@ def test_short_report_has_exact_ny_spending_and_preserves_unknown_charges():
     assert 'COLLECTOR_FAILURES_RECORDED' in text
 
 
+def test_short_report_explains_retained_all_skipped_run_and_successful_recoveries():
+    value = live_result()
+    value.update(decisions=[], decision_count=0, cycle_count=5, flat_feed_recoveries=2,
+        reviewed_entry_resumes=3, collection=[{'status':'DELIVERED','attempts':21}, {'status':'FAILED','attempts':6}],
+        collector_failures=[{'error_class':'TimeoutError'}],
+        cycle_outcomes=[{'status':['SKIPPED'],'reason':['RUNTIME_SLOT_NOT_OBSERVED'],'count':2},
+                        {'status':['SKIPPED'],'reason':['OPTION_RUNTIME_FEED_UNAVAILABLE'],'count':3}])
+    value['operation'] = module.operation(value, {'Status':'exited','ExitCode':0})
+    result = module.short_report(value)
+    for expected in ('complete 0; skipped 5', 'OPTION_RUNTIME_FEED_UNAVAILABLE (3)',
+                     'Feed recoveries: 2', 'delivered 21; failed 6',
+                     'TimeoutError; read phase unavailable', 'DEGEN: no decision recorded; scan not established'):
+        assert expected in result
+    assert len(result) < 8192
+    original = {'stage':'CAPTURE','error_class':'TimeoutError', 'read_progress':{
+        'request_id':'a'*32,'stage':'DISCOVER','completed_reads':0,'private':'PRIVATE_TOKEN'}}
+    sanitized = module.failure_evidence(json.dumps(original))
+    assert sanitized['read_progress'] == {'stage':'DISCOVER','completed_reads':0}
+    assert 'PRIVATE_TOKEN' not in json.dumps(sanitized)
+
+
 @pytest.mark.parametrize('reason', ['SCOPE_REFRESH_READ_BUDGET_UNAVAILABLE','SCOPE_REFRESH_COLLECTOR_BUSY'])
 def test_short_report_exposes_scope_budget_rejection_without_overstating_peer_status(reason):
     value = live_result()

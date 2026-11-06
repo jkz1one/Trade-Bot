@@ -217,9 +217,28 @@ def short_report(result):
             issues += codes([scan.get('issues') for scan in decision.get('scans', [])])
         if family in decision.get('unavailable_families', []):
             issues.append(family + '_INPUT_UNAVAILABLE')
-        lines.append(family + ': ' + (reasons(issues) or ('no input blocker reported' if result.get('accepted_packet') else 'input not established')))
+        fallback = 'no input blocker reported' if result.get('accepted_packet') else 'input not established'
+        if family == 'DEGEN' and not result.get('decision_count', len(result.get('decisions', []))):
+            fallback = 'no decision recorded; scan not established'
+        lines.append(family + ': ' + (reasons(issues) or fallback))
     lines.append('Last decision: ' + (reasons([decision.get('status'), decision.get('reason')]) or 'none recorded'))
     lines.append(f"Fills (account total): {result.get('account_total_fills', 'unknown')}; cycles (run): {result.get('cycle_count', 'unknown')}")
+    outcomes = result.get('cycle_outcomes')
+    if outcomes is not None:
+        counts = {s: sum(r['count'] for r in outcomes if s in r['status'])
+                  for s in ('COMPLETE', 'SKIPPED', 'WAITING_FOR_FEED', 'STARTED', 'INTERRUPTED')}
+        lines.append('Cycles: ' + '; '.join(f'{s.lower()} {n}' for s,n in counts.items()))
+        why = [f"{reasons(r['reason'])} ({r['count']})" for r in outcomes if reasons(r['reason'])]
+        if why:
+            lines.append('Cycle reasons: ' + '; '.join(why[:5]))
+    lines.append(f"Feed recoveries: {result.get('flat_feed_recoveries', 'unknown')}; reviewed resumes: {result.get('reviewed_entry_resumes', 'unknown')}")
+    collection = result.get('collection', [])
+    lines.append('Collection: ' + '; '.join(f"{s.lower()} {sum(r['attempts'] for r in collection if r['status']==s)}"
+                                           for s in ('DELIVERED', 'FAILED', 'INTERRUPTED')))
+    if result.get('collector_failures'):
+        last = result['collector_failures'][-1]
+        phase = reasons((last.get('read_progress') or {}).get('stage')) or 'unavailable'
+        lines.append(f"Last collection failure: {last.get('error_class', 'unknown')}; read phase {phase}")
     paid = result.get('model_spending', {})
     if 'costs' in paid:
         values, limits = paid['costs'], paid['budgets']
@@ -297,6 +316,11 @@ def failure_evidence(raw):
     }:
         result['error_class'] = error
     result['frames'] = []
+    progress = value.get('read_progress')
+    if (isinstance(progress, dict) and progress.get('stage') in {
+            'PRIVATE_AUTH', 'CONNECT', 'DISCOVER', 'VALIDATE_PLAN', 'MARKET_READ', 'CLOSE', 'SERIALIZE'}
+            and type(progress.get('completed_reads')) is int and 0 <= progress['completed_reads'] <= 8):
+        result['read_progress'] = {k: progress[k] for k in ('stage', 'completed_reads')}
     frames = value.get('frames')
     for frame in frames[-8:] if isinstance(frames, list) else []:
         if not isinstance(frame, dict):
@@ -520,6 +544,11 @@ def report(directory, started, finished):
         result['cycle_count'] = db.execute(
             'SELECT COUNT(*) FROM execution_option_runtime_slots WHERE started_at>=? AND started_at<=?',
             (start, end)).fetchone()[0]
+        result['cycle_outcomes'] = [{'status': codes(r['status']), 'reason': codes(r['reason']),
+                                     'count': r['count']} for r in db.execute(
+            'SELECT status,reason,COUNT(*) AS count FROM execution_option_runtime_slots '
+            'WHERE started_at>=? AND started_at<=? GROUP BY status,reason ORDER BY status,reason LIMIT 25',
+            (start, end))]
         result['decision_count'] = db.execute(
             'SELECT COUNT(*) FROM execution_option_opportunities WHERE started_at>=? AND started_at<=?',
             (start, end)).fetchone()[0]
@@ -600,6 +629,8 @@ def report(directory, started, finished):
     finally:
         db.close()
     concerns = []
+    if result['decision_count'] == 0:
+        concerns.append('NO_DECISION_RECORDED')
     if result.get('runtime_evidence', {}).get('feed') in {'MISSING', 'STALE', 'FUTURE'}:
         concerns.append('FEED_' + result['runtime_evidence']['feed'])
     if any(row['status'] == 'FAILED' and row['attempts'] for row in result['collection']):
