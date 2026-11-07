@@ -275,8 +275,15 @@ def short_report(result):
     if not isinstance(run_id, str) or not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,39}', run_id):
         run_id = 'unknown'
     lines = [f"PAPER {run_id}: {reasons(operation.get('state')) or 'UNKNOWN'}",
-             'Reason: ' + (reasons(operation.get('reasons')) or 'not reported'),
-             f"Data: heartbeat {reasons(clocks.get('heartbeat')) or 'UNKNOWN'}; feed {reasons(clocks.get('feed')) or 'UNKNOWN'}; accepted {accepted}, collected {collected}"]
+             'Reason: ' + (reasons(operation.get('reasons')) or 'not reported')]
+    if 'SESSION_WINDOW_UNAVAILABLE' in result.get('run_issues', []):
+        lines.extend(['Session timestamps unavailable. Fill, scan and spending totals are unknown.',
+                      'LIVE disabled.'])
+        return '\n'.join(lines)
+    lines.append(f"Data: heartbeat {reasons(clocks.get('heartbeat')) or 'UNKNOWN'}; feed {reasons(clocks.get('feed')) or 'UNKNOWN'}; accepted {accepted}, collected {collected}")
+    timing = result.get('session_timing', {})
+    if timing.get('elapsed_seconds') is not None and timing.get('planned_seconds') is not None:
+        lines.append(f"Duration: {timing['elapsed_seconds']:.1f}s elapsed, {timing['planned_seconds']}s planned")
     families = operation.get('family_input_issues', {})
     for family in ('DEGEN', 'SWING', 'SCOPE'):
         issues = list(families.get(family, []))
@@ -693,9 +700,20 @@ def operation(result, state):
     last_failure = next(iter(reversed(result.get('collector_failures', []))), {})
     auth_blocked = (authorization_required(last_failure)
                     and last_failure.get('sequence', 0) > (result.get('latest_packet') or {}).get('sequence', 0))
-    if state['Status'] == 'exited':
-        status = 'STOPPED' if state.get('ExitCode') == 0 else 'FAILED'
-        why = ['BOUNDED_SESSION_ENDED' if status == 'STOPPED' else 'CONTAINER_EXIT_NONZERO']
+    timing = result.get('session_timing', {})
+    if state['Status'] == 'dead':
+        status, why = 'FAILED', ['CONTAINER_DEAD']
+    elif state['Status'] == 'exited':
+        if state.get('ExitCode') != 0:
+            status, why = 'FAILED', ['CONTAINER_EXIT_NONZERO']
+        elif 'SESSION_WINDOW_UNAVAILABLE' in result.get('run_issues', []):
+            status, why = 'FAILED', ['SESSION_WINDOW_UNAVAILABLE']
+        elif timing.get('planned_seconds') is None or timing.get('elapsed_seconds') is None:
+            status, why = 'STOPPED', ['SESSION_DURATION_UNVERIFIED']
+        elif timing['elapsed_seconds'] < timing['planned_seconds']:
+            status, why = 'STOPPED', ['SESSION_ENDED_EARLY']
+        else:
+            status, why = 'STOPPED', ['BOUNDED_SESSION_ENDED']
     elif runtime.get('status') == 'FAILED':
         status, why = 'FAILED', codes(runtime.get('reason'))
     elif clocks.get('heartbeat') != 'FRESH':
@@ -872,6 +890,26 @@ def report(directory, started, finished):
     return result
 
 
+def session_timing(cmd, start, end):
+    # Only recover the duration from the inspected connected worker's own argv.
+    planned = None
+    prefix = ['python', '-I', '-W', 'error', '-m', 'app.mixed.connected_runtime', 'run']
+    if isinstance(cmd, list) and cmd[:len(prefix)] == prefix and cmd.count('--seconds') == 1:
+        index = cmd.index('--seconds') + 1
+        if index < len(cmd) and isinstance(cmd[index], str) and re.fullmatch(r'[1-9][0-9]{0,4}', cmd[index]):
+            value = int(cmd[index])
+            if value <= 86400:
+                planned = value
+    elapsed = None
+    try:
+        first, last = datetime.fromisoformat(start), datetime.fromisoformat(end)
+        if first.tzinfo is not None and last.tzinfo is not None and first.year > 1 and last >= first:
+            elapsed = (last - first).total_seconds()
+    except (ValueError, TypeError, OverflowError):
+        pass
+    return {'planned_seconds': planned, 'elapsed_seconds': elapsed}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-id", required=True)
@@ -879,7 +917,7 @@ def main():
     args = parser.parse_args()
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,39}", args.run_id):
         raise ValueError("INVALID_RUN_ID")
-    fmt = '{"state":{{json .State}},"label":{{json (index .Config.Labels "trade-bot.connected-session-v1")}}}'
+    fmt = '{"state":{{json .State}},"cmd":{{json .Config.Cmd}},"label":{{json (index .Config.Labels "trade-bot.connected-session-v1")}}}'
     inspected = subprocess.run(
         ["docker", "inspect", "--format", fmt, "trade-bot-connected-" + args.run_id],
         capture_output=True, text=True, timeout=10,
@@ -890,12 +928,22 @@ def main():
     if not container.get("label"):
         raise ValueError("NOT_A_CONNECTED_SESSION")
     state = container["state"]
-    if state['Status'] not in {'running', 'exited'}:
+    if state['Status'] not in {'running', 'exited', 'dead'}:
         raise ValueError('SESSION_NOT_RUNNING_OR_FINISHED')
     active = state['Status'] == 'running'
-    end = datetime.now(timezone.utc).isoformat() if active else state['FinishedAt']
-    result = report(STATE, state['StartedAt'], end)
-    result.update(run_id=args.run_id, container_exit_code=None if active else state['ExitCode'],
+    end = datetime.now(timezone.utc).isoformat() if active else state.get('FinishedAt')
+    start = state.get('StartedAt')
+    timing = session_timing(container.get('cmd'), start, end)
+    if timing['elapsed_seconds'] is None:
+        if active:
+            raise ValueError('SESSION_WINDOW_UNAVAILABLE')
+        result = {'provider_calls': False, 'state_modified': False, 'live_enabled': False,
+                  'run_issues': ['SESSION_WINDOW_UNAVAILABLE'],
+                  'run_execution': {'status': 'UNAVAILABLE', 'reason': 'SESSION_WINDOW_UNAVAILABLE'}}
+    else:
+        result = report(STATE, start, end)
+    result['session_timing'] = timing
+    result.update(run_id=args.run_id, container_exit_code=None if active else state.get('ExitCode'),
                   status='CURRENT_SESSION_REPORT' if active else 'SAVED_SESSION_REPORT',
                   operation=operation(result, state))
     print(short_report(result) if args.format == 'text' else json.dumps(result, indent=2))

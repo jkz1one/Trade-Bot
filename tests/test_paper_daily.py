@@ -580,3 +580,27 @@ def test_abnormal_worker_reports_failure_on_the_final_tick(docker_state, exit_co
     assert state['status'] == 'FAILED'
     assert state['days']['2026-11-09']['done']
     assert state['reasons'] == ['SESSION_STOPPED_REVIEW_REQUIRED']
+
+
+def test_controller_saves_real_report_for_dead_worker_without_session_clocks(tmp_path, monkeypatch):
+    import json
+    import os
+
+    backend = daily.Backend({'image_id': 'pinned'}, tmp_path)
+    item = {'Id': 'b' * 64, 'State': {'Status': 'dead', 'ExitCode': 0,
+            'StartedAt': '0001-01-01T00:00:00Z', 'FinishedAt': '0001-01-01T00:00:00Z'}}
+    run_id = 'daily-20261109'
+    docker = tmp_path / 'docker'
+    docker.write_text('#!/bin/sh\n[ "$1" = inspect ] || exit 1\ncat "$(dirname "$0")/inspection.json"\n')
+    docker.chmod(0o700)
+    (tmp_path / 'inspection.json').write_text(json.dumps({'state': item['State'], 'label': 'bound'}))
+    monkeypatch.setenv('PATH', str(tmp_path) + os.pathsep + os.environ['PATH'])
+    monkeypatch.setattr(backend, 'container', lambda *a, **kw: item)
+    state = {'days': {'2026-11-09': {'run_id': run_id, 'launch_attempted': True, 'container_id': item['Id']}}}
+    advance(state, backend, '2026-11-09T16:01:00')
+    day = state['days']['2026-11-09']
+    assert state['status'] == 'FAILED' and day['done']
+    assert day['operation']['reasons'] == ['CONTAINER_DEAD']
+    saved = json.loads((tmp_path / (run_id + '-report.json')).read_text())
+    assert saved['run_execution']['status'] == 'UNAVAILABLE'
+    assert saved['run_issues'] == ['SESSION_WINDOW_UNAVAILABLE']

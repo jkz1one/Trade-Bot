@@ -114,7 +114,11 @@ branch includes these offline-tested changes for a future deployment.
   another launch. On the tested branch a created or restarting worker reports
   `STARTING`. A paused, removing or unrecognized Docker state reports the worker
   condition and remains under inspection. Only an exited or dead container can
-  finish the day. An abnormal exit is reported as failed on that tick.
+  finish the day. An abnormal exit is reported as failed on that tick. Final
+  reports compare Docker's original start and finish times with the duration
+  in the worker command. An early clean exit or an unverifiable duration
+  requires review. A dead worker without a valid time window yields a failure
+  receipt with unknown run metrics.
 - Portfolio reconciliation journals each recovered unknown attempt once and
   reports how many remain unresolved. Native broker order and client identities
   must be unique. Run reports expose matched attempts and unresolved attempts at

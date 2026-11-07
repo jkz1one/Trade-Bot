@@ -604,3 +604,53 @@ def test_inconsistent_run_receipts_are_unknown(damage):
         assert total is None
         assert run == {'status': 'UNAVAILABLE', 'reason': 'RUN_FILL_EVIDENCE_INVALID'}
         assert 'Run execution: unavailable' in module.short_report({'run_execution': run})
+
+
+@pytest.mark.parametrize('worker,exit_code,finish,classification,reason', [
+    ('dead', 0, '2026-11-09T15:05:00Z', 'FAILED', 'CONTAINER_DEAD'),
+    ('exited', 0, '2026-11-09T15:05:00Z', 'STOPPED', 'SESSION_ENDED_EARLY'),
+    ('exited', 1, '2026-11-09T15:10:00Z', 'FAILED', 'CONTAINER_EXIT_NONZERO'),
+    ('exited', 0, '2026-11-09T15:10:00Z', 'STOPPED', 'BOUNDED_SESSION_ENDED'),
+    ('dead', 1, '0001-01-01T00:00:00Z', 'FAILED', 'CONTAINER_DEAD'),
+    ('exited', 0, '0001-01-01T00:00:00Z', 'FAILED', 'SESSION_WINDOW_UNAVAILABLE'),
+])
+def test_terminal_report_uses_original_container_window_and_duration(
+        monkeypatch, capsys, worker, exit_code, finish, classification, reason):
+    from types import SimpleNamespace
+
+    cmd = ['python', '-I', '-W', 'error', '-m', 'app.mixed.connected_runtime', 'run',
+           '--seconds', '600']
+    state = {'Status': worker, 'ExitCode': exit_code, 'StartedAt': '2026-11-09T15:00:00Z',
+             'FinishedAt': finish}
+    def inspect(*args, **kwargs):
+        assert args[0][:2] == ['docker', 'inspect']
+        return SimpleNamespace(returncode=0, stdout=json.dumps({'label': 'bound', 'cmd': cmd, 'state': state}))
+    def report(directory, start, end):
+        assert finish != '0001-01-01T00:00:00Z', 'invalid window must not read account journals'
+        assert (start, end) == (state['StartedAt'], finish)
+        return live_result()
+    monkeypatch.setattr(module.subprocess, 'run', inspect)
+    monkeypatch.setattr(module, 'report', report)
+    monkeypatch.setattr('sys.argv', ['report', '--run-id', 'daily-20261109'])
+    module.main()
+    result = json.loads(capsys.readouterr().out)
+    assert result['operation']['state'] == classification
+    assert reason in result['operation']['reasons']
+    assert result['operation']['container_running'] is False
+    assert result['session_timing']['planned_seconds'] == 600
+    if finish.startswith('0001'):
+        assert result['session_timing']['elapsed_seconds'] is None
+        assert 'SESSION_WINDOW_UNAVAILABLE' in result['run_issues']
+        assert result.get('account_total_fills') is None
+        text = module.short_report(result)
+        assert 'totals are unknown' in text and 'delivered 0' not in text
+
+
+@pytest.mark.parametrize('tail', [[], ['--seconds'], ['--seconds', '0'], ['--seconds', '86401'],
+                                 ['--seconds', '60', '--seconds', '600']])
+def test_ambiguous_duration_never_confirms_bounded_completion(tail):
+    command = ['python', '-I', '-W', 'error', '-m', 'app.mixed.connected_runtime', 'run', *tail]
+    timing = module.session_timing(command, '2026-11-09T15:00:00Z', '2026-11-09T21:00:00Z')
+    assert timing == {'planned_seconds': None, 'elapsed_seconds': 21600}
+    result = module.operation({'session_timing': timing}, {'Status': 'exited', 'ExitCode': 0})
+    assert result['reasons'] == ['SESSION_DURATION_UNVERIFIED']

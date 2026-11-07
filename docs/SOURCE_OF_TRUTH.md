@@ -1,5 +1,26 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.195. Accurate daily PAPER completion reports, 2026-11-07.
+
+The host reporter on 177dd97 rejected a dead Docker worker even though the
+controller recognized it. It also classified an exit with code zero as a bounded
+completion regardless of elapsed time. Offline CLI reproductions cover both paths.
+The report now reads the reviewed worker command's duration and original Docker
+start and finish timestamps. A short clean exit reports SESSION_ENDED_EARLY.
+A missing duration reports SESSION_DURATION_UNVERIFIED. The controller's existing
+attention latch requires review for either outcome. A dead worker produces a
+failed final report, including when its clock window is unavailable. Unusable
+clocks leave run fills and spending unknown. Only a valid window is used to
+read journals. Duration evidence establishes elapsed time, not the cause of exit.
+
+143 installed-package tests passed across the report, daily controller and session
+launcher, including a controller fixture invoking the actual reporting subprocess.
+This release changes host reporting. The last confirmed host release is b5d10cb
+with November 9 enrolled. No further preparation or manual start is required for
+that installed schedule. The first connected simulated round trip is outstanding.
+
+## Previous release evidence
+
 Version 1.194. Daily worker supervision and read-only Robinhood option order recovery, 2026-11-07.
 
 The daily controller could mark a created, restarting, paused, removing or
