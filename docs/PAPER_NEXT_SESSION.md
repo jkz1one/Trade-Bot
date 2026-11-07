@@ -104,14 +104,17 @@ restricted to the existing normal stop and the two native flat-feed recoveries.
 ## Working branch changes after installation
 
 The installed timer on b5d10cb already has the November 9 enrollment. The newer
-branch includes three offline-tested changes for a future deployment.
+branch includes these offline-tested changes for a future deployment.
 
 - The scheduler reserves a maximum of three launch-review attempts for the date.
   It checks the same owner state and image at final review and records its dispatch
   marker immediately before the run command. After a possible dispatch it checks
   the original container identity. A temporary Docker read failure keeps the run
   under supervision. A later appearance of that worker can be adopted without
-  another launch.
+  another launch. On the tested branch a created or restarting worker reports
+  `STARTING`. A paused, removing or unrecognized Docker state reports the worker
+  condition and remains under inspection. Only an exited or dead container can
+  finish the day. An abnormal exit is reported as failed on that tick.
 - Portfolio reconciliation journals each recovered unknown attempt once and
   reports how many remain unresolved. Native broker order and client identities
   must be unique. Run reports expose matched attempts and unresolved attempts at
@@ -120,6 +123,10 @@ branch includes three offline-tested changes for a future deployment.
   published Cboe terms for the standard product. It can inspect a retained SPX
   input probe independently of the selected contract. The October 29 record has
   78 session bars and zero confirmed original bars.
+
+The optional Robinhood order-history reader is for investigating a known brokerage
+order ID. The scheduled simulator needs no brokerage history capture or separate
+account. [Order recovery instructions](OPTIONS_EXECUTION.md#robinhood-option-order-history)
 
 ## Current evidence and remaining requirements
 

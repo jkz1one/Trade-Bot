@@ -503,14 +503,48 @@ def main() -> None:
     abandon = sub.add_parser("shadow-slot-abandon")
     abandon.add_argument("--slot", required=True)
     recovery = sub.add_parser("order-recovery-report", help="Replay a private normalized options order-history case offline")
-    recovery.add_argument("--case", required=True, type=Path)
+    source = recovery.add_mutually_exclusive_group(required=True)
+    source.add_argument("--case", type=Path)
+    source.add_argument("--attempt", type=Path)
+    recovery.add_argument("--history", type=Path, action="append")
+    schema_report = sub.add_parser("order-history-schema-report", help="Check a saved Robinhood tool inventory offline")
+    schema_report.add_argument("--source", required=True, type=Path)
+    capture = sub.add_parser("capture-option-history", help="Retain read-only history for one recorded broker order")
+    capture.add_argument("--attempt", type=Path, required=True)
+    capture.add_argument("--oauth-file", required=True)
+    capture.add_argument("--output", type=Path, required=True)
+    capture.add_argument("--with-position", action="store_true")
     args = parser.parse_args()
+    if args.command == "order-history-schema-report":
+        from app.options.read_cli import private_json
+        from app.robinhood.option_history import inventory_report
+        try:
+            result = inventory_report(private_json(args.source, 8 * 1024 * 1024))
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            result = {"status": "INVALID_SCHEMA_INVENTORY", "provider_calls": False, "live_enabled": False}
+        print(json.dumps(result, sort_keys=True))
+        raise SystemExit(0 if result["status"] == "SAVED_SCHEMA_REPORT" else 2)
+    if args.command == "capture-option-history":
+        from app.robinhood.option_history import HistoryIssue, capture_file
+        try:
+            result = capture_file(args.attempt, args.oauth_file, args.output, args.with_position)
+        except Exception as exc:
+            result = {"status": "HISTORY_UNAVAILABLE", "reason": str(exc) if isinstance(exc, HistoryIssue) else type(exc).__name__,
+                      "execution_authority": False, "live_enabled": False}
+        print(json.dumps(result, sort_keys=True))
+        raise SystemExit(0 if result["status"] == "HISTORY_CAPTURED" else 2)
     if args.command == "order-recovery-report":
+        if args.case and args.history:
+            parser.error("--history requires --attempt")
         from app.options.read_cli import private_json
         from app.execution.order_recovery import RecoveryCase, recover
 
         try:
-            result = recover(RecoveryCase.model_validate(private_json(args.case, 8 * 1024 * 1024)))
+            if args.case:
+                result = recover(RecoveryCase.model_validate(private_json(args.case, 8 * 1024 * 1024)))
+            else:
+                from app.robinhood.option_history import report_files
+                result = report_files(args.attempt, args.history or [])
         except (OSError, ValueError):
             result = {"status": "INVALID_EVIDENCE", "resubmit": False, "provider_calls": False,
                       "state_modified": False, "live_enabled": False}

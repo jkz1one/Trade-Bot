@@ -534,3 +534,49 @@ def test_late_docker_response_is_adopted_after_first_empty_listing():
     advance(state, backend, '2026-11-09T15:02:00')
     assert state['status'] == 'WAITING_FOR_SETUP' and 'attention' not in state
     assert backend.calls.count('launch') == 1
+
+
+@pytest.mark.parametrize('docker_state', ['created', 'restarting', 'paused', 'removing', 'unknown'])
+def test_transitional_worker_remains_supervised_across_timer_restart(docker_state):
+    backend, state = Fake(), {}
+    ready(backend)
+    backend.error = 'after_launch'
+    with pytest.raises(RuntimeError):
+        advance(state, backend, '2026-11-09T15:00:00')
+    backend.item['State']['Status'] = docker_state
+    saved = advance(state, backend, '2026-11-09T15:01:00')
+    day = state['days']['2026-11-09']
+    assert not day.get('done')
+    assert saved[0]['days']['2026-11-09']['container_id'] == backend.item['Id']
+    assert state['reasons'] == ['WORKER_' + docker_state.upper()]
+    assert 'report' not in backend.calls
+    backend.item['State']['Status'] = 'running'
+    recovered = copy.deepcopy(state)
+    advance(recovered, backend, '2026-11-09T15:02:00')
+    assert recovered['status'] == 'WAITING_FOR_SETUP'
+    assert backend.calls.count('launch') == 1
+
+
+@pytest.mark.parametrize('docker_state', ['restarting', 'paused'])
+def test_stop_policy_still_applies_during_worker_transition(docker_state):
+    backend, state = Fake(), {}
+    ready(backend)
+    advance(state, backend, '2026-11-09T15:00:00')
+    backend.item['State']['Status'] = docker_state
+    backend.on = False
+    advance(state, backend, '2026-11-09T15:01:00')
+    assert backend.calls[-1] == ('stop', 'daily-20261109', backend.item['Id'])
+    assert state['status'] == 'STOPPING'
+
+
+@pytest.mark.parametrize('docker_state,exit_code', [('dead', 0), ('exited', 1)])
+def test_abnormal_worker_reports_failure_on_the_final_tick(docker_state, exit_code):
+    backend, state = Fake(), {}
+    ready(backend)
+    advance(state, backend, '2026-11-09T15:00:00')
+    backend.item['State'].update(Status=docker_state, ExitCode=exit_code)
+    backend.reported['operation'] = {'state': 'STOPPED', 'reasons': ['BOUNDED_SESSION_ENDED']}
+    advance(state, backend, '2026-11-09T16:00:00')
+    assert state['status'] == 'FAILED'
+    assert state['days']['2026-11-09']['done']
+    assert state['reasons'] == ['SESSION_STOPPED_REVIEW_REQUIRED']

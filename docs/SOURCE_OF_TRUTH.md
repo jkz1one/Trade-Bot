@@ -1,5 +1,46 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.194. Daily worker supervision and read-only Robinhood option order recovery, 2026-11-07.
+
+The daily controller could mark a created, restarting, paused, removing or
+unrecognized Docker worker as finished. Offline restart and pause cases reproduced
+seven failures on e1c4fd2. The controller now persists an adopted worker's exact
+identity before reporting or stopping it, follows it across transitions, and
+applies the stop policy to running, restarting and paused workers. An exited or
+dead container can finish the run. Abnormal termination reports failure immediately.
+The host's installed timer is still b5d10cb. It already has the November 9 session
+enrolled for 09:00 preparation and a 10:00 New York start.
+
+The read-only options account adapter checks the authenticated MCP definitions
+before requesting one previously recorded broker order UUID for the specified
+account. It optionally reads positions for the exact option UUID. A private
+receipt retains original response pages and observation clocks. Offline replay
+checks the broker terms and each leg execution. Pending cancellation stays open.
+Verified fills survive a subsequent incomplete read. The separate position report
+retains its own observation time. Missing broker ID, schema drift, incomplete
+history or contradictory executions produce explicit diagnostics. The native
+PAPER worker never needs to query a brokerage account's option orders.
+
+The pinned field shapes come from a third party's public October 12 Robinhood MCP
+tool snapshot. Its raw order and position definitions passed both the installed
+SDK metadata serializer and the reader's compatibility checks. The published
+order response supplies the broker ID and omits the submitting client reference.
+Account permissions and responses for this user's grant remain unverified.
+[Source and operator instructions](OPTIONS_EXECUTION.md#robinhood-option-order-history)
+
+The last reported connected session had zero fills. Scope still needs usable
+original SPX history and exact reviewed contract/session bindings. Swing still
+needs original history. The first automatically started connected session and the
+first connected entry-to-exit lifecycle remain outstanding.
+
+433 distinct installed-package cases passed. The broad run passed 432 cases,
+and the final history suite passed 41 including one additional discovery/replay
+CLI case. All 324 application files matched source, wheel and installation, and
+all 60 runtime pins matched. Wheel SHA256
+ac85828819a3351ca1debc61234f13d4953d13fb9f995b2621c102a39120c08e.
+
+## Previous release evidence
+
 Version 1.193. Exact option-order recovery, documented Scope terms and daily launch recovery, 2026-11-06.
 
 The published branch builds on 14beca82102212a9fd9437e0488d9dccdfec6328. The

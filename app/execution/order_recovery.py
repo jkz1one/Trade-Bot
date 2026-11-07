@@ -46,7 +46,7 @@ class Execution(OptionRecord):
 class HistoryOrder(Terms):
     order_id: Name
     client_id: Name | None = None
-    status: Literal['OPEN', 'PARTIAL', 'FILLED', 'CANCELED', 'EXPIRED', 'REJECTED']
+    status: Literal['OPEN', 'PARTIAL', 'PENDING_CANCEL', 'FILLED', 'CANCELED', 'EXPIRED', 'REJECTED']
     updated_at: datetime
     filled_quantity: Count
     fills: tuple[Execution, ...] = Field(max_length=1000)

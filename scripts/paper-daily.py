@@ -18,6 +18,7 @@ UNIT_HOME = Path('/etc/systemd/system')
 UNIT = 'trade-bot-paper-daily'
 MARKER = '# Managed by Trade-Bot paper-daily-v1\n'
 NY = ZoneInfo('America/New_York')
+STOPPABLE = {'running', 'paused', 'restarting'}
 
 
 def module(name, filename):
@@ -194,24 +195,40 @@ def tick(state, backend, persist, now):
             raise ValueError('DAILY_CONTAINER_IDENTITY_CHANGED')
         if day.pop('awaiting_container', False) and state.get('attention') == 'LAUNCH_OUTCOME_UNKNOWN_NO_AUTOMATIC_RETRY':
             state.pop('attention')
-        day['container_id'] = item['Id']
-        active = item['State']['Status'] == 'running'
-        if active and (not backend.enabled() or now >= parsed(day['close_at'])):
+        if not day.get('container_id'):
+            day['container_id'] = item['Id']
+            persist(state)
+        worker_state = item['State']['Status']
+        if worker_state in STOPPABLE and (not backend.enabled() or now >= parsed(day['close_at'])):
             backend.stop(day['run_id'], item['Id'], image_id=day.get('image_id'))
             return status(state, 'STOPPING', ['PAUSE_REQUESTED' if not backend.enabled() else 'SESSION_CLOSED'])
+        if worker_state not in {'running', 'exited', 'dead'}:
+            reason = {
+                'created': 'WORKER_CREATED',
+                'restarting': 'WORKER_RESTARTING',
+                'paused': 'WORKER_PAUSED',
+                'removing': 'WORKER_REMOVING',
+            }.get(worker_state, 'WORKER_UNKNOWN')
+            # A Docker transition can outlive this tick or the controller process.
+            # Retain the exact worker and re-inspect before declaring a final result.
+            operation = 'STARTING' if worker_state in {'created', 'restarting'} else 'FAILED'
+            return status(state, operation, [reason])
         report = backend.report(day['run_id'])
         day['operation'] = report['operation']
         day['fills'] = report.get('account_total_fills')
         if 'run_execution' in report:
             day['run_execution'] = report['run_execution']
-        if not active:
+        if worker_state in {'exited', 'dead'}:
             day['done'] = True
-            if (item['State'].get('ExitCode') != 0
+            if (worker_state == 'dead' or item['State'].get('ExitCode') != 0
                     or report['operation']['state'] == 'FAILED'
                     or 'BOUNDED_SESSION_ENDED' not in report['operation'].get('reasons', [])):
                 state['attention'] = 'SESSION_STOPPED_REVIEW_REQUIRED'
-            return status(state, 'PAUSED' if not backend.enabled() else 'STOPPED',
-                          [state['attention']] if state.get('attention') else report['operation'].get('reasons', []))
+            if not backend.enabled():
+                return status(state, 'PAUSED', [state.get('attention', 'MANUAL_PAUSE')])
+            if state.get('attention'):
+                return status(state, 'FAILED', [state['attention']])
+            return status(state, 'STOPPED', report['operation'].get('reasons', []))
         return status(state, report['operation']['state'], report['operation'].get('reasons', []))
     if not backend.enabled():
         return status(state, 'PAUSED', ['MANUAL_PAUSE'])
@@ -399,7 +416,7 @@ def main(argv=None):
                 for day in state.get('days', {}).values():
                     if day.get('launch_attempted') and not day.get('done'):
                         item = backend.container(day['run_id'], image_id=day.get('image_id'))
-                        if item and item['State']['Status'] == 'running':
+                        if item and item['State']['Status'] in STOPPABLE:
                             if day.get('container_id') and item['Id'] != day['container_id']:
                                 raise ValueError('DAILY_CONTAINER_IDENTITY_CHANGED')
                             backend.stop(day['run_id'], item['Id'], image_id=day.get('image_id'))

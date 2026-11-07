@@ -163,8 +163,8 @@ approval prices; this adds no stop authority or changes to cash, fees or model c
 `python -m app.robinhood.cli order-recovery-report --case FILE` reads a private
 0600 JSON file. It emits a redacted reconciliation result and exits 0 for an
 exact observed match or 2 for unresolved/invalid evidence. The normalized input
-contract is `app.execution.order_recovery.RecoveryCase`. The wire-to-contract
-mapping for authenticated Robinhood options order history still needs verification.
+contract is `app.execution.order_recovery.RecoveryCase`. The Robinhood reader
+can also produce this reconciliation directly from private raw history receipts.
 The native PAPER owner uses the same exact matching rule on uncertain option attempts.
 
 A case has version `option-order-recovery-v1`, one durable `attempt`, and
@@ -185,3 +185,43 @@ fills, conflicting terminal states and incomplete history retain an unresolved
 result. The result reports the last verified quantity even if a later observation
 conflicts. Price/time similarity supplies no order identity. This command performs
 zero provider calls and has no execution or retry authority.
+
+### Robinhood option order history
+
+The optional reader supports a previously recorded broker order UUID for a
+single-leg regular-hours DAY limit order, buy to open or sell to close. Supply
+the original attempt as a private JSON serialization of
+`app.execution.order_recovery.Attempt`. The reviewed history response contains
+the broker order UUID and leg executions. It omits the client reference. An
+attempt with only a client reference returns `BROKER_ORDER_ID_REQUIRED`. A
+position row or an agent-initiated flag cannot establish ownership.
+
+The reader checks the authenticated tool's name, read-only annotation and exact
+structural input/output schema before each tool's first request. It scopes the
+request to the attempt's account and broker order ID. Optional positions use the
+same account and exact option UUID. The reference is the October 12 public
+snapshot of Robinhood's MCP tool definitions. Its compatibility with the
+operator's grant and actual account responses is still unverified.
+[Published tool definitions at the reviewed revision](https://github.com/kevin1chun/robinhood-for-agents/blob/16b3d800e7f29e9d450f45663d054a7b5adcd4b3/docs/official-mcp-tools.json)
+
+These are operator tools for investigations. The daily PAPER timer has no
+dependency on a brokerage order, this capture, or another account.
+
+- `python -m app.robinhood.cli order-history-schema-report --source INVENTORY`
+  checks an existing private full tool snapshot or saved capability inventory.
+  Each tool reports whether its definition was retained and matches.
+- `python -m app.robinhood.cli capture-option-history --attempt ATTEMPT --oauth-file OAUTH --output NEW_RECEIPT`
+  uses the existing headless read grant. Add `--with-position` for the separate
+  account holding. The destination must be new and inside an owner-only 0700
+  directory. The 0600 receipt retains the account-bound query, raw successful
+  pages, timestamps, schema and any incomplete-read reason. Each stream has an
+  eight-page maximum and the connection has a 30-second timeout.
+- `python -m app.robinhood.cli order-recovery-report --attempt ATTEMPT --history RECEIPT`
+  replays saved evidence offline. Repeat `--history` in capture order for later
+  observations. A matched working order can still have `terminal_confirmed: false`.
+  The report preserves verified fills on interruption, missing receipts and
+  conflicting updates. A pending cancellation stays open for reconciliation.
+  The optional holding has its own timestamp and may include other trades.
+
+A brokerage receipt cannot populate the simulated account. The reader has no
+order placement, cancel, journal mutation, or automatic resubmission operation.
