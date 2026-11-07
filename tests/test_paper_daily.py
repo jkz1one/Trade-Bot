@@ -105,7 +105,10 @@ class Fake:
         self.calls.append('preopen')
         return {'status': 'PREOPEN_INPUTS_BLOCKED', 'reason': 'INTERPOLATED_BAR'}
 
-    def launch(self, day, info, now):
+    def launch(self, day, info, now, before_run):
+        if self.error == 'before_review':
+            raise RuntimeError('review unavailable')
+        before_run()
         self.calls.append('launch')
         self.item = {'Id': 'b' * 64, 'State': {'Status': 'running', 'ExitCode': 0}}
         if self.error == 'after_launch':
@@ -312,19 +315,21 @@ def test_units_survive_disconnect_use_calendar_and_have_no_worker_restart():
 
 def test_backend_launch_has_close_bound_and_same_prepared_policy(monkeypatch, tmp_path):
     calls = []
-    backend = daily.Backend({'max_feed_recoveries': 2}, tmp_path)
+    backend = daily.Backend({'image_id':'pinned', 'max_feed_recoveries': 2}, tmp_path)
     monkeypatch.setattr(daily, 'stamp', lambda: dt('2026-11-09T15:00:02'))
+    owner = {'runtime_status':'STOPPED', 'halt_reason':'OPTION_RUNTIME_STOPPED', 'owner_revision':555}
+    info = {**schedule(dt('2026-11-09T15:00:00')), 'owner_state':owner}
     def invoke(args):
         calls.append(args)
         if args[0] == 'review-run':
             return {'degen_option_configuration_ready': True, 'live_enabled': False,
-                    'binding': {'policy_sha256': 'a' * 64, 'max_feed_recoveries': 2},
+                    'image_id':'pinned', 'binding': {'owner_state':owner, 'policy_sha256': 'a' * 64, 'max_feed_recoveries': 2},
                     'review_sha256': 'd' * 64}
         return {'container_id': 'b' * 64}
     monkeypatch.setattr(backend, 'invoke', invoke)
     result = backend.launch({'run_id': 'daily-20261109', 'receipt': {
         'target_session': '2026-11-09', 'policy_sha256': 'a' * 64}},
-        schedule(dt('2026-11-09T15:00:00')), dt('2026-11-09T15:00:00'))
+        info, dt('2026-11-09T15:00:00'), lambda: calls.append(['attempted']))
     assert result['container_id'] == 'b' * 64
     assert calls[-1] == ['run', '--run-id', 'daily-20261109', '--seconds', '21480',
                          '--resume-flat', '--max-feed-recoveries', '2', '--expected-review', 'd' * 64]
@@ -332,7 +337,7 @@ def test_backend_launch_has_close_bound_and_same_prepared_policy(monkeypatch, tm
     with pytest.raises(ValueError, match='WINDOW_EXPIRED'):
         backend.launch({'run_id': 'daily-20261109', 'receipt': {
             'target_session': '2026-11-09', 'policy_sha256': 'a' * 64}},
-            schedule(dt('2026-11-09T15:00:00')), dt('2026-11-09T15:00:00'))
+            info, dt('2026-11-09T15:00:00'), lambda: calls.append(['attempted']))
 
 
 def test_atomic_state_retains_pause_across_install(monkeypatch, tmp_path):
@@ -468,3 +473,64 @@ def test_previous_run_image_binding_survives_schedule_upgrade(monkeypatch, tmp_p
     assert state['days']['2026-11-09']['done']
     assert state['days']['2026-11-09']['fills'] == 2
     assert state['status'] == 'STOPPED'
+
+
+def test_unsent_launch_can_be_rereviewed_but_read_failure_budget_survives_restart():
+    backend, state = Fake(), {}
+    ready(backend)
+    backend.error = 'before_review'
+    for attempt in range(1, 4):
+        with pytest.raises(RuntimeError):
+            advance(state, backend, '2026-11-09T15:01:00')
+        state = copy.deepcopy(state)
+        assert state['days']['2026-11-09']['review_attempts'] == attempt
+        assert not state['days']['2026-11-09'].get('launch_attempted')
+    advance(state, backend, '2026-11-09T15:02:00')
+    assert state['reasons'] == ['LAUNCH_REVIEW_RETRY_LIMIT']
+    assert 'launch' not in backend.calls
+
+
+@pytest.mark.parametrize('change', ['revision','failure','image'])
+def test_changed_run_review_cannot_launch_or_consume_dispatch_intent(tmp_path, monkeypatch, change):
+    backend = daily.Backend({'max_feed_recoveries':2, 'image_id':'pinned'}, tmp_path)
+    expected = {'runtime_status':'STOPPED','halt_reason':'OPTION_RUNTIME_STOPPED','owner_revision':12}
+    actual = dict(expected)
+    if change == 'revision':
+        actual['owner_revision'] += 1
+    elif change == 'failure':
+        actual.update(runtime_status='FAILED', halt_reason='OPTION_RUNTIME_FAILED')
+    def invoke(args):
+        if args[0] == 'snapshot':
+            return {}
+        assert args[0] == 'review-run'
+        return {'binding':{'owner_state':actual}, 'image_id':'changed' if change=='image' else 'pinned'}
+    monkeypatch.setattr(backend, 'invoke', invoke)
+    info = {**schedule(dt('2026-11-09T15:00:00')), 'owner_state':expected}
+    day = {'receipt':{'target_session':'2026-11-09','policy_sha256':'a'*64}, 'run_id':'daily-20261109'}
+    with pytest.raises(ValueError, match='DAILY_REVIEW_BINDING_CHANGED'):
+        backend.launch(day, info, dt('2026-11-09T15:00:00'), lambda: pytest.fail('dispatch marked'))
+
+
+def test_transient_docker_inspection_error_keeps_run_under_supervision(monkeypatch, tmp_path):
+    backend = daily.Backend({'image_id':'pinned'}, tmp_path)
+    state = {'days':{'2026-11-09':{'run_id':'daily-20261109','launch_attempted':True}}}
+    monkeypatch.setattr(daily.host.h, 'container', lambda *a, **k: None)
+    def unavailable(*args, **kwargs):
+        raise RuntimeError('Docker unavailable')
+    monkeypatch.setattr(daily.host.h, 'docker', unavailable)
+    with pytest.raises(RuntimeError):
+        advance(state, backend)
+    assert not state['days']['2026-11-09'].get('done') and 'attention' not in state
+
+
+def test_late_docker_response_is_adopted_after_first_empty_listing():
+    backend, state = Fake(), {}
+    ready(backend)
+    advance(state, backend, '2026-11-09T15:00:00')
+    item, backend.item = backend.item, None
+    advance(state, backend, '2026-11-09T15:01:00')
+    assert state['days']['2026-11-09']['awaiting_container']
+    backend.item = item
+    advance(state, backend, '2026-11-09T15:02:00')
+    assert state['status'] == 'WAITING_FOR_SETUP' and 'attention' not in state
+    assert backend.calls.count('launch') == 1

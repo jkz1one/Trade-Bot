@@ -101,6 +101,26 @@ manual worker. Holdings, unresolved orders, unknown costs, exhausted budgets and
 non-stop halts block automatic new-day preparation/start. Automatic resumption is
 restricted to the existing normal stop and the two native flat-feed recoveries.
 
+## Working branch changes after installation
+
+The installed timer on b5d10cb already has the November 9 enrollment. The newer
+branch includes three offline-tested changes for a future deployment.
+
+- The scheduler reserves a maximum of three launch-review attempts for the date.
+  It checks the same owner state and image at final review and records its dispatch
+  marker immediately before the run command. After a possible dispatch it checks
+  the original container identity. A temporary Docker read failure keeps the run
+  under supervision. A later appearance of that worker can be adopted without
+  another launch.
+- Portfolio reconciliation journals each recovered unknown attempt once and
+  reports how many remain unresolved. Native broker order and client identities
+  must be unique. Run reports expose matched attempts and unresolved attempts at
+  the last applicable snapshot.
+- Scope setup checks retained Robinhood chain and instrument rows and uses
+  published Cboe terms for the standard product. It can inspect a retained SPX
+  input probe independently of the selected contract. The October 29 record has
+  78 session bars and zero confirmed original bars.
+
 ## Current evidence and remaining requirements
 
 The confirmed host release is `b5d10cbfaaa0bde5af5e14110f815ff91925d79d`,

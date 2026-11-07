@@ -107,6 +107,14 @@ class Backend:
 
     def container(self, run_id, *, image_id=None):
         item = host.h.container('trade-bot-connected-' + run_id, missing=True)
+        if item is None:
+            # A failed inspect can also mean Docker is unavailable. Only a
+            # successful exact-name listing can establish absence after dispatch.
+            name = 'trade-bot-connected-' + run_id
+            found = host.h.docker('container', 'ls', '--all', '--filter', 'name=^/' + name + '$',
+                                  '--format', '{{.Names}}').stdout.strip()
+            if found:
+                raise ValueError('DAILY_CONTAINER_INSPECTION_UNAVAILABLE')
         if item and (not (item['Config'].get('Labels') or {}).get(host.LABEL)
                      or item['Image'] != (image_id or self.config['image_id'])):
             raise ValueError('DAILY_CONTAINER_IDENTITY_CHANGED')
@@ -146,13 +154,25 @@ class Backend:
         except starter.StepFailed:
             return {'status': 'PREOPEN_INPUTS_BLOCKED', 'details': 'SEE_SERVICE_JOURNAL'}
 
-    def launch(self, day, info, now):
+    def launch(self, day, info, now, before_run):
         seconds = int((parsed(info['close_at']) - now).total_seconds()) - 120
         # Review and launch must fit inside the cushion. No late session extension.
         def invoke(args):
-            if args[0] == 'run' and stamp().timestamp() + seconds > parsed(info['close_at']).timestamp():
-                raise ValueError('DAILY_LAUNCH_WINDOW_EXPIRED')
-            return self.invoke(args)
+            if args[0] == 'run':
+                if stamp().timestamp() + seconds > parsed(info['close_at']).timestamp():
+                    raise ValueError('DAILY_LAUNCH_WINDOW_EXPIRED')
+                if not self.enabled():
+                    raise ValueError('DAILY_PAUSED')
+                before_run()
+            report = self.invoke(args)
+            if args[0] == 'review-run':
+                owner = report.get('binding', {}).get('owner_state')
+                if (owner != info['owner_state'] or not isinstance(owner, dict)
+                        or owner.get('runtime_status') != 'STOPPED'
+                        or owner.get('halt_reason') != 'OPTION_RUNTIME_STOPPED'
+                        or report.get('image_id') != self.config['image_id']):
+                    raise ValueError('DAILY_REVIEW_BINDING_CHANGED')
+            return report
         return starter.run_prepared(day['receipt'], day['run_id'], seconds,
                                     invoke=invoke, today=info['target_session'],
                                     max_feed_recoveries=self.config['max_feed_recoveries'])
@@ -167,11 +187,13 @@ def tick(state, backend, persist, now):
             continue
         item = backend.container(day['run_id'], image_id=day.get('image_id'))
         if item is None:
-            day['done'] = True
+            day['awaiting_container'] = True
             state['attention'] = 'LAUNCH_OUTCOME_UNKNOWN_NO_AUTOMATIC_RETRY'
             return status(state, 'FAILED', [state['attention']])
         if day.get('container_id') and item['Id'] != day['container_id']:
             raise ValueError('DAILY_CONTAINER_IDENTITY_CHANGED')
+        if day.pop('awaiting_container', False) and state.get('attention') == 'LAUNCH_OUTCOME_UNKNOWN_NO_AUTOMATIC_RETRY':
+            state.pop('attention')
         day['container_id'] = item['Id']
         active = item['State']['Status'] == 'running'
         if active and (not backend.enabled() or now >= parsed(day['close_at'])):
@@ -244,9 +266,16 @@ def tick(state, backend, persist, now):
         return status(state, 'READY', [day['preopen']['status']])
     if now < parsed(info['start_at']):
         return status(state, 'READY', ['WAITING_FOR_SIX_COMPLETED_BARS'])
-    day.update(launch_attempted=True, close_at=info['close_at'], image_id=backend.config['image_id'])
+    if day.get('review_attempts', 0) >= 3:
+        return status(state, 'MISSING_INPUTS', ['LAUNCH_REVIEW_RETRY_LIMIT'])
+    day['review_attempts'] = day.get('review_attempts', 0) + 1
     persist(state)
-    result = backend.launch(day, info, now)
+
+    def before_run():
+        day.update(launch_attempted=True, close_at=info['close_at'], image_id=backend.config['image_id'])
+        persist(state)
+
+    result = backend.launch(day, info, now, before_run)
     day['container_id'] = result['container_id']
     return status(state, 'RUNNING', ['WAITING_FOR_FIRST_REPORT'])
 
@@ -341,6 +370,11 @@ def main(argv=None):
             if info['start_blockers'] or backend.active():
                 raise ValueError('RESUME_REQUIRES_NORMALLY_STOPPED_FLAT_OWNER')
             state = read(HOME / 'state.json', {'version': 'paper-daily-state-v1'})
+            for day in state.get('days', {}).values():
+                if day.get('awaiting_container') and not day.get('done'):
+                    if backend.container(day['run_id'], image_id=day.get('image_id')) is not None:
+                        raise ValueError('RESUME_REQUIRES_SAVED_WORKER_REPORT')
+                    day.update(done=True, awaiting_container=False)
             state.pop('attention', None)
             save(HOME / 'state.json', status(state, 'STOPPED', ['EXPLICIT_SCHEDULE_RESUME']))
             (HOME / 'paused.json').unlink(missing_ok=True)

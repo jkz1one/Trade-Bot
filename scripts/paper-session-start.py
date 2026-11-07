@@ -63,7 +63,7 @@ def run_prepared(receipt, run_id, seconds, *, invoke, today, max_feed_recoveries
 def launch(captures, target, run_id, seconds, *, invoke, session_root, today,
            prepare_only=False, prepared_session=None, observed_swing_history=False,
            swing_capture_directory=None, scope_binding=None, earnings_probe=None, max_feed_recoveries=0,
-           candidate_ids=None):
+           candidate_ids=None, scope_contract_capture=None):
     if (type(max_feed_recoveries) is not int or not 0 <= max_feed_recoveries <= 3
             or (prepare_only and max_feed_recoveries)):
         raise ValueError("Bounded feed recovery is a run-only option")
@@ -76,6 +76,8 @@ def launch(captures, target, run_id, seconds, *, invoke, session_root, today,
             or any(not isinstance(i, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,127}', i)
                    for i in candidate_ids) or len(set(candidate_ids)) != len(candidate_ids)):
         raise ValueError('Explicit unique bounded candidate IDs required')
+    if scope_contract_capture and (not scope_binding or prepared_session):
+        raise ValueError("Original Scope contracts require an exact new session binding")
     if prepared_session:
         if candidate_ids is not None:
             raise ValueError('Prepared sessions already bind their candidate selection')
@@ -95,7 +97,7 @@ def launch(captures, target, run_id, seconds, *, invoke, session_root, today,
                             max_feed_recoveries=max_feed_recoveries)
     if date.fromisoformat(target) < date.fromisoformat(today) or (not prepare_only and target != today):
         raise ValueError("Use --prepare-only for a future session; expired sessions cannot run")
-    for value in (captures, swing_capture_directory, scope_binding, earnings_probe):
+    for value in (captures, swing_capture_directory, scope_binding, earnings_probe, scope_contract_capture):
         if value is not None and not Path(value).is_absolute():
             raise ValueError("Absolute retained input paths required")
     if captures is None or (swing_capture_directory and not observed_swing_history):
@@ -107,7 +109,7 @@ def launch(captures, target, run_id, seconds, *, invoke, session_root, today,
     options = ["--observed-swing-history"] if observed_swing_history else []
     options += ['--candidate-id=' + i for i in (candidate_ids or [])]
     for flag, value in (("--swing-capture-directory", swing_capture_directory),
-                        ("--scope-binding", scope_binding), ("--earnings-probe", earnings_probe)):
+                        ("--scope-binding", scope_binding), ("--scope-contract-capture", scope_contract_capture), ("--earnings-probe", earnings_probe)):
         if value:
             options += [flag, str(value)]
     invoke(["prepare-session", *common, "--capture-directory", str(captures), *options])
@@ -207,7 +209,7 @@ def main(argv=None):
     p.add_argument("--observed-swing-history", action="store_true")
     p.add_argument('--candidate-id', action='append', help='Repeat for each explicitly retained DEGEN candidate; preserves Swing catalog')
     p.add_argument("--swing-expiration", help="With --capture-contracts, capture the separate Swing expiry")
-    for flag in ("swing-capture-directory", "scope-binding", "earnings-probe"):
+    for flag in ("swing-capture-directory", "scope-binding", "scope-contract-capture", "earnings-probe"):
         p.add_argument("--" + flag)
     args = p.parse_args(argv)
     if args.max_feed_recoveries and args.prepare_only:
@@ -221,7 +223,7 @@ def main(argv=None):
     if not args.prepared_session and not args.target_session:
         p.error("--target-session is required with retained captures")
     if args.prepared_session and (args.prepare_only or args.target_session or args.observed_swing_history
-                                 or args.swing_capture_directory or args.scope_binding or args.earnings_probe or args.candidate_id):
+                                 or args.swing_capture_directory or args.scope_binding or args.scope_contract_capture or args.earnings_probe or args.candidate_id):
         p.error("Prepared sessions already bind their target and inputs")
     if os.geteuid() != 0:
         p.error("Run on the Trade-Bot host as root")
@@ -261,7 +263,7 @@ def main(argv=None):
                         prepare_only=args.prepare_only, prepared_session=args.prepared_session,
                         observed_swing_history=args.observed_swing_history,
                         swing_capture_directory=args.swing_capture_directory,
-                        scope_binding=args.scope_binding, earnings_probe=args.earnings_probe,
+                        scope_binding=args.scope_binding, scope_contract_capture=args.scope_contract_capture, earnings_probe=args.earnings_probe,
                         candidate_ids=args.candidate_id,
                         max_feed_recoveries=args.max_feed_recoveries)
         print(json.dumps(result, sort_keys=True), flush=True)

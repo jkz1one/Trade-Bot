@@ -459,6 +459,10 @@ def reconcile(engine, snapshot, *, now, epoch=None):
                 < timedelta(seconds=engine.limits.account_max_age_seconds)
             ):
                 raise ValueError("PORTFOLIO_SNAPSHOT_STALE")
+            observed = (*snap.orders, *snap.stock_orders)
+            if (len({order.client_id for order in observed}) != len(observed)
+                    or len({order.order_id for order in observed}) != len(observed)):
+                raise ValueError("PORTFOLIO_DUPLICATE_ORDER_IDENTITY")
             old = (
                 PortfolioVenueSnapshot.model_validate_json(c["snapshot_json"])
                 if c["snapshot_json"]
@@ -470,7 +474,7 @@ def reconcile(engine, snapshot, *, now, epoch=None):
                     or snap.receipts[: len(old.receipts)] != old.receipts
                 ):
                     raise ValueError("PORTFOLIO_SNAPSHOT_PREFIX_CHANGED")
-                new_orders = {o.client_id: o for o in (*snap.orders, *snap.stock_orders)}
+                new_orders = {o.client_id: o for o in observed}
                 for prior in (*old.orders, *old.stock_orders):
                     current = new_orders.get(prior.client_id)
                     if (
@@ -495,11 +499,21 @@ def reconcile(engine, snapshot, *, now, epoch=None):
                 snap.positions,
             ):
                 raise ValueError("PORTFOLIO_ACCOUNTING_MISMATCH")
-            for order in (*snap.orders, *snap.stock_orders):
+            recovered = 0
+            for order in observed:
                 row = db.execute(
                     "SELECT * FROM execution_portfolio_orders WHERE client_id=?", (order.client_id,)
                 ).fetchone()
                 i = stored_intent(row)
+                if row["status"] == "UNKNOWN":
+                    if row["asset"] == "OPTION":
+                        from app.execution.order_recovery import verify_recovered_option
+                        verify_recovered_option(i, row, order, snap)
+                    recovered += 1
+                    engine.journal.event(db, now, "PORTFOLIO_ATTEMPT_RECOVERED", {
+                        "order_id": order.order_id, "status": order.status,
+                        "filled_quantity": str(order.filled_quantity), "fill_count": len(order.fills),
+                    }, order.client_id)
                 if row["status"] in TERMINAL and row["observation_json"] is None:
                     raise ValueError("PORTFOLIO_UNSUBMITTED_TERMINAL_OBSERVED")
                 db.execute(
@@ -524,16 +538,21 @@ def reconcile(engine, snapshot, *, now, epoch=None):
             from app.options.scope_execution import sync
 
             sync(engine, db, now)
+            unresolved = db.execute(
+                "SELECT COUNT(*) FROM execution_portfolio_orders WHERE status='UNKNOWN'"
+            ).fetchone()[0]
+            recovery = {"matched": recovered, "unresolved": unresolved}
             engine.journal.event(
                 db,
                 now,
                 "PORTFOLIO_RECONCILED",
-                {"snapshot_id": snap.snapshot_id, "play_ids": list(result.ledger.positions)},
+                {"snapshot_id": snap.snapshot_id, "play_ids": list(result.ledger.positions), "attempt_recovery": recovery},
             )
             db.execute("RELEASE portfolio_reconciliation")
             return {
                 "reconciled": True,
                 "positions": len(result.ledger.positions),
+                "attempt_recovery": recovery,
                 "snapshot_id": snap.snapshot_id,
             }
         except (ValueError, ExecutionBlocked) as exc:

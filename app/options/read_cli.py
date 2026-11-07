@@ -131,7 +131,9 @@ def main(argv=None):
         if name == "capture":
             cmd.add_argument("--schemas", required=True)
             cmd.add_argument("--schema-sha256", required=True)
-            cmd.add_argument("--plan", required=True)
+            source = cmd.add_mutually_exclusive_group(required=True)
+            source.add_argument("--plan")
+            source.add_argument("--scope-contract-id", help="Exact Robinhood option UUID for SPX chain/contract review")
     args = parser.parse_args(argv)
     if args.operation == "export-earnings":
         try:
@@ -203,7 +205,11 @@ def main(argv=None):
             schemas = ReadSchemas.model_validate(discovery.schemas.model_dump(warnings=False))
             if schemas.sha256 != args.schema_sha256:
                 raise ValueError("Reviewed schema pin mismatch")
-            plan = CapturePlan.model_validate(private_json(args.plan, 64 * 1024))
+            if args.scope_contract_id:
+                from app.mixed.scope_terms import contract_plan
+                plan = contract_plan(args.scope_contract_id)
+            else:
+                plan = CapturePlan.model_validate(private_json(args.plan, 64 * 1024))
         output = Path(args.output).absolute()
         parent = output.parent
         info = parent.stat()

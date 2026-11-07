@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 from functools import lru_cache
 from typing import Literal
+from uuid import UUID
 
 from jsonschema.validators import validator_for
 from pydantic import Field, JsonValue, model_validator
@@ -105,7 +106,7 @@ class ReadSample(OptionRecord):
 
 class CapturePlan(OptionRecord):
     purpose: Literal["SCHEMA_MAPPING_EVIDENCE"]
-    symbols: tuple[Literal["SPY", "QQQ"], ...] = Field(min_length=1, max_length=2)
+    symbols: tuple[Literal["SPY", "QQQ", "SPX"], ...] = Field(min_length=1, max_length=2)
     instrument_ids: tuple[Name, ...] = Field(default=(), max_length=10)
     calls: tuple[ReadSample, ...] = Field(min_length=1, max_length=8)
 
@@ -117,6 +118,14 @@ class CapturePlan(OptionRecord):
             or len({c.label for c in self.calls}) != len(self.calls)
         ):
             raise ValueError("Unique declared subjects and call labels required")
+        if "SPX" in self.symbols:
+            if self.symbols != ("SPX",) or len(self.instrument_ids) != 1:
+                raise ValueError("Scope contract capture requires one exact SPX option")
+            identity = self.instrument_ids[0]
+            expected = [("get_option_chains", {"underlying_symbol": "SPX"}),
+                        ("get_option_instruments", {"ids": identity})]
+            if str(UUID(identity)) != identity or [(c.tool, c.arguments) for c in self.calls] != expected:
+                raise ValueError("Scope contract capture requires the exact chain and instrument reads")
         if any(c.tool == "get_option_quotes" for c in self.calls) and not self.instrument_ids:
             raise ValueError("Declare reviewed exact quote subjects")
         return self

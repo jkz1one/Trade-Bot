@@ -1,5 +1,52 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.193. Exact option-order recovery, documented Scope terms and daily launch recovery, 2026-11-06.
+
+The published branch builds on 14beca82102212a9fd9437e0488d9dccdfec6328. The
+installed host is b5d10cb, its timer is enabled, and November 9 is enrolled.
+The last observed connected fill count is zero. This change was tested offline.
+
+The new order-recovery report matches a normalized single-leg option limit attempt
+to complete same-account history using its durable client reference or previously
+bound broker order ID. Cumulative fills, original terms, temporal order, terminal
+state and duplicate identity must agree. Uncertain later reads preserve the last
+verified quantity. Native PAPER option recovery shares this matcher and retains
+one recovery event per recovered order, including fills during disconnection.
+Duplicate order IDs in a native snapshot block reconciliation. Portfolio reports
+keep the number of recovered attempts and outstanding uncertainties separate.
+Real Robinhood options order-history normalization and funded execution still need
+account-specific wire evidence and explicit authorization.
+
+Scope can use Cboe's standard product specifications together with a two-read
+Robinhood capture for a single supplied instrument UUID. The setup review checks
+the joined chain/instrument identity, index underlying, PM flag, expiry, strike,
+right, ticks, multiplier, tradability and protection versus broker sellout time.
+A generic SPX chain symbol retains the series root as an explicit reviewed input.
+Calendar evidence, extraordinary cutoffs and live market inputs remain separate.
+Existing SPY/QQQ enrollment, the eight-contract limit and halt/budget policy persist.
+See the Scope integration and options execution guides for both normal entry points.
+
+Saved Robinhood input probes can supply independent SPX diagnostics before a Scope
+binding exists. Replaying the retained October 29 record reports 78 regular-session
+bars and zero explicitly original. The saved tool schema makes the interpolation
+flag optional, defines true as gap fill and specifies no default for an omission.
+The prior setup report incorrectly labeled all selected bars as original.
+
+Daily launch review now checks the owner revision/state and pinned image again and
+persists the launch marker immediately before dispatch. A maximum of three prelaunch
+reviews is reserved per date. A possible dispatch cannot be replayed. An unavailable
+Docker inspection keeps the worker under supervision, and a latently appearing
+container can be adopted after an empty exact-name listing. Persistent pause and
+the explicit flat-owner resume controls continue to apply.
+
+607 distinct installed cases passed (606 broad; 40 final scheduler cases replacing
+overlap). All 323 application files matched source, wheel and installation, and
+all 60 runtime dependency pins matched. The final wheel SHA256 is
+35a49cb6b27d8fd004a39b00de86a126965c0b4ffad5ceeaace15823ff5695a7.
+No new host operation or market capture is needed for the installed Monday schedule.
+
+## Previous release evidence
+
 Version 1.192. Broker account completeness and run-level PAPER fills, 2026-11-06.
 
 The operator installed b5d10cbfaaa0bde5af5e14110f815ff91925d79d. Systemd enabled

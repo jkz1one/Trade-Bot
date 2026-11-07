@@ -11,9 +11,60 @@ from app.domain.models import utc_now
 from app.mixed.continuous_feed import FeedPolicy
 from app.mixed.scope_feed import ScopeFeedBinding
 from app.mixed.simulation_catalog import proposal
+from app.mixed.scope_terms import contract_evidence
 from app.options.engine import fingerprint
 from app.options.operator_inbox import read
 from app.options.read_capture import CaptureResult
+
+
+def inspect_index(artifact, scope, now):
+    from app.mixed.scope_sources import map_index, receipt_data
+    from app.options.input_probe import index_id, validate_observations
+    from app.options.read_mapping import instant
+    from app.options.scope_read import TOOLS, validate
+
+    captured = CaptureResult.model_validate(artifact.get('result', artifact))
+    if (not captured.started_at <= captured.collected_at <= now
+            or captured.status != 'COMPLETE' or captured.scope_error_class is not None):
+        raise ValueError('Incomplete index capture')
+    if captured.operation == 'INPUT_PROBE':
+        validate_observations(captured.observations, captured.started_at)
+        rows = [r for r in captured.observations if r['tool'] in TOOLS]
+    elif captured.operation == 'SCOPE_INPUT':
+        rows = captured.observations
+    elif captured.operation == 'CAPTURE' and captured.scope_requested:
+        rows = captured.scope_observations
+    else:
+        raise ValueError('Original index receipts required')
+    validate(rows, captured.started_at, complete=True)
+    if [r['tool'] for r in rows] != list(TOOLS):
+        raise ValueError('Index receipt order mismatch')
+    (ids, ir), (quotes, qr), (history, hr) = [receipt_data(row, tool) for row, tool in zip(rows, TOOLS, strict=True)]
+    identity = index_id(ids)
+    q, = quotes['quotes']
+    h, = history['results']
+    if (identity is None or not ir <= min(qr, hr) <= max(qr, hr) <= captured.collected_at
+            or any(r['symbol'] != 'SPX' or r['instrument_id'] != identity for r in (q, h))
+            or h['interval'] != '5minute' or instant(q['venue_timestamp']) > qr
+            or not isinstance(h['bars'], list) or len(h['bars']) > 400):
+        raise ValueError('Index coverage mismatch')
+    bars = h['bars']
+    if any(not isinstance(b, dict) for b in bars):
+        raise ValueError('Invalid index bars')
+    details = {'index_mapping_as_of': captured.collected_at.isoformat(),
+               'captured_bars': len(bars),
+               'captured_explicit_original': sum(b.get('interpolated') is False for b in bars),
+               'captured_unknown_interpolation': sum(b.get('interpolated') is not True and b.get('interpolated') is not False for b in bars),
+               'current_index_age_seconds': (now - instant(q['venue_timestamp'])).total_seconds()}
+    issues = []
+    if scope is not None:
+        _, _, mapped = map_index(*rows, scope.session, now=captured.collected_at)
+        details.update(index_mapping_issues=mapped['issues'], original_completed_bars=mapped['original_bars'],
+                       session_bars=mapped['session_bars'], unknown_session_bars=mapped['unknown_interpolation_bars'])
+        issues.extend(mapped['issues'])
+    if not 0 <= details['current_index_age_seconds'] <= 30:
+        issues.append('SCOPE_RETAINED_INPUT_NOT_CURRENT')
+    return details, issues
 
 
 def review(policy, contracts, samples, target, *, binding=None, contract_capture=None,
@@ -64,32 +115,19 @@ def review(policy, contracts, samples, target, *, binding=None, contract_capture
     else:
         digest = fingerprint(contract_capture)
         details['contract_capture_sha256'] = digest
-        details['contract_capture_check'] = 'HASH_ONLY_NOT_TERM_VERIFICATION'
-        if scope is not None and digest != scope.contract_capture_sha256:
-            issues.append('SCOPE_CONTRACT_CAPTURE_HASH_MISMATCH')
+        if scope is not None:
+            try:
+                details.update(contract_evidence(scope, contract_capture, now))
+            except ValueError as exc:
+                issues.append(str(exc))
     if index_capture is None:
         issues.append('SCOPE_ORIGINAL_INDEX_INPUT_REQUIRED')
-    elif scope is not None:
-        from app.mixed.scope_sources import map_index
-        from app.options.scope_read import validate
+    else:
         try:
-            captured = CaptureResult.model_validate(index_capture.get('result', index_capture))
-            rows = captured.scope_observations if captured.scope_requested else captured.observations
-            if (captured.operation not in {'SCOPE_INPUT', 'CAPTURE'} or captured.status != 'COMPLETE'
-                    or captured.collected_at > now or captured.scope_error_class is not None):
-                raise ValueError('Original completed Scope input required')
-            validate(rows, captured.started_at, complete=True)
-            _, _, mapped = map_index(*rows, scope.session, now=captured.collected_at)
-            details['index_mapping_as_of'] = captured.collected_at.isoformat()
-            details['index_mapping_issues'] = mapped['issues']
-            details['original_completed_bars'] = mapped['session_bars']
-            issues.extend(mapped['issues'])
-            from app.options.read_mapping import instant
-            age = (now - instant(mapped['reference']['source_at'])).total_seconds()
-            details['current_index_age_seconds'] = age
-            if not 0 <= age <= 30:
-                issues.append('SCOPE_RETAINED_INPUT_NOT_CURRENT')
-        except (ValueError, TypeError, KeyError, ArithmeticError):
+            index_details, index_issues = inspect_index(index_capture, scope, now)
+            details.update(index_details)
+            issues.extend(index_issues)
+        except (ValueError, TypeError, KeyError, AttributeError, ArithmeticError):
             issues.append('SCOPE_ORIGINAL_INDEX_INPUT_INVALID')
     if now.astimezone(ZoneInfo('America/New_York')).date() > target:
         issues.append('TARGET_SESSION_EXPIRED')

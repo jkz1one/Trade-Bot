@@ -81,8 +81,39 @@ def test_restart_after_durable_submit_marker_never_retries_unobserved_order(tmp_
         assert v.submit_count == 0
         path, limits, policy = e.journal.path, e.limits, e.policy
     with OptionExecution.open(path, limits, policy, v, now=NOW) as e:
+        assert e.reconcile(v.snapshot(NOW), now=NOW)["attempt_recovery"] == {"matched":0, "unresolved":1}
         assert asyncio.run(e.dispatch_stock(out["client_id"], quote, now=NOW)) == "UNKNOWN"
         assert v.submit_count == 0
         with e.journal.read() as db:
             p = reconstruct(history(e, db, e.portfolio_policy, NOW))
             assert len(p.commitments) == 1 and p.commitments[0].uncertain and p.reserved_cash > 0
+
+
+def test_partial_fill_then_cancellation_recovered_once_after_disconnect(tmp_path):
+    with owned(tmp_path) as (engine, venue):
+        pr, quote = stock("SPY")
+        result = engine.prepare_stock("interrupted", pr, quote, now=NOW)
+        client_id = result["client_id"]
+        entry = get_intent(engine, client_id)
+        venue.fault = "LOST_ACK"
+        assert asyncio.run(engine.dispatch_stock(client_id, quote, now=NOW)) == "UNKNOWN"
+        at = NOW + timedelta(seconds=1)
+        venue.fault = "NONE"
+        venue.fill_stock(entry, Decimal(".1"), q(entry, at), at, fill_id="partial-one")
+        venue.record_stock_terminal(client_id, "CANCELED", at)
+        path, limits, policy = engine.journal.path, engine.limits, engine.policy
+    with OptionExecution.open(path, limits, policy, venue, now=at) as engine:
+        snap = venue.snapshot(at)
+        # Duplicate observations must not consume the unknown attempt.
+        duplicate = snap.model_copy(update={"stock_orders": snap.stock_orders * 2})
+        assert engine.reconcile(duplicate, now=at)["issues"] == ["PORTFOLIO_DUPLICATE_ORDER_IDENTITY"]
+        assert engine.reconcile(snap, now=at)["attempt_recovery"] == {"matched":1, "unresolved":0}
+        assert engine.reconcile(snap, now=at)["attempt_recovery"] == {"matched":0, "unresolved":0}
+        with engine.journal.read() as db:
+            from test_paper_session_report import module as host_report
+            state = reconstruct(history(engine, db, engine.portfolio_policy, at))
+            assert state.ledger.positions[client_id].quantity == Decimal(".1")
+            assert host_report.attempt_recovery_counts(db, NOW.isoformat(), at.isoformat()) == {
+                'matched_in_run': 1, 'unresolved_at_last_snapshot': 0}
+        assert asyncio.run(engine.dispatch_stock(client_id, quote, now=at)) == "CANCELED"
+        assert venue.submit_count == 1

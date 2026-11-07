@@ -502,7 +502,20 @@ def main() -> None:
     export.add_argument("--output", required=True)
     abandon = sub.add_parser("shadow-slot-abandon")
     abandon.add_argument("--slot", required=True)
+    recovery = sub.add_parser("order-recovery-report", help="Replay a private normalized options order-history case offline")
+    recovery.add_argument("--case", required=True, type=Path)
     args = parser.parse_args()
+    if args.command == "order-recovery-report":
+        from app.options.read_cli import private_json
+        from app.execution.order_recovery import RecoveryCase, recover
+
+        try:
+            result = recover(RecoveryCase.model_validate(private_json(args.case, 8 * 1024 * 1024)))
+        except (OSError, ValueError):
+            result = {"status": "INVALID_EVIDENCE", "resubmit": False, "provider_calls": False,
+                      "state_modified": False, "live_enabled": False}
+        print(json.dumps(result, sort_keys=True))
+        raise SystemExit(0 if result["status"] == "MATCHED" else 2)
     settings = Settings()
     if args.command == "synthetic-init":
         from app.experiment.ledger import ExperimentConfig

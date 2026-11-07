@@ -17,7 +17,7 @@ from app.robinhood.schedule import XNYSCalendar
 
 
 def proposal(policy, contracts, samples, target, *, earnings_probe=None, observed_swing_history=False,
-             swing_contracts=None, swing_samples=None, scope_binding=None, candidate_ids=None):
+             swing_contracts=None, swing_samples=None, scope_binding=None, candidate_ids=None, scope_contract_capture=None):
     policy = FeedPolicy.model_validate(policy.model_dump())
     from app.options.earnings_context import from_probe
 
@@ -61,6 +61,13 @@ def proposal(policy, contracts, samples, target, *, earnings_probe=None, observe
             raise ValueError("Scope terms/calendar must name the exact session")
         if scope_binding.instrument.instrument_id in {i.instrument_id for i in selected}:
             raise ValueError('Scope identity cannot overlap the ETF candidate catalog')
+    scope_evidence = None
+    if scope_contract_capture is not None:
+        from app.domain.models import utc_now
+        from app.mixed.scope_terms import contract_evidence
+        if scope_binding is None:
+            raise ValueError("Scope contract evidence requires the exact reviewed binding")
+        scope_evidence = contract_evidence(scope_binding, scope_contract_capture, utc_now())
     proposed = FeedPolicy.model_validate(policy.model_dump() | {
         "candidates": tuple(selected), "observed_simulation": "robinhood-observed-v1",
         "company_earnings": earnings,
@@ -74,6 +81,7 @@ def proposal(policy, contracts, samples, target, *, earnings_probe=None, observe
     return proposed, {
         "version": "intraday-simulation-catalog-v1", "target_session": target.isoformat(),
         **({"company_earnings": earnings.observation().model_dump(mode="json")} if earnings else {}),
+        **({"scope_contract_evidence": scope_evidence} if scope_evidence else {}),
         "simulation_terms": "STANDARD_ETF_INTRADAY_V1",
         "observed": ["provider IDs", "symbol", "right", "strike", "expiration", "multiplier", "ticks", "tradability"],
         "assumed": ["unadjusted standard 100-share deliverable", "American physical ETF terms", "USD", "root equals symbol"],
@@ -164,6 +172,7 @@ def main(argv=None):
     p.add_argument("--sample", action="append", required=True)
     p.add_argument("--earnings-probe", help="Original input probe; company calendar observation only")
     p.add_argument("--observed-swing-history", action="store_true", help="Review original RH day/half-hour histories for PAPER Swing; does not supply catalysts")
+    p.add_argument("--scope-contract-capture", help="Compare original SPX chain and exact instrument receipts")
     p.add_argument("--scope-binding", help="Explicit reviewed ScopeFeedBinding: SPXW terms, index session and watch choice")
     p.add_argument("--swing-capture-directory", help="Separate original 7-45 DTE ETF catalog and three quote samples")
     p.add_argument('--candidate-id', action='append', help='Explicit DEGEN subset; repeat for each retained ID. Swing contracts stay intact.')
@@ -174,6 +183,7 @@ def main(argv=None):
                                 earnings_probe=json.loads(read(Path(a.earnings_probe), 1024 * 1024)) if a.earnings_probe else None,
                                 observed_swing_history=a.observed_swing_history,
                                 scope_binding=load(a.scope_binding) if a.scope_binding else None,
+                                scope_contract_capture=load(a.scope_contract_capture) if a.scope_contract_capture else None,
                                 candidate_ids=a.candidate_id,
                                 swing_contracts=load(Path(a.swing_capture_directory) / "contracts.json") if a.swing_capture_directory else None,
                                 swing_samples=[load(Path(a.swing_capture_directory) / f"quotes-{n}.json") for n in (1, 2, 3)] if a.swing_capture_directory else None)

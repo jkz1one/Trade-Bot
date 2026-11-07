@@ -83,8 +83,25 @@ not authorize overnight holding.
 Optional `--scope-binding` points to a reviewed `ScopeFeedBinding` JSON: exact native
 SPXW OptionInstrument, exact ScopeSession/calendar, previous session, one explicit
 pattern/right choice and original contract capture SHA256. It is an operator-supplied
-reviewed binding, not an automatic SPXW term discovery/verifier. The caller must
-inspect the original contract evidence corresponding to its hash. ETF assumptions
+reviewed binding. The setup reviewer accepts a retained two-call SPX chain and
+instrument capture whose digest matches that binding. The capture entry point is
+`python -m app.options.read_cli capture --scope-contract-id UUID` with the usual
+private schema, OAuth and output arguments. Both requests use the existing
+market-read tools. The first requests SPX chains. The second requests exactly
+the supplied instrument UUID. Review checks the owning chain ID, active/tradable
+status, index underlying, expiration, strike, right, multiplier, PM flag, tick
+schedule and broker sellout time against the selected protection time. An SPX
+chain label leaves series-root identification with the reviewed binding. The
+review output records that distinction. Scope session clocks, series identity,
+strategy choice and nonstandard adjustments require their own evidence.
+
+Cboe specifies cash settlement, European exercise and the 100 multiplier for
+standard SPXW. These product terms are usable independently of the market capture.
+The retained Robinhood index schema makes the interpolation flag optional and
+defines the meaning of true. It supplies no default for an omitted flag.
+[SPX specifications](https://www.cboe.com/tradable-products/sp-500/spx-options/spx-specifications)
+and [SPX Weeklys](https://www.cboe.com/tradable_products/sp_500/spx_weekly_options/specifications).
+ ETF assumptions
 cannot substitute for SPXW cash/European/PM terms. This release handles one bound
 Scope watch, not autonomous whole-chain watch selection.
 
@@ -100,8 +117,13 @@ and [offline validation](PAPER_DAILY_TOOLS_PROOF.json). Do not amend an enrolled
 binding in place or assume this supplies the missing original Scope inputs.
 
 The read-only `review-scope-setup` host operation lists missing evidence and original
-contract choices before preparation. Its contract fingerprint comparison is not a
-brokerage term verifier. Repeat `--candidate-id ACTUAL_ID` to select an explicit
+contract choices before preparation. Supply `--scope-contract-capture` with the
+original captured JSON for the row-level comparison. Setup review and new-session
+preparation both support that check. Existing explicit operator bindings retain
+their original meaning. A matching arbitrary document digest alone now reports
+missing original broker rows in the setup review. Saved input-probe artifacts
+can provide SPX diagnostics before an exact contract/session binding exists.
+Session counts distinguish returned bars, explicitly original bars and unknowns. Repeat `--candidate-id ACTUAL_ID` to select an explicit
 DEGEN subset while retaining every enrolled symbol and all supplied Swing contracts.
 These flags are accepted by setup review and preparation only. The catalog still
 allows eight candidates total, including the Scope slot; no ninth contract or

@@ -156,3 +156,32 @@ population stays frozen, LIVE disabled, main untouched and PR #1 draft.
 optional exact quote per option fill through the same native validation, stored
 attribution and independent replay. Missing evidence is never substituted from
 approval prices; this adds no stop authority or changes to cash, fees or model costs.
+
+
+## Replaying an uncertain single-leg option order
+
+`python -m app.robinhood.cli order-recovery-report --case FILE` reads a private
+0600 JSON file. It emits a redacted reconciliation result and exits 0 for an
+exact observed match or 2 for unresolved/invalid evidence. The normalized input
+contract is `app.execution.order_recovery.RecoveryCase`. The wire-to-contract
+mapping for authenticated Robinhood options order history still needs verification.
+The native PAPER owner uses the same exact matching rule on uncertain option attempts.
+
+A case has version `option-order-recovery-v1`, one durable `attempt`, and
+chronologically ordered `snapshots`. The attempt records account ID, client ID,
+optional previously acknowledged order ID, attempt time, exact instrument ID, side,
+position effect, quantity, limit price, LIMIT order type and DAY time in force.
+Each snapshot records account ID, observation time, completeness and orders. An
+order carries its broker ID, optional broker-returned client ID, original terms,
+normalized status, update time, cumulative filled quantity and the original
+executions with unique fill ID, whole quantity, price and time. Producers must
+establish single-leg identity, full requested history coverage and the normalized
+terms from their source. Missing pages mean incomplete history.
+
+Matching requires the original client ID or a previously bound broker order ID.
+Partial fills survive cancellation, duplicate observations and replay after
+restart. Conflicting IDs, changed original terms, disappearing orders, regressing
+fills, conflicting terminal states and incomplete history retain an unresolved
+result. The result reports the last verified quantity even if a later observation
+conflicts. Price/time similarity supplies no order identity. This command performs
+zero provider calls and has no execution or retry authority.

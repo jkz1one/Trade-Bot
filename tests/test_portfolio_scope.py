@@ -273,3 +273,20 @@ def test_owned_scope_context_cannot_be_reused_as_an_entry(tmp_path, monkeypatch,
             assert (
                 db.execute("SELECT count(*) FROM execution_option_scope_entries").fetchone()[0] == 1
             )
+
+
+def test_scope_lost_ack_recovers_filled_contract_after_restart(tmp_path):
+    from app.options.engine import OptionExecution
+    with owned(tmp_path, enroll=False, portfolio=True, execution_policy_changes=execution_policy()) as (engine, venue, _):
+        book, _, frame, _, underlying, now = admitted(engine, venue, 'CALL', 2, p=policy())
+        result = book.prepare_entry('first', expected_revision=revision(engine), now=now)
+        entry = get_intent(engine, result['client_id'])
+        venue.fault = 'LOST_ACK'
+        assert asyncio.run(engine.dispatch(entry.client_id, frame.quote, underlying, now=now)) == 'UNKNOWN'
+        venue.fault = 'NONE'
+        venue.fill(entry, entry.quantity, frame.quote, now, fill_id='option-recovery', underlying=underlying)
+        path, limits, execution = engine.journal.path, engine.limits, engine.policy
+    with OptionExecution.open(path, limits, execution, venue, now=now) as engine:
+        assert engine.reconcile(venue.snapshot(now), now=now)['attempt_recovery'] == {'matched':1, 'unresolved':0}
+        assert asyncio.run(engine.dispatch(entry.client_id, frame.quote, underlying, now=now)) == 'FILLED'
+        assert venue.submit_count == 1

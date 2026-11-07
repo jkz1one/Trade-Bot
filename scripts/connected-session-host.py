@@ -863,7 +863,9 @@ def main(argv=None):
         p.error("--sequence is only for preopen-report or preopen-inputs")
     if (a.scope_binding is not None or a.candidate_id is not None) and a.operation not in {'prepare-session', 'review-scope-setup'}:
         p.error('Scope binding/candidate selection is only for session preparation or Scope review')
-    if (a.scope_contract_capture or a.scope_input) and a.operation != 'review-scope-setup':
+    if a.scope_contract_capture and a.operation not in {'review-scope-setup', 'prepare-session'}:
+        p.error('Original Scope contract evidence requires session preparation or Scope review')
+    if a.scope_input and a.operation != 'review-scope-setup':
         p.error('Original Scope evidence is only for read-only Scope setup review')
     if a.earnings_probe is not None and a.operation != "prepare-session":
         p.error("--earnings-probe is only for prepare-session")

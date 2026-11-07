@@ -335,6 +335,10 @@ def short_report(result):
                      f"prior-run plays fully exited {execution['carry_in_exits']}")
     elif execution:
         lines.append("Run execution: unavailable (" + (reasons(execution.get('reason')) or 'unknown') + ")")
+    recovery = result.get('attempt_recovery')
+    if recovery and (recovery['matched_in_run'] or recovery['unresolved_at_last_snapshot']):
+        lines.append(f"Order recovery: matched {recovery['matched_in_run']}; "
+                     f"unresolved at last reconciliation {recovery['unresolved_at_last_snapshot']}")
     outcomes = result.get('cycle_outcomes')
     if outcomes is not None:
         counts = {s: sum(r['count'] for r in outcomes if s in r['status'])
@@ -539,6 +543,20 @@ def failure_evidence(raw):
     return result
 
 
+def attempt_recovery_counts(db, start, end):
+    snapshot = db.execute(
+        "SELECT CASE WHEN length(payload)<=65536 AND json_valid(payload) "
+        "THEN json_extract(payload,'$.attempt_recovery.unresolved') END "
+        "FROM execution_events WHERE kind='PORTFOLIO_RECONCILED' AND occurred_at>=? AND occurred_at<=? "
+        "ORDER BY occurred_at DESC,rowid DESC LIMIT 1", (start, end)).fetchone()
+    if snapshot and type(snapshot[0]) is int and snapshot[0] >= 0:
+        matched = db.execute(
+            "SELECT COUNT(*) FROM execution_events WHERE kind='PORTFOLIO_ATTEMPT_RECOVERED' "
+            "AND occurred_at>=? AND occurred_at<=?", (start, end)).fetchone()[0]
+        return {'matched_in_run': matched, 'unresolved_at_last_snapshot': snapshot[0]}
+    return None
+
+
 def owner_diagnostics(db, start, end):
     result = {'first_decisions': [], 'decision_reason_counts': [], 'halt_history': []}
     for row in db.execute(
@@ -559,6 +577,9 @@ def owner_diagnostics(db, start, end):
     ):
         result['decision_reason_counts'].append({**dict(row), 'reason': codes(row['reason'])})
     if 'payload' in {r[1] for r in db.execute('PRAGMA table_info(execution_events)')}:
+        recovery = attempt_recovery_counts(db, start, end)
+        if recovery is not None:
+            result['attempt_recovery'] = recovery
         result['flat_feed_recoveries'] = db.execute(
             "SELECT COUNT(*) FROM execution_events WHERE kind='OPTION_REVIEWED_RESUME' "
             "AND occurred_at>=? AND occurred_at<=? AND CASE WHEN length(payload)<=65536 "

@@ -29,7 +29,7 @@ def receipt_data(receipt, tool):
             or len(encoded(raw)) > MAX_SAMPLE_BYTES or raw.get("isError", False) is not False):
         raise ValueError("Bounded ordered SPX receipt required")
     data = raw.get("structuredContent", {}).get("data")
-    if not isinstance(data, dict) or data.get("restricted"):
+    if not isinstance(data, dict) or data.get("restricted") or data.get("not_found"):
         raise ValueError("Unrestricted structured SPX data required")
     return data, received
 
@@ -107,6 +107,9 @@ def map_index(identity_receipt, quote_receipt, history_receipt, session, *, now)
         "version": "robinhood-scope-source-mapping-v1", "issues": sorted(set(issues)),
         "status": "MAPPED" if history is not None else "BLOCKED",
         "reference": reference.model_dump(mode="json"), "session_bars": len(selected),
+        "original_bars": sum(b.get("interpolated") is False for b in selected),
+        "interpolated_bars": sum(b.get("interpolated") is True for b in selected),
+        "unknown_interpolation_bars": sum(b.get("interpolated") is None for b in selected),
         "capture_hashes": [fingerprint(r) for r in (identity_receipt, quote_receipt, history_receipt)],
         "entitlement": "UNKNOWN", "volume_available": False,
         "trading_ready": False, "live_enabled": False,
