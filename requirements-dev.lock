@@ -1,0 +1,9 @@
+# Linux CPython 3.12; generated from the tested environment by scripts/lock-dependencies.py.
+# Exact dependency versions; image/OS artifacts are verified separately.
+-r requirements-runtime.lock
+iniconfig==2.3.0
+packaging==26.3
+pluggy==1.6.0
+pygments==2.21.0
+pytest==9.1.1
+ruff==0.16.10

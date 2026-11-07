@@ -1,0 +1,101 @@
+name: trade-bot-shadow
+services:
+  shadow:
+    build:
+      context: .
+      dockerfile: Dockerfile.shadow
+      args:
+        TRADE_BOT_RELEASE: ${TRADE_BOT_RELEASE:?Set TRADE_BOT_RELEASE to the checked-out commit SHA}
+    image: trade-bot-shadow:${TRADE_BOT_RELEASE:?Set TRADE_BOT_RELEASE}
+    restart: unless-stopped
+    init: true
+    user: "10001:10001"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 1.0
+    stop_grace_period: 660s
+    environment:
+      TRADER_MODE: SHADOW
+      TRADER_LIVE_ENABLED: "false"
+      TRADER_ROBINHOOD_INTERACTIVE_AUTH: "false"
+      TRADER_ROBINHOOD_DB_URL: sqlite:////data/robinhood.db
+      TRADER_DB_URL: sqlite:////data/paper-unused.db
+      TRADER_ROBINHOOD_OAUTH_STORAGE: /oauth/robinhood-oauth.json
+      TRADER_OPENAI_API_KEY_FILE: /run/secrets/openai_api_key
+      TRADER_SHADOW_SERVICE_LOCK_PATH: /data/shadow-service.lock
+      TRADER_MODEL_PROCESS_TIMEOUT_SECONDS: "120"
+      TRADER_MODEL_REQUEST_TIMEOUT_SECONDS: "60"
+      TRADER_SYNTHETIC_EXPERIMENT_ID: ${TRADE_BOT_EXPERIMENT_ID:-}
+    volumes:
+      - type: bind
+        source: /var/lib/trade-bot/data
+        target: /data
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /var/lib/trade-bot/oauth
+        target: /oauth
+        bind:
+          create_host_path: false
+    secrets: [openai_api_key]
+    healthcheck:
+      test: [CMD, python, -m, app.robinhood.cli, shadow-service-check]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  observer:
+    image: trade-bot-shadow:${TRADE_BOT_RELEASE:?Set TRADE_BOT_RELEASE}
+    command: [uvicorn, app.web.shadow:create_shadow_app, --factory, --host, 0.0.0.0, --port, "8787", --no-access-log]
+    restart: unless-stopped
+    init: true
+    user: "10001:10001"
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 32
+    mem_limit: 256m
+    cpus: 0.5
+    environment:
+      TRADER_MODE: SHADOW
+      TRADER_LIVE_ENABLED: "false"
+      TRADER_ROBINHOOD_DB_URL: sqlite:////data/robinhood.db
+      TRADER_DASHBOARD_PASSWORD_FILE: /run/secrets/dashboard_password
+    ports:
+      - "127.0.0.1:8787:8787"
+    volumes:
+      - type: bind
+        source: /var/lib/trade-bot/data
+        target: /data
+        read_only: true
+        bind:
+          create_host_path: false
+    secrets: [dashboard_password]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8787/healthz', timeout=2).close()"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+secrets:
+  openai_api_key:
+    file: /etc/trade-bot/openai_api_key
+  dashboard_password:
+    file: /etc/trade-bot/dashboard_password

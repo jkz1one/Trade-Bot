@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from sqlalchemy import DateTime, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -103,3 +103,102 @@ class SystemEventRow(Base):
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     level: Mapped[str] = mapped_column(String(16))
     message: Mapped[str] = mapped_column(Text)
+
+
+class ShadowCycleEvidenceRow(Base):
+    """Explicit links for new SHADOW cycles; legacy rows are never guessed/backfilled."""
+
+    __tablename__ = "shadow_cycle_evidence"
+    cycle_id: Mapped[int] = mapped_column(ForeignKey("decision_cycles.id"), primary_key=True)
+    model_usage_id: Mapped[int | None] = mapped_column(ForeignKey("model_usage.id"))
+    account_snapshot_id: Mapped[int] = mapped_column(ForeignKey("account_snapshots.id"))
+    benchmark_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("benchmark_snapshots.id"))
+    reconciliation_json: Mapped[str] = mapped_column(Text)
+
+
+class ShadowScheduleSlotRow(Base):
+    __tablename__ = "shadow_schedule_slots"
+    slot_key: Mapped[str] = mapped_column(String(128), primary_key=True)
+    claim_token: Mapped[str] = mapped_column(String(64))
+    # All workers share one bankroll. A nullable unique lock permits many finished
+    # slots but at most one in-flight cycle, even across different interval keys.
+    active_lock: Mapped[int | None] = mapped_column(Integer, unique=True)
+    scheduled_for: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    session_date: Mapped[str] = mapped_column(String(10))
+    session_open: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    session_close: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    claimed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    status: Mapped[str] = mapped_column(String(16), default="CLAIMED")
+    exit_code: Mapped[int | None] = mapped_column(Integer)
+    error_class: Mapped[str | None] = mapped_column(String(128))
+    cycle_id: Mapped[int | None] = mapped_column(ForeignKey("decision_cycles.id"))
+
+
+class ShadowForwardOutcomeRow(Base):
+    """Immutable forward quote marks, separate from broker orders/fills/positions."""
+
+    __tablename__ = "shadow_forward_outcomes"
+    source_cycle_id: Mapped[int] = mapped_column(ForeignKey("decision_cycles.id"), primary_key=True)
+    horizon_minutes: Mapped[int] = mapped_column(Integer, primary_key=True)
+    status: Mapped[str] = mapped_column(String(16), index=True)
+    reason: Mapped[str | None] = mapped_column(String(64))
+    due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    baseline_json: Mapped[str] = mapped_column(Text)
+    measurement_cycle_id: Mapped[int | None] = mapped_column(ForeignKey("decision_cycles.id"))
+    result_json: Mapped[str | None] = mapped_column(Text)
+
+
+class ShadowServiceStateRow(Base):
+    __tablename__ = "shadow_service_state"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    status: Mapped[str] = mapped_column(String(16))
+    heartbeat_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    release_sha: Mapped[str] = mapped_column(String(64))
+    last_result_json: Mapped[str | None] = mapped_column(Text)
+
+
+class SyntheticExperimentRow(Base):
+    __tablename__ = "synthetic_experiments"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    config_json: Mapped[str] = mapped_column(Text)
+    state_json: Mapped[str] = mapped_column(Text)
+    revision: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class SyntheticCycleRow(Base):
+    __tablename__ = "synthetic_cycles"
+    __table_args__ = (UniqueConstraint("experiment_id", "slot_key"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    experiment_id: Mapped[str] = mapped_column(ForeignKey("synthetic_experiments.id"), index=True)
+    slot_key: Mapped[str] = mapped_column(ForeignKey("shadow_schedule_slots.slot_key"))
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    model: Mapped[str] = mapped_column(String(128))
+    prompt_version: Mapped[str] = mapped_column(String(128))
+    packet_json: Mapped[str] = mapped_column(Text)
+    decision_json: Mapped[str] = mapped_column(Text)
+    risk_json: Mapped[str] = mapped_column(Text)
+    execution_json: Mapped[str] = mapped_column(Text)
+    usage_json: Mapped[str | None] = mapped_column(Text)
+    snapshot_json: Mapped[str] = mapped_column(Text)
+
+
+class SyntheticFillRow(Base):
+    __tablename__ = "synthetic_fills"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    experiment_id: Mapped[str] = mapped_column(ForeignKey("synthetic_experiments.id"), index=True)
+    cycle_id: Mapped[int] = mapped_column(ForeignKey("synthetic_cycles.id"))
+    source_cycle_id: Mapped[int | None] = mapped_column(ForeignKey("synthetic_cycles.id"))
+    fill_json: Mapped[str] = mapped_column(Text)
+
+
+class SyntheticAttemptRow(Base):
+    """Durable pre-model receipt prevents a crash from hiding potentially billed calls."""
+
+    __tablename__ = "synthetic_attempts"
+    slot_key: Mapped[str] = mapped_column(ForeignKey("shadow_schedule_slots.slot_key"), primary_key=True)
+    experiment_id: Mapped[str] = mapped_column(ForeignKey("synthetic_experiments.id"), index=True)
+    model_attempted: Mapped[bool] = mapped_column(Boolean, default=False)
+    accounted: Mapped[bool] = mapped_column(Boolean, default=False)

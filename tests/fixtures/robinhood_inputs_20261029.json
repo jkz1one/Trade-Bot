@@ -1,0 +1,2421 @@
+{
+  "original_capture_sha256": "d19f657976ddd0714f8628735f97487aca2fe600d648bdfc0d4a17557092c5e0",
+  "capture_id": "960ccf1f977e4ad3b78808936d1cd361",
+  "started_at": "2026-10-30T00:14:07.872822Z",
+  "observations": [
+    {
+      "arguments": {
+        "symbols": [
+          "SPY",
+          "QQQ"
+        ]
+      },
+      "attempted_at": "2026-10-30T00:14:10.585425+00:00",
+      "completed": true,
+      "elapsed_seconds": 0.24496687902137637,
+      "metadata_sha256": "dd684f320f2cb770b9df02d9930ad0af80d0510e94ded703bd8e04b52a02a760",
+      "output_schema_validated": true,
+      "raw": {
+        "_meta": null,
+        "content": [
+          {
+            "_meta": null,
+            "annotations": null,
+            "text": "{\"data\":{\"books\":[{\"symbol\":\"SPY\",\"updated_at\":\"2026-10-29T20:14:10.789386996-04:00\",\"asks\":[],\"bids\":[]},{\"symbol\":\"QQQ\",\"updated_at\":\"2026-10-29T20:14:10.789125413-04:00\",\"asks\":[],\"bids\":[]}]},\"guide\":\"Each book in books is one symbol's snapshot: asks are sell-side levels (lowest/best ask first) and bids are buy-side levels (highest/best bid first), so the inside market is asks[0] vs bids[0]. quantity is the resting share size at a level \u2014 a level with outsized size relative to its neighbors is a wall (support on the bid side, resistance on the ask side). A requested symbol appears in books OR in errors, never both: surface anything in errors (a symbol that did not resolve to an equity, or whose book was unavailable because the market is closed) rather than implying its book was empty. An empty asks or bids array means no resting liquidity on that side right now, not an error.\"}",
+            "type": "text"
+          }
+        ],
+        "isError": false,
+        "resultType": "complete",
+        "structuredContent": {
+          "data": {
+            "books": [
+              {
+                "asks": [],
+                "bids": [],
+                "symbol": "SPY",
+                "updated_at": "2026-10-29T20:14:10.789386996-04:00"
+              },
+              {
+                "asks": [],
+                "bids": [],
+                "symbol": "QQQ",
+                "updated_at": "2026-10-29T20:14:10.789125413-04:00"
+              }
+            ]
+          },
+          "guide": "Each book in books is one symbol's snapshot: asks are sell-side levels (lowest/best ask first) and bids are buy-side levels (highest/best bid first), so the inside market is asks[0] vs bids[0]. quantity is the resting share size at a level \u2014 a level with outsized size relative to its neighbors is a wall (support on the bid side, resistance on the ask side). A requested symbol appears in books OR in errors, never both: surface anything in errors (a symbol that did not resolve to an equity, or whose book was unavailable because the market is closed) rather than implying its book was empty. An empty asks or bids array means no resting liquidity on that side right now, not an error."
+        }
+      },
+      "received_at": "2026-10-30T00:14:10.830391+00:00",
+      "tool": "get_equity_price_book"
+    },
+    {
+      "arguments": {
+        "days": 7,
+        "start_date": "2026-10-29"
+      },
+      "attempted_at": "2026-10-30T00:14:10.832942+00:00",
+      "completed": false,
+      "elapsed_seconds": 0.44047274719923735,
+      "failure": {
+        "causes": [
+          {
+            "error_class": "ValueError"
+          }
+        ],
+        "stage": "MARKET_READ",
+        "truncated": false
+      },
+      "metadata_sha256": "847030468e36a4e253757079040089e987603322e0113eeaf643cf6010b42e27",
+      "received_at": "2026-10-30T00:14:11.273415+00:00",
+      "tool": "get_earnings_calendar"
+    },
+    {
+      "arguments": {
+        "symbols": "SPX"
+      },
+      "attempted_at": "2026-10-30T00:14:11.275252+00:00",
+      "completed": true,
+      "elapsed_seconds": 0.22292580199427903,
+      "metadata_sha256": "4d78ecf97aa1d7da25f4ac88accecb03172b7c6a0409024557404fbfe18be522",
+      "output_schema_validated": true,
+      "raw": {
+        "_meta": null,
+        "content": [
+          {
+            "_meta": null,
+            "annotations": null,
+            "text": "{\"data\":{\"indexes\":[{\"id\":\"432fbbb8-b82c-454a-852d-eb85382c7066\",\"symbol\":\"SPX\",\"name\":\"\",\"current_value\":\"\",\"trade_halted\":false,\"updated_at\":\"\"}]},\"guide\":\"Each indexes[] entry identifies one index by id and symbol. current_value is a snapshot \u2014 for live values, pass id to get_index_quotes. Entries under restricted have no values available through this channel \u2014 relay their message to the user verbatim; do not retry or estimate a value.\"}",
+            "type": "text"
+          }
+        ],
+        "isError": false,
+        "resultType": "complete",
+        "structuredContent": {
+          "data": {
+            "indexes": [
+              {
+                "current_value": "",
+                "id": "432fbbb8-b82c-454a-852d-eb85382c7066",
+                "name": "",
+                "symbol": "SPX",
+                "trade_halted": false,
+                "updated_at": ""
+              }
+            ]
+          },
+          "guide": "Each indexes[] entry identifies one index by id and symbol. current_value is a snapshot \u2014 for live values, pass id to get_index_quotes. Entries under restricted have no values available through this channel \u2014 relay their message to the user verbatim; do not retry or estimate a value."
+        }
+      },
+      "received_at": "2026-10-30T00:14:11.498165+00:00",
+      "tool": "get_indexes"
+    },
+    {
+      "arguments": {
+        "instrument_ids": [
+          "432fbbb8-b82c-454a-852d-eb85382c7066"
+        ]
+      },
+      "attempted_at": "2026-10-30T00:14:11.500522+00:00",
+      "completed": true,
+      "elapsed_seconds": 0.17964576603844762,
+      "metadata_sha256": "60847e57a5c786b13a561ffacbf4831e4e35bb0ff026a52c86fe9d11bc248da7",
+      "output_schema_validated": true,
+      "raw": {
+        "_meta": null,
+        "content": [
+          {
+            "_meta": null,
+            "annotations": null,
+            "text": "{\"data\":{\"quotes\":[{\"instrument_id\":\"432fbbb8-b82c-454a-852d-eb85382c7066\",\"symbol\":\"SPX\",\"value\":\"7720.39\",\"state\":\"\",\"venue_timestamp\":\"2026-10-29T16:32:47.11144-04:00\",\"updated_at\":\"2026-10-29T17:57:05.298082719-04:00\"}]},\"guide\":\"Match quotes[] entries to your requested instrument_ids by instrument_id (NOT symbol \u2014 multiple instruments could theoretically share a symbol). value is the current index level as a decimal string; quote precision is preserved. Surface symbol and value first; only mention state when it is non-empty and not 'active'. venue_timestamp reflects when the exchange published the level; updated_at reflects when marketdata last refreshed the record. Requested ids under restricted have no value available \u2014 relay their message to the user verbatim; do not retry or estimate a value.\"}",
+            "type": "text"
+          }
+        ],
+        "isError": false,
+        "resultType": "complete",
+        "structuredContent": {
+          "data": {
+            "quotes": [
+              {
+                "instrument_id": "432fbbb8-b82c-454a-852d-eb85382c7066",
+                "state": "",
+                "symbol": "SPX",
+                "updated_at": "2026-10-29T17:57:05.298082719-04:00",
+                "value": "7720.39",
+                "venue_timestamp": "2026-10-29T16:32:47.11144-04:00"
+              }
+            ]
+          },
+          "guide": "Match quotes[] entries to your requested instrument_ids by instrument_id (NOT symbol \u2014 multiple instruments could theoretically share a symbol). value is the current index level as a decimal string; quote precision is preserved. Surface symbol and value first; only mention state when it is non-empty and not 'active'. venue_timestamp reflects when the exchange published the level; updated_at reflects when marketdata last refreshed the record. Requested ids under restricted have no value available \u2014 relay their message to the user verbatim; do not retry or estimate a value."
+        }
+      },
+      "received_at": "2026-10-30T00:14:11.680151+00:00",
+      "tool": "get_index_quotes"
+    },
+    {
+      "arguments": {
+        "end_time": "2026-10-30T00:14:07.872822+00:00",
+        "instrument_ids": [
+          "432fbbb8-b82c-454a-852d-eb85382c7066"
+        ],
+        "interval": "5minute",
+        "start_time": "2026-10-29T00:14:07.872822+00:00"
+      },
+      "attempted_at": "2026-10-30T00:14:11.685124+00:00",
+      "completed": true,
+      "elapsed_seconds": 0.2786625421140343,
+      "metadata_sha256": "592e766f6cd419ee95c33009ab2b8f281958ba0c6bc777e52e76f2423fe382fd",
+      "output_schema_validated": true,
+      "raw": {
+        "_meta": null,
+        "content": [
+          {
+            "_meta": null,
+            "annotations": null,
+            "text": "{\"data\":{\"results\":[{\"instrument_id\":\"432fbbb8-b82c-454a-852d-eb85382c7066\",\"symbol\":\"SPX\",\"interval\":\"5minute\",\"bars\":[{\"begins_at\":\"2026-10-29T00:10:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T00:15:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T00:20:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T00:25:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T00:30:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T00:35:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T00:40:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T00:45:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T00:50:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T00:55:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T01:00:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T01:05:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T01:10:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T01:15:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T01:20:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T01:25:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T01:30:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T01:35:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T01:40:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T01:45:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T01:50:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T01:55:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T02:00:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T02:05:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T02:10:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T02:15:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T02:20:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T02:25:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T02:30:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T02:35:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T02:40:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T02:45:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T02:50:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T02:55:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T03:00:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T03:05:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T03:10:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T03:15:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T03:20:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T03:25:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T03:30:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T03:35:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T03:40:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T03:45:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T03:50:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T03:55:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T04:00:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T04:05:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T04:10:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T04:15:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T04:20:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T04:25:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T04:30:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T04:35:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T04:40:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T04:45:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T04:50:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T04:55:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T05:00:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T05:05:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T05:10:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T05:15:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T05:20:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T05:25:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T05:30:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T05:35:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T05:40:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T05:45:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T05:50:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T05:55:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T06:00:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T06:05:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T06:10:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T06:15:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T06:20:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T06:25:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T06:30:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T06:35:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T06:40:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T06:45:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T06:50:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T06:55:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T07:00:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T07:05:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T07:10:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T07:15:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T07:20:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T07:25:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T07:30:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T07:35:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T07:40:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T07:45:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T07:50:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T07:55:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T08:00:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T08:05:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T08:10:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T08:15:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T08:20:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T08:25:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T08:30:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T08:35:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T08:40:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T08:45:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T08:50:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T08:55:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T09:00:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T09:05:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T09:10:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T09:15:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T09:20:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T09:25:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T09:30:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T09:35:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T09:40:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T09:45:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T09:50:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T09:55:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T10:00:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T10:05:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T10:10:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T10:15:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T10:20:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T10:25:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T10:30:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T10:35:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T10:40:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T10:45:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T10:50:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T10:55:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T11:00:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T11:05:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T11:10:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T11:15:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T11:20:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T11:25:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T11:30:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T11:35:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T11:40:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T11:45:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T11:50:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T11:55:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T12:00:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T12:05:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T12:10:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T12:15:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T12:20:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T12:25:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T12:30:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T12:35:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T12:40:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T12:45:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T12:50:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T12:55:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T13:00:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T13:05:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T13:10:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T13:15:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T13:20:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T13:25:00Z\",\"open_value\":\"7743.98\",\"high_value\":\"7743.98\",\"low_value\":\"7743.98\",\"close_value\":\"7743.98\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T13:30:00Z\",\"open_value\":\"7699.61\",\"high_value\":\"7713.69\",\"low_value\":\"7699.25\",\"close_value\":\"7699.48\"},{\"begins_at\":\"2026-10-29T13:35:00Z\",\"open_value\":\"7699.8\",\"high_value\":\"7705.24\",\"low_value\":\"7695.75\",\"close_value\":\"7700.89\"},{\"begins_at\":\"2026-10-29T13:40:00Z\",\"open_value\":\"7701.07\",\"high_value\":\"7713.17\",\"low_value\":\"7700.21\",\"close_value\":\"7712.89\"},{\"begins_at\":\"2026-10-29T13:45:00Z\",\"open_value\":\"7712.3\",\"high_value\":\"7718.67\",\"low_value\":\"7702.57\",\"close_value\":\"7702.7\"},{\"begins_at\":\"2026-10-29T13:50:00Z\",\"open_value\":\"7702.39\",\"high_value\":\"7710.64\",\"low_value\":\"7701.07\",\"close_value\":\"7704.96\"},{\"begins_at\":\"2026-10-29T13:55:00Z\",\"open_value\":\"7704.58\",\"high_value\":\"7713.95\",\"low_value\":\"7699.3\",\"close_value\":\"7713.33\"},{\"begins_at\":\"2026-10-29T14:00:00Z\",\"open_value\":\"7713.25\",\"high_value\":\"7723.16\",\"low_value\":\"7711.82\",\"close_value\":\"7722.41\"},{\"begins_at\":\"2026-10-29T14:05:00Z\",\"open_value\":\"7722.38\",\"high_value\":\"7724.02\",\"low_value\":\"7711.62\",\"close_value\":\"7712.92\"},{\"begins_at\":\"2026-10-29T14:10:00Z\",\"open_value\":\"7712.75\",\"high_value\":\"7713.19\",\"low_value\":\"7704.32\",\"close_value\":\"7710.96\"},{\"begins_at\":\"2026-10-29T14:15:00Z\",\"open_value\":\"7711.07\",\"high_value\":\"7721.11\",\"low_value\":\"7708.91\",\"close_value\":\"7718.6\"},{\"begins_at\":\"2026-10-29T14:20:00Z\",\"open_value\":\"7718.95\",\"high_value\":\"7720.94\",\"low_value\":\"7716.29\",\"close_value\":\"7718.29\"},{\"begins_at\":\"2026-10-29T14:25:00Z\",\"open_value\":\"7718.17\",\"high_value\":\"7719.56\",\"low_value\":\"7711.5\",\"close_value\":\"7718.28\"},{\"begins_at\":\"2026-10-29T14:30:00Z\",\"open_value\":\"7718.29\",\"high_value\":\"7725.27\",\"low_value\":\"7717.21\",\"close_value\":\"7725.2\"},{\"begins_at\":\"2026-10-29T14:35:00Z\",\"open_value\":\"7725.38\",\"high_value\":\"7726.78\",\"low_value\":\"7720.81\",\"close_value\":\"7724.88\"},{\"begins_at\":\"2026-10-29T14:40:00Z\",\"open_value\":\"7724.9\",\"high_value\":\"7725.41\",\"low_value\":\"7714.52\",\"close_value\":\"7721.19\"},{\"begins_at\":\"2026-10-29T14:45:00Z\",\"open_value\":\"7721.19\",\"high_value\":\"7721.72\",\"low_value\":\"7702.46\",\"close_value\":\"7702.8\"},{\"begins_at\":\"2026-10-29T14:50:00Z\",\"open_value\":\"7702.72\",\"high_value\":\"7709.73\",\"low_value\":\"7701.62\",\"close_value\":\"7709.08\"},{\"begins_at\":\"2026-10-29T14:55:00Z\",\"open_value\":\"7708.78\",\"high_value\":\"7713.26\",\"low_value\":\"7706.93\",\"close_value\":\"7711.21\"},{\"begins_at\":\"2026-10-29T15:00:00Z\",\"open_value\":\"7712.11\",\"high_value\":\"7720.51\",\"low_value\":\"7711.5\",\"close_value\":\"7718.06\"},{\"begins_at\":\"2026-10-29T15:05:00Z\",\"open_value\":\"7718.27\",\"high_value\":\"7722.64\",\"low_value\":\"7713.97\",\"close_value\":\"7721.06\"},{\"begins_at\":\"2026-10-29T15:10:00Z\",\"open_value\":\"7721.01\",\"high_value\":\"7726.02\",\"low_value\":\"7720.22\",\"close_value\":\"7725.14\"},{\"begins_at\":\"2026-10-29T15:15:00Z\",\"open_value\":\"7725.17\",\"high_value\":\"7725.17\",\"low_value\":\"7719.95\",\"close_value\":\"7721.16\"},{\"begins_at\":\"2026-10-29T15:20:00Z\",\"open_value\":\"7721.35\",\"high_value\":\"7724.57\",\"low_value\":\"7720.35\",\"close_value\":\"7724.57\"},{\"begins_at\":\"2026-10-29T15:25:00Z\",\"open_value\":\"7724.37\",\"high_value\":\"7726.48\",\"low_value\":\"7721.52\",\"close_value\":\"7726.26\"},{\"begins_at\":\"2026-10-29T15:30:00Z\",\"open_value\":\"7726.2\",\"high_value\":\"7732.21\",\"low_value\":\"7725.9\",\"close_value\":\"7729.59\"},{\"begins_at\":\"2026-10-29T15:35:00Z\",\"open_value\":\"7729.46\",\"high_value\":\"7730.5\",\"low_value\":\"7723.3\",\"close_value\":\"7726.16\"},{\"begins_at\":\"2026-10-29T15:40:00Z\",\"open_value\":\"7726.11\",\"high_value\":\"7727.41\",\"low_value\":\"7723.53\",\"close_value\":\"7723.79\"},{\"begins_at\":\"2026-10-29T15:45:00Z\",\"open_value\":\"7723.82\",\"high_value\":\"7723.82\",\"low_value\":\"7716.79\",\"close_value\":\"7716.96\"},{\"begins_at\":\"2026-10-29T15:50:00Z\",\"open_value\":\"7717.12\",\"high_value\":\"7719.24\",\"low_value\":\"7714.77\",\"close_value\":\"7718.23\"},{\"begins_at\":\"2026-10-29T15:55:00Z\",\"open_value\":\"7718.35\",\"high_value\":\"7726.51\",\"low_value\":\"7717.98\",\"close_value\":\"7726.26\"},{\"begins_at\":\"2026-10-29T16:00:00Z\",\"open_value\":\"7726.45\",\"high_value\":\"7726.7\",\"low_value\":\"7721.28\",\"close_value\":\"7722.09\"},{\"begins_at\":\"2026-10-29T16:05:00Z\",\"open_value\":\"7722.02\",\"high_value\":\"7725.42\",\"low_value\":\"7720.02\",\"close_value\":\"7720.41\"},{\"begins_at\":\"2026-10-29T16:10:00Z\",\"open_value\":\"7720.3\",\"high_value\":\"7720.3\",\"low_value\":\"7713.38\",\"close_value\":\"7715.8\"},{\"begins_at\":\"2026-10-29T16:15:00Z\",\"open_value\":\"7715.88\",\"high_value\":\"7717.81\",\"low_value\":\"7713\",\"close_value\":\"7716.86\"},{\"begins_at\":\"2026-10-29T16:20:00Z\",\"open_value\":\"7716.88\",\"high_value\":\"7719.16\",\"low_value\":\"7714.14\",\"close_value\":\"7714.79\"},{\"begins_at\":\"2026-10-29T16:25:00Z\",\"open_value\":\"7714.85\",\"high_value\":\"7720.31\",\"low_value\":\"7714.85\",\"close_value\":\"7718.29\"},{\"begins_at\":\"2026-10-29T16:30:00Z\",\"open_value\":\"7718.19\",\"high_value\":\"7718.56\",\"low_value\":\"7710.35\",\"close_value\":\"7712.78\"},{\"begins_at\":\"2026-10-29T16:35:00Z\",\"open_value\":\"7712.62\",\"high_value\":\"7717.16\",\"low_value\":\"7712.25\",\"close_value\":\"7714.85\"},{\"begins_at\":\"2026-10-29T16:40:00Z\",\"open_value\":\"7714.94\",\"high_value\":\"7717.28\",\"low_value\":\"7713.74\",\"close_value\":\"7717.19\"},{\"begins_at\":\"2026-10-29T16:45:00Z\",\"open_value\":\"7717.12\",\"high_value\":\"7717.33\",\"low_value\":\"7711.49\",\"close_value\":\"7712.57\"},{\"begins_at\":\"2026-10-29T16:50:00Z\",\"open_value\":\"7712.54\",\"high_value\":\"7716.55\",\"low_value\":\"7712.29\",\"close_value\":\"7714.62\"},{\"begins_at\":\"2026-10-29T16:55:00Z\",\"open_value\":\"7714.59\",\"high_value\":\"7720.98\",\"low_value\":\"7714.59\",\"close_value\":\"7719.74\"},{\"begins_at\":\"2026-10-29T17:00:00Z\",\"open_value\":\"7719.6\",\"high_value\":\"7720.37\",\"low_value\":\"7715.72\",\"close_value\":\"7716.15\"},{\"begins_at\":\"2026-10-29T17:05:00Z\",\"open_value\":\"7716.17\",\"high_value\":\"7717.45\",\"low_value\":\"7712.84\",\"close_value\":\"7713.44\"},{\"begins_at\":\"2026-10-29T17:10:00Z\",\"open_value\":\"7713.38\",\"high_value\":\"7714.16\",\"low_value\":\"7706.13\",\"close_value\":\"7706.13\"},{\"begins_at\":\"2026-10-29T17:15:00Z\",\"open_value\":\"7706.18\",\"high_value\":\"7709.81\",\"low_value\":\"7706.18\",\"close_value\":\"7709.5\"},{\"begins_at\":\"2026-10-29T17:20:00Z\",\"open_value\":\"7709.47\",\"high_value\":\"7709.72\",\"low_value\":\"7706.55\",\"close_value\":\"7706.79\"},{\"begins_at\":\"2026-10-29T17:25:00Z\",\"open_value\":\"7706.79\",\"high_value\":\"7710.9\",\"low_value\":\"7706.79\",\"close_value\":\"7709.65\"},{\"begins_at\":\"2026-10-29T17:30:00Z\",\"open_value\":\"7709.67\",\"high_value\":\"7711.58\",\"low_value\":\"7706.46\",\"close_value\":\"7707.36\"},{\"begins_at\":\"2026-10-29T17:35:00Z\",\"open_value\":\"7707.3\",\"high_value\":\"7708.39\",\"low_value\":\"7704.69\",\"close_value\":\"7706.29\"},{\"begins_at\":\"2026-10-29T17:40:00Z\",\"open_value\":\"7706.15\",\"high_value\":\"7706.46\",\"low_value\":\"7702.19\",\"close_value\":\"7703.29\"},{\"begins_at\":\"2026-10-29T17:45:00Z\",\"open_value\":\"7703.36\",\"high_value\":\"7705.07\",\"low_value\":\"7695.51\",\"close_value\":\"7698.78\"},{\"begins_at\":\"2026-10-29T17:50:00Z\",\"open_value\":\"7698.95\",\"high_value\":\"7699.69\",\"low_value\":\"7690.94\",\"close_value\":\"7692.26\"},{\"begins_at\":\"2026-10-29T17:55:00Z\",\"open_value\":\"7692.26\",\"high_value\":\"7697.54\",\"low_value\":\"7692.26\",\"close_value\":\"7697.5\"},{\"begins_at\":\"2026-10-29T18:00:00Z\",\"open_value\":\"7697.66\",\"high_value\":\"7699.21\",\"low_value\":\"7693.97\",\"close_value\":\"7694.93\"},{\"begins_at\":\"2026-10-29T18:05:00Z\",\"open_value\":\"7694.82\",\"high_value\":\"7699.38\",\"low_value\":\"7694.33\",\"close_value\":\"7699.32\"},{\"begins_at\":\"2026-10-29T18:10:00Z\",\"open_value\":\"7699.52\",\"high_value\":\"7701.95\",\"low_value\":\"7697.36\",\"close_value\":\"7701.95\"},{\"begins_at\":\"2026-10-29T18:15:00Z\",\"open_value\":\"7701.97\",\"high_value\":\"7703.21\",\"low_value\":\"7698.01\",\"close_value\":\"7698.28\"},{\"begins_at\":\"2026-10-29T18:20:00Z\",\"open_value\":\"7698.15\",\"high_value\":\"7701.54\",\"low_value\":\"7698.15\",\"close_value\":\"7700.33\"},{\"begins_at\":\"2026-10-29T18:25:00Z\",\"open_value\":\"7700.32\",\"high_value\":\"7700.56\",\"low_value\":\"7695.86\",\"close_value\":\"7698.4\"},{\"begins_at\":\"2026-10-29T18:30:00Z\",\"open_value\":\"7698.52\",\"high_value\":\"7698.86\",\"low_value\":\"7691.78\",\"close_value\":\"7694.06\"},{\"begins_at\":\"2026-10-29T18:35:00Z\",\"open_value\":\"7694\",\"high_value\":\"7697.19\",\"low_value\":\"7692.76\",\"close_value\":\"7694.25\"},{\"begins_at\":\"2026-10-29T18:40:00Z\",\"open_value\":\"7694.35\",\"high_value\":\"7695.91\",\"low_value\":\"7692.76\",\"close_value\":\"7695.45\"},{\"begins_at\":\"2026-10-29T18:45:00Z\",\"open_value\":\"7695.34\",\"high_value\":\"7697.77\",\"low_value\":\"7694.13\",\"close_value\":\"7697.01\"},{\"begins_at\":\"2026-10-29T18:50:00Z\",\"open_value\":\"7697.02\",\"high_value\":\"7701.16\",\"low_value\":\"7696.76\",\"close_value\":\"7700.5\"},{\"begins_at\":\"2026-10-29T18:55:00Z\",\"open_value\":\"7700.32\",\"high_value\":\"7703.42\",\"low_value\":\"7699.65\",\"close_value\":\"7700.02\"},{\"begins_at\":\"2026-10-29T19:00:00Z\",\"open_value\":\"7699.84\",\"high_value\":\"7703.23\",\"low_value\":\"7698.79\",\"close_value\":\"7702.51\"},{\"begins_at\":\"2026-10-29T19:05:00Z\",\"open_value\":\"7702.16\",\"high_value\":\"7703.19\",\"low_value\":\"7700.56\",\"close_value\":\"7701.27\"},{\"begins_at\":\"2026-10-29T19:10:00Z\",\"open_value\":\"7701.16\",\"high_value\":\"7702.55\",\"low_value\":\"7696.71\",\"close_value\":\"7698.28\"},{\"begins_at\":\"2026-10-29T19:15:00Z\",\"open_value\":\"7698.49\",\"high_value\":\"7702.7\",\"low_value\":\"7697.91\",\"close_value\":\"7702.15\"},{\"begins_at\":\"2026-10-29T19:20:00Z\",\"open_value\":\"7701.93\",\"high_value\":\"7704.69\",\"low_value\":\"7701.64\",\"close_value\":\"7704.03\"},{\"begins_at\":\"2026-10-29T19:25:00Z\",\"open_value\":\"7703.98\",\"high_value\":\"7707.49\",\"low_value\":\"7703.98\",\"close_value\":\"7706.88\"},{\"begins_at\":\"2026-10-29T19:30:00Z\",\"open_value\":\"7706.75\",\"high_value\":\"7712.37\",\"low_value\":\"7706.69\",\"close_value\":\"7711.28\"},{\"begins_at\":\"2026-10-29T19:35:00Z\",\"open_value\":\"7711.27\",\"high_value\":\"7711.27\",\"low_value\":\"7706.71\",\"close_value\":\"7707.27\"},{\"begins_at\":\"2026-10-29T19:40:00Z\",\"open_value\":\"7707.29\",\"high_value\":\"7708.17\",\"low_value\":\"7705.51\",\"close_value\":\"7705.51\"},{\"begins_at\":\"2026-10-29T19:45:00Z\",\"open_value\":\"7705.57\",\"high_value\":\"7709.18\",\"low_value\":\"7702.14\",\"close_value\":\"7709.18\"},{\"begins_at\":\"2026-10-29T19:50:00Z\",\"open_value\":\"7714.01\",\"high_value\":\"7716.53\",\"low_value\":\"7712.92\",\"close_value\":\"7715.8\"},{\"begins_at\":\"2026-10-29T19:55:00Z\",\"open_value\":\"7715.71\",\"high_value\":\"7721.02\",\"low_value\":\"7713.99\",\"close_value\":\"7721.02\"},{\"begins_at\":\"2026-10-29T20:00:00Z\",\"open_value\":\"7721.04\",\"high_value\":\"7721.04\",\"low_value\":\"7720.19\",\"close_value\":\"7720.39\"},{\"begins_at\":\"2026-10-29T20:05:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\"},{\"begins_at\":\"2026-10-29T20:10:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\"},{\"begins_at\":\"2026-10-29T20:15:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\"},{\"begins_at\":\"2026-10-29T20:20:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\"},{\"begins_at\":\"2026-10-29T20:25:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T20:30:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\"},{\"begins_at\":\"2026-10-29T20:35:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T20:40:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T20:45:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T20:50:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T20:55:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T21:00:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T21:05:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T21:10:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T21:15:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T21:20:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T21:25:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T21:30:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T21:35:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T21:40:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T21:45:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T21:50:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T21:55:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T22:00:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T22:05:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T22:10:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T22:15:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T22:20:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T22:25:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T22:30:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T22:35:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T22:40:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T22:45:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T22:50:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T22:55:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T23:00:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T23:05:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T23:10:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T23:15:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T23:20:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T23:25:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T23:30:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T23:35:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T23:40:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T23:45:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T23:50:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-29T23:55:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-30T00:00:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true},{\"begins_at\":\"2026-10-30T00:05:00Z\",\"open_value\":\"7720.39\",\"high_value\":\"7720.39\",\"low_value\":\"7720.39\",\"close_value\":\"7720.39\",\"interpolated\":true}]}]},\"guide\":\"Bars are left-edge labeled in UTC; convert to the user's timezone for presentation. Treat interpolated=true bars as gap-fill \u2014 they carry no new information and should usually be hidden in charts and ignored for analytics. Bars carry index values, not trade prices \u2014 there is no volume. For the current level use get_index_quotes; for a multi-bar move, compute the change from the first bar's open_value to the last bar's close_value. Match results to your request by instrument_id; requested ids that did not resolve are listed in not_found, and ids under restricted are unavailable for licensing reasons \u2014 tell the user that rather than retrying.\"}",
+            "type": "text"
+          }
+        ],
+        "isError": false,
+        "resultType": "complete",
+        "structuredContent": {
+          "data": {
+            "results": [
+              {
+                "bars": [
+                  {
+                    "begins_at": "2026-10-29T00:10:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T00:15:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T00:20:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T00:25:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T00:30:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T00:35:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T00:40:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T00:45:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T00:50:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T00:55:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T01:00:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T01:05:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T01:10:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T01:15:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T01:20:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T01:25:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T01:30:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T01:35:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T01:40:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T01:45:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T01:50:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T01:55:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T02:00:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T02:05:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T02:10:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T02:15:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T02:20:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T02:25:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T02:30:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T02:35:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T02:40:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T02:45:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T02:50:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T02:55:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T03:00:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T03:05:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T03:10:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T03:15:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T03:20:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T03:25:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T03:30:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T03:35:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T03:40:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T03:45:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T03:50:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T03:55:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T04:00:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T04:05:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T04:10:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T04:15:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T04:20:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T04:25:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T04:30:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T04:35:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T04:40:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T04:45:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T04:50:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T04:55:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T05:00:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T05:05:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T05:10:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T05:15:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T05:20:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T05:25:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T05:30:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T05:35:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T05:40:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T05:45:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T05:50:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T05:55:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T06:00:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T06:05:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T06:10:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T06:15:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T06:20:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T06:25:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T06:30:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T06:35:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T06:40:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T06:45:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T06:50:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T06:55:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T07:00:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T07:05:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T07:10:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T07:15:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T07:20:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T07:25:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T07:30:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T07:35:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T07:40:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T07:45:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T07:50:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T07:55:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T08:00:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T08:05:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T08:10:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T08:15:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T08:20:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T08:25:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T08:30:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T08:35:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T08:40:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T08:45:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T08:50:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T08:55:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T09:00:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T09:05:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T09:10:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T09:15:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T09:20:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T09:25:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T09:30:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T09:35:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T09:40:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T09:45:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T09:50:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T09:55:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T10:00:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T10:05:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T10:10:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T10:15:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T10:20:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T10:25:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T10:30:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T10:35:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T10:40:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T10:45:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T10:50:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T10:55:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T11:00:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T11:05:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T11:10:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T11:15:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T11:20:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T11:25:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T11:30:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T11:35:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T11:40:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T11:45:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T11:50:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T11:55:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T12:00:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T12:05:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T12:10:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T12:15:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T12:20:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T12:25:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T12:30:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T12:35:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T12:40:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T12:45:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T12:50:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T12:55:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T13:00:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T13:05:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T13:10:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T13:15:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T13:20:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T13:25:00Z",
+                    "close_value": "7743.98",
+                    "high_value": "7743.98",
+                    "interpolated": true,
+                    "low_value": "7743.98",
+                    "open_value": "7743.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T13:30:00Z",
+                    "close_value": "7699.48",
+                    "high_value": "7713.69",
+                    "low_value": "7699.25",
+                    "open_value": "7699.61"
+                  },
+                  {
+                    "begins_at": "2026-10-29T13:35:00Z",
+                    "close_value": "7700.89",
+                    "high_value": "7705.24",
+                    "low_value": "7695.75",
+                    "open_value": "7699.8"
+                  },
+                  {
+                    "begins_at": "2026-10-29T13:40:00Z",
+                    "close_value": "7712.89",
+                    "high_value": "7713.17",
+                    "low_value": "7700.21",
+                    "open_value": "7701.07"
+                  },
+                  {
+                    "begins_at": "2026-10-29T13:45:00Z",
+                    "close_value": "7702.7",
+                    "high_value": "7718.67",
+                    "low_value": "7702.57",
+                    "open_value": "7712.3"
+                  },
+                  {
+                    "begins_at": "2026-10-29T13:50:00Z",
+                    "close_value": "7704.96",
+                    "high_value": "7710.64",
+                    "low_value": "7701.07",
+                    "open_value": "7702.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T13:55:00Z",
+                    "close_value": "7713.33",
+                    "high_value": "7713.95",
+                    "low_value": "7699.3",
+                    "open_value": "7704.58"
+                  },
+                  {
+                    "begins_at": "2026-10-29T14:00:00Z",
+                    "close_value": "7722.41",
+                    "high_value": "7723.16",
+                    "low_value": "7711.82",
+                    "open_value": "7713.25"
+                  },
+                  {
+                    "begins_at": "2026-10-29T14:05:00Z",
+                    "close_value": "7712.92",
+                    "high_value": "7724.02",
+                    "low_value": "7711.62",
+                    "open_value": "7722.38"
+                  },
+                  {
+                    "begins_at": "2026-10-29T14:10:00Z",
+                    "close_value": "7710.96",
+                    "high_value": "7713.19",
+                    "low_value": "7704.32",
+                    "open_value": "7712.75"
+                  },
+                  {
+                    "begins_at": "2026-10-29T14:15:00Z",
+                    "close_value": "7718.6",
+                    "high_value": "7721.11",
+                    "low_value": "7708.91",
+                    "open_value": "7711.07"
+                  },
+                  {
+                    "begins_at": "2026-10-29T14:20:00Z",
+                    "close_value": "7718.29",
+                    "high_value": "7720.94",
+                    "low_value": "7716.29",
+                    "open_value": "7718.95"
+                  },
+                  {
+                    "begins_at": "2026-10-29T14:25:00Z",
+                    "close_value": "7718.28",
+                    "high_value": "7719.56",
+                    "low_value": "7711.5",
+                    "open_value": "7718.17"
+                  },
+                  {
+                    "begins_at": "2026-10-29T14:30:00Z",
+                    "close_value": "7725.2",
+                    "high_value": "7725.27",
+                    "low_value": "7717.21",
+                    "open_value": "7718.29"
+                  },
+                  {
+                    "begins_at": "2026-10-29T14:35:00Z",
+                    "close_value": "7724.88",
+                    "high_value": "7726.78",
+                    "low_value": "7720.81",
+                    "open_value": "7725.38"
+                  },
+                  {
+                    "begins_at": "2026-10-29T14:40:00Z",
+                    "close_value": "7721.19",
+                    "high_value": "7725.41",
+                    "low_value": "7714.52",
+                    "open_value": "7724.9"
+                  },
+                  {
+                    "begins_at": "2026-10-29T14:45:00Z",
+                    "close_value": "7702.8",
+                    "high_value": "7721.72",
+                    "low_value": "7702.46",
+                    "open_value": "7721.19"
+                  },
+                  {
+                    "begins_at": "2026-10-29T14:50:00Z",
+                    "close_value": "7709.08",
+                    "high_value": "7709.73",
+                    "low_value": "7701.62",
+                    "open_value": "7702.72"
+                  },
+                  {
+                    "begins_at": "2026-10-29T14:55:00Z",
+                    "close_value": "7711.21",
+                    "high_value": "7713.26",
+                    "low_value": "7706.93",
+                    "open_value": "7708.78"
+                  },
+                  {
+                    "begins_at": "2026-10-29T15:00:00Z",
+                    "close_value": "7718.06",
+                    "high_value": "7720.51",
+                    "low_value": "7711.5",
+                    "open_value": "7712.11"
+                  },
+                  {
+                    "begins_at": "2026-10-29T15:05:00Z",
+                    "close_value": "7721.06",
+                    "high_value": "7722.64",
+                    "low_value": "7713.97",
+                    "open_value": "7718.27"
+                  },
+                  {
+                    "begins_at": "2026-10-29T15:10:00Z",
+                    "close_value": "7725.14",
+                    "high_value": "7726.02",
+                    "low_value": "7720.22",
+                    "open_value": "7721.01"
+                  },
+                  {
+                    "begins_at": "2026-10-29T15:15:00Z",
+                    "close_value": "7721.16",
+                    "high_value": "7725.17",
+                    "low_value": "7719.95",
+                    "open_value": "7725.17"
+                  },
+                  {
+                    "begins_at": "2026-10-29T15:20:00Z",
+                    "close_value": "7724.57",
+                    "high_value": "7724.57",
+                    "low_value": "7720.35",
+                    "open_value": "7721.35"
+                  },
+                  {
+                    "begins_at": "2026-10-29T15:25:00Z",
+                    "close_value": "7726.26",
+                    "high_value": "7726.48",
+                    "low_value": "7721.52",
+                    "open_value": "7724.37"
+                  },
+                  {
+                    "begins_at": "2026-10-29T15:30:00Z",
+                    "close_value": "7729.59",
+                    "high_value": "7732.21",
+                    "low_value": "7725.9",
+                    "open_value": "7726.2"
+                  },
+                  {
+                    "begins_at": "2026-10-29T15:35:00Z",
+                    "close_value": "7726.16",
+                    "high_value": "7730.5",
+                    "low_value": "7723.3",
+                    "open_value": "7729.46"
+                  },
+                  {
+                    "begins_at": "2026-10-29T15:40:00Z",
+                    "close_value": "7723.79",
+                    "high_value": "7727.41",
+                    "low_value": "7723.53",
+                    "open_value": "7726.11"
+                  },
+                  {
+                    "begins_at": "2026-10-29T15:45:00Z",
+                    "close_value": "7716.96",
+                    "high_value": "7723.82",
+                    "low_value": "7716.79",
+                    "open_value": "7723.82"
+                  },
+                  {
+                    "begins_at": "2026-10-29T15:50:00Z",
+                    "close_value": "7718.23",
+                    "high_value": "7719.24",
+                    "low_value": "7714.77",
+                    "open_value": "7717.12"
+                  },
+                  {
+                    "begins_at": "2026-10-29T15:55:00Z",
+                    "close_value": "7726.26",
+                    "high_value": "7726.51",
+                    "low_value": "7717.98",
+                    "open_value": "7718.35"
+                  },
+                  {
+                    "begins_at": "2026-10-29T16:00:00Z",
+                    "close_value": "7722.09",
+                    "high_value": "7726.7",
+                    "low_value": "7721.28",
+                    "open_value": "7726.45"
+                  },
+                  {
+                    "begins_at": "2026-10-29T16:05:00Z",
+                    "close_value": "7720.41",
+                    "high_value": "7725.42",
+                    "low_value": "7720.02",
+                    "open_value": "7722.02"
+                  },
+                  {
+                    "begins_at": "2026-10-29T16:10:00Z",
+                    "close_value": "7715.8",
+                    "high_value": "7720.3",
+                    "low_value": "7713.38",
+                    "open_value": "7720.3"
+                  },
+                  {
+                    "begins_at": "2026-10-29T16:15:00Z",
+                    "close_value": "7716.86",
+                    "high_value": "7717.81",
+                    "low_value": "7713",
+                    "open_value": "7715.88"
+                  },
+                  {
+                    "begins_at": "2026-10-29T16:20:00Z",
+                    "close_value": "7714.79",
+                    "high_value": "7719.16",
+                    "low_value": "7714.14",
+                    "open_value": "7716.88"
+                  },
+                  {
+                    "begins_at": "2026-10-29T16:25:00Z",
+                    "close_value": "7718.29",
+                    "high_value": "7720.31",
+                    "low_value": "7714.85",
+                    "open_value": "7714.85"
+                  },
+                  {
+                    "begins_at": "2026-10-29T16:30:00Z",
+                    "close_value": "7712.78",
+                    "high_value": "7718.56",
+                    "low_value": "7710.35",
+                    "open_value": "7718.19"
+                  },
+                  {
+                    "begins_at": "2026-10-29T16:35:00Z",
+                    "close_value": "7714.85",
+                    "high_value": "7717.16",
+                    "low_value": "7712.25",
+                    "open_value": "7712.62"
+                  },
+                  {
+                    "begins_at": "2026-10-29T16:40:00Z",
+                    "close_value": "7717.19",
+                    "high_value": "7717.28",
+                    "low_value": "7713.74",
+                    "open_value": "7714.94"
+                  },
+                  {
+                    "begins_at": "2026-10-29T16:45:00Z",
+                    "close_value": "7712.57",
+                    "high_value": "7717.33",
+                    "low_value": "7711.49",
+                    "open_value": "7717.12"
+                  },
+                  {
+                    "begins_at": "2026-10-29T16:50:00Z",
+                    "close_value": "7714.62",
+                    "high_value": "7716.55",
+                    "low_value": "7712.29",
+                    "open_value": "7712.54"
+                  },
+                  {
+                    "begins_at": "2026-10-29T16:55:00Z",
+                    "close_value": "7719.74",
+                    "high_value": "7720.98",
+                    "low_value": "7714.59",
+                    "open_value": "7714.59"
+                  },
+                  {
+                    "begins_at": "2026-10-29T17:00:00Z",
+                    "close_value": "7716.15",
+                    "high_value": "7720.37",
+                    "low_value": "7715.72",
+                    "open_value": "7719.6"
+                  },
+                  {
+                    "begins_at": "2026-10-29T17:05:00Z",
+                    "close_value": "7713.44",
+                    "high_value": "7717.45",
+                    "low_value": "7712.84",
+                    "open_value": "7716.17"
+                  },
+                  {
+                    "begins_at": "2026-10-29T17:10:00Z",
+                    "close_value": "7706.13",
+                    "high_value": "7714.16",
+                    "low_value": "7706.13",
+                    "open_value": "7713.38"
+                  },
+                  {
+                    "begins_at": "2026-10-29T17:15:00Z",
+                    "close_value": "7709.5",
+                    "high_value": "7709.81",
+                    "low_value": "7706.18",
+                    "open_value": "7706.18"
+                  },
+                  {
+                    "begins_at": "2026-10-29T17:20:00Z",
+                    "close_value": "7706.79",
+                    "high_value": "7709.72",
+                    "low_value": "7706.55",
+                    "open_value": "7709.47"
+                  },
+                  {
+                    "begins_at": "2026-10-29T17:25:00Z",
+                    "close_value": "7709.65",
+                    "high_value": "7710.9",
+                    "low_value": "7706.79",
+                    "open_value": "7706.79"
+                  },
+                  {
+                    "begins_at": "2026-10-29T17:30:00Z",
+                    "close_value": "7707.36",
+                    "high_value": "7711.58",
+                    "low_value": "7706.46",
+                    "open_value": "7709.67"
+                  },
+                  {
+                    "begins_at": "2026-10-29T17:35:00Z",
+                    "close_value": "7706.29",
+                    "high_value": "7708.39",
+                    "low_value": "7704.69",
+                    "open_value": "7707.3"
+                  },
+                  {
+                    "begins_at": "2026-10-29T17:40:00Z",
+                    "close_value": "7703.29",
+                    "high_value": "7706.46",
+                    "low_value": "7702.19",
+                    "open_value": "7706.15"
+                  },
+                  {
+                    "begins_at": "2026-10-29T17:45:00Z",
+                    "close_value": "7698.78",
+                    "high_value": "7705.07",
+                    "low_value": "7695.51",
+                    "open_value": "7703.36"
+                  },
+                  {
+                    "begins_at": "2026-10-29T17:50:00Z",
+                    "close_value": "7692.26",
+                    "high_value": "7699.69",
+                    "low_value": "7690.94",
+                    "open_value": "7698.95"
+                  },
+                  {
+                    "begins_at": "2026-10-29T17:55:00Z",
+                    "close_value": "7697.5",
+                    "high_value": "7697.54",
+                    "low_value": "7692.26",
+                    "open_value": "7692.26"
+                  },
+                  {
+                    "begins_at": "2026-10-29T18:00:00Z",
+                    "close_value": "7694.93",
+                    "high_value": "7699.21",
+                    "low_value": "7693.97",
+                    "open_value": "7697.66"
+                  },
+                  {
+                    "begins_at": "2026-10-29T18:05:00Z",
+                    "close_value": "7699.32",
+                    "high_value": "7699.38",
+                    "low_value": "7694.33",
+                    "open_value": "7694.82"
+                  },
+                  {
+                    "begins_at": "2026-10-29T18:10:00Z",
+                    "close_value": "7701.95",
+                    "high_value": "7701.95",
+                    "low_value": "7697.36",
+                    "open_value": "7699.52"
+                  },
+                  {
+                    "begins_at": "2026-10-29T18:15:00Z",
+                    "close_value": "7698.28",
+                    "high_value": "7703.21",
+                    "low_value": "7698.01",
+                    "open_value": "7701.97"
+                  },
+                  {
+                    "begins_at": "2026-10-29T18:20:00Z",
+                    "close_value": "7700.33",
+                    "high_value": "7701.54",
+                    "low_value": "7698.15",
+                    "open_value": "7698.15"
+                  },
+                  {
+                    "begins_at": "2026-10-29T18:25:00Z",
+                    "close_value": "7698.4",
+                    "high_value": "7700.56",
+                    "low_value": "7695.86",
+                    "open_value": "7700.32"
+                  },
+                  {
+                    "begins_at": "2026-10-29T18:30:00Z",
+                    "close_value": "7694.06",
+                    "high_value": "7698.86",
+                    "low_value": "7691.78",
+                    "open_value": "7698.52"
+                  },
+                  {
+                    "begins_at": "2026-10-29T18:35:00Z",
+                    "close_value": "7694.25",
+                    "high_value": "7697.19",
+                    "low_value": "7692.76",
+                    "open_value": "7694"
+                  },
+                  {
+                    "begins_at": "2026-10-29T18:40:00Z",
+                    "close_value": "7695.45",
+                    "high_value": "7695.91",
+                    "low_value": "7692.76",
+                    "open_value": "7694.35"
+                  },
+                  {
+                    "begins_at": "2026-10-29T18:45:00Z",
+                    "close_value": "7697.01",
+                    "high_value": "7697.77",
+                    "low_value": "7694.13",
+                    "open_value": "7695.34"
+                  },
+                  {
+                    "begins_at": "2026-10-29T18:50:00Z",
+                    "close_value": "7700.5",
+                    "high_value": "7701.16",
+                    "low_value": "7696.76",
+                    "open_value": "7697.02"
+                  },
+                  {
+                    "begins_at": "2026-10-29T18:55:00Z",
+                    "close_value": "7700.02",
+                    "high_value": "7703.42",
+                    "low_value": "7699.65",
+                    "open_value": "7700.32"
+                  },
+                  {
+                    "begins_at": "2026-10-29T19:00:00Z",
+                    "close_value": "7702.51",
+                    "high_value": "7703.23",
+                    "low_value": "7698.79",
+                    "open_value": "7699.84"
+                  },
+                  {
+                    "begins_at": "2026-10-29T19:05:00Z",
+                    "close_value": "7701.27",
+                    "high_value": "7703.19",
+                    "low_value": "7700.56",
+                    "open_value": "7702.16"
+                  },
+                  {
+                    "begins_at": "2026-10-29T19:10:00Z",
+                    "close_value": "7698.28",
+                    "high_value": "7702.55",
+                    "low_value": "7696.71",
+                    "open_value": "7701.16"
+                  },
+                  {
+                    "begins_at": "2026-10-29T19:15:00Z",
+                    "close_value": "7702.15",
+                    "high_value": "7702.7",
+                    "low_value": "7697.91",
+                    "open_value": "7698.49"
+                  },
+                  {
+                    "begins_at": "2026-10-29T19:20:00Z",
+                    "close_value": "7704.03",
+                    "high_value": "7704.69",
+                    "low_value": "7701.64",
+                    "open_value": "7701.93"
+                  },
+                  {
+                    "begins_at": "2026-10-29T19:25:00Z",
+                    "close_value": "7706.88",
+                    "high_value": "7707.49",
+                    "low_value": "7703.98",
+                    "open_value": "7703.98"
+                  },
+                  {
+                    "begins_at": "2026-10-29T19:30:00Z",
+                    "close_value": "7711.28",
+                    "high_value": "7712.37",
+                    "low_value": "7706.69",
+                    "open_value": "7706.75"
+                  },
+                  {
+                    "begins_at": "2026-10-29T19:35:00Z",
+                    "close_value": "7707.27",
+                    "high_value": "7711.27",
+                    "low_value": "7706.71",
+                    "open_value": "7711.27"
+                  },
+                  {
+                    "begins_at": "2026-10-29T19:40:00Z",
+                    "close_value": "7705.51",
+                    "high_value": "7708.17",
+                    "low_value": "7705.51",
+                    "open_value": "7707.29"
+                  },
+                  {
+                    "begins_at": "2026-10-29T19:45:00Z",
+                    "close_value": "7709.18",
+                    "high_value": "7709.18",
+                    "low_value": "7702.14",
+                    "open_value": "7705.57"
+                  },
+                  {
+                    "begins_at": "2026-10-29T19:50:00Z",
+                    "close_value": "7715.8",
+                    "high_value": "7716.53",
+                    "low_value": "7712.92",
+                    "open_value": "7714.01"
+                  },
+                  {
+                    "begins_at": "2026-10-29T19:55:00Z",
+                    "close_value": "7721.02",
+                    "high_value": "7721.02",
+                    "low_value": "7713.99",
+                    "open_value": "7715.71"
+                  },
+                  {
+                    "begins_at": "2026-10-29T20:00:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7721.04",
+                    "low_value": "7720.19",
+                    "open_value": "7721.04"
+                  },
+                  {
+                    "begins_at": "2026-10-29T20:05:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T20:10:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T20:15:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T20:20:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T20:25:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T20:30:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T20:35:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T20:40:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T20:45:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T20:50:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T20:55:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T21:00:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T21:05:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T21:10:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T21:15:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T21:20:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T21:25:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T21:30:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T21:35:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T21:40:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T21:45:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T21:50:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T21:55:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T22:00:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T22:05:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T22:10:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T22:15:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T22:20:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T22:25:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T22:30:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T22:35:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T22:40:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T22:45:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T22:50:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T22:55:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T23:00:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T23:05:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T23:10:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T23:15:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T23:20:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T23:25:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T23:30:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T23:35:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T23:40:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T23:45:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T23:50:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-29T23:55:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-30T00:00:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  },
+                  {
+                    "begins_at": "2026-10-30T00:05:00Z",
+                    "close_value": "7720.39",
+                    "high_value": "7720.39",
+                    "interpolated": true,
+                    "low_value": "7720.39",
+                    "open_value": "7720.39"
+                  }
+                ],
+                "instrument_id": "432fbbb8-b82c-454a-852d-eb85382c7066",
+                "interval": "5minute",
+                "symbol": "SPX"
+              }
+            ]
+          },
+          "guide": "Bars are left-edge labeled in UTC; convert to the user's timezone for presentation. Treat interpolated=true bars as gap-fill \u2014 they carry no new information and should usually be hidden in charts and ignored for analytics. Bars carry index values, not trade prices \u2014 there is no volume. For the current level use get_index_quotes; for a multi-bar move, compute the change from the first bar's open_value to the last bar's close_value. Match results to your request by instrument_id; requested ids that did not resolve are listed in not_found, and ids under restricted are unavailable for licensing reasons \u2014 tell the user that rather than retrying."
+        }
+      },
+      "received_at": "2026-10-30T00:14:11.963788+00:00",
+      "tool": "get_index_historicals"
+    }
+  ]
+}

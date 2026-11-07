@@ -1,0 +1,50 @@
+[Unit]
+Description=Trade-Bot independent checkpoint evidence archive
+Wants=network-online.target
+After=network-online.target
+RequiresMountsFor=/var/lib/trade-bot-archive/objects
+ConditionPathExists=/var/lib/trade-bot-archive/objects/archive.json
+ConditionPathExists=/etc/trade-bot-archive/receiver/archive.token
+ConditionPathExists=/etc/trade-bot-archive/receiver/chain.pem
+ConditionPathExists=/etc/trade-bot-archive/receiver/tls.key
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+Type=exec
+User=tradebot-archive
+Group=tradebot-archive
+WorkingDirectory=/var/lib/trade-bot-archive
+# Replace archive.invalid with the reviewed independent TLS hostname before installation.
+ExecStart=/opt/trade-bot-archive/venv/bin/python -I -m app.execution.archive_cli serve --directory /var/lib/trade-bot-archive/objects --origin https://archive.invalid:8790 --token-file /etc/trade-bot-archive/receiver/archive.token --certfile /etc/trade-bot-archive/receiver/chain.pem --keyfile /etc/trade-bot-archive/receiver/tls.key --host 0.0.0.0 --port 8790 --timeout-seconds 30
+Restart=on-failure
+RestartSec=10
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=45
+UMask=0077
+Environment=PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/lib/trade-bot-archive/objects
+TemporaryFileSystem=/etc/trade-bot-archive:ro,mode=0755,size=1M
+BindReadOnlyPaths=/etc/trade-bot-archive/receiver
+InaccessiblePaths=-/var/lib/trade-bot-paper -/etc/trade-bot-paper -/opt/trade-bot-paper
+InaccessiblePaths=-/var/lib/trade-bot -/etc/trade-bot -/opt/trade-bot
+TasksMax=32
+MemoryMax=128M
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=trade-bot-archive
+
+[Install]
+WantedBy=multi-user.target

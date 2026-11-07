@@ -1,0 +1,698 @@
+"""PAPER-only order, receipt and accounting contracts. No real brokerage transport."""
+
+from datetime import datetime
+from decimal import Context, Decimal, localcontext
+from typing import Literal
+
+from pydantic import Field, StrictBool, model_validator
+
+from app.execution.economics import CostPolicy
+from app.mixed.native_models import MixedOwnerPolicy
+from app.mixed.stock_models import StockLimits, StockObservation, StockPosition
+from app.options.carry_models import SwingCarryTerms
+from app.options.models import (
+    Count,
+    Money,
+    Name,
+    OptionContract,
+    OptionHolding,
+    OptionInstrument,
+    OptionQuote,
+    OptionRecord,
+    PositiveCount,
+    Symbol,
+    UnderlyingObservation,
+)
+
+ZERO = Decimal(0)
+TERMINAL = {"FILLED", "CANCELED", "REJECTED", "EXPIRED"}
+CALENDAR_SOURCE = "XNYS_REGULAR_INTERSECTION_V1"
+
+
+class FamilyLossPolicy(OptionRecord):
+    family: Literal["DEGEN", "SWING", "SCOPE"]
+    max_consecutive_losses: int = Field(strict=True, ge=1, le=2)
+    cooldown_seconds: int = Field(strict=True, ge=1800, le=86400)
+
+
+class NativeLossPolicy(OptionRecord):
+    version: Literal["native-position-loss-v1"] = "native-position-loss-v1"
+    entry_cost_attribution: Literal["later-flat-entry-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    max_consecutive_losses: int = Field(strict=True, ge=1, le=2)
+    cooldown_seconds: int = Field(strict=True, ge=1800, le=86400)
+    families: tuple[FamilyLossPolicy, ...] = Field(
+        default=(), max_length=3, exclude_if=lambda v: not v
+    )
+
+    @model_validator(mode="after")
+    def distinct_families(self):
+        if len({p.family for p in self.families}) != len(self.families):
+            raise ValueError("Distinct frozen family loss policies required")
+        return self
+
+
+class OptionExecutionPolicy(OptionRecord):
+    mixed_owner: MixedOwnerPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
+    version: Literal["option-paper-lifecycle-v1"] = "option-paper-lifecycle-v1"
+    capital: Money = Field(gt=0)
+    daily_loss_limit: Money = Field(gt=0)
+    total_loss_limit: Money = Field(gt=0)
+    calendar_source: Literal["XNYS_REGULAR_INTERSECTION_V1"] = CALENDAR_SOURCE
+    entry_cutoff_minutes: PositiveCount
+    exit_cutoff_minutes: PositiveCount
+    expiry_guard_seconds: PositiveCount
+    premium_catastrophe_fraction: Money = Field(gt=0, lt=1)
+    supervisor_max_age_seconds: PositiveCount
+    process_timeout_seconds: float = Field(gt=0, le=30, allow_inf_nan=False)
+    cost_policy: CostPolicy | None = None
+    health_management: Literal["observed-daytrade-health-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    loss_control: NativeLossPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
+    partial_closes: Literal["whole-contract-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    target_exits: Literal["frozen-targets-v1", "frozen-target-milestones-v2"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    target_stops: Literal["frozen-target-stops-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    target_entry_reference: Literal["fill-weighted-underlying-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    trade_floor: Literal["native-target-floor-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    premium_trail: Literal["executable-premium-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    entry_time_protection: Literal["tighten-only-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    entry_premium_protection: Literal["tighten-only-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+
+    scope_carry: Literal["shared-scope-carry-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    swing_carry: Literal["bounded-swing-carry-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+
+    scope_execution: Literal["scope-native-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+
+    scope_arbitration: Literal["shared-scope-selection-v1", "shared-scope-entry-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+
+    @model_validator(mode="after")
+    def bounded(self):
+        if self.mixed_owner is not None and (
+            (self.cost_policy is not None) != (self.mixed_owner.reasoning is not None)
+            or self.loss_control is None
+            or not {"DEGEN", "SWING"} <= {p.family for p in self.loss_control.families}
+        ):
+            raise ValueError(
+                "Mixed native ownership requires common loss controls and explicit paid enrollment"
+            )
+        if (
+            self.loss_control is not None
+            and self.loss_control.entry_cost_attribution is not None
+            and self.cost_policy is None
+        ):
+            raise ValueError("Later-entry attribution requires frozen model costs")
+        if self.scope_carry is not None and (
+            self.swing_carry is None or self.scope_arbitration is None
+        ):
+            raise ValueError("Combined carry requires native Swing and shared Scope")
+        if self.scope_arbitration is not None and (
+            self.scope_execution is None
+            or self.loss_control is None
+            or not {"DEGEN", "SCOPE"} <= {p.family for p in self.loss_control.families}
+        ):
+            raise ValueError("Shared Scope requires native Scope and every family loss policy")
+        if self.swing_carry is not None and (
+            (self.scope_execution is not None and self.scope_carry is None)
+            or self.loss_control is None
+            or not any(p.family == "SWING" for p in self.loss_control.families)
+        ):
+            raise ValueError("Swing carry requires independent Swing loss enrollment")
+        if self.scope_execution is not None and (
+            self.target_exits != "frozen-target-milestones-v2"
+            or self.target_entry_reference is None
+            or self.entry_premium_protection is None
+            or self.entry_time_protection is None
+            or self.loss_control is None
+            or not any(p.family == "SCOPE" for p in self.loss_control.families)
+        ):
+            raise ValueError(
+                "Scope execution requires native targets, fill reference, premium/time protection and Scope loss control"
+            )
+        if self.target_entry_reference is not None and (
+            self.target_exits != "frozen-target-milestones-v2" or self.target_stops is None
+        ):
+            raise ValueError("Fill-bound target stops require v2 milestones and target stops")
+        if self.target_exits is not None and self.partial_closes is None:
+            raise ValueError("Target exits require whole-contract partial closes")
+        if self.trade_floor is not None and self.target_exits is None:
+            raise ValueError("Whole-trade floors require frozen target exits")
+        if self.target_stops is not None and self.target_exits is None:
+            raise ValueError("Target stops require frozen target exits")
+        if self.target_exits == "frozen-target-milestones-v2" and self.target_stops is None:
+            raise ValueError("Target milestones require frozen target stops")
+        if self.total_loss_limit > self.capital or self.daily_loss_limit > self.total_loss_limit:
+            raise ValueError("Explicit loss limits must fit the original PAPER capital")
+        if self.exit_cutoff_minutes >= self.entry_cutoff_minutes:
+            raise ValueError("New entries must stop before deterministic session exit")
+        return self
+
+
+class EntryProtection(OptionRecord):
+    """Immutable independently enforceable terms, bound to the complete stored plan."""
+
+    packet_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    plan_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    underlying_target: Money = Field(gt=0)
+    exit_by: datetime
+
+
+class EntryTimeProtection(OptionRecord):
+    version: Literal["tighten-only-v1"] = "tighten-only-v1"
+    exit_by: datetime
+
+
+class EntryPremiumProtection(OptionRecord):
+    version: Literal["tighten-only-v1"] = "tighten-only-v1"
+    maximum_loss_fraction: Money = Field(gt=0, lt=1)
+
+
+class TradeFloorState(OptionRecord):
+    version: Literal["native-target-floor-v1"] = "native-target-floor-v1"
+    minimum_exit_fill_price: Money | None = Field(default=None, ge=0)
+    reference_stage: int = Field(default=0, strict=True, ge=0, le=3)
+    evidence_hash: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+    reasons: tuple[Name, ...] = Field(default=(), max_length=100)
+
+    @model_validator(mode="after")
+    def bound_floor(self):
+        if (self.minimum_exit_fill_price is None) != (self.reference_stage == 0) or (
+            (self.minimum_exit_fill_price is None) != (self.evidence_hash is None)
+        ):
+            raise ValueError("Whole-trade floor requires its stored stage and evidence hash")
+        return self
+
+
+class PremiumTrailState(OptionRecord):
+    version: Literal["executable-premium-v1"] = "executable-premium-v1"
+    entry_quantity: PositiveCount
+    entry_basis: Money | None = Field(default=None, gt=0)
+    peak_bid: Money | None = Field(default=None, gt=0)
+
+    @model_validator(mode="after")
+    def completed_basis(self):
+        if self.entry_basis is None and self.peak_bid is not None:
+            raise ValueError("Premium trail requires completed entry basis")
+        return self
+
+
+class TargetExitStep(OptionRecord):
+    underlying_price: Money = Field(gt=0)
+    quantity: Count
+    tighten_underlying_to: Money | None = Field(default=None, gt=0, exclude_if=lambda v: v is None)
+    tighten_to_entry: Literal["fill-weighted-underlying-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+
+    @model_validator(mode="after")
+    def meaningful(self):
+        if self.tighten_to_entry is not None and self.tighten_underlying_to is not None:
+            raise ValueError("An entry-bound stop cannot also name a fixed price")
+        if (
+            self.quantity == 0
+            and self.tighten_underlying_to is None
+            and self.tighten_to_entry is None
+        ):
+            raise ValueError("A stop-only milestone requires an explicit tighter stop")
+        return self
+
+
+class TargetExitSchedule(OptionRecord):
+    """Trusted software's explicit allocations, frozen before any entry attempt."""
+
+    version: Literal["frozen-targets-v1", "frozen-target-milestones-v2"] = "frozen-targets-v1"
+    entry_quantity: PositiveCount
+    steps: tuple[TargetExitStep, ...] = Field(min_length=1, max_length=3)
+
+    @model_validator(mode="after")
+    def bounded(self):
+        if any(s.tighten_to_entry is not None for s in self.steps) and (
+            self.version != "frozen-target-milestones-v2"
+            or any(s.tighten_to_entry is not None for s in self.steps[1:])
+        ):
+            raise ValueError("Only the first v2 milestone may bind an entry reference")
+        if self.version == "frozen-targets-v1" and any(s.quantity == 0 for s in self.steps):
+            raise ValueError("Stop-only milestones require the v2 schedule")
+        if sum(s.quantity for s in self.steps) > self.entry_quantity:
+            raise ValueError("Target allocations cannot exceed the entry quantity")
+        return self
+
+    def check_direction(self, right, reference):
+        for step in self.steps:
+            if not (
+                step.underlying_price > reference
+                if right == "CALL"
+                else step.underlying_price < reference
+            ):
+                raise ValueError("Targets must advance strictly in the held direction")
+            reference = step.underlying_price
+
+    def check_stops(self, right, original):
+        entry_bound = False
+        for step in self.steps:
+            if step.tighten_to_entry is not None:
+                original, entry_bound = step.underlying_price, True
+                continue
+            stop = step.tighten_underlying_to
+            if stop is None:
+                continue
+            if not (
+                (original <= stop if entry_bound else original < stop)
+                and stop < step.underlying_price
+                if right == "CALL"
+                else (original >= stop if entry_bound else original > stop)
+                and stop > step.underlying_price
+            ):
+                raise ValueError(
+                    "Target stops must tighten strictly and remain behind their target"
+                )
+            original, entry_bound = stop, False
+
+    @property
+    def has_stops(self):
+        return any(
+            s.tighten_underlying_to is not None or s.tighten_to_entry is not None
+            for s in self.steps
+        )
+
+    @property
+    def needs_entry_reference(self):
+        return self.steps[0].tighten_to_entry is not None
+
+
+class EntryUnderlyingSample(OptionRecord):
+    fill_id: Name
+    fill_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    quantity: PositiveCount
+    reference: Money | None = Field(default=None, gt=0)
+
+
+class EntryUnderlyingReference(OptionRecord):
+    version: Literal["fill-weighted-underlying-v1"] = "fill-weighted-underlying-v1"
+    entry_quantity: PositiveCount
+    samples: tuple[EntryUnderlyingSample, ...] = Field(min_length=1, max_length=1000)
+
+    @model_validator(mode="after")
+    def coverage(self):
+        if sum(s.quantity for s in self.samples) > self.entry_quantity or len(
+            {s.fill_id for s in self.samples}
+        ) != len(self.samples):
+            raise ValueError("Entry reference requires distinct bounded original fills")
+        return self
+
+
+class PositionExitProtection(OptionRecord):
+    packet_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    plan_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    entry_client_id: Name
+    position_revision: PositiveCount
+
+
+class EntryLineage(OptionRecord):
+    """Frozen selected-opportunity identity; never a caller-selected strategy label."""
+
+    version: Literal["native-entry-lineage-v1"] = "native-entry-lineage-v1"
+    family: Literal["DEGEN", "SWING", "SCOPE"]
+    setup: Name
+    opportunity_key: Name
+    candidate_id: Name
+    candidate_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+    @model_validator(mode="after")
+    def source_family(self):
+        if self.family == "SCOPE" and not self.opportunity_key.startswith("scope:"):
+            raise ValueError("SCOPE_LINEAGE_SOURCE_NAMESPACE_REQUIRED")
+        return self
+
+
+class OptionIntent(OptionRecord):
+    client_id: Name
+    source_key: Name
+    instrument: OptionInstrument
+    side: Literal["BUY", "SELL"]
+    health_management: Literal["observed-daytrade-health-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    trade_floor: Literal["native-target-floor-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    premium_trail: Literal["executable-premium-v1"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    quantity: PositiveCount
+    limit_price: Money = Field(gt=0)
+    approved_entry_debit: Money = Field(ge=0)
+    approved_full_premium_loss: Money = Field(ge=0)
+    prepared_at: datetime
+    approval_expires_at: datetime
+    order_expires_at: datetime
+    exit_at: datetime
+    original_underlying_invalidation: Money = Field(gt=0)
+    thesis: str = Field(min_length=1, max_length=500)
+    time_in_force: Literal["DAY"] = "DAY"
+    entry_protection: EntryProtection | None = Field(default=None, exclude_if=lambda v: v is None)
+    closing_entry_client_id: Name | None = Field(default=None, exclude_if=lambda v: v is None)
+    requested_close_quantity: PositiveCount | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    target_exit_schedule: TargetExitSchedule | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    swing_carry: SwingCarryTerms | None = Field(default=None, exclude_if=lambda v: v is None)
+    entry_time_protection: EntryTimeProtection | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    entry_premium_protection: EntryPremiumProtection | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    target_exit_stage: int | None = Field(
+        default=None, strict=True, ge=1, le=3, exclude_if=lambda v: v is None
+    )
+    entry_lineage: EntryLineage | None = Field(default=None, exclude_if=lambda v: v is None)
+
+    position_protection: PositionExitProtection | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+
+    @model_validator(mode="after")
+    def lifetime(self):
+        if self.swing_carry is not None and (
+            self.side != "BUY"
+            or self.entry_time_protection is not None
+            or not self.swing_carry.sessions[0].opens_at
+            <= self.prepared_at
+            < self.swing_carry.sessions[0].closes_at
+            or not self.prepared_at < self.exit_at <= self.swing_carry.exit_at
+            or self.order_expires_at > min(self.swing_carry.sessions[0].closes_at, self.exit_at)
+        ):
+            raise ValueError("Carry binds a frozen buy with an entry-session DAY order")
+        if self.entry_time_protection is not None and (
+            self.side != "BUY"
+            or self.entry_protection is not None
+            or not self.prepared_at < self.exit_at <= self.entry_time_protection.exit_by
+            or self.order_expires_at > self.exit_at
+        ):
+            raise ValueError(
+                "Entry deadline binds a deterministic buy and cannot extend its lifetime"
+            )
+        if self.health_management is not None and self.side != "BUY":
+            raise ValueError("Health management enrollment binds only the original buy")
+        if self.trade_floor is not None and self.side != "BUY":
+            raise ValueError("Whole-trade floor enrollment binds only the original buy")
+        if self.premium_trail is not None and self.side != "BUY":
+            raise ValueError("Premium trail enrollment binds only the original buy")
+        if self.entry_premium_protection is not None and self.side != "BUY":
+            raise ValueError("Entry premium protection binds only the original buy")
+        if self.target_exit_schedule is not None:
+            if (
+                self.side != "BUY"
+                or self.entry_protection is not None
+                or self.quantity != self.target_exit_schedule.entry_quantity
+            ):
+                raise ValueError("Target schedule binds its exact deterministic entry")
+            self.target_exit_schedule.check_direction(
+                self.instrument.contract.right, self.original_underlying_invalidation
+            )
+            self.target_exit_schedule.check_stops(
+                self.instrument.contract.right, self.original_underlying_invalidation
+            )
+        if self.target_exit_stage is not None and (
+            self.side != "SELL" or self.requested_close_quantity is None
+        ):
+            raise ValueError("Target stage requires an explicitly bounded close")
+        if not self.prepared_at < self.approval_expires_at <= self.order_expires_at:
+            raise ValueError("Distinct fresh approval and DAY-order deadlines required")
+        if self.order_expires_at > self.instrument.contract.last_trading_at:
+            raise ValueError("DAY order cannot outlive the exact contract trading instant")
+        if self.requested_close_quantity is not None and (
+            self.side != "SELL"
+            or self.closing_entry_client_id is None
+            or self.quantity > self.requested_close_quantity
+        ):
+            raise ValueError("Requested close ceiling binds an exact owned sell quantity")
+        if self.entry_lineage is not None and (
+            self.side != "BUY" or self.entry_lineage.opportunity_key != self.source_key
+        ):
+            raise ValueError("Entry lineage binds only its originating buy opportunity")
+        if self.closing_entry_client_id is not None and (
+            self.side != "SELL"
+            or self.closing_entry_client_id == self.client_id
+            or (
+                self.position_protection is not None
+                and self.closing_entry_client_id != self.position_protection.entry_client_id
+            )
+        ):
+            raise ValueError("Closing entry link requires the exact distinct buy")
+        if self.position_protection is not None and (
+            self.side != "SELL" or self.entry_protection is not None
+        ):
+            raise ValueError("Management protection binds only an owned full-exit intent")
+        if self.entry_protection is not None and (
+            self.side != "BUY"
+            or not self.prepared_at < self.exit_at <= self.entry_protection.exit_by
+            or self.order_expires_at > self.exit_at
+        ):
+            raise ValueError("Entry plan must bound entry order and independent exit lifetime")
+        return self
+
+
+class OptionFill(OptionRecord):
+    fill_id: Name
+    order_id: Name
+    sequence: PositiveCount
+    quantity: PositiveCount
+    price: Money = Field(gt=0)
+    fee: Money = Field(ge=0)
+    occurred_at: datetime
+    quote_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    quote: OptionQuote
+    underlying: UnderlyingObservation | None = Field(default=None, exclude_if=lambda v: v is None)
+
+
+class OptionObservation(OptionRecord):
+    order_id: Name
+    client_id: Name
+    instrument: OptionInstrument
+    side: Literal["BUY", "SELL"]
+    quantity: PositiveCount
+    limit_price: Money = Field(gt=0)
+    status: Literal["OPEN", "PARTIAL", "FILLED", "CANCELED", "REJECTED", "EXPIRED"]
+    filled_quantity: Count
+    updated_at: datetime
+    fills: tuple[OptionFill, ...] = Field(default=(), max_length=1000)
+
+    @model_validator(mode="after")
+    def consistent(self):
+        if self.filled_quantity != sum(f.quantity for f in self.fills):
+            raise ValueError("Complete whole-contract fill history required")
+        if self.filled_quantity > self.quantity or any(
+            f.order_id != self.order_id for f in self.fills
+        ):
+            raise ValueError("Overfilled or foreign order fills")
+        if len({f.fill_id for f in self.fills}) != len(self.fills):
+            raise ValueError("Duplicate fill IDs")
+        if self.status in {"OPEN", "REJECTED"} and self.filled_quantity:
+            raise ValueError("OPEN/REJECTED cannot contain fills")
+        if (self.status == "FILLED") != (self.filled_quantity == self.quantity):
+            raise ValueError("Full quantity and FILLED must agree")
+        if self.status == "PARTIAL" and not 0 < self.filled_quantity < self.quantity:
+            raise ValueError("PARTIAL requires positive incomplete quantity")
+        return self
+
+
+class OptionLot(OptionRecord):
+    quantity: PositiveCount
+    price: Money = Field(gt=0)
+
+
+class OptionPosition(OptionHolding):
+    entry_client_id: Name
+    entry_underlying_reference: EntryUnderlyingReference | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    trade_floor: TradeFloorState | None = Field(default=None, exclude_if=lambda v: v is None)
+    premium_trail: PremiumTrailState | None = Field(default=None, exclude_if=lambda v: v is None)
+    lots: tuple[OptionLot, ...] = Field(min_length=1, max_length=1000)
+    exit_at: datetime
+    tightened_underlying_invalidation: Money = Field(gt=0)
+    entry_protection: EntryProtection | None = Field(default=None, exclude_if=lambda v: v is None)
+    swing_carry: SwingCarryTerms | None = Field(default=None, exclude_if=lambda v: v is None)
+    entry_time_protection: EntryTimeProtection | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    entry_premium_protection: EntryPremiumProtection | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    target_exit_schedule: TargetExitSchedule | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    target_exit_stage: int = Field(default=0, strict=True, ge=0, le=3, exclude_if=lambda v: v == 0)
+    exit_reason: (
+        Literal[
+            "UNDERLYING_INVALIDATION",
+            "PREMIUM_CATASTROPHE",
+            "TIME_EXIT",
+            "EXPIRY_GUARD",
+            "UNDERLYING_TARGET",
+            "PREMIUM_TRAIL",
+            "WHOLE_TRADE_FLOOR",
+            "HEALTH_MANAGEMENT",
+        ]
+        | None
+    ) = None
+    exit_required_at: datetime | None = None
+    supervision_issue: str | None = None
+
+    @model_validator(mode="after")
+    def owned(self):
+        if self.swing_carry is not None and self.exit_at > self.swing_carry.exit_at:
+            raise ValueError("Owned carry cannot extend its deadline")
+        if (
+            self.entry_time_protection is not None
+            and self.exit_at > self.entry_time_protection.exit_by
+        ):
+            raise ValueError("Owned position cannot extend the frozen entry deadline")
+        needs_reference = bool(
+            self.target_exit_schedule and self.target_exit_schedule.needs_entry_reference
+        )
+        if needs_reference != (self.entry_underlying_reference is not None) or (
+            needs_reference
+            and (
+                self.entry_underlying_reference.entry_quantity
+                != self.target_exit_schedule.entry_quantity
+                or self.quantity > sum(s.quantity for s in self.entry_underlying_reference.samples)
+            )
+        ):
+            raise ValueError("Entry reference must bind the original dynamic target schedule")
+        if (
+            self.trade_floor is not None
+            and self.trade_floor.reference_stage > self.target_exit_stage
+        ):
+            raise ValueError("Whole-trade floor cannot precede its frozen target stage")
+        if self.premium_trail is not None and self.quantity > self.premium_trail.entry_quantity:
+            raise ValueError("Premium trail must retain original entry quantity")
+        if self.target_exit_schedule is not None:
+            self.target_exit_schedule.check_direction(
+                self.contract.right, self.original_underlying_invalidation
+            )
+            self.target_exit_schedule.check_stops(
+                self.contract.right, self.original_underlying_invalidation
+            )
+            if (
+                self.entry_protection is not None
+                or self.quantity > self.target_exit_schedule.entry_quantity
+                or self.target_exit_stage > len(self.target_exit_schedule.steps)
+            ):
+                raise ValueError("Position must retain its bounded original target schedule")
+        elif self.target_exit_stage:
+            raise ValueError("Target progress requires a frozen schedule")
+        if self.entry_protection is not None and self.exit_at > self.entry_protection.exit_by:
+            raise ValueError("Owned position cannot extend the original plan horizon")
+        if self.quantity != sum(lot.quantity for lot in self.lots):
+            raise ValueError("Owned quantity must match complete lots")
+        if (self.exit_reason is None) != (self.exit_required_at is None):
+            raise ValueError("Exit requirement must retain its original time")
+        original, stop = (
+            self.original_underlying_invalidation,
+            self.tightened_underlying_invalidation,
+        )
+        if (self.contract.right == "CALL" and stop < original) or (
+            self.contract.right == "PUT" and stop > original
+        ):
+            raise ValueError("Invalidation cannot widen")
+        return self
+
+    @property
+    def basis(self):
+        with localcontext(Context(prec=192)):
+            return sum(
+                (lot.quantity * lot.price * self.contract.multiplier for lot in self.lots), ZERO
+            )
+
+
+class OptionLedger(OptionRecord):
+    cash: Money = Field(ge=0)
+    settled_cash: Money | None = Field(default=None, ge=0)
+    high_watermark: Money = Field(gt=0)
+    position: OptionPosition | None = None
+    realized_pnl: Money = ZERO
+    fees_paid: Money = Field(default=ZERO, ge=0)
+    daily_net_pnl: dict[str, Money] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def funded(self):
+        if self.settled_cash is None:
+            object.__setattr__(self, "settled_cash", self.cash)
+        if self.settled_cash > self.cash:
+            raise ValueError("Settled cash cannot exceed actual cash")
+        return self
+
+
+class OptionReceipt(OptionRecord):
+    receipt_id: Name
+    sequence: PositiveCount
+    kind: Literal["FUNDS_SETTLED", "CASH_SETTLEMENT", "EXPIRED_WORTHLESS", "PHYSICAL_EXERCISE"]
+    occurred_at: datetime
+    contract: OptionContract | None = None
+    quantity: Count = 0
+    settlement_value: Money | None = Field(default=None, ge=0)
+    cash_change: Money
+
+
+class UnderlyingExposure(OptionRecord):
+    symbol: Symbol
+    quantity: Money
+
+
+class OptionVenueSnapshot(OptionRecord):
+    environment: Literal["LOCAL_OPTION_FIXTURE"] = "LOCAL_OPTION_FIXTURE"
+    venue_id: Name
+    account_id: Name
+    population_id: Name
+    snapshot_id: Name
+    captured_at: datetime
+    complete: StrictBool = True
+    cash: Money
+    settled_cash: Money
+    position: OptionPosition | None = None
+    stock_limits: StockLimits | None = Field(default=None, exclude_if=lambda v: v is None)
+    stock_position: StockPosition | None = Field(default=None, exclude_if=lambda v: v is None)
+    stock_orders: tuple[StockObservation, ...] = Field(
+        default=(), max_length=1000, exclude_if=lambda v: not v
+    )
+    orders: tuple[OptionObservation, ...] = Field(default=(), max_length=1000)
+    receipts: tuple[OptionReceipt, ...] = Field(default=(), max_length=1000)
+    underlying_exposures: tuple[UnderlyingExposure, ...] = Field(default=(), max_length=32)
+
+    @model_validator(mode="after")
+    def stock_enrollment(self):
+        if self.stock_limits is None and (self.stock_position is not None or self.stock_orders):
+            raise ValueError("Explicit stock snapshot enrollment required")
+        if self.position is not None and self.stock_position is not None:
+            raise ValueError("One stock or option holding required")
+        return self

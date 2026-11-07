@@ -1,0 +1,12 @@
+{% if data.admin_enabled %}
+<button type="button" id="admin-open">Account controls</button>
+<dialog id="admin-dialog" aria-labelledby="admin-title">
+<div class="head"><h2 id="admin-title">Account controls</h2><button type="button" id="admin-close" aria-label="Close account controls">Close</button></div>
+<p>Limit new plays across all strategies. Lowering this limit keeps current positions and their protection.</p>
+<p id="admin-current">Loading current account rules…</p>
+<label>Maximum simultaneous plays <select id="admin-max-plays"><option value="0">0 — pause entries</option><option value="1">1 play</option><option value="2">2 plays</option></select></label>
+<label>Reason <input id="admin-reason" maxlength="300" autocomplete="off" placeholder="Why this limit is changing"></label>
+<button type="button" id="admin-submit" disabled>Apply reviewed limit</button>
+<p id="admin-status" role="status">Reviewing the current revision.</p>
+</dialog>
+{% endif %}

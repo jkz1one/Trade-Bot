@@ -1,0 +1,93 @@
+{
+  "version": "options-read-auth-required-v1",
+  "reviewed_head": "30e4eba7591b0c6741a9495ad92b9fdc21fd8fd3",
+  "capture_id": "81dcba97bca8427c8cce5b555dfe1020",
+  "supplied_artifacts": {
+    "discovery.json": {
+      "bytes": 795,
+      "sha256": "3b71cae6c1066c47988c46855addcb726c22ca79b4541f11a3f76e199902332e"
+    },
+    "summary(1).json": {
+      "bytes": 506,
+      "sha256": "59c9dc769fc5d6ab554d72313e62c86672c43efd29d709c7a91e50010632750e"
+    },
+    "exit-code(1)": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    }
+  },
+  "result": {
+    "collected_at": "2026-10-25T03:46:22.810151Z",
+    "elapsed_seconds": 1.2616207459941506,
+    "error_class": "ExceptionGroup",
+    "execution_authority": false,
+    "failure": {
+      "causes": [
+        {
+          "error_class": "ExceptionGroup"
+        },
+        {
+          "error_class": "ReadAuthorizationRequired"
+        },
+        {
+          "error_class": "CancelledError"
+        },
+        {
+          "error_class": "WouldBlock"
+        }
+      ],
+      "stage": "CONNECT",
+      "truncated": false
+    },
+    "normalized_data_verified": false,
+    "observations": [],
+    "operation": "DISCOVER",
+    "plan": null,
+    "policy_sha256": "e0f91ea635a7d9e7a36d4ded2190667077d7e5b190448dc97359f0709eb68378",
+    "request_id": "799a5517e77e47b392e02c15d01a425d",
+    "schemas": null,
+    "started_at": "2026-10-25T03:46:20.386521Z",
+    "status": "FAILED"
+  },
+  "summary": {
+    "capture_id": "81dcba97bca8427c8cce5b555dfe1020",
+    "status": "FAILED",
+    "schema_sha256": null,
+    "completed_reads": 0,
+    "missing_tools": [],
+    "missing_input_schemas": [],
+    "missing_output_schemas": [],
+    "execution_authority": false,
+    "normalized_data_verified": false,
+    "error_class": "ExceptionGroup",
+    "failure": {
+      "stage": "CONNECT",
+      "causes": [
+        {
+          "error_class": "ExceptionGroup"
+        },
+        {
+          "error_class": "ReadAuthorizationRequired"
+        },
+        {
+          "error_class": "CancelledError"
+        },
+        {
+          "error_class": "WouldBlock"
+        }
+      ],
+      "truncated": false
+    }
+  },
+  "interpretation": {
+    "blocked_at": "CONNECT_INTERACTIVE_AUTHORIZATION_REQUIRED",
+    "market_reads_attempted": 0,
+    "schema_discovery_completed": false,
+    "specific_token_failure_proven": false,
+    "original_capture_cause_proven": false
+  },
+  "changes": "Documentation and retained-evidence receipt only; application bytes unchanged.",
+  "existing_installed_proof": "OPTIONS_READ_DIAGNOSTICS_PROOF.json",
+  "next_step": "Operator interactive authorization and list_tools only; no market batch or runtime activation.",
+  "host_reauthorization_result": "PENDING"
+}

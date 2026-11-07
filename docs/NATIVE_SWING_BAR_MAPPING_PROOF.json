@@ -1,0 +1,20 @@
+{
+  "version": "native-swing-bar-mapping-proof-v1",
+  "installed_tests_passed": 175,
+  "failed": 0,
+  "matching_application_files": 299,
+  "wheel_sha256": "a02fcd2a819dd97647a81357e4f97a8bde63a9dae29ab4f1e40c562f6f22f7ad",
+  "legacy_default_serialization_unchanged": true,
+  "owner_unchanged_during_mapping_rollover": true,
+  "real_daily_placeholders_still_rejected": true,
+  "provider_calls": false,
+  "model_calls": false,
+  "live_enabled": false,
+  "host_modified": false,
+  "remaining": [
+    "Actual observed completed daily bars and entitlement",
+    "Reviewed contract terms",
+    "Provider contracts and payloads for Swing catalyst and Scope inputs",
+    "Host mapping enrollment and dashboard activation"
+  ]
+}

@@ -1,0 +1,369 @@
+{
+  "version": "swing-carry-request-v1",
+  "at": "2026-10-09T14:00:00Z",
+  "exit_session": "2026-10-12",
+  "carry": {
+    "version": "swing-carry-preflight-v1",
+    "maximum_carry_sessions": 3,
+    "maximum_calendar_days": 10,
+    "exit_before_close_minutes": 20,
+    "expiry_session_buffer": 1
+  },
+  "swing": {
+    "version": "swing-next-session-v1",
+    "history_source": "fixture-daily",
+    "catalyst_source": "fixture-catalyst",
+    "daily_lookback": 3,
+    "minimum_dte": 7,
+    "maximum_dte": 45,
+    "maximum_chase_fraction": "0.0065",
+    "stop_buffer_fraction": "0.0001",
+    "catalyst_max_age_seconds": 10,
+    "family_priority": [
+      "SWING",
+      "DEGEN"
+    ],
+    "holding_policy": "SESSION_CLOSE",
+    "unfilled_lifecycle": "observed-lifecycle-v3"
+  },
+  "structure": {
+    "version": "degen-completed-bars-v1",
+    "symbols": [
+      "SPY"
+    ],
+    "history_source": "fixture-bars",
+    "max_bar_age_seconds": 300,
+    "max_receive_lag_seconds": 2,
+    "volume_lookback": 3,
+    "minimum_volume_ratio": "1.05",
+    "opening_range_minutes": 15,
+    "stop_buffer_fraction": "0.0001",
+    "maximum_extension_fraction": "0.0065",
+    "vwap_separation_fraction": "0.0022",
+    "vwap_touch_fraction": "0.0018",
+    "setup_priority": [
+      "ORB_CONTINUATION",
+      "VWAP_PULLBACK",
+      "FAILED_BREAK_REVERSAL"
+    ]
+  },
+  "selection": {
+    "version": "degen-contract-selection-v1",
+    "metadata_source": "fixture-chain",
+    "max_inventory_contracts": 8,
+    "max_quote_contracts": 4,
+    "max_metadata_age_seconds": 10,
+    "minimum_abs_delta": "0.25",
+    "maximum_abs_delta": "0.7",
+    "target_abs_delta": "0.45",
+    "maximum_strike_distance_fraction": "0.02",
+    "minimum_volume": 10,
+    "minimum_open_interest": 100
+  },
+  "execution": {
+    "version": "option-paper-lifecycle-v1",
+    "capital": "1000",
+    "daily_loss_limit": "600",
+    "total_loss_limit": "800",
+    "calendar_source": "XNYS_REGULAR_INTERSECTION_V1",
+    "entry_cutoff_minutes": 30,
+    "exit_cutoff_minutes": 15,
+    "expiry_guard_seconds": 60,
+    "premium_catastrophe_fraction": "0.5",
+    "supervisor_max_age_seconds": 20,
+    "process_timeout_seconds": 5.0,
+    "cost_policy": null
+  },
+  "limits": {
+    "version": "long-option-admission-v1",
+    "mode": "PAPER",
+    "account_id": "option-paper",
+    "population_id": "new-options-v1",
+    "allowed_underlyings": [
+      "SPY"
+    ],
+    "provider": "fixture",
+    "option_source": "fixture-opra",
+    "underlying_source": "fixture-equity",
+    "session_source": "XNYS_REGULAR_INTERSECTION_V1",
+    "max_contracts": 10,
+    "max_entry_debit": "500",
+    "max_account_exposure": "500",
+    "max_full_premium_loss": "500",
+    "entry_fee_per_contract": "0.65",
+    "exit_fee_per_contract": "0.65",
+    "entry_fee_per_order": "1",
+    "exit_fee_per_order": "1",
+    "slippage_bps": "5",
+    "max_spread_fraction": "0.10",
+    "minimum_underlying_price": "5",
+    "quote_max_age_seconds": 10,
+    "account_max_age_seconds": 10,
+    "max_receive_lag_seconds": 2,
+    "max_sync_seconds": 2,
+    "approval_lifetime_seconds": 5
+  },
+  "item": {
+    "seed": {
+      "version": "swing-locked-seed-v1",
+      "created_at": "2026-10-08T20:00:01Z",
+      "target_session": "2026-10-09",
+      "history": {
+        "source": "fixture-daily",
+        "source_at": "2026-10-08T20:00:01Z",
+        "received_at": "2026-10-08T20:00:01Z",
+        "entitlement": "REALTIME",
+        "complete": true,
+        "symbol": "SPY",
+        "bounds": "regular",
+        "adjustment": "split",
+        "bars": [
+          {
+            "begins_at": "2026-10-06T13:30:00Z",
+            "open": "596.8",
+            "high": "598",
+            "low": "596",
+            "close": "597",
+            "volume": 100000,
+            "interpolated": false,
+            "closes_at": "2026-10-06T20:00:00Z"
+          },
+          {
+            "begins_at": "2026-10-07T13:30:00Z",
+            "open": "597.8",
+            "high": "599",
+            "low": "597",
+            "close": "598",
+            "volume": 100000,
+            "interpolated": false,
+            "closes_at": "2026-10-07T20:00:00Z"
+          },
+          {
+            "begins_at": "2026-10-08T13:30:00Z",
+            "open": "598.8",
+            "high": "600",
+            "low": "598",
+            "close": "599",
+            "volume": 100000,
+            "interpolated": false,
+            "closes_at": "2026-10-08T20:00:00Z"
+          }
+        ]
+      },
+      "instrument": {
+        "provider": "fixture",
+        "instrument_id": "swing-locked-contract",
+        "contract": {
+          "underlying": "SPY",
+          "underlying_kind": "ETF",
+          "underlying_market": "US_LISTED",
+          "root": "SPY",
+          "right": "CALL",
+          "strike": "600",
+          "expiration": "2026-10-16",
+          "multiplier": 100,
+          "deliverable_kind": "SHARES",
+          "deliverable_units": 100,
+          "currency": "USD",
+          "exercise_style": "AMERICAN",
+          "settlement": "PHYSICAL",
+          "settlement_session": "PM",
+          "last_trading_at": "2026-10-16T20:00:00Z",
+          "expires_at": "2026-10-16T21:00:00Z",
+          "settles_at": "2026-10-17T20:00:00Z",
+          "adjusted": false,
+          "tick_below_three": "0.01",
+          "tick_at_or_above_three": "0.01"
+        },
+        "metadata_complete": true,
+        "option_tradable": true
+      },
+      "first_target": "605"
+    },
+    "metadata": {
+      "source": "fixture-chain",
+      "source_at": "2026-10-09T14:00:00Z",
+      "received_at": "2026-10-09T14:00:00Z",
+      "entitlement": "REALTIME",
+      "complete": true,
+      "instrument": {
+        "provider": "fixture",
+        "instrument_id": "swing-locked-contract",
+        "contract": {
+          "underlying": "SPY",
+          "underlying_kind": "ETF",
+          "underlying_market": "US_LISTED",
+          "root": "SPY",
+          "right": "CALL",
+          "strike": "600",
+          "expiration": "2026-10-16",
+          "multiplier": 100,
+          "deliverable_kind": "SHARES",
+          "deliverable_units": 100,
+          "currency": "USD",
+          "exercise_style": "AMERICAN",
+          "settlement": "PHYSICAL",
+          "settlement_session": "PM",
+          "last_trading_at": "2026-10-16T20:00:00Z",
+          "expires_at": "2026-10-16T21:00:00Z",
+          "settles_at": "2026-10-17T20:00:00Z",
+          "adjusted": false,
+          "tick_below_three": "0.01",
+          "tick_at_or_above_three": "0.01"
+        },
+        "metadata_complete": true,
+        "option_tradable": true
+      },
+      "delta": "0.45",
+      "greek_provenance": "OBSERVED",
+      "volume": 500,
+      "open_interest": 1000
+    },
+    "catalyst": {
+      "source": "fixture-catalyst",
+      "source_at": "2026-10-09T14:00:00Z",
+      "received_at": "2026-10-09T14:00:00Z",
+      "entitlement": "REALTIME",
+      "complete": true,
+      "symbol": "SPY",
+      "status": "CLEAR",
+      "valid_through": "2026-10-12T20:00:00Z"
+    }
+  },
+  "history": {
+    "source": "fixture-bars",
+    "source_at": "2026-10-09T14:00:00Z",
+    "received_at": "2026-10-09T14:00:00Z",
+    "entitlement": "REALTIME",
+    "complete": true,
+    "symbol": "SPY",
+    "interval_seconds": 300,
+    "bounds": "regular",
+    "adjustment": "split",
+    "bars": [
+      {
+        "begins_at": "2026-10-09T13:30:00Z",
+        "open": "599",
+        "high": "600",
+        "low": "598",
+        "close": "599",
+        "volume": 100,
+        "interpolated": false
+      },
+      {
+        "begins_at": "2026-10-09T13:35:00Z",
+        "open": "599",
+        "high": "600",
+        "low": "598",
+        "close": "599",
+        "volume": 100,
+        "interpolated": false
+      },
+      {
+        "begins_at": "2026-10-09T13:40:00Z",
+        "open": "599",
+        "high": "600",
+        "low": "598",
+        "close": "599",
+        "volume": 100,
+        "interpolated": false
+      },
+      {
+        "begins_at": "2026-10-09T13:45:00Z",
+        "open": "600",
+        "high": "600.3",
+        "low": "599.9",
+        "close": "600.2",
+        "volume": 100,
+        "interpolated": false
+      },
+      {
+        "begins_at": "2026-10-09T13:50:00Z",
+        "open": "600.2",
+        "high": "600.5",
+        "low": "600.1",
+        "close": "600.4",
+        "volume": 100,
+        "interpolated": false
+      },
+      {
+        "begins_at": "2026-10-09T13:55:00Z",
+        "open": "600.4",
+        "high": "600.9",
+        "low": "600.3",
+        "close": "600.8",
+        "volume": 300,
+        "interpolated": false
+      }
+    ]
+  },
+  "quote": {
+    "source": "fixture-opra",
+    "source_at": "2026-10-09T14:00:00Z",
+    "received_at": "2026-10-09T14:00:00Z",
+    "entitlement": "REALTIME",
+    "complete": true,
+    "instrument": {
+      "provider": "fixture",
+      "instrument_id": "swing-locked-contract",
+      "contract": {
+        "underlying": "SPY",
+        "underlying_kind": "ETF",
+        "underlying_market": "US_LISTED",
+        "root": "SPY",
+        "right": "CALL",
+        "strike": "600",
+        "expiration": "2026-10-16",
+        "multiplier": 100,
+        "deliverable_kind": "SHARES",
+        "deliverable_units": 100,
+        "currency": "USD",
+        "exercise_style": "AMERICAN",
+        "settlement": "PHYSICAL",
+        "settlement_session": "PM",
+        "last_trading_at": "2026-10-16T20:00:00Z",
+        "expires_at": "2026-10-16T21:00:00Z",
+        "settles_at": "2026-10-17T20:00:00Z",
+        "adjusted": false,
+        "tick_below_three": "0.01",
+        "tick_at_or_above_three": "0.01"
+      },
+      "metadata_complete": true,
+      "option_tradable": true
+    },
+    "bid": "0.98",
+    "ask": "1",
+    "bid_size": 20,
+    "ask_size": 20
+  },
+  "underlying": {
+    "source": "fixture-equity",
+    "source_at": "2026-10-09T14:00:00Z",
+    "received_at": "2026-10-09T14:00:00Z",
+    "entitlement": "REALTIME",
+    "complete": true,
+    "symbol": "SPY",
+    "bid": "600.8",
+    "ask": "600.81"
+  },
+  "account": {
+    "account_id": "option-paper",
+    "population_id": "new-options-v1",
+    "snapshot_id": "carry-fixture",
+    "captured_at": "2026-10-09T14:00:00Z",
+    "complete": true,
+    "reconciled": true,
+    "cash": "1000",
+    "settled_cash": "1000",
+    "reserved_cash": "0",
+    "daily_loss_available": "600",
+    "total_loss_available": "800",
+    "budgets_known": true,
+    "position": null,
+    "working_orders": 0,
+    "unsupported_exposure": false,
+    "entry_halted": false,
+    "entry_blockers": []
+  },
+  "retained_terminal": null
+}
