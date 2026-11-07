@@ -1,5 +1,43 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.192. Broker account completeness and run-level PAPER fills, 2026-11-06.
+
+The operator installed b5d10cbfaaa0bde5af5e14110f815ff91925d79d. Systemd enabled
+the timer, the reported pause flag was false, and the November 9 session was
+already enrolled. Startup checks found no blockers. The runbook records the
+confirmed image and policy. The first automatic session and connected fill are
+still pending. Monday uses the installed release.
+
+On the prior revision, replaying a failed Robinhood tool response or a successful
+response missing the equity positions list returned an empty account position list.
+The SHADOW equity account reader now requires explicit position/order pages and
+portfolio amounts, validates available account identities, and rejects conflicting
+order observations or incomplete account selection. Repeated cursors and queries
+exceeding 64 pages yield an incomplete read. Exact repeated order observations
+are counted once. Unsupported portfolio exposure uses absolute amounts so
+offsetting asset values cannot hide exposure. These are account-read changes.
+
+The PAPER report now distinguishes lifetime fills, run entry/exit fills, plays
+fully bought and sold within the run, and positions opened earlier and fully
+sold in this run. It uses exact native play/order/fill identities, original fill
+times and decimal quantities. Partial sales and later-run exits cannot establish
+an earlier round trip. Legacy journals without sufficient fields report unavailable
+run evidence. The controller stores this summary beside the day's operation.
+
+223 targeted installed-package cases passed across the read gateway, reconciliation,
+SHADOW, reports, daily controller, startup, and native DEGEN/Scope lifecycle fixtures.
+The DEGEN fixture produced two complete buy/sell plays and the Scope fixture one
+through restart. All 321 application files matched source, wheel and installation,
+and all 60 runtime dependency pins matched. Final wheel SHA256
+d617d999ee171b3724656697db53d780067b6b92c26608b15f2fc7aec6a42386.
+These changes and fixtures are branch evidence. The host still runs b5d10cb.
+
+The retained October 29 SPX probe has 78 regular-session five-minute bars and
+all 78 have unknown interpolation status. Swing original daily history and Scope
+usable SPX history plus exact reviewed SPXW bindings still require original data.
+
+## Previous release evidence
+
 Version 1.191. Persistent daily PAPER operation, 2026-11-06.
 
 The operator explicitly requested autonomous daily operation instead of repeated

@@ -88,6 +88,7 @@ def test_production_profile_two_options_fill_and_exit_independently(tmp_path, ca
         'runtime': settings.runtime.model_dump() | {'feed_file': str(feed_dir / 'feed.json')},
     })
     times = [datetime(2026, 10, 28, 14, 0, 26, tzinfo=UTC)]
+    window_start = times[0].isoformat()
     initialize(owner, settings, clock=lambda: times[0])
     requests = []
 
@@ -176,6 +177,10 @@ def test_production_profile_two_options_fill_and_exit_independently(tmp_path, ca
             with runtime.c.engine.journal.read() as db:
                 from test_paper_session_report import module as host_report
                 assert host_report.fill_count(db) == (4, 'PORTFOLIO_ORDER_OBSERVATIONS')
+                assert host_report.fill_evidence(db, window_start, times[0].isoformat())[2] == {
+                    'status': 'RECORDED', 'entry_fills': 2, 'exit_fills': 2,
+                    'completed_round_trips': 2, 'carry_in_exits': 0,
+                }
                 assert db.execute('SELECT COUNT(*) FROM execution_model_calls').fetchone()[0] == 2
             # Re-delivering the same packet cannot duplicate fills or charges.
             asyncio.run(step(runtime))

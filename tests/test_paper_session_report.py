@@ -551,3 +551,56 @@ def test_live_auth_block_is_specific_but_later_delivery_clears_current_diagnosis
     result['latest_packet']['sequence'] = 597
     assert module.operation(result, {'Status': 'running'})['reasons'] == ['RUNTIME_FEED_STALE']
     assert module.operation(result, {'Status': 'exited', 'ExitCode': 0})['state'] == 'STOPPED'
+
+
+def test_source_clock_round_trip_attribution_with_partial_and_fractional_fills():
+    start, end = '2026-11-06T15:00:00+00:00', '2026-11-06T16:00:00+00:00'
+    before, after = '2026-11-06T14:59:59Z', '2026-11-06T16:00:01Z'
+    with sqlite3.connect(':memory:') as db:
+        db.execute('CREATE TABLE execution_portfolio_orders(play_id,client_id,order_id,observation_json)')
+        def add(play, client, *receipts):
+            order = 'order-' + client
+            fills = [{'fill_id': str(n), 'sequence': n, 'order_id': order, 'occurred_at': at, 'quantity': qty}
+                     for n, at, qty in receipts]
+            from decimal import Decimal
+            obs = {'order_id': order, 'client_id': client, 'side': 'BUY' if client == play else 'SELL',
+                   'filled_quantity': str(sum(Decimal(q) for _, _, q in receipts)),
+                   'instrument': {'instrument_id': 'same-symbol'}, 'fills': fills}
+            db.execute('INSERT INTO execution_portfolio_orders VALUES(?,?,?,?)', (play, client, order, json.dumps(obs)))
+        add('old', 'old', (1, before, '1'))
+        add('new', 'new', (2, start, '0.1'), (3, start, '0.2'))
+        add('old', 'close-old', (4, start, '1'))
+        add('partial', 'partial', (5, start, '2'))
+        add('partial', 'partial-exit', (6, end, '1'), (9, after, '1'))
+        add('new', 'exit-a', (7, end, '0.2'))
+        add('new', 'exit-b', (8, '2026-11-06T11:00:00-05:00', '0.1'))
+        total, _, run = module.fill_evidence(db, start, end)
+        assert total == 9
+        assert run == {'status': 'RECORDED', 'entry_fills': 3, 'exit_fills': 4,
+                       'completed_round_trips': 1, 'carry_in_exits': 1}
+        assert module.fill_evidence(db, start, after)[2]['completed_round_trips'] == 2
+        # Overlapping same-symbol plays cannot supply one another's entry or exit.
+        db.execute("UPDATE execution_portfolio_orders SET play_id='different' WHERE client_id='exit-b'")
+        assert module.fill_evidence(db, start, end)[2]['status'] == 'UNAVAILABLE'
+
+
+@pytest.mark.parametrize('damage', ['duplicate_receipt', 'wrong_filled_quantity', 'missing_clock', 'wrong_order'])
+def test_inconsistent_run_receipts_are_unknown(damage):
+    with sqlite3.connect(':memory:') as db:
+        db.execute('CREATE TABLE execution_portfolio_orders(play_id,client_id,order_id,observation_json)')
+        fill = {'fill_id': 'id', 'sequence': 1, 'order_id': 'o', 'quantity': 1, 'occurred_at': '2026-11-06T15:00:00Z'}
+        obs = {'client_id': 'p', 'order_id': 'o', 'side': 'BUY', 'filled_quantity': 1,
+               'instrument': {'instrument_id': 'contract'}, 'fills': [fill]}
+        if damage == 'duplicate_receipt':
+            obs['fills'].append(fill.copy())
+        elif damage == 'wrong_filled_quantity':
+            obs['filled_quantity'] = 2
+        elif damage == 'missing_clock':
+            del fill['occurred_at']
+        else:
+            fill['order_id'] = 'not-o'
+        db.execute('INSERT INTO execution_portfolio_orders VALUES(?,?,?,?)', ('p','p','o',json.dumps(obs)))
+        total, _, run = module.fill_evidence(db, '2026-11-06T15:00:00Z', '2026-11-06T16:00:00Z')
+        assert total is None
+        assert run == {'status': 'UNAVAILABLE', 'reason': 'RUN_FILL_EVIDENCE_INVALID'}
+        assert 'Run execution: unavailable' in module.short_report({'run_execution': run})

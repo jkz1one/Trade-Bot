@@ -487,6 +487,10 @@ def test_production_scope_feed_lifecycle(tmp_path, schemas, monkeypatch, timing)
                         == "RUNNING"
                     )
                 saved_report = host_report.report(tmp_path, AT.isoformat(), times[0].isoformat())
+                assert saved_report['run_execution'] == {
+                    'status': 'RECORDED', 'entry_fills': 1, 'exit_fills': 1,
+                    'completed_round_trips': 1, 'carry_in_exits': 0,
+                }
                 assert saved_report["account_total_fills"] == 2
                 assert (
                     saved_report["accepted_packet"]["sequence"]

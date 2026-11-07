@@ -1,9 +1,9 @@
 # Daily PAPER operation
 
-The host's last confirmed run is stopped, with **zero connected fills**. Manual
-bounded launch helpers existed; a persistent daily controller did not. The new
-`paper-daily.py` installs that controller. Installation on the host, real quote
-latency and a connected entry-to-exit lifecycle are still unverified.
+The host installed the daily controller at release `b5d10cb` and reported
+`DAILY_SCHEDULE_INSTALLED` with `paused: false`. The November 9 enrollment exists.
+Its first automatic launch is scheduled for 10:00 New York after 09:00 preparation.
+The latest completed connected run still has zero fills.
 
 Use the existing `local-simulation` account and population
 `connected-simulation-1000-v1`: $1,000 initial virtual capital, maximum two plays,
@@ -103,13 +103,23 @@ restricted to the existing normal stop and the two native flat-feed recoveries.
 
 ## Current evidence and remaining requirements
 
-Last confirmed host build: `840255127c8d895fd6bc22dab9410bb7f6ec48a0`, image
-`sha256:3b5a3344fc30b4d5450aa719450ef79554845063d24e4a705f862fa8f5e13bf6`.
-The operator subsequently checked out `b2436f3` for reporting; no later successful
-host build/start output has been supplied. The November 6 prepared directory is
-`/etc/trade-bot-connected/sessions/2026-11-06-friday-ready`; it is expired after
-that session and must not be reused. A November 9 preparation was suggested but
-its completion has not been confirmed.
+The confirmed host release is `b5d10cbfaaa0bde5af5e14110f815ff91925d79d`,
+image `sha256:39dace641132c9e4ac767b955809ccb1366d2f30e133e4b410455eb794e28e9c`.
+At installation the owner was normally stopped at revision 3259, generation 13,
+feed sequence 678. The November 9 policy SHA is
+`391f87e90a639f4923d72b632e925b81f1e7c8a25af67ed6cf6fe08e6757f149`.
+The installer found no start blockers. The existing timer can use this enrollment.
+
+The newer branch reporter can read the portfolio journals written by that release.
+Its JSON `run_execution` and text summary count entry and exit fills in the
+container's time window. A completed round trip requires the same play to have
+its first entry and its full sale inside that window. Fully sold positions
+carried into the run appear separately. This measures recorded buy/sell fills.
+Exercise, expiry and cash settlement require their own native receipt evidence.
+Older journals missing the necessary bindings show unavailable run counts.
+The host begins saving the new summary automatically upon a future scheduled-release
+upgrade. The installed timer already saves the evidence needed for retrospective
+reporting.
 
 Run `paper-1106-151939-cd07ea` ended normally at 10:31 New York: 23 delivered packets,
 five read timeouts, two recoveries, zero fills and zero model cost. Two completed
@@ -128,7 +138,7 @@ and [daily controller proof](PAPER_DAILY_AUTOMATION_PROOF.json).
 
 | Area | Implemented and tested offline | Still requires host/provider evidence |
 | --- | --- | --- |
-| Daily operation | Calendar-driven preparation, exact enrollment adoption, one launch per date, persistent retry/stop state, reporting and systemd installation. | One host installation, an automatically launched session and real sustained read latency. |
+| Daily operation | Calendar-driven preparation, exact enrollment adoption, one launch per date, persistent retry/stop state, reporting and systemd installation. | Host installation confirmed. First automatic launch and sustained read latency still require host evidence. |
 | DEGEN | Shared simulation, collection/scanning, two entries, later fills, protective exits and restart/accounting fixtures; prior timing repair included. | Authentic qualifying setup, accepted original quotes, model response and a complete connected simulated lifecycle. |
 | Swing | Native source preparation and execution; invalid originals remain isolated. | Valid original daily history. Saved interpolated bars cannot establish readiness. |
 | Scope | Collector/watch/admission/owned-play management and synthetic lifecycle coverage exist. | Usable original SPX history and exact reviewed SPXW contract/session/pattern bindings, with a reserved catalog slot. |

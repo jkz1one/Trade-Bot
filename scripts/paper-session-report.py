@@ -326,7 +326,15 @@ def short_report(result):
     if decisions:
         scanned = sum(bool(d.get('scans')) for d in decisions)
         lines.append(f'Decisions shown: {len(decisions)}; with scans {scanned}; without scans {len(decisions)-scanned}')
-    lines.append(f"Fills (account total): {result.get('account_total_fills', 'unknown')}; cycles (run): {result.get('cycle_count', 'unknown')}")
+    total = result.get('account_total_fills')
+    lines.append(f"Fills (account total): {total if total is not None else 'unknown'}; cycles (run): {result.get('cycle_count', 'unknown')}")
+    execution = result.get('run_execution', {})
+    if execution.get('status') == 'RECORDED':
+        lines.append(f"Run execution: entry fills {execution['entry_fills']}; exit fills {execution['exit_fills']}; "
+                     f"completed round trips {execution['completed_round_trips']}; "
+                     f"prior-run plays fully exited {execution['carry_in_exits']}")
+    elif execution:
+        lines.append("Run execution: unavailable (" + (reasons(execution.get('reason')) or 'unknown') + ")")
     outcomes = result.get('cycle_outcomes')
     if outcomes is not None:
         counts = {s: sum(r['count'] for r in outcomes if s in r['status'])
@@ -362,27 +370,115 @@ def short_report(result):
     return '\n'.join(lines)
 
 
-def fill_count(db):
-    """Count the owner's actual receipt store, without mixing legacy projections."""
-    tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-    if 'execution_portfolio_orders' in tables:
-        count = 0
-        for row in db.execute(
-            'SELECT CASE WHEN length(observation_json)<=2097152 THEN observation_json '
-            'ELSE NULL END FROM execution_portfolio_orders WHERE observation_json IS NOT NULL'
-        ):
-            if row[0] is None:
+class RunFillWindow:
+    """Group original fill receipts by their native portfolio entry and source clock."""
+
+    def __init__(self, start, end):
+        self.first = datetime.fromisoformat(start)
+        self.last = datetime.fromisoformat(end)
+        self.plays = {}
+        self.fill_ids = set()
+        self.sequences = set()
+        self.entry_fills = 0
+        self.exit_fills = 0
+
+    def add(self, play, client, order_id, observation):
+        side = observation.get('side')
+        instrument = observation.get('instrument', {}).get('instrument_id')
+        if (not all(isinstance(key, str) and key for key in (play, client, order_id, instrument))
+                or observation.get('client_id') != client or observation.get('order_id') != order_id
+                or side not in ('BUY', 'SELL') or (side == 'BUY') != (play == client)):
+            raise ValueError('Invalid fill binding')
+        total = Decimal(0)
+        for fill in observation['fills']:
+            if not isinstance(fill, dict):
+                raise ValueError('Invalid fill')
+            identity, sequence = fill.get('fill_id'), fill.get('sequence')
+            at = datetime.fromisoformat(fill['occurred_at'])
+            quantity = amount(str(fill.get('quantity')))
+            if (not at.tzinfo or quantity is None or quantity <= 0 or type(sequence) is not int
+                    or sequence <= 0 or not isinstance(identity, str) or not identity
+                    or fill.get('order_id') != order_id or identity in self.fill_ids or sequence in self.sequences):
+                raise ValueError('Invalid fill receipt')
+            self.fill_ids.add(identity)
+            self.sequences.add(sequence)
+            total += quantity
+            if at <= self.last:
+                self.plays.setdefault(play, []).append((sequence, at, side, quantity, instrument))
+            if self.first <= at <= self.last:
+                if side == 'BUY':
+                    self.entry_fills += 1
+                else:
+                    self.exit_fills += 1
+        if total != amount(str(observation.get('filled_quantity'))):
+            raise ValueError('Incomplete fill receipts')
+
+    def summary(self):
+        round_trips = carry_in_exits = 0
+        for events in self.plays.values():
+            events.sort()
+            balance = Decimal(0)
+            opened = previous = events[0][1]
+            for index, (_, at, side, quantity, instrument) in enumerate(events):
+                if at < previous or (index and balance == 0) or instrument != events[0][4]:
+                    raise ValueError('Inconsistent play fills')
+                balance += quantity if side == 'BUY' else -quantity
+                if balance < 0:
+                    raise ValueError('Missing entry fills')
+                previous = at
+            if balance == 0 and previous >= self.first:
+                if opened >= self.first:
+                    round_trips += 1
+                else:
+                    carry_in_exits += 1
+        return {'status': 'RECORDED', 'entry_fills': self.entry_fills, 'exit_fills': self.exit_fills,
+                'completed_round_trips': round_trips, 'carry_in_exits': carry_in_exits}
+
+
+def fill_evidence(db, start=None, end=None):
+    """Keep the account total independent of availability of per-run fill evidence."""
+    columns = {r[1] for r in db.execute('PRAGMA table_info(execution_portfolio_orders)')}
+    if not columns:
+        count = db.execute('SELECT COUNT(*) FROM execution_fills').fetchone()[0]
+        if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_stock_fills'").fetchone():
+            count += db.execute('SELECT COUNT(*) FROM execution_stock_fills').fetchone()[0]
+        return count, 'LEGACY_FILL_TABLES', {'status': 'UNAVAILABLE', 'reason': 'LEGACY_FILL_TABLES'}
+
+    detailed = start is not None and {'play_id', 'client_id', 'order_id'} <= columns
+    bindings = 'play_id,client_id,order_id' if detailed else 'NULL,NULL,NULL'
+    rows = db.execute(f'SELECT {bindings},CASE WHEN length(observation_json)<=2097152 THEN observation_json '
+                      'END FROM execution_portfolio_orders WHERE observation_json IS NOT NULL')
+    count = 0
+    run = {'status': 'UNAVAILABLE', 'reason': 'RUN_FILL_BINDINGS_UNAVAILABLE'}
+    window = RunFillWindow(start, end) if detailed else None
+    with localcontext() as context:
+        context.prec = 192
+        for play, client, order_id, raw in rows:
+            if raw is None:
                 raise ValueError('FILL_EVIDENCE_TOO_LARGE')
-            observation = json.loads(row[0])
-            fills = observation.get('fills') if isinstance(observation, dict) else None
-            if not isinstance(fills, list):
+            obs = json.loads(raw)
+            if not isinstance(obs, dict) or not isinstance(obs.get('fills'), list):
                 raise ValueError('FILL_EVIDENCE_UNAVAILABLE')
-            count += len(fills)
-        return count, 'PORTFOLIO_ORDER_OBSERVATIONS'
-    count = db.execute('SELECT COUNT(*) FROM execution_fills').fetchone()[0]
-    if 'execution_stock_fills' in tables:
-        count += db.execute('SELECT COUNT(*) FROM execution_stock_fills').fetchone()[0]
-    return count, 'LEGACY_FILL_TABLES'
+            count += len(obs['fills'])
+            if window is not None:
+                try:
+                    window.add(play, client, order_id, obs)
+                except (ValueError, KeyError, TypeError, AttributeError, ArithmeticError):
+                    run = {'status': 'UNAVAILABLE', 'reason': 'RUN_FILL_EVIDENCE_INVALID'}
+                    window = None
+        if window is not None:
+            try:
+                run = window.summary()
+            except ValueError:
+                run = {'status': 'UNAVAILABLE', 'reason': 'RUN_FILL_EVIDENCE_INVALID'}
+    if run.get('reason') == 'RUN_FILL_EVIDENCE_INVALID':
+        count = None
+    return count, 'PORTFOLIO_ORDER_OBSERVATIONS', run
+
+
+def fill_count(db):
+    count, source, _ = fill_evidence(db)
+    return count, source
 
 
 def runtime_failures(db, start, end):
@@ -683,7 +779,8 @@ def report(directory, started, finished):
                     'kind': codes(accepted['kind']), 'coverage_issues': codes(json.loads(accepted['issues'] or '[]'))}
         result["current_control"] = [dict(r) for r in db.execute(
             "SELECT halted,halt_reason FROM execution_control WHERE id=1")]
-        result["account_total_fills"], result["fill_count_source"] = fill_count(db)
+        (result["account_total_fills"], result["fill_count_source"],
+         result["run_execution"]) = fill_evidence(db, start, end)
         result['model_spending'] = spending(db, start, end)
         result["runtime_failures"] = runtime_failures(db, start, end)
         result.update(owner_diagnostics(db, start, end))
@@ -736,6 +833,8 @@ def report(directory, started, finished):
     finally:
         db.close()
     concerns = []
+    if result['run_execution'].get('reason') == 'RUN_FILL_EVIDENCE_INVALID':
+        concerns.append('RUN_FILL_EVIDENCE_INVALID')
     if result['decision_count'] == 0:
         concerns.append('NO_DECISION_RECORDED')
     if result.get('runtime_evidence', {}).get('feed') in {'MISSING', 'STALE', 'FUTURE'}:

@@ -180,6 +180,8 @@ def tick(state, backend, persist, now):
         report = backend.report(day['run_id'])
         day['operation'] = report['operation']
         day['fills'] = report.get('account_total_fills')
+        if 'run_execution' in report:
+            day['run_execution'] = report['run_execution']
         if not active:
             day['done'] = True
             if (item['State'].get('ExitCode') != 0

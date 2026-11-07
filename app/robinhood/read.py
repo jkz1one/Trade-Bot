@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from decimal import Decimal
+from collections.abc import AsyncIterator
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from app.robinhood.gateway import RobinhoodSafeGateway
@@ -24,6 +25,8 @@ OPEN_ORDER_STATES = (
 
 def tool_payload(result: dict[str, Any]) -> dict[str, Any]:
     """Return the output-schema object from an MCP CallToolResult dump."""
+    if any(result.get(flag, False) is not False for flag in ("isError", "is_error")):
+        raise RuntimeError("Robinhood tool reported an error")
     raw = result.get("structuredContent")
     if raw is None:
         raw = result.get("structured_content")
@@ -42,10 +45,19 @@ def tool_data(result: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
-def _d(value: Any, *, default: str = "0") -> Decimal:
-    if value is None or value == "":
-        return Decimal(default)
-    return Decimal(str(value))
+def _money(value: Any) -> Decimal:
+    try:
+        amount = Decimal(str(value))
+    except InvalidOperation:
+        raise RuntimeError("Incomplete Robinhood portfolio amount") from None
+    if not amount.is_finite():
+        raise RuntimeError("Incomplete Robinhood portfolio amount")
+    return amount
+
+
+def _account_binding(data: dict[str, Any], expected: str) -> None:
+    if "account_number" in data and data["account_number"] != expected:
+        raise RuntimeError("Robinhood account identity changed")
 
 
 class RobinhoodReadService:
@@ -54,8 +66,11 @@ class RobinhoodReadService:
 
     async def get_agentic_account(self) -> RobinhoodAccount:
         data = tool_data(await self.gateway.call_safe("get_accounts", {}))
-        accounts = data.get("accounts") or []
-        eligible = [a for a in accounts if a and a.get("agentic_allowed") is True]
+        accounts = data.get("accounts")
+        if (not isinstance(accounts, list) or data.get("next") or data.get("restricted")
+                or any(not isinstance(a, dict) or type(a.get("agentic_allowed")) is not bool for a in accounts)):
+            raise RuntimeError("Incomplete Robinhood account selection")
+        eligible = [a for a in accounts if a["agentic_allowed"]]
         if len(eligible) != 1:
             raise RuntimeError(
                 f"Expected exactly one Robinhood account accessible to this agent; found {len(eligible)}"
@@ -69,66 +84,72 @@ class RobinhoodReadService:
         data = tool_data(
             await self.gateway.call_safe("get_portfolio", {"account_number": account_number})
         )
-        bp = data.get("buying_power") or {}
-        unsupported = sum(
-            (
-                _d(data.get("options_value")),
-                _d(data.get("crypto_value")),
-                _d(data.get("futures_value")),
-                _d(data.get("event_contracts_value")),
-                _d(data.get("mutual_funds_value")),
-                _d(data.get("fixed_income_value")),
-            ),
-            Decimal("0"),
-        )
-        buying_power = _d(bp.get("buying_power"))
-        unleveraged = _d(bp.get("unleveraged_buying_power"))
+        _account_binding(data, account_number)
+        bp = data.get("buying_power")
+        if not isinstance(bp, dict):
+            raise RuntimeError("Incomplete Robinhood buying power")
+        # Any unsupported exposure blocks equity reconciliation, including offsetting values.
+        unsupported = sum((_money(data.get(field)).copy_abs() for field in (
+            "options_value", "crypto_value", "futures_value", "event_contracts_value",
+            "mutual_funds_value", "fixed_income_value",
+        )), Decimal("0"))
+        buying_power = _money(bp.get("buying_power"))
+        unleveraged = _money(bp.get("unleveraged_buying_power"))
         safe_buying_power = min(buying_power, max(Decimal("0"), unleveraged))
         return RobinhoodPortfolio(
-            total_value=_d(data.get("total_value")),
-            equity_value=_d(data.get("equity_value")),
-            cash=_d(data.get("cash")),
+            total_value=_money(data.get("total_value")),
+            equity_value=_money(data.get("equity_value")),
+            cash=_money(data.get("cash")),
             buying_power=safe_buying_power,
             unleveraged_buying_power=unleveraged,
             unsupported_value=unsupported,
         )
 
+    async def _rows(self, tool: str, field: str, account_number: str,
+                    **filters: str) -> AsyncIterator[dict[str, Any]]:
+        arguments = {"account_number": account_number, **filters}
+        cursors: set[str] = set()
+        for _ in range(64):
+            data = tool_data(await self.gateway.call_safe(tool, arguments.copy()))
+            _account_binding(data, account_number)
+            rows = data.get(field)
+            if not isinstance(rows, list) or data.get("restricted"):
+                raise RuntimeError("Incomplete Robinhood account page")
+            for row in rows:
+                if not isinstance(row, dict):
+                    raise RuntimeError("Incomplete Robinhood account row")
+                _account_binding(row, account_number)
+                yield row
+            cursor = data.get("next")
+            if cursor is None or cursor == "":
+                return
+            if not isinstance(cursor, str) or len(cursor) > 4096 or cursor in cursors:
+                raise RuntimeError("Invalid or repeated Robinhood account cursor")
+            cursors.add(cursor)
+            arguments["cursor"] = cursor
+        raise RuntimeError("Robinhood account pagination exceeds bound")
+
     async def get_positions(self, account_number: str) -> list[RobinhoodPosition]:
-        positions: list[RobinhoodPosition] = []
-        cursor: str | None = None
-        while True:
-            args: dict[str, Any] = {"account_number": account_number}
-            if cursor:
-                args["cursor"] = cursor
-            data = tool_data(await self.gateway.call_safe("get_equity_positions", args))
-            for item in data.get("positions") or []:
-                if item is not None:
-                    positions.append(RobinhoodPosition.model_validate(item))
-            cursor = data.get("next") or None
-            if not cursor:
-                break
+        positions = []
+        symbols = set()
+        async for row in self._rows("get_equity_positions", "positions", account_number):
+            position = RobinhoodPosition.model_validate(row)
+            if position.symbol in symbols:
+                raise RuntimeError("Duplicate Robinhood position in account snapshot")
+            symbols.add(position.symbol)
+            positions.append(position)
         return positions
 
     async def get_working_orders(self, account_number: str) -> list[RobinhoodOrder]:
-        orders: list[RobinhoodOrder] = []
-        seen: set[str] = set()
+        orders: dict[str, RobinhoodOrder] = {}
         for state in OPEN_ORDER_STATES:
-            cursor: str | None = None
-            while True:
-                args: dict[str, Any] = {"account_number": account_number, "state": state}
-                if cursor:
-                    args["cursor"] = cursor
-                data = tool_data(await self.gateway.call_safe("get_equity_orders", args))
-                for item in data.get("orders") or []:
-                    if item is None or item.get("id") in seen:
-                        continue
-                    order = RobinhoodOrder.model_validate(item)
-                    seen.add(order.id)
-                    orders.append(order)
-                cursor = data.get("next") or None
-                if not cursor:
-                    break
-        return orders
+            async for row in self._rows("get_equity_orders", "orders", account_number, state=state):
+                order = RobinhoodOrder.model_validate(row)
+                previous = orders.get(order.id)
+                if order.state != state or (previous is not None and order != previous):
+                    raise RuntimeError("Conflicting Robinhood working-order observations")
+                orders[order.id] = order
+        return list(orders.values())
 
     async def truth(self) -> RobinhoodTruth:
         account = await self.get_agentic_account()
