@@ -255,6 +255,16 @@ def verify_order(engine, db, policy, row):
         raise ValueError("PORTFOLIO_ORIGINAL_ADMISSION_CHANGED")
     if i.quantity > reviewed.quantity or i.limit_price != reviewed.limit_price:
         raise ValueError("PORTFOLIO_APPROVED_QUANTITY_OR_PRICE_CHANGED")
+    if "paid_entry_admission" in approval:
+        from app.options.models import OptionAdmission
+
+        paid = OptionAdmission.model_validate(approval["paid_entry_admission"])
+        if (not isinstance(i, OptionIntent) or i.side != "BUY" or paid.outcome != "APPROVED"
+                or paid.contract_id != i.instrument.contract.contract_id
+                or i.quantity > paid.quantity or i.limit_price != paid.limit_price
+                or i.approved_entry_debit > paid.entry_debit or i.approved_full_premium_loss > paid.full_premium_loss
+                or paid.valid_until is None or i.approval_expires_at > paid.valid_until):
+            raise ValueError("PORTFOLIO_PAID_OPTION_CEILING_EXCEEDED")
     if (row["status"] in TERMINAL) != (row["active_play"] is None):
         raise ValueError("PORTFOLIO_RESERVATION_STATUS_CHANGED")
     attempts = db.execute(

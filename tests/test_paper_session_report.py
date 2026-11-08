@@ -654,3 +654,32 @@ def test_ambiguous_duration_never_confirms_bounded_completion(tail):
     assert timing == {'planned_seconds': None, 'elapsed_seconds': 21600}
     result = module.operation({'session_timing': timing}, {'Status': 'exited', 'ExitCode': 0})
     assert result['reasons'] == ['SESSION_DURATION_UNVERIFIED']
+
+
+def test_report_explains_post_model_option_quote_check_without_dumping_market():
+    value = live_result()
+    with sqlite3.connect(':memory:') as db:
+        db.execute('CREATE TABLE execution_option_opportunities(cycle_key,result_json)')
+        raw = {'status': 'HOLD', 'reason': 'OPTION_EXECUTION_MARKET_UNAVAILABLE',
+               'blocker': 'CONFLICTING_OPTION_SOURCE_BOOK', 'option_market_sequence': 88}
+        db.execute('INSERT INTO execution_option_opportunities VALUES(?,?)', ('test', json.dumps(raw)))
+        decision = module.decision_evidence(db, 'test')
+        value['decisions'] = [decision]
+        value['operation'] = module.operation(value, {'Status': 'running'})
+        assert value['operation']['state'] == 'MISSING_INPUTS'
+        assert 'Option entry checked feed 88: CONFLICTING_OPTION_SOURCE_BOOK' in module.short_report(value)
+        raw.update(reason='ORIGINAL_PRICE_CEILING_EXCEEDED', entry_review={'reasons': ['ORIGINAL_PRICE_CEILING_EXCEEDED']})
+        del raw['blocker']
+        db.execute('UPDATE execution_option_opportunities SET result_json=?', (json.dumps(raw),))
+        value['decisions'] = [module.decision_evidence(db, 'test')]
+        assert 'Option entry checked feed 88: ORIGINAL_PRICE_CEILING_EXCEEDED' in module.short_report(value)
+
+
+
+def test_expired_scan_lease_reports_missing_timely_input():
+    value = live_result()
+    value['decisions'] = [{'status': ['HOLD'], 'reason': ['ENTRY_PLAN_EXPIRED_BEFORE_MODEL'],
+                           'scans': [{'symbol': ['SPY']}], 'evidence_available': True}]
+    operation = module.operation(value, {'Status': 'running'})
+    assert operation['state'] == 'MISSING_INPUTS'
+    assert operation['reasons'] == ['ENTRY_PLAN_EXPIRED_BEFORE_MODEL']

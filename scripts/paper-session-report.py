@@ -48,6 +48,10 @@ def outcome(raw):
         selected = codes(value.get(field))
         if selected:
             result[field] = selected
+    sequence = value.get('option_market_sequence')
+    if type(sequence) is int and sequence > 0:
+        result['option_market_sequence'] = sequence
+        result['option_market_review_reasons'] = codes(value.get('option_market_review_reasons'))
     result['entry_timely'] = value.get('entry_timely') if type(value.get('entry_timely')) is bool else None
     result['scope_admission_reasons'] = codes(value.get('scope_admission_reasons'))
     result["option_candidates"] = len(value.get("candidates") or [])
@@ -111,6 +115,9 @@ def decision_evidence(db, key):
     value = {name: field('$.' + name) for name in (
         'status', 'reason', 'issues', 'blocker', 'unavailable_families',
         'rejections', 'stock_rejections', 'scope_rejections')}
+    value['option_market_sequence'] = field('$.option_market_sequence')
+    if value['option_market_sequence'] is not None:
+        value['option_market_review_reasons'] = field('$.entry_review.reasons')
     value['entry_timely'] = field('$.entry_timely')
     value['scope_admission_reasons'] = field('$.scope_fresh_review.admission_review.reasons')
     value['scans'] = []
@@ -257,7 +264,10 @@ def decision_input_issues(decision):
         'INVENTORY_BINDING_COVERAGE_OR_FRESHNESS', 'INVENTORY_UNAVAILABLE',
         'SCAN_TIME_OR_STRUCTURE_MISMATCH'}]
     missing += [r for r in codes(decision.get('reason')) if r in {
-        'AUTHORITATIVE_RECONCILIATION_REQUIRED', 'PORTFOLIO_PROTECTION_REQUIRED'}]
+        'AUTHORITATIVE_RECONCILIATION_REQUIRED', 'PORTFOLIO_PROTECTION_REQUIRED',
+        'OPTION_EXECUTION_MARKET_UNAVAILABLE', 'EVIDENCE_IDENTITY_OR_TIME_REGRESSION',
+        'CONFLICTING_OPTION_SOURCE_BOOK', 'ENTRY_PLAN_EXPIRED_BEFORE_MODEL',
+        'ORIGINAL_PLAN_DEADLINE_EXPIRED'}]
     return sorted(set(missing))
 
 
@@ -307,6 +317,11 @@ def short_report(result):
                     decision.get('rejections'), decision.get('contract_exclusions')])
     if checks:
         lines.append('Entry checks: ' + reasons(checks[:8]))
+    sequence = decision.get('option_market_sequence')
+    if type(sequence) is int:
+        review = reasons(decision.get('option_market_review_reasons') or decision.get('blocker'))
+        lines.append(f"Option entry checked feed {sequence}" + (f": {review}" if review else ""))
+
     for timing in decision.get('inventory_timing', [])[:4]:
         limit = timing['max_metadata_age_seconds']
         lines.append(f"Inventory {timing['symbol']}: source age {timing['source_age_seconds']:.3f}s; "

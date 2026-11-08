@@ -1147,23 +1147,26 @@ class DegenCoordinator:
                         **evidence,
                     },
                 )
+            # Reproduce the shortlist at the scan instant. The account snapshot
+            # retains its own capture time; admission rejects stale or future data.
+            scan_at = planned["scans"][0].evaluated_at
             with self.engine.journal.read() as db:
                 portfolio_history = None
                 if self.engine.portfolio_policy is not None:
                     from app.mixed.portfolio_execution import selection_account
                     from app.mixed.portfolio_store import history
 
-                    account = selection_account(self.engine, db, self.now())
+                    account = selection_account(self.engine, db, scan_at)
                     portfolio_history = history(
-                        self.engine, db, self.engine.portfolio_policy, self.now()
+                        self.engine, db, self.engine.portfolio_policy, scan_at
                     )
                 else:
-                    account = self.engine._account(db, self.now())
+                    account = self.engine._account(db, scan_at)
             candidates, rejections = [], {}
             for scan, plan in zip(planned["scans"], planned["plans"], strict=True):
                 matched = tuple(quotes[i.instrument_id] for i in plan.instruments)
                 session = (
-                    self.engine._session(plan.instruments[0].contract, self.now())
+                    self.engine._session(plan.instruments[0].contract, scan_at)
                     if plan.instruments
                     else None
                 )
@@ -1175,7 +1178,7 @@ class DegenCoordinator:
                     account,
                     self.engine._effective_limits(),
                     session,
-                    now=planned["scans"][0].evaluated_at,
+                    now=scan_at,
                     portfolio_history=portfolio_history,
                 )
                 candidates.extend(accepted)
@@ -1198,7 +1201,7 @@ class DegenCoordinator:
             if self.stock_policy is not None:
                 from app.mixed.selection import collect as collect_stocks
 
-                collect_stocks(self, key, frame, evidence)
+                collect_stocks(self, key, frame, evidence, evaluated_at=scan_at)
             if self.scope_policy is not None:
                 from app.options.scope_arbitration import collect, execute_scope
 

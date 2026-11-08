@@ -464,3 +464,59 @@ def test_scope_protection_accepts_nested_index_beside_two_common_quotes(tmp_path
             assert stored_inputs(db, times[0])["statuses"] == {"DELIVERED": 1}
             assert not c.engine._control(db)["halted"]
         assert v.submit_count == 0
+
+
+@pytest.mark.parametrize("update", [
+    "above_limit", "missing_option", "missing_underlying", "regressed", "conflict",
+    "unchanged", "improved", "stop_requested", "interrupted_protection",
+])
+def test_paid_option_uses_delivered_market_at_model_return(tmp_path, monkeypatch, update):
+    with owner(tmp_path, monkeypatch, choice="OPTION", delay=0) as (c, venue, times, model):
+        r = runtime(c, tmp_path)
+        original_model = c._model_run
+
+        async def during_model(request, secret, *, broad):
+            result = await original_model(request, secret, broad=broad)
+            chosen = next(o for o in request.packet.opportunities
+                          if o.candidate.candidate_id == result.plan.candidate_id)
+            times[0] += timedelta(seconds=1)
+            q = changed(chosen.quote, source_at=times[0], received_at=times[0])
+            u = changed(chosen.underlying, source_at=times[0], received_at=times[0])
+            if update == "above_limit":
+                q = changed(q, bid=q.bid + 1, ask=q.ask + 1)
+            elif update == "improved":
+                q = changed(q, bid=q.bid - D(".01"), ask=q.ask - D(".01"))
+            elif update == "regressed":
+                q = changed(q, source_at=chosen.quote.source_at - timedelta(seconds=1))
+            elif update == "conflict":
+                q = changed(q, source_at=chosen.quote.source_at, ask_size=q.ask_size + 1)
+            send(r, DegenFrame(quotes=() if update == "missing_option" else (q,),
+                               underlyings=() if update == "missing_underlying" else (u,)))
+            await r.tick()
+            if update == "stop_requested":
+                r.stop = asyncio.Event()
+                r.stop.set()
+            elif update == "interrupted_protection":
+                r._scope_tick = asyncio.get_running_loop().create_future()
+                r._scope_tick.set_result(False)
+            return result
+
+        monkeypatch.setattr(c, "_model_run", during_model)
+        send(r, stock_frame(), kind="CYCLE")
+        asyncio.run(step(r))
+        with c.engine.journal.read() as db:
+            out = json.loads(db.execute("SELECT result_json FROM execution_option_opportunities").fetchone()[0])
+            settled = db.execute("SELECT cost FROM execution_model_calls").fetchall()
+            assert len(settled) == 1 and settled[0][0] is not None, out
+            assert not db.execute("SELECT halted FROM execution_control").fetchone()[0], out.get("reason")
+        admitted = update in {'unchanged', 'improved'}
+        assert out['status'] == ('OPEN' if admitted else 'HOLD'), out.get('reason')
+        assert venue.submit_count == int(admitted)
+        if admitted or update in {'above_limit', 'conflict', 'regressed'}:
+            assert out['option_market_sequence'] == 2
+        if update == 'improved':
+            assert venue.snapshot(times[0]).orders[0].limit_price < model['request'].packet.opportunities[0].candidate.admission.limit_price
+        if update in {'missing_option', 'missing_underlying', 'conflict', 'stop_requested', 'interrupted_protection'}:
+            assert out['reason'] == 'OPTION_EXECUTION_MARKET_UNAVAILABLE'
+        if update == 'regressed':
+            assert out['reason'] == 'EVIDENCE_IDENTITY_OR_TIME_REGRESSION'

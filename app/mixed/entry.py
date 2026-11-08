@@ -91,7 +91,7 @@ def evidence_for(c, key, evidence):
 
     with c.engine.journal.read() as db:
         row = db.execute(
-            "SELECT inputs_json,started_at FROM execution_option_opportunities WHERE cycle_key=?",
+            "SELECT inputs_json FROM execution_option_opportunities WHERE cycle_key=?",
             (key,),
         ).fetchone()
     frame = DegenFrame.model_validate_json(row[0])
@@ -113,7 +113,7 @@ def evidence_for(c, key, evidence):
             structure=c.policy,
             selection=c.stock_policy,
             execution=c.engine.policy,
-            as_of=datetime.fromisoformat(row[1]),
+            as_of=datetime.fromisoformat(evidence["scans"][0]["evaluated_at"]),
         )
         for raw in evidence.get("stock_candidates", [])
     )
@@ -185,7 +185,9 @@ def validate_stored(db, key, evidence, *, usable=True):
             or o.structure.model_dump(mode="json") != config.get("setup")
             or o.source not in frame.stocks
             or o.intraday not in frame.histories
-            or o.as_of != datetime.fromisoformat(row["started_at"])
+            or o.as_of != request.packet.as_of
+            or not datetime.fromisoformat(row["started_at"]) <= o.as_of
+            or o.as_of != datetime.fromisoformat(evidence["scans"][0]["evaluated_at"])
         ):
             raise ExecutionBlocked("MIXED_ORIGINAL_SOURCE_PACKET_CHANGED")
     result = (

@@ -103,8 +103,22 @@ restricted to the existing normal stop and the two native flat-feed recoveries.
 
 ## Working branch changes after installation
 
-The installed timer on b5d10cb already has the November 9 enrollment. The newer
-branch includes these offline-tested changes for a future deployment.
+The last confirmed host release, b5d10cb, already has the November 9 enrollment.
+Use the latest tested entry fix with the one-time install above before Monday's
+run. The installed release can reject confirmed options as STALE_OR_FUTURE_ACCOUNT
+when separate reads of the clock straddle the same scan. A frozen-clock test had
+masked this. One upgrade includes the entry, supervision and reporting fixes.
+
+- A confirmed shared shortlist uses one scan evaluation time for the original
+  account projection, option admission and stock alternatives. The account
+  snapshot and market quotes retain their original clocks. The paid model gate
+  checks the actual time after saving the request. Expiry before that gate
+  produces a HOLD with zero model attempts.
+- After a paid DEGEN or Swing option selection, the mixed runtime checks the
+  selected contract and underlying from its latest completed delivery. The
+  decision records the feed sequence used. If the updated evidence qualifies,
+  the shared reservation respects the reviewed quantity, premium and loss
+  limits. Fills still require a subsequent executable quote.
 
 - The scheduler reserves a maximum of three launch-review attempts for the date.
   It checks the same owner state and image at final review and records its dispatch

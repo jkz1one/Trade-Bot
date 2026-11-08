@@ -193,10 +193,12 @@ def receipt(policy, key, evidence):
     }
 
 
-def collect(c, key, frame, evidence):
+def collect(c, key, frame, evidence, *, evaluated_at=None):
     from app.mixed.native_execution import review
     from app.mixed.native_store import history as cash_history
 
+    if evaluated_at is None:
+        evaluated_at = c.now()
     by_symbol = {x.quote.instrument.symbol: x for x in frame.stocks}
     histories = {x.symbol: x for x in frame.histories}
     if len(by_symbol) != len(frame.stocks) or set(by_symbol) != set(c.policy.symbols):
@@ -221,7 +223,7 @@ def collect(c, key, frame, evidence):
                 c.stock_policy,
                 c.engine.policy,
                 c.engine.calendar,
-                now=c.now(),
+                now=evaluated_at,
                 swing_unavailable=frame.swing_unavailable,
             )
             rejected[symbol] = issues
@@ -233,7 +235,7 @@ def collect(c, key, frame, evidence):
                     family,
                     reason,
                     item.model_dump(mode="json"),
-                    c.now(),
+                    evaluated_at,
                 )
             for candidate in proposed:
                 if (
@@ -253,14 +255,14 @@ def collect(c, key, frame, evidence):
                         from app.mixed.portfolio_loss import guard
                         from app.mixed.portfolio_store import history
 
-                        account = selection_account(c.engine, db, c.now())
-                        h = history(c.engine, db, c.engine.portfolio_policy, c.now())
-                        window = session(c.engine, candidate.proposal.instrument, c.now())
+                        account = selection_account(c.engine, db, evaluated_at)
+                        h = history(c.engine, db, c.engine.portfolio_policy, evaluated_at)
+                        window = session(c.engine, candidate.proposal.instrument, evaluated_at)
                         guard(
                             c.engine,
                             db,
                             c.engine.portfolio_policy,
-                            c.now(),
+                            evaluated_at,
                             candidate.proposal.family,
                         )
                         admission = admit_stock(
@@ -268,7 +270,7 @@ def collect(c, key, frame, evidence):
                             item.quote,
                             h,
                             window,
-                            now=c.now(),
+                            now=evaluated_at,
                             reconciled=True,
                             entry_halted=account.entry_halted,
                         )
@@ -288,9 +290,9 @@ def collect(c, key, frame, evidence):
                             )
                     else:
                         admission, account, window = review(
-                            c.engine, db, candidate.proposal, item.quote, c.now()
+                            c.engine, db, candidate.proposal, item.quote, evaluated_at
                         )
-                        h = cash_history(c.engine, db, as_of=c.now())
+                        h = cash_history(c.engine, db, as_of=evaluated_at)
                     if admission.outcome == "APPROVED":
                         accepted.append(
                             {

@@ -1,7 +1,8 @@
 """Frozen broader-entry PAPER coordination on the existing single-owner journal."""
 
+import asyncio
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 from app.execution.engine import ExecutionBlocked
@@ -40,6 +41,15 @@ def review_for_execution(engine, db, key, request, result, quote, underlying, no
         < request.packet.valid_until
     ):
         raise ExecutionBlocked("FULL_SETTLED_ENTRY_RECEIPT_REQUIRED")
+    market_sequence = evidence.get("option_market_sequence")
+    mixed = getattr(getattr(engine, "_option_runtime", None), "mixed", None)
+    if market_sequence is not None and mixed is None:
+        raise ExecutionBlocked("PAID_OPTION_MARKET_SUPERSEDED")
+    if mixed is not None and not getattr(result.plan, "scope", False):
+        sequence, option, reference = mixed.option_market(db, quote.instrument, now)
+        if (market_sequence is not None and market_sequence != sequence
+                or option != quote or reference != underlying):
+            raise ExecutionBlocked("PAID_OPTION_MARKET_SUPERSEDED")
     for o in request.packet.opportunities:
         if o.session != engine._session(o.candidate.instrument.contract, now):
             raise ExecutionBlocked("ENTRY_SESSION_BINDING_CHANGED")
@@ -110,6 +120,7 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
             *(o.candidate.admission.valid_until for o in opportunities),
             *(o.admission.approval_expires_at for o in stocks),
             *([datetime.fromisoformat(scope["binding"]["valid_until"])] if scope else []),
+            account.captured_at + timedelta(seconds=c.engine.limits.account_max_age_seconds),
             datetime.fromtimestamp((int(as_of.timestamp()) // 300 + 1) * 300, tz=as_of.tzinfo),
         ),
         account=account,
@@ -119,6 +130,9 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
         stocks=stocks,
         scope=scope,
     )
+    at = c.now()
+    if not packet.as_of <= at < packet.valid_until:
+        return c._finish(key, {**evidence, "status": "HOLD", "reason": "ENTRY_PLAN_EXPIRED_BEFORE_MODEL"})
     request = judgment.create_request(packet, config, request_id=uuid4().hex, now=at)
     if len(request.model_dump_json().encode()) > judgment.MAX_REQUEST_BYTES:
         return c._finish(
@@ -129,7 +143,10 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
     # Full request precedes cost admission. A crash at either boundary leaves a
     # retained STARTED slot; reopening interrupts it and never retries the call.
     c._pending_evidence(key, {**evidence, "status": "MODEL_PENDING"})
-    c.engine.begin_model_attempt(key, evidence["model_input_hash"], now=at)
+    before_model = c.now()
+    if not at <= before_model < packet.valid_until:
+        return c._finish(key, {**evidence, "status": "HOLD", "reason": "ENTRY_PLAN_EXPIRED_BEFORE_MODEL"})
+    c.engine.begin_model_attempt(key, evidence["model_input_hash"], now=before_model)
     try:
         result = await c._model_run(request, secret, broad=True)
         result = judgment.EntryResult.model_validate(result.model_dump(warnings=False))
@@ -199,8 +216,29 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
     if selected is None:
         c._model_halt("OPTION_MODEL_EVIDENCE_REJECTED", completed)
         return c._finish(key, {**evidence, "status": "HOLD", "reason": "UNKNOWN_ENTRY_CANDIDATE"})
-    quotes, underlyings = c._execution_market(quotes, underlyings)
-    quote, underlying = quotes[selected.instrument.instrument_id], underlyings[selected.symbol]
+    mixed = getattr(getattr(c.engine, "_option_runtime", None), "mixed", None)
+    if mixed is None:
+        quotes, underlyings = c._execution_market(quotes, underlyings)
+        quote, underlying = quotes[selected.instrument.instrument_id], underlyings[selected.symbol]
+    else:
+        # A model response may arrive during a later delivery's protection tick.
+        # Stay inside the original plan deadline and use one complete delivery.
+        try:
+            async with asyncio.timeout(max(0, (packet.valid_until - c.now()).total_seconds())):
+                await mixed.wait_for_protection()
+            with c.engine.journal.read() as db:
+                sequence, quote, underlying = mixed.option_market(db, selected.instrument, c.now())
+            evidence["option_market_sequence"] = sequence
+            original = quotes[selected.instrument.instrument_id]
+            if (quote.source_at == original.source_at and quote.source == original.source
+                    and any(getattr(quote, k) != getattr(original, k)
+                            for k in ("bid", "ask", "bid_size", "ask_size"))):
+                raise ExecutionBlocked("CONFLICTING_OPTION_SOURCE_BOOK")
+        except (ExecutionBlocked, TimeoutError) as exc:
+            return c._finish(key, {**evidence, "status": "HOLD",
+                                   "reason": "OPTION_EXECUTION_MARKET_UNAVAILABLE",
+                                   "blocker": str(exc) if isinstance(exc, ExecutionBlocked)
+                                   else "OPTION_PROTECTION_WAIT_EXPIRED"})
     with c.engine.journal.read() as db:
         c._bound(db)
         review = review_for_execution(

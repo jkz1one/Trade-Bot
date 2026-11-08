@@ -333,6 +333,16 @@ def prepare(
                         ceiling.entry_debit,
                         ceiling.full_premium_loss,
                     )
+                if entry_review is not None:
+                    paid_admission = entry_review.admission
+                    if paid_admission.quantity < quantity:
+                        quantity = paid_admission.quantity
+                        debit = paid_admission.entry_debit
+                        loss = paid_admission.full_premium_loss
+                    if (result.limit_price != paid_admission.limit_price
+                            or debit > paid_admission.entry_debit or loss > paid_admission.full_premium_loss):
+                        raise ExecutionBlocked("PORTFOLIO_PAID_OPTION_CEILING_EXCEEDED")
+                    management_deadline = min(management_deadline, paid_admission.valid_until)
                 value = OptionIntent(
                     client_id="option-" + uuid4().hex,
                     source_key=source_key,
@@ -378,6 +388,9 @@ def prepare(
                     "admission": result.model_dump(mode="json"),
                     "entry_lineage": lineage.model_dump(mode="json") if lineage else None,
                 }
+                if entry_review is not None:
+                    approval["paid_entry_admission"] = paid_admission.model_dump(mode="json")
+                    output["reserved_quantity"] = value.quantity
                 reserve(engine, db, p, value, approval, now)
                 if scope_packet is not None or inputs.get("scope_arbitration") is not None:
                     # Retain the existing Scope receipt contract alongside the
@@ -497,6 +510,8 @@ def begin(engine, client_id, quote, underlying, now):
                     )
                     if review.outcome != "ELIGIBLE" or review.proposal != proposal:
                         raise ExecutionBlocked("PORTFOLIO_ORIGINAL_MODEL_PLAN_REQUIRED")
+                    if value.quantity > review.admission.quantity:
+                        raise ExecutionBlocked("PORTFOLIO_PAID_OPTION_CEILING_EXCEEDED")
             else:
                 held = reconstruct(h).ledger.positions.get(value.closing_entry_client_id)
                 if held is None:

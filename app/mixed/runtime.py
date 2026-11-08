@@ -201,7 +201,7 @@ class MixedRuntimeInputs:
                 ("BLOCKED" if issue else "DELIVERED", packet.sequence),
             )
 
-    async def fresh(self, instrument):
+    async def wait_for_protection(self):
         pending = self.r._scope_tick
         while pending is not None:
             if not await asyncio.shield(pending):
@@ -209,38 +209,57 @@ class MixedRuntimeInputs:
             if self.r._scope_tick is pending:
                 break
             pending = self.r._scope_tick
+
+    def delivered(self, db, asset, now):
+        pending = self.r._scope_tick
+        if pending is not None and (not pending.done() or pending.cancelled() or not pending.result()):
+            raise ExecutionBlocked("MIXED_RUNTIME_PROTECTION_TICK_INCOMPLETE")
         packet = self.latest
         if (
             packet is None
             or not self.r.running
             or (self.r.stop and self.r.stop.is_set())
             or not 0
-            <= (self.r.c.now() - packet.recorded_at).total_seconds()
+            <= (now - packet.recorded_at).total_seconds()
             < self.r.policy.feed_max_age_seconds
         ):
-            raise ExecutionBlocked("FRESH_DELIVERED_STOCK_INPUT_REQUIRED")
-        with self.r.c.engine.journal.read() as db:
-            state = self.r._bound(db)
-            row = db.execute(
-                "SELECT packet_hash,status FROM execution_mixed_runtime_inputs WHERE sequence=?",
+            raise ExecutionBlocked(f"FRESH_DELIVERED_{asset}_INPUT_REQUIRED")
+        state = self.r._bound(db)
+        row = db.execute(
+            "SELECT packet_hash,status FROM execution_mixed_runtime_inputs WHERE sequence=?",
+            (packet.sequence,),
+        ).fetchone()
+        if (
+            state["status"] != "RUNNING"
+            or state["feed_sequence"] != packet.sequence
+            or row is None
+            or row["status"] != "DELIVERED"
+            or state["frame_hash"] != row["packet_hash"]
+            or row["packet_hash"] != fingerprint(packet)
+            or self.r.c.engine._control(db)["halted"]
+        ):
+            raise ExecutionBlocked(f"DELIVERED_{asset}_RECEIPT_NOT_READY")
+        if packet.action is not None:
+            scope = db.execute(
+                "SELECT status FROM execution_option_scope_runtime_inputs WHERE sequence=?",
                 (packet.sequence,),
             ).fetchone()
-            if (
-                state["status"] != "RUNNING"
-                or state["feed_sequence"] != packet.sequence
-                or row is None
-                or row["status"] != "DELIVERED"
-                or row["packet_hash"] != fingerprint(packet)
-                or self.r.c.engine._control(db)["halted"]
-            ):
-                raise ExecutionBlocked("DELIVERED_STOCK_RECEIPT_NOT_READY")
-            if packet.action is not None:
-                scope = db.execute(
-                    "SELECT status FROM execution_option_scope_runtime_inputs WHERE sequence=?",
-                    (packet.sequence,),
-                ).fetchone()
-                if scope is None or scope[0] != "RECORDED":
-                    raise ExecutionBlocked("SCOPE_ACTION_NOT_COMPLETED")
+            if scope is None or scope[0] != "RECORDED":
+                raise ExecutionBlocked("SCOPE_ACTION_NOT_COMPLETED")
+        return packet
+
+    def option_market(self, db, instrument, now):
+        packet = self.delivered(db, "OPTION", now)
+        quotes = [q for q in packet.frame.quotes if q.instrument == instrument]
+        underlyings = [u for u in packet.frame.underlyings if u.symbol == instrument.contract.underlying]
+        if len(quotes) != 1 or len(underlyings) != 1:
+            raise ExecutionBlocked("EXACT_DELIVERED_OPTION_MARKET_REQUIRED")
+        return packet.sequence, quotes[0], underlyings[0]
+
+    async def fresh(self, instrument):
+        await self.wait_for_protection()
+        with self.r.c.engine.journal.read() as db:
+            packet = self.delivered(db, "STOCK", self.r.c.now())
         quotes = [x.quote for x in packet.frame.stocks if x.quote.instrument == instrument]
         if len(quotes) != 1:
             raise ExecutionBlocked("EXACT_DELIVERED_STOCK_QUOTE_REQUIRED")

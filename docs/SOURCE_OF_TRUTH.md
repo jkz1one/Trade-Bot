@@ -1,5 +1,46 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.196. Shared PAPER shortlist timing and paid option execution, 2026-11-08.
+
+A production-profile fixture with a clock advancing one microsecond per read
+reproduced STALE_OR_FUTURE_ACCOUNT on both confirmed option candidates before a
+model call. The option scan and the shared account projection had sampled
+different local evaluation times. The stored account snapshot and provider
+clocks were valid. The November 6 host report contains no confirmed setup, so
+this reproduction establishes an independent implementation fault.
+
+The option and stock alternatives now share the original scan evaluation time.
+Eligibility still checks the original account snapshot and quote ages. The
+model request expires at the earliest candidate, account or slot deadline.
+Preparation rechecks time after writing the request. An expired request returns
+ENTRY_PLAN_EXPIRED_BEFORE_MODEL without reserving a call or halting the owner.
+
+An offline asynchronous entry also reproduced use of a superseded option book
+after the model returned. The running mixed owner now obtains the exact option
+and underlying from one completed, protected delivery, within the original
+deadline. Unavailable, conflicting, regressing and above-ceiling evidence blocks
+entry. The session report identifies the delivery sequence and review result.
+Scope keeps its separately enrolled post-cost process.
+
+With a lower price the shared owner could reserve seven contracts on a four-
+contract reviewed plan in the regression fixture. Reservation now also enforces
+the paid quantity, debit and full-premium loss. Dispatch rechecks current size.
+New reservations retain the paid admission alongside the full portfolio admission.
+
+307 distinct installed-package regression cases passed. The 306-case suite
+included the advancing-clock production-profile CALL and PUT paths, two native
+plays, protective exits and restart. The final 68-case host reporter run added
+one case for expiry before model dispatch. All 324 application files matched
+source, wheel and installation, and all 60 runtime pins matched. Wheel SHA256
+b40c9c4578bfc84e660f7eca4de7ac59f1a1deee4db6112a739142df54905e47.
+
+The installed host last reported b5d10cb, November 9 enrolled, and zero connected
+fills. Use the consolidated install in PAPER_NEXT_SESSION.md to deploy this fix.
+Original Swing history, original SPX history and exact Scope bindings, and an
+observed connected simulated entry and exit are still outstanding.
+
+## Previous release evidence
+
 Version 1.195. Accurate daily PAPER completion reports, 2026-11-07.
 
 The host reporter on 177dd97 rejected a dead Docker worker even though the

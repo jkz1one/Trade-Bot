@@ -88,12 +88,20 @@ def test_production_profile_two_options_fill_and_exit_independently(tmp_path, ca
         'runtime': settings.runtime.model_dump() | {'feed_file': str(feed_dir / 'feed.json')},
     })
     times = [datetime(2026, 10, 28, 14, 0, 26, tzinfo=UTC)]
+    def advancing_clock():
+        times[0] += timedelta(microseconds=1)
+        return times[0]
+
     window_start = times[0].isoformat()
     initialize(owner, settings, clock=lambda: times[0])
     requests = []
 
     async def model(request, _secret, *, broad):
         requests.append(request)
+        if len(requests) == 1:
+            # A regular quote poll finishes while the first entry model is working.
+            times[0] += timedelta(seconds=2)
+            await deliver(wait_for_decision=False)
         o = request.packet.opportunities[0]
         stop = o.candidate.proposal.underlying_invalidation
         anchor = o.underlying.ask if right == 'CALL' else o.underlying.bid
@@ -116,25 +124,33 @@ def test_production_profile_two_options_fill_and_exit_independently(tmp_path, ca
     monkeypatch.setattr('app.options.entry_judgment.run_entry_process', unexpected_model)
     feed = ContinuousFeed(feed_dir, policy, schemas, create=True)
     try:
-        with existing_runtime(owner, clock=lambda: times[0]) as (runtime, _):
+        with existing_runtime(owner, clock=advancing_clock) as (runtime, _):
             monkeypatch.setattr(runtime.c, '_model_run', model)
             enable(runtime)
 
-            async def deliver(*, cycle=False, exit_symbol=None):
+            async def deliver(*, cycle=False, exit_symbol=None, wait_for_decision=True):
                 at = times[0]
+                # The first source read begins seven seconds into its collector interval.
+                source_at = at + timedelta(seconds=7) if cycle and not requests else at
                 outcome = await feed.tick(now=at, source_settings=settings,
                     window=XNYSCalendar().current_window(at) if cycle else None,
-                    reader=market_reader(at, policy, right=right, exit_symbol=exit_symbol))
+                    reader=market_reader(source_at, policy, right=right, exit_symbol=exit_symbol))
                 assert outcome['status'] == 'DELIVERED', outcome
-                times[0] += timedelta(seconds=1)
-                await step(runtime)
-                return read_packet(feed_dir / 'feed.json')
+                delivered = read_packet(feed_dir / 'feed.json')
+                times[0] = source_at + timedelta(seconds=1)
+                if wait_for_decision:
+                    await step(runtime)
+                else:
+                    await runtime.tick()
+                return delivered
 
             packet = asyncio.run(deliver(cycle=True))
             with runtime.c.engine.journal.read() as db:
                 decisions = [json.loads(r[0]) for r in db.execute('SELECT result_json FROM execution_option_opportunities')]
-            assert len(requests) == 1, decisions
+            assert len(requests) == 1, [(d.get('reason'), d.get('rejections'), d.get('blocker')) for d in decisions]
             assert runtime.c.engine.venue.submit_count == 1, decisions
+            assert decisions[0]['option_market_sequence'] == packet.sequence + 1
+            assert not runtime.c.engine.venue.snapshot(times[0]).positions
             assert all(h.source_clock_basis == 'COMPLETED_BAR_END' for h in packet.frame.histories)
             times[0] += timedelta(seconds=9)
             asyncio.run(deliver())
@@ -163,7 +179,7 @@ def test_production_profile_two_options_fill_and_exit_independently(tmp_path, ca
 
         # Reopening an interrupted owner retains its actual position and cash,
         # fences entries, and still allows independent mandatory protection.
-        with existing_runtime(owner, clock=lambda: times[0]) as (runtime, _):
+        with existing_runtime(owner, clock=advancing_clock) as (runtime, _):
             assert runtime.c.engine.venue.snapshot(times[0]).positions == peer
             assert runtime.c.engine.venue.snapshot(times[0]).cash == saved.cash
             enable(runtime)
@@ -184,7 +200,7 @@ def test_production_profile_two_options_fill_and_exit_independently(tmp_path, ca
                 assert db.execute('SELECT COUNT(*) FROM execution_model_calls').fetchone()[0] == 2
             # Re-delivering the same packet cannot duplicate fills or charges.
             asyncio.run(step(runtime))
-            assert runtime.c.engine.venue.snapshot(times[0]) == final
+            assert runtime.c.engine.venue.snapshot(final.captured_at) == final
         from app.mixed.observer import MixedObserver
         report = MixedObserver(owner / 'options.db', settings.limits.population_id, clock=lambda: times[0]).report()
         assert report['fill_count'] == 4 and not report['positions']
