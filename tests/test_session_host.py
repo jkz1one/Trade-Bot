@@ -596,3 +596,21 @@ def test_feed_recovery_without_valid_explicit_flat_review_is_refused(host, maxim
     with pytest.raises(ValueError, match='reviewed'):
         m.review(IMAGE, 'run', 600, 'bad-recovery', max_feed_recoveries=maximum)
     assert not calls
+
+
+@pytest.mark.parametrize("module,detail,expected", [
+    ("app.mixed.connected_runtime", {"reason": "CONNECTED_RUNTIME_UNAVAILABLE",
+                                    "journal_issue": "JOURNAL_MODE_UNSAFE"}, "JOURNAL_MODE_UNSAFE"),
+    ("app.mixed.daily_plan", {"reason": "JOURNAL_EMPTY"}, "JOURNAL_EMPTY"),
+    ("app.mixed.dashboard_snapshot", {"reason": "DASHBOARD_SNAPSHOT_STORAGE_FULL"},
+     "DASHBOARD_SNAPSHOT_STORAGE_FULL"),
+    ("app.mixed.connected_runtime", {"reason": "CONNECTED_RUNTIME_UNAVAILABLE",
+                                    "journal_issue": ["private-token"]}, "Host command failed"),
+])
+def test_host_reports_bounded_file_diagnostics(module, detail, expected, monkeypatch):
+    host = load()
+    monkeypatch.setattr(host.h, "docker", lambda *args, **kw: subprocess.CompletedProcess(
+        args, 2, json.dumps(detail), "private-stderr"))
+    with pytest.raises(RuntimeError, match=expected) as caught:
+        host.execute(IMAGE, module, [], [])
+    assert "private" not in str(caught.value)

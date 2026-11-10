@@ -7,12 +7,13 @@ import argparse
 import fcntl
 import json
 import os
+import re
 import signal
 import sqlite3
 import stat
 import threading
 import time
-from contextlib import ExitStack, closing
+from contextlib import closing
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
@@ -21,7 +22,7 @@ from app.domain.models import utc_now
 from app.mixed.connected_runtime import inspect_owner
 from app.mixed.observer import MixedObserver
 from app.options.engine import clock, fingerprint
-from app.options.observer import MAX_DATABASE_BYTES
+from app.options.observer import JOURNAL_FILE_ERRORS, MAX_DATABASE_BYTES, journal_identity
 from app.options.operator_inbox import read, save, sync_directory
 from app.options.runtime_cli import load
 from app.options.venue import private_path
@@ -90,18 +91,18 @@ def connect_readonly(path):
     return db
 
 
-def checkpoint(db, binding):
+def checkpoint(db, binding, *, schema="main"):
     config = json.loads(
-        db.execute("SELECT config_json FROM execution_option_runtime WHERE id=1").fetchone()[0]
+        db.execute(f"SELECT config_json FROM {schema}.execution_option_runtime WHERE id=1").fetchone()[0]
     )
     if fingerprint(config) != binding["owner_configuration_sha256"]:
         raise ValueError("Snapshot native owner configuration changed")
     if config["engine"]["limits"]["population_id"] != binding["population_id"]:
         raise ValueError("Snapshot population changed")
     generation, sequence = db.execute(
-        "SELECT generation,feed_sequence FROM execution_option_runtime WHERE id=1"
+        f"SELECT generation,feed_sequence FROM {schema}.execution_option_runtime WHERE id=1"
     ).fetchone()
-    revision = db.execute("SELECT COALESCE(MAX(sequence),0) FROM execution_events").fetchone()[0]
+    revision = db.execute(f"SELECT COALESCE(MAX(sequence),0) FROM {schema}.execution_events").fetchone()[0]
     return {"owner_revision": revision, "runtime_generation": generation, "feed_sequence": sequence}
 
 
@@ -139,6 +140,40 @@ def published(directory, binding, *, include_runtime=False):
         return receipt
     finally:
         db.close()
+
+
+def copy_display_tables(db):
+    """Copy the portfolio reader's history windows from one pinned owner transaction."""
+    from app.mixed.native_store import TRIGGERS
+
+    if db.execute("SELECT 1 FROM owner.sqlite_schema WHERE name='dashboard_snapshot'").fetchone():
+        raise ValueError("A dashboard snapshot cannot be used as an execution source")
+    # The v2 desk reads the last market packet for company earnings and the last
+    # 100 venue observations for its equity series. All order, cost, decision
+    # pagination and event evidence stays available to its native verifier.
+    windows = {
+        "execution_mixed_runtime_inputs": " ORDER BY sequence DESC LIMIT 1",
+        "execution_snapshots": " ORDER BY rowid DESC LIMIT 100",
+    }
+    for name, ddl in db.execute(
+        "SELECT name,sql FROM owner.sqlite_schema WHERE type='table' AND name GLOB 'execution_*'"
+    ).fetchall():
+        if not re.fullmatch(r"execution_[a-z0-9_]+", name) or not ddl.startswith("CREATE TABLE "):
+            raise ValueError("Unsupported native display table")
+        db.execute(ddl)
+        columns = [r[1] for r in db.execute(f"PRAGMA main.table_info({name})")]
+        names = ",".join('"' + column.replace('"', '""') + '"' for column in columns)
+        db.execute(
+            f"INSERT INTO main.{name}(rowid,{names}) SELECT rowid,{names} FROM owner.{name}"
+            + windows.get(name, "")
+        )
+    # The accounting verifier checks the enrolled cross-asset lock definitions.
+    for name, ddl in TRIGGERS.items():
+        if db.execute(
+            "SELECT sql FROM owner.sqlite_schema WHERE type='trigger' AND name=?", (name,)
+        ).fetchone() != (ddl,):
+            raise ValueError("Native order lock changed")
+        db.execute(ddl)
 
 
 class DashboardPublisher:
@@ -189,39 +224,40 @@ class DashboardPublisher:
             raise ValueError("Snapshot owner binding changed")
         bound_directory(self.directory, self.binding)
         source = self.owner / "options.db"
-        source_identity = file_identity(source, os.getuid())
+        source_identity = journal_identity(source, native_journal=True)
         temporary = self.directory / ".pending.db"
         fd = os.open(temporary, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
         os.close(fd)
         deadline = time.monotonic() + BACKUP_SECONDS
-        with ExitStack() as connections:
-            source_db = connections.enter_context(closing(connect_readonly(source)))
-            target_db = connections.enter_context(closing(sqlite3.connect(temporary)))
-            page_size = source_db.execute("PRAGMA page_size").fetchone()[0]
-
-            def progress(_status, _remaining, total):
-                if time.monotonic() > deadline or total * page_size > MAX_DATABASE_BYTES:
-                    raise TimeoutError("Snapshot backup exceeded its bound")
-
-            source_db.backup(target_db, pages=64, progress=progress, sleep=0.01)
-            if file_identity(source, os.getuid()) != source_identity:
-                raise ValueError("Source journal identity changed during backup")
+        with closing(sqlite3.connect(temporary.as_uri() + "?mode=rw", uri=True, timeout=1)) as target_db:
+            target_db.execute("PRAGMA trusted_schema=OFF")
             target_db.execute("PRAGMA journal_mode=DELETE")
+            page_size = target_db.execute("PRAGMA page_size").fetchone()[0]
+            target_db.execute(f"PRAGMA max_page_count={MAX_DATABASE_BYTES // page_size}")
+            target_db.setlimit(sqlite3.SQLITE_LIMIT_LENGTH, MAX_DATABASE_BYTES)
+            target_db.set_progress_handler(lambda: int(time.monotonic() > deadline), 1000)
+            target_db.execute("ATTACH DATABASE ? AS owner", (source.as_uri() + "?mode=ro",))
+            target_db.execute("BEGIN")
+            if time.monotonic() > deadline:
+                raise TimeoutError("Snapshot publication exceeded its bound")
+            original = checkpoint(target_db, self.binding, schema="owner")
+            copy_display_tables(target_db)
+            if journal_identity(source, native_journal=True) != source_identity:
+                raise ValueError("Source journal identity changed during publication")
             current = checkpoint(target_db, self.binding)
+            if current != original:
+                raise ValueError("Snapshot differs from the native owner checkpoint")
             at = clock(self.clock())
             if self.previous is not None and (
                 at < datetime.fromisoformat(self.previous["published_at"])
                 or any(current[k] < self.previous["checkpoint"][k] for k in current)
             ):
                 raise ValueError("Snapshot source checkpoint or clock regressed")
-            if target_db.execute(
-                "SELECT 1 FROM sqlite_master WHERE name='dashboard_snapshot'"
-            ).fetchone():
-                raise ValueError("A dashboard snapshot cannot be used as an execution source")
             receipt = {
                 "version": VERSION,
                 "binding_sha256": fingerprint(self.binding),
                 "published_at": at.isoformat(),
+                "display_history": "portfolio-snapshot-v1",
                 "checkpoint": current,
             }
             target_db.execute(
@@ -251,6 +287,8 @@ class DashboardPublisher:
         self.previous = receipt
         return {
             "status": "PUBLISHED",
+            "source_database_bytes": source.stat().st_size,
+            "display_database_bytes": (self.directory / "options.db").stat().st_size,
             "population_id": self.binding["population_id"],
             **receipt,
             "held_plays": len(view["positions"]),
@@ -347,12 +385,21 @@ def main(argv=None):
                     result = publisher.publish()
             finally:
                 publisher.close()
-    except (OSError, ValueError, RuntimeError, sqlite3.Error, KeyError, TypeError):
+    except (OSError, ValueError, RuntimeError, sqlite3.Error, KeyError, TypeError) as exc:
+        reason = "DASHBOARD_SNAPSHOT_UNAVAILABLE"
+        if type(exc) is ValueError and str(exc) in JOURNAL_FILE_ERRORS:
+            reason = str(exc)
+        elif getattr(exc, "sqlite_errorcode", None) == sqlite3.SQLITE_FULL:
+            reason = "DASHBOARD_SNAPSHOT_STORAGE_FULL"
+        elif isinstance(exc, TimeoutError) or getattr(exc, "sqlite_errorcode", None) == sqlite3.SQLITE_INTERRUPT:
+            reason = "DASHBOARD_SNAPSHOT_DEADLINE"
+        elif str(exc) == "Retained failed snapshot requires inspection":
+            reason = "DASHBOARD_PENDING_SNAPSHOT_RETAINED"
         print(
             json.dumps(
                 {
                     "status": "UNAVAILABLE",
-                    "reason": "DASHBOARD_SNAPSHOT_UNAVAILABLE",
+                    "reason": reason,
                     "execution_authority": False,
                     "live_enabled": False,
                 }

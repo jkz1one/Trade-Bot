@@ -19,6 +19,7 @@ from app.mixed.connected_check import connection_report
 from app.mixed.continuous_feed import ContinuousFeed, FeedPolicy
 from app.mixed.observer import MixedObserver
 from app.options.engine import fingerprint
+from app.options.observer import JOURNAL_FILE_ERRORS, OptionObserver
 from app.options.operator_inbox import private_directory, read
 from app.options.read_gateway import ReadSchemas
 from app.options.runtime_cli import existing_runtime, load, strategy_identity
@@ -39,9 +40,11 @@ def inspect_owner(directory, settings, *, clock_source=utc_now):
     private_directory(directory)
     private_path(directory / "venue.db")
     observer = MixedObserver(
-        directory / "options.db", settings.limits.population_id, clock=clock_source
+        directory / "options.db", settings.limits.population_id, clock=clock_source, native_journal=True
     )
     with observer.read() as db:
+        if db.execute("SELECT 1 FROM sqlite_schema WHERE name='dashboard_snapshot'").fetchone():
+            raise ValueError("A dashboard snapshot cannot be used as an execution source")
         row = db.execute("SELECT * FROM execution_option_runtime WHERE id=1").fetchone()
         control = db.execute("SELECT * FROM execution_control WHERE id=1").fetchone()
         if row is None or control is None:
@@ -122,12 +125,9 @@ def check(directory, feed_directory, policy_file, schemas_file, *, clock_source=
     if frozen["venue_path"] != str(directory / "venue.db"):
         raise ValueError("Execution owner path differs from enrollment")
     private_directory(feed_directory)
-    private_path(feed_directory / "collector.db")
     # Reuse the bounded read-only database reader, without opening the collector
     # lease or performing interrupted-attempt recovery during a check.
-    from app.options.observer import OptionObserver
-
-    with OptionObserver(feed_directory / "collector.db", policy.population_id).read() as db:
+    with OptionObserver(feed_directory / "collector.db", policy.population_id, native_journal=True).read() as db:
         from zoneinfo import ZoneInfo
 
         from app.mixed.feed_rollover import load_rollovers, policy_for, verify_owner
@@ -692,6 +692,7 @@ def main(argv=None):
                     "status": "UNAVAILABLE",
                     "reason": "CONNECTED_RUNTIME_UNAVAILABLE",
                     "failure": failure_details(exc),
+                    **({"journal_issue": str(exc)} if type(exc) is ValueError and str(exc) in JOURNAL_FILE_ERRORS else {}),
                     "live_enabled": False,
                 }
             )

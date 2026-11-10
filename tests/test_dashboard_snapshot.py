@@ -19,8 +19,8 @@ from app.mixed.observer import MixedObserver
 from app.options.runtime_cli import existing_runtime, initialize
 
 
-def owner(tmp_path, *, positions=False):
-    value = request(tmp_path)
+def owner(tmp_path, *, positions=False, value=None):
+    value = value or request(tmp_path)
     directory = tmp_path / "owner"
     initialize(directory, value.settings, clock=lambda: AT)
     if positions:
@@ -440,3 +440,76 @@ def test_failed_publication_retains_last_complete_snapshot(tmp_path, monkeypatch
         assert digest(source) == before
     finally:
         p.close()
+
+
+def test_publish_after_owner_outgrows_display_with_two_verified_plays(tmp_path):
+    from app.mixed.dashboard_reader import guard
+    from app.options.engine import fingerprint
+
+    value = request(tmp_path)
+    source, settings = owner(tmp_path, positions=True, value=value)
+    directory = tmp_path / "dashboard"
+    journal = source / "options.db"
+    at = AT + timedelta(seconds=2)
+    p = publisher(source, directory)
+    try:
+        first = p.publish()
+    finally:
+        p.close()
+
+    with sqlite3.connect(journal) as db:
+        # Grow the original append-only input table. JSON whitespace is ignored
+        # by the canonical packet hash. Each packet has its own native sequence.
+        for seq in range(1, 1026):
+            packet = value.packets[1].model_copy(update={"sequence": seq})
+            db.execute("INSERT INTO execution_mixed_runtime_inputs VALUES (?,?,?,?,?)", (
+                seq, fingerprint(packet), packet.model_dump_json().ljust(65536),
+                packet.recorded_at.isoformat(), "DELIVERED",
+            ))
+        db.execute("UPDATE execution_option_runtime SET feed_sequence=?,frame_hash=?,"
+                   "status='STOPPED',reason='OPTION_RUNTIME_STOPPED'", (seq, fingerprint(packet)))
+        db.execute("UPDATE execution_control SET halted=1,halt_reason='OPTION_RUNTIME_STOPPED'")
+        db.execute("INSERT INTO execution_events(occurred_at,kind,payload) VALUES(?,?,?)",
+                   (at.isoformat(), "OPTION_RUNTIME_STOPPED", "{}"))
+    before = digest(source)
+    assert journal.stat().st_size > 64 * 1024 * 1024
+    p = publisher(source, directory, create=False, at=at)
+    try:
+        result = p.publish()
+    finally:
+        p.close()
+    assert result["checkpoint"]["owner_revision"] > first["checkpoint"]["owner_revision"]
+    assert result["checkpoint"]["feed_sequence"] == seq
+    assert result["held_plays"] == result["fills"] == 2
+    assert guard(directory, p.binding, clock_source=lambda: at + timedelta(hours=2))[
+        "publication_state"] == "STOPPED_RECORDS"
+    assert (directory / "options.db").stat().st_size < 64 * 1024 * 1024
+    assert view(directory / "options.db", settings) == MixedObserver(
+        journal, settings.limits.population_id, clock=lambda: at, native_journal=True,
+    ).report(limit=100)
+    with sqlite3.connect(directory / "options.db") as db:
+        assert db.execute("SELECT sequence FROM execution_mixed_runtime_inputs").fetchall() == [(seq,)]
+    assert digest(source) == before
+
+
+def test_projected_database_is_rejected_as_native_owner(tmp_path):
+    from app.mixed.connected_runtime import inspect_owner
+
+    source, settings = owner(tmp_path)
+    directory = tmp_path / "dashboard"
+    p = publisher(source, directory)
+    try:
+        p.publish()
+    finally:
+        p.close()
+    os.replace(directory / "options.db", source / "options.db")
+    with pytest.raises(ValueError, match="cannot be used as an execution source"):
+        inspect_owner(source, settings, clock_source=lambda: AT)
+
+
+def test_large_native_journal_still_requires_private_mode(tmp_path):
+    source, _ = owner(tmp_path)
+    (source / "options.db").chmod(0o644)
+    with pytest.raises(ValueError, match="JOURNAL_MODE_UNSAFE"):
+        publisher(source, tmp_path / "dashboard")
+    assert not (tmp_path / "dashboard").exists()

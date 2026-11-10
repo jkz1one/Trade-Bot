@@ -377,3 +377,18 @@ def test_failed_first_tick_never_starts_collector_and_releases_lease(
 
     with existing_runtime(args[0], clock=lambda: AT):
         pass
+
+
+def test_growing_collector_can_be_checked_and_planned_without_opening_worker(tmp_path, schemas):
+    from app.mixed.daily_plan import inspect
+
+    args, _, _ = enrolled(tmp_path, schemas)
+    journal = args[1] / "collector.db"
+    with sqlite3.connect(journal) as db:
+        db.execute("CREATE TABLE test_saved_capture(evidence BLOB)")
+        db.execute("INSERT INTO test_saved_capture VALUES(zeroblob(67108864))")
+    before = digest(tmp_path)
+    report = inspect(*args, now=AT)
+    assert report["status"] == "DAILY_INFO"
+    assert report["state_modified"] is report["provider_calls"] is False
+    assert digest(tmp_path) == before

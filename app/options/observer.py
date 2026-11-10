@@ -60,15 +60,24 @@ def _json(raw):
     return json.loads(raw)
 
 
-def _private(path):
+JOURNAL_FILE_ERRORS = frozenset({
+    "JOURNAL_NOT_REGULAR", "JOURNAL_OWNER_MISMATCH", "JOURNAL_MODE_UNSAFE",
+    "JOURNAL_EMPTY", "DISPLAY_DATABASE_SIZE_LIMIT",
+})
+
+
+def journal_identity(path, *, native_journal=False):
     info = path.lstat()
-    if (
-        not stat.S_ISREG(info.st_mode)
-        or info.st_uid != os.getuid()
-        or stat.S_IMODE(info.st_mode) != 0o600
-        or not 0 < info.st_size <= MAX_DATABASE_BYTES
-    ):
-        raise ValueError("Private bounded owned database required")
+    if not stat.S_ISREG(info.st_mode):
+        raise ValueError("JOURNAL_NOT_REGULAR")
+    if info.st_uid != os.getuid():
+        raise ValueError("JOURNAL_OWNER_MISMATCH")
+    if stat.S_IMODE(info.st_mode) != 0o600:
+        raise ValueError("JOURNAL_MODE_UNSAFE")
+    if info.st_size <= 0:
+        raise ValueError("JOURNAL_EMPTY")
+    if not native_journal and info.st_size > MAX_DATABASE_BYTES:
+        raise ValueError("DISPLAY_DATABASE_SIZE_LIMIT")
     return info.st_dev, info.st_ino
 
 
@@ -94,22 +103,25 @@ def _contract(contract):
 
 
 class OptionObserver:
-    def __init__(self, journal, population_id, *, clock=utc_now, comparison_file=None):
+    def __init__(self, journal, population_id, *, clock=utc_now, comparison_file=None, native_journal=False):
         self.path = Path(journal)
         if not self.path.is_absolute():
             raise ValueError("Explicit absolute journal path required")
         self.population_id = TypeAdapter(Name).validate_python(population_id)
         self.clock = clock
+        self.native_journal = native_journal
         if comparison_file is not None and not Path(comparison_file).is_absolute():
             raise ValueError("Explicit absolute comparison path required")
         self.comparison_file = comparison_file
 
     @contextmanager
     def read(self):
-        identity = _private(self.path)
+        identity = journal_identity(self.path, native_journal=self.native_journal)
         db = sqlite3.connect(
             "file:" + quote(str(self.path)) + "?mode=ro", uri=True, timeout=READ_SECONDS
         )
+        if self.native_journal:
+            db.setlimit(sqlite3.SQLITE_LIMIT_LENGTH, MAX_DATABASE_BYTES)
         db.row_factory = sqlite3.Row
         deadline = time.monotonic() + READ_SECONDS
         db.set_progress_handler(lambda: int(time.monotonic() >= deadline), 1000)
@@ -117,10 +129,10 @@ class OptionObserver:
             db.execute("PRAGMA query_only=ON")
             db.execute("PRAGMA trusted_schema=OFF")
             db.execute("BEGIN")
-            if _private(self.path) != identity:
+            if journal_identity(self.path, native_journal=self.native_journal) != identity:
                 raise ValueError("Database identity changed")
             yield db
-            if _private(self.path) != identity or time.monotonic() >= deadline:
+            if journal_identity(self.path, native_journal=self.native_journal) != identity or time.monotonic() >= deadline:
                 raise ValueError("Database identity/deadline changed")
         finally:
             db.close()

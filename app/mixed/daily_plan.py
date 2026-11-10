@@ -11,7 +11,7 @@ from app.execution.economics import summary
 from app.mixed.connected_runtime import check
 from app.mixed.feed_rollover import load_rollovers
 from app.options.engine import fingerprint
-from app.options.observer import OptionObserver
+from app.options.observer import JOURNAL_FILE_ERRORS, OptionObserver
 from app.robinhood.schedule import XNYSCalendar
 
 NY = ZoneInfo("America/New_York")
@@ -51,7 +51,7 @@ def inspect(directory, feed_directory, policy_file, schemas_file, *, now=None):
         directory, feed_directory, policy_file, schemas_file, clock_source=lambda: now)
     plan = schedule(now)
     target = plan["target_session"]
-    with OptionObserver(feed_directory / "collector.db", base.population_id).read() as db:
+    with OptionObserver(feed_directory / "collector.db", base.population_id, native_journal=True).read() as db:
         rows = load_rollovers(db, base, schemas)
     enrolled = next((r for r in rows if r.target_session.isoformat() == target), None)
     latest = rows[-1].policy if rows else base
@@ -104,7 +104,14 @@ def main():
     for name in ("directory", "feed-directory", "policy", "schemas"):
         p.add_argument("--" + name, type=Path, required=True)
     a = p.parse_args()
-    print(json.dumps(inspect(a.directory, a.feed_directory, a.policy, a.schemas), sort_keys=True))
+    try:
+        result = inspect(a.directory, a.feed_directory, a.policy, a.schemas)
+    except ValueError as exc:
+        if str(exc) not in JOURNAL_FILE_ERRORS:
+            raise
+        print(json.dumps({"status": "UNAVAILABLE", "reason": str(exc), "live_enabled": False}))
+        raise SystemExit(2) from None
+    print(json.dumps(result, sort_keys=True))
 
 
 if __name__ == "__main__":

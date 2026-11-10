@@ -249,7 +249,7 @@ def review(
                     i.contract,
                     binding.carry_expiry_guard_seconds,
                 )
-    with OptionObserver(feed_directory / "collector.db", base.population_id).read() as db:
+    with OptionObserver(feed_directory / "collector.db", base.population_id, native_journal=True).read() as db:
         rows = load_rollovers(db, base, schemas)
         verify_owner(rows, state["owner_configuration_sha256"], result.get("accepted_owner_hashes"))
         if len(rows) >= MAX_ROLLOVERS or any(r.target_session == target for r in rows):

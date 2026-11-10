@@ -1,5 +1,35 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.198. November 9 publisher exit and growing PAPER journals, 2026-11-10.
+
+Docker recorded exit 2 and OOMKilled=false for daily-20261109. The worker identified
+PUBLISHER as the failed component. Its traceback ends at the native owner's file
+check in app/options/observer.py. On the deployed release that line checks regular
+file type, owner, mode 0600 and a nonzero length of at most 64 MiB. The operator's
+one-shot publication also failed. The host output contains no file sizes or modes.
+
+An offline owner with two filled simulated positions reproduced the same file check
+when original packet history crossed 64 MiB. An independently enlarged collector
+journal reproduced a failure in daily startup inspection. The connected owner and
+collector now use private, read-only journal transactions with bounded query time
+and record size. The publisher reads one committed owner transaction and writes
+a separate display database with the original row IDs, current packet, latest
+100 venue observations and original order and decision history. It compares the
+source and display checkpoints, verifies accounting and atomically publishes the
+result under the existing reader binding. The 64 MiB display limit still applies.
+The source journal retains every historical packet and venue observation.
+
+446 installed-package tests passed. The cross-UID case was skipped because
+the test namespace does not map UID/GID 10001. All 324 application files matched
+source, wheel and installation. All 60 runtime pins matched. Wheel SHA256
+acad0daf0e1559d899243eee01035a49784e0194174dbeaee539eb76373b2ccb.
+
+Monday ended with zero fills and two completed scans. The publisher failure and
+the earlier feed-unavailable skips have separate evidence. A sustained connected
+run and a connected entry-to-exit lifecycle still require host observations.
+
+## Previous release evidence
+
 Version 1.197. November 9 daily PAPER failure and dashboard publication, 2026-11-09.
 
 The operator installed f6493b5 with image

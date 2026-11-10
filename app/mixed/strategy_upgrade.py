@@ -106,7 +106,7 @@ def review(state, *, clock_source=utc_now):
         if amendment(db) is not None:
             raise ValueError('Account was already amended')
         frozen = json.loads(db.execute('SELECT config_json FROM execution_option_runtime WHERE id=1').fetchone()[0])
-    with OptionObserver(state / 'collector/collector.db', old.limits.population_id).read() as db:
+    with OptionObserver(state / 'collector/collector.db', old.limits.population_id, native_journal=True).read() as db:
         feed = collector_state(db, load_rollovers(db, policy, schemas))
         if feed['last_attempt'] and feed['last_attempt'][1] in {'STARTED', 'NORMALIZED'}:
             raise ValueError('Collector has an unfinished delivery')
@@ -178,7 +178,7 @@ def apply(state, *, expected_review, clock_source=utc_now):
         from app.options.observer import OptionObserver
         base = FeedPolicy.model_validate_json(read(state / 'config/policy.json', 256 * 1024))
         schemas = ReadSchemas.model_validate_json(read(state / 'config/schemas.json', 256 * 1024))
-        with OptionObserver(state / 'collector/collector.db', base.population_id).read() as feed_db:
+        with OptionObserver(state / 'collector/collector.db', base.population_id, native_journal=True).read() as feed_db:
             current_feed = collector_state(feed_db, load_rollovers(feed_db, base, schemas))
         if current_feed != value['binding']['collector_state']:
             raise ValueError('Collector changed after strategy review')

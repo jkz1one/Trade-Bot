@@ -12,19 +12,21 @@ files. The existing dashboard runs as UID/GID 10001, with private owned-file che
 Directly pointing that reader at a root-owned journal fails those checks. Moving
 credentials or changing the native journal's ownership is unnecessary.
 
-The publisher reads the original journal, validates a complete SQLite backup with
-the native mixed-account observer, then atomically replaces the display copy. Only
-the newly created copy is assigned to UID/GID 10001. Original timestamps, account
-state, two-play identities, fills and accounting remain intact. The source owner
-may keep its execution lease while a separate publisher lease prevents two writers
-to the display directory. Readers already holding the old database see a complete
-old snapshot; new requests see the replacement.
+The publisher opens the original journal read-only. One SQLite transaction reads
+the checkpoint and native execution tables, including committed WAL records. The
+portfolio view uses the latest accepted input row for its earnings context and
+the last 100 venue observations for its chart. The display copy retains those
+windows, original row IDs and the full order, decision, cost and event records.
+The source retains the complete history. The publisher verifies the checkpoint,
+native lock definitions and accounting before assigning the new file to UID/GID
+10001 and replacing the display atomically. Readers holding the previous inode
+finish their reads on that publication.
 
-Publication is bounded by a 64 MiB database limit and a five-second backup/validation
-budget. Native observer validation retains its own bounded reads. A publication
-started before shutdown may finish before the publisher exits. This is a display
-cadence, not a trading or quote-freshness guarantee. Stopped publication can leave a
-stale display; check the publication receipt and original feed clocks separately.
+The display has a 64 MiB limit and a five-second copy and verification budget.
+The native journal can grow beyond that size. Its private file and inode checks
+and bounded read transactions apply to each publication. The publication receipt
+records the checkpoint and time. Quote clocks and the stopped owner's recorded
+state come from the original observations.
 
 ## Frozen binding and failures
 

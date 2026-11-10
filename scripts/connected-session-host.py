@@ -270,14 +270,27 @@ def execute(image_id, module, args, mounts, *, copies=False):
                     and report.get("reason") == "SAVED_PREOPEN_REPLAY_UNAVAILABLE"):
                 return report
         try:
-            reason = json.loads(result.stdout).get("reason")
+            public = json.loads(result.stdout) if len(result.stdout) <= 65536 else {}
+            reason = public.get("reason")
+            if module == "app.mixed.connected_runtime" and reason == "CONNECTED_RUNTIME_UNAVAILABLE":
+                reason = public.get("journal_issue") or reason
         except (ValueError, AttributeError):
+            reason = None
+        if not isinstance(reason, str):
             reason = None
         if module == "app.mixed.feed_rollover" and reason in {
             "SESSION_CLOSED", "FEED_ROLLOVER_UNAVAILABLE"
         }:
             raise RuntimeError(reason)
-        if module == "app.mixed.dashboard_snapshot" and reason == "DASHBOARD_SNAPSHOT_UNAVAILABLE":
+        if module in {"app.mixed.connected_runtime", "app.mixed.daily_plan", "app.mixed.dashboard_snapshot"} and reason in (
+            "JOURNAL_NOT_REGULAR", "JOURNAL_OWNER_MISMATCH", "JOURNAL_MODE_UNSAFE",
+            "JOURNAL_EMPTY", "DISPLAY_DATABASE_SIZE_LIMIT",
+        ):
+            raise RuntimeError(reason)
+        if module == "app.mixed.dashboard_snapshot" and reason in (
+            "DASHBOARD_SNAPSHOT_UNAVAILABLE", "DASHBOARD_SNAPSHOT_STORAGE_FULL",
+            "DASHBOARD_SNAPSHOT_DEADLINE", "DASHBOARD_PENDING_SNAPSHOT_RETAINED",
+        ):
             raise RuntimeError(reason)
         raise RuntimeError("Host command failed: docker run")
     return json.loads(result.stdout)

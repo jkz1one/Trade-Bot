@@ -5,21 +5,35 @@ It ended about 92 minutes early with a nonzero container exit, zero fills and
 zero AI spend. Two scans completed and both reviewed feed recoveries were used.
 The controller latches a failed run for review before another automatic launch.
 
-## November 9 dashboard and exit diagnosis
+## Recover the November 9 publisher failure
 
-From `/opt/trade-bot-dashboard` on the installed release, use
-`docker logs --tail 1 trade-bot-connected-daily-20261109` for the final
-structured worker error. If the worker exited without that record, Docker's
-`State.ExitCode` and `State.OOMKilled` provide independent exit evidence.
+The final worker log identified the publisher's private journal check. Docker
+recorded exit 2 and OOMKilled=false. A growing native journal reproduces that
+check offline. Monday's saved report and the original owner are the incident
+records. The publisher's original file check ran before creating a temporary
+display for that publication attempt.
 
-With the worker stopped, `python3 scripts/connected-session-host.py snapshot`
-attempts one publication from the existing owner to the enrolled display.
-A successful PUBLISHED result can be viewed by reloading the existing dashboard.
-The reader checks the original checkpoint and permits historical terminal
-records only for a stopped or failed, halted owner. An UNAVAILABLE result or
-a retained partial snapshot requires investigation. Keep those files for review.
-The daily session and the dashboard have independent outcomes. A successful
-publication does not clear the scheduler's failure latch.
+From the stopped host, use one block with the tested release SHA supplied in the
+release message. The final line explicitly resumes the daily schedule after the
+failed run. Omit that line if you intentionally paused the schedule.
+
+```bash
+cd /opt/trade-bot-dashboard &&
+git fetch origin slice2/robinhood-read-shadow &&
+release=TESTED_RELEASE_SHA &&
+git merge-base --is-ancestor HEAD "$release" &&
+git merge-base --is-ancestor "$release" FETCH_HEAD &&
+git switch --detach "$release" &&
+python3 scripts/paper-daily.py install &&
+python3 scripts/connected-session-host.py snapshot &&
+python3 scripts/paper-daily.py resume
+```
+
+PUBLISHED includes the native and display database sizes and the verified
+checkpoint. Reload the existing dashboard. SCHEDULE_RESUMED allows the timer
+to evaluate the next eligible session after its flat-owner and halt checks.
+A retained partial publication or a file permission error requires review.
+Keep both the partial publication and the last complete display.
 
 Use the existing `local-simulation` account and population
 `connected-simulation-1000-v1`: $1,000 initial virtual capital, maximum two plays,
