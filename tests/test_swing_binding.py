@@ -255,7 +255,7 @@ def test_continuous_run_binds_after_capture_without_starting_another_reader(
     stop = asyncio.Event()
 
     async def offline_tick(**kwargs):
-        result = await native_tick(**kwargs, reader=reader(now[0], seen))
+        result = await native_tick(**(kwargs | {'reader': reader(now[0], seen)}))
         now[0] += timedelta(seconds=2)
         stop.set()
         return result
@@ -328,3 +328,25 @@ def test_observed_swing_does_not_repair_unusable_history(damage):
         daily = daily.model_copy(update={"bars": (*daily.bars[:-1], daily.bars[-1].model_copy(update={"interpolated": True}))})
     snapshot = snapshot.model_copy(update={"daily": (daily,)})
     assert bind_sources(snapshot, policy, created_at=snapshot.captured_at).status == "BLOCKED"
+
+
+def test_verified_history_cache_reuses_exact_bytes_and_rechecks_mutation(tmp_path, schemas, monkeypatch):
+    from app.mixed.continuous_feed import ContinuousFeed
+    from app.mixed import swing_feed
+
+    settings, policy = connected(tmp_path)
+    feed = ContinuousFeed(tmp_path / "feed", policy, schemas, create=True)
+    try:
+        asyncio.run(feed.tick(now=PREOPEN, reader=reader(PREOPEN, [])))
+        first = feed.bind_swing_sources(settings, now=PREOPEN+timedelta(seconds=2))
+        feed.bind_swing_sources(settings, now=PREOPEN+timedelta(seconds=3))
+        def no_rebuild(*args, **kwargs):
+            pytest.fail("Unchanged original history rebuilt")
+        monkeypatch.setattr(swing_feed, "snapshot", no_rebuild)
+        assert feed.bind_swing_sources(settings, now=PREOPEN+timedelta(seconds=4)) == first
+        feed.db.execute("UPDATE attempts SET request_hash=?", ("0"*64,))
+        feed.db.commit()
+        with pytest.raises(ValueError, match="Stored Swing history binding changed"):
+            feed.bind_swing_sources(settings, now=PREOPEN+timedelta(seconds=5))
+    finally:
+        feed.close()

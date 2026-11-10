@@ -1,5 +1,57 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.199. Tuesday runtime timeout and independent dashboard status, 2026-11-10.
+
+The operator confirmed successful deployment of 7db7475, publication and schedule
+resume. Its image was sha256:975b88ad3c615afe5f8098b785cd93e16374423fb1387ed3857c0fbb3b3d85f1.
+The original owner journal was 67,133,440 bytes, 24 KiB above the previous limit.
+Publication produced a 27,361,280-byte display without modifying the source.
+
+Run daily-20261110 failed after 802.3 of 21,475 planned seconds. The worker
+reported RUNTIME FixtureProcessTimeout at app/options/process.py:185. Accepted
+sequence was 1432 and collected sequence was 1437. One cycle completed, seven
+were skipped and one was interrupted. Collection delivered 26 attempts and failed
+22. One feed recovery was used. The last scan had one confirmed setup and its
+decision was HOLD. QQQ inventory was 22.472 seconds old against a ten-second bound.
+The account recorded zero fills and zero AI spend.
+
+Collector normalization now runs off the runtime event loop. Archive source-clock
+walks yield cooperatively and retain the original hash and timestamp comparisons.
+Repeated Swing history validation reuses a bounded per-collector result only when
+all original stored bytes and policy inputs match. Mutations or restart force
+validation again. Collector time-window queries use an additive timestamp index.
+Local process, market data, recovery and spending limits continue to apply.
+
+A regression fixture reproduces a local venue deadline failure while synchronous
+normalization blocks the event loop. The revised path allows native read supervision
+to complete during that work. This establishes a software contention path.
+Tuesday's exact delayed subprocess stage remains unavailable in the supplied text.
+The updated report retains its existing sanitized parent/child stage telemetry.
+
+The dashboard now shows daily controller evidence independently of the worker and
+account publisher, including failures, run duration and missing updates. Status
+publication runs on the host timer. Authentication still precedes access. An
+unavailable account snapshot produces a readable status page with unknown account
+balances and positions. The existing account API continues to reject stale data.
+The reader has a checked in-place upgrade with rollback to its retained predecessor.
+
+An explicit saved-read-timeout recovery authorizes one subsequent daily launch
+against the exact failed owner revision. It verifies the retained worker identity,
+a sole runtime timeout, the original snapshot-read failure and absence of later
+operator halts. The native startup reconciliation and fresh-feed gates remain
+authoritative. Existing same-day guards prevent re-running Tuesday automatically.
+
+599 installed-package tests passed. One cross-UID publication test was skipped
+because the namespace cannot map UID/GID 10001. All 328 application files matched
+source, wheel and installation, and all 60 runtime pins matched. Wheel SHA256
+aad3ff907936aaca61a1b92692b207f8422ea94c8bf3dee9d1cda2f344a217e0.
+The original installed revision failed the contention regression with
+FixtureProcessTimeout. HTTP-level UI tests verified login enforcement, failure
+visibility with a missing account snapshot and stale controller status.
+Browser visual verification was blocked by the workspace's browser restrictions.
+
+## Previous release evidence
+
 Version 1.198. November 9 publisher exit and growing PAPER journals, 2026-11-10.
 
 Docker recorded exit 2 and OOMKilled=false for daily-20261109. The worker identified

@@ -11,7 +11,8 @@ from pathlib import Path
 from app.domain.models import utc_now
 from app.mixed.dashboard_snapshot import VERSION, published
 from app.mixed.observer import MixedObserver
-from app.options.engine import clock
+from app.mixed.paper_health import display
+from app.options.engine import clock, fingerprint
 from app.options.release_identity import inspect_release
 from app.web.options import create_options_app
 
@@ -97,14 +98,19 @@ def inspect(directory, binding, *, clock_source=utc_now):
     }
 
 
-def create_app(directory, binding, password_file, *, clock_source=utc_now):
-    inspect(directory, binding, clock_source=clock_source)
+def create_app(directory, binding, password_file, *, clock_source=utc_now, allow_degraded=False):
+    if allow_degraded:
+        if inspect_release().status != "VERIFIED_FILES":
+            raise ValueError("Installed application identity unavailable")
+    else:
+        inspect(directory, binding, clock_source=clock_source)
     return create_options_app(
         str(Path(directory) / "options.db"),
         binding["population_id"],
         password_file,
         mixed=True,
         clock=clock_source,
+        paper_operation=lambda: display(directory, fingerprint(binding), binding["publisher_uid"], clock_source()),
         stored_guard=lambda: guard(directory, binding, clock_source=clock_source),
     )
 
@@ -118,7 +124,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         binding = parse_binding(args.binding_json)
-        app = create_app(args.directory, binding, args.password_file)
+        app = create_app(args.directory, binding, args.password_file, allow_degraded=args.operation == "serve")
         if args.operation == "inspect":
             print(json.dumps(inspect(args.directory, binding), sort_keys=True))
         else:

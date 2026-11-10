@@ -8,6 +8,7 @@ import asyncio
 import fcntl
 import os
 import sqlite3
+import time
 from datetime import timedelta
 from pathlib import Path
 from typing import Literal
@@ -487,6 +488,8 @@ class ContinuousFeed:
             raise ValueError("Absolute dedicated feed directory required")
         self.policy = FeedPolicy.model_validate(policy.model_dump())
         self.cycle_needed = None
+        self._checked_history = None
+        self._checked_binding = None
         self.schemas = reviewed_schemas(schemas)
         if create:
             self.directory.mkdir(mode=0o700)
@@ -522,6 +525,7 @@ class ContinuousFeed:
             from app.mixed.feed_rollover import load_rollovers
 
             self.rollovers = load_rollovers(self.db, self.policy, self.schemas)
+            self.db.execute("CREATE INDEX IF NOT EXISTS attempts_started_at ON attempts(started_at)")
             self.db.execute('CREATE TABLE IF NOT EXISTS cycle_requests(sequence INTEGER PRIMARY KEY,requested INTEGER NOT NULL)')
             self.db.execute("UPDATE attempts SET status='INTERRUPTED' WHERE status='STARTED'")
             self.db.commit()
@@ -552,12 +556,19 @@ class ContinuousFeed:
             return None
         from app.mixed.swing_feed import SwingHistorySnapshot, snapshot
         from app.options.read_capture import policy_digest
-        value = SwingHistorySnapshot.model_validate_json(row["payload_json"])
         attempt = self.db.execute(
-            "SELECT * FROM attempts WHERE sequence=?", (row["attempt_sequence"],)
+            "SELECT raw_json, request_hash FROM attempts WHERE sequence=?", (row["attempt_sequence"],)
         ).fetchone()
         if attempt is None or attempt["raw_json"] is None:
             raise ValueError("Original Swing capture missing")
+        # Keep one verified original per collector. Compare actual stored bytes, not
+        # only the claimed hashes. Restart or a changed input forces full verification.
+        inputs = (target, tuple(row), tuple(attempt), fingerprint(self.schemas),
+                  fingerprint(self.policy.capture), fingerprint(self.policy_for(target).swing_history),
+                  tuple(i.symbol for i in self.policy.stocks))
+        if self._checked_history and self._checked_history[0] == inputs:
+            return self._checked_history[1].model_copy(deep=True)
+        value = SwingHistorySnapshot.model_validate_json(row["payload_json"])
         captured = CaptureResult.model_validate_json(attempt["raw_json"])
         if (
             value.target_session != target
@@ -575,6 +586,7 @@ class ContinuousFeed:
             )
         ):
             raise ValueError("Stored Swing history binding changed")
+        self._checked_history = (inputs, value.model_copy(deep=True))
         return value
 
     def recover(self):
@@ -629,7 +641,7 @@ class ContinuousFeed:
         if paid_scope_refresh is not None:
             from app.mixed.scope_refresh import validate_ticket
             validate_ticket(self, paid_scope_refresh, now)
-        last = self.db.execute("SELECT * FROM attempts ORDER BY sequence DESC LIMIT 1").fetchone()
+        last = self.db.execute("SELECT sequence,status,started_at FROM attempts ORDER BY sequence DESC LIMIT 1").fetchone()
         from datetime import datetime
 
         if last:
@@ -802,7 +814,8 @@ class ContinuousFeed:
             if captured.collected_at.astimezone(ZoneInfo("America/New_York")).date() != target_day:
                 history_issues = (*history_issues, "SESSION_BOUNDARY_DURING_CAPTURE")
             stage = "NORMALIZE"
-            packet = normalize(
+            packet = await asyncio.to_thread(
+                normalize,
                 effective,
                 self.schemas,
                 captured,
@@ -841,11 +854,15 @@ class ContinuousFeed:
             unchecked = quotes(packet.frame)
             # Missing deliveries never erase a subject's last original source
             # clock. Walk retained envelopes until each current subject is found.
+            next_yield = time.monotonic() + 0.02
             for prior in self.db.execute(
                 "SELECT packet_json,packet_hash FROM attempts WHERE packet_json IS NOT NULL ORDER BY sequence DESC"
             ):
                 if not unchecked:
                     break
+                if time.monotonic() >= next_yield:
+                    await asyncio.sleep(0)
+                    next_yield = time.monotonic() + 0.02
                 previous = PortfolioRuntimePacket.model_validate_json(prior[0])
                 if fingerprint(previous) != prior[1]:
                     raise ValueError("Retained normalized feed changed")
@@ -933,12 +950,18 @@ class ContinuousFeed:
         history = self.swing_snapshot(target)
         if history is None:
             raise ValueError("Original Swing history missing")
-        bound = BoundSwingSources.model_validate_json(row["payload_json"])
         effective = self.policy_for(target)
         policy = policy_from_settings(
             settings, effective.candidates, carry_intent_for(effective, target),
             observed_simulation=effective.swing_observed_simulation,
         )
+        key = (target, tuple(row), fingerprint(history), fingerprint(policy))
+        if self._checked_binding and self._checked_binding[0] == key:
+            bound = self._checked_binding[1]
+            if bound.created_at > clock(now):
+                raise ValueError("Original Swing binding changed")
+            return bound.model_copy(deep=True)
+        bound = BoundSwingSources.model_validate_json(row["payload_json"])
         if (
             bound.created_at > clock(now)
             or bound.target_session != target
@@ -946,6 +969,7 @@ class ContinuousFeed:
             or bound != bind_sources(history, policy, created_at=bound.created_at)
         ):
             raise ValueError("Original Swing binding changed")
+        self._checked_binding = (key, bound.model_copy(deep=True))
         return bound
 
     def bind_swing_sources(self, settings, *, now):

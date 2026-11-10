@@ -67,6 +67,7 @@ def create_options_app(
     review_at=None,
     operator_key_file=None,
     stored_guard=None,
+    paper_operation=None,
 ):
     if stored_guard is not None and (
         not mixed or review_at is not None or operator_key_file is not None
@@ -108,7 +109,7 @@ def create_options_app(
         )
         return response
 
-    def authenticate(credentials: Annotated[HTTPBasicCredentials | None, Depends(basic)]):
+    def login(credentials: Annotated[HTTPBasicCredentials | None, Depends(basic)]):
         try:
             secret = password(password_file)
         except (OSError, ValueError):
@@ -123,11 +124,25 @@ def create_options_app(
                 headers={"WWW-Authenticate": 'Basic realm="Options PAPER observer"'},
             )
 
+    def guard_account():
         if stored_guard is not None:
             try:
                 stored_guard()
             except (OSError, ValueError, RuntimeError, KeyError, TypeError):
                 raise HTTPException(503, "Dashboard snapshot unavailable or not updating") from None
+
+    def authenticate(_login=Depends(login)):
+        guard_account()
+
+    if paper_operation is not None:
+        @app.get("/desk/operation", response_class=HTMLResponse, dependencies=[Depends(login)])
+        def operation_view():
+            return templates.env.get_template("paper_operation.html").render(ops=paper_operation())
+
+        @app.get("/desk-operation.js", dependencies=[Depends(login)])
+        def operation_script():
+            return Response(templates.env.get_template("paper_operation_script.html").render(),
+                            media_type="application/javascript")
 
     if operator_key_file is not None:
         from app.web.portfolio_admin import install
@@ -223,7 +238,7 @@ def create_options_app(
             data["review"] = {"mode": "FROZEN_OFFLINE_UI_FIXTURE", "as_of": review_at.isoformat()}
         return JSONResponse(data, status_code=503 if data["status"] == "UNAVAILABLE" else 200)
 
-    @app.get("/", response_class=HTMLResponse, dependencies=[Depends(authenticate)])
+    @app.get("/", response_class=HTMLResponse, dependencies=[Depends(login)])
     def index(
         request: Request,
         limit: int = Query(25, ge=1, le=100),
@@ -231,6 +246,15 @@ def create_options_app(
         family: Literal["ALL", "DEGEN", "SWING", "SCOPE"] = "ALL",
         refresh: bool | None = None,
     ):
+        ops = paper_operation() if paper_operation else None
+        try:
+            guard_account()
+        except HTTPException as exc:
+            if ops is None or exc.status_code != 503:
+                raise
+            return templates.TemplateResponse(
+                request, "paper_unavailable.html", {"ops": ops}, status_code=503,
+            )
         if mixed and family != "ALL":
             raise HTTPException(422, "Mixed desk shows the common account; use ALL")
         data = observer.report(limit=limit, before=before, family=family)
@@ -246,6 +270,7 @@ def create_options_app(
             "mixed_desk.html" if mixed else "options.html",
             {
                 "data": data,
+                "ops": ops,
                 "view": mixed_view(data) if mixed else None,
                 "auto_refresh": bool(refresh) and before is None and review_at is None,
                 "update_mode": update_mode(before, mixed if refresh is None else refresh),

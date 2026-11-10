@@ -300,6 +300,10 @@ def short_report(result):
             last = failure['frames'][-1] if failure['frames'] else None
             location = f" at {last['file']}:{last['line']}" if last else ""
             lines.append(f"Worker failure: {failure['component']} {failure['error_class']}{location}")
+            if process := failure.get('option_process'):
+                stages = process['child_stages']
+                last_stage = stages[-1]['stage'] if stages else process['child_trace_status']
+                lines.append(f"Local worker: parent {process['parent_phase']}; last child stage {last_stage}; elapsed {process['elapsed_seconds']}s")
     if 'SESSION_WINDOW_UNAVAILABLE' in result.get('run_issues', []):
         lines.extend(['Session timestamps unavailable. Fill, scan and spending totals are unknown.',
                       'LIVE disabled.'])
@@ -537,8 +541,37 @@ def runtime_failures(db, start, end):
             number = value.get(key)
             if type(number) in (int, float) and 0 <= number <= 86400:
                 item[key] = number
+        if value.get("operation") == "snapshot":
+            item["operation"] = "snapshot"
+        trace = safe_process(value.get("option_process"))
+        if trace:
+            item["option_process"] = trace
         failures.append(item)
     return failures
+
+
+def safe_process(value):
+    if not isinstance(value, dict) or value.get('parent_phase') not in (
+        'SPAWN', 'REQUEST_WRITE', 'RESPONSE_READ', 'CHILD_EXIT', 'RESPONSE_VALIDATE'
+    ):
+        return None
+    elapsed = value.get('elapsed_seconds')
+    status = value.get('child_trace_status')
+    stages = value.get('child_stages')
+    if (type(elapsed) not in (int, float) or not 0 <= elapsed <= 3600
+            or status not in ('INVALID', 'OBSERVED', 'NOT_OBSERVED')
+            or not isinstance(stages, list) or len(stages) > 7):
+        return None
+    checked = []
+    for row in stages:
+        if (not isinstance(row, dict) or row.get('stage') not in (
+                'IMPORTS', 'REQUEST', 'VENUE_OPEN', 'SNAPSHOT', 'ACCEPT', 'SERIALIZE', 'COMPLETE')
+                or any(type(row.get(k)) not in (int, float) or not 0 <= row[k] <= 120
+                       for k in ('elapsed_seconds', 'cpu_seconds'))):
+            return None
+        checked.append({key: row[key] for key in ('stage', 'elapsed_seconds', 'cpu_seconds')})
+    return {'parent_phase': value['parent_phase'], 'elapsed_seconds': elapsed,
+            'child_trace_status': status, 'child_stages': checked}
 
 
 def failure_evidence(raw):
@@ -951,7 +984,11 @@ def terminal_failures(container_id):
         error = part.get('error_class')
         if error not in ('SHUTDOWN_TIMEOUT', 'UNEXPECTED_RETURN'):
             error = safe.get('error_class', 'OTHER_ERROR')
-        failures.append({'component': part['component'], 'error_class': error, 'frames': safe['frames']})
+        failure = {'component': part['component'], 'error_class': error, 'frames': safe['frames']}
+        process = safe_process(part.get('option_process'))
+        if process:
+            failure['option_process'] = process
+        failures.append(failure)
     return failures
 
 

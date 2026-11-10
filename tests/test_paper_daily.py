@@ -604,3 +604,82 @@ def test_controller_saves_real_report_for_dead_worker_without_session_clocks(tmp
     saved = json.loads((tmp_path / (run_id + '-report.json')).read_text())
     assert saved['run_execution']['status'] == 'UNAVAILABLE'
     assert saved['run_issues'] == ['SESSION_WINDOW_UNAVAILABLE']
+
+
+def test_failed_snapshot_review_is_bound_to_one_saved_container_and_owner():
+    from app.mixed.daily_plan import failed_snapshot_read
+    import json, sqlite3
+    owner = {"runtime_status": "FAILED", "halt_reason": "OPTION_RUNTIME_FAILED", "entry_halted": True,
+             "runtime_generation": 2, "owner_revision": 4}
+    with sqlite3.connect(":memory:") as db:
+        db.row_factory = sqlite3.Row
+        db.execute("CREATE TABLE execution_events(sequence INTEGER PRIMARY KEY,kind,payload)")
+        def add(kind, payload):
+            db.execute("INSERT INTO execution_events(kind,payload) VALUES(?,?)", (kind, json.dumps(payload)))
+        add("OPTION_RUNTIME_STARTED", {"generation": 2})
+        add("FIXTURE_READ_FAILED", {"operation": "snapshot", "error_class": "FixtureProcessTimeout"})
+        add("MANUAL_HALT", {"reason": "OPTION_RUNTIME_FAILED"})
+        add("OPTION_RUNTIME_STOPPED", {"failed": True})
+        assert failed_snapshot_read(db, owner)
+        db.execute("UPDATE execution_events SET payload=? WHERE sequence=3", (json.dumps({"reason": "OPERATOR_HALT"}),))
+        assert not failed_snapshot_read(db, owner)
+    info = {"owner_state": owner, "failed_snapshot_read": True,
+            "start_blockers": ["OWNER_NOT_NORMALLY_STOPPED", "OWNER_HALT_REQUIRES_REVIEW"],
+            "last_runtime_started_at": "2026-11-10T15:01:00+00:00"}
+    day = {"run_id": "daily-20261110", "launch_attempted": True, "done": True,
+           "container_id": "saved", "image_id": "original"}
+    state = {"days": {"2026-11-10": day}, "attention": "SESSION_STOPPED_REVIEW_REQUIRED"}
+    report = {"run_id": day["run_id"], "status": "SAVED_SESSION_REPORT", "live_enabled": False,
+              "window_start": "2026-11-10T15:00:00+00:00", "window_end": "2026-11-10T15:13:22+00:00",
+              "worker_exit": {"exit_code": 2, "failures": [{"component": "RUNTIME", "error_class": "FixtureProcessTimeout"}]}}
+    backend = SimpleNamespace(container=lambda run, image_id: {"Id": "saved", "State": {
+        "Status": "exited", "ExitCode": 2, "OOMKilled": False}}, report=lambda run: report)
+    assert daily.review_timeout(state, backend, info, day["run_id"]) == owner
+    report["worker_exit"]["failures"].append({"component": "COLLECTOR"})
+    with pytest.raises(ValueError, match="SAVED_DAILY_READ_TIMEOUT_REQUIRED"):
+        daily.review_timeout(state, backend, info, day["run_id"])
+    assert not daily.timeout_owner(dict(info, start_blockers=info["start_blockers"]+["EXISTING_HOLDINGS_OR_UNRESOLVED_ORDERS"]))
+
+
+def test_publish_status_exports_only_bounded_evidence_from_saved_worker(tmp_path, monkeypatch):
+    import json
+    from app.options.engine import fingerprint
+    exports = tmp_path / 'exports'
+    exports.mkdir(mode=0o700)
+    folder = exports / 'connected-price-options-v1'
+    folder.mkdir()
+    folder.chmod(0o711)
+    monkeypatch.setattr(daily.host, 'EXPORTS', exports)
+    monkeypatch.setattr(daily, 'HOME', tmp_path)
+    binding = {'destination': '/exports/'+folder.name, 'publisher_uid': 0, 'population_id':'connected-simulation-1000-v1'}
+    daily.save(folder / 'binding.json', binding)
+    run = 'daily-20261110'
+    report = {'run_id':run, 'operation':{'state':'FAILED'}, 'session_timing':{'elapsed_seconds':802.3},
+              'worker_exit':{'failures':[{'component':'RUNTIME','error_class':'FixtureProcessTimeout','private':'DO_NOT_EXPORT'}]},
+              'runtime_evidence':{'feed':'STALE','heartbeat':'STALE'}, 'run_execution':{'entry_fills':0,'exit_fills':0}}
+    daily.save(tmp_path/(run+'-report.json'), report)
+    daily.publish_status({'status':'FAILED', 'days':{'2026-11-10':{'run_id':run, 'launch_attempted':True}}})
+    raw = (folder/'paper-status.json').read_text()
+    assert 'DO_NOT_EXPORT' not in raw and json.loads(raw)['binding_sha256'] == fingerprint(binding)
+    result = daily.desk_health.display(folder, fingerprint(binding), 0, daily.stamp())
+    assert result['title'] == 'Failed' and '13m 22s' in result['session']
+    assert result['exit_fills'] == 0 and result['failure'] == 'Local simulation subprocess timed out.'
+
+
+@pytest.mark.parametrize('changed', [False, True])
+def test_timeout_approval_is_single_use_and_changes_cannot_pass_daily_gate(changed):
+    f, state = Fake(), {}
+    ready(f)
+    owner = {'runtime_status':'FAILED', 'entry_halted':True, 'halt_reason':'OPTION_RUNTIME_FAILED',
+             'owner_revision':1432, 'runtime_generation':15}
+    f.plan.update(owner_state=owner, failed_snapshot_read=True,
+                  start_blockers=['OWNER_NOT_NORMALLY_STOPPED','OWNER_HALT_REQUIRES_REVIEW'])
+    state['timeout_review'] = dict(owner)
+    if changed:
+        owner['owner_revision'] += 1
+    advance(state, f, '2026-11-09T15:00:00')
+    if changed:
+        assert state['status'] == 'MISSING_INPUTS' and 'launch' not in f.calls
+    else:
+        assert state['status'] == 'RUNNING' and 'timeout_review' not in state
+        assert f.calls.count('launch') == 1

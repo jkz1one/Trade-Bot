@@ -1,5 +1,18 @@
 # Reviewed switch from frozen review to the native snapshot dashboard
 
+## Upgrade an already connected reader
+
+Use `python3 scripts/connected-dashboard-host.py update-reader --snapshot-name connected-price-options-v1`
+after installing the pinned release and publishing the account snapshot. This
+operation verifies the existing connected reader, password mount, snapshot binding,
+localhost listener and new installed image before replacement. It retains the
+previous reader under its container identity and restores it if startup or the
+authenticated operations-page check fails. An already current reader is checked
+without replacement. The original frozen-reader rollback container is retained.
+
+## Initial installation
+
+
 The existing login and localhost port can now serve the display copy of the same
 native virtual-money owner. The switch does not create an account, start a
 collector/runtime/model worker, enable LIVE, configure trading inputs or change

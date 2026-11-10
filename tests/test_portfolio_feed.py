@@ -259,3 +259,40 @@ def test_failed_connection_keeps_original_cause_and_never_publishes_missing_sche
         assert asyncio.run(feed.tick(now=at, reader=reader(at, [], source_shift=20)))['status'] == 'DELIVERED'
     finally:
         feed.close()
+
+
+def test_slow_normalization_allows_native_snapshot_deadline_to_run(tmp_path, schemas, monkeypatch):
+    import threading
+    from app.mixed import continuous_feed
+    from app.options.process import run_option_process
+    from test_portfolio_venue import venue as create_venue
+
+    venue = create_venue(tmp_path)
+    feed = ContinuousFeed(tmp_path / "feed", policy(), schemas, create=True)
+    complete = threading.Event()
+    native = continuous_feed.normalize
+
+    def busy_mapping(*args, **kwargs):
+        if not complete.wait(2.5):
+            raise TimeoutError("Collector blocked local venue supervision")
+        return native(*args, **kwargs)
+
+    monkeypatch.setattr(continuous_feed, "normalize", busy_mapping)
+
+    async def read():
+        try:
+            return await run_option_process(venue, now=AT, timeout_seconds=2)
+        finally:
+            complete.set()
+
+    async def run():
+        local = asyncio.create_task(read())
+        await asyncio.sleep(0)
+        delivery = await feed.tick(now=AT, reader=reader(AT, []))
+        assert (await local).snapshot == venue.snapshot(AT)
+        assert delivery["status"] == "DELIVERED"
+
+    try:
+        asyncio.run(run())
+    finally:
+        feed.close()

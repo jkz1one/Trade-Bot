@@ -45,6 +45,34 @@ def schedule(now, calendar=None):
     raise ValueError("EXCHANGE_SESSION_UNAVAILABLE")
 
 
+def failed_snapshot_read(db, owner):
+    if (owner["runtime_status"] != "FAILED" or not owner["entry_halted"]
+            or owner["halt_reason"] != "OPTION_RUNTIME_FAILED"):
+        return False
+    start = db.execute("SELECT sequence,payload FROM execution_events WHERE kind='OPTION_RUNTIME_STARTED' "
+                       "ORDER BY sequence DESC LIMIT 1").fetchone()
+    if start is None or json.loads(start["payload"]).get("generation") != owner["runtime_generation"]:
+        return False
+    # A later operator action or an unrelated halt cannot be overwritten by
+    # the generic shutdown reason and then authorized as a read timeout.
+    allowed = {"OPTION_RUNTIME_FEED_UNAVAILABLE", "OPTION_FIXTURE_READ_FAILED", "OPTION_RUNTIME_FAILED"}
+    failures = 0
+    terminal = False
+    for row in db.execute("SELECT sequence,kind,payload FROM execution_events WHERE sequence>? AND "
+                          "kind IN ('FIXTURE_READ_FAILED','MANUAL_HALT','OPTIONS_OPERATOR_COMMAND',"
+                          "'OPTION_RUNTIME_STOPPED') ORDER BY sequence", (start["sequence"],)):
+        kind, value = row["kind"], json.loads(row["payload"])
+        if kind == "OPTIONS_OPERATOR_COMMAND" or (kind == "MANUAL_HALT" and value.get("reason") not in allowed):
+            return False
+        if kind == "FIXTURE_READ_FAILED":
+            if value.get("operation") != "snapshot" or value.get("error_class") != "FixtureProcessTimeout":
+                return False
+            failures += 1
+        if kind == "OPTION_RUNTIME_STOPPED":
+            terminal = value.get("failed") is True and row["sequence"] == owner["owner_revision"]
+    return terminal and failures == 1
+
+
 def inspect(directory, feed_directory, policy_file, schemas_file, *, now=None):
     now = now or utc_now()
     result, settings, base, schemas, observer = check(
@@ -56,6 +84,7 @@ def inspect(directory, feed_directory, policy_file, schemas_file, *, now=None):
     enrolled = next((r for r in rows if r.target_session.isoformat() == target), None)
     latest = rows[-1].policy if rows else base
     with observer.read() as db:
+        timeout_reviewable = failed_snapshot_read(db, result["owner_state"])
         costs = summary(db)
         last = db.execute("SELECT occurred_at FROM execution_events "
                           "WHERE kind='OPTION_RUNTIME_STARTED' ORDER BY sequence DESC LIMIT 1").fetchone()
@@ -85,7 +114,7 @@ def inspect(directory, feed_directory, policy_file, schemas_file, *, now=None):
         blockers.append("OWNER_HALT_REQUIRES_REVIEW")
     special = any(p.scope_binding or p.company_earnings or p.carry_intents for p in (base, latest))
     return {"version": "paper-daily-info-v1", "status": "DAILY_INFO", **plan,
-            "owner_state": owner, "last_runtime_started_at": last[0] if last else None,
+            "owner_state": owner, "failed_snapshot_read": timeout_reviewable, "last_runtime_started_at": last[0] if last else None,
             "start_blockers": blockers,
             "automatic_catalog_blockers": ["EXACT_SESSION_BINDINGS_REQUIRED"] if special else [],
             "swing_history_enrolled": base.swing_history is not None,

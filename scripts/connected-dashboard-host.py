@@ -54,6 +54,11 @@ try:
  with urllib.request.urlopen(request,timeout=3) as response:
   html=response.read(2*1024*1024)
   assert bool(b'Paused historical simulation' in html)==(sys.argv[1]=='frozen')
+ if sys.argv[1]=='operations':
+  assert b'id="paper-operation"' in html
+  req=urllib.request.Request('http://127.0.0.1:8790/desk/operation',headers=headers)
+  with urllib.request.urlopen(req,timeout=3) as response:
+   assert b'id="paper-operation"' in response.read(32768)
  print(json.dumps({'authenticated':True,'mode':sys.argv[1],'execution_authority':False}))
 except Exception:
  print('Dashboard authentication/state probe failed',file=sys.stderr)
@@ -270,13 +275,14 @@ def review(release, *, rollback=False):
     return plan | {"review_sha256": digest(plan)}
 
 
-def wait_ready(mode):
+def wait_ready(mode, *, expected_restarts=None):
     deadline = time.monotonic() + 90
     restarts = None
     for _ in range(45):
         current = container(ACTIVE)
         if restarts is None:
-            restarts = 0 if mode == "connected" else current["RestartCount"]
+            restarts = (expected_restarts if expected_restarts is not None else
+                        0 if mode in ("connected", "operations") else current["RestartCount"])
         if (
             not current["State"]["Running"]
             or current["State"]["OOMKilled"]
@@ -314,6 +320,77 @@ def restore(old_id, *, retain):
     wait_ready("frozen")
 
 
+def start_reader(image_id, value, rollback_id, *extra):
+    docker(
+        "run",
+        "-d",
+        "--name",
+        ACTIVE,
+        "--restart",
+        "unless-stopped",
+        "--init",
+        "--label",
+        LABEL + "=" + rollback_id,
+        *extra,
+        "--log-opt",
+        "max-size=10m",
+        "--log-opt",
+        "max-file=3",
+        "-p",
+        "127.0.0.1:8790:8790",
+        *isolation(),
+        image_id,
+        *reader_args(value, "serve"),
+    )
+
+
+def update_reader(release):
+    prior = container(ACTIVE)
+    check_reader(prior, frozen=False)
+    value = binding()
+    old_id = prior['Id']
+    if not prior['State']['Running'] or prior['Config']['Cmd'] != reader_args(value, 'serve'):
+        raise ValueError('Existing running reader binding required')
+    image = json.loads(docker('image', 'inspect', 'trade-bot-dashboard:' + release).stdout)[0]
+    if 'TRADER_RELEASE_SHA=' + release not in image['Config']['Env']:
+        raise ValueError('Image release identity mismatch')
+    preflight(image['Id'], value)
+    if prior['Image'] == image['Id']:
+        wait_ready('operations', expected_restarts=prior['RestartCount'])
+        return {'status': 'DASHBOARD_READER_CURRENT', 'release': release}
+    retained = 'trade-bot-dashboard-reader-' + old_id[:12]
+    failed = 'trade-bot-dashboard-update-failed-' + image['Id'][7:19]
+    absent(retained, failed)
+    workers_before = workers()
+    if digest(identity(container(ACTIVE))) != digest(identity(prior)):
+        raise ValueError('Dashboard reader changed during review')
+    marker = 'trade-bot.reader-predecessor'
+    try:
+        docker('rename', ACTIVE, retained)
+        docker('stop', '--time', '10', retained)
+        start_reader(image['Id'], value, prior['Config']['Labels'][LABEL], '--label', marker + '=' + old_id)
+        wait_ready('operations')
+        current = container(ACTIVE)
+        check_reader(current, frozen=False)
+        if (current['Image'] != image['Id'] or current['Config']['Cmd'] != reader_args(value, 'serve')
+                or current['Config']['Labels'].get(marker) != old_id or workers() != workers_before):
+            raise ValueError('Reader update identity changed')
+    except (Exception, KeyboardInterrupt):
+        old = container(retained, missing=True)
+        if old is not None and old['Id'] == old_id:
+            active = container(ACTIVE, missing=True)
+            if active is not None:
+                if active['Config']['Labels'].get(marker) != old_id or active['Image'] != image['Id']:
+                    raise ValueError('Unexpected active dashboard during restoration')
+                docker('stop', '--time', '10', ACTIVE)
+                docker('rename', ACTIVE, failed)
+            docker('rename', retained, ACTIVE)
+            if not container(ACTIVE)['State']['Running']:
+                docker('start', ACTIVE)
+        raise
+    return {'status': 'DASHBOARD_READER_UPDATED', 'release': release, 'previous': retained}
+
+
 def apply(plan):
     old_id = plan["active_id"]
     if plan["operation"] == "rollback":
@@ -322,26 +399,7 @@ def apply(plan):
         try:
             docker("rename", ACTIVE, BACKUP)
             docker("stop", "--time", "10", BACKUP)
-            docker(
-                "run",
-                "-d",
-                "--name",
-                ACTIVE,
-                "--restart",
-                "unless-stopped",
-                "--init",
-                "--label",
-                LABEL + "=" + old_id,
-                "--log-opt",
-                "max-size=10m",
-                "--log-opt",
-                "max-file=3",
-                "-p",
-                "127.0.0.1:8790:8790",
-                *isolation(),
-                plan["image_id"],
-                *reader_args(plan["binding"], "serve"),
-            )
+            start_reader(plan["image_id"], plan["binding"], old_id)
             wait_ready("connected")
             current = container(ACTIVE)
             check_reader(current, frozen=False)
@@ -368,7 +426,7 @@ def apply(plan):
 def main(argv=None):
     global SNAPSHOT, SNAPSHOT_NAME
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("operation", choices=("review", "activate", "switch", "review-rollback", "rollback"))
+    parser.add_argument("operation", choices=("review", "activate", "switch", "update-reader", "review-rollback", "rollback"))
     parser.add_argument("--review-sha256")
     parser.add_argument("--snapshot-name", choices=("connected-v1", "connected-price-options-v1"),
                         default="connected-v1")
@@ -396,6 +454,9 @@ def main(argv=None):
         release = command(["git", "rev-parse", "HEAD"]).stdout.strip()
         if not re.fullmatch("[a-f0-9]{40}", release):
             raise ValueError("Pinned release required")
+        if args.operation == "update-reader":
+            print(json.dumps(update_reader(release), sort_keys=True))
+            return 0
         plan = review(release, rollback=args.operation in ("rollback", "review-rollback"))
         if args.operation == "switch":
             # Explicit one-command switch, retaining the same complete review

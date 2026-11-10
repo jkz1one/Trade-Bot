@@ -1,21 +1,20 @@
 # Daily PAPER operation
 
-The host installed `f6493b5` and started the November 9 session automatically.
-It ended about 92 minutes early with a nonzero container exit, zero fills and
-zero AI spend. Two scans completed and both reviewed feed recoveries were used.
-The controller latches a failed run for review before another automatic launch.
+The host installed 7db7475, published the existing account snapshot and resumed
+the daily schedule. The native journal measured 67,133,440 bytes and the display
+27,361,280 bytes. Tuesday's daily-20261110 worker then failed after 802.3 of
+21,475 planned seconds with a RUNTIME FixtureProcessTimeout. One scan completed,
+one setup confirmed and the account recorded zero fills and zero AI spend.
 
-## Recover the November 9 publisher failure
+## Install and recover Tuesday's failed read
 
-The final worker log identified the publisher's private journal check. Docker
-recorded exit 2 and OOMKilled=false. A growing native journal reproduces that
-check offline. Monday's saved report and the original owner are the incident
-records. The publisher's original file check ran before creating a temporary
-display for that publication attempt.
-
-From the stopped host, use one block with the tested release SHA supplied in the
-release message. The final line explicitly resumes the daily schedule after the
-failed run. Omit that line if you intentionally paused the schedule.
+Use one stopped-host upgrade block. The reader update upgrades the already
+connected dashboard, retaining the current login, binding, listener and previous
+reader container. The final command reviews this specific saved runtime timeout
+and authorizes one subsequent daily launch from the exact current owner revision.
+It verifies flat accounting and the saved worker's identity and exit. A later
+owner change invalidates the review. Initial runtime startup still requires a
+fresh native venue reconciliation and valid market input before resuming entries.
 
 ```bash
 cd /opt/trade-bot-dashboard &&
@@ -26,14 +25,38 @@ git merge-base --is-ancestor "$release" FETCH_HEAD &&
 git switch --detach "$release" &&
 python3 scripts/paper-daily.py install &&
 python3 scripts/connected-session-host.py snapshot &&
-python3 scripts/paper-daily.py resume
+python3 scripts/connected-dashboard-host.py update-reader --snapshot-name connected-price-options-v1 &&
+python3 scripts/paper-daily.py resume --after-read-timeout daily-20261110
 ```
 
-PUBLISHED includes the native and display database sizes and the verified
-checkpoint. Reload the existing dashboard. SCHEDULE_RESUMED allows the timer
-to evaluate the next eligible session after its flat-owner and halt checks.
-A retained partial publication or a file permission error requires review.
-Keep both the partial publication and the last complete display.
+Omit the final line if you intentionally want the daily schedule paused. Existing
+same-day launch guards still apply. Other failures, exposure, uncertain orders,
+unknown model cost or intervening operator halts require their own review.
+
+## Dashboard operating status
+
+The authenticated page shows the controller state, its last check time, the last
+worker result and duration, local process failures, feed/heartbeat health at the
+report cutoff, scan totals, fills and retained strategy blockers. The daily
+controller publishes this small status file every tick independently of the worker
+and the SQLite account publisher. It has an explicit 180-second freshness bound.
+Lost controller updates or browser requests display unknown health. An unavailable
+account snapshot displays unknown positions and balances while keeping operating
+status accessible. The account APIs continue rejecting invalid or stale snapshots.
+
+The ordinary report also retains the saved local subprocess phase and fixed child
+stages. No new market read is needed to inspect Tuesday's error.
+
+## Remaining evidence
+
+- Tuesday's saved terminal traceback establishes a local runtime timeout. The
+  supplied text does not establish which subprocess stage consumed the deadline.
+- Repeated Robinhood capture failures and full-session completion require host
+  observation after the contention fixes.
+- A connected simulated entry, exit and complete round trip remain unobserved.
+- Scope needs original usable index history and exact reviewed session/contract
+  bindings. Swing input blockers remain tied to original history and target
+  validation. The eight-contract capacity and original-data checks still apply.
 
 Use the existing `local-simulation` account and population
 `connected-simulation-1000-v1`: $1,000 initial virtual capital, maximum two plays,

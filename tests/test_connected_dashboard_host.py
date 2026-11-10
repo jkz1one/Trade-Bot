@@ -115,6 +115,10 @@ class Docker:
                 raise RuntimeError("Creation failed before allocation")
             assert h.ACTIVE not in self.items
             self.items[h.ACTIVE] = self.item(h.ACTIVE, "new-id", frozen=False)
+            for index, flag in enumerate(args):
+                if flag == "--label":
+                    key, val = args[index + 1].split("=", 1)
+                    self.items[h.ACTIVE]["Config"]["Labels"][key] = val
             output = "new-id"
             if self.failure == "create_after":
                 raise RuntimeError("Creation failed after allocation")
@@ -386,3 +390,28 @@ def test_one_command_switch_retains_second_review_and_rollback_boundary(host, mo
         assert lines[-1]['status'] == 'DASHBOARD_SWITCHED'
         assert fake.items[h.ACTIVE]['Id'] == 'new-id'
         assert fake.items[h.BACKUP]['Id'] == OLD_ID
+
+
+@pytest.mark.parametrize("rollback", [False, True])
+def test_update_active_reader_preserves_mounts_and_can_restore_exact_reader(host, rollback, monkeypatch):
+    h, fake = host
+    h.apply(h.review(RELEASE))
+    prior = fake.items[h.ACTIVE]
+    prior["Id"] = "9" * 64
+    prior["Image"] = "sha256:" + "e" * 64
+    saved = copy.deepcopy(prior)
+    stable = h.workers()
+    if rollback:
+        def fail(mode):
+            assert mode == "operations"
+            raise RuntimeError("Operations page probe failed")
+        monkeypatch.setattr(h, "wait_ready", fail)
+        with pytest.raises(RuntimeError, match="probe failed"):
+            h.update_reader(RELEASE)
+        assert fake.items[h.ACTIVE]["Id"] == saved["Id"] and fake.items[h.ACTIVE]["State"]["Running"]
+    else:
+        assert h.update_reader(RELEASE)["status"] == "DASHBOARD_READER_UPDATED"
+        assert h.update_reader(RELEASE)["status"] == "DASHBOARD_READER_CURRENT"
+        assert fake.items[h.ACTIVE]["Config"]["Labels"][h.LABEL] == OLD_ID
+        assert fake.items[h.ACTIVE]["Mounts"] == saved["Mounts"]
+    assert fake.items[h.BACKUP]["Id"] == OLD_ID and h.workers() == stable

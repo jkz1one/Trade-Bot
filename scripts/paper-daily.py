@@ -9,6 +9,8 @@ from pathlib import Path
 import re
 import subprocess
 import tempfile
+import stat
+import sys
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -30,6 +32,7 @@ def module(name, filename):
 
 starter = module('paper_daily_starter', 'paper-session-start.py')
 host = module('paper_daily_host', 'connected-session-host.py')
+desk_health = module('paper_desk_health', '../app/mixed/paper_health.py')
 
 
 def private(path, directory=False):
@@ -65,6 +68,45 @@ def read(path, default=None):
     if path.stat().st_size > 4 * 1024 * 1024:
         raise ValueError('DAILY_STATE_TOO_LARGE')
     return json.loads(path.read_text())
+
+
+def publish_status(state):
+    # The daily timer runs outside the worker. A dead worker or failed account
+    # publication must still leave a visible, dated operating status.
+    path = host.EXPORTS / 'connected-price-options-v1'
+    temp = None
+    try:
+        private(host.EXPORTS, True)
+        info = path.lstat()
+        if (path.resolve() != path or not stat.S_ISDIR(info.st_mode) or info.st_uid != 0
+                or stat.S_IMODE(info.st_mode) != 0o711):
+            raise ValueError('INVALID_STATUS_DIRECTORY')
+        binding = read(path / 'binding.json')
+        if (binding['population_id'] != 'connected-simulation-1000-v1'
+                or binding['destination'] != '/exports/' + path.name or binding['publisher_uid'] != 0):
+            raise ValueError('INVALID_STATUS_BINDING')
+        report = None
+        for _, day in sorted(state.get('days', {}).items(), reverse=True):
+            run_id = day.get('run_id', '')
+            if day.get('launch_attempted') and re.fullmatch(r'daily-[0-9]{8}', run_id):
+                report = read(HOME / (run_id + '-report.json'))
+                if report and report.get('run_id') != run_id:
+                    raise ValueError('INVALID_STATUS_REPORT')
+                break
+        status_record = desk_health.evidence(state, report, observed_at=stamp().isoformat(),
+                                             binding_hash=host.h.digest(binding))
+        fd, temp = tempfile.mkstemp(prefix='.paper-status-', dir=path)
+        with os.fdopen(fd, 'w') as stream:
+            json.dump(status_record, stream, allow_nan=False)
+            stream.flush()
+            os.fchmod(stream.fileno(), 0o444)
+            os.fsync(stream.fileno())
+        os.replace(temp, path / 'paper-status.json')
+    except (OSError, ValueError, KeyError, TypeError):
+        print('PAPER dashboard status publication unavailable', file=sys.stderr)
+    finally:
+        if temp is not None:
+            Path(temp).unlink(missing_ok=True)
 
 
 def stamp():
@@ -169,14 +211,43 @@ class Backend:
             if args[0] == 'review-run':
                 owner = report.get('binding', {}).get('owner_state')
                 if (owner != info['owner_state'] or not isinstance(owner, dict)
-                        or owner.get('runtime_status') != 'STOPPED'
-                        or owner.get('halt_reason') != 'OPTION_RUNTIME_STOPPED'
+                        or not ((owner.get('runtime_status'), owner.get('halt_reason')) == ('STOPPED', 'OPTION_RUNTIME_STOPPED')
+                                or (info.get('timeout_review') == owner and timeout_owner(info)))
                         or report.get('image_id') != self.config['image_id']):
                     raise ValueError('DAILY_REVIEW_BINDING_CHANGED')
             return report
         return starter.run_prepared(day['receipt'], day['run_id'], seconds,
                                     invoke=invoke, today=info['target_session'],
                                     max_feed_recoveries=self.config['max_feed_recoveries'])
+
+
+def timeout_owner(info):
+    owner = info.get('owner_state', {})
+    return (info.get('failed_snapshot_read') is True and owner.get('runtime_status') == 'FAILED'
+            and owner.get('halt_reason') == 'OPTION_RUNTIME_FAILED' and owner.get('entry_halted') is True
+            and set(info['start_blockers']) == {'OWNER_NOT_NORMALLY_STOPPED', 'OWNER_HALT_REQUIRES_REVIEW'})
+
+
+def review_timeout(state, backend, info, run_id):
+    day = next((day for day in state.get('days', {}).values() if day.get('run_id') == run_id), {})
+    if (not re.fullmatch(r'daily-[0-9]{8}', run_id) or not timeout_owner(info)
+            or state.get('attention') != 'SESSION_STOPPED_REVIEW_REQUIRED' or not day.get('done')
+            or not day.get('launch_attempted') or not day.get('container_id') or not day.get('image_id')):
+        raise ValueError('SAVED_DAILY_READ_TIMEOUT_REQUIRED')
+    item = backend.container(run_id, image_id=day['image_id'])
+    if (not item or item['Id'] != day['container_id'] or item['State']['Status'] != 'exited'
+            or item['State'].get('ExitCode') != 2 or item['State'].get('OOMKilled') is not False):
+        raise ValueError('SAVED_DAILY_READ_TIMEOUT_REQUIRED')
+    report = backend.report(run_id)
+    exit_info = report.get('worker_exit', {})
+    failures = exit_info.get('failures', [])
+    if (report.get('run_id') != run_id or report.get('status') != 'SAVED_SESSION_REPORT'
+            or report.get('live_enabled') is not False or exit_info.get('exit_code') != 2
+            or len(failures) != 1 or failures[0].get('component') != 'RUNTIME'
+            or failures[0].get('error_class') != 'FixtureProcessTimeout'
+            or not parsed(report['window_start']) <= parsed(info['last_runtime_started_at']) <= parsed(report['window_end'])):
+        raise ValueError('SAVED_DAILY_READ_TIMEOUT_REQUIRED')
+    return dict(info['owner_state'])
 
 
 def tick(state, backend, persist, now):
@@ -254,7 +325,10 @@ def tick(state, backend, persist, now):
     if previous and parsed(previous).astimezone(NY).date().isoformat() == target:
         day['done'] = True
         return status(state, 'STOPPED', ['SESSION_ALREADY_RUN_TODAY'])
-    if info['start_blockers']:
+    reviewed = state.get('timeout_review')
+    if reviewed is not None and reviewed == info.get('owner_state') and timeout_owner(info):
+        info = dict(info, timeout_review=reviewed)
+    elif info['start_blockers']:
         return status(state, 'MISSING_INPUTS', info['start_blockers'])
     # Enrollment is the authority, including recovery after a receipt-write crash.
     day['receipt'] = info.get('receipt')
@@ -289,6 +363,7 @@ def tick(state, backend, persist, now):
     persist(state)
 
     def before_run():
+        state.pop('timeout_review', None)
         day.update(launch_attempted=True, close_at=info['close_at'], image_id=backend.config['image_id'])
         persist(state)
 
@@ -354,7 +429,10 @@ def install():
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('operation', choices=('install', 'tick', 'status', 'pause', 'resume'))
+    p.add_argument('--after-read-timeout', metavar='RUN_ID')
     args = p.parse_args(argv)
+    if args.after_read_timeout and args.operation != 'resume':
+        p.error('--after-read-timeout requires resume')
     if os.geteuid() != 0:
         raise ValueError('ROOT_HOST_OPERATOR_REQUIRED')
     os.chdir(ROOT)
@@ -376,7 +454,9 @@ def main(argv=None):
         except BlockingIOError:
             return {'status': 'PAUSE_REQUESTED' if args.operation == 'pause' else 'CONTROLLER_BUSY'}
         if args.operation == 'install':
-            return install()
+            result = install()
+            publish_status(read(HOME / 'state.json') or {'status': 'WAITING_FIRST_TICK'})
+            return result
         config = read(HOME / 'config.json')
         if not config:
             raise ValueError('SCHEDULE_NOT_INSTALLED')
@@ -384,9 +464,13 @@ def main(argv=None):
             backend = Backend(config)
             backend.verify()
             info = backend.info()
-            if info['start_blockers'] or backend.active():
+            if backend.active() or (info['start_blockers'] and not args.after_read_timeout):
                 raise ValueError('RESUME_REQUIRES_NORMALLY_STOPPED_FLAT_OWNER')
             state = read(HOME / 'state.json', {'version': 'paper-daily-state-v1'})
+            if args.after_read_timeout:
+                state['timeout_review'] = review_timeout(state, backend, info, args.after_read_timeout)
+            else:
+                state.pop('timeout_review', None)
             for day in state.get('days', {}).values():
                 if day.get('awaiting_container') and not day.get('done'):
                     if backend.container(day['run_id'], image_id=day.get('image_id')) is not None:
@@ -395,6 +479,7 @@ def main(argv=None):
             state.pop('attention', None)
             save(HOME / 'state.json', status(state, 'STOPPED', ['EXPLICIT_SCHEDULE_RESUME']))
             (HOME / 'paused.json').unlink(missing_ok=True)
+            publish_status(state)
             return {'status': 'SCHEDULE_RESUMED', 'automatic_failure_retry': False}
         state = read(HOME / 'state.json', {'version': 'paper-daily-state-v1'})
         persist = lambda value: save(HOME / 'state.json', value)
@@ -410,6 +495,7 @@ def main(argv=None):
         finally:
             state['updated_at'] = stamp().isoformat()
             persist(state)
+            publish_status(state)
             # A pause arriving during a capture/review/launch takes effect before
             # releasing the controller lock, using the exact inspected identity.
             if not backend.enabled():

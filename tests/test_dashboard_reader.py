@@ -222,3 +222,40 @@ def test_terminal_halted_records_remain_viewable_without_claiming_current_feed(t
         with pytest.raises(ValueError, match='Recent snapshot'):
             reader.guard(directory, binding, clock_source=lambda: AT)
     assert digest(tmp_path) == before
+
+
+def test_failure_visible_with_or_without_account_snapshot_and_login_required(tmp_path):
+    from app.mixed.paper_health import evidence
+    from app.options.engine import fingerprint
+
+    _, directory, binding, secret = setup(tmp_path)
+    at = AT + timedelta(seconds=3)
+    now = [at]
+    report = {"run_id": "daily-20261110", "window_end": at.isoformat(),
+              "operation": {"state": "FAILED"}, "session_timing": {"elapsed_seconds": 802.3},
+              "worker_exit": {"failures": [{"component": "RUNTIME", "error_class": "FixtureProcessTimeout"}]},
+              "runtime_evidence": {"feed": "STALE", "heartbeat": "STALE"},
+              "run_execution": {"entry_fills": 0, "exit_fills": 0}}
+    record = evidence({"status": "FAILED", "reasons": ["SESSION_STOPPED_REVIEW_REQUIRED"]},
+                      report, observed_at=at.isoformat(), binding_hash=fingerprint(binding))
+    path = directory / "paper-status.json"
+    path.write_text(json.dumps(record))
+    path.chmod(0o444)
+    app = reader.create_app(directory, binding, str(secret), clock_source=lambda: now[0])
+    with TestClient(app) as client:
+        assert all(client.get(url).status_code == 401 for url in ("/", "/desk/operation", "/desk-operation.js"))
+        client.auth = ("trader", PASSWORD)
+        for url in ("/", "/desk/operation"):
+            response = client.get(url)
+            assert response.status_code == 200
+            assert 'data-state="FAILED"' in response.text and "13m 22s" in response.text
+            assert "Local simulation subprocess timed out" in response.text
+        (directory / "options.db").unlink()
+        assert client.get("/api/mixed").status_code == 503
+        page = client.get("/")
+        assert page.status_code == 503 and "Current positions and balances are unknown" in page.text
+        assert "13m 22s" in page.text
+        now[0] += timedelta(minutes=4)
+        assert "Controller updates have stopped" in client.get("/desk/operation").text
+        path.unlink()
+        assert "Status unavailable" in client.get("/desk/operation").text
