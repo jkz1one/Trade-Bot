@@ -268,7 +268,10 @@ def test_native_restart_consumes_next_delivery_without_reset_or_duplicate_owner(
     ):
         assert source_settings == settings
         assert state(args[0])[0]["heartbeat_at"] is not None
-        calls.append(held_source())
+        from app.mixed.observer import MixedObserver
+        with monkeypatch.context() as protected_read:
+            protected_read.setattr(MixedObserver, "report", lambda *a, **kw: pytest.fail("Rendered dashboard during quote polling"))
+            calls.append(held_source())
         # The first runner holds both real leases before any provider task starts.
         with pytest.raises(RuntimeAlreadyRunning):
             await run(*args, asyncio.Event(), clock_source=clock_source)

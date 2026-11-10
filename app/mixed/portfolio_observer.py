@@ -17,6 +17,31 @@ from app.options.models import OptionQuote
 from app.options.observer import _age, _health
 
 
+def verified_portfolio(owner, db, p, now):
+    """Check original holdings and receipts without rendering dashboard history."""
+    stored = control(owner, db, p)
+    snap = PortfolioVenueSnapshot.model_validate_json(stored["snapshot_json"])
+    if (snap.account_id, snap.population_id, snap.venue_id, snap.portfolio_policy) != (
+        owner.limits.account_id,
+        owner.limits.population_id,
+        owner.venue.venue_id,
+        p,
+    ) or snap.captured_at > now:
+        raise ValueError("Portfolio snapshot identity changed")
+    h = history(owner, db, p, now, snapshot=snap)
+    projected = reconstruct(h)
+    if (projected.ledger.cash, projected.ledger.settled_cash, projected.ledger.positions) != (
+        snap.cash,
+        snap.settled_cash,
+        snap.positions,
+    ):
+        raise ValueError("Portfolio receipt accounting mismatch")
+    issues = json.loads(owner._control(db)["issues_json"])
+    if issues or not snap.complete:
+        raise ValueError("Portfolio reconciliation incomplete")
+    return stored, snap, h, projected
+
+
 def snapshot(observer, db, now, limit, before, family, config, policy, limits):
     from app.mixed.runtime import stored_company_earnings
     from app.mixed.observer import history_chart, stored_stream
@@ -39,26 +64,8 @@ def snapshot(observer, db, now, limit, before, family, config, policy, limits):
     )
     p = portfolio_policy(owner)
     owner.portfolio_policy = p
-    stored = control(owner, db, p)
-    snap = PortfolioVenueSnapshot.model_validate_json(stored["snapshot_json"])
-    if (snap.account_id, snap.population_id, snap.venue_id, snap.portfolio_policy) != (
-        limits.account_id,
-        limits.population_id,
-        config["venue_id"],
-        p,
-    ) or snap.captured_at > now:
-        raise ValueError("Portfolio snapshot identity changed")
-    h = history(owner, db, p, now)
-    projected = reconstruct(h)
-    if (projected.ledger.cash, projected.ledger.settled_cash, projected.ledger.positions) != (
-        snap.cash,
-        snap.settled_cash,
-        snap.positions,
-    ):
-        raise ValueError("Portfolio receipt accounting mismatch")
+    stored, snap, h, projected = verified_portfolio(owner, db, p, now)
     issues = json.loads(c["issues_json"])
-    if issues or not snap.complete:
-        raise ValueError("Portfolio reconciliation incomplete")
     guards = json.loads(stored["protection_json"])
     orders, fills = [], []
     for row in db.execute("SELECT * FROM execution_portfolio_orders ORDER BY rowid"):

@@ -1,9 +1,25 @@
 # Daily PAPER operation
 
-The host installed the daily controller at release `b5d10cb` and reported
-`DAILY_SCHEDULE_INSTALLED` with `paused: false`. The November 9 enrollment exists.
-Its first automatic launch is scheduled for 10:00 New York after 09:00 preparation.
-The latest completed connected run still has zero fills.
+The host installed `f6493b5` and started the November 9 session automatically.
+It ended about 92 minutes early with a nonzero container exit, zero fills and
+zero AI spend. Two scans completed and both reviewed feed recoveries were used.
+The controller latches a failed run for review before another automatic launch.
+
+## November 9 dashboard and exit diagnosis
+
+From `/opt/trade-bot-dashboard` on the installed release, use
+`docker logs --tail 1 trade-bot-connected-daily-20261109` for the final
+structured worker error. If the worker exited without that record, Docker's
+`State.ExitCode` and `State.OOMKilled` provide independent exit evidence.
+
+With the worker stopped, `python3 scripts/connected-session-host.py snapshot`
+attempts one publication from the existing owner to the enrolled display.
+A successful PUBLISHED result can be viewed by reloading the existing dashboard.
+The reader checks the original checkpoint and permits historical terminal
+records only for a stopped or failed, halted owner. An UNAVAILABLE result or
+a retained partial snapshot requires investigation. Keep those files for review.
+The daily session and the dashboard have independent outcomes. A successful
+publication does not clear the scheduler's failure latch.
 
 Use the existing `local-simulation` account and population
 `connected-simulation-1000-v1`: $1,000 initial virtual capital, maximum two plays,
@@ -31,8 +47,7 @@ preserve a previous pause. Neither the timer nor its worker depends on SSH stayi
 connected. There is no automatic Git pull, rebuild or unbounded worker restart.
 Changing the checkout/image requires reinstalling the schedule explicitly.
 
-On the next exchange session, normally Monday November 9 after the November 6
-close, the controller performs these steps automatically:
+On an eligible exchange session with the schedule enabled, the controller performs these steps automatically:
 
 1. At 09:00 New York, reuse an exact already-enrolled session. If Monday's prior
    preparation completed, it is adopted from the validated enrollment chain even
@@ -103,11 +118,7 @@ restricted to the existing normal stop and the two native flat-feed recoveries.
 
 ## Working branch changes after installation
 
-The last confirmed host release, b5d10cb, already has the November 9 enrollment.
-Use the latest tested entry fix with the one-time install above before Monday's
-run. The installed release can reject confirmed options as STALE_OR_FUTURE_ACCOUNT
-when separate reads of the clock straddle the same scan. A frozen-clock test had
-masked this. One upgrade includes the entry, supervision and reporting fixes.
+The November 9 host ran f6493b5 with the following entry and supervision changes.
 
 - A confirmed shared shortlist uses one scan evaluation time for the original
   account projection, option admission and stock alternatives. The account
@@ -148,12 +159,12 @@ account. [Order recovery instructions](OPTIONS_EXECUTION.md#robinhood-option-ord
 
 ## Current evidence and remaining requirements
 
-The confirmed host release is `b5d10cbfaaa0bde5af5e14110f815ff91925d79d`,
-image `sha256:39dace641132c9e4ac767b955809ccb1366d2f30e133e4b410455eb794e28e9c`.
+The confirmed host release is `f6493b5afa670d4f9ceb16e25a70376de30da118`,
+image `sha256:7682c2d6c4c239323f62237531efd01fddb383c58b70694ba7ae797ee9b81df6`.
 At installation the owner was normally stopped at revision 3259, generation 13,
 feed sequence 678. The November 9 policy SHA is
 `391f87e90a639f4923d72b632e925b81f1e7c8a25af67ed6cf6fe08e6757f149`.
-The installer found no start blockers. The existing timer can use this enrollment.
+The installer found no start blockers. That enrollment applied only to November 9.
 
 The newer branch reporter can read the portfolio journals written by that release.
 Its JSON `run_execution` and text summary count entry and exit fills in the
@@ -183,7 +194,7 @@ and [daily controller proof](PAPER_DAILY_AUTOMATION_PROOF.json).
 
 | Area | Implemented and tested offline | Still requires host/provider evidence |
 | --- | --- | --- |
-| Daily operation | Calendar-driven preparation, exact enrollment adoption, one launch per date, persistent retry/stop state, reporting and systemd installation. | Host installation confirmed. First automatic launch and sustained read latency still require host evidence. |
+| Daily operation | Calendar-driven preparation, exact enrollment adoption, one launch per date, persistent retry/stop state, reporting and systemd installation. | First automatic launch observed November 9. The worker exited early. A complete scheduled session with sustained feed coverage remains unverified. |
 | DEGEN | Shared simulation, collection/scanning, two entries, later fills, protective exits and restart/accounting fixtures; prior timing repair included. | Authentic qualifying setup, accepted original quotes, model response and a complete connected simulated lifecycle. |
 | Swing | Native source preparation and execution; invalid originals remain isolated. | Valid original daily history. Saved interpolated bars cannot establish readiness. |
 | Scope | Collector/watch/admission/owned-play management and synthetic lifecycle coverage exist. | Usable original SPX history and exact reviewed SPXW contract/session/pattern bindings, with a reserved catalog slot. |

@@ -683,3 +683,39 @@ def test_expired_scan_lease_reports_missing_timely_input():
     operation = module.operation(value, {'Status': 'running'})
     assert operation['state'] == 'MISSING_INPUTS'
     assert operation['reasons'] == ['ENTRY_PLAN_EXPIRED_BEFORE_MODEL']
+
+
+def test_mixed_scan_family_issues_stay_with_their_own_strategy():
+    decision = module.outcome(json.dumps({'status':'HOLD', 'scans': [
+        {'version':'degen-completed-bars-v1', 'symbol':'QQQ', 'observations':[]},
+        {'version':'swing-next-session-v1', 'symbol':'SPY', 'issues':['SWING_SEED_INVALIDATED'],
+         'observations':[]},
+    ]}))
+    result = live_result()
+    result['accepted_packet']['coverage_issues'] = ['SCOPE_CURRENT_INPUT_UNAVAILABLE']
+    result['decisions'] = [decision]
+    result['operation'] = module.operation(result, {'Status':'exited','ExitCode':2})
+    text = module.short_report(result).splitlines()
+    assert result['operation']['family_input_issues']['SWING'] == ['SWING_SEED_INVALIDATED']
+    assert 'SWING_' not in next(line for line in text if line.startswith('DEGEN:'))
+    assert 'SWING: SWING_SEED_INVALIDATED' in text
+
+
+@pytest.mark.parametrize('payload,expected', [
+    ({'status':'UNAVAILABLE', 'live_enabled':False, 'failures':[{'component':'COLLECTOR',
+      'error_class':'TimeoutError','private':'credentials', 'frames':[{'file':'app/mixed/continuous_feed.py','line':11}]}]},
+     [{'component':'COLLECTOR','error_class':'TimeoutError','frames':[{'file':'app/mixed/continuous_feed.py','line':11}]}]),
+    ({'status':'UNAVAILABLE','live_enabled':False,'reason':'CONNECTED_RUNTIME_UNAVAILABLE',
+      'failure':{'error_class':'ValueError', 'frames':[{'file':'/private/token','line':20}]}},
+     [{'component':'WORKER','error_class':'ValueError','frames':[]}]),
+    ({'status':'SESSION_STARTED', 'failures':[{'component':'COLLECTOR'}]}, []),
+])
+def test_final_log_report_projects_bounded_failure_fields(monkeypatch, payload, expected):
+    from types import SimpleNamespace
+    def logs(argv, *, stdout, stderr, timeout):
+        assert argv == ['docker','logs','--tail','1','a'*64]
+        stdout.write(json.dumps(payload).encode())
+        return SimpleNamespace(returncode=0)
+    monkeypatch.setattr(module.subprocess, 'run', logs)
+    assert module.terminal_failures('a'*64) == expected
+    assert module.terminal_failures('daily-20261109') == []

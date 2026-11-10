@@ -7,6 +7,7 @@ import re
 import sqlite3
 import subprocess
 import time
+import tempfile
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation, localcontext
 from zoneinfo import ZoneInfo
@@ -58,7 +59,10 @@ def outcome(raw):
     result["stock_candidates"] = len(value.get("stock_candidates") or [])
     result["scans"] = []
     for scan in (value.get("scans") or [])[:12]:
+        version = scan.get("version")
         result["scans"].append({
+            "strategy": "DEGEN" if version == "degen-completed-bars-v1" else
+                        "SWING" if version == "swing-next-session-v1" else None,
             "symbol": codes(scan.get("symbol")),
             "issues": codes(scan.get("issues")),
             "setups": [{"family": codes(o.get("family")), "status": codes(o.get("status")),
@@ -123,7 +127,7 @@ def decision_evidence(db, key):
     value['scans'] = []
     for index in range(min(count('$.scans'), 12)):
         prefix = f'$.scans[{index}]'
-        scan = {name: field(prefix + '.' + name) for name in ('symbol', 'issues', 'evaluated_at')}
+        scan = {name: field(prefix + '.' + name) for name in ('symbol', 'issues', 'evaluated_at', 'version')}
         scan['observations'] = [{name: field(f'{prefix}.observations[{n}].{name}')
                                  for name in ('family', 'status', 'reasons')}
                                 for n in range(min(count(prefix + '.observations'), 12))]
@@ -254,9 +258,11 @@ def spending(db, start, end):
 
 def decision_input_issues(decision):
     """Retained blockers only; a HOLD or completed cycle alone proves no scan."""
+    scans = [scan for scan in decision.get('scans', []) if scan.get('strategy') != 'SWING']
     missing = codes([decision.get('issues'), decision.get('blocker'),
-                     [scan.get('issues') for scan in decision.get('scans', [])]])
-    setup_reasons = codes([setup.get('reasons') for scan in decision.get('scans', [])
+                     [issue for scan in scans for issue in codes(scan.get('issues'))
+                      if not issue.startswith('SWING_')]])
+    setup_reasons = codes([setup.get('reasons') for scan in scans
                           for setup in scan.get('setups', [])])
     missing += [r for r in setup_reasons if r in {
         'COMPLETED_STRUCTURE_INSUFFICIENT', 'HISTORY_UNAVAILABLE_DELAYED_OR_STALE'}]
@@ -286,6 +292,14 @@ def short_report(result):
         run_id = 'unknown'
     lines = [f"PAPER {run_id}: {reasons(operation.get('state')) or 'UNKNOWN'}",
              'Reason: ' + (reasons(operation.get('reasons')) or 'not reported')]
+    if 'worker_exit' in result:
+        exit_info = result['worker_exit']
+        lines.append(f"Worker exit code {exit_info['exit_code']}" +
+                     (" (Docker reported out of memory)" if exit_info.get('oom_killed') is True else ""))
+        for failure in exit_info['failures']:
+            last = failure['frames'][-1] if failure['frames'] else None
+            location = f" at {last['file']}:{last['line']}" if last else ""
+            lines.append(f"Worker failure: {failure['component']} {failure['error_class']}{location}")
     if 'SESSION_WINDOW_UNAVAILABLE' in result.get('run_issues', []):
         lines.extend(['Session timestamps unavailable. Fill, scan and spending totals are unknown.',
                       'LIVE disabled.'])
@@ -299,8 +313,6 @@ def short_report(result):
         issues = list(families.get(family, []))
         if family == 'SCOPE':
             issues += codes([decision.get('scope_rejections'), decision.get('scope_admission_reasons')])
-        if family == 'DEGEN':
-            issues += codes([scan.get('issues') for scan in decision.get('scans', [])])
         if family in decision.get('unavailable_families', []):
             issues.append(family + '_INPUT_UNAVAILABLE')
         fallback = 'no input blocker reported' if result.get('accepted_packet') else 'input not established'
@@ -710,6 +722,11 @@ def operation(result, state):
     issues = packet.get('coverage_issues', [])
     families = {name: sorted(c for c in issues if c.startswith(prefixes))
                 for name, prefixes in (('SCOPE', ('SCOPE_', 'SPX_')), ('SWING', ('SWING_',)))}
+    for scan in decision.get('scans', []):
+        for issue in codes(scan.get('issues')):
+            # Legacy reports can lack the scan version but retain named Swing errors.
+            family = 'SWING' if issue.startswith('SWING_') else scan.get('strategy') or 'DEGEN'
+            families[family] = sorted(set(families.get(family, [])) | {issue})
     reasons = codes([decision.get('reason'), decision.get('issues'), decision.get('blocker'),
                      decision.get('rejections'), decision.get('contract_exclusions')])
     last_failure = next(iter(reversed(result.get('collector_failures', []))), {})
@@ -905,6 +922,39 @@ def report(directory, started, finished):
     return result
 
 
+def terminal_failures(container_id):
+    """Read only the stopped container's final structured failure, never emit raw logs."""
+    if not isinstance(container_id, str) or not re.fullmatch(r'[0-9a-f]{64}', container_id):
+        return []
+    try:
+        with tempfile.TemporaryFile() as output:
+            command = subprocess.run(['docker', 'logs', '--tail', '1', container_id],
+                                     stdout=output, stderr=subprocess.DEVNULL, timeout=5)
+            if command.returncode or not 0 < output.tell() <= 32768:
+                return []
+            output.seek(0)
+            payload = json.loads(output.read())
+    except (OSError, ValueError, RecursionError, subprocess.TimeoutExpired):
+        return []
+    if not isinstance(payload, dict) or payload.get('status') != 'UNAVAILABLE' or payload.get('live_enabled') is not False:
+        return []
+    parts = payload.get('failures')
+    if parts is None and payload.get('reason') == 'CONNECTED_RUNTIME_UNAVAILABLE' and isinstance(payload.get('failure'), dict):
+        parts = [dict(payload['failure'], component='WORKER')]
+    if not isinstance(parts, list):
+        return []
+    failures = []
+    for part in parts[:8]:
+        if not isinstance(part, dict) or part.get('component') not in ('RUNTIME','COLLECTOR','PUBLISHER','TERMINAL_PUBLISHER','WORKER'):
+            continue
+        safe = failure_evidence(json.dumps(part))
+        error = part.get('error_class')
+        if error not in ('SHUTDOWN_TIMEOUT', 'UNEXPECTED_RETURN'):
+            error = safe.get('error_class', 'OTHER_ERROR')
+        failures.append({'component': part['component'], 'error_class': error, 'frames': safe['frames']})
+    return failures
+
+
 def session_timing(cmd, start, end):
     # Only recover the duration from the inspected connected worker's own argv.
     planned = None
@@ -932,7 +982,7 @@ def main():
     args = parser.parse_args()
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,39}", args.run_id):
         raise ValueError("INVALID_RUN_ID")
-    fmt = '{"state":{{json .State}},"cmd":{{json .Config.Cmd}},"label":{{json (index .Config.Labels "trade-bot.connected-session-v1")}}}'
+    fmt = '{"id":{{json .Id}},"state":{{json .State}},"cmd":{{json .Config.Cmd}},"label":{{json (index .Config.Labels "trade-bot.connected-session-v1")}}}'
     inspected = subprocess.run(
         ["docker", "inspect", "--format", fmt, "trade-bot-connected-" + args.run_id],
         capture_output=True, text=True, timeout=10,
@@ -957,6 +1007,10 @@ def main():
                   'run_execution': {'status': 'UNAVAILABLE', 'reason': 'SESSION_WINDOW_UNAVAILABLE'}}
     else:
         result = report(STATE, start, end)
+    if not active and (state['Status'] == 'dead' or state.get('ExitCode') != 0):
+        result['worker_exit'] = {'exit_code': state.get('ExitCode'),
+                                 'oom_killed': state.get('OOMKilled'),
+                                 'failures': terminal_failures(container.get('id'))}
     result['session_timing'] = timing
     result.update(run_id=args.run_id, container_exit_code=None if active else state.get('ExitCode'),
                   status='CURRENT_SESSION_REPORT' if active else 'SAVED_SESSION_REPORT',

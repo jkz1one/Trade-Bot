@@ -1,5 +1,49 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.197. November 9 daily PAPER failure and dashboard publication, 2026-11-09.
+
+The operator installed f6493b5 with image
+sha256:7682c2d6c4c239323f62237531efd01fddb383c58b70694ba7ae797ee9b81df6.
+Run daily-20261109 started automatically and exited nonzero after 15,944.9 of
+21,474 planned seconds. It completed two of 60 cycle records. Fifty skipped
+records cited unavailable feed, seven cited unobserved slots and one record
+was interrupted. There were 534 delivered collections, 174 failed collections
+and two flat feed recoveries. The account recorded zero fills and zero settled
+AI spending. Final accepted and collected sequence were both 1388. The
+terminal heartbeat and feed were fresh at the report cutoff. The last scan
+had no confirmed setup. QQQ inventory was 10.050 seconds old against a strict
+ten-second upper bound. The dashboard returned HTTP 503. The supplied text
+does not identify which component or external event ended the worker.
+
+A test on f6493b5 reproduced a stale display after a collector failure. The
+supervisor drained all components but skipped the final publication. It now
+attempts one verified snapshot of the halted terminal owner after a component
+failure if the publisher itself completed normally. Publisher failures still
+fence execution and preserve the previous complete copy and partial evidence.
+An error during terminal publication is reported alongside the initial failure.
+An old active snapshot still fails freshness validation.
+
+The connected collector obtains holdings and pending entries from verified native
+portfolio accounting without rendering charts or loading decision history.
+Ordinary polls now allow for capture time when calculating their next start.
+A simulated eight-second capture on the ten-second policy waits two seconds.
+Persisted rate limits, original quote ages, the two-recovery allowance and the
+separately enrolled Scope pacing policies continue to apply.
+
+The host report identifies strategy-specific scan issues and retrieves the
+stopped worker's exit code, Docker OOM indicator and bounded structured
+component diagnostics when retained. This works retrospectively on a stopped
+worker. It only exposes approved error classes and application frame locations.
+The deployed revision still requires the operator's log for Monday's exit
+diagnosis. See PAPER_NEXT_SESSION.md for the installed snapshot recovery command.
+
+293 installed-package cases passed. The cross-UID test was skipped because the
+test namespace does not map UID/GID 10001. All 324 application files matched
+source, wheel and installation, and all 60 runtime pins matched. Wheel SHA256
+7d6d2283bc5e65c2fc5192388e1249f896a737f46ed3bee1062bcdc0c5f50bcd.
+
+## Previous release evidence
+
 Version 1.196. Shared PAPER shortlist timing and paid option execution, 2026-11-08.
 
 A production-profile fixture with a clock advancing one microsecond per read

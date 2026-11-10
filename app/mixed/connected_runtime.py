@@ -16,7 +16,7 @@ from pathlib import Path
 from app.domain.models import utc_now
 from app.execution.failure import failure_details
 from app.mixed.connected_check import connection_report
-from app.mixed.continuous_feed import ContinuousFeed, FeedPolicy, held_from_observer
+from app.mixed.continuous_feed import ContinuousFeed, FeedPolicy
 from app.mixed.observer import MixedObserver
 from app.options.engine import fingerprint
 from app.options.operator_inbox import private_directory, read
@@ -503,11 +503,12 @@ async def run(
             async def collect(stop):
                 if not await await_ready(ready, stop):
                     return
+                from app.mixed.portfolio_selection import held_instruments
                 from app.mixed.scope_feed import owner_state as scope_owner_state
                 operation = feed.run(
                     stop,
                     clock_source=clock_source,
-                    held_source=lambda: held_from_observer(observer),
+                    held_source=lambda: held_instruments(runtime.c, require_reconciled=True),
                     calendar=XNYSCalendar(),
                     source_settings=enrolled,
                     **({"scope_state": lambda binding: scope_owner_state(observer, binding)}
@@ -558,7 +559,22 @@ async def run(
                     except TimeoutError:
                         pass
 
-            await supervise(trade, collect, stop, publisher_run=publish if publisher else None)
+            try:
+                await supervise(trade, collect, stop, publisher_run=publish if publisher else None)
+            except ComponentFailure as exc:
+                # supervise has drained all components. If the publisher was healthy,
+                # retain the terminal owner's state while its original leases are held.
+                if publisher and all(part["component"] != "PUBLISHER" for part in exc.details):
+                    try:
+                        source = dashboard_source(directory, snapshot_owner)
+                        _, state = inspect_owner(source, enrolled, clock_source=clock_source)
+                        if state["runtime_status"] not in {"FAILED", "STOPPED"} or not state["entry_halted"]:
+                            raise ValueError("Terminal halted owner required")
+                        await publish_async(publisher)
+                    except Exception as publication_error:
+                        exc.details.append({"component": "TERMINAL_PUBLISHER",
+                                            **failure_details(publication_error)})
+                raise
             after_counts = session_counts(runtime.c.engine)
             if publisher is not None:
                 # All runtime/collector cleanup has finished. Publish the stopped

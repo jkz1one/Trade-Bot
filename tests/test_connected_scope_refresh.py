@@ -277,3 +277,35 @@ def test_underestimated_held_book_cost_does_not_busy_poll(tmp_path, schemas):
         assert wait_seconds(feed, now) == 1
     finally:
         feed.close()
+
+
+def test_ordinary_collector_counts_slow_capture_time_toward_next_poll(tmp_path, schemas, monkeypatch):
+    from test_portfolio_feed import policy
+    from app.mixed.continuous_feed import ContinuousFeed
+
+    feed = ContinuousFeed(tmp_path / 'feed', policy(), schemas, create=True)
+    stop = asyncio.Event()
+    times, starts, waits = [AT], [], []
+    async def slow_tick(**kwargs):
+        starts.append(kwargs['now'])
+        # Persist both an unsuccessful read and a delivered poll, as the normal loop does.
+        feed.db.execute('INSERT INTO attempts VALUES(?,?,2,?,?,NULL,NULL,NULL)',
+                        (len(starts), times[0].isoformat(), 'FAILED' if len(starts) == 1 else 'DELIVERED', 'a'*64))
+        feed.db.commit()
+        times[0] += timedelta(seconds=8)
+        if len(starts) == 3:
+            stop.set()
+    async def sleep_until_next(waiter, timeout):
+        waiter.close()
+        waits.append(timeout)
+        times[0] += timedelta(seconds=timeout)
+        raise TimeoutError
+    monkeypatch.setattr(feed, 'tick', slow_tick)
+    monkeypatch.setattr(asyncio, 'wait_for', sleep_until_next)
+    try:
+        asyncio.run(feed.run(stop, clock_source=lambda: times[0], held_source=lambda: (),
+                             calendar=XNYSCalendar()))
+        assert [(t-AT).total_seconds() for t in starts] == [0,10,20]
+        assert waits == [2,2]
+    finally:
+        feed.close()

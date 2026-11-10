@@ -89,14 +89,19 @@ def stock_inputs(frame):
     return tuple(StockCycleInput(quote=q) for q in values.values())
 
 
-def held_instruments(c):
+def held_instruments(c, *, require_reconciled=False):
     """Durable held plus pending originals, including contracts absent from current scans."""
     from app.mixed.portfolio_store import intent
 
     with c.engine.journal.read() as db:
         c._bound(db)
-        h = history(c.engine, db, c.engine.portfolio_policy, c.now())
-        projection = reconstruct(h)
+        if require_reconciled:
+            from app.mixed.portfolio_observer import verified_portfolio
+
+            _, _, _, projection = verified_portfolio(c.engine, db, c.engine.portfolio_policy, c.now())
+        else:
+            h = history(c.engine, db, c.engine.portfolio_policy, c.now())
+            projection = reconstruct(h)
         identities = {x.play_id for x in projection.commitments}
         return tuple(
             intent(r).instrument

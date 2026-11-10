@@ -1032,17 +1032,22 @@ class ContinuousFeed:
                 await capture()
             if source_settings is not None and self.policy.swing_history is not None:
                 self.bind_swing_sources(source_settings, now=clock_source())
+            if stop.is_set():
+                break
+            # Charge elapsed capture/validation time to the poll interval. An
+            # additional full sleep after a slow read ages the last good book.
+            # Persisted attempts still enforce minimum spacing and rolling quota.
+            from app.mixed.scope_schedule import wait_seconds
+            finished = clock(clock_source())
             if scope_refresh is not None:
                 from app.mixed.scope_refresh import paced
-                binding = self.policy_for(clock_source().astimezone(ZoneInfo('America/New_York')).date()).scope_binding
-                if paced(binding):
-                    from app.mixed.scope_schedule import wait_seconds
-                    await scope_refresh.wait(wait_seconds(self, clock(clock_source())))
-                else:
-                    await scope_refresh.wait(self.policy.poll_seconds)
+                binding = self.policy_for(finished.astimezone(ZoneInfo('America/New_York')).date()).scope_binding
+                delay = wait_seconds(self, finished) if paced(binding) else self.policy.poll_seconds
+                await scope_refresh.wait(delay)
             else:
+                delay = wait_seconds(self, finished)
                 try:
-                    await asyncio.wait_for(stop.wait(), timeout=self.policy.poll_seconds)
+                    await asyncio.wait_for(stop.wait(), timeout=delay)
                 except TimeoutError:
                     pass
 

@@ -207,3 +207,32 @@ def test_cli_requires_complete_snapshot_binding_before_any_check(monkeypatch, ex
             ]
         )
     assert exc.value.code == 2
+
+
+def test_collector_failure_publishes_verified_terminal_records(tmp_path, schemas, monkeypatch):
+    from datetime import timedelta
+    from app.mixed.dashboard_reader import guard
+    from app.mixed.dashboard_snapshot import published
+
+    args, _, _ = enrolled(tmp_path, schemas)
+    destination = tmp_path / "dashboard"
+    with_publisher = DashboardPublisher(args[0], destination, os.getuid(), os.getgid(),
+                                        create=True, clock_source=lambda: AT)
+    try:
+        with_publisher.publish()
+        binding = with_publisher.binding
+    finally:
+        with_publisher.close()
+
+    async def fail_collector(self, stop, **kwargs):
+        raise OSError("private fixture detail")
+
+    monkeypatch.setattr(connected.ContinuousFeed, "run", fail_collector)
+    with pytest.raises(connected.ComponentFailure, match="COLLECTOR") as failed:
+        asyncio.run(connected.run(*args, asyncio.Event(), snapshot_directory=destination,
+                                  reader_uid=os.getuid(), reader_gid=os.getgid(), clock_source=lambda: AT))
+    assert [part["component"] for part in failed.value.details] == ["COLLECTOR"]
+    receipt = published(destination, binding, include_runtime=True)
+    assert receipt["stored_runtime"]["status"] in {"FAILED", "STOPPED"}
+    assert receipt["stored_runtime"]["halted"]
+    assert guard(destination, binding, clock_source=lambda: AT + timedelta(hours=6))["publication_state"] == "STOPPED_RECORDS"
