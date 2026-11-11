@@ -1,5 +1,50 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.204. Verified-held startup protection and expanded timing, 2026-11-11.
+
+Published implementation: `d35d318e50d376e8f7287f7bffe72486e2eb640e`.
+Startup now permits protection of verified native holdings when an enrolled
+dashboard snapshot is missing or a partial copy remains. Exact enrollment and
+original accounting are checked before startup and under the owner lease. New
+entries remain durably halted, the damaged display remains untouched, and the
+worker reports the publication failure at shutdown. Read-only host review binds
+`PROTECTION_ONLY` and rejects entry-resume or feed-recovery requests for it.
+Flat, missing-enrollment and unreconciled accounts retain their rejection gates.
+
+A2 now records stock scans, Scope scans/quality, paid stock/Scope refresh waits,
+stock admission/dispatch and option/stock/portfolio management-model waits.
+Original quote clocks and concurrent protection timing remain separate. A stock
+management/display-failure overlap test protects before the model returns,
+retains its known cost and prevents a duplicate exit.
+
+Final noneditable installed verification covers **450 passing cases with one known
+cross-UID environmental skip**. All five synthetic integrated scenarios complete
+two round trips; both damaged-display cases restart with QQQ held and exit it
+without another entry-model call. The installed baseline reproduction fails
+before that second runtime starts. A preceding 65-case targeted run also passed;
+these overlapping counts are not summed. The broader run's two host mount-test
+assertions confused a temporary source path with a container destination; the
+corrected full host suite passes on the unchanged wheel. Both failures and their
+correction are retained, without rerunning the unaffected lifecycle scenarios.
+[PAPER_STARTUP_PROTECTION_PROOF.json](PAPER_STARTUP_PROTECTION_PROOF.json) retains
+the before/after evidence, bounded test results and extended phase samples.
+All 330 application files match source/wheel/installation, all 60 runtime pins
+match and the dependency check passes. Wheel SHA256:
+`eb6a57e3f1d1196ada8a9ade9cea3ab4d36f8a4434d0a0e0724727d7ed3dc45f`.
+
+[DELIVERY_PLAN.md](DELIVERY_PLAN.md) keeps A2 and A4 partial. Killed-before-record
+denominators, full-session timing/capacity and combined prolonged history/model/
+report stress remain open. The existing strict-table rollback compatibility,
+actual Docker/systemd/cross-UID, browser and connected-lifecycle gates remain.
+[PAPER_TIMING_PROTECTION.md](PAPER_TIMING_PROTECTION.md) records the exact startup
+boundary; the ordinary daily flat launcher is unchanged.
+
+The confirmed host remains d2046f6. No deployment, schedule, account, limits or
+provider/model-service calls changed. Main and the event branch are preserved;
+PR #1 remains draft with its body unchanged. LIVE remains disabled.
+
+## Previous release evidence
+
 Version 1.203. Correlated timing and in-run publication isolation, 2026-11-11.
 
 Published implementation: `aad4e0885cac8928c790bd717a3128a30c0c05a9`.

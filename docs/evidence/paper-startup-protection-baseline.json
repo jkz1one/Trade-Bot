@@ -1,0 +1,38 @@
+{
+  "version": "startup-protection-baseline-v1",
+  "synthetic": true,
+  "market_acceptance": false,
+  "installed_baseline_commit": "db3826782b8a3447e6d0dfa6f1521635724e63dd",
+  "installed_baseline_wheel_sha256": "6e3084fcd169526fe766cca87514479136ec82c01f144c0463822f50d6785d2d",
+  "case": "test_coordinated_options_lifecycle_restart_publication_and_report[False-False-missing]",
+  "status": "FAILED_AS_EXPECTED",
+  "reason": "No completed dashboard snapshot",
+  "second_runtime_started": false,
+  "retained_runtime": {
+    "status": "STOPPED",
+    "generation": 2,
+    "feed_sequence": 31
+  },
+  "held_plays": 1,
+  "held_assets": [
+    {
+      "asset": "OPTION",
+      "symbol": "QQQ"
+    }
+  ],
+  "model_calls": 2,
+  "orders": [
+    {
+      "side": "BUY",
+      "status": "FILLED",
+      "count": 2
+    },
+    {
+      "side": "SELL",
+      "status": "FILLED",
+      "count": 1
+    }
+  ],
+  "junit_sha256": "0a4a2bf6635682c47f7ad2b95ab5b060907b732785f82e13b2f3692ecaee0098",
+  "log_sha256": "6819ee5f9c1034a8c658bdca7f37eb30fd1f705e075a452b8e10092f072ed827"
+}

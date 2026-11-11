@@ -1,8 +1,9 @@
 # Offline PAPER system check
 
 This is the developer check for delivery-plan **A1**, with the first part of
-**A2**. The current continuation adds runtime correlation and an in-run
-publication-failure case; see [PAPER_TIMING_PROTECTION.md](PAPER_TIMING_PROTECTION.md).
+**A2**. The current continuation adds runtime correlation, stock/Scope/management
+timing, in-run publication isolation and two damaged-display restart cases; see
+[PAPER_TIMING_PROTECTION.md](PAPER_TIMING_PROTECTION.md).
 It runs the installed collector, scanner, simulator, native subprocesses,
 supervisor, publisher and authenticated dashboard reader together. The resulting
 report also passes through the daily controller and independent status page.
@@ -38,7 +39,7 @@ errors. Its overall limit is thirty minutes; each integrated scenario has bounde
 progress and subprocess deadlines. Timeout or interruption drains the test process
 group and records failure. The accelerated scenarios run in minutes; they are not a full-session soak.
 
-Output contains `summary.json`, `tests.log`, `tests.xml`, three synthetic system
+Output contains `summary.json`, `tests.log`, `tests.xml`, five synthetic system
 reports and disposable fixture state. `summary.json` distinguishes test success
 from unverified host/market acceptance and a wall-clock soak that has not run.
 Do not mount or copy these fixture journals into any connected owner directory.
@@ -104,9 +105,10 @@ combined sessions, Swing binding, rollover, schemas, native read imports and the
 previous lifecycle path. All 329 application files matched source, wheel and
 installation; all 60 runtime dependency pins matched.
 
-**A2 stays open.** Complete the production timing trace across packet acceptance,
-native reads, scan/model/admission and execution; then repair measured bottlenecks
-under A3. Fixture read timings include deliberate backpressure and are not Robinhood
+**A2 stays open.** The current trace covers packet identity, native reads,
+option/stock/Scope scanning, entry/management model waits, refresh, admission and
+dispatch. Complete killed-before-record denominators and full-session profiling,
+then repair measured bottlenecks under A3. Fixture read timings include deliberate backpressure and are not Robinhood
 latency measurements. Native subprocess timings here are workspace observations,
 not evidence of Tuesday's exact host timeout cause.
 
