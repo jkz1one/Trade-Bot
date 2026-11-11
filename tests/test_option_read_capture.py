@@ -382,6 +382,11 @@ def test_native_discovery_then_pinned_sample_collection(tmp_path, monkeypatch):
     assert all(o["output_schema_validated"] for o in captured.observations)
     assert all(c.returncode == 0 for c in children)
     assert "PRIVATE-TOKEN" not in captured.model_dump_json()
+    assert captured.timing.parent_phase == 'RESPONSE_VALIDATE'
+    assert captured.timing.parent_seconds > 0
+    trace = captured.timing.progress
+    assert trace[0].stage == 'PRIVATE_AUTH' and trace[-1].stage == 'SERIALIZE'
+    assert [r.elapsed_seconds for r in trace] == sorted(r.elapsed_seconds for r in trace)
 
 
 @pytest.mark.parametrize("cancel", [False, True])
@@ -416,6 +421,8 @@ def test_native_timeout_keeps_only_bound_progress_and_reaps_child(tmp_path, monk
         asyncio.run(collect(policy, schemas=schemas, plan=plan()))
     progress = caught.value.capture_progress
     assert progress.stage == stage and progress.completed_reads == completed
+    assert caught.value.capture_timing.progress[-1] == progress
+    assert caught.value.capture_timing.parent_seconds >= policy.timeout_seconds
     assert 'PRIVATE-TOKEN' not in progress.model_dump_json()
     assert time.monotonic()-started < 7 and children[0].returncode is not None
 

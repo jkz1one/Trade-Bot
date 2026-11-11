@@ -389,6 +389,12 @@ def short_report(result):
     collection = result.get('collection', [])
     lines.append('Collection: ' + '; '.join(f"{s.lower()} {sum(r['attempts'] for r in collection if r['status']==s)}"
                                            for s in ('DELIVERED', 'FAILED', 'INTERRUPTED')))
+    timing = result.get('collection_timing', {})
+    if timing.get('status') == 'OBSERVED':
+        elapsed = timing['attempt_total']
+        lines.append(f"Collection timing: {timing['measured']}/{timing['attempts']} measured; "
+                     f"p95 {elapsed['p95_seconds']:.3f}s; p99 {elapsed['p99_seconds']:.3f}s; "
+                     f"max {elapsed['max_seconds']:.3f}s (includes failures)")
     if result.get('collector_failures'):
         last = result['collector_failures'][-1]
         phase = reasons((last.get('read_progress') or {}).get('stage')) or 'unavailable'
@@ -828,6 +834,88 @@ def authorization_required(failure):
                for c in failure.get('source_capture', {}).get('causes', []))
 
 
+def timing_evidence(db, start, end):
+    """Bounded diagnostic summaries, including failures and missing measurements."""
+    import math
+
+    total = db.execute('SELECT COUNT(*) FROM attempts WHERE started_at>=? AND started_at<=?',
+                       (start, end)).fetchone()[0]
+    result = {'status': 'UNAVAILABLE', 'attempts': total, 'measured': 0,
+              'missing_or_invalid': total, 'omitted': 0, 'by_status': {}, 'phases': {},
+              'child_observed_intervals': {}}
+    if not db.execute("SELECT 1 FROM sqlite_master WHERE name='attempt_timings'").fetchone():
+        return result
+    phases = {'PREPARE', 'CAPTURE', 'PERSIST_CAPTURE', 'SOURCE_BINDING', 'NORMALIZE',
+              'SOURCE_CLOCK_CHECK', 'PUBLISH'}
+    child_phases = {'PRIVATE_AUTH', 'CONNECT', 'DISCOVER', 'VALIDATE_PLAN',
+                    'MARKET_READ', 'CLOSE', 'SERIALIZE'}
+    values, grouped, child_values, parent = [], {}, {}, []
+
+    def number(v):
+        return type(v) in (int, float) and math.isfinite(v) and 0 <= v <= 3600
+
+    inspected = 0
+    for row in db.execute(
+        'SELECT a.status,CASE WHEN length(t.payload_json)<=16384 THEN t.payload_json END AS timing '
+        'FROM attempts a LEFT JOIN attempt_timings t USING(sequence) '
+        'WHERE a.started_at>=? AND a.started_at<=? ORDER BY a.sequence DESC LIMIT 20000', (start, end)):
+        inspected += 1
+        try:
+            r = json.loads(row['timing'] or 'null')
+            if (not isinstance(r, dict) or r.get('version') != 'collector-attempt-timing-v1'
+                    or r.get('status') not in {'DELIVERED', 'FAILED', 'INTERRUPTED', 'NORMALIZED'}
+                    or r['status'] != row['status'] or not number(r.get('elapsed_seconds'))
+                    or not isinstance(r.get('phases'), dict) or not set(r['phases']) <= phases
+                    or not all(number(v) for v in r['phases'].values())):
+                continue
+            values.append(r['elapsed_seconds'])
+            grouped.setdefault(r['status'], []).append(r['elapsed_seconds'])
+            for key, value in r['phases'].items():
+                result['phases'].setdefault(key, []).append(value)
+            read = r.get('read_process')
+            if not isinstance(read, dict):
+                continue
+            if number(read.get('parent_seconds')):
+                parent.append(read['parent_seconds'])
+            progress = read.get('progress')
+            if not isinstance(progress, list) or not 1 <= len(progress) <= 32:
+                continue
+            intervals, previous = {}, None
+            for point in progress:
+                if (not isinstance(point, dict) or point.get('stage') not in child_phases
+                        or not number(point.get('elapsed_seconds'))
+                        or (previous and point['elapsed_seconds'] < previous['elapsed_seconds'])):
+                    intervals = {}
+                    break
+                if previous:
+                    key = previous['stage']
+                    intervals[key] = intervals.get(key, 0) + point['elapsed_seconds'] - previous['elapsed_seconds']
+                previous = point
+            for key, value in intervals.items():
+                child_values.setdefault(key, []).append(value)
+        except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
+            continue
+
+    def summary(items):
+        items = sorted(items)
+        def percentile(p):
+            return round(items[max(0, math.ceil(len(items)*p)-1)], 6)
+        return {'samples': len(items), 'p50_seconds': percentile(.5),
+                'p95_seconds': percentile(.95), 'p99_seconds': percentile(.99),
+                'max_seconds': round(items[-1], 6)}
+
+    result.update(status='OBSERVED' if values else 'UNAVAILABLE', measured=len(values),
+                  missing_or_invalid=inspected-len(values), omitted=max(0, total-inspected),
+                  by_status={k: summary(v) for k, v in grouped.items()},
+                  phases={k: summary(v) for k, v in result['phases'].items()},
+                  child_observed_intervals={k: summary(v) for k, v in child_values.items()})
+    if values:
+        result['attempt_total'] = summary(values)
+    if parent:
+        result['read_parent'] = summary(parent)
+    return result
+
+
 def report(directory, started, finished):
     start = datetime.fromisoformat(started).astimezone(timezone.utc).isoformat()
     end = datetime.fromisoformat(finished).astimezone(timezone.utc).isoformat()
@@ -917,6 +1005,7 @@ def report(directory, started, finished):
                 "COUNT(*) AS packets,MIN(sequence) AS first_sequence,MAX(sequence) AS last_sequence "
                 "FROM attempts WHERE started_at>=? AND started_at<=? AND packet_json IS NOT NULL "
                 "AND json_valid(packet_json) GROUP BY kind,issues ORDER BY first_sequence LIMIT 25", (start, end))]
+        result['collection_timing'] = timing_evidence(db, start, end)
         if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='attempt_failures'").fetchone():
             result['collector_failures'] = [{
                 'sequence': row['sequence'], 'started_at': row['started_at'],

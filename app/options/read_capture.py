@@ -29,9 +29,25 @@ class CaptureProgress(OptionRecord):
     stage: Literal['PRIVATE_AUTH', 'CONNECT', 'DISCOVER', 'VALIDATE_PLAN',
                    'MARKET_READ', 'CLOSE', 'SERIALIZE']
     completed_reads: int = Field(ge=0, le=8, strict=True)
+    elapsed_seconds: float | None = Field(default=None, ge=0, le=120,
+        allow_inf_nan=False, exclude_if=lambda v: v is None)
 
 
-async def read_progress(stream, request_id, latest):
+class CaptureTiming(OptionRecord):
+    """Monotonic diagnostic evidence, never a replacement for provider clocks."""
+    parent_phase: Literal['SPAWN', 'REQUEST_WRITE', 'RESPONSE_READ', 'CHILD_EXIT', 'RESPONSE_VALIDATE']
+    parent_seconds: float = Field(ge=0, le=3600, allow_inf_nan=False)
+    progress: tuple[CaptureProgress, ...] = Field(default=(), max_length=32)
+
+
+def measured_timing(phase, started, trace):
+    elapsed = time.monotonic()-started
+    if not 0 <= elapsed <= 3600:
+        return None
+    return CaptureTiming(parent_phase=phase, parent_seconds=elapsed, progress=tuple(trace))
+
+
+async def read_progress(stream, request_id, latest, trace=None):
     total = 0
     while line := await stream.readline():
         total += len(line)
@@ -44,6 +60,8 @@ async def read_progress(stream, request_id, latest):
                 continue
             if value.request_id == request_id:
                 latest[:] = [value]
+                if trace is not None and len(trace) < 32:
+                    trace.append(value)
 
 OAuthFailure = Literal[
     "invalid_request",
@@ -173,6 +191,7 @@ class CaptureResult(OptionRecord):
     failure: CaptureFailure | None = Field(default=None, exclude_if=lambda v: v is None)
     input_probe: dict[str, JsonValue] | None = Field(default=None, exclude_if=lambda v: v is None)
     inventory: dict[str, JsonValue] | None = Field(default=None, exclude_if=lambda v: v is None)
+    timing: CaptureTiming | None = Field(default=None, exclude_if=lambda v: v is None)
 
     scope_requested: bool = Field(default=False, strict=True, exclude_if=lambda v: not v)
     scope_observations: list[dict[str, JsonValue]] = Field(default_factory=list, max_length=3, exclude_if=lambda v: not v)
@@ -215,6 +234,8 @@ def policy_digest(policy):
 
 
 async def _read(request):
+    started = time.monotonic()
+    phase, trace = 'SPAWN', []
     payload = request.model_dump_json().encode()
     if len(payload) > MAX_REQUEST_BYTES:
         raise ValueError("Capture request exceeds protocol bound")
@@ -235,23 +256,29 @@ async def _read(request):
     try:
         async with asyncio.timeout(max(0, request.deadline_monotonic - time.monotonic())):
             child = await asyncio.shield(spawn)
-            diagnostics = asyncio.create_task(read_progress(child.stderr, request.request_id, latest))
+            diagnostics = asyncio.create_task(read_progress(child.stderr, request.request_id, latest, trace))
+            phase = 'REQUEST_WRITE'
             child.stdin.write(payload)
             await child.stdin.drain()
             child.stdin.close()
+            phase = 'RESPONSE_READ'
             output = bytearray()
             while chunk := await child.stdout.read(4096):
                 output.extend(chunk)
                 if len(output) > MAX_RESPONSE_BYTES:
                     raise ValueError("Capture response exceeds protocol bound")
+            phase = 'CHILD_EXIT'
             await child.wait()
             await diagnostics
             if child.returncode:
                 raise ValueError("Capture child failed")
-            return CaptureResult.model_validate_json(output)
+            phase = 'RESPONSE_VALIDATE'
+            result = CaptureResult.model_validate_json(output)
+            return result.model_copy(update={'timing': measured_timing(phase, started, trace)})
     except Exception as exc:
         if latest:
             exc.capture_progress = latest[0]
+        exc.capture_timing = measured_timing(phase, started, trace)
         raise
     finally:
         if child is None:

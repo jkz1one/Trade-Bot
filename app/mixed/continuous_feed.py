@@ -526,6 +526,7 @@ class ContinuousFeed:
 
             self.rollovers = load_rollovers(self.db, self.policy, self.schemas)
             self.db.execute("CREATE INDEX IF NOT EXISTS attempts_started_at ON attempts(started_at)")
+            self.db.execute('CREATE TABLE IF NOT EXISTS attempt_timings(sequence INTEGER PRIMARY KEY,payload_json TEXT NOT NULL)')
             self.db.execute('CREATE TABLE IF NOT EXISTS cycle_requests(sequence INTEGER PRIMARY KEY,requested INTEGER NOT NULL)')
             self.db.execute("UPDATE attempts SET status='INTERRUPTED' WHERE status='STARTED'")
             self.db.commit()
@@ -637,6 +638,8 @@ class ContinuousFeed:
         scope_state=None,
         paid_scope_refresh=None,
     ):
+        from app.mixed.feed_timing import AttemptTimer
+        timing = AttemptTimer()
         now = clock(now)
         if paid_scope_refresh is not None:
             from app.mixed.scope_refresh import validate_ticket
@@ -742,6 +745,7 @@ class ContinuousFeed:
         self.db.commit()
         stage = "CAPTURE"
         captured = None
+        capture_timing = None
         try:
             scope_capture = None
             scope_record = None
@@ -753,8 +757,11 @@ class ContinuousFeed:
                     sent = self.db.execute("SELECT 1 FROM attempts WHERE json_extract(packet_json, '$.action.kind')='CALL' AND json_extract(packet_json, '$.action.play_key')=? LIMIT 1", (scope_binding.play_key(),)).fetchone()
                     if sent:
                         scope_record = {'status': 'CALL_ALREADY_DELIVERED'}
+            timing.step('CAPTURE')
             captured = await reader(self.policy.capture, schemas=self.schemas, plan=plan,
                                     **({"scope_input": True} if scope_enabled else {}))
+            capture_timing = captured.timing
+            timing.step('PERSIST_CAPTURE')
             if scope_enabled:
                 if not captured.scope_requested:
                     raise ValueError("Combined Scope capture missing its requested evidence")
@@ -775,6 +782,7 @@ class ContinuousFeed:
             from app.options.read_capture import policy_digest
 
             stage = "SOURCE_BINDING"
+            timing.step('SOURCE_BINDING')
             if (
                 captured.plan != plan
                 or captured.policy_sha256 != policy_digest(self.policy.capture)
@@ -814,6 +822,7 @@ class ContinuousFeed:
             if captured.collected_at.astimezone(ZoneInfo("America/New_York")).date() != target_day:
                 history_issues = (*history_issues, "SESSION_BOUNDARY_DURING_CAPTURE")
             stage = "NORMALIZE"
+            timing.step('NORMALIZE')
             packet = await asyncio.to_thread(
                 normalize,
                 effective,
@@ -851,6 +860,7 @@ class ContinuousFeed:
                 return result
 
             stage = "SOURCE_CLOCK_CHECK"
+            timing.step('SOURCE_CLOCK_CHECK')
             unchecked = quotes(packet.frame)
             # Missing deliveries never erase a subject's last original source
             # clock. Walk retained envelopes until each current subject is found.
@@ -878,6 +888,7 @@ class ContinuousFeed:
                     ):
                         raise ValueError("Source evidence regressed or changed at the same clock")
             stage = "PUBLISH"
+            timing.step('PUBLISH')
             self.db.execute(
                 "UPDATE attempts SET status='NORMALIZED',packet_json=?,packet_hash=? WHERE sequence=?",
                 (packet.model_dump_json(), fingerprint(packet), sequence),
@@ -912,6 +923,7 @@ class ContinuousFeed:
 
             # Append bounded public metadata; preserve original raw/packet data.
             details = {"stage": stage, **failure_details(exc)}
+            capture_timing = getattr(exc, 'capture_timing', capture_timing)
             from app.options.read_capture import CaptureProgress
             progress = getattr(exc, 'capture_progress', None)
             if isinstance(progress, CaptureProgress):
@@ -928,6 +940,16 @@ class ContinuousFeed:
             )
             self.db.commit()
             return {"status": "FAILED", "sequence": sequence, "failure": details}
+        finally:
+            import json
+            status = self.db.execute('SELECT status FROM attempts WHERE sequence=?', (sequence,)).fetchone()[0]
+            # A cancelled attempt has no success measurement. Its durable attempt
+            # remains STARTED until ordinary restart recovery marks it interrupted.
+            if status == 'STARTED':
+                status = 'INTERRUPTED'
+            self.db.execute('INSERT INTO attempt_timings VALUES(?,?)',
+                            (sequence, json.dumps(timing.finish(status, capture_timing))))
+            self.db.commit()
 
     def load_swing_sources(self, settings, target, *, now):
         """Read and rebuild the full typed original, without inserting or refreshing it."""

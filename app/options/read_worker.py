@@ -151,6 +151,7 @@ async def collect(request, *, progress=None):
 
 
 def main():
+    started = time.monotonic()
     try:
         data = sys.stdin.buffer.read(MAX_REQUEST_BYTES + 1)
         if len(data) > MAX_REQUEST_BYTES:
@@ -160,6 +161,8 @@ def main():
             return 1
         threading.Thread(target=_watch, args=(request,), daemon=True).start()
         def progress(value):
+            elapsed = time.monotonic()-started
+            value = value.model_copy(update={'elapsed_seconds': elapsed if 0 <= elapsed <= 120 else None})
             sys.stderr.buffer.write(PROGRESS_PREFIX + value.model_dump_json().encode() + b'\n')
             sys.stderr.buffer.flush()
         result = asyncio.run(collect(request, progress=progress))
