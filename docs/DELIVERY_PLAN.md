@@ -65,6 +65,10 @@ next action. Do not replace missing evidence with a date estimate.
 - [ ] **A1 — Whole-system harness:** exercise the installed collector, scanner,
   simulator, local subprocesses, publisher, dashboard and controller/report boundaries
   together, reusing existing fixtures and isolating all external calls.
+  Local progress is recorded in [PAPER_SYSTEM_CHECK_PENDING.md](PAPER_SYSTEM_CHECK_PENDING.md):
+  401 installed tests passed, including the coordinated lifecycle and restart.
+  Code publication was interrupted by workspace failure; A1 remains unchecked
+  until the tested implementation is published and linked.
 - [ ] **A2 — Complete timing evidence:** connect attempt/packet/cycle identities;
   report each phase, quote age, receive lag, p95/p99/max and failed-attempt counts.
 - [ ] **A3 — Measured repairs:** reproduce and close the actual bottlenecks with
