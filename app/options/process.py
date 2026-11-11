@@ -24,6 +24,7 @@ from app.mixed.stock_models import StockIntent, StockLimits
 from app.options.lifecycle import OptionIntent, OptionVenueSnapshot
 from app.options.models import Name, OptionRecord
 from app.options.venue import DurableOptionVenue
+from app.options.runtime_timing import phase as timing_phase, native_diagnostics
 from app.options.process_trace import OptionProcessDiagnostics, TraceReader
 from app.options.snapshot_worker import VERSION as SNAPSHOT_VERSION
 
@@ -60,6 +61,14 @@ class OptionProcessResult(OptionRecord):
 
 
 async def run_option_process(
+    venue, *, now, timeout_seconds, intent=None, stock_intent=None, deadline=None
+):
+    with timing_phase("NATIVE_ACCEPT" if intent is not None or stock_intent is not None else "NATIVE_SNAPSHOT"):
+        return await _run_option_process(venue, now=now, timeout_seconds=timeout_seconds,
+                                         intent=intent, stock_intent=stock_intent, deadline=deadline)
+
+
+async def _run_option_process(
     venue, *, now, timeout_seconds, intent=None, stock_intent=None, deadline=None
 ):
     if type(venue) is not DurableOptionVenue or not 0 < timeout_seconds <= 30:
@@ -184,6 +193,9 @@ async def run_option_process(
         )
         raise failure from None
     finally:
+        native_diagnostics(OptionProcessDiagnostics(
+            phase, time.monotonic() - started, trace.invalid, tuple(trace.records)
+        ))
         if child is None:
             while not spawn.done():
                 try:

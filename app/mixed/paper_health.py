@@ -21,6 +21,7 @@ CODES = {
     "CONTAINER_EXIT_NONZERO": "The worker exited with an error.",
     "MANUAL_PAUSE": "Paused by operator.", "BOUNDED_SESSION_ENDED": "Scheduled run ended.",
     "EXPLICIT_SCHEDULE_RESUME": "Daily schedule resumed.", "DAILY_SESSION_ALREADY_FINISHED": "Today's run has ended.",
+    "CONNECTED_PUBLICATION_FAILED": "Account display failed. New entries are halted; position protection still requires valid data.",
     "OPTION_RUNTIME_FEED_UNAVAILABLE": "Waiting for valid market data.",
     "WAITING_FOR_SIX_COMPLETED_BARS": "Waiting for six completed five-minute bars.",
 }
@@ -59,7 +60,9 @@ def evidence(state, report, *, observed_at, binding_hash):
     if not report or not re.fullmatch(r"daily-\d{8}", str(report.get("run_id", ""))):
         return result
     operation = report.get("operation", {}).get("state")
-    failures = report.get("worker_exit", {}).get("failures", [])
+    failures = [*report.get("worker_exit", {}).get("failures", []), *report.get("publication_failures", [])]
+    if report.get("publication_failures"):
+        result["reason"] = "CONNECTED_PUBLICATION_FAILED"
     issue = next((f for f in failures if f.get("component") in ("RUNTIME", "PUBLISHER", "COLLECTOR", "TERMINAL_PUBLISHER")), {})
     clocks = report.get("runtime_evidence", {})
     result["session"] = {

@@ -154,6 +154,7 @@ def copy_display_tables(db):
     windows = {
         "execution_mixed_runtime_inputs": " ORDER BY sequence DESC LIMIT 1",
         "execution_snapshots": " ORDER BY rowid DESC LIMIT 100",
+        "execution_runtime_timings": " ORDER BY id DESC LIMIT 100",
     }
     for name, ddl in db.execute(
         "SELECT name,sql FROM owner.sqlite_schema WHERE type='table' AND name GLOB 'execution_*'"

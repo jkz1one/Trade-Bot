@@ -31,6 +31,40 @@ def setup(tmp_path, *, positions=False):
     return source, directory, binding, secret
 
 
+def test_publication_fault_visible_while_worker_protects_and_account_display_is_missing(tmp_path):
+    from test_paper_session_report import module as reports
+    from app.mixed.paper_health import evidence
+    from app.options.engine import fingerprint
+
+    source, directory, binding, secret = setup(tmp_path, positions=True)
+    (directory / 'options.db').unlink()
+    report = {'run_id': 'daily-20261028', 'window_end': AT.isoformat(),
+              'current_runtime': [{'status': 'RUNNING'}],
+              'current_control': [{'halted': True, 'halt_reason': 'CONNECTED_PUBLICATION_FAILED'}],
+              'runtime_evidence': {'heartbeat': 'FRESH', 'feed': 'FRESH'},
+              'publication_failures': [{'component': 'PUBLISHER', 'error_class': 'OSError'}]}
+    report['operation'] = reports.operation(report, {'Status': 'running'})
+    assert report['operation']['state'] == 'MISSING_INPUTS'
+    assert report['operation']['reasons'] == ['CONNECTED_PUBLICATION_FAILED']
+    health = evidence({'status': 'RUNNING'}, report, observed_at=AT.isoformat(),
+                      binding_hash=fingerprint(binding))
+    path = directory / 'paper-status.json'
+    path.write_text(json.dumps(health))
+    path.chmod(0o444)
+    before = digest(source)
+    app = reader.create_app(directory, binding, str(secret), clock_source=lambda: AT,
+                            allow_degraded=True)
+    with TestClient(app) as client:
+        assert client.get('/desk/operation').status_code == 401
+        client.auth = ('trader', PASSWORD)
+        response = client.get('/desk/operation')
+        assert response.status_code == 200
+        assert 'Account display failed' in response.text
+        assert 'position protection still requires valid data' in response.text
+        assert client.get('/api/mixed').status_code == 503
+    assert digest(source) == before
+
+
 @pytest.mark.parametrize("positions", [False, True])
 def test_native_account_is_authenticated_current_read_only(tmp_path, positions, monkeypatch):
     source, directory, binding, secret = setup(tmp_path, positions=positions)

@@ -10,6 +10,7 @@ from datetime import UTC, datetime, timedelta
 import json
 import os
 import time
+import threading
 
 from fastapi.testclient import TestClient
 import pytest
@@ -33,9 +34,9 @@ from app.options.entry_reasoning import plan_class
 from app.options.runtime_cli import initialize
 
 
-@pytest.mark.parametrize('read_failure', [False, True])
+@pytest.mark.parametrize('read_failure,publication_failure', [(False, False), (True, False), (False, True)])
 def test_coordinated_options_lifecycle_restart_publication_and_report(
-    tmp_path, captures, schemas, monkeypatch, read_failure
+    tmp_path, captures, schemas, monkeypatch, read_failure, publication_failure
 ):
     settings, policy = combined(captures)
     owner, feed_dir, dashboard = (tmp_path / p for p in ('owner', 'collector', 'dashboard'))
@@ -78,6 +79,13 @@ def test_coordinated_options_lifecycle_restart_publication_and_report(
     finally:
         publisher.close()
 
+    inject_publication = threading.Event()
+    publish_native = DashboardPublisher.publish
+    def broken_publish(self):
+        if inject_publication.is_set():
+            raise OSError('private synthetic publication failure')
+        return publish_native(self)
+    monkeypatch.setattr(DashboardPublisher, 'publish', broken_publish)
     models, snapshots, native_times, deliveries = [], [], [], []
     handles, generation, count = {}, [1], [0]
     original_open, original_loop = connected.existing_runtime, ContinuousFeed.run
@@ -136,7 +144,17 @@ def test_coordinated_options_lifecycle_restart_publication_and_report(
                         await asyncio.sleep(.02)
             snap = runtime.c.engine.venue.snapshot(now[0])
             symbols = {p.contract.underlying for p in snap.positions.values()}
-            exit_symbol = 'QQQ' if generation[0] == 2 else 'SPY' if len(models) >= 2 else None
+            if publication_failure and generation[0] == 1 and len(symbols) == 2:
+                inject_publication.set()
+                async with asyncio.timeout(12):
+                    while getattr(runtime, 'entry_fault', None) is None:
+                        assert not stop.is_set()
+                        await asyncio.sleep(.02)
+                assert runtime.entry_fault == 'CONNECTED_PUBLICATION_FAILED'
+                assert not stop.is_set()
+                with runtime.c.engine.journal.read() as db:
+                    assert runtime.c.engine._control(db)['halted']
+            exit_symbol = 'QQQ'  if generation[0] == 2 else 'SPY' if len(models) >= 2 else None
             if (generation[0] == 1 and len(models) == 2 and symbols == {'QQQ'}
                     or generation[0] == 2 and not symbols):
                 stop.set()
@@ -191,8 +209,19 @@ def test_coordinated_options_lifecycle_restart_publication_and_report(
             await asyncio.gather(task, return_exceptions=True)
 
     revision = connected.check(*args, clock_source=lambda: now[0])[0]['owner_state']['owner_revision']
-    first = asyncio.run(session(revision))
-    assert first['status'] == 'STOPPED'
+    if publication_failure:
+        with pytest.raises(connected.ComponentFailure, match='PUBLISHER') as caught:
+            asyncio.run(session(revision))
+        assert any(d['component'] == 'PUBLISHER' for d in caught.value.details)
+        intermediate = reports.report(tmp_path, start.isoformat(), now[0].isoformat())
+        assert intermediate['run_execution']['entry_fills'] == 2
+        assert intermediate['run_execution']['exit_fills'] == 1
+        assert intermediate['publication_failures']
+        assert 'private synthetic' not in json.dumps(intermediate)
+        inject_publication.clear()  # Explicit repair in this disposable fixture only.
+    else:
+        first = asyncio.run(session(revision))
+        assert first['status'] == 'STOPPED'
     assert len(models) == 2 and native_times and snapshots
     generation[0] = 2
     second = asyncio.run(session(None))
@@ -201,6 +230,20 @@ def test_coordinated_options_lifecycle_restart_publication_and_report(
     assert report['run_execution'] == dict(status='RECORDED', entry_fills=2, exit_fills=2,
                                          completed_round_trips=2, carry_in_exits=0)
     assert report['account_total_fills'] == 4
+    timings = report['runtime_timing']
+    assert timings['measured'] and not timings['missing_or_invalid']
+    assert {'TICK', 'CYCLE', 'SCAN', 'ENTRY_MODEL', 'ADMISSION', 'DISPATCH', 'NATIVE_SNAPSHOT', 'NATIVE_ACCEPT'} <= set(timings['phases'])
+    assert timings['execution_quote_clocks']['quote_age_seconds']['max_seconds'] < 10
+    assert timings['native_observed_intervals']['SNAPSHOT']['samples']
+    assert all(t['collector_binding'] == 'MATCHED' for t in timings['recent'] if t['packet_sequence'] is not None)
+    with __import__('sqlite3').connect(owner / 'options.db') as db:
+        traces = [json.loads(r[0]) for r in db.execute('SELECT payload_json FROM execution_runtime_timings')]
+        for trace in traces:
+            if trace['packet_sequence'] is not None:
+                original = db.execute('SELECT packet_hash FROM execution_mixed_runtime_inputs WHERE sequence=?',
+                                      (trace['packet_sequence'],)).fetchone()
+                assert original[0] == trace['packet_sha256']
+        assert {t['generation'] for t in traces} >= {2, 3}
     assert report['collection_timing']['measured'] == count[0]
     failed = sum(r['attempts'] for r in report['collection'] if r['status'] == 'FAILED')
     assert failed == int(read_failure)
@@ -230,7 +273,8 @@ def test_coordinated_options_lifecycle_restart_publication_and_report(
     with TestClient(app) as client:
         client.auth = ('trader', PASSWORD)
         operation = client.get('/desk/operation')
-        assert operation.status_code == 200 and 'worker stopped early' in operation.text
+        expected_message = 'Account display failed' if publication_failure else 'worker stopped early'
+        assert operation.status_code == 200 and expected_message in operation.text
         account = client.get('/api/mixed').json()
         assert account['fill_count'] == 4 and not account['positions']
         assert account['accounting'] == 'VERIFIED'
@@ -238,7 +282,7 @@ def test_coordinated_options_lifecycle_restart_publication_and_report(
     output = os.environ.get('TRADE_BOT_OFFLINE_PROOF')
     if output:
         from pathlib import Path
-        evidence_path = Path(output) / ('system-with-read-failure.json' if read_failure else 'system-normal.json')
+        evidence_path = Path(output) / ('system-with-publisher-failure.json' if publication_failure else 'system-with-read-failure.json' if read_failure else 'system-normal.json')
         evidence_path.write_text(json.dumps({'synthetic': True, 'market_acceptance': False,
             'native_process_calls': len(native_times), 'native_process_max_seconds': max(native_times),
             'dashboard_reads': len(snapshots), 'capture_attempts': count[0], 'report': report}, indent=2))

@@ -1,5 +1,6 @@
 """Durable options PAPER lifecycle on the existing journal/restore/ownership foundation."""
 
+from app.options.runtime_timing import measured, phase
 from app.options.models import parse_underlying
 import hashlib
 import json
@@ -132,6 +133,7 @@ class OptionJournal(ExecutionJournal):
             "execution_option_opportunities",
             "execution_option_runtime",
             "execution_option_runtime_slots",
+            "execution_runtime_timings",
             "execution_option_scope_runtime_inputs",
             "execution_mixed_runtime_inputs",
             "execution_option_swing_seeds",
@@ -484,6 +486,7 @@ class OptionExecution:
         return account
 
     @exact
+    @measured("ADMISSION", quote_position=3)
     def prepare(
         self,
         source_key,
@@ -1218,6 +1221,10 @@ class OptionExecution:
             return intent
 
     async def dispatch(self, client_id, quote, underlying=None, *, now):
+        with phase("DISPATCH", quote=quote, now=now):
+            return await self._timed_dispatch(client_id, quote, underlying, now=now)
+
+    async def _timed_dispatch(self, client_id, quote, underlying=None, *, now):
         if self.portfolio_policy is not None:
             from app.mixed.portfolio_options import dispatch
 

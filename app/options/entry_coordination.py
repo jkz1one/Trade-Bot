@@ -4,6 +4,7 @@ import asyncio
 import json
 from datetime import datetime, timedelta
 from uuid import uuid4
+from app.options.runtime_timing import phase
 
 from app.execution.engine import ExecutionBlocked
 from app.options import entry_judgment as judgment
@@ -148,7 +149,8 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
         return c._finish(key, {**evidence, "status": "HOLD", "reason": "ENTRY_PLAN_EXPIRED_BEFORE_MODEL"})
     c.engine.begin_model_attempt(key, evidence["model_input_hash"], now=before_model)
     try:
-        result = await c._model_run(request, secret, broad=True)
+        with phase("ENTRY_MODEL"):
+            result = await c._model_run(request, secret, broad=True)
         result = judgment.EntryResult.model_validate(result.model_dump(warnings=False))
         evidence["entry_result"] = result.model_dump(mode="json")
         completed = c.now()

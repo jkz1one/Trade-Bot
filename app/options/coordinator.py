@@ -15,6 +15,7 @@ from app.execution.judgment import JudgmentLimits
 from app.execution.runtime import model_key
 from app.mixed.sources import StockCycleInput, StockSelectionPolicy
 from app.options import judgment
+from app.options.runtime_timing import measured, phase
 from app.options.degen import DegenHistory, DegenPolicy, scan_degen
 from app.options.engine import EntryModelBlocked, OptionExecution, clock, fingerprint
 from app.options.governor import _fresh
@@ -614,6 +615,7 @@ class DegenCoordinator:
             ).fetchone()
         return OptionIntent.model_validate_json(row[0]).instrument if row else None
 
+    @measured("SCAN")
     def quote_plan(self, histories, inventories, swing=(), *, swing_batches=(), swing_unavailable=False):
         if swing_unavailable and (self.engine.portfolio_policy is None or swing or swing_batches):
             raise ValueError("Unavailable Swing requires portfolio enrollment and no Swing inputs")
@@ -829,7 +831,8 @@ class DegenCoordinator:
         self._pending_evidence(key, {**evidence, "status": "MODEL_PENDING"})
         self.engine.begin_model_attempt(key, evidence["model_input_hash"], now=at)
         try:
-            result = await self._model_run(request, secret)
+            with phase("ENTRY_MODEL"):
+                result = await self._model_run(request, secret)
             result = judgment.CandidateResult.model_validate(result.model_dump(warnings=False))
             evidence["model_result"] = result.model_dump(mode="json")
             self._pending_evidence(key, evidence)
@@ -882,6 +885,7 @@ class DegenCoordinator:
         )
         return selected, proposal, completed
 
+    @measured("PROTECTION")
     async def supervise(self, quotes=(), underlyings=(), *, stocks=()):
         if self.engine.portfolio_policy is not None:
             return await self.engine.protective_tick(

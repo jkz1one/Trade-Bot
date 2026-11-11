@@ -1,0 +1,117 @@
+"""Bounded diagnostic spans; never market, account or execution authority."""
+
+import asyncio
+from contextlib import contextmanager
+from contextvars import ContextVar
+from functools import wraps
+import inspect
+import json
+import sqlite3
+import time
+
+
+CURRENT = ContextVar("option_runtime_timing", default=None)
+PHASES = {"SCAN", "ENTRY_MODEL", "ADMISSION", "DISPATCH", "PROTECTION", "NATIVE_SNAPSHOT", "NATIVE_ACCEPT"}
+MAX_SPANS = 64
+
+
+@contextmanager
+def phase(name, *, quote=None, now=None):
+    trace = CURRENT.get()
+    if trace is None:
+        yield
+        return
+    assert name in PHASES
+    started, status = time.monotonic(), "COMPLETE"
+    sample = {"phase": name}
+    if quote is not None and now is not None:
+        sample["quote_age_seconds"] = (now - quote.source_at).total_seconds()
+        sample["receive_lag_seconds"] = (quote.received_at - quote.source_at).total_seconds()
+        sample["local_age_seconds"] = (now - quote.received_at).total_seconds()
+    try:
+        yield
+    except BaseException as exc:
+        status = "INTERRUPTED" if isinstance(exc, asyncio.CancelledError) else "FAILED"
+        raise
+    finally:
+        sample.update(status=status, elapsed_seconds=round(time.monotonic() - started, 6))
+        if len(trace["spans"]) < MAX_SPANS:
+            trace["spans"].append(sample)
+        else:
+            trace["spans_omitted"] += 1
+
+
+def measured(name, *, quote_position=None):
+    def decorate(function):
+        if inspect.iscoroutinefunction(function):
+            @wraps(function)
+            async def asynchronous(*args, **kwargs):
+                with phase(name):
+                    return await function(*args, **kwargs)
+            return asynchronous
+        @wraps(function)
+        def synchronous(*args, **kwargs):
+            quote = (args[quote_position] if len(args) > quote_position else kwargs.get("quote")) if quote_position is not None else None
+            with phase(name, quote=quote, now=kwargs.get("now")):
+                return function(*args, **kwargs)
+        return synchronous
+    return decorate
+
+
+def bind_packet(packet, accepted_at):
+    trace = CURRENT.get()
+    if trace is not None:
+        from app.options.engine import fingerprint
+        trace.update(packet_sequence=packet.sequence, packet_sha256=fingerprint(packet),
+                     packet_age_seconds=(accepted_at - packet.recorded_at).total_seconds())
+
+
+def native_diagnostics(value):
+    trace = CURRENT.get()
+    if trace is not None and len(trace["native"]) < MAX_SPANS:
+        public = value.public()
+        if public is not None:
+            trace["native"].append(public)
+
+
+@contextmanager
+def root(runtime, kind, *, slot=None, packet=None):
+    """A cycle owns its own context even when spawned inside a protection tick."""
+    journal = runtime.c.engine.journal
+    at = runtime.c.now()
+    started = time.monotonic()
+    value = {"version": "runtime-timing-v1", "kind": kind, "slot": slot,
+             "packet_sequence": None, "packet_sha256": None, "spans": [], "native": [],
+             "spans_omitted": 0, "status": "RUNNING"}
+    row_id = None
+    try:
+        with journal.write() as db:
+            row = runtime._bound(db)
+            value["generation"] = row["generation"]
+            db.execute("CREATE TABLE IF NOT EXISTS execution_runtime_timings("
+                       "id INTEGER PRIMARY KEY,started_at TEXT NOT NULL,payload_json TEXT NOT NULL)")
+            db.execute("CREATE INDEX IF NOT EXISTS runtime_timings_started ON execution_runtime_timings(started_at)")
+            row_id = db.execute("INSERT INTO execution_runtime_timings(started_at,payload_json) VALUES(?,?)",
+                                (at.isoformat(), json.dumps(value))).lastrowid
+    except (OSError, sqlite3.Error):
+        # Diagnostics must not stop valid protection. Missing rows remain unmeasured.
+        pass
+    token = CURRENT.set(value)
+    if packet is not None:
+        bind_packet(packet, at)
+    try:
+        yield
+        value["status"] = "COMPLETE"
+    except BaseException as exc:
+        value["status"] = "INTERRUPTED" if isinstance(exc, asyncio.CancelledError) else "FAILED"
+        raise
+    finally:
+        CURRENT.reset(token)
+        value["elapsed_seconds"] = round(time.monotonic() - started, 6)
+        if row_id is not None:
+            try:
+                with journal.write() as db:
+                    db.execute("UPDATE execution_runtime_timings SET payload_json=? WHERE id=?",
+                               (json.dumps(value, sort_keys=True), row_id))
+            except (OSError, sqlite3.Error):
+                pass  # The unfinished RUNNING record is explicit missing evidence.

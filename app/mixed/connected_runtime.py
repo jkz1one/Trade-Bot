@@ -548,12 +548,32 @@ async def run(
                         collector.cancel()
                     await asyncio.gather(collector, return_exceptions=True)
 
+            publication_failures = []
+
             async def publish(stop):
                 if not await await_ready(ready, stop):
                     return
                 while not stop.is_set():
-                    dashboard_source(directory, snapshot_owner)
-                    await publish_async(publisher)
+                    try:
+                        dashboard_source(directory, snapshot_owner)
+                        await publish_async(publisher)
+                    except Exception as exc:
+                        # A display failure removes entry authority, not the sole
+                        # native protection owner. If durable fencing fails, let
+                        # supervision stop everything with that failure explicit.
+                        detail = {"component": "PUBLISHER", **failure_details(exc)}
+                        with runtime.c.engine.journal.write() as db:
+                            runtime._bound(db)
+                            runtime.c.engine._halt(db, "CONNECTED_PUBLICATION_FAILED", clock_source())
+                            runtime.c.engine.journal.event(db, clock_source(),
+                                "CONNECTED_PUBLICATION_FAILED", detail)
+                        runtime.entry_fault = "CONNECTED_PUBLICATION_FAILED"
+                        recovery.fenced = True
+                        publication_failures.append(detail)
+                        # No automatic retry of a retained partial publication.
+                        # Report/controller reads can see the native incident.
+                        await stop.wait()
+                        return
                     try:
                         await asyncio.wait_for(stop.wait(), timeout=5)
                     except TimeoutError:
@@ -562,6 +582,7 @@ async def run(
             try:
                 await supervise(trade, collect, stop, publisher_run=publish if publisher else None)
             except ComponentFailure as exc:
+                exc.details.extend(publication_failures)
                 # supervise has drained all components. If the publisher was healthy,
                 # retain the terminal owner's state while its original leases are held.
                 if publisher and all(part["component"] != "PUBLISHER" for part in exc.details):
@@ -575,6 +596,8 @@ async def run(
                         exc.details.append({"component": "TERMINAL_PUBLISHER",
                                             **failure_details(publication_error)})
                 raise
+            if publication_failures:
+                raise ComponentFailure("CONNECTED_COMPONENT_STOPPED:PUBLISHER", publication_failures)
             after_counts = session_counts(runtime.c.engine)
             if publisher is not None:
                 # All runtime/collector cleanup has finished. Publish the stopped

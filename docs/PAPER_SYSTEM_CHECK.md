@@ -1,7 +1,9 @@
 # Offline PAPER system check
 
 This is the developer check for delivery-plan **A1**, with the first part of
-**A2**. It runs the installed collector, scanner, simulator, native subprocesses,
+**A2**. The current continuation adds runtime correlation and an in-run
+publication-failure case; see [PAPER_TIMING_PROTECTION.md](PAPER_TIMING_PROTECTION.md).
+It runs the installed collector, scanner, simulator, native subprocesses,
 supervisor, publisher and authenticated dashboard reader together. The resulting
 report also passes through the daily controller and independent status page.
 External provider/model responses and Docker inspection are explicit fixtures.
@@ -34,9 +36,9 @@ the inherited environment except locale/PATH, explicitly loads the anyio pytest
 plugin and runs the installed application with isolated Python and warnings as
 errors. Its overall limit is thirty minutes; each integrated scenario has bounded
 progress and subprocess deadlines. Timeout or interruption drains the test process
-group and records failure. The checked run took about five minutes.
+group and records failure. The accelerated scenarios run in minutes; they are not a full-session soak.
 
-Output contains `summary.json`, `tests.log`, `tests.xml`, the two synthetic system
+Output contains `summary.json`, `tests.log`, `tests.xml`, three synthetic system
 reports and disposable fixture state. `summary.json` distinguishes test success
 from unverified host/market acceptance and a wall-clock soak that has not run.
 Do not mount or copy these fixture journals into any connected owner directory.
@@ -108,9 +110,10 @@ under A3. Fixture read timings include deliberate backpressure and are not Robin
 latency measurements. Native subprocess timings here are workspace observations,
 not evidence of Tuesday's exact host timeout cause.
 
-**A4–A6 stay open.** The supervisor still stops trading components after publisher
-failure. That coupling needs a tested change preserving valid held-position
-protection and visible failure status. The complete failure matrix, accelerated
+**A4–A6 stay open.** The recovered A1 baseline stopped trading components after
+publisher failure. The continuation in PAPER_TIMING_PROTECTION.md isolates an
+in-run display failure, fences entries and proves protective exits with held
+positions. Startup display failures and the wider stress matrix remain open. The complete failure matrix, accelerated
 calendar cases, full-duration resource-limited soak and journal-growth acceptance
 remain separate work. Actual Docker/systemd, cross-UID and browser visual acceptance
 remain unverified. No connected fill or entry-to-exit lifecycle is claimed.

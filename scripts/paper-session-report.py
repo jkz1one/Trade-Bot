@@ -395,6 +395,17 @@ def short_report(result):
         lines.append(f"Collection timing: {timing['measured']}/{timing['attempts']} measured; "
                      f"p95 {elapsed['p95_seconds']:.3f}s; p99 {elapsed['p99_seconds']:.3f}s; "
                      f"max {elapsed['max_seconds']:.3f}s (includes failures)")
+    runtime_timing = result.get('runtime_timing', {})
+    if runtime_timing.get('status') == 'OBSERVED':
+        lines.append(f"Runtime timing: {runtime_timing['measured']}/{runtime_timing['records']} measured; "
+                     f"{runtime_timing['missing_or_invalid']} incomplete/invalid; {runtime_timing['omitted']} omitted")
+        for name in ('NATIVE_SNAPSHOT', 'SCAN', 'ENTRY_MODEL', 'DISPATCH'):
+            values = runtime_timing.get('phases', {}).get(name)
+            if values:
+                lines.append(f"{name}: n={values['samples']}; p95 {values['p95_seconds']:.3f}s; "
+                             f"p99 {values['p99_seconds']:.3f}s; max {values['max_seconds']:.3f}s")
+    if result.get('publication_failures'):
+        lines.append('Account publication failed: new entries halted; protection still requires valid native data.')
     if result.get('collector_failures'):
         last = result['collector_failures'][-1]
         phase = reasons((last.get('read_progress') or {}).get('stage')) or 'unavailable'
@@ -791,6 +802,8 @@ def operation(result, state):
         status, why = 'MISSING_INPUTS', ['RUNTIME_HEARTBEAT_' + clocks.get('heartbeat', 'UNKNOWN')]
     elif runtime.get('status') in {'STOPPED', 'STOPPING'}:
         status, why = 'STOPPED', codes(runtime.get('reason'))
+    elif result.get('publication_failures'):
+        status, why = 'MISSING_INPUTS', ['CONNECTED_PUBLICATION_FAILED']
     elif auth_blocked:
         status, why = 'MISSING_INPUTS', ['READ_AUTHORIZATION_REQUIRED']
     elif control.get('halted'):
@@ -916,6 +929,97 @@ def timing_evidence(db, start, end):
     return result
 
 
+def runtime_timing_evidence(db, start, end):
+    """Bounded runtime diagnostics with explicit unfinished/omitted denominators."""
+    import math
+
+    result = {'status': 'UNAVAILABLE', 'records': 0, 'measured': 0,
+              'missing_or_invalid': 0, 'omitted': 0, 'spans_omitted': 0,
+              'by_status': {}, 'phases': {}, 'recent': []}
+    if not db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_runtime_timings'").fetchone():
+        return result
+    phases = {'SCAN', 'ENTRY_MODEL', 'ADMISSION', 'DISPATCH', 'PROTECTION', 'NATIVE_SNAPSHOT', 'NATIVE_ACCEPT'}
+    statuses = {'COMPLETE', 'FAILED', 'INTERRUPTED'}
+    has_packets = bool(db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_mixed_runtime_inputs'").fetchone())
+    total = db.execute('SELECT COUNT(*) FROM execution_runtime_timings WHERE started_at>=? AND started_at<=?',
+                       (start, end)).fetchone()[0]
+    result.update(status='OBSERVED', records=total, omitted=max(0, total-2000))
+    values, ages, natives, packet_ages = {}, {}, {}, []
+
+    def number(value, signed=False):
+        return type(value) in (int, float) and math.isfinite(value) and (-86400 if signed else 0) <= value <= 86400
+
+    def summary(items):
+        ordered = sorted(items)
+        return {'samples': len(items), **{name+'_seconds': ordered[max(0, math.ceil(p*len(items))-1)]
+            for name, p in (('p50', .5), ('p95', .95), ('p99', .99), ('max', 1))}}
+
+    rows = db.execute('SELECT id,started_at,CASE WHEN length(payload_json)<=65536 THEN payload_json END AS payload '
+        'FROM execution_runtime_timings WHERE started_at>=? AND started_at<=? ORDER BY id DESC LIMIT 2000', (start, end))
+    for row in rows:
+        try:
+            item = json.loads(row['payload'] or 'null')
+            if (not isinstance(item, dict) or item.get('version') != 'runtime-timing-v1'
+                    or item.get('kind') not in {'TICK', 'CYCLE'} or item.get('status') not in statuses
+                    or not number(item.get('elapsed_seconds'))
+                    or type(item.get('generation')) is not int or item['generation'] < 0
+                    or (item.get('slot') is not None and (type(item['slot']) is not int or item['slot'] < 0))
+                    or not isinstance(item.get('spans'), list) or len(item['spans']) > 64
+                    or not isinstance(item.get('native'), list) or len(item['native']) > 64
+                    or type(item.get('spans_omitted')) is not int or not 0 <= item['spans_omitted'] <= 1000000):
+                raise ValueError
+            for span in item['spans']:
+                if (not isinstance(span, dict) or span.get('phase') not in phases
+                        or span.get('status') not in statuses or not number(span.get('elapsed_seconds'))
+                        or any(k in span and not number(span[k], signed=True)
+                               for k in ('quote_age_seconds', 'receive_lag_seconds', 'local_age_seconds'))):
+                    raise ValueError
+            if any(safe_process(n) is None for n in item['native']):
+                raise ValueError
+            sequence, digest = item.get('packet_sequence'), item.get('packet_sha256')
+            if sequence is None and digest is not None:
+                raise ValueError
+            if sequence is not None and (type(sequence) is not int or sequence < 1
+                    or not isinstance(digest, str) or not re.fullmatch('[0-9a-f]{64}', digest)
+                    or not number(item.get('packet_age_seconds'), signed=True)):
+                raise ValueError
+            if has_packets and sequence is not None:
+                packet = db.execute('SELECT packet_hash FROM execution_mixed_runtime_inputs WHERE sequence=?', (sequence,)).fetchone()
+                if packet is None or packet['packet_hash'] != digest:
+                    raise ValueError
+        except (ValueError, TypeError, KeyError):
+            result['missing_or_invalid'] += 1
+            continue
+        result['measured'] += 1
+        result['spans_omitted'] += item['spans_omitted']
+        label = item['kind'] + ':' + item['status']
+        result['by_status'][label] = result['by_status'].get(label, 0) + 1
+        values.setdefault(item['kind'], []).append(item['elapsed_seconds'])
+        if sequence is not None:
+            packet_ages.append(item['packet_age_seconds'])
+        for span in item['spans']:
+            values.setdefault(span['phase'], []).append(span['elapsed_seconds'])
+            key = span['phase'] + ':' + span['status']
+            result['by_status'][key] = result['by_status'].get(key, 0) + 1
+            for name in ('quote_age_seconds', 'receive_lag_seconds', 'local_age_seconds'):
+                if name in span:
+                    ages.setdefault(name, []).append(span[name])
+        for native in item['native']:
+            for left, right in zip(native['child_stages'], native['child_stages'][1:]):
+                delta = right['elapsed_seconds'] - left['elapsed_seconds']
+                if delta >= 0:
+                    natives.setdefault(left['stage'], []).append(delta)
+        if len(result['recent']) < 25:
+            result['recent'].append({'id': row['id'], 'started_at': row['started_at'],
+                **{k: item[k] for k in ('kind', 'status', 'generation', 'slot', 'packet_sequence', 'packet_sha256', 'elapsed_seconds')},
+                'native': [safe_process(n) for n in item['native']]})
+    result['phases'] = {k: summary(v) for k, v in values.items()}
+    result['execution_quote_clocks'] = {k: summary(v) for k, v in ages.items()}
+    result['native_observed_intervals'] = {k: summary(v) for k, v in natives.items()}
+    result['packet_age'] = summary(packet_ages) if packet_ages else None
+    return result
+
+
 def report(directory, started, finished):
     start = datetime.fromisoformat(started).astimezone(timezone.utc).isoformat()
     end = datetime.fromisoformat(finished).astimezone(timezone.utc).isoformat()
@@ -975,6 +1079,16 @@ def report(directory, started, finished):
          result["run_execution"]) = fill_evidence(db, start, end)
         result['model_spending'] = spending(db, start, end)
         result["runtime_failures"] = runtime_failures(db, start, end)
+        event_columns = {r[1] for r in db.execute('PRAGMA table_info(execution_events)')}
+        publication_available = {'occurred_at', 'kind', 'payload'} <= event_columns
+        result['publication_failure_evidence'] = 'AVAILABLE' if publication_available else 'UNAVAILABLE'
+        result["publication_failures"] = ([
+            {"at": r["occurred_at"], "component": "PUBLISHER", **failure_evidence(r["payload"])}
+            for r in db.execute("SELECT occurred_at,CASE WHEN length(payload)<=16384 THEN payload END AS payload "
+                "FROM execution_events WHERE kind='CONNECTED_PUBLICATION_FAILED' "
+                "AND occurred_at>=? AND occurred_at<=? ORDER BY rowid DESC LIMIT 10", (start, end))]
+            if publication_available else [])
+        result["runtime_timing"] = runtime_timing_evidence(db, start, end)
         result.update(owner_diagnostics(db, start, end))
     finally:
         db.close()
@@ -1006,6 +1120,16 @@ def report(directory, started, finished):
                 "FROM attempts WHERE started_at>=? AND started_at<=? AND packet_json IS NOT NULL "
                 "AND json_valid(packet_json) GROUP BY kind,issues ORDER BY first_sequence LIMIT 25", (start, end))]
         result['collection_timing'] = timing_evidence(db, start, end)
+        # Packet sequence is the collector attempt sequence; check both the
+        # original hash and delivery before joining the two diagnostic ledgers.
+        for trace in result.get('runtime_timing', {}).get('recent', []):
+            sequence = trace.get('packet_sequence')
+            bound = None
+            if sequence is not None and 'packet_hash' in {r[1] for r in db.execute('PRAGMA table_info(attempts)')}:
+                bound = db.execute('SELECT sequence,status,packet_hash FROM attempts WHERE sequence=?', (sequence,)).fetchone()
+            trace['collector_attempt'] = sequence if bound and bound['status'] == 'DELIVERED' and bound['packet_hash'] == trace['packet_sha256'] else None
+            trace['collector_binding'] = 'MATCHED' if trace['collector_attempt'] is not None else 'UNAVAILABLE_OR_MISMATCHED'
+
         if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='attempt_failures'").fetchone():
             result['collector_failures'] = [{
                 'sequence': row['sequence'], 'started_at': row['started_at'],
@@ -1036,6 +1160,8 @@ def report(directory, started, finished):
         concerns.append('COLLECTOR_FAILURES_RECORDED')
     if any(authorization_required(f) for f in result.get('collector_failures', [])):
         concerns.append('READ_AUTHORIZATION_REQUIRED_RECORDED')
+    if result.get('publication_failures'):
+        concerns.append('CONNECTED_PUBLICATION_FAILED')
     if result['runtime_failures']:
         concerns.append('RUNTIME_READ_FAILURES_RECORDED')
     if any('ENTRY_HEALTH_BLOCKED' in row['reason'] for row in result['decision_reason_counts']):

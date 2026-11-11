@@ -12,6 +12,7 @@ from pydantic import Field, TypeAdapter
 from app.execution.engine import ExecutionBlocked
 from app.options.coordinator import DegenCoordinator, DegenFrame
 from app.options.engine import fingerprint
+from app.options import runtime_timing as timing
 from app.options.runtime_models import (
     MixedRuntimePacket,
     PortfolioRuntimePacket,
@@ -91,6 +92,7 @@ class OptionRuntime:
         self.stop = None
         self.last_at = None
         self.operator = None
+        self.entry_fault = None
         with self.c.engine.journal.write() as db:
             self.c._bound(db)
             db.execute(
@@ -147,7 +149,11 @@ class OptionRuntime:
             raise ExecutionBlocked("OPTION_RUNTIME_OWNER_CHANGED")
         return row
 
-    async def _cycle(self, slot, frame, protected_epoch=None):
+    async def _cycle(self, slot, frame, protected_epoch=None, packet=None):
+        with timing.root(self, "CYCLE", slot=slot, packet=packet):
+            return await self._cycle_timed(slot, frame, protected_epoch)
+
+    async def _cycle_timed(self, slot, frame, protected_epoch=None):
         status, reason = "INTERRUPTED", "OPTION_RUNTIME_CYCLE_INTERRUPTED"
         try:
             result = await self.c.cycle(
@@ -175,6 +181,10 @@ class OptionRuntime:
                     and not control['halted'] and (slot is None or slot['status'] == 'WAITING_FOR_FEED'))
 
     async def tick(self):
+        with timing.root(self, "TICK"):
+            return await self._timed_tick()
+
+    async def _timed_tick(self):
         loss = self.c.engine.policy.loss_control
         if self.mixed is None and (
             self.scope is None or loss is None or loss.entry_cost_attribution is None
@@ -205,12 +215,13 @@ class OptionRuntime:
             raise ValueError("Runtime clock moved backwards")
         self.last_at = at
         operator_issue = self.operator.poll(now=at) if self.operator is not None else None
-        if operator_issue:
+        entry_issue = self.entry_fault or operator_issue
+        if entry_issue:
             with self.c.engine.journal.write() as db:
                 self._bound(db)
                 control = self.c.engine._control(db)
-                if not control["halted"] or control["halt_reason"] != operator_issue:
-                    self.c.engine._halt(db, operator_issue, at)
+                if not control["halted"] or control["halt_reason"] != entry_issue:
+                    self.c.engine._halt(db, entry_issue, at)
         packet, issue = None, None
         try:
             packet = read_packet(self.policy.feed_file)
@@ -245,6 +256,7 @@ class OptionRuntime:
                     )
                 ):
                     raise ValueError("Fixture feed identity, time or sequence mismatch")
+            timing.bind_packet(packet, at)
             if self.scope is not None:
                 self.scope.accept(packet, at)
             if self.mixed is not None:
@@ -394,7 +406,7 @@ class OptionRuntime:
             if self.c.engine.portfolio_policy is not None and result.get("reconciled"):
                 with self.c.engine.journal.read() as db:
                     protected_epoch = (self.c.engine._epoch(db), fingerprint(frame))
-            self.task = asyncio.create_task(self._cycle(slot, frame, protected_epoch))
+            self.task = asyncio.create_task(self._cycle(slot, frame, protected_epoch, packet))
         return result
 
     async def run(self, stop, *, ready=None):
