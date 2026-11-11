@@ -284,6 +284,59 @@ async def publish_async(publisher):
         raise
 
 
+def protection_startup(directory, destination, uid, gid, observer, settings, *, now, snapshot_owner=None):
+    """Only verified native holdings and intact display enrollment allow this path."""
+    from types import SimpleNamespace
+    from app.mixed.dashboard_snapshot import binding_for, bound_directory
+    from app.mixed.portfolio_execution import policy as portfolio_policy
+    from app.mixed.portfolio_observer import verified_portfolio
+
+    source = dashboard_source(directory, snapshot_owner)
+    binding, _ = binding_for(source, destination, uid, gid, clock_source=lambda: now)
+    bound_directory(Path(destination), binding)
+    private_path(Path(destination) / 'publisher.lock')
+    with observer.read() as db:
+        control = db.execute('SELECT * FROM execution_control WHERE id=1').fetchone()
+        config = json.loads(control['config_json'])
+        owner = SimpleNamespace(policy=settings.execution, limits=settings.limits,
+            venue=SimpleNamespace(venue_id=config['venue_id']), _control=lambda _: control, _closed=False)
+        if settings.execution.mixed_owner is None or settings.execution.mixed_owner.portfolio is None:
+            raise ValueError('Display failure startup requires a verified portfolio owner')
+        owner.portfolio_policy = portfolio_policy(owner)
+        _, _, _, projection = verified_portfolio(owner, db, owner.portfolio_policy, now)
+        if not projection.ledger.positions:
+            raise ValueError('Display failure startup requires verified held positions')
+        return {'status': 'PROTECTION_ONLY', 'startup_mode': 'PROTECTION_ONLY',
+                'binding_sha256': fingerprint(binding), 'held_plays': len(projection.ledger.positions),
+                'publication_available': False, 'state_modified': False, 'live_enabled': False}
+
+
+def dashboard_preflight(directory, destination, uid, gid, observer, settings, *,
+                        clock_source=utc_now, snapshot_owner=None, allow_protection=True):
+    """Read-only startup classification; run repeats verification under its lease."""
+    try:
+        return dashboard_check(directory, destination, uid, gid,
+            clock_source=clock_source, snapshot_owner=snapshot_owner), None
+    except (OSError, ValueError, sqlite3.Error) as exc:
+        if destination is None or not allow_protection:
+            raise
+        result = protection_startup(directory, destination, uid, gid, observer, settings,
+            now=clock_source(), snapshot_owner=snapshot_owner)
+        return result, exc
+
+
+def publication_fault(runtime, recovery, error, *, now, stage):
+    """Latch entry authority off without clearing any native uncertainty or limits."""
+    detail = {'component': 'PUBLISHER', 'stage': stage, **failure_details(error)}
+    with runtime.c.engine.journal.write() as db:
+        runtime._bound(db)
+        runtime.c.engine._halt(db, 'CONNECTED_PUBLICATION_FAILED', now)
+        runtime.c.engine.journal.event(db, now, 'CONNECTED_PUBLICATION_FAILED', detail)
+    runtime.entry_fault = 'CONNECTED_PUBLICATION_FAILED'
+    recovery.fenced = True
+    return detail
+
+
 async def await_ready(ready, stop):
     waits = [asyncio.create_task(ready.wait()), asyncio.create_task(stop.wait())]
     try:
@@ -451,13 +504,10 @@ async def run(
         or report["owner_state"]["halt_reason"] not in {"OPTION_RUNTIME_STOPPED", "OPTION_RUNTIME_FAILED"}
     ):
         raise ValueError("Exact stopped owner review required for explicit flat recovery")
-    dashboard_check(
-        directory,
-        snapshot_directory,
-        reader_uid,
-        reader_gid,
-        clock_source=clock_source,
-        snapshot_owner=snapshot_owner,
+    _, startup_publication_error = dashboard_preflight(
+        directory, snapshot_directory, reader_uid, reader_gid, observer, settings,
+        clock_source=clock_source, snapshot_owner=snapshot_owner,
+        allow_protection=resume_flat_reviewed_revision is None,
     )
     if stop.is_set():
         return {"status": "NOT_STARTED", "live_enabled": False}
@@ -478,6 +528,7 @@ async def run(
                                     clock_source(), start_revision=locked_owner['owner_revision'])
         before_counts = session_counts(runtime.c.engine)
         publisher = None
+        publication_failures = []
         try:
             if any(enabled(p.scope_binding) for p in (policy, *(r.policy for r in feed.rollovers))):
                 if runtime.scope is None:
@@ -488,13 +539,23 @@ async def run(
             if snapshot_directory is not None:
                 from app.mixed.dashboard_snapshot import DashboardPublisher
 
-                publisher = DashboardPublisher(
-                    dashboard_source(directory, snapshot_owner),
-                    snapshot_directory,
-                    reader_uid,
-                    reader_gid,
-                    clock_source=clock_source,
-                )
+                if startup_publication_error is None:
+                    try:
+                        publisher = DashboardPublisher(
+                            dashboard_source(directory, snapshot_owner), snapshot_directory,
+                            reader_uid, reader_gid, clock_source=clock_source,
+                        )
+                    except (OSError, ValueError, sqlite3.Error) as exc:
+                        if resume_flat_reviewed_revision is not None:
+                            raise
+                        startup_publication_error = exc
+                if startup_publication_error is not None:
+                    # Repeat enrollment and held-account verification under the
+                    # native owner lease. Never reopen/copy/delete a damaged display.
+                    protection_startup(directory, snapshot_directory, reader_uid, reader_gid,
+                        observer, enrolled, now=clock_source(), snapshot_owner=snapshot_owner)
+                    publication_failures.append(publication_fault(runtime, recovery,
+                        startup_publication_error, now=clock_source(), stage='STARTUP'))
             ready = asyncio.Event()
 
             async def trade(stop):
@@ -523,6 +584,9 @@ async def run(
                     startup_resumed = False
                     while not stop.is_set() and not collector.done():
                         at = clock_source()
+                        if runtime.entry_fault:
+                            await asyncio.sleep(0.25)
+                            continue
                         if startup_resumed:
                             recovery.observe(runtime, at)
                             await asyncio.sleep(0.25)
@@ -548,8 +612,6 @@ async def run(
                         collector.cancel()
                     await asyncio.gather(collector, return_exceptions=True)
 
-            publication_failures = []
-
             async def publish(stop):
                 if not await await_ready(ready, stop):
                     return
@@ -561,15 +623,8 @@ async def run(
                         # A display failure removes entry authority, not the sole
                         # native protection owner. If durable fencing fails, let
                         # supervision stop everything with that failure explicit.
-                        detail = {"component": "PUBLISHER", **failure_details(exc)}
-                        with runtime.c.engine.journal.write() as db:
-                            runtime._bound(db)
-                            runtime.c.engine._halt(db, "CONNECTED_PUBLICATION_FAILED", clock_source())
-                            runtime.c.engine.journal.event(db, clock_source(),
-                                "CONNECTED_PUBLICATION_FAILED", detail)
-                        runtime.entry_fault = "CONNECTED_PUBLICATION_FAILED"
-                        recovery.fenced = True
-                        publication_failures.append(detail)
+                        publication_failures.append(publication_fault(runtime, recovery, exc,
+                            now=clock_source(), stage='RUNNING'))
                         # No automatic retry of a retained partial publication.
                         # Report/controller reads can see the native incident.
                         await stop.wait()
@@ -683,16 +738,21 @@ def main(argv=None):
         parser.error("Check does not start workers")
     try:
         if args.operation == "check":
-            result = check(args.directory, args.feed_directory, args.policy, args.schemas)[0]
-            snapshot = dashboard_check(
+            result, settings, _, _, observer = check(
+                args.directory, args.feed_directory, args.policy, args.schemas)
+            snapshot, publication_error = dashboard_preflight(
                 args.directory,
                 args.snapshot_directory,
                 args.reader_uid,
                 args.reader_gid,
+                observer,
+                settings,
                 snapshot_owner=args.snapshot_owner,
             )
             if snapshot is not None:
                 result["dashboard_snapshot"] = snapshot
+            if publication_error is not None:
+                result['entry_blockers'] = [*result['entry_blockers'], 'CONNECTED_PUBLICATION_FAILED']
         else:
             result = asyncio.run(serve(args))
     except ComponentFailure as exc:

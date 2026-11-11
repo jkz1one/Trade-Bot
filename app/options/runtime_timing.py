@@ -11,7 +11,11 @@ import time
 
 
 CURRENT = ContextVar("option_runtime_timing", default=None)
-PHASES = {"SCAN", "ENTRY_MODEL", "ADMISSION", "DISPATCH", "PROTECTION", "NATIVE_SNAPSHOT", "NATIVE_ACCEPT"}
+PHASES = {"SCAN", "STOCK_SCAN", "SCOPE_SCAN", "SCOPE_QUALITY", "ENTRY_MODEL",
+          "STOCK_REFRESH", "SCOPE_REFRESH", "ADMISSION", "DISPATCH",
+          "STOCK_ADMISSION", "STOCK_DISPATCH", "OPTION_MANAGEMENT_MODEL",
+          "STOCK_MANAGEMENT_MODEL", "PORTFOLIO_MANAGEMENT_MODEL",
+          "PROTECTION", "NATIVE_SNAPSHOT", "NATIVE_ACCEPT"}
 MAX_SPANS = 64
 
 
@@ -42,17 +46,21 @@ def phase(name, *, quote=None, now=None):
 
 
 def measured(name, *, quote_position=None):
+    def original_quote(args, kwargs):
+        if quote_position is None:
+            return None
+        return args[quote_position] if len(args) > quote_position else kwargs.get("quote")
+
     def decorate(function):
         if inspect.iscoroutinefunction(function):
             @wraps(function)
             async def asynchronous(*args, **kwargs):
-                with phase(name):
+                with phase(name, quote=original_quote(args, kwargs), now=kwargs.get("now")):
                     return await function(*args, **kwargs)
             return asynchronous
         @wraps(function)
         def synchronous(*args, **kwargs):
-            quote = (args[quote_position] if len(args) > quote_position else kwargs.get("quote")) if quote_position is not None else None
-            with phase(name, quote=quote, now=kwargs.get("now")):
+            with phase(name, quote=original_quote(args, kwargs), now=kwargs.get("now")):
                 return function(*args, **kwargs)
         return synchronous
     return decorate

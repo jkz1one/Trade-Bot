@@ -34,9 +34,9 @@ from app.options.entry_reasoning import plan_class
 from app.options.runtime_cli import initialize
 
 
-@pytest.mark.parametrize('read_failure,publication_failure', [(False, False), (True, False), (False, True)])
+@pytest.mark.parametrize('read_failure,publication_failure,startup_failure', [(False, False, None), (True, False, None), (False, True, None), (False, False, 'missing'), (False, False, 'pending')])
 def test_coordinated_options_lifecycle_restart_publication_and_report(
-    tmp_path, captures, schemas, monkeypatch, read_failure, publication_failure
+    tmp_path, captures, schemas, monkeypatch, read_failure, publication_failure, startup_failure
 ):
     settings, policy = combined(captures)
     owner, feed_dir, dashboard = (tmp_path / p for p in ('owner', 'collector', 'dashboard'))
@@ -224,8 +224,34 @@ def test_coordinated_options_lifecycle_restart_publication_and_report(
         assert first['status'] == 'STOPPED'
     assert len(models) == 2 and native_times and snapshots
     generation[0] = 2
-    second = asyncio.run(session(None))
-    assert second['status'] == 'STOPPED' and len(models) == 2
+    if startup_failure:
+        damaged = dashboard / ('options.db' if startup_failure == 'missing' else '.pending.db')
+        if startup_failure == 'missing':
+            damaged.unlink()
+        else:
+            damaged.write_bytes(b'original failed publication')
+        before_display = {p.name: p.read_bytes() for p in dashboard.iterdir() if p.is_file()}
+        _, enrolled_settings, _, _, observer = connected.check(*args, clock_source=lambda: now[0])
+        reviewed, error = connected.dashboard_preflight(owner, dashboard, os.getuid(), os.getgid(),
+            observer, enrolled_settings, clock_source=lambda: now[0])
+        assert reviewed['startup_mode'] == 'PROTECTION_ONLY' and reviewed['held_plays'] == 1
+        assert error is not None
+        with pytest.raises(connected.ComponentFailure, match='PUBLISHER') as failed:
+            asyncio.run(session(None))
+        assert failed.value.details[0]['stage'] == 'STARTUP'
+        assert {p.name: p.read_bytes() for p in dashboard.iterdir() if p.is_file()} == before_display
+        # Only this isolated fixture is explicitly repaired after the protected exit.
+        if startup_failure == 'pending':
+            damaged.unlink()
+        repair = DashboardPublisher(owner, dashboard, os.getuid(), os.getgid(), clock_source=lambda: now[0])
+        try:
+            repair.publish()
+        finally:
+            repair.close()
+    else:
+        second = asyncio.run(session(None))
+        assert second['status'] == 'STOPPED'
+    assert len(models) == 2
     report = reports.report(tmp_path, start.isoformat(), now[0].isoformat())
     assert report['run_execution'] == dict(status='RECORDED', entry_fills=2, exit_fills=2,
                                          completed_round_trips=2, carry_in_exits=0)
@@ -273,7 +299,7 @@ def test_coordinated_options_lifecycle_restart_publication_and_report(
     with TestClient(app) as client:
         client.auth = ('trader', PASSWORD)
         operation = client.get('/desk/operation')
-        expected_message = 'Account display failed' if publication_failure else 'worker stopped early'
+        expected_message = 'Account display failed' if publication_failure or startup_failure else 'worker stopped early'
         assert operation.status_code == 200 and expected_message in operation.text
         account = client.get('/api/mixed').json()
         assert account['fill_count'] == 4 and not account['positions']
@@ -282,7 +308,7 @@ def test_coordinated_options_lifecycle_restart_publication_and_report(
     output = os.environ.get('TRADE_BOT_OFFLINE_PROOF')
     if output:
         from pathlib import Path
-        evidence_path = Path(output) / ('system-with-publisher-failure.json' if publication_failure else 'system-with-read-failure.json' if read_failure else 'system-normal.json')
+        evidence_path = Path(output) / (('system-startup-'+startup_failure+'.json') if startup_failure else 'system-with-publisher-failure.json' if publication_failure else 'system-with-read-failure.json' if read_failure else 'system-normal.json')
         evidence_path.write_text(json.dumps({'synthetic': True, 'market_acceptance': False,
             'native_process_calls': len(native_times), 'native_process_max_seconds': max(native_times),
             'dashboard_reads': len(snapshots), 'capture_attempts': count[0], 'report': report}, indent=2))

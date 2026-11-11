@@ -16,7 +16,8 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 SUITES = ('connected_system', 'feed_timing', 'runtime_timing', 'option_read_capture', 'connected_runtime',
           'connected_feed_recovery', 'connected_cycle_handoff', 'connected_publisher',
-          'dashboard_reader', 'paper_session_report', 'paper_daily')
+          'dashboard_reader', 'paper_session_report', 'paper_daily', 'mixed_runtime',
+          'option_runtime', 'portfolio_models', 'session_host', 'dashboard_snapshot')
 
 
 def run(output):

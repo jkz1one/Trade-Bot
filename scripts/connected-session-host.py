@@ -404,6 +404,10 @@ def review(image_id, phase, seconds=None, run_id=None, *, resume_flat=False, max
             "container_name": name,
             "resources": session_resources(),
         }
+        if native['dashboard_snapshot'].get('startup_mode') == 'PROTECTION_ONLY':
+            if resume_flat or max_feed_recoveries:
+                raise ValueError('Display failure permits held-position protection only')
+            binding['startup_mode'] = 'PROTECTION_ONLY'
     if resume_flat:
         if phase != "run" or native["owner_state"]["halt_reason"] not in {
             "OPTION_RUNTIME_STOPPED", "OPTION_RUNTIME_FAILED",

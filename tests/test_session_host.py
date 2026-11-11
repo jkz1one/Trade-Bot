@@ -456,6 +456,35 @@ def test_resume_requires_review_binding_and_reaches_bounded_container(host, monk
     assert invocation[invocation.index("--resume-flat-reviewed-revision") + 1] == "1"
 
 
+@pytest.mark.parametrize('resume,allowance', [(False, 0), (True, 0), (True, 1)])
+def test_display_failure_review_binds_protection_only_and_forbids_entry_resume(host, monkeypatch, resume, allowance):
+    m, calls, _, _, _ = host
+    healthy = m.review(IMAGE, 'run', 600, 'held-protection')
+    original = m.execute
+
+    def execute(image, module, args, mounts, **kwargs):
+        result = original(image, module, args, mounts, **kwargs)
+        if module == 'app.mixed.connected_runtime':
+            result['owner_state']['halt_reason'] = 'OPTION_RUNTIME_STOPPED'
+            result['dashboard_snapshot'].update(startup_mode='PROTECTION_ONLY', publication_available=False)
+            result['entry_blockers'] = ['CONNECTED_PUBLICATION_FAILED']
+        return result
+
+    monkeypatch.setattr(m, 'execute', execute)
+    if resume:
+        with pytest.raises(ValueError, match='protection only'):
+            m.review(IMAGE, 'run', 600, 'held-protection', resume_flat=resume, max_feed_recoveries=allowance)
+        assert not any(c[:2] == ('run', '-d') for c in calls)
+    else:
+        plan = m.review(IMAGE, 'run', 600, 'held-protection')
+        assert plan['binding']['startup_mode'] == 'PROTECTION_ONLY'
+        assert plan['review_sha256'] != healthy['review_sha256']
+        m.apply(plan)
+        invocation = next(c for c in calls if c[:2] == ('run', '-d'))
+        assert '--resume-flat-reviewed-revision' not in invocation
+        assert '--max-feed-recoveries' not in invocation
+
+
 def test_swing_preparation_uses_separate_readonly_capture_mount(tmp_path, monkeypatch):
     m = load()
     captures, swing = tmp_path / 'degen', tmp_path / 'swing'
@@ -563,7 +592,15 @@ def test_capture_session_retains_private_evidence_without_owner_mount(tmp_path, 
     assert result['status'] == ('CAPTURE_FAILED' if failed else 'CATALOG_CAPTURED')
     assert result['evidence_directory'] == str(destination)
     assert 'PRIVATE' not in json.dumps(result)
-    assert not any('/state' in x or '/exports' in x or '/run/secrets' in x for x in calls[0])
+    # Host fixture directories may themselves contain '/state'. Check the
+    # actual container mount destinations and their exact allowed sources.
+    command = calls[0]
+    mounts = [dict(part.split('=', 1) for part in command[i+1].split(',') if '=' in part)
+              for i, value in enumerate(command) if value == '--mount']
+    assert [(m['src'], m['dst']) for m in mounts] == [
+        (str(auth), '/auth'), (str(auth / 'discovery.json'), '/auth/discovery.json'),
+        (str(destination), '/out')]
+    assert not any(x in {'-v', '--volume', '--volumes-from'} for x in command)
     assert 'app.mixed.session_capture' in calls[0]
 
 

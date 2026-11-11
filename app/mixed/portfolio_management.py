@@ -15,6 +15,7 @@ from app.mixed.portfolio_store import control, history, intent
 from app.mixed.stock_models import StockIntent
 from app.options.engine import fingerprint
 from app.options.lifecycle import OptionPosition
+from app.options.runtime_timing import phase
 
 
 def current(engine, db, identity, now, *, exclude=None):
@@ -504,11 +505,12 @@ async def run(c, frame):
     except (ValueError, OSError, ExecutionBlocked) as exc:
         return {"status": "HELD", "reason": str(exc)}
     try:
-        result = await (
-            c.replay_model.run(request)
-            if c.replay_model is not None
-            else j.run_position_process(request, secret)
-        )
+        with phase("PORTFOLIO_MANAGEMENT_MODEL"):
+            result = await (
+                c.replay_model.run(request)
+                if c.replay_model is not None
+                else j.run_position_process(request, secret)
+            )
         result = j.PositionResult.model_validate(result.model_dump())
         completed = c.now()
         evidence.update(

@@ -81,6 +81,16 @@ def test_mixed_runtime_native_fill_and_fast_stock_exit(tmp_path, monkeypatch, pa
         asyncio.run(step(r))
         assert v.submit_count == 2
         with c.engine.journal.read() as db:
+            traces = [json.loads(row[0]) for row in db.execute(
+                'SELECT payload_json FROM execution_runtime_timings')]
+        phases = {s['phase'] for t in traces for s in t['spans']}
+        assert {'STOCK_SCAN', 'STOCK_ADMISSION', 'STOCK_DISPATCH'} <= phases
+        assert ('STOCK_REFRESH' in phases) == paid
+        dispatch = [s for t in traces for s in t['spans'] if s['phase'] == 'STOCK_DISPATCH']
+        assert dispatch[0]['quote_age_seconds'] == int(paid)
+        assert dispatch[-1]['quote_age_seconds'] == 0
+        assert all(s['receive_lag_seconds'] == 0 for s in dispatch)
+        with c.engine.journal.read() as db:
             assert (
                 db.execute("SELECT count(*) FROM execution_option_opportunities").fetchone()[0] == 1
             )
@@ -149,7 +159,8 @@ def test_mixed_envelope_does_not_relax_old_stock_boundaries():
         )
 
 
-def test_mixed_management_wait_keeps_independent_protection(tmp_path, monkeypatch):
+@pytest.mark.parametrize('display_failure', [False, True])
+def test_mixed_management_wait_keeps_independent_protection(tmp_path, monkeypatch, display_failure):
     with owner(tmp_path, monkeypatch, management=True) as (c, v, times, _):
         r = runtime(c, tmp_path)
 
@@ -189,6 +200,13 @@ def test_mixed_management_wait_keeps_independent_protection(tmp_path, monkeypatc
             )
             await r.tick()
             await asyncio.wait_for(started.wait(), 10)
+            if display_failure:
+                from types import SimpleNamespace
+                from app.mixed.connected_runtime import publication_fault
+                recovery = SimpleNamespace(fenced=False)
+                publication_fault(r, recovery, OSError('isolated failed display'),
+                                  now=times[0], stage='RUNNING')
+                assert recovery.fenced and not r.task.done()
             times[0] += timedelta(seconds=1)
             send(
                 r,
@@ -201,6 +219,17 @@ def test_mixed_management_wait_keeps_independent_protection(tmp_path, monkeypatc
             finish.set()
             await r.task
             assert v.submit_count == 2
+            with c.engine.journal.read() as db:
+                assert db.execute('SELECT count(*) FROM execution_model_calls WHERE cost IS NULL').fetchone()[0] == 0
+                assert db.execute('SELECT count(*) FROM execution_model_calls').fetchone()[0] == 2
+                if display_failure:
+                    assert c.engine._control(db)['halted']
+                traces = [json.loads(row[0]) for row in db.execute(
+                    'SELECT payload_json FROM execution_runtime_timings')]
+            managed = [t for t in traces if any(s['phase'] == 'STOCK_MANAGEMENT_MODEL' for s in t['spans'])]
+            assert len(managed) == 1 and managed[0]['kind'] == 'CYCLE'
+            assert not any(s['phase'] == 'STOCK_DISPATCH' for s in managed[0]['spans'])
+            assert any(t['kind'] == 'TICK' and any(s['phase'] == 'STOCK_DISPATCH' for s in t['spans']) for t in traces)
 
         asyncio.run(exercise())
 
@@ -247,6 +276,12 @@ def test_joint_scope_runtime_retains_actual_native_choice(tmp_path, monkeypatch,
             assert scope_inputs(db, times[0])["statuses"] == {"OBSERVED": count}
         assert out["status"] == ("HOLD" if choice == "SCOPE_STALE" else "OPEN"), out
         assert v.submit_count == int(choice != "SCOPE_STALE")
+        with c.engine.journal.read() as db:
+            from test_paper_session_report import module as reports
+            timing = reports.runtime_timing_evidence(db, AT.isoformat(), times[0].isoformat())
+        assert not timing['missing_or_invalid']
+        assert {'STOCK_SCAN', 'SCOPE_SCAN', 'SCOPE_QUALITY'} <= timing['phases'].keys()
+        assert ('SCOPE_REFRESH' in timing['phases']) == choice.startswith('SCOPE')
 
 
 def test_cli_mixed_restart_and_explicit_settlement_keep_one_balance(tmp_path):

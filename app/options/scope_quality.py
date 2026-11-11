@@ -9,6 +9,7 @@ from pydantic import Field, ValidationError, model_validator
 
 from app.options.degen import _metric
 from app.options.engine import fingerprint
+from app.options.runtime_timing import measured
 from app.options.models import Money, Name, OptionRecord
 from app.options.scope import ScopePreflightInput
 from app.options.scope_context import (
@@ -144,6 +145,7 @@ class ScopeQualityScan(OptionRecord):
     live_enabled: Literal[False] = False
 
 
+@measured("SCOPE_QUALITY")
 def scan_scope_quality(frame, context, policy, *, now):
     frame = ScopePreflightInput.model_validate(frame.model_dump(warnings=False))
     context = ScopeContextInput.model_validate(context.model_dump(warnings=False))

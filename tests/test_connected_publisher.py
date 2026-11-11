@@ -1,8 +1,11 @@
 """Coordinated publisher failure/cancellation retains leases until backup drains."""
 
 import asyncio
+import json
 import os
+import sqlite3
 import threading
+from datetime import timedelta
 
 import pytest
 from test_connected_runtime import digest, enrolled
@@ -11,6 +14,63 @@ from test_robinhood_read_mapping import schemas as schemas  # noqa: PLC0414
 
 from app.mixed import connected_runtime as connected
 from app.mixed.dashboard_snapshot import DashboardPublisher
+
+
+@pytest.mark.parametrize('damage', ['missing_display', 'pending', 'binding', 'reader',
+                                  'missing_lock', 'flat', 'unreconciled', 'cash'])
+def test_protection_startup_requires_original_enrollment_and_verified_holdings(tmp_path, damage):
+    from test_dashboard_snapshot import owner, publisher
+    from test_degen_options import AT as original_at
+    from app.mixed.observer import MixedObserver
+
+    source, settings = owner(tmp_path, positions=damage != 'flat')
+    destination = tmp_path / 'dashboard'
+    p = publisher(source, destination)
+    try:
+        p.publish()
+    finally:
+        p.close()
+    at = original_at + timedelta(seconds=2)
+    if damage == 'missing_display':
+        (destination / 'options.db').unlink()
+    elif damage == 'pending':
+        (destination / '.pending.db').write_bytes(b'retained incomplete display')
+    elif damage == 'binding':
+        path = destination / 'binding.json'
+        binding = json.loads(path.read_text())
+        binding['population_id'] = 'foreign'
+        path.write_text(json.dumps(binding))
+    elif damage == 'missing_lock':
+        (destination / 'publisher.lock').unlink()
+    elif damage == 'unreconciled':
+        with sqlite3.connect(source / 'options.db') as db:
+            db.execute('UPDATE execution_control SET issues_json=?', ('["UNRESOLVED"]',))
+    elif damage == 'cash':
+        with sqlite3.connect(source / 'options.db') as db:
+            raw = json.loads(db.execute('SELECT snapshot_json FROM execution_portfolio_control').fetchone()[0])
+            raw['cash'] = str(int(float(raw['cash'])) + 1)
+            db.execute('UPDATE execution_portfolio_control SET snapshot_json=?', (json.dumps(raw),))
+    before = digest(tmp_path)
+    observer = MixedObserver(source / 'options.db', settings.limits.population_id,
+                             clock=lambda: at, native_journal=True)
+
+    def verify():
+        connected.protection_startup(source, destination,
+            os.getuid() + int(damage == 'reader'), os.getgid(), observer, settings, now=at)
+
+    if damage in {'missing_display', 'pending'}:
+        verify()
+        reviewed, failure = connected.dashboard_preflight(source, destination, os.getuid(),
+            os.getgid(), observer, settings, clock_source=lambda: at)
+        assert reviewed['startup_mode'] == 'PROTECTION_ONLY' and reviewed['held_plays'] == 2
+        assert failure is not None and not reviewed['publication_available']
+        with pytest.raises((OSError, ValueError)):
+            connected.dashboard_preflight(source, destination, os.getuid(), os.getgid(),
+                observer, settings, clock_source=lambda: at, allow_protection=False)
+    else:
+        with pytest.raises((OSError, ValueError, RuntimeError)):
+            verify()
+    assert digest(tmp_path) == before
 
 
 @pytest.mark.parametrize("raises", [True, False])

@@ -13,6 +13,7 @@ from app.mixed.sources import (
 from app.options.engine import fingerprint
 from app.options.selection import parse_candidate
 from app.options.swing_base_models import SWING_FAMILIES
+from app.options.runtime_timing import measured
 
 
 def configuration(db):
@@ -193,6 +194,7 @@ def receipt(policy, key, evidence):
     }
 
 
+@measured("STOCK_SCAN")
 def collect(c, key, frame, evidence, *, evaluated_at=None):
     from app.mixed.native_execution import review
     from app.mixed.native_store import history as cash_history

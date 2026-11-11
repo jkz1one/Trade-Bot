@@ -2242,6 +2242,7 @@ class OptionExecution:
 
         return unresolved(db, submitting=True)
 
+    @measured("STOCK_ADMISSION", quote_position=3)
     def prepare_stock(
         self,
         source_key,
@@ -2274,6 +2275,7 @@ class OptionExecution:
             self, source_key, proposal, quote, now=now, origin=origin, close_quantity=close_quantity
         )
 
+    @measured("STOCK_DISPATCH", quote_position=2)
     async def dispatch_stock(self, client_id, quote, *, now):
         if self.portfolio_policy is not None:
             from app.mixed.portfolio_execution import dispatch_stock

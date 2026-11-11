@@ -292,6 +292,12 @@ def test_protection_runs_during_paid_management_wait_and_cost_is_retained(tmp_pa
                     == 0
                 )
                 assert db.execute("SELECT COUNT(*) FROM execution_model_calls").fetchone()[0] == 2
+                traces = [json.loads(row[0]) for row in db.execute(
+                    'SELECT payload_json FROM execution_runtime_timings')]
+                managed = [t for t in traces if any(s['phase'] == 'OPTION_MANAGEMENT_MODEL' for s in t['spans'])]
+                assert len(managed) == 1 and managed[0]['kind'] == 'CYCLE'
+                assert not any(s['phase'] == 'DISPATCH' for s in managed[0]['spans'])
+                assert any(t['kind'] == 'TICK' and any(s['phase'] == 'DISPATCH' for s in t['spans']) for t in traces)
 
         asyncio.run(exercise())
 

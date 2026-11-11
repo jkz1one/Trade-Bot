@@ -21,6 +21,7 @@ from app.options.entry_reasoning import Digest, MixedEntryPlan
 from app.options.lifecycle import OptionExecutionPolicy
 from app.options.models import Name, OptionAccount, OptionLimits, OptionRecord, SessionWindow
 from app.options.position_reasoning import PositionPlan, PositionReasoningPolicy, PositionReview
+from app.options.runtime_timing import phase
 
 
 class StockPositionPacket(OptionRecord):
@@ -559,11 +560,12 @@ async def run(c, key, frame):
     except ExecutionBlocked as exc:
         return c._finish(key, {**evidence, "status": "HELD", "reason": str(exc)})
     try:
-        result = (
-            await c.replay_model.run(request)
-            if c.mixed_replay is not None
-            else await j.run_position_process(request, secret)
-        )
+        with phase("STOCK_MANAGEMENT_MODEL"):
+            result = (
+                await c.replay_model.run(request)
+                if c.mixed_replay is not None
+                else await j.run_position_process(request, secret)
+            )
         result = j.PositionResult.model_validate(result.model_dump(warnings=False))
         completed = c.now()
         evidence.update(

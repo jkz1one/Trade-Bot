@@ -399,7 +399,10 @@ def short_report(result):
     if runtime_timing.get('status') == 'OBSERVED':
         lines.append(f"Runtime timing: {runtime_timing['measured']}/{runtime_timing['records']} measured; "
                      f"{runtime_timing['missing_or_invalid']} incomplete/invalid; {runtime_timing['omitted']} omitted")
-        for name in ('NATIVE_SNAPSHOT', 'SCAN', 'ENTRY_MODEL', 'DISPATCH'):
+        for name in ('NATIVE_SNAPSHOT', 'NATIVE_ACCEPT', 'PROTECTION', 'SCAN', 'STOCK_SCAN',
+                     'SCOPE_SCAN', 'SCOPE_QUALITY', 'ENTRY_MODEL', 'STOCK_REFRESH', 'SCOPE_REFRESH',
+                     'ADMISSION', 'DISPATCH', 'STOCK_ADMISSION', 'STOCK_DISPATCH',
+                     'OPTION_MANAGEMENT_MODEL', 'STOCK_MANAGEMENT_MODEL', 'PORTFOLIO_MANAGEMENT_MODEL'):
             values = runtime_timing.get('phases', {}).get(name)
             if values:
                 lines.append(f"{name}: n={values['samples']}; p95 {values['p95_seconds']:.3f}s; "
@@ -938,7 +941,11 @@ def runtime_timing_evidence(db, start, end):
               'by_status': {}, 'phases': {}, 'recent': []}
     if not db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_runtime_timings'").fetchone():
         return result
-    phases = {'SCAN', 'ENTRY_MODEL', 'ADMISSION', 'DISPATCH', 'PROTECTION', 'NATIVE_SNAPSHOT', 'NATIVE_ACCEPT'}
+    phases = {'SCAN', 'STOCK_SCAN', 'SCOPE_SCAN', 'SCOPE_QUALITY', 'ENTRY_MODEL',
+              'STOCK_REFRESH', 'SCOPE_REFRESH', 'ADMISSION', 'DISPATCH',
+              'STOCK_ADMISSION', 'STOCK_DISPATCH', 'OPTION_MANAGEMENT_MODEL',
+              'STOCK_MANAGEMENT_MODEL', 'PORTFOLIO_MANAGEMENT_MODEL',
+              'PROTECTION', 'NATIVE_SNAPSHOT', 'NATIVE_ACCEPT'}
     statuses = {'COMPLETE', 'FAILED', 'INTERRUPTED'}
     has_packets = bool(db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_mixed_runtime_inputs'").fetchone())
     total = db.execute('SELECT COUNT(*) FROM execution_runtime_timings WHERE started_at>=? AND started_at<=?',

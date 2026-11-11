@@ -107,7 +107,15 @@ def test_exact_portfolio_management_native_consumption(tmp_path, monkeypatch, ac
             )
 
         monkeypatch.setattr(j, "run_position_process", worker)
-        out = asyncio.run(c.cycle(frame))
+        from app.options import runtime_timing as timing
+        trace = {'spans': [], 'native': [], 'spans_omitted': 0}
+        token = timing.CURRENT.set(trace)
+        try:
+            out = asyncio.run(c.cycle(frame))
+        finally:
+            timing.CURRENT.reset(token)
+        model_spans = [s for s in trace['spans'] if s['phase'] == 'PORTFOLIO_MANAGEMENT_MODEL']
+        assert len(model_spans) == 1 and model_spans[0]['status'] == 'COMPLETE'
         result = out["management"]["discretionary"]
         assert (
             result["status"]

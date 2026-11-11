@@ -8,6 +8,7 @@ from types import SimpleNamespace
 
 from app.execution.engine import ExecutionBlocked
 from app.options.engine import fingerprint
+from app.options.runtime_timing import phase
 
 
 def validate_stored(db, key, evidence, policy):
@@ -83,7 +84,8 @@ async def choose_after_usage(c, key, evidence, request, result):
         raise ExecutionBlocked("SCOPE_ORIGINAL_PLAN_EXPIRED")
     try:
         async with asyncio.timeout(remaining):
-            fresh = await c.scope_refresh(request.packet.scope.binding.play_key)
+            with phase("SCOPE_REFRESH"):
+                fresh = await c.scope_refresh(request.packet.scope.binding.play_key)
     except TimeoutError:
         return c._finish(
             key, {**evidence, "status": "HOLD", "reason": "SCOPE_FRESH_EVIDENCE_TIMEOUT"}

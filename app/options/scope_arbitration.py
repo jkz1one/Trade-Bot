@@ -12,6 +12,7 @@ from app.options.scope import ScopePreflightInput
 from app.options.scope_context import ScopeContextInput
 from app.options.scope_watch import ScopeWatchPolicy
 from app.options.swing_base_models import SWING_FAMILIES
+from app.options.runtime_timing import measured
 
 VERSION = "shared-scope-selection-v1"
 
@@ -371,6 +372,7 @@ def verify_entry(db, intent, approval):
         raise ValueError("SHARED_SCOPE_RECEIPT_CHANGED")
 
 
+@measured("SCOPE_SCAN")
 def collect(c, key, frame, evidence):
     """Refresh Scope's owned admission after reconciliation; no event follows before prepare."""
     with c.engine.journal.read() as db:

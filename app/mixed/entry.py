@@ -18,6 +18,7 @@ from app.mixed.sources import (
 )
 from app.options.degen import DegenHistory, DegenPolicy
 from app.options.engine import fingerprint
+from app.options.runtime_timing import phase
 from app.options.lifecycle import OptionExecutionPolicy
 from app.options.models import OptionAccount, OptionRecord, SessionWindow
 from app.robinhood.schedule import XNYSCalendar
@@ -307,7 +308,8 @@ async def execute(c, key, evidence, request, result):
     select(c, key, evidence)
     try:
         async with asyncio.timeout(max(0, (request.packet.valid_until - c.now()).total_seconds())):
-            quote = await c.stock_refresh(original.candidate.proposal.instrument)
+            with phase("STOCK_REFRESH"):
+                quote = await c.stock_refresh(original.candidate.proposal.instrument)
         quote = StockQuote.model_validate(quote.model_dump(warnings=False))
         if (
             quote.instrument != original.source.quote.instrument
