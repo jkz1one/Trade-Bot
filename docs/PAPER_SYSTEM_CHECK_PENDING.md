@@ -1,6 +1,16 @@
-# Pending offline system checkpoint
+# Recovered offline system checkpoint
 
-Recorded 2026-11-11 UTC. This is a recovery record, **not a deployable release**.
+Recovered and published 2026-11-11 UTC as
+`29ef510748ea4fe0b18592d8483c7dcf836b15bb`. All saved source, wheel,
+installation, JUnit and scenario hashes matched; 401 passing cases were retained
+without repeating unchanged application tests. The case-list artifact was reduced
+from 16,849,322 to 72,436 bytes, keeping a full-name SHA256 for the long parameter.
+Newer deployment notes were preserved. This is an offline code checkpoint, not a
+new host deployment or connected acceptance. A1 is checked in DELIVERY_PLAN.md.
+
+The original recovery instructions below are retained as historical evidence.
+
+Recorded 2026-11-11 UTC. This was a recovery record, **not a deployable release**.
 The implementation below was tested locally but was not published before the
 workspace command service disconnected. The working branch's application code
 still has the d2046f6 implementation. The operator has now confirmed deployment

@@ -18,10 +18,10 @@ A saved prior failure is not evidence that today's worker has started or failed.
 Controller freshness, worker state and account freshness remain separate.
 No manual market capture or launch is required by this receipt.
 
-The current work order is [DELIVERY_PLAN.md](DELIVERY_PLAN.md). The local offline
-system-check code remains unpublished while the assistant's workspace command
-service is unavailable; [PAPER_SYSTEM_CHECK_PENDING.md](PAPER_SYSTEM_CHECK_PENDING.md)
-records the exact recovery point. This docs update requires no build.
+The current work order is [DELIVERY_PLAN.md](DELIVERY_PLAN.md). The recovered offline
+system-check code is published as `29ef510`; [PAPER_SYSTEM_CHECK.md](PAPER_SYSTEM_CHECK.md)
+records its proof and limits. It has not been deployed; the existing confirmed
+host installation and scheduled session remain unchanged.
 
 ## Completed November 11 recovery procedure — reference only
 

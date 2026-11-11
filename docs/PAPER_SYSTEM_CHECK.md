@@ -116,6 +116,7 @@ remain separate work. Actual Docker/systemd, cross-UID and browser visual accept
 remain unverified. No connected fill or entry-to-exit lifecycle is claimed.
 
 The original Swing and Scope evidence/binding requirements remain unchanged. The
-latest confirmed host is still 7db7475; deployment of the earlier d2046f6 recovery
-implementation is unconfirmed. Continue development from
+operator confirmed host deployment of d2046f6; see
+[PAPER_HOST_DEPLOYMENT_20261111.json](PAPER_HOST_DEPLOYMENT_20261111.json).
+This newer offline kit has not been deployed. Continue development from
 [DELIVERY_PLAN.md](DELIVERY_PLAN.md); consolidate the host handoff under D.

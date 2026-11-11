@@ -66,13 +66,14 @@ next action. Do not replace missing evidence with a date estimate.
 
 ### A — Integrated reliability and latency
 
-- [ ] **A1 — Whole-system harness:** exercise the installed collector, scanner,
+- [x] **A1 — Whole-system harness:** exercise the installed collector, scanner,
   simulator, local subprocesses, publisher, dashboard and controller/report boundaries
   together, reusing existing fixtures and isolating all external calls.
-  Local progress is recorded in [PAPER_SYSTEM_CHECK_PENDING.md](PAPER_SYSTEM_CHECK_PENDING.md):
-  401 installed tests passed, including the coordinated lifecycle and restart.
-  Code publication was interrupted by workspace failure; A1 remains unchecked
-  until the tested implementation is published and linked.
+  Published implementation: `29ef510748ea4fe0b18592d8483c7dcf836b15bb`.
+  [PAPER_SYSTEM_CHECK_PROOF.json](PAPER_SYSTEM_CHECK_PROOF.json) retains 401 installed
+  passes, including two synthetic round trips and restart in each scenario.
+  Source/wheel/install identity was reverified during recovery. Provider/model and
+  Docker boundaries remain fixtures; full-duration/host/browser gates stay open.
 - [ ] **A2 — Complete timing evidence:** connect attempt/packet/cycle identities;
   report each phase, quote age, receive lag, p95/p99/max and failed-attempt counts.
 - [ ] **A3 — Measured repairs:** reproduce and close the actual bottlenecks with

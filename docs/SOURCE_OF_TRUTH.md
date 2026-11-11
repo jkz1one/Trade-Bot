@@ -1,5 +1,18 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.202. Offline system checkpoint recovered, 2026-11-11.
+
+The tested implementation is published as
+`29ef510748ea4fe0b18592d8483c7dcf836b15bb`. Recovery verified all 329
+application files against the saved wheel/installation, the original 401 passing
+JUnit cases, and both synthetic lifecycle reports. The published case list is now
+bounded, with a hash replacing its oversized parameter payload. A1 is complete at
+its offline boundary; A2 timing and A4 position-protection isolation continue.
+[PAPER_SYSTEM_CHECK.md](PAPER_SYSTEM_CHECK.md) describes reproduction and limits.
+The confirmed host remains d2046f6 with the account, limits and schedule unchanged.
+
+## Previous release evidence
+
 Version 1.201. Confirmed recovery deployment, 2026-11-11.
 
 The operator installed d2046f6363084ca26fc850130eb94cba51f07b6d with image
