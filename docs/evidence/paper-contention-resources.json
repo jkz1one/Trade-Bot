@@ -1,0 +1,25 @@
+{
+  "samples": {
+    "targeted": {
+      "logical_cpus": 1,
+      "peak_rss_kib": 357700,
+      "user_seconds": 21.677925,
+      "system_seconds": 2.611425,
+      "elapsed_seconds": 36.637149430000136,
+      "test_exit_code": 0
+    },
+    "report-followup": {
+      "logical_cpus": 1,
+      "peak_rss_kib": 486180,
+      "child_max_rss_kib": 469120,
+      "user_seconds": 11.553712,
+      "system_seconds": 1.8982809999999999,
+      "elapsed_seconds": 18.510637666000093,
+      "test_exit_code": 0
+    }
+  },
+  "restriction": "one logical CPU affinity, inherited by child processes",
+  "memory": "resource.getrusage peak RSS for the test process and, when retained, maximum individual child; not simultaneous aggregate memory or a host memory cap",
+  "wall_clock_soak": "NOT_RUN",
+  "host_memory_profile": "UNAVAILABLE"
+}

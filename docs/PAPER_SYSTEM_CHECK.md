@@ -2,11 +2,14 @@
 
 This is the developer check for delivery-plan **A1**, with the first part of
 **A2**. The current continuation adds runtime correlation, stock/Scope/management
-timing, in-run publication isolation and two damaged-display restart cases; see
+timing, native commitment coverage, history/display/report isolation and two
+damaged-display restart cases; see
 [PAPER_TIMING_PROTECTION.md](PAPER_TIMING_PROTECTION.md).
 It runs the installed collector, scanner, simulator, native subprocesses,
 supervisor, publisher and authenticated dashboard reader together. The resulting
 report also passes through the daily controller and independent status page.
+A separate contention case holds history, advice and display work while a report
+snapshot stays open and the original owner completes a protective exit.
 External provider/model responses and Docker inspection are explicit fixtures.
 
 The check creates a new `offline-system-acceptance` population in a new output
@@ -78,7 +81,8 @@ the host resource profile.
 
 An additive `attempt_timings` table binds measurements to the existing attempt
 sequence. It records PREPARE, CAPTURE, PERSIST_CAPTURE, SOURCE_BINDING, NORMALIZE,
-SOURCE_CLOCK_CHECK and PUBLISH durations for delivered, failed and interrupted
+SOURCE_CLOCK_CHECK, HISTORY_PLAN, HISTORY_VALIDATE, HISTORY_BINDING and PUBLISH
+durations for delivered, failed and interrupted
 attempts. Read children emit bounded monotonic progress markers. The parent retains
 its response/failure phase, elapsed time and matching markers, including when a
 read times out. The CAPTURE measurement includes the caller's entire read wait;
@@ -105,20 +109,26 @@ combined sessions, Swing binding, rollover, schemas, native read imports and the
 previous lifecycle path. All 329 application files matched source, wheel and
 installation; all 60 runtime dependency pins matched.
 
-**A2 stays open.** The current trace covers packet identity, native reads,
-option/stock/Scope scanning, entry/management model waits, refresh, admission and
-dispatch. Complete killed-before-record denominators and full-session profiling,
-then repair measured bottlenecks under A3. Fixture read timings include deliberate backpressure and are not Robinhood
-latency measurements. Native subprocess timings here are workspace observations,
-not evidence of Tuesday's exact host timeout cause.
+The current continuation in [PAPER_CONTENTION_PROOF.json](PAPER_CONTENTION_PROOF.json)
+retains 521 distinct installed passes and one known cross-UID environment skip,
+three failing pre-repair cases, five completed lifecycle scenarios and the combined
+one-CPU contention case. All 331 application files match source/wheel/installation.
+The broader run staged the report before its independent lock repair; the complete
+report, contention and timing suites passed afterward on the unchanged app wheel.
+Actual abrupt-process exits separately verify missing timing denominators.
 
-**A4–A6 stay open.** The recovered A1 baseline stopped trading components after
-publisher failure. The continuation in PAPER_TIMING_PROTECTION.md isolates an
-in-run display failure, fences entries and proves protective exits with held
-positions. Startup display failures and the wider stress matrix remain open. The complete failure matrix, accelerated
-calendar cases, full-duration resource-limited soak and journal-growth acceptance
-remain separate work. Actual Docker/systemd, cross-UID and browser visual acceptance
-remain unverified. No connected fill or entry-to-exit lifecycle is claimed.
+**A2 stays open for full-session profiling.** Committed native slot/model coverage,
+overflow counts and scheduler-delay distributions are implemented. Work before any
+commitment is explicitly unobservable. Fixture timings are workspace observations,
+not Robinhood latency measurements or Tuesday's exact native timeout cause.
+
+**A4–A6 acceptance stays open.** Startup and in-run display failure isolation and
+combined history/model/display/report contention now have installed evidence. The
+full failure matrix, accelerated calendar cases and full configured-duration
+wall-clock soak under measured host memory limits remain. The existing >64 MiB
+journal test passes; projected-month sustained growth is not established. Actual
+Docker/systemd, cross-UID, browser and connected lifecycle acceptance remain
+unverified. The short one-CPU test is not a full-duration soak.
 
 The original Swing and Scope evidence/binding requirements remain unchanged. The
 operator confirmed host deployment of d2046f6; see

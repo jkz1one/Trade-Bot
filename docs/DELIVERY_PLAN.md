@@ -79,13 +79,19 @@ next action. Do not replace missing evidence with a date estimate.
   `aad4e08` established native and common option traces. `d35d318` adds stock and
   Scope scans/quality, paid refresh waits, stock admission/dispatch and all three
   management-model paths, with original quote clocks and concurrent trace checks.
-  [Current proof](PAPER_STARTUP_PROTECTION_PROOF.json): 450 installed passes and
-  one existing cross-UID skip, including retained extended phase samples. Complete
-  killed-before-record denominators and full-session timing/capacity profiling
-  remain open; A2 is not complete.
+  `c787281` adds history phases, scheduler wakeup delay, native diagnostic overflow
+  and committed native slot/model denominators, including actual abrupt-process
+  exits before/within a trace. Work before any commitment remains explicitly
+  unobservable. [Current proof](PAPER_CONTENTION_PROOF.json): 521 distinct installed
+  passes and one known cross-UID skip. Full-session timing/capacity profiling
+  remains under A6; A2 acceptance is still open.
 - [ ] **A3 — Measured repairs:** reproduce and close the actual bottlenecks with
   before/after evidence; decide connection reuse from measurements and validate
   its isolation, refresh ownership, deadlines and cleanup if adopted.
+  `c787281` reproduces and repairs synchronous history work and display/report
+  read-lock contention, with three failing baseline cases and passing installed
+  repairs. Tuesday's actual native-process cause and provider connection-reuse
+  measurements remain unresolved; these repairs do not establish those causes.
 - [ ] **A4 — Independent protection:** prove that model waits, history work and
   display/report failures cannot improperly stop management of an owned position.
   `aad4e08` isolated in-run publisher failure. `d35d318` adds verified-held startup
@@ -93,9 +99,13 @@ next action. Do not replace missing evidence with a date estimate.
   review and entry-resume rejection. Both startup scenarios retain the damaged
   display and complete the held QQQ exit without another entry-model call. A
   management/display-failure overlap case preserves protection, model cost and
-  single-exit accounting. [Proof](PAPER_STARTUP_PROTECTION_PROOF.json);
-  [contract and limits](PAPER_TIMING_PROTECTION.md). Combined prolonged history/
-  model/report stress and sustained resource-constrained operation remain open.
+  single-exit accounting. `c787281` moves history validation off the protection loop
+  and releases native display/report read locks before processing. A combined
+  one-CPU case exits while history, advice and display work wait and a report is
+  open; final accounting is verified and no duplicate exit/model call occurs.
+  [Current proof](PAPER_CONTENTION_PROOF.json); [contract and limits](PAPER_TIMING_PROTECTION.md).
+  Sustained full-duration resource-profile proof remains under A6. Unverified
+  startup exposure retains its authority/accounting rejection boundary.
 - [ ] **A5 — Failure/restart matrix:** exercise every condition in A's matrix;
   preserve accounting, unknown outcomes and bounded recovery without duplicates.
 - [ ] **A6 — Duration and capacity:** pass accelerated calendar/multi-day cases

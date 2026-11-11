@@ -1,5 +1,58 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.205. History and reporting contention repairs, 2026-11-11.
+
+Published implementation: `c7872818fa59ecbfee798a3ee62ce315c07cd036`.
+Swing history planning, original
+validation and source binding now yield to native protection through drained
+background work and separate read-only collector connections. Overlapping capture
+is excluded and cancellation retains the collector lease until its work finishes.
+Original receipts, cache invalidation, capture budgets and admission rules remain.
+
+Dashboard projection and session reporting now use private online SQLite copies.
+Native read locks are released between 64-page batches and before projection or
+report processing. The five-second copy bound and 512 MiB disposable source-copy
+cap fail the diagnostic component without trimming the native journal. The last
+completed display and pending failed-publication evidence remain intact.
+
+Three reproduced contention cases fail before their repairs: synchronous history
+planning, paused display projection and an open session-report read transaction.
+The combined repaired case holds history, management advice and display work,
+keeps a report snapshot open, and submits the actual protective exit in
+**1.47 seconds on one logical CPU**. It finishes flat with verified accounting,
+retains both model charges and submits no duplicate exit. This short stress case
+does not establish a full-day or host-memory-profile soak.
+
+A2 now compares traces with committed native cycle slots and model attempts,
+including actual process exits before a trace starts and before it finishes.
+Unsettled costs remain unknown. Work before any native commitment is explicitly
+unobservable. Reports add history phases, scheduler wakeup delay and native-span
+overflow counts, with a 20,000-record / 64 MiB inspection bound and explicit omissions.
+
+Final evidence: **521 distinct passing installed-package cases and one known
+cross-UID environment skip**. All five integrated scenarios still complete two
+round trips and match native model/cycle commitments to their traces. All 331
+application files match source, wheel and installation; all 60 dependency pins
+match and the dependency check passes. Wheel SHA256:
+`927e6c4db784487f8f43bfacf2a5824c6e201d898cdd01359d1dadf8c5b9fa33`.
+[PAPER_CONTENTION_PROOF.json](PAPER_CONTENTION_PROOF.json) retains baseline failures,
+test/script identities, timing, resource observations and scenario reports.
+The broader run preceded the independent host-report lock repair; the full report
+suite and combined/timing tests passed afterward on the unchanged application wheel.
+
+The requested coding and publication slice is complete. A2/A4 acceptance remains
+open for full configured-duration timing and sustained resource-profile evidence
+under A6; the complete failure/calendar matrix also remains. D2 still requires
+strict-table rollback review. Actual Docker/systemd/cross-UID, browser and connected
+lifecycle gates remain distinct. See [DELIVERY_PLAN.md](DELIVERY_PLAN.md) and
+[PAPER_TIMING_PROTECTION.md](PAPER_TIMING_PROTECTION.md).
+
+The confirmed host remains d2046f6. No deployment, schedule, connected account,
+limits, provider or model-service call changed. Main and the event branch are
+preserved; PR #1 remains draft with its title and entire body unchanged. LIVE is off.
+
+## Prior checkpoint
+
 Version 1.204. Verified-held startup protection and expanded timing, 2026-11-11.
 
 Published implementation: `d35d318e50d376e8f7287f7bffe72486e2eb640e`.

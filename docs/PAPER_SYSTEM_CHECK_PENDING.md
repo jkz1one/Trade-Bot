@@ -7,8 +7,9 @@ without repeating unchanged application tests. The case-list artifact was reduce
 from 16,849,322 to 72,436 bytes, keeping a full-name SHA256 for the long parameter.
 Newer deployment notes were preserved. Subsequent A2/A4 implementation is
 `aad4e08`; see [PAPER_TIMING_PROTECTION.md](PAPER_TIMING_PROTECTION.md) and the
-current delivery checklist. This is an offline code checkpoint, not a
-new host deployment or connected acceptance. A1 is checked in DELIVERY_PLAN.md.
+current delivery checklist. Further history/report contention and timing-coverage
+work is published as `c787281` with [retained proof](PAPER_CONTENTION_PROOF.json).
+This is an offline code checkpoint, not a new host deployment or connected acceptance. A1 is checked in DELIVERY_PLAN.md.
 
 The original recovery instructions below are retained as historical evidence.
 

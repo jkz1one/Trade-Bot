@@ -32,21 +32,35 @@ remain visible; diagnostics never make a quote admissible. Packet age is measure
 at the tick/cycle evaluation time, not a claimed network latency or fill time.
 
 `execution_runtime_timings` is an additive diagnostic table. It does not emit
-accounting events, change market packets or participate in execution authority.
+accounting events or change market packets or execution policy. Enrolled restore
+fences still hash every execution table, including diagnostics; that integrity
+work and its cost are unchanged.
 A start record precedes the work, and completion/failure/cancellation updates it.
 An unfinished start remains incomplete evidence. Diagnostic SQLite/I/O failure
-does not authorize an entry or stop otherwise valid protection. A failure before
-the start record is written cannot be counted from that table alone.
+does not authorize an entry or stop otherwise valid protection. Native slot/model
+commitments supply independent denominators even when
+no timing record was saved. Reports separate unmatched commitments, unmatched
+trace keys, duplicate trace keys, skipped/waiting slots and unsettled model costs.
+Interrupted slots are counted conservatively; this does not assert that every
+interrupted slot reached a model. Work before any native commitment remains
+unobservable. Actual child-process exits test both absent and unfinished traces.
 
 Each trace retains at most 64 spans and 64 native diagnostics; excess span counts
-are explicit. Reports inspect at most the latest 2,000 records in the selected
-window, retaining total, measured, unfinished/invalid and omitted counts. Phase
-p50/p95/p99/max values describe those measured records, including failed calls.
+and excess native-diagnostic counts are explicit. Reports inspect at most the
+latest 20,000 records and 64 MiB of payload in the selected window, retaining
+total, measured, unfinished/invalid and omitted counts. Unmatched commitments
+can include uninspected or window-boundary traces; they are not all labeled crashes.
+Phase p50/p95/p99/max values describe those measured records, including failed calls.
 Recent correlation details are limited to 25 traces. Display snapshots copy only
 the latest 100 diagnostic rows; the native ledger is not pruned.
 
-This does not complete A2. Complete killed-before-record denominators and the full-session timing/capacity
-profile remain open. Synthetic timings are workspace observations, not Robinhood
+Collector traces include HISTORY_PLAN, HISTORY_VALIDATE and HISTORY_BINDING.
+Runtime traces also report scheduler wakeup delay beyond the configured inter-tick
+wait; total tick duration is retained separately. These are observations, not
+changed process deadlines or faster freshness clocks.
+
+A2 still requires the full-session timing/capacity profile under A6. Synthetic
+timings are workspace observations, not Robinhood
 latency measurements or proof of Tuesday's exact native timeout cause.
 
 ## Publication failure with held positions
@@ -113,10 +127,43 @@ with the publication fault. A separate protection tick dispatches the exit befor
 the model returns, the known model cost is still retained, and no second exit is
 submitted. Timing assertions keep that dispatch outside the model's cycle trace.
 
-A4 remains open for combined prolonged history/model/report stress and resource-
-constrained sustained operation, as well as startup exposure that cannot pass the
-verified-held-position boundary. Those cases must not gain entry authority or
-clear native uncertainty to obtain protection.
+## History and display/report contention
+
+History planning, original snapshot validation, binding reconstruction and
+normalization run outside the protection event loop. SQLite history readers use
+separate read-only connections; the original collector connection remains the
+sole writer. Derived bindings retain exact original payload/hash equality and
+their original creation time. A capture guard excludes overlap before the durable
+attempt exists. Repeated cancellation drains background work before releasing
+its owner; validation failures still reject changed originals.
+
+Publication first creates a consistent private online backup in 64-page batches,
+releasing native read locks between steps. Projection and accounting verification
+read only that copy. Session reports independently use the same bounded-copy
+pattern in a standard-library host script, without an application dependency.
+Their owner/collector snapshots are individually consistent, not one cross-database
+atomic snapshot. Existing packet/hash checks still govern correlations.
+
+Each disposable source copy is limited to 512 MiB and five seconds; these are
+diagnostic capacity bounds, not native journal or account limits. Completed display
+projection remains limited to 64 MiB. Ordinary completion/failure removes the new
+private source copy. A failed publisher retains `.pending.db` and the prior completed
+display. Abrupt process death can leave a private scratch directory for inspection;
+there is no automatic original-history deletion or damaged-display repair.
+
+Three baseline tests demonstrate event-loop blockage and native SQLite write-lock
+contention before repair. The combined installed test overlaps real history binding,
+pending management advice, paused then failed display projection and an open report
+snapshot against the same original native owner. Its exit submits in 1.47 seconds
+on one logical CPU, completes while advice/history remain pending, then retains
+known model costs and verified flat accounting without a duplicate exit. Separate
+tests retain original-source tamper rejection, cancellation/lease drainage, read-only
+report consistency, deadline/capacity cleanup and the existing >64 MiB journal case.
+
+A4 remains open for sustained full-duration resource-profile proof under A6 and
+startup exposure outside the verified-held boundary. The short one-CPU tests and
+per-process RSS observations do not establish host memory limits, projected-month
+growth, full-session deadlines or actual host acceptance.
 
 ## Release boundaries
 
@@ -125,8 +172,10 @@ The continuation's installed identity, failures/corrections and final results ar
 recorded in [PAPER_TIMING_PROTECTION_PROOF.json](PAPER_TIMING_PROTECTION_PROOF.json).
 The startup/phase continuation is recorded in
 [PAPER_STARTUP_PROTECTION_PROOF.json](PAPER_STARTUP_PROTECTION_PROOF.json).
-The same paper-system-check command now also exercises all five coordinated
-scenarios, stock/Scope/management runtime timing, host review and snapshot guards.
+The contention continuation is recorded in
+[PAPER_CONTENTION_PROOF.json](PAPER_CONTENTION_PROOF.json). The same system-check
+command also exercises all five coordinated scenarios, history/binding/feed
+regressions, stock/Scope/management timing, contention, host review and snapshot guards.
 
 The new diagnostic table is accepted by this release and bounded in display
 copies. Older releases with a strict table allowlist cannot reopen that upgraded
