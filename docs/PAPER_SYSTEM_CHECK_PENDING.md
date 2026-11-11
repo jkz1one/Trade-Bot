@@ -3,7 +3,10 @@
 Recorded 2026-11-11 UTC. This is a recovery record, **not a deployable release**.
 The implementation below was tested locally but was not published before the
 workspace command service disconnected. The working branch's application code
-still has the d2046f6 implementation; the latest confirmed host remains 7db7475.
+still has the d2046f6 implementation. The operator has now confirmed deployment
+of d2046f6, the dashboard reader update and reviewed schedule resume; see
+[PAPER_HOST_DEPLOYMENT_20261111.json](PAPER_HOST_DEPLOYMENT_20261111.json). The local
+system-check implementation described here remains unpublished.
 
 ## Verified local result
 

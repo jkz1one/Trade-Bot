@@ -1,20 +1,35 @@
 # Daily PAPER operation
 
-The current development order and completion gates are in
-[DELIVERY_PLAN.md](DELIVERY_PLAN.md). This file is the host runbook. The plan-only
-update requires no rebuild or re-enrollment; d2046f6 remains the tested recovery
-implementation awaiting host confirmation. Historical procedures for other
-populations are not instructions to recreate the connected account.
+The operator completed the d2046f6 recovery installation on November 11,
+including snapshot publication, the existing dashboard reader update and
+`resume --after-read-timeout daily-20261110`. The final result was
+`SCHEDULE_RESUMED`. [PAPER_HOST_DEPLOYMENT_20261111.json](PAPER_HOST_DEPLOYMENT_20261111.json)
+records the exact image, checkpoint and receipt. Do not repeat that completed
+deployment or resume.
 
-The host installed 7db7475, published the existing account snapshot and resumed
-the daily schedule. The native journal measured 67,133,440 bytes and the display
-27,361,280 bytes. Tuesday's daily-20261110 worker then failed after 802.3 of
-21,475 planned seconds with a RUNTIME FixtureProcessTimeout. One scan completed,
-one setup confirmed and the account recorded zero fills and zero AI spend.
+For November 11, preparation is scheduled for **9:00 a.m.**, startup for
+**10:00 a.m.**, and close for **4:00 p.m.**, all America/New_York. No worker start
+has yet been reported. The saved-timeout review allows the next eligible launch
+against the original owner state; startup still requires fresh native
+reconciliation and valid data. The old failed runtime history is not erased.
 
-## Install and recover Tuesday's failed read
+The dashboard reader now includes the independent operating-status implementation.
+A saved prior failure is not evidence that today's worker has started or failed.
+Controller freshness, worker state and account freshness remain separate.
+No manual market capture or launch is required by this receipt.
 
-Use one stopped-host upgrade block. The reader update upgrades the already
+The current work order is [DELIVERY_PLAN.md](DELIVERY_PLAN.md). The local offline
+system-check code remains unpublished while the assistant's workspace command
+service is unavailable; [PAPER_SYSTEM_CHECK_PENDING.md](PAPER_SYSTEM_CHECK_PENDING.md)
+records the exact recovery point. This docs update requires no build.
+
+## Completed November 11 recovery procedure — reference only
+
+The operator has already completed this block for d2046f6. Retain it as historical
+reference; a new failure requires its own evidence and review. Do not run it again
+as a routine daily step.
+
+The original stopped-host upgrade block follows. The reader update upgrades the already
 connected dashboard, retaining the current login, binding, listener and previous
 reader container. The final command reviews this specific saved runtime timeout
 and authorizes one subsequent daily launch from the exact current owner revision.

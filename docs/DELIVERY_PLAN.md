@@ -15,9 +15,12 @@ strategy evaluation and controlled improvement follow operational acceptance.
 
 The verified implementation baseline is
 `d2046f6363084ca26fc850130eb94cba51f07b6d`. It includes independent dashboard status
-and a reproduced collector/runtime contention repair. Its host installation is
-unconfirmed. The last confirmed host release is `7db7475`; Tuesday's worker failed
-after 802.3 seconds, with 26 delivered and 22 failed collections, one confirmed
+and a reproduced collector/runtime contention repair. The operator confirmed its
+host installation, in-place dashboard reader update and reviewed schedule resume
+on November 11; see [PAPER_HOST_DEPLOYMENT_20261111.json](PAPER_HOST_DEPLOYMENT_20261111.json).
+The next worker launch and sustained effectiveness remain unobserved. Tuesday's
+worker on 7db7475 failed after 802.3 seconds, with 26 delivered and 22 failed
+collections, one confirmed
 setup, no fills and no AI spend. A reported QQQ quote was 22.472 seconds old against
 the unchanged ten-second admission limit. The exact delayed native subprocess
 stage remains unresolved; the contention reproduction is not proof of that cause.
@@ -57,8 +60,9 @@ next action. Do not replace missing evidence with a date estimate.
   collector contention repair and installed-package proof. This checks that narrow
   code result only; Tuesday's exact delayed stage and host effectiveness remain open.
 - [x] **P3 — Independent status implemented:** d2046f6 contains dashboard failure
-  and missing-update states with authenticated HTTP tests. Host installation and
-  real-browser visual acceptance remain open under B and D.
+  and missing-update states with authenticated HTTP tests. The operator confirmed
+  the reader update on November 11; real-browser visual acceptance and failure
+  visibility during a subsequent host run remain open under B and D.
 
 ### A — Integrated reliability and latency
 

@@ -1,5 +1,35 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.201. Confirmed recovery deployment, 2026-11-11.
+
+The operator installed d2046f6363084ca26fc850130eb94cba51f07b6d with image
+sha256:82c6abc2a82934deda5c928522ce39eccd53e57eae121f7f2b5efad7ba3aa034.
+The existing account snapshot published successfully, the connected dashboard
+reader updated in place, and the explicit review of daily-20261110 returned
+SCHEDULE_RESUMED. [PAPER_HOST_DEPLOYMENT_20261111.json](PAPER_HOST_DEPLOYMENT_20261111.json)
+retains the operator's receipt. No further deployment or repeated resume is
+required for this release.
+
+November 11 is scheduled to prepare at 9:00 a.m., start at 10:00 a.m. and close at
+4:00 p.m. America/New_York. This confirms the schedule, not an observed worker
+start. The printed owner blockers precede the explicit saved-timeout review.
+The native failed history is retained; the next eligible launch must still
+reconcile the original owner and obtain valid fresh input.
+
+The published checkpoint is owner revision 5453, runtime generation 15, feed
+sequence 1432, zero fills and zero held plays. Source/display sizes are 70,516,736
+and 29,933,568 bytes. The existing account, enrollment and all limits remain
+unchanged; LIVE remains disabled. Sustained connected operation, connected fills
+and browser visual acceptance remain open.
+
+[DELIVERY_PLAN.md](DELIVERY_PLAN.md) remains the work order and checklist;
+[PAPER_NEXT_SESSION.md](PAPER_NEXT_SESSION.md) remains the runbook. The separate
+[PAPER_SYSTEM_CHECK_PENDING.md](PAPER_SYSTEM_CHECK_PENDING.md) records 401 passing
+local tests whose code publication is still blocked by the unavailable workspace
+command service. This documentation update does not publish that code.
+
+## Previous release evidence
+
 Version 1.200. Consolidated delivery order, 2026-11-10.
 
 [DELIVERY_PLAN.md](DELIVERY_PLAN.md) is the current guide and
