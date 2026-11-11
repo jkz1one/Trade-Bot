@@ -2,12 +2,15 @@
 
 Version 1.200. Consolidated delivery order, 2026-11-10.
 
-[DELIVERY_PLAN.md](DELIVERY_PLAN.md) is the current execution order: integrated
+[DELIVERY_PLAN.md](DELIVERY_PLAN.md) is the current guide and
+[completion checklist](DELIVERY_PLAN.md#delivery-checklist): integrated
 reliability and latency, operating dashboard/control, strategy/execution closure,
 one tested release and connected acceptance, then separately governed LIVE and
 controlled improvement. It defines offline/host/provider boundaries, measurable
 release gates and responsibilities. Earlier roadmap sections remain historical
 context; do not use old population-initialization examples for the connected owner.
+Update its stable checklist items with evidence as work completes. A checked code
+result does not imply host deployment, connected acceptance or economic validation.
 
 This is a documentation-only change. The tested implementation baseline remains
 d2046f6363084ca26fc850130eb94cba51f07b6d; its host installation is unconfirmed.

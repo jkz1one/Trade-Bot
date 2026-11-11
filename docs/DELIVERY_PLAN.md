@@ -35,6 +35,125 @@ data, substituted SPY-for-SPX strategy, relaxed validation or live orders belong
 this plan's PAPER work. Offline fixtures are isolated, explicitly synthetic, and
 cannot be adopted as connected evidence or execution state.
 
+## Delivery checklist
+
+This is the active checklist for the work below. Start with **A1 and A2**.
+Existing implementation and regression tests are the starting point; an unchecked
+item means its complete acceptance condition is still open, not that all related
+code is missing. Do not repeat completed work merely to check a broader item.
+
+Check an item only when its stated result is demonstrated. Record the code commit,
+test/report artifact and remaining limits beside the item in the same change.
+Keep code-tested, host-deployed, operationally accepted and economically evaluated
+distinct. A blocked item stays unchecked and names the exact missing input and
+next action. Do not replace missing evidence with a date estimate.
+
+### Established baseline
+
+- [x] **P1 — One work order:** this plan is linked from SOURCE_OF_TRUTH.md and
+  PAPER_NEXT_SESSION.md; current account constraints and responsibilities are
+  recorded here. Original plan commit: a569e7f.
+- [x] **P2 — Runtime repair published and tested:** d2046f6 contains the reproduced
+  collector contention repair and installed-package proof. This checks that narrow
+  code result only; Tuesday's exact delayed stage and host effectiveness remain open.
+- [x] **P3 — Independent status implemented:** d2046f6 contains dashboard failure
+  and missing-update states with authenticated HTTP tests. Host installation and
+  real-browser visual acceptance remain open under B and D.
+
+### A — Integrated reliability and latency
+
+- [ ] **A1 — Whole-system harness:** exercise the installed collector, scanner,
+  simulator, local subprocesses, publisher, dashboard and controller/report boundaries
+  together, reusing existing fixtures and isolating all external calls.
+- [ ] **A2 — Complete timing evidence:** connect attempt/packet/cycle identities;
+  report each phase, quote age, receive lag, p95/p99/max and failed-attempt counts.
+- [ ] **A3 — Measured repairs:** reproduce and close the actual bottlenecks with
+  before/after evidence; decide connection reuse from measurements and validate
+  its isolation, refresh ownership, deadlines and cleanup if adopted.
+- [ ] **A4 — Independent protection:** prove that model waits, history work and
+  display/report failures cannot improperly stop management of an owned position.
+- [ ] **A5 — Failure/restart matrix:** exercise every condition in A's matrix;
+  preserve accounting, unknown outcomes and bounded recovery without duplicates.
+- [ ] **A6 — Duration and capacity:** pass accelerated calendar/multi-day cases
+  and a full configured-duration wall-clock soak under the host resource profile,
+  including journal growth; identify any residual host-only restriction tests.
+
+### B — Operating dashboard and control
+
+- [ ] **B1 — Complete operating view:** show schedule, controller/worker/feed/account
+  freshness separately, scans, failures, latency, recovery allowance, fills and costs.
+- [ ] **B2 — Explain the trading path:** show family eligibility, understandable
+  HOLD/blockers, exact positions/protection and signal-to-fill incident timelines.
+- [ ] **B3 — Durable controls:** integrate authenticated pause and reviewed recovery
+  through existing authority; verify CSRF protection, receipts and changed-state
+  rejection; acknowledgment alone must not resume trading.
+- [ ] **B4 — Independent notification plumbing:** test deduplication, delivery
+  failure and missing-heartbeat detection locally; record the chosen destination
+  and authorized delivery evidence separately before claiming alerts work.
+- [ ] **B5 — Browser acceptance:** retain actual desktop/phone screenshots and
+  keyboard/contrast/layout checks for healthy, failed, stale, empty and held-position
+  states. Workspace restrictions remain an explicit blocker until resolved.
+
+### C — Strategies and shared execution
+
+- [ ] **C1 — Shared lifecycle closure:** verify the complete known-trigger CALL/PUT
+  path, two-play contention, fills, protection, exits, costs and restart together;
+  reuse existing passing cases and add only missing integration coverage.
+- [ ] **C2 — DEGEN closure:** cover completed bars, confirmation, exact contracts,
+  pre/post-model freshness, sizing and session exits on the installed path.
+- [ ] **C3 — Swing closure:** distinguish implementation/geometry failures from
+  invalid originals; complete target, seed, carry and restart cases; retain the
+  exact original-history/binding requirement if provider evidence is still missing.
+- [ ] **C4 — Scope closure:** complete SPX/SPXW input/watch/admission/protection/exit
+  integration and pacing cases; keep missing original history and reviewed
+  contract/session/pattern bindings explicit, within eight catalog slots.
+- [ ] **C5 — Truthful family readiness:** maintain separate implementation,
+  configuration, provider-evidence and setup-dependent blockers for each family;
+  show stock capability blockers without implying options acceptance closes them.
+
+### D — Consolidated release and connected acceptance
+
+- [ ] **D1 — Offline release gate:** satisfy A, essential B and the selected family's
+  C; retain installed-package identity, regression/soak/timing/visual evidence and
+  the exact residual environmental gaps against the acceptance budgets below.
+- [ ] **D2 — One host handoff:** verify stopped-host upgrade, capacity, existing
+  reader/schedule/account preservation, preflight and rollback compatibility;
+  record the actual installed image/release and any residual host-only test results.
+- [ ] **D3 — Automatic diagnosis:** retain the bounded private support export on
+  failure and session end; display the actionable incident without manual log probes.
+- [ ] **D4 — Sustained operation:** observe two consecutive full scheduled sessions
+  meeting coverage/health gates without manual repair; retain all outages and HOLDs.
+- [ ] **D5 — Connected lifecycle:** observe an authentic eligible entry and full
+  exit with reconciled cash, positions and model costs. Synthetic proof and a
+  healthy no-setup day do not check this item.
+- [ ] **D6 — Remaining family evidence:** accept Swing/Scope only against their
+  required valid originals and exact bindings; preserve independent blockers
+  without delaying an otherwise accepted DEGEN path.
+
+### E — Live integration and strategy evaluation
+
+- [ ] **E1 — Adapter contracts and offline proof:** cover exact identity, preview,
+  submit/cancel races, partial/unknown outcomes, restart, settled funds and expiry
+  semantics without real brokerage writes.
+- [ ] **E2 — Actual capability and recovery evidence:** verify the selected
+  account/product, protective exits, independent alerts and backup/restore; prepare
+  a concrete funded-release review with outstanding evidence clearly named.
+- [ ] **E3 — Explicit funded release:** obtain reviewed bankroll/loss limits and
+  real-write authorization for a pinned candidate before a supervised canary.
+  PAPER work and this checklist do not authorize LIVE.
+- [ ] **E4 — Economic evaluation:** retain chronological validation, untouched
+  evaluation, benchmarks, costs, drawdowns, attempted variants and coverage
+  denominators; distinguish execution success from evidence supporting a strategy.
+
+### F — Controlled improvement
+
+- [ ] **F1 — Operational automation:** accept diagnosis, bounded recovery,
+  reporting and evaluation against the reliable foundation.
+- [ ] **F2 — Isolated challengers:** version and evaluate proposed changes without
+  mutating the active population, risk limits, bankroll or validation rules.
+- [ ] **F3 — Reviewed promotion/rollback:** record evidence and explicit authority;
+  prevent self-promotion to LIVE or automatic capital/risk escalation.
+
 ## Work order and responsibilities
 
 | Package | Concrete result | Dependency and completion gate |
