@@ -20,7 +20,7 @@ MAX_SPANS = 64
 
 
 @contextmanager
-def phase(name, *, quote=None, now=None):
+def phase(name, *, quote=None, now=None, model_source_key=None):
     trace = CURRENT.get()
     if trace is None:
         yield
@@ -28,6 +28,8 @@ def phase(name, *, quote=None, now=None):
     assert name in PHASES
     started, status = time.monotonic(), "COMPLETE"
     sample = {"phase": name}
+    if model_source_key is not None:
+        sample['model_source_key'] = model_source_key
     if quote is not None and now is not None:
         sample["quote_age_seconds"] = (now - quote.source_at).total_seconds()
         sample["receive_lag_seconds"] = (quote.received_at - quote.source_at).total_seconds()
@@ -76,10 +78,13 @@ def bind_packet(packet, accepted_at):
 
 def native_diagnostics(value):
     trace = CURRENT.get()
-    if trace is not None and len(trace["native"]) < MAX_SPANS:
+    if trace is not None:
         public = value.public()
         if public is not None:
-            trace["native"].append(public)
+            if len(trace['native']) < MAX_SPANS:
+                trace["native"].append(public)
+            else:
+                trace['native_omitted'] = trace.get('native_omitted', 0) + 1
 
 
 @contextmanager
@@ -90,7 +95,9 @@ def root(runtime, kind, *, slot=None, packet=None):
     started = time.monotonic()
     value = {"version": "runtime-timing-v1", "kind": kind, "slot": slot,
              "packet_sequence": None, "packet_sha256": None, "spans": [], "native": [],
-             "spans_omitted": 0, "status": "RUNNING"}
+             "spans_omitted": 0, "native_omitted": 0, "status": "RUNNING"}
+    if kind == 'TICK' and getattr(runtime, '_scheduler_delay', None) is not None:
+        value['scheduler_delay_seconds'] = runtime._scheduler_delay
     row_id = None
     try:
         with journal.write() as db:

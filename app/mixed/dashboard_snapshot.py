@@ -13,6 +13,7 @@ import sqlite3
 import stat
 import threading
 import time
+import tempfile
 from contextlib import closing
 from datetime import datetime
 from pathlib import Path
@@ -29,6 +30,25 @@ from app.options.venue import private_path
 
 VERSION = "native-dashboard-snapshot-v1"
 BACKUP_SECONDS = 5
+# This bounds disposable diagnostic storage, never the native account journal.
+MAX_SOURCE_COPY_BYTES = 512 * 1024 * 1024
+
+
+def copy_source(source, destination, deadline):
+    """Online backup releases the native read lock between small page batches."""
+    fd = os.open(destination, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
+    os.close(fd)
+    with closing(connect_readonly(source)) as original, closing(sqlite3.connect(destination)) as copy:
+        page_size = original.execute('PRAGMA page_size').fetchone()[0]
+
+        def progress(_status, _remaining, total):
+            if total * page_size > MAX_SOURCE_COPY_BYTES:
+                raise ValueError('Diagnostic source copy exceeds its storage bound')
+            if time.monotonic() > deadline:
+                raise TimeoutError('Snapshot source copy exceeded its bound')
+
+        progress(None, None, original.execute('PRAGMA page_count').fetchone()[0])
+        original.backup(copy, pages=64, progress=progress, sleep=.01)
 
 
 def binding_for(owner, destination, reader_uid, reader_gid, *, clock_source):
@@ -230,14 +250,20 @@ class DashboardPublisher:
         fd = os.open(temporary, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
         os.close(fd)
         deadline = time.monotonic() + BACKUP_SECONDS
-        with closing(sqlite3.connect(temporary.as_uri() + "?mode=rw", uri=True, timeout=1)) as target_db:
+        # Projection and accounting can be expensive. Pin a private copy first,
+        # then release every native connection before either operation begins.
+        with tempfile.TemporaryDirectory(prefix='.source-', dir=self.directory) as scratch, closing(
+            sqlite3.connect(temporary.as_uri() + "?mode=rw", uri=True, timeout=1)
+        ) as target_db:
+            copied = Path(scratch) / 'source.db'
+            copy_source(source, copied, deadline)
             target_db.execute("PRAGMA trusted_schema=OFF")
             target_db.execute("PRAGMA journal_mode=DELETE")
             page_size = target_db.execute("PRAGMA page_size").fetchone()[0]
             target_db.execute(f"PRAGMA max_page_count={MAX_DATABASE_BYTES // page_size}")
             target_db.setlimit(sqlite3.SQLITE_LIMIT_LENGTH, MAX_DATABASE_BYTES)
             target_db.set_progress_handler(lambda: int(time.monotonic() > deadline), 1000)
-            target_db.execute("ATTACH DATABASE ? AS owner", (source.as_uri() + "?mode=ro",))
+            target_db.execute("ATTACH DATABASE ? AS owner", (copied.as_uri() + "?mode=ro",))
             target_db.execute("BEGIN")
             if time.monotonic() > deadline:
                 raise TimeoutError("Snapshot publication exceeded its bound")

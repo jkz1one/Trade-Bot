@@ -505,7 +505,7 @@ async def run(c, frame):
     except (ValueError, OSError, ExecutionBlocked) as exc:
         return {"status": "HELD", "reason": str(exc)}
     try:
-        with phase("PORTFOLIO_MANAGEMENT_MODEL"):
+        with phase("PORTFOLIO_MANAGEMENT_MODEL", model_source_key=key):
             result = await (
                 c.replay_model.run(request)
                 if c.replay_model is not None

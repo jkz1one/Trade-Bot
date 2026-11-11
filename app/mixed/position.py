@@ -560,7 +560,7 @@ async def run(c, key, frame):
     except ExecutionBlocked as exc:
         return c._finish(key, {**evidence, "status": "HELD", "reason": str(exc)})
     try:
-        with phase("STOCK_MANAGEMENT_MODEL"):
+        with phase("STOCK_MANAGEMENT_MODEL", model_source_key=key):
             result = (
                 await c.replay_model.run(request)
                 if c.mixed_replay is not None

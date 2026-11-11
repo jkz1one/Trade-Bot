@@ -490,6 +490,7 @@ class ContinuousFeed:
         self.cycle_needed = None
         self._checked_history = None
         self._checked_binding = None
+        self._tick_active = False
         self.schemas = reviewed_schemas(schemas)
         if create:
             self.directory.mkdir(mode=0o700)
@@ -626,7 +627,16 @@ class ContinuousFeed:
 
         sync_directory(self.directory)
 
-    async def tick(
+    async def tick(self, **kwargs):
+        if self._tick_active:
+            return {'status': 'CAPTURE_IN_PROGRESS'}
+        self._tick_active = True
+        try:
+            return await self._tick(**kwargs)
+        finally:
+            self._tick_active = False
+
+    async def _tick(
         self,
         *,
         now,
@@ -704,9 +714,12 @@ class ContinuousFeed:
 
             history_target = target_session(now, XNYSCalendar())
             history_policy = self.policy_for(history_target).swing_history if history_target else self.policy.swing_history
-            target, proposed = planned_history(
+            from app.mixed.background import run as background
+            timing.step('HISTORY_PLAN')
+            target, proposed = await background(planned_history,
                 history_policy, tuple(i.symbol for i in self.policy.stocks), now
             )
+            timing.step('PREPARE')
             history_used = self.db.execute(
                 "SELECT COALESCE(SUM(b.calls),0) FROM swing_read_budget b JOIN attempts a USING(sequence) WHERE a.started_at>?",
                 ((now - timedelta(minutes=1)).isoformat(),),
@@ -719,7 +732,7 @@ class ContinuousFeed:
             )
             if (
                 target is not None
-                and self.swing_snapshot(target) is None
+                and await self.history_read('swing_snapshot', target) is None
                 and used + len(plan.calls) + len(proposed) + extra_calls <= self.policy.calls_per_minute
                 and len(plan.calls) + len(proposed) + extra_calls <= 8
                 and history_used + len(proposed) <= self.policy.calls_per_minute - quote_reserve
@@ -800,7 +813,9 @@ class ContinuousFeed:
                 from app.mixed.swing_feed import snapshot
 
                 try:
-                    swing = snapshot(
+                    from app.mixed.background import run as background
+                    timing.step('HISTORY_VALIDATE')
+                    swing = await background(snapshot,
                         history_policy,
                         tuple(i.symbol for i in self.policy.stocks),
                         self.schemas,
@@ -814,7 +829,8 @@ class ContinuousFeed:
                                           {"reason": "HISTORY_MAPPING_UNAVAILABLE", "error_class": type(exc).__name__})
             bound = None
             if source_settings is not None and self.policy.swing_history is not None:
-                bound = self.load_swing_sources(
+                timing.step('HISTORY_BINDING')
+                bound = await self.history_read('load_swing_sources',
                     source_settings,
                     captured.collected_at.astimezone(ZoneInfo("America/New_York")).date(),
                     now=captured.collected_at,
@@ -823,7 +839,8 @@ class ContinuousFeed:
                 history_issues = (*history_issues, "SESSION_BOUNDARY_DURING_CAPTURE")
             stage = "NORMALIZE"
             timing.step('NORMALIZE')
-            packet = await asyncio.to_thread(
+            from app.mixed.background import run as background
+            packet = await background(
                 normalize,
                 effective,
                 self.schemas,
@@ -994,7 +1011,64 @@ class ContinuousFeed:
         self._checked_binding = (key, bound.model_copy(deep=True))
         return bound
 
-    def bind_swing_sources(self, settings, *, now):
+    async def history_read(self, operation, *args, **kwargs):
+        """Use a short-lived read-only connection; keep the sole writer on its loop."""
+        import copy
+        from urllib.parse import quote
+        from app.mixed.background import run as background
+
+        if operation not in {'swing_snapshot', 'load_swing_sources', 'bind_swing_sources'}:
+            raise ValueError('Unsupported history operation')
+        view = copy.copy(self)
+
+        def read():
+            db = sqlite3.connect('file:' + quote(str(self.directory / 'collector.db')) + '?mode=ro',
+                                 uri=True, timeout=0, isolation_level=None)
+            db.row_factory = sqlite3.Row
+            try:
+                db.execute('PRAGMA query_only=ON')
+                view.db = db
+                return getattr(view, operation)(*args, **kwargs)
+            finally:
+                db.close()
+
+        result = await background(read)
+        self._checked_history, self._checked_binding = view._checked_history, view._checked_binding
+        return result
+
+    async def bind_swing_sources_async(self, settings, *, now):
+        prepared = await self.history_read('bind_swing_sources', settings, now=now, _prepare_only=True)
+        from app.mixed.swing_binding import BoundSwingSources
+        if not isinstance(prepared, BoundSwingSources):
+            return prepared
+        self.save_swing_binding(prepared)
+        return self.swing_binding_report(prepared)
+
+    def save_swing_binding(self, bound):
+        """Commit only derived evidence on the original collector connection."""
+        self.db.execute(
+            'CREATE TABLE IF NOT EXISTS swing_source_bindings(target_session TEXT PRIMARY KEY,payload_json TEXT NOT NULL,payload_hash TEXT NOT NULL)')
+        current = self.db.execute('SELECT payload_json,payload_hash FROM swing_source_bindings WHERE target_session=?',
+                                 (bound.target_session.isoformat(),)).fetchone()
+        encoded = (bound.model_dump_json(), fingerprint(bound))
+        if current is None:
+            self.db.execute('INSERT INTO swing_source_bindings VALUES(?,?,?)',
+                            (bound.target_session.isoformat(), *encoded))
+        elif tuple(current) != encoded:
+            raise ValueError('Original Swing binding changed during preparation')
+        self.db.commit()
+
+    @staticmethod
+    def swing_binding_report(bound):
+        return {
+            'status': bound.status, 'blockers': list(bound.blockers),
+            'target_session': bound.target_session.isoformat(),
+            'created_at': bound.created_at.isoformat(), 'binding_hash': fingerprint(bound),
+            'stock_sources': len(bound.stocks), 'option_seeds': len(bound.seeds),
+            'option_batches': len(bound.batches), 'trading_ready': False,
+        }
+
+    def bind_swing_sources(self, settings, *, now, _prepare_only=False):
         """Create once or verify an existing session's source-binding receipt.
 
         This is derived collector evidence, separate from native execution state.
@@ -1040,28 +1114,13 @@ class ContinuousFeed:
         )
         # Additive, derived evidence only. Existing history enrollment and raw
         # captures are untouched; no execution or fixture database is migrated.
-        self.db.execute(
-            "CREATE TABLE IF NOT EXISTS swing_source_bindings(target_session TEXT PRIMARY KEY,payload_json TEXT NOT NULL,payload_hash TEXT NOT NULL)"
-        )
         bound = self.load_swing_sources(settings, target.date(), now=now)
         if bound is None:
             bound = bind_sources(history, policy, created_at=now)
-            self.db.execute(
-                "INSERT INTO swing_source_bindings VALUES(?,?,?)",
-                (target.date().isoformat(), bound.model_dump_json(), fingerprint(bound)),
-            )
-            self.db.commit()
-        return {
-            "status": bound.status,
-            "blockers": list(bound.blockers),
-            "target_session": bound.target_session.isoformat(),
-            "created_at": bound.created_at.isoformat(),
-            "binding_hash": fingerprint(bound),
-            "stock_sources": len(bound.stocks),
-            "option_seeds": len(bound.seeds),
-            "option_batches": len(bound.batches),
-            "trading_ready": False,
-        }
+        if _prepare_only:
+            return bound
+        self.save_swing_binding(bound)
+        return self.swing_binding_report(bound)
 
     async def run(self, stop, *, clock_source, held_source, calendar, source_settings=None, scope_state=None,
                   scope_refresh=None, reader=collect):
@@ -1077,7 +1136,7 @@ class ContinuousFeed:
             else:
                 await capture()
             if source_settings is not None and self.policy.swing_history is not None:
-                self.bind_swing_sources(source_settings, now=clock_source())
+                await self.bind_swing_sources_async(source_settings, now=clock_source())
             if stop.is_set():
                 break
             # Charge elapsed capture/validation time to the poll interval. An

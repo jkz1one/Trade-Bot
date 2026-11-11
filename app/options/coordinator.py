@@ -831,7 +831,7 @@ class DegenCoordinator:
         self._pending_evidence(key, {**evidence, "status": "MODEL_PENDING"})
         self.engine.begin_model_attempt(key, evidence["model_input_hash"], now=at)
         try:
-            with phase("ENTRY_MODEL"):
+            with phase("ENTRY_MODEL", model_source_key=key):
                 result = await self._model_run(request, secret)
             result = judgment.CandidateResult.model_validate(result.model_dump(warnings=False))
             evidence["model_result"] = result.model_dump(mode="json")

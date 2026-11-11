@@ -83,6 +83,41 @@ def test_missing_database_is_not_created(tmp_path):
     assert not (tmp_path / "missing.db").exists()
 
 
+def test_report_snapshot_keeps_consistency_without_blocking_native_commits(tmp_path):
+    path = tmp_path / 'native.db'
+    with sqlite3.connect(path) as db:
+        db.execute('CREATE TABLE receipts(value TEXT)')
+        db.execute("INSERT INTO receipts VALUES('original')")
+    report = module.connection(path)
+    copy_path = Path(report.execute('PRAGMA database_list').fetchone()[2])
+    try:
+        assert report.execute('SELECT value FROM receipts').fetchone()[0] == 'original'
+        with sqlite3.connect(path, timeout=.1) as writer:
+            writer.execute("INSERT INTO receipts VALUES('later')")
+        assert report.execute('SELECT COUNT(*) FROM receipts').fetchone()[0] == 1
+        with pytest.raises(sqlite3.OperationalError):
+            report.execute("INSERT INTO receipts VALUES('forbidden')")
+    finally:
+        report.close()
+    assert not copy_path.exists() and path.exists()
+
+
+@pytest.mark.parametrize('limit', ['capacity', 'deadline'])
+def test_failed_report_copy_cleans_private_scratch_and_preserves_native(tmp_path, monkeypatch, limit):
+    path = tmp_path / 'native.db'
+    with sqlite3.connect(path) as db:
+        db.execute('CREATE TABLE receipts(value TEXT)')
+        db.execute("INSERT INTO receipts VALUES('original')")
+    before = path.read_bytes()
+    scratch = tmp_path / 'scratch'
+    scratch.mkdir()
+    monkeypatch.setattr(module.tempfile, 'tempdir', str(scratch))
+    monkeypatch.setattr(module, 'MAX_REPORT_SOURCE_BYTES' if limit == 'capacity' else 'REPORT_COPY_SECONDS', 0)
+    with pytest.raises((ValueError, TimeoutError), match='REPORT_SOURCE_COPY_'):
+        module.connection(path)
+    assert not list(scratch.iterdir()) and path.read_bytes() == before
+
+
 def test_short_report_has_exact_ny_spending_and_preserves_unknown_charges():
     with sqlite3.connect(':memory:') as db:
         db.execute('CREATE TABLE execution_model_calls(started_at,cost)')

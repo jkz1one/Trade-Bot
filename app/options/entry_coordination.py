@@ -149,7 +149,7 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
         return c._finish(key, {**evidence, "status": "HOLD", "reason": "ENTRY_PLAN_EXPIRED_BEFORE_MODEL"})
     c.engine.begin_model_attempt(key, evidence["model_input_hash"], now=before_model)
     try:
-        with phase("ENTRY_MODEL"):
+        with phase("ENTRY_MODEL", model_source_key=key):
             result = await c._model_run(request, secret, broad=True)
         result = judgment.EntryResult.model_validate(result.model_dump(warnings=False))
         evidence["entry_result"] = result.model_dump(mode="json")

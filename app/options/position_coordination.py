@@ -367,7 +367,7 @@ async def run_position_cycle(c, key, frame):
     except ExecutionBlocked as exc:
         return c._finish(key, {**evidence, "status": "HELD", "reason": str(exc)})
     try:
-        with phase("OPTION_MANAGEMENT_MODEL"):
+        with phase("OPTION_MANAGEMENT_MODEL", model_source_key=key):
             result = (
                 await c.replay_model.run(request)
                 if c.replay_model is not None

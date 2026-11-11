@@ -32,6 +32,7 @@ def owner(
     fresh=True,
     management=False,
     portfolio=False,
+    journal_name="engine.db",
 ):
     limits, p = settings()
     costs = CostPolicy(total_budget="10", daily_budget="2", max_call_cost=".01")
@@ -75,7 +76,7 @@ def owner(
     async def refresh(_instrument):
         return quote(times[0] if fresh else AT - timedelta(seconds=30))
 
-    with OptionExecution.open(path / "engine.db", limits, p, v, now=AT, create=True) as e:
+    with OptionExecution.open(path / journal_name, limits, p, v, now=AT, create=True) as e:
         assert e.reconcile(v.snapshot(AT), now=AT)["reconciled"]
         if not portfolio:
             e.assess_stock(None, now=AT)

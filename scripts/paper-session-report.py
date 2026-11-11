@@ -17,6 +17,8 @@ CODE = re.compile(r"[A-Z][A-Z0-9_]{1,95}\Z")
 STATE = Path("/var/lib/trade-bot-connected")
 MAX_DECISION_BYTES = 16 * 1024 * 1024
 MAX_SUMMARY_FIELD = 65536
+MAX_REPORT_SOURCE_BYTES = 512 * 1024 * 1024
+REPORT_COPY_SECONDS = 5
 
 
 def codes(value):
@@ -195,12 +197,51 @@ def inventory_timing(db, key, scans):
     return results
 
 
+class ReportConnection(sqlite3.Connection):
+    """The report owns its disposable copy, never a long native read lease."""
+    def close(self):
+        try:
+            super().close()
+        finally:
+            scratch = getattr(self, '_scratch', None)
+            if scratch is not None:
+                self._scratch = None
+                scratch.cleanup()
+
+
 def connection(path):
-    db = sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=2)
-    db.row_factory = sqlite3.Row
-    db.execute("PRAGMA query_only=ON")
-    db.execute("BEGIN")
-    return db
+    # This host script deliberately has no installed application dependency.
+    # Keep a consistent private snapshot while releasing native SQLite read locks
+    # between small online-backup batches and before any report processing.
+    from contextlib import closing
+    scratch = tempfile.TemporaryDirectory(prefix='paper-report-')
+    db = None
+    try:
+        target = Path(scratch.name) / 'snapshot.db'
+        db = sqlite3.connect(target, factory=ReportConnection)
+        db._scratch = scratch
+        target.chmod(0o600)
+        deadline = time.monotonic() + REPORT_COPY_SECONDS
+        with closing(sqlite3.connect(path.resolve().as_uri() + '?mode=ro', uri=True, timeout=0)) as source:
+            source.execute('PRAGMA query_only=ON')
+            page_size = source.execute('PRAGMA page_size').fetchone()[0]
+            def progress(_status, _remaining, total):
+                if total * page_size > MAX_REPORT_SOURCE_BYTES:
+                    raise ValueError('REPORT_SOURCE_COPY_CAPACITY')
+                if time.monotonic() > deadline:
+                    raise TimeoutError('REPORT_SOURCE_COPY_DEADLINE')
+            progress(None, None, source.execute('PRAGMA page_count').fetchone()[0])
+            source.backup(db, pages=64, progress=progress, sleep=.01)
+        db.row_factory = sqlite3.Row
+        db.execute('PRAGMA query_only=ON')
+        db.execute('BEGIN')
+        return db
+    except BaseException:
+        if db is not None:
+            db.close()
+        else:
+            scratch.cleanup()
+        raise
 
 
 def amount(value):
@@ -861,7 +902,8 @@ def timing_evidence(db, start, end):
               'child_observed_intervals': {}}
     if not db.execute("SELECT 1 FROM sqlite_master WHERE name='attempt_timings'").fetchone():
         return result
-    phases = {'PREPARE', 'CAPTURE', 'PERSIST_CAPTURE', 'SOURCE_BINDING', 'NORMALIZE',
+    phases = {'PREPARE', 'HISTORY_PLAN', 'HISTORY_VALIDATE', 'HISTORY_BINDING',
+              'CAPTURE', 'PERSIST_CAPTURE', 'SOURCE_BINDING', 'NORMALIZE',
               'SOURCE_CLOCK_CHECK', 'PUBLISH'}
     child_phases = {'PRIVATE_AUTH', 'CONNECT', 'DISCOVER', 'VALIDATE_PLAN',
                     'MARKET_READ', 'CLOSE', 'SERIALIZE'}
@@ -932,14 +974,51 @@ def timing_evidence(db, start, end):
     return result
 
 
+def runtime_timing_coverage(db, start, end, cycle_slots=(), model_keys=()):
+    """Use native commitments as denominators even when no trace was written.
+
+    Work killed before any native commitment is unobservable. Report windows and
+    bounded trace inspection can also leave commitments without a matched trace.
+    """
+    result = {'boundary': 'NATIVE_COMMITMENTS_IN_REPORT_WINDOW',
+              'before_first_commit': 'UNOBSERVABLE'}
+    for name, table, key, observed, required, predicate in (
+        ('cycles', 'execution_option_runtime_slots', 'slot', cycle_slots,
+         {'slot', 'status', 'started_at'}, " AND status NOT IN ('SKIPPED','WAITING_FOR_FEED')"),
+        ('models', 'execution_model_calls', 'source_key', model_keys,
+         {'source_key', 'started_at', 'cost'}, ''),
+    ):
+        if not required <= {r[1] for r in db.execute(f'PRAGMA table_info({table})')}:
+            result[name] = {'status': 'UNAVAILABLE'}
+            continue
+        where = 'started_at>=? AND started_at<=?' + predicate
+        total = db.execute(f'SELECT COUNT(*) FROM {table} WHERE ' + where, (start, end)).fetchone()[0]
+        matched = sum(bool(db.execute(f'SELECT 1 FROM {table} WHERE {key}=? AND ' + where,
+                                     (value, start, end)).fetchone()) for value in set(observed))
+        result[name] = {'status': 'OBSERVED', 'committed': total, 'matched': matched,
+                       'without_matched_trace': total - matched,
+                       'trace_keys_without_commitment_in_window': len(set(observed)) - matched,
+                       'duplicate_trace_keys': len(observed) - len(set(observed))}
+        if name == 'cycles':
+            result[name]['not_started'] = db.execute(
+                "SELECT COUNT(*) FROM execution_option_runtime_slots WHERE started_at>=? AND started_at<=? "
+                "AND status IN ('SKIPPED','WAITING_FOR_FEED')", (start, end)).fetchone()[0]
+        else:
+            result[name]['unsettled'] = db.execute(
+                'SELECT COUNT(*) FROM execution_model_calls WHERE cost IS NULL AND ' + where,
+                (start, end)).fetchone()[0]
+    return result
+
+
 def runtime_timing_evidence(db, start, end):
     """Bounded runtime diagnostics with explicit unfinished/omitted denominators."""
     import math
 
     result = {'status': 'UNAVAILABLE', 'records': 0, 'measured': 0,
-              'missing_or_invalid': 0, 'omitted': 0, 'spans_omitted': 0,
+              'missing_or_invalid': 0, 'omitted': 0, 'spans_omitted': 0, 'native_omitted': 0,
               'by_status': {}, 'phases': {}, 'recent': []}
     if not db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_runtime_timings'").fetchone():
+        result['coverage'] = runtime_timing_coverage(db, start, end)
         return result
     phases = {'SCAN', 'STOCK_SCAN', 'SCOPE_SCAN', 'SCOPE_QUALITY', 'ENTRY_MODEL',
               'STOCK_REFRESH', 'SCOPE_REFRESH', 'ADMISSION', 'DISPATCH',
@@ -950,8 +1029,9 @@ def runtime_timing_evidence(db, start, end):
     has_packets = bool(db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_mixed_runtime_inputs'").fetchone())
     total = db.execute('SELECT COUNT(*) FROM execution_runtime_timings WHERE started_at>=? AND started_at<=?',
                        (start, end)).fetchone()[0]
-    result.update(status='OBSERVED', records=total, omitted=max(0, total-2000))
+    result.update(status='OBSERVED', records=total, omitted=max(0, total-20000))
     values, ages, natives, packet_ages = {}, {}, {}, []
+    cycle_slots, model_keys, scheduler_delays = [], [], []
 
     def number(value, signed=False):
         return type(value) in (int, float) and math.isfinite(value) and (-86400 if signed else 0) <= value <= 86400
@@ -962,8 +1042,14 @@ def runtime_timing_evidence(db, start, end):
             for name, p in (('p50', .5), ('p95', .95), ('p99', .99), ('max', 1))}}
 
     rows = db.execute('SELECT id,started_at,CASE WHEN length(payload_json)<=65536 THEN payload_json END AS payload '
-        'FROM execution_runtime_timings WHERE started_at>=? AND started_at<=? ORDER BY id DESC LIMIT 2000', (start, end))
+        'FROM execution_runtime_timings WHERE started_at>=? AND started_at<=? ORDER BY id DESC LIMIT 20000', (start, end))
+    inspected, inspected_bytes = 0, 0
     for row in rows:
+        size = len((row['payload'] or '').encode())
+        if inspected_bytes + size > 64 * 1024 * 1024:
+            break
+        inspected += 1
+        inspected_bytes += size
         try:
             item = json.loads(row['payload'] or 'null')
             if (not isinstance(item, dict) or item.get('version') != 'runtime-timing-v1'
@@ -973,13 +1059,17 @@ def runtime_timing_evidence(db, start, end):
                     or (item.get('slot') is not None and (type(item['slot']) is not int or item['slot'] < 0))
                     or not isinstance(item.get('spans'), list) or len(item['spans']) > 64
                     or not isinstance(item.get('native'), list) or len(item['native']) > 64
-                    or type(item.get('spans_omitted')) is not int or not 0 <= item['spans_omitted'] <= 1000000):
+                    or type(item.get('spans_omitted')) is not int or not 0 <= item['spans_omitted'] <= 1000000
+                    or type(item.get('native_omitted', 0)) is not int or not 0 <= item.get('native_omitted', 0) <= 1000000
+                    or ('scheduler_delay_seconds' in item and not number(item['scheduler_delay_seconds']))):
                 raise ValueError
             for span in item['spans']:
                 if (not isinstance(span, dict) or span.get('phase') not in phases
                         or span.get('status') not in statuses or not number(span.get('elapsed_seconds'))
                         or any(k in span and not number(span[k], signed=True)
-                               for k in ('quote_age_seconds', 'receive_lag_seconds', 'local_age_seconds'))):
+                               for k in ('quote_age_seconds', 'receive_lag_seconds', 'local_age_seconds'))
+                        or ('model_source_key' in span and (not isinstance(span['model_source_key'], str)
+                            or not 1 <= len(span['model_source_key']) <= 200))):
                     raise ValueError
             if any(safe_process(n) is None for n in item['native']):
                 raise ValueError
@@ -994,17 +1084,25 @@ def runtime_timing_evidence(db, start, end):
                 packet = db.execute('SELECT packet_hash FROM execution_mixed_runtime_inputs WHERE sequence=?', (sequence,)).fetchone()
                 if packet is None or packet['packet_hash'] != digest:
                     raise ValueError
-        except (ValueError, TypeError, KeyError):
+        except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
             result['missing_or_invalid'] += 1
             continue
         result['measured'] += 1
         result['spans_omitted'] += item['spans_omitted']
+        result['native_omitted'] += item.get('native_omitted', 0)
+        if item['kind'] == 'CYCLE' and item['slot'] is not None:
+            cycle_slots.append(item['slot'])
+        if item['kind'] == 'TICK' and 'scheduler_delay_seconds' in item:
+            scheduler_delays.append(item['scheduler_delay_seconds'])
         label = item['kind'] + ':' + item['status']
         result['by_status'][label] = result['by_status'].get(label, 0) + 1
         values.setdefault(item['kind'], []).append(item['elapsed_seconds'])
         if sequence is not None:
             packet_ages.append(item['packet_age_seconds'])
         for span in item['spans']:
+            if span['phase'] in {'ENTRY_MODEL', 'OPTION_MANAGEMENT_MODEL',
+                                 'STOCK_MANAGEMENT_MODEL', 'PORTFOLIO_MANAGEMENT_MODEL'} and 'model_source_key' in span:
+                model_keys.append(span['model_source_key'])
             values.setdefault(span['phase'], []).append(span['elapsed_seconds'])
             key = span['phase'] + ':' + span['status']
             result['by_status'][key] = result['by_status'].get(key, 0) + 1
@@ -1024,6 +1122,10 @@ def runtime_timing_evidence(db, start, end):
     result['execution_quote_clocks'] = {k: summary(v) for k, v in ages.items()}
     result['native_observed_intervals'] = {k: summary(v) for k, v in natives.items()}
     result['packet_age'] = summary(packet_ages) if packet_ages else None
+    result['omitted'] = max(0, total - inspected)
+    result['inspected_bytes'] = inspected_bytes
+    result['scheduler_delay'] = summary(scheduler_delays) if scheduler_delays else None
+    result['coverage'] = runtime_timing_coverage(db, start, end, cycle_slots, model_keys)
     return result
 
 

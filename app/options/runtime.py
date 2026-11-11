@@ -4,6 +4,7 @@ import asyncio
 import json
 import os
 import stat
+import time
 from datetime import datetime
 from typing import Annotated
 
@@ -437,10 +438,13 @@ class OptionRuntime:
                         "release": release.model_dump(mode="json"),
                     },
                 )
+            due = time.monotonic()
             while not stop.is_set():
+                self._scheduler_delay = max(0, time.monotonic() - due)
                 await self.tick()
                 if ready is not None:
                     ready.set()
+                due = time.monotonic() + self.policy.tick_seconds
                 try:
                     await asyncio.wait_for(stop.wait(), self.policy.tick_seconds)
                 except TimeoutError:
