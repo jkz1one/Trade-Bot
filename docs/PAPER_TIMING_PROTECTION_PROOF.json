@@ -186,5 +186,6 @@
     "In-run publisher failure is isolated; startup dashboard failures still prevent launch.",
     "Older releases with a strict journal table allowlist need a reviewed rollback compatibility path before any upgrade.",
     "Ruff module exists but its executable is unavailable; changed files passed syntax and whitespace checks."
-  ]
+  ],
+  "implementation_commit": "aad4e0885cac8928c790bd717a3128a30c0c05a9"
 }

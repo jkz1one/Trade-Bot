@@ -5,7 +5,9 @@ Recovered and published 2026-11-11 UTC as
 installation, JUnit and scenario hashes matched; 401 passing cases were retained
 without repeating unchanged application tests. The case-list artifact was reduced
 from 16,849,322 to 72,436 bytes, keeping a full-name SHA256 for the long parameter.
-Newer deployment notes were preserved. This is an offline code checkpoint, not a
+Newer deployment notes were preserved. Subsequent A2/A4 implementation is
+`aad4e08`; see [PAPER_TIMING_PROTECTION.md](PAPER_TIMING_PROTECTION.md) and the
+current delivery checklist. This is an offline code checkpoint, not a
 new host deployment or connected acceptance. A1 is checked in DELIVERY_PLAN.md.
 
 The original recovery instructions below are retained as historical evidence.

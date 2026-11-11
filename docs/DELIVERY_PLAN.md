@@ -76,11 +76,22 @@ next action. Do not replace missing evidence with a date estimate.
   Docker boundaries remain fixtures; full-duration/host/browser gates stay open.
 - [ ] **A2 — Complete timing evidence:** connect attempt/packet/cycle identities;
   report each phase, quote age, receive lag, p95/p99/max and failed-attempt counts.
+  `aad4e08` adds generation/packet/cycle correlation, native success/failure/cleanup
+  timings, common option scan/entry-model/admission/dispatch phases and original
+  quote-clock summaries. [Proof](PAPER_TIMING_PROTECTION_PROOF.json): 490 distinct
+  installed passes; one existing cross-UID skip. Dedicated stock/Scope/management
+  phase coverage, killed-before-record denominators and full-session profiling
+  remain open; A2 is not complete.
 - [ ] **A3 — Measured repairs:** reproduce and close the actual bottlenecks with
   before/after evidence; decide connection reuse from measurements and validate
   its isolation, refresh ownership, deadlines and cleanup if adopted.
 - [ ] **A4 — Independent protection:** prove that model waits, history work and
   display/report failures cannot improperly stop management of an owned position.
+  `aad4e08` isolates in-run publisher failure: durable new-entry fence, independent
+  incident visibility and valid native position protection. The two-position fixture
+  exits SPY during failure, restarts with QQQ held, then exits QQQ without another
+  entry-model call. [Contract and limits](PAPER_TIMING_PROTECTION.md). Startup display
+  failures and the full combined model/history/report stress matrix remain open.
 - [ ] **A5 — Failure/restart matrix:** exercise every condition in A's matrix;
   preserve accounting, unknown outcomes and bounded recovery without duplicates.
 - [ ] **A6 — Duration and capacity:** pass accelerated calendar/multi-day cases

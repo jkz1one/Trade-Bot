@@ -1,5 +1,42 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.203. Correlated timing and in-run publication isolation, 2026-11-11.
+
+Published implementation: `aad4e0885cac8928c790bd717a3128a30c0c05a9`.
+The recovered A1 kit is `29ef510`; its original 401 passing cases and wheel identity
+were preserved. The continuation adds native generation/packet/cycle timing,
+common option scan/model/admission/dispatch measurements and original quote-clock
+summaries, with incomplete/failed/omitted records retained separately.
+
+An in-run publisher exception now durably halts new entries and fences automatic
+feed recovery while the original runtime/collector continue valid position
+protection. Native incident reporting is independent of the failed display. The
+worker still reports failure at shutdown; no automatic publication retry or
+account resume is introduced. A synthetic failure with two holdings now permits
+SPY's protective exit, restart with QQQ held and QQQ's exit without another entry
+model request. The baseline reproduction stopped with both positions still open.
+
+Final installed evidence covers **490 distinct passing cases and one existing
+cross-UID environmental skip**. Initial schema/report compatibility failures and
+the corrected publication-message assertion are retained in
+[PAPER_TIMING_PROTECTION_PROOF.json](PAPER_TIMING_PROTECTION_PROOF.json).
+All 330 application files match source/wheel/installation and all 60 runtime pins
+match. Wheel SHA256:
+`6e3084fcd169526fe766cca87514479136ec82c01f144c0463822f50d6785d2d`.
+
+[DELIVERY_PLAN.md](DELIVERY_PLAN.md) records A1 complete at its offline boundary,
+A2 partial and A4 partial. Full model/strategy timing, startup display isolation,
+the complete failure matrix and full-duration resource-profile soak remain open.
+The new diagnostic table also requires a reviewed rollback compatibility path
+before a future host upgrade; old strict table allowlists cannot reopen it as-is.
+[PAPER_TIMING_PROTECTION.md](PAPER_TIMING_PROTECTION.md) describes exact boundaries.
+
+The confirmed host remains d2046f6. No host build, schedule/account/limit change,
+provider/model service call or connected lifecycle claim is made. Main and the
+event branch are preserved; PR #1 remains draft. LIVE remains disabled.
+
+## Previous release evidence
+
 Version 1.202. Offline system checkpoint recovered, 2026-11-11.
 
 The tested implementation is published as
