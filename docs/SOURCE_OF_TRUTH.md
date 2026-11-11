@@ -1,5 +1,22 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.200. Consolidated delivery order, 2026-11-10.
+
+[DELIVERY_PLAN.md](DELIVERY_PLAN.md) is the current execution order: integrated
+reliability and latency, operating dashboard/control, strategy/execution closure,
+one tested release and connected acceptance, then separately governed LIVE and
+controlled improvement. It defines offline/host/provider boundaries, measurable
+release gates and responsibilities. Earlier roadmap sections remain historical
+context; do not use old population-initialization examples for the connected owner.
+
+This is a documentation-only change. The tested implementation baseline remains
+d2046f6363084ca26fc850130eb94cba51f07b6d; its host installation is unconfirmed.
+The last confirmed host release is 7db7475. Connected fills and sustained operation
+remain unverified. No build, account mutation, deployment or policy change is
+required to adopt the plan. PAPER_NEXT_SESSION.md remains the host runbook.
+
+## Previous release evidence
+
 Version 1.199. Tuesday runtime timeout and independent dashboard status, 2026-11-10.
 
 The operator confirmed successful deployment of 7db7475, publication and schedule

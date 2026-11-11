@@ -1,5 +1,11 @@
 # Daily PAPER operation
 
+The current development order and completion gates are in
+[DELIVERY_PLAN.md](DELIVERY_PLAN.md). This file is the host runbook. The plan-only
+update requires no rebuild or re-enrollment; d2046f6 remains the tested recovery
+implementation awaiting host confirmation. Historical procedures for other
+populations are not instructions to recreate the connected account.
+
 The host installed 7db7475, published the existing account snapshot and resumed
 the daily schedule. The native journal measured 67,133,440 bytes and the display
 27,361,280 bytes. Tuesday's daily-20261110 worker then failed after 802.3 of
