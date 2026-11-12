@@ -9,11 +9,68 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
+import sys
 import uuid
+from collections import OrderedDict
 from pathlib import Path
+from threading import Lock
 from urllib.parse import quote
 
 AUTHORITY_SCHEMA = "execution-restore-authority-v1"
+
+
+class _RowEncodingCache:
+    """Memoize only row serialization, never database verification results.
+
+    Every digest reads every SQL row. Exact typed cell equality is required for
+    reuse; schema, canonical row ordering and the final SHA256 stay unchanged.
+    Bound retained key/value bytes and entries across concurrent readers.
+    """
+
+    def __init__(self, max_bytes=192 * 1024 * 1024, max_entries=32768):
+        self.max_bytes = max_bytes
+        self.max_entries = max_entries
+        self.size = 0
+        self.values = OrderedDict()
+        self.lock = Lock()
+
+    def encode(self, row):
+        cells = []
+        for cell in row:
+            if cell is None or type(cell) in (str, int):
+                cells.append((type(cell), cell))
+            elif type(cell) is float:
+                # Python equality conflates -0.0 and 0.0; v1 JSON does not.
+                cells.append((float, cell.hex()))
+            else:
+                return json.dumps(list(row), separators=(",", ":")).encode()
+        key = tuple(cells)
+        with self.lock:
+            if key in self.values:
+                self.values.move_to_end(key)
+                return self.values[key][0]
+        value = json.dumps(list(row), separators=(",", ":")).encode()
+        weight = (
+            sys.getsizeof(key)
+            + sys.getsizeof(value)
+            + sum(sys.getsizeof(pair) + sys.getsizeof(pair[1]) for pair in key)
+        )
+        if weight <= self.max_bytes and self.max_entries > 0:
+            with self.lock:
+                if key in self.values:
+                    self.values.move_to_end(key)
+                    return self.values[key][0]
+                while self.values and (
+                    self.size + weight > self.max_bytes or len(self.values) >= self.max_entries
+                ):
+                    _, (_, old_weight) = self.values.popitem(last=False)
+                    self.size -= old_weight
+                self.values[key] = (value, weight)
+                self.size += weight
+        return value
+
+
+_ROW_ENCODINGS = _RowEncodingCache()
 
 
 def authority_path(path):
@@ -40,11 +97,10 @@ def _digest(db):
             # Schema-derived names, escaped as identifiers, never supplied SQL.
             name = row[1].replace('"', '""')
             values = sorted(
-                json.dumps(list(r), separators=(",", ":"))
-                for r in db.execute(f'SELECT * FROM main."{name}"')
+                _ROW_ENCODINGS.encode(r) for r in db.execute(f'SELECT * FROM main."{name}"')
             )
             for value in values:
-                digest.update(value.encode())
+                digest.update(value)
                 digest.update(b"\n")
     return digest.hexdigest()
 

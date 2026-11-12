@@ -209,6 +209,20 @@ class ReportConnection(sqlite3.Connection):
                 scratch.cleanup()
 
 
+def copy_scalar(db, statement, deadline):
+    """Retry transient source locks only within the existing copy deadline."""
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise TimeoutError('REPORT_SOURCE_COPY_DEADLINE')
+        try:
+            return db.execute(statement).fetchone()[0]
+        except sqlite3.OperationalError as exc:
+            if getattr(exc, "sqlite_errorcode", None) not in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED):
+                raise
+            time.sleep(min(.01, remaining))
+
+
 def connection(path):
     # This host script deliberately has no installed application dependency.
     # Keep a consistent private snapshot while releasing native SQLite read locks
@@ -224,13 +238,13 @@ def connection(path):
         deadline = time.monotonic() + REPORT_COPY_SECONDS
         with closing(sqlite3.connect(path.resolve().as_uri() + '?mode=ro', uri=True, timeout=0)) as source:
             source.execute('PRAGMA query_only=ON')
-            page_size = source.execute('PRAGMA page_size').fetchone()[0]
+            page_size = copy_scalar(source, 'PRAGMA page_size', deadline)
             def progress(_status, _remaining, total):
                 if total * page_size > MAX_REPORT_SOURCE_BYTES:
                     raise ValueError('REPORT_SOURCE_COPY_CAPACITY')
                 if time.monotonic() > deadline:
                     raise TimeoutError('REPORT_SOURCE_COPY_DEADLINE')
-            progress(None, None, source.execute('PRAGMA page_count').fetchone()[0])
+            progress(None, None, copy_scalar(source, 'PRAGMA page_count', deadline))
             source.backup(db, pages=64, progress=progress, sleep=.01)
         db.row_factory = sqlite3.Row
         db.execute('PRAGMA query_only=ON')
