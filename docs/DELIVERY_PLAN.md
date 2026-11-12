@@ -111,6 +111,14 @@ next action. Do not replace missing evidence with a date estimate.
 - [ ] **A6 — Duration and capacity:** pass accelerated calendar/multi-day cases
   and a full configured-duration wall-clock soak under the host resource profile,
   including journal growth; identify any residual host-only restriction tests.
+  The new [duration/capacity preflight](PAPER_DURATION_CAPACITY.md) runs real elapsed
+  time on one CPU. A small-journal 90-second lifecycle passes, but the 73 MB case
+  still expires its admission lease and retains an uncertain-attempt halt.
+  Exact row-encoding reuse improves restore hashing; bounded snapshot setup retries
+  repair a separate SQLite lock race. The full 21,480-second run was not started
+  after the loaded failure. Sampled RSS is not host cgroup proof, and synthetic
+  padding/linear growth projection is not month-history acceptance.
+  [Retained evidence](PAPER_SOAK_CAPACITY_PROOF.json).
 
 ### B — Operating dashboard and control
 

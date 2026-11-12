@@ -1,5 +1,43 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.206. Duration/capacity preflight and bounded journal encoding, 2026-11-12 UTC.
+
+Implementation: `39181c995844f4f1823366cbb6d10260a601ac1c`.
+The disposable installed-package soak harness now runs one CPU with actual elapsed
+time, network isolation, continuous resource readings, native subprocesses,
+collector/runtime loops, publisher, report and authenticated HTTP reader. It
+refuses existing account/output paths. The full configured target is 21,480
+seconds; short checks cannot report a full-duration pass.
+
+The capacity preflight found a reproducible bottleneck at approximately 73 MB.
+Bounded exact row-encoding reuse reduces warm complete restore digests from about
+0.20–0.22 seconds to 0.084–0.093 seconds while preserving the original v1 hash.
+Every digest still reads every row and includes every schema/evidence record.
+An independently reproduced report-copy race now retries transient initial SQLite
+locks within the original five-second copy deadline. No limits were relaxed.
+
+The final small-journal 90-second run completes one entry/protective exit and
+finishes verified flat. The loaded run still fails: quote age reaches 9.24 seconds
+at dispatch, native acceptance takes 2.35 seconds, and the remaining admission
+lease expires. The original uncertain-attempt halt is retained, with zero fills.
+Peak sampled aggregate RSS is 473,538,560 bytes. Fast native snapshots do not mean
+native acceptance passed. **A2/A4/A6 remain open; the six-hour soak was not started
+after this failed capacity gate.** Month growth and a kernel-enforced host memory
+profile are also unproven.
+
+Final installed validation: **832 passing cases, zero failures and one known
+cross-UID environment skip**. All five coordinated scenarios pass; 331 application
+files match source/wheel/installation and all 60 runtime pins match. Evidence is retained in
+[PAPER_SOAK_CAPACITY_PROOF.json](PAPER_SOAK_CAPACITY_PROOF.json), including failures,
+source/wheel identities and case results. See
+[PAPER_DURATION_CAPACITY.md](PAPER_DURATION_CAPACITY.md) for measurements, harness
+boundaries and the next dispatch-budget repair. No connected host, account,
+schedule, provider/model service or limits changed. The confirmed host remains
+d2046f6. Main and the event branch are preserved; PR #1 remains draft with its
+entire title/body unchanged. Today's connected dashboard has not been reviewed.
+
+## Prior checkpoint
+
 Version 1.205. History and reporting contention repairs, 2026-11-11.
 
 Published implementation: `c7872818fa59ecbfee798a3ee62ce315c07cd036`.

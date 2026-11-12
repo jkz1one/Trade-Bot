@@ -1,5 +1,10 @@
 # Recovered offline system checkpoint
 
+Duration/capacity continuation: `39181c995844f4f1823366cbb6d10260a601ac1c`.
+The new real-time harness passes its small-journal lifecycle, but its 73 MB
+admission/dispatch gate still fails. Full duration and host acceptance remain
+open; see [PAPER_DURATION_CAPACITY.md](PAPER_DURATION_CAPACITY.md).
+
 Recovered and published 2026-11-11 UTC as
 `29ef510748ea4fe0b18592d8483c7dcf836b15bb`. All saved source, wheel,
 installation, JUnit and scenario hashes matched; 401 passing cases were retained
