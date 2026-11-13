@@ -92,6 +92,11 @@ next action. Do not replace missing evidence with a date estimate.
   read-lock contention, with three failing baseline cases and passing installed
   repairs. Tuesday's actual native-process cause and provider connection-reuse
   measurements remain unresolved; these repairs do not establish those causes.
+  `194563c` separately fixes the November 12 pre-launch schema rejection: the
+  exact operator-observed revision changes only two interval descriptions from
+  the already reviewed metadata. Ten baseline failures become passing cases;
+  502 installed regressions pass. [Review and host boundary](PAPER_SCHEMA_REVISION_20261112.md).
+  This is not a loaded-journal latency repair or a confirmed host rollout.
 - [ ] **A4 — Independent protection:** prove that model waits, history work and
   display/report failures cannot improperly stop management of an owned position.
   `aad4e08` isolated in-run publisher failure. `d35d318` adds verified-held startup

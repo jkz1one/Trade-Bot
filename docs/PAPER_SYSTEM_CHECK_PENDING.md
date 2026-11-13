@@ -1,5 +1,10 @@
 # Recovered offline system checkpoint
 
+November 13 continuation: schema-compatibility repair `194563c` is published and
+passes 502 installed tests. It addresses the operator-observed November 12
+pre-launch rejection, with no host deployment or account changes. See
+[PAPER_SCHEMA_REVISION_20261112.md](PAPER_SCHEMA_REVISION_20261112.md).
+
 Duration/capacity continuation: `39181c995844f4f1823366cbb6d10260a601ac1c`.
 The new real-time harness passes its small-journal lifecycle, but its 73 MB
 admission/dispatch gate still fails. Full duration and host acceptance remain

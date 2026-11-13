@@ -1,5 +1,34 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.207. Reviewed historical-interval metadata compatibility, 2026-11-13 NY.
+
+Published implementation: `194563c0616ad5146f172f9d9fa061c8c5d38801`.
+Operator evidence confirms the November 12 scheduled session failed three catalog
+captures at VALIDATE_PLAN before any market reads or worker launch. Robinhood's
+observed six-tool metadata hash is dc15d335. Relative to the reviewed November 4
+revision, only two interval parameter descriptions changed; they clarify that
+fifteen-minute bars come from three five-minute bars. Reconstructing those exact
+changes reproduces the complete observed digest. Argument/output schemas and
+capability annotations otherwise match.
+
+The new exact revision is compatible with both earlier reviewed revisions while
+arbitrary metadata changes remain rejected. Saved discovery/enrollment, original
+clocks, read limits and all native account state are preserved. No strategy
+change is needed: existing confirmation already uses completed five-minute bars.
+The old implementation fails ten new compatibility cases; the installed repair
+passes **502 cases with zero failures or skips**. All 331 application files and
+60 dependency pins match source/wheel/installation. See
+[PAPER_SCHEMA_REVISION_20261112.md](PAPER_SCHEMA_REVISION_20261112.md) and its
+[retained proof](PAPER_SCHEMA_REVISION_20261112_PROOF.json).
+
+This fixes the reviewed schema rejection in code. The confirmed host remains
+on d2046f6 and has not been deployed or retried here; successful connected
+preparation is still unverified. Failed-day allowances and native halts remain.
+The separate loaded-journal admission expiry, full-duration soak and A2/A4/A6
+acceptance remain open. Main, the event branch and draft PR #1 are preserved.
+
+## Prior checkpoint
+
 Version 1.206. Duration/capacity preflight and bounded journal encoding, 2026-11-12 UTC.
 
 Implementation: `39181c995844f4f1823366cbb6d10260a601ac1c`.
