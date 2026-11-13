@@ -3,10 +3,15 @@ import copy
 from datetime import date
 
 import pytest
-from test_contract_catalog import captures as captures
+from test_contract_catalog import captures as captures  # noqa: PLC0414
+from test_read_schema_contract import (
+    description_schemas as description_schemas,  # noqa: PLC0414
+)
+from test_read_schema_contract import (
+    interval_description_schemas as interval_description_schemas,  # noqa: PLC0414
+)
 from test_robinhood_read_mapping import equity
-from test_robinhood_read_mapping import schemas as schemas
-from test_read_schema_contract import description_schemas as description_schemas
+from test_robinhood_read_mapping import schemas as schemas  # noqa: PLC0414
 
 from app.mixed.session_capture import collect, contract_plan, plan
 
@@ -15,10 +20,12 @@ from app.mixed.session_capture import collect, contract_plan, plan
 def test_capture_cli_binds_each_call_to_actual_reviewed_discovery(
         tmp_path, monkeypatch, schemas, description_schemas, updated_description):
     import json
-    from datetime import datetime, UTC
+    from datetime import UTC, datetime
+
+    from test_schema_artifact import artifact
+
     from app.mixed import session_capture
     from app.options import read_cli
-    from test_schema_artifact import artifact
     selected = description_schemas if updated_description else schemas
     source = tmp_path / 'discovery.json'
     source.write_text(json.dumps(artifact(selected)))
@@ -75,7 +82,12 @@ def context(captures):
 
 
 @pytest.mark.parametrize("future_quote", [False, True])
-def test_capture_sequence_produces_reviewable_symbol_catalog(captures, future_quote):
+@pytest.mark.parametrize("new_revision", [False, True])
+def test_capture_sequence_produces_reviewable_symbol_catalog(
+        captures, future_quote, new_revision, interval_description_schemas):
+    if new_revision:
+        for artifact in captures:
+            artifact["result"]["schemas"] = interval_description_schemas.model_dump(mode="json")
     if future_quote:
         from datetime import datetime, timedelta
         received = datetime.fromisoformat(captures[2]["result"]["collected_at"])

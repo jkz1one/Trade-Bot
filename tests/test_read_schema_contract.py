@@ -19,6 +19,50 @@ def description_schemas():
         'robinhood_read_schemas_20261104.json').read_text())
 
 
+@pytest.fixture
+def interval_description_schemas(description_schemas):
+    # The operator supplied exact field changes plus the full metadata digest,
+    # not an original capture timestamp. Retain the base fixture's test clock.
+    delta = json.loads((Path(__file__).parent / 'fixtures' /
+        'robinhood_read_schema_delta_20261112.json').read_text())
+    value = description_schemas.model_dump()
+    assert value['sha256'] == delta['base_sha256']
+    for change in delta['changes']:
+        node = value['tools']
+        for key in change['path'][:-1]:
+            node = node[key]
+        node[change['path'][-1]] = change['value']
+    value['sha256'] = schema_digest(value['tools'])
+    assert value['sha256'] == delta['observed_sha256']
+    return ReadSchemas.model_validate(value)
+
+
+@pytest.fixture(params=['description_schemas', 'interval_description_schemas'])
+def compatible_schemas(request):
+    return request.getfixturevalue(request.param)
+
+
+@pytest.mark.parametrize('left', ['schemas', 'description_schemas', 'interval_description_schemas'])
+@pytest.mark.parametrize('right', ['schemas', 'description_schemas', 'interval_description_schemas'])
+def test_reviewed_revision_pairs_preserve_original_metadata(request, left, right):
+    from app.options.read_mapping import reviewed_schemas
+    a, b = request.getfixturevalue(left), request.getfixturevalue(right)
+    before = a.model_dump_json(), b.model_dump_json()
+    assert reviewed_schemas(a) == a and reviewed_schemas(b) == b
+    assert same_schema_contract(a, b)
+    assert (a.model_dump_json(), b.model_dump_json()) == before
+
+
+def test_interval_revision_changes_only_two_parameter_descriptions(
+        description_schemas, interval_description_schemas):
+    old = description_schemas.model_dump()['tools']
+    new = interval_description_schemas.model_dump()['tools']
+    for name in ('get_equity_historicals', 'get_option_historicals'):
+        node = old[name]['inputSchema']['properties']['interval']
+        node['description'] += " There is no '15minute' bar. For 15-minute bars, request '5minute' and combine every three bars."
+    assert old == new
+
+
 def test_discovery_time_is_retained_but_not_part_of_contract_identity(schemas):
     before = schemas.model_dump_json()
     later = schemas.model_copy(update={'captured_at': schemas.captured_at + timedelta(days=30)})
@@ -61,16 +105,22 @@ def test_supplied_revision_changes_exactly_one_top_level_description(schemas, de
     assert schemas.model_dump() == old and description_schemas.model_dump() == new
 
 
-@pytest.mark.parametrize('damage', ['description', 'input', 'output', 'annotation', 'name', 'nested_description'])
-def test_unreviewed_metadata_cannot_use_description_exception(schemas, description_schemas, damage):
-    from app.options.read_gateway import OptionReadGateway, ReadSample, CapturePlan
+@pytest.mark.parametrize('damage', ['description', 'input', 'output', 'annotation', 'name', 'nested_description', 'interval_description', 'required', 'argument_type'])
+def test_unreviewed_metadata_cannot_use_description_exception(schemas, compatible_schemas, damage):
+    from app.options.read_gateway import CapturePlan, OptionReadGateway, ReadSample
     from app.options.read_mapping import reviewed_schemas
-    value = description_schemas.model_dump()
+    value = compatible_schemas.model_dump()
     tool = value['tools']['get_equity_historicals']
     if damage in {'input', 'output'}:
         tool[damage + 'Schema']['additionalProperties'] = True
     elif damage == 'annotation':
         tool['annotations']['readOnlyHint'] = False
+    elif damage == 'interval_description':
+        tool['inputSchema']['properties']['interval']['description'] += ' unreviewed'
+    elif damage == 'required':
+        tool['inputSchema']['required'] = []
+    elif damage == 'argument_type':
+        tool['inputSchema']['properties']['interval']['type'] = 'integer'
     elif damage == 'nested_description':
         tool['inputSchema']['description'] = 'Unreviewed nested change'
     else:
@@ -78,7 +128,7 @@ def test_unreviewed_metadata_cannot_use_description_exception(schemas, descripti
     value['sha256'] = schema_digest(value['tools'])
     current = ReadSchemas.model_validate(value)
     assert not same_schema_contract(current, schemas)
-    assert not same_schema_contract(current, description_schemas)
+    assert not same_schema_contract(current, compatible_schemas)
     with pytest.raises(ValueError, match='Unreviewed'):
         reviewed_schemas(current)
     gateway = OptionReadGateway(None)
@@ -92,15 +142,16 @@ def test_unreviewed_metadata_cannot_use_description_exception(schemas, descripti
 @pytest.mark.anyio
 @pytest.mark.parametrize('invalid_output', [False, True])
 async def test_native_worker_and_parent_accept_reviewed_revision_only(
-        tmp_path, schemas, description_schemas, monkeypatch, invalid_output):
+        tmp_path, schemas, compatible_schemas, monkeypatch, invalid_output):
     from test_option_read_capture import oauth
     from test_robinhood_read_mapping import envelope, equity
+
     from app.options import read_capture, read_worker
     from app.options.read_gateway import CapturePlan, ReadSample
     seen = []
     class Client:
         async def list_tools(self):
-            return list(description_schemas.tools.values())
+            return list(compatible_schemas.tools.values())
         async def call_tool(self, name, arguments):
             seen.append((name, arguments))
             raw = equity('SPY')
@@ -117,15 +168,16 @@ async def test_native_worker_and_parent_accept_reviewed_revision_only(
     plan = CapturePlan(purpose='SCHEMA_MAPPING_EVIDENCE', symbols=('SPY',), calls=(call,))
     result = await read_capture.collect(policy, schemas=schemas, plan=plan)
     assert result.status == ('FAILED' if invalid_output else 'COMPLETE')
-    assert result.schemas.sha256 == description_schemas.sha256
+    assert result.schemas.sha256 == compatible_schemas.sha256
     assert result.plan == plan and len(seen) == 1
     assert result.observations[0]['completed'] is not invalid_output
     assert not result.execution_authority and not result.normalized_data_verified
 
 
-def test_collector_keeps_enrollment_and_raw_new_digest_across_restart(tmp_path, schemas, description_schemas):
+def test_collector_keeps_enrollment_and_raw_new_digest_across_restart(tmp_path, schemas, compatible_schemas):
     from test_portfolio_feed import policy, reader
     from test_robinhood_read_mapping import AT, instrument
+
     from app.mixed.continuous_feed import ContinuousFeed
     from app.options.runtime import read_packet
     p = policy()
@@ -134,13 +186,13 @@ def test_collector_keeps_enrollment_and_raw_new_digest_across_restart(tmp_path, 
     for n in range(2):
         at = AT + timedelta(seconds=n * p.poll_seconds)
         base = reader(at, seen, source_shift=n * p.poll_seconds)
-        async def capture(cp, **kwargs):
-            result = await base(cp, **kwargs)
+        async def capture(cp, _base=base, _at=at, **kwargs):
+            result = await _base(cp, **kwargs)
             # Synthetic advancing provider clock, retained verbatim by delivery.
             for row in result.observations:
                 if row['tool'] == 'get_option_quotes':
-                    row['raw']['structuredContent']['data']['results'][0]['quote']['updated_at'] = at.isoformat()
-            return result.model_copy(update={'schemas': description_schemas})
+                    row['raw']['structuredContent']['data']['results'][0]['quote']['updated_at'] = _at.isoformat()
+            return result.model_copy(update={'schemas': compatible_schemas})
         feed = ContinuousFeed(path, p, schemas, create=n == 0)
         try:
             before = feed.db.execute('SELECT sql FROM sqlite_master ORDER BY name').fetchall()
@@ -148,7 +200,7 @@ def test_collector_keeps_enrollment_and_raw_new_digest_across_restart(tmp_path, 
             assert result['status'] == 'DELIVERED', result
             raw = json.loads(feed.db.execute('SELECT raw_json FROM attempts WHERE sequence=?',
                                             (result['sequence'],)).fetchone()[0])
-            assert raw['schemas']['sha256'] == description_schemas.sha256
+            assert raw['schemas']['sha256'] == compatible_schemas.sha256
             assert feed.schemas == schemas and feed.policy == p
             assert before == feed.db.execute('SELECT sql FROM sqlite_master ORDER BY name').fetchall()
         finally:

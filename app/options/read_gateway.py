@@ -27,12 +27,15 @@ ReadTool = Literal[
 READ_TOOLS = frozenset(ReadTool.__args__)
 MAX_SCHEMA_BYTES = 128 * 1024
 MAX_SAMPLE_BYTES = 128 * 1024
-# Exact reviewed metadata revisions. The latter changes only the top-level
-# get_equity_historicals description (completed-bar timing documentation).
-# It does not change any input/output schema, tool identity or annotation.
+# Exact reviewed metadata revisions. November 4 adds completed-bar timing
+# documentation. November 12 additionally clarifies both historical interval
+# descriptions. Argument rules, output schemas and capability annotations match.
 REVIEWED_SCHEMA_SHA256 = "d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15"
 COMPLETED_BARS_DESCRIPTION_SHA256 = "77f5aaac0e67dd9fb194d35bdbfb3779a351f52db8c6594a90dadd4f3fc5e272"
-REVIEWED_SCHEMA_DIGESTS = frozenset({REVIEWED_SCHEMA_SHA256, COMPLETED_BARS_DESCRIPTION_SHA256})
+INTERVAL_DESCRIPTION_SHA256 = "dc15d335d30cd024e60910982942cf27d4c51dd83651630630c6b6e1cfa27718"
+REVIEWED_SCHEMA_DIGESTS = frozenset({
+    REVIEWED_SCHEMA_SHA256, COMPLETED_BARS_DESCRIPTION_SHA256, INTERVAL_DESCRIPTION_SHA256,
+})
 
 
 def encoded(value):
@@ -72,10 +75,10 @@ class ReadSchemas(OptionRecord):
 
 
 def same_schema_contract(left, right):
-    """Keep exact pins, with one reviewed description-only metadata revision.
+    """Match three exact reviewed revisions without rewriting original evidence.
 
-    Never rewrite original schemas/digests, extend this exception to arbitrary
-    descriptions, or ignore annotations and nested schema metadata.
+    Only the three reviewed documentation fields may differ after both complete
+    metadata digests pass the allowlist. All other nested fields still match.
     """
     if left is None or right is None:
         return False
@@ -84,11 +87,13 @@ def same_schema_contract(left, right):
     a, b = (s.model_dump(exclude={"captured_at"}) for s in (left, right))
     if a == b:
         return True
-    if {left.sha256, right.sha256} != REVIEWED_SCHEMA_DIGESTS:
+    if not {left.sha256, right.sha256} <= REVIEWED_SCHEMA_DIGESTS:
         return False
     for value in (a, b):
         del value["sha256"]
         value["tools"]["get_equity_historicals"].pop("description", None)
+        for name in ("get_equity_historicals", "get_option_historicals"):
+            value["tools"][name]["inputSchema"]["properties"]["interval"].pop("description", None)
     return a == b
 
 
