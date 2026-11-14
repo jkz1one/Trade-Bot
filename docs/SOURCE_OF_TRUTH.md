@@ -1,6 +1,16 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.209. November 14 Robinhood schema review and verified host capture.
+Version 1.210. November 14 PAPER timing and position-protection checkpoint.
+
+On the branch, `0d79a3a` completes a simulated entry and protective exit in
+both the 90-second and 335-second runs on a 72,822,784-byte journal and one CPU.
+The longer run completed two five-minute decision slots. In a separate loaded
+test the owner submitted its protective exit in 3.37 seconds while history,
+advice and display publication waited with a report open. Full-duration capacity,
+month-growth and connected performance remain open. The host runs `39d8e48`.
+[Run evidence](PAPER_LOADED_HANDOFF_20261114_PROOF.json).
+
+### November 14 Robinhood schema review and verified host capture
 
 The operator confirmed the November 13 installation of `ab9b090`, snapshot publication,
 dashboard reader update and scheduler installation. The source account retained its

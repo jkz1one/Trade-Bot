@@ -83,8 +83,11 @@ next action. Do not replace missing evidence with a date estimate.
   and committed native slot/model denominators, including actual abrupt-process
   exits before/within a trace. Work before any commitment remains explicitly
   unobservable. [Current proof](PAPER_CONTENTION_PROOF.json): 521 distinct installed
-  passes and one known cross-UID skip. Full-session timing/capacity profiling
-  remains under A6; A2 acceptance is still open.
+  passes and one known cross-UID skip. `0d79a3a` reports the delivery commit,
+  parent-observed native spawn wait and deadline remaining at spawn. Entry quote
+  age at dispatch fell from 8.91 seconds on the loaded baseline to 7.32 and
+  6.83 seconds in the final 90- and 335-second runs. Full-session timing and
+  capacity profiling remain under A6. [Loaded run evidence](PAPER_LOADED_HANDOFF_20261114_PROOF.json).
 - [ ] **A3 — Measured repairs:** reproduce and close the actual bottlenecks with
   before/after evidence; decide connection reuse from measurements and validate
   its isolation, refresh ownership, deadlines and cleanup if adopted.
@@ -116,6 +119,10 @@ next action. Do not replace missing evidence with a date estimate.
   one-CPU case exits while history, advice and display work wait and a report is
   open; final accounting is verified and no duplicate exit/model call occurs.
   [Current proof](PAPER_CONTENTION_PROOF.json); [contract and limits](PAPER_TIMING_PROTECTION.md).
+  In `0d79a3a` the same overlap on a fenced 72,814,592-byte journal produced one
+  protective exit in 3.37 seconds with verified flat accounting. Injected journal
+  failures also cover partial Scope/mixed acceptance and partial delivery/slot
+  claims. [Loaded protection evidence](PAPER_LOADED_HANDOFF_20261114_PROOF.json).
   Sustained full-duration resource-profile proof remains under A6. Unverified
   startup exposure retains its authority/accounting rejection boundary.
 - [ ] **A5 — Failure/restart matrix:** exercise every condition in A's matrix;
@@ -123,14 +130,14 @@ next action. Do not replace missing evidence with a date estimate.
 - [ ] **A6 — Duration and capacity:** pass accelerated calendar/multi-day cases
   and a full configured-duration wall-clock soak under the host resource profile,
   including journal growth; identify any residual host-only restriction tests.
-  The new [duration/capacity preflight](PAPER_DURATION_CAPACITY.md) runs real elapsed
-  time on one CPU. A small-journal 90-second lifecycle passes, but the 73 MB case
-  still expires its admission lease and retains an uncertain-attempt halt.
-  Exact row-encoding reuse improves restore hashing; bounded snapshot setup retries
-  repair a separate SQLite lock race. The full 21,480-second run was not started
-  after the loaded failure. Sampled RSS is not host cgroup proof, and synthetic
-  padding/linear growth projection is not month-history acceptance.
-  [Retained evidence](PAPER_SOAK_CAPACITY_PROOF.json).
+  The [November 12 preflight](PAPER_DURATION_CAPACITY.md) passed the small-journal
+  lifecycle and exposed a 73 MB dispatch timeout. `0d79a3a` passes that short
+  loaded preflight and a two-slot run with the same original limits and restore
+  fence. The second slot recorded `ENTRY_MODEL_RISK_PAUSE`. Next run the full
+  21,480 seconds and measure growth on representative multi-session history.
+  The short tests use labeled padding and sampled aggregate RSS. Host cgroup
+  enforcement and connected-session effectiveness still require separate evidence.
+  [Short loaded runs](PAPER_LOADED_HANDOFF_20261114_PROOF.json).
 
 ### B — Operating dashboard and control
 

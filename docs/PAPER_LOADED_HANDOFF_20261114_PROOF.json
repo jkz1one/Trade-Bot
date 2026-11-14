@@ -1,0 +1,450 @@
+{
+  "version": "paper-loaded-handoff-proof-v1",
+  "date_utc": "2026-11-14",
+  "baseline": "b8d70bb95a727a3c47ade5608b52d06da6064cb0",
+  "implementation": "0d79a3a979bc1632031677392ccbe4fb491a4275",
+  "synthetic": true,
+  "live_enabled": false,
+  "provider_calls": false,
+  "model_service_calls": false,
+  "host_release_at_checkpoint": "39d8e48c5f4bfefeed7d5b05682edb733ddb8e8a",
+  "measurement": {
+    "initial_journal_bytes": 72822784,
+    "padding_rows": 2173,
+    "logical_cpus": 1,
+    "clock": "real monotonic elapsed time with simulated session timestamps",
+    "entry_budget": "Seconds to the original native deadline when the parent starts waiting for process creation. Spawn elapsed includes parent scheduling delay.",
+    "tables": "Each row describes an independent run from a new disposable owner. The first five rows show the baseline and intermediate builds."
+  },
+  "loaded_runs": [
+    {
+      "build": "branch_baseline",
+      "manifest_sha256": "ddc5a94fa1c94453c7750c57b8c6e5344659f916c1868feba60c7a9b3f3eb9c7",
+      "status": "FAILED",
+      "duration_seconds": 90,
+      "elapsed_seconds": 91.98555,
+      "entry_quote_age_at_admission_seconds": 8.574225,
+      "entry_quote_age_at_dispatch_seconds": 8.906635,
+      "entry_native_accept": {
+        "status": "FAILED",
+        "elapsed_seconds": 2.076125
+      },
+      "entry_native_spawn": null,
+      "completed_slots": 1,
+      "entry_fills": 0,
+      "exit_fills": 0,
+      "completed_round_trips": 0,
+      "final_accounting": null,
+      "uncertain_attempt_halt": true,
+      "report_sha256": "26b64d81fe311651c36b8a5a657c027ee29e7cb771c1d87b5d7a1eff543626d6",
+      "last_parent_observation": {
+        "parent_phase": "SPAWN",
+        "child_trace_status": "NOT_OBSERVED",
+        "elapsed_seconds": 2.07
+      }
+    },
+    {
+      "build": "delivery_write_consolidated",
+      "manifest_sha256": "c83a7d8ff3a6249fef37415c9a2613920f9f5781ad34fe9369a9e89cfe9cbbbf",
+      "status": "PASSED",
+      "duration_seconds": 90,
+      "elapsed_seconds": 90.584884,
+      "entry_quote_age_at_admission_seconds": 7.268123,
+      "entry_quote_age_at_dispatch_seconds": 7.58608,
+      "entry_native_accept": {
+        "status": "COMPLETE",
+        "elapsed_seconds": 1.731739
+      },
+      "entry_native_spawn": null,
+      "completed_slots": 1,
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "final_accounting": "VERIFIED_FLAT",
+      "uncertain_attempt_halt": false,
+      "report_sha256": "649263c9015cb49118cb80a42b7786801059fcf4cab0a4bb44b315967c495b01"
+    },
+    {
+      "build": "delivery_write_consolidated_with_spawn_timing",
+      "manifest_sha256": "0eda5f22f76bf4d14e1ab79ed0eeea4a4a0dcd2153779a0005a6ac76a0447491",
+      "status": "FAILED",
+      "duration_seconds": 90,
+      "elapsed_seconds": 91.816014,
+      "entry_quote_age_at_admission_seconds": 7.533493,
+      "entry_quote_age_at_dispatch_seconds": 7.881392,
+      "entry_native_accept": {
+        "status": "FAILED",
+        "elapsed_seconds": 1.847177
+      },
+      "entry_native_spawn": {
+        "status": "COMPLETE",
+        "remaining_at_start_seconds": 1.800365,
+        "elapsed_seconds": 1.372883
+      },
+      "completed_slots": 1,
+      "entry_fills": 0,
+      "exit_fills": 0,
+      "completed_round_trips": 0,
+      "final_accounting": null,
+      "uncertain_attempt_halt": true,
+      "report_sha256": "03dd994d54ad05cbd0a3b1b302062d6d99407438d905e0dd7e47d1c66846c27f"
+    },
+    {
+      "build": "paired_receipts_first",
+      "manifest_sha256": "ff623e9362b462403bc731a32ac838d754dcdc630b6e078a035b5e89f4a52f99",
+      "status": "PASSED",
+      "duration_seconds": 90,
+      "elapsed_seconds": 91.28327,
+      "entry_quote_age_at_admission_seconds": 5.981765,
+      "entry_quote_age_at_dispatch_seconds": 6.299809,
+      "entry_native_accept": {
+        "status": "COMPLETE",
+        "elapsed_seconds": 1.706106
+      },
+      "entry_native_spawn": {
+        "status": "COMPLETE",
+        "remaining_at_start_seconds": 2.225625,
+        "elapsed_seconds": 1.08478
+      },
+      "completed_slots": 1,
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "final_accounting": "VERIFIED_FLAT",
+      "uncertain_attempt_halt": false,
+      "report_sha256": "46a3ec1d915276fb8ed5275b79910e28832cfff8676c118072b8a5ee0fa4a499"
+    },
+    {
+      "build": "paired_receipts_repeat",
+      "manifest_sha256": "ff623e9362b462403bc731a32ac838d754dcdc630b6e078a035b5e89f4a52f99",
+      "status": "PASSED",
+      "duration_seconds": 120,
+      "elapsed_seconds": 120.709425,
+      "entry_quote_age_at_admission_seconds": 6.053451,
+      "entry_quote_age_at_dispatch_seconds": 6.419297,
+      "entry_native_accept": {
+        "status": "COMPLETE",
+        "elapsed_seconds": 1.742606
+      },
+      "entry_native_spawn": {
+        "status": "COMPLETE",
+        "remaining_at_start_seconds": 2.03805,
+        "elapsed_seconds": 1.220207
+      },
+      "completed_slots": 1,
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "final_accounting": "VERIFIED_FLAT",
+      "uncertain_attempt_halt": false,
+      "report_sha256": "041216359ecde524cc05abefeca9218350cb3adca83fe0e7e3246aa0b9b9667f"
+    },
+    {
+      "build": "published_90_seconds",
+      "manifest_sha256": "fadf8df298f62be5a21f08039bb54c797ffe12c5616b1fcb114b70ee6f201bd9",
+      "status": "PASSED",
+      "duration_seconds": 90,
+      "elapsed_seconds": 91.598211,
+      "entry_quote_age_at_admission_seconds": 6.941546,
+      "entry_quote_age_at_dispatch_seconds": 7.319412,
+      "entry_native_accept": {
+        "status": "COMPLETE",
+        "elapsed_seconds": 1.632349
+      },
+      "entry_native_spawn": {
+        "status": "COMPLETE",
+        "remaining_at_start_seconds": 1.890155,
+        "elapsed_seconds": 1.171951
+      },
+      "completed_slots": 1,
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "final_accounting": "VERIFIED_FLAT",
+      "uncertain_attempt_halt": false,
+      "report_sha256": "bb9fc69a8810fa5e869dfa2a8076bb6f91d063c5f9032dd1940c5d2e2986971d",
+      "capture_attempts": 9,
+      "native_snapshot_calls": 33,
+      "native_snapshot_failures": 0,
+      "peak_tree_rss_bytes": 474574848,
+      "source_database_bytes": 73818112,
+      "children_reaped_count": 34,
+      "children_reaped": true,
+      "slot_decisions": [
+        {
+          "status": [
+            "OPEN"
+          ],
+          "reason": []
+        }
+      ],
+      "trace_counts": {
+        "records": 35,
+        "measured": 35,
+        "missing_or_invalid": 0,
+        "omitted": 0,
+        "spans_omitted": 0,
+        "native_omitted": 0
+      },
+      "delivery_commit": {
+        "samples": 34,
+        "p50_seconds": 0.20552,
+        "p95_seconds": 0.261545,
+        "p99_seconds": 0.363844,
+        "max_seconds": 0.363844
+      },
+      "spawn_budget_across_entries_and_exits": {
+        "samples": 2,
+        "p50_seconds": 1.890155,
+        "p95_seconds": 4.789614,
+        "p99_seconds": 4.789614,
+        "max_seconds": 4.789614,
+        "min_seconds": 1.890155
+      }
+    },
+    {
+      "build": "published_two_slots",
+      "manifest_sha256": "fadf8df298f62be5a21f08039bb54c797ffe12c5616b1fcb114b70ee6f201bd9",
+      "status": "PASSED",
+      "duration_seconds": 335,
+      "elapsed_seconds": 336.955232,
+      "entry_quote_age_at_admission_seconds": 6.473524,
+      "entry_quote_age_at_dispatch_seconds": 6.827715,
+      "entry_native_accept": {
+        "status": "COMPLETE",
+        "elapsed_seconds": 1.732238
+      },
+      "entry_native_spawn": {
+        "status": "COMPLETE",
+        "remaining_at_start_seconds": 2.093045,
+        "elapsed_seconds": 1.268093
+      },
+      "completed_slots": 2,
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "final_accounting": "VERIFIED_FLAT",
+      "uncertain_attempt_halt": false,
+      "report_sha256": "0764b8ab8f9841d56fcdd9d08a46eb990501cab9ef039a94580363009f2a940c",
+      "capture_attempts": 33,
+      "native_snapshot_calls": 135,
+      "native_snapshot_failures": 0,
+      "peak_tree_rss_bytes": 490319872,
+      "source_database_bytes": 76025856,
+      "children_reaped_count": 136,
+      "children_reaped": true,
+      "slot_decisions": [
+        {
+          "status": [
+            "OPEN"
+          ],
+          "reason": []
+        },
+        {
+          "status": [
+            "HOLD"
+          ],
+          "reason": [
+            "ENTRY_MODEL_RISK_PAUSE"
+          ]
+        }
+      ],
+      "trace_counts": {
+        "records": 138,
+        "measured": 138,
+        "missing_or_invalid": 0,
+        "omitted": 0,
+        "spans_omitted": 0,
+        "native_omitted": 0
+      },
+      "delivery_commit": {
+        "samples": 136,
+        "p50_seconds": 0.195945,
+        "p95_seconds": 0.239007,
+        "p99_seconds": 0.321707,
+        "max_seconds": 0.361439
+      },
+      "spawn_budget_across_entries_and_exits": {
+        "samples": 2,
+        "p50_seconds": 2.093045,
+        "p95_seconds": 4.805386,
+        "p99_seconds": 4.805386,
+        "max_seconds": 4.805386,
+        "min_seconds": 2.093045
+      }
+    }
+  ],
+  "loaded_protection": {
+    "work": "A held stock, pending management judgment, stalled history and display publication, and an open report snapshot. Projection fails after the exit submission.",
+    "exit_bound_seconds": 5,
+    "cpu_affinity": 1,
+    "baseline_loaded": {
+      "seed_mib": 68,
+      "journal_bytes_before_contention": 72814592,
+      "exit_submitted_while_all_waiting": true,
+      "report_snapshot_open_during_exit": true,
+      "native_submissions": 2,
+      "held_positions": 0,
+      "accounting": "VERIFIED",
+      "exit_seconds": 3.612627,
+      "model_coverage": {
+        "status": "OBSERVED",
+        "committed": 2,
+        "matched": 2,
+        "without_matched_trace": 0,
+        "trace_keys_without_commitment_in_window": 0,
+        "duplicate_trace_keys": 0,
+        "unsettled": 0
+      },
+      "evidence_sha256": "61ba9b4ed0f3dabbea168f868a6981b6f8ce5bc7924c2fd3bcc9238b4d6573fe"
+    },
+    "small": {
+      "seed_mib": 0,
+      "journal_bytes_before_contention": 409600,
+      "exit_submitted_while_all_waiting": true,
+      "report_snapshot_open_during_exit": true,
+      "native_submissions": 2,
+      "held_positions": 0,
+      "accounting": "VERIFIED",
+      "exit_seconds": 1.003804,
+      "model_coverage": {
+        "status": "OBSERVED",
+        "committed": 2,
+        "matched": 2,
+        "without_matched_trace": 0,
+        "trace_keys_without_commitment_in_window": 0,
+        "duplicate_trace_keys": 0,
+        "unsettled": 0
+      },
+      "evidence_sha256": "3a1b784221eefd4607b6a90caea511034a433469c19b20ba557caf3afbed78fb"
+    },
+    "loaded": {
+      "seed_mib": 68,
+      "journal_bytes_before_contention": 72814592,
+      "exit_submitted_while_all_waiting": true,
+      "report_snapshot_open_during_exit": true,
+      "native_submissions": 2,
+      "held_positions": 0,
+      "accounting": "VERIFIED",
+      "exit_seconds": 3.372681,
+      "model_coverage": {
+        "status": "OBSERVED",
+        "committed": 2,
+        "matched": 2,
+        "without_matched_trace": 0,
+        "trace_keys_without_commitment_in_window": 0,
+        "duplicate_trace_keys": 0,
+        "unsettled": 0
+      },
+      "evidence_sha256": "b02183370a652a813fcb4b59fc443202b4cea6b7f580d0af559c4b15fbab634c"
+    }
+  },
+  "atomicity": {
+    "baseline_regressions": {
+      "passed": 0,
+      "errors": 0,
+      "failures": 2,
+      "skipped": 0,
+      "elapsed_seconds": 3.823,
+      "junit_sha256": "81a9acc3e5b93fb51f50b9ac6923fc1bdb23ed78ee5d83cd94db56d6003d51e8"
+    },
+    "baseline_wheel_sha256": "17be7af5a4b478b09d234604850a257148f660d31b38417c3e888aeb886e21f3",
+    "failed_slot_claim": "Baseline advanced heartbeat sequence from 0 to 1. The implementation keeps the previous heartbeat, the ACCEPTED receipt and no slot or cycle.",
+    "failed_mixed_insert": "Baseline retained one Scope receipt. The implementation rolls back both receipts and Scope watermark, and publishes neither in-memory input."
+  },
+  "installed": {
+    "application_files": 331,
+    "source_wheel_install_match": true,
+    "application_manifest_sha256": "fadf8df298f62be5a21f08039bb54c797ffe12c5616b1fcb114b70ee6f201bd9",
+    "runtime_dependency_pins": 60,
+    "pip_check": "PASS",
+    "wheel_sha256": "b84f5ee54de4bcd537f93aa0789f6720e2851b4ded0a8f8f5ab330879c954b3b",
+    "network": "isolated",
+    "overlapping_test_groups": {
+      "system": {
+        "passed": 524,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 1,
+        "elapsed_seconds": 449.385,
+        "junit_sha256": "a040634b01a2d0222a0996fb2ba1541a7a14799171f339f27d46472d56eeccaf"
+      },
+      "focused": {
+        "passed": 315,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "elapsed_seconds": 184.987,
+        "junit_sha256": "cb7e8bdf025bfcf7f998db6af9faeb2b037803d53a615564db6bc010c9f0828b"
+      },
+      "protection_repeated_with_loaded_case": {
+        "passed": 7,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "elapsed_seconds": 20.304,
+        "junit_sha256": "67fc63ca4e29614401b4f04e7bfa68d338cb6bc07886605e5496a9094b8c5af9"
+      },
+      "ownership_capacity": {
+        "passed": 64,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "elapsed_seconds": 38.853,
+        "junit_sha256": "43187bbb15ceb89965d6faee3e092184d29ead658acc1b6d85898cfc709b2069"
+      }
+    },
+    "skipped": {
+      "test": "test_cross_uid_snapshot_is_readable_by_unprivileged_dashboard_without_auth_copy",
+      "reason": "Reader 10001 is not mapped in this environment: uid"
+    },
+    "system_scenarios": [
+      {
+        "scenario": "system-normal",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "unsettled_model_calls": 0,
+        "report_sha256": "1445f9c4cf072103d8f515ca61c12ee57a097e30d02eff4e516f4b9e247a1d14"
+      },
+      {
+        "scenario": "system-startup-missing",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "unsettled_model_calls": 0,
+        "report_sha256": "81650fd78e8fcf3b87fc459551f136067be2b16ccff5c8e71b8295f178bdef95"
+      },
+      {
+        "scenario": "system-startup-pending",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "unsettled_model_calls": 0,
+        "report_sha256": "a06f36a3d57ebbe6a2df616f93421196da4d5b73157da38a00947fb7c6eff5b8"
+      },
+      {
+        "scenario": "system-with-publisher-failure",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "unsettled_model_calls": 0,
+        "report_sha256": "88284aa7de3817d1bab4be476895efa6b2effe4390af99eeb2f2bc748a6d4c58"
+      },
+      {
+        "scenario": "system-with-read-failure",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "unsettled_model_calls": 0,
+        "report_sha256": "cc577c80ebd13466ed98f65eaf10668359afc278d3557257eacc5ac939835696"
+      }
+    ]
+  },
+  "open": [
+    "21,480-second wall-clock run",
+    "representative month-growth replay",
+    "host resource enforcement and connected effectiveness",
+    "cross-UID publication on a mapped UID 10001"
+  ]
+}

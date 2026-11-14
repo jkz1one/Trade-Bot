@@ -3,7 +3,14 @@
 Recorded 2026-11-12 UTC (November 11 New York session). This is offline,
 synthetic evidence; today's connected dashboard has not been reviewed here.
 
-## Result
+## November 14 follow-up
+
+`0d79a3a` passed the 73 MB short preflight and a 335-second two-slot run
+on one CPU. Both finished with one entry, one protective exit and verified
+flat accounting. The full 21,480-second and month-growth gates remain open.
+[Loaded run evidence](PAPER_LOADED_HANDOFF_20261114_PROOF.json).
+
+## November 12 result
 
 The duration harness is implemented. The capacity gate is **not passed**.
 A 90-second one-CPU run with a small journal completes one entry and one

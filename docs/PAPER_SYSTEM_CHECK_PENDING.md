@@ -1,5 +1,14 @@
 # Recovered offline system checkpoint
 
+November 14 loaded-journal follow-up: branch implementation `0d79a3a` completed
+the previously failing 73 MB simulation twice with verified flat accounting.
+The separate loaded protection case met its five-second exit bound. The host
+runs the earlier deployed `39d8e48`. Full-duration and connected observation
+remain pending. The final installed system suite passed 524 tests. One cross-UID
+reader case skipped because the test namespace lacks UID 10001. All five
+integrated scenarios recorded two completed round trips and settled model usage.
+[Timing and protection proof](PAPER_LOADED_HANDOFF_20261114_PROOF.json).
+
 November 14 update: the operator deployed `ab9b090` on November 13. The next
 schema compatibility implementation `aae1dff` has passed 526 installed tests.
 [Host and test evidence](PAPER_SCHEMA_REVISION_20261114_PROOF.json).
