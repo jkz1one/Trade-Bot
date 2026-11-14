@@ -322,6 +322,15 @@ its process group on interruption, and records FAILED unless both child and
 lifecycle gates pass. Snapshot timing counters explicitly exclude acceptance.
 Reports, progress, logs and final summaries remain in the disposable output.
 
+Add `--profile-opening-restore` to the offline soak to measure how much
+of the first approved quote's lifetime is spent hashing the owner journal.
+The `opening_restore_profile` in `progress.json` covers both the original
+source-to-reservation and receipt-to-reservation windows. Overlapping digest
+intervals count once toward elapsed time. Thread CPU and caller counts
+include calls wholly inside each window. The worker keeps up to 1,024 spans
+and reports an unmeasured window when it lacks full coverage or approved
+clocks.
+
 The short small-journal projection suggests several GiB of growth over 22 nominal
 sessions, but linear extrapolation is not measured month history. Journal-growth,
 long-lived cache behavior, full-duration protection, real Docker/systemd/cross-UID

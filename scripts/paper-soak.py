@@ -61,8 +61,10 @@ def validate(output, seconds, seed_mib):
     }
 
 
-def run(output, seconds, seed_mib, *, cpus=1, max_feed_recoveries=0):
+def run(output, seconds, seed_mib, *, cpus=1, max_feed_recoveries=0, profile_opening_restore=False):
     identity = validate(output, seconds, seed_mib)
+    if type(profile_opening_restore) is not bool:
+        raise ValueError("BOOLEAN_OPENING_PROFILE_REQUIRED")
     if type(max_feed_recoveries) is not int or not 0 <= max_feed_recoveries <= 3:
         raise ValueError("FEED_RECOVERY_ALLOWANCE_MUST_BE_0_TO_3")
     available = sorted(os.sched_getaffinity(0))
@@ -107,7 +109,7 @@ def run(output, seconds, seed_mib, *, cpus=1, max_feed_recoveries=0):
         + str(seconds)
         + ","
         + str(seed_mib)
-        + f",max_feed_recoveries={max_feed_recoveries})"
+        + f",max_feed_recoveries={max_feed_recoveries},profile_opening_restore={profile_opening_restore})"
     )
     env = {key: os.environ[key] for key in ("PATH", "LANG", "LC_ALL") if key in os.environ}
     env.update(
@@ -172,10 +174,12 @@ if __name__ == "__main__":
                         help="Logical CPUs for the worker and children (nominal profile: 1)")
     parser.add_argument("--max-feed-recoveries", type=int, choices=range(4), default=0,
                         help="Reviewed flat feed recoveries in this disposable run")
+    parser.add_argument("--profile-opening-restore", action="store_true",
+                        help="Measure journal verification CPU and elapsed time during the first approved opening")
     args = parser.parse_args()
     try:
         value = run(args.output, args.seconds, args.seed_mib, cpus=args.cpus,
-                    max_feed_recoveries=args.max_feed_recoveries)
+                    max_feed_recoveries=args.max_feed_recoveries, profile_opening_restore=args.profile_opening_restore)
     except (OSError, ValueError) as exc:
         value = {"status": "UNAVAILABLE", "reason": str(exc), "live_enabled": False}
     print(json.dumps(value, sort_keys=True))

@@ -117,3 +117,39 @@ def test_scan_coverage_needs_both_original_evaluations_in_the_expected_slot():
             "COMPLETE", "SKIPPED", "MISSING", "COMPLETE"]
         assert not result["target_met"]
         assert decision_coverage(db, BASE, 300)["target_met"]
+
+
+def test_opening_restore_profile_clips_overlaps_and_counts_only_whole_call_cpu():
+    from soak_restore_profile import OpeningRestoreProfile
+
+    profile = OpeningRestoreProfile(None, [0])
+    profile.spans = [(1, 3, .6, True, "earlier"), (3, 5, 1.5, True, "tick"),
+                     (4, 5, .3, False, "reader"), (5.5, 8, 1., True, "later")]
+    assert profile.window(2, 6) == {
+        "window_seconds": 4, "wall_seconds_with_digest_running": 3.5,
+        "wholly_contained_calls": 2, "owner_thread_cpu_seconds": 1.5,
+        "background_cpu_seconds": .3, "owner_thread_calls": {"tick": 1},
+    }
+
+
+def test_opening_restore_profile_refuses_unverified_and_truncated_windows():
+    from soak_worker import BASE
+    from soak_restore_profile import OpeningRestoreProfile
+
+    profile = OpeningRestoreProfile(BASE, [10.])
+    assert profile.report(None, {"status": "PARTIAL"})["status"] == "UNMEASURED"
+    with sqlite3.connect(":memory:") as db:
+        db.execute("CREATE TABLE execution_events(kind,client_id,occurred_at,sequence)")
+        db.execute("CREATE TABLE execution_portfolio_orders(client_id,play_id,approval_json)")
+        quote = {"source_at": BASE.isoformat(), "received_at": (BASE + timedelta(seconds=1)).isoformat()}
+        db.execute("INSERT INTO execution_portfolio_orders VALUES('op','op',?)",
+                   (json.dumps({"inputs": {"quote": quote}}),))
+        db.execute("INSERT INTO execution_events VALUES('PORTFOLIO_RESERVED','op',?,1)",
+                   ((BASE + timedelta(seconds=4)).isoformat(),))
+        profile.first_omitted = 13.
+        assert profile.report(db, {"status": "OBSERVED"})["reason"] == "OPENING_OUTSIDE_PROFILE"
+        profile.first_omitted = 15.
+        result = profile.report(db, {"status": "OBSERVED"})
+        assert result["status"] == "OBSERVED"
+        assert result["source_to_reservation"]["window_seconds"] == 4
+        assert result["receipt_to_reservation"]["window_seconds"] == 3

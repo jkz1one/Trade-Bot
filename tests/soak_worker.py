@@ -149,7 +149,7 @@ def seed_capacity(journal, mib):
         return db.execute("SELECT COUNT(*) FROM execution_runtime_timings").fetchone()[0] - before
 
 
-def run(output, seconds, seed_mib, *, max_feed_recoveries=0):
+def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_restore=False):
     from types import SimpleNamespace
 
     from app.options import engine as engine_module
@@ -237,6 +237,11 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0):
     original_open, original_loop = connected.existing_runtime, ContinuousFeed.run
     native_read, spawn = engine_module.run_option_process, asyncio.create_subprocess_exec
     started = [None]
+    profile = None
+    if profile_opening_restore:
+        from soak_restore_profile import OpeningRestoreProfile
+
+        profile = OpeningRestoreProfile(BASE, started)
 
     def live_clock():
         return (
@@ -421,6 +426,8 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0):
         with closing(sqlite3.connect((owner / "options.db").as_uri() + "?mode=ro", uri=True)) as db:
             db.execute("BEGIN")
             metrics["decision_coverage"] = decision_coverage(db, BASE, seconds)
+            if profile is not None:
+                metrics["opening_restore_profile"] = profile.report(db, final["entry_freshness"])
         assert not any(child.returncode is None for child in children), "Unreaped native child"
         assert not metrics["native_snapshot_failures"], "Native snapshot deadline/read failure"
         assert not final["runtime_timing"]["by_status"].get("NATIVE_ACCEPT:FAILED"), (
@@ -465,6 +472,8 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0):
 
     try:
         with pytest.MonkeyPatch.context() as patch:
+            if profile is not None:
+                patch.setattr("app.execution.restore._digest", profile.digest)
             patch.setattr(connected, "existing_runtime", opened)
             patch.setattr(ContinuousFeed, "run", collect)
             patch.setattr(engine_module, "run_option_process", measured_native)
