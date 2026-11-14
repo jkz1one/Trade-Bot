@@ -847,3 +847,15 @@ def test_approved_entry_freshness_uses_original_reservations_and_reports_missing
         assert measure()['measured'] == 0 and measure()['missing_or_invalid'] == 3
     finally:
         db.close()
+
+
+def test_text_report_retains_the_last_publication_failure_location():
+    result = live_result()
+    result['publication_failures'] = [
+        {'error_class': 'TimeoutError', 'frames': [
+            {'file': '/tmp/PRIVATE', 'line': 1},
+            {'file': 'app/mixed/sqlite_copy.py', 'line': 24, 'source': 'PRIVATE'}]},
+    ]
+    text = module.short_report(result)
+    assert 'Last publication failure: TimeoutError at app/mixed/sqlite_copy.py:24' in text
+    assert 'PRIVATE' not in text

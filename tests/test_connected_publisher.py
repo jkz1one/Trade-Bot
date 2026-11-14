@@ -296,3 +296,26 @@ def test_collector_failure_publishes_verified_terminal_records(tmp_path, schemas
     assert receipt["stored_runtime"]["status"] in {"FAILED", "STOPPED"}
     assert receipt["stored_runtime"]["halted"]
     assert guard(destination, binding, clock_source=lambda: AT + timedelta(hours=6))["publication_state"] == "STOPPED_RECORDS"
+
+
+def test_threaded_publication_timeout_keeps_original_application_location(tmp_path):
+    import sqlite3
+    import time
+    from contextlib import closing
+    from app.execution.failure import failure_details
+    from app.mixed.dashboard_snapshot import copy_source
+
+    source = tmp_path / "private-native.db"
+    with closing(sqlite3.connect(source)) as db:
+        db.execute("CREATE TABLE receipt(value)")
+
+    class Publisher:
+        def publish(self):
+            copy_source(source, tmp_path / "private-output.db", time.monotonic() - 1)
+
+    with pytest.raises(TimeoutError) as caught:
+        asyncio.run(connected.publish_async(Publisher()))
+    evidence = failure_details(caught.value)
+    assert evidence["error_class"] == "TimeoutError"
+    assert any(frame["file"] == "app/mixed/sqlite_copy.py" for frame in evidence["frames"])
+    assert str(tmp_path) not in str(evidence)

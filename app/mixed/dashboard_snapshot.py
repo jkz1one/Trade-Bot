@@ -22,6 +22,7 @@ from urllib.parse import quote
 from app.domain.models import utc_now
 from app.mixed.connected_runtime import inspect_owner
 from app.mixed.observer import MixedObserver
+from app.mixed.sqlite_copy import private_backup
 from app.options.engine import clock, fingerprint
 from app.options.observer import JOURNAL_FILE_ERRORS, MAX_DATABASE_BYTES, journal_identity
 from app.options.operator_inbox import read, save, sync_directory
@@ -34,35 +35,13 @@ BACKUP_SECONDS = 5
 MAX_SOURCE_COPY_BYTES = 512 * 1024 * 1024
 
 
-def copy_scalar(db, statement, deadline):
-    """Retry transient source locks only within the existing copy deadline."""
-    while True:
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            raise TimeoutError("Snapshot source copy exceeded its bound")
-        try:
-            return db.execute(statement).fetchone()[0]
-        except sqlite3.OperationalError as exc:
-            if getattr(exc, "sqlite_errorcode", None) not in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED):
-                raise
-            time.sleep(min(.01, remaining))
-
-
 def copy_source(source, destination, deadline):
-    """Online backup releases the native read lock between small page batches."""
     fd = os.open(destination, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
     os.close(fd)
     with closing(connect_readonly(source)) as original, closing(sqlite3.connect(destination)) as copy:
-        page_size = copy_scalar(original, 'PRAGMA page_size', deadline)
-
-        def progress(_status, _remaining, total):
-            if total * page_size > MAX_SOURCE_COPY_BYTES:
-                raise ValueError('Diagnostic source copy exceeds its storage bound')
-            if time.monotonic() > deadline:
-                raise TimeoutError('Snapshot source copy exceeded its bound')
-
-        progress(None, None, copy_scalar(original, 'PRAGMA page_count', deadline))
-        original.backup(copy, pages=64, progress=progress, sleep=.01)
+        private_backup(original, copy, deadline=deadline, max_bytes=MAX_SOURCE_COPY_BYTES,
+                       capacity_error="Diagnostic source copy exceeds its storage bound",
+                       deadline_error="Snapshot source copy exceeded its bound")
 
 
 def binding_for(owner, destination, reader_uid, reader_gid, *, clock_source):

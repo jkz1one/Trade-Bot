@@ -58,7 +58,8 @@ def run(output):
                         ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
     health = output / 'stage/app/mixed'
     health.mkdir(parents=True)
-    shutil.copy(ROOT / 'app/mixed/paper_health.py', health / 'paper_health.py')
+    for name in ("paper_health.py", "sqlite_copy.py"):
+        shutil.copy(ROOT / "app/mixed" / name, health / name)
     args = ['-q', '-p', 'anyio.pytest_plugin', '--tb=short', '-c', '/dev/null',
             '--basetemp='+str(output/'state'), '--junitxml='+str(output/'tests.xml'),
             *[str(output/'stage/tests'/('test_'+name+'.py')) for name in SUITES]]

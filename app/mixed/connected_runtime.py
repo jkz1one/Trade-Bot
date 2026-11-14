@@ -268,9 +268,20 @@ def dashboard_check(
 async def publish_async(publisher):
     # SQLite backup/validation must not block native supervision. Cancellation
     # drains the bounded copy before any owning lease or descriptor can close.
-    task = asyncio.create_task(asyncio.to_thread(publisher.publish), name="connected-snapshot-copy")
+    def copy():
+        try:
+            return publisher.publish(), None
+        except TimeoutError as exc:
+            # asyncio translates a timeout crossing a thread future and drops the
+            # original stack. Return it intact for the bounded incident report.
+            return None, exc
+
+    task = asyncio.create_task(asyncio.to_thread(copy), name="connected-snapshot-copy")
     try:
-        return await asyncio.shield(task)
+        receipt, timeout = await asyncio.shield(task)
+        if timeout is not None:
+            raise timeout
+        return receipt
     except asyncio.CancelledError:
         while not task.done():
             try:

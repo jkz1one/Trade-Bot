@@ -93,7 +93,8 @@ def run(output, seconds, seed_mib, *, cpus=1):
         )
     health = output / "stage/app/mixed"
     health.mkdir(parents=True)
-    shutil.copy(ROOT / "app/mixed/paper_health.py", health / "paper_health.py")
+    for name in ("paper_health.py", "sqlite_copy.py"):
+        shutil.copy(ROOT / "app/mixed" / name, health / name)
     bootstrap = (
         f"import os,sys;os.sched_setaffinity(0,{affinity!r});"
         "sys.path[:0]=" + repr([str(output / "stage"), str(output / "stage/tests")]) + ";"

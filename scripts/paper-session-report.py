@@ -2,6 +2,7 @@
 """Read running or stopped PAPER status without a build, run or provider call."""
 
 import argparse
+import importlib.util
 import json
 import math
 import re
@@ -13,6 +14,13 @@ from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation, localcontext
 from zoneinfo import ZoneInfo
 from pathlib import Path
+
+# Host operation uses the same standard-library copier without installing the trader.
+_copy_spec = importlib.util.spec_from_file_location(
+    "paper_sqlite_copy", Path(__file__).resolve().parents[1] / "app/mixed/sqlite_copy.py"
+)
+_copy = importlib.util.module_from_spec(_copy_spec)
+_copy_spec.loader.exec_module(_copy)
 
 CODE = re.compile(r"[A-Z][A-Z0-9_]{1,95}\Z")
 STATE = Path("/var/lib/trade-bot-connected")
@@ -218,24 +226,8 @@ class ReportConnection(sqlite3.Connection):
                 scratch.cleanup()
 
 
-def copy_scalar(db, statement, deadline):
-    """Retry transient source locks only within the existing copy deadline."""
-    while True:
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            raise TimeoutError('REPORT_SOURCE_COPY_DEADLINE')
-        try:
-            return db.execute(statement).fetchone()[0]
-        except sqlite3.OperationalError as exc:
-            if getattr(exc, "sqlite_errorcode", None) not in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED):
-                raise
-            time.sleep(min(.01, remaining))
-
-
 def connection(path):
     # This host script deliberately has no installed application dependency.
-    # Keep a consistent private snapshot while releasing native SQLite read locks
-    # between small online-backup batches and before any report processing.
     from contextlib import closing
     scratch = tempfile.TemporaryDirectory(prefix='paper-report-')
     db = None
@@ -247,14 +239,9 @@ def connection(path):
         deadline = time.monotonic() + REPORT_COPY_SECONDS
         with closing(sqlite3.connect(path.resolve().as_uri() + '?mode=ro', uri=True, timeout=0)) as source:
             source.execute('PRAGMA query_only=ON')
-            page_size = copy_scalar(source, 'PRAGMA page_size', deadline)
-            def progress(_status, _remaining, total):
-                if total * page_size > MAX_REPORT_SOURCE_BYTES:
-                    raise ValueError('REPORT_SOURCE_COPY_CAPACITY')
-                if time.monotonic() > deadline:
-                    raise TimeoutError('REPORT_SOURCE_COPY_DEADLINE')
-            progress(None, None, copy_scalar(source, 'PRAGMA page_count', deadline))
-            source.backup(db, pages=64, progress=progress, sleep=.01)
+            _copy.private_backup(source, db, deadline=deadline, max_bytes=MAX_REPORT_SOURCE_BYTES,
+                                 capacity_error='REPORT_SOURCE_COPY_CAPACITY',
+                                 deadline_error='REPORT_SOURCE_COPY_DEADLINE')
         db.row_factory = sqlite3.Row
         db.execute('PRAGMA query_only=ON')
         db.execute('BEGIN')
@@ -492,6 +479,13 @@ def short_report(result):
                          f"across {budget['samples']} calls")
     if result.get('publication_failures'):
         lines.append('Account publication failed: new entries halted; protection still requires valid native data.')
+        details = result['publication_failures'][0]
+        failure = failure_evidence(json.dumps(details))
+        frames = failure.get('frames', [])
+        if frames:
+            last = frames[-1]
+            lines.append(f"Last publication failure: {failure.get('error_class', 'unknown')} "
+                         f"at {last['file']}:{last['line']}")
     if result.get('collector_failures'):
         last = result['collector_failures'][-1]
         phase = reasons((last.get('read_progress') or {}).get('stage')) or 'unavailable'
