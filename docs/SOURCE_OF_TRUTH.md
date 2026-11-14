@@ -1,5 +1,30 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.208. November 14 Robinhood historical date and option chain metadata review.
+
+The operator confirmed the November 13 installation of `ab9b090`, snapshot publication,
+dashboard reader update and scheduler installation. The source account retained its
+checkpoint. November 13 had already used its three preparation attempts. On November
+14, a diagnostic capture for November 16 on that release failed at VALIDATE_PLAN
+before the first market read. The discovered six-tool digest began `05c635c9`.
+
+Implementation `aae1dffe3196a5d0d1f77c07e5d94a76f081f939` accepts the exact
+reviewed revision. Applying the four historical date-bound description edits and
+two option-chain output description edits to the November 12 fixture reproduces
+the complete host digest. The historical tools still accept the existing UTC
+timestamps. The chain metadata describes index extended hours and settlement. The
+capture still selects eligible contracts using its existing chain checks. All four
+reviewed revisions match across enrollment and discovery, with wire validation on
+each read. Twelve cases reproduced the old rejection. All 526 installed tests
+passed, including simulated capture, restart, damaged metadata and invalid responses.
+[Host and test evidence](PAPER_SCHEMA_REVISION_20261114_PROOF.json).
+
+Host installation of this revision and the next connected capture need operator
+verification. The separate loaded-journal timing and position-protection acceptance
+items remain open in the [delivery plan](DELIVERY_PLAN.md).
+
+## Prior checkpoint
+
 Version 1.207. Reviewed historical-interval metadata compatibility, 2026-11-13 NY.
 
 Published implementation: `194563c0616ad5146f172f9d9fa061c8c5d38801`.

@@ -13,7 +13,7 @@ and protection, exits, restart reconciliation, clear operating status and retain
 results. Then complete a separately governed Robinhood live-execution path. Broader
 strategy evaluation and controlled improvement follow operational acceptance.
 
-The verified implementation baseline is
+The November 11 implementation baseline is
 `d2046f6363084ca26fc850130eb94cba51f07b6d`. It includes independent dashboard status
 and a reproduced collector/runtime contention repair. The operator confirmed its
 host installation, in-place dashboard reader update and reviewed schedule resume
@@ -96,7 +96,12 @@ next action. Do not replace missing evidence with a date estimate.
   exact operator-observed revision changes only two interval descriptions from
   the already reviewed metadata. Ten baseline failures become passing cases;
   502 installed regressions pass. [Review and host boundary](PAPER_SCHEMA_REVISION_20261112.md).
-  This is not a loaded-journal latency repair or a confirmed host rollout.
+  The November 13 host rollout of `ab9b090` is confirmed. The following weekend,
+  a diagnostic capture for November 16 observed a new schema and failed at
+  VALIDATE_PLAN before any market reads. `aae1dff` admits the exact six reviewed
+  description edits. Twelve baseline cases reproduced the rejection and 526 installed
+  tests passed. Connected capture on the new implementation is pending.
+  [November 14 evidence](PAPER_SCHEMA_REVISION_20261114_PROOF.json).
 - [ ] **A4 — Independent protection:** prove that model waits, history work and
   display/report failures cannot improperly stop management of an owned position.
   `aad4e08` isolated in-run publisher failure. `d35d318` adds verified-held startup

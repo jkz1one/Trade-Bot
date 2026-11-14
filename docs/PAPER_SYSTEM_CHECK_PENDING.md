@@ -1,5 +1,9 @@
 # Recovered offline system checkpoint
 
+November 14 update: the operator deployed `ab9b090` on November 13. The next
+schema compatibility implementation `aae1dff` has passed 526 installed tests.
+[Host and test evidence](PAPER_SCHEMA_REVISION_20261114_PROOF.json).
+
 November 13 continuation: schema-compatibility repair `194563c` is published and
 passes 502 installed tests. It addresses the operator-observed November 12
 pre-launch rejection, with no host deployment or account changes. See
