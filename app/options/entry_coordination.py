@@ -155,11 +155,13 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
     evidence["model_input_hash"] = fingerprint(judgment.request_content(request))
     # Full request precedes cost admission. A crash at either boundary leaves a
     # retained STARTED slot; reopening interrupts it and never retries the call.
-    c._pending_evidence(key, {**evidence, "status": "MODEL_PENDING"})
+    with phase("ENTRY_MODEL_REQUEST"):
+        c._pending_evidence(key, {**evidence, "status": "MODEL_PENDING"})
     before_model = c.now()
     if not at <= before_model < packet.valid_until:
         return c._finish(key, {**evidence, "status": "HOLD", "reason": "ENTRY_PLAN_EXPIRED_BEFORE_MODEL"})
-    c.engine.begin_model_attempt(key, evidence["model_input_hash"], now=before_model)
+    with phase("ENTRY_MODEL_ADMISSION"):
+        c.engine.begin_model_attempt(key, evidence["model_input_hash"], now=before_model)
     try:
         with phase("ENTRY_MODEL", model_source_key=key):
             result = await c._model_run(request, secret, broad=True)
@@ -195,7 +197,8 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
         )
     # Settle trustworthy usage even for rejected/late geometry. Never discard a
     # known charge because its model proposal cannot be used.
-    _settle_reply(c, key, evidence, result, completed)
+    with phase("ENTRY_MODEL_SETTLEMENT"):
+        _settle_reply(c, key, evidence, result, completed)
     coherent = (
         result.counted_input_tokens == result.usage.input_tokens
         and result.usage.input_tokens <= config.limits.max_input_tokens
@@ -239,8 +242,9 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
         # A model response may arrive during a later delivery's protection tick.
         # Stay inside the original plan deadline and use one complete delivery.
         try:
-            async with asyncio.timeout(max(0, (packet.valid_until - c.now()).total_seconds())):
-                await mixed.wait_for_protection()
+            with phase("ENTRY_PROTECTION_WAIT"):
+                async with asyncio.timeout(max(0, (packet.valid_until - c.now()).total_seconds())):
+                    await mixed.wait_for_protection()
             with c.engine.journal.read() as db:
                 sequence, quote, underlying = mixed.option_market(db, selected.instrument, c.now())
             evidence["option_market_sequence"] = sequence
@@ -254,13 +258,14 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
                                    "reason": "OPTION_EXECUTION_MARKET_UNAVAILABLE",
                                    "blocker": str(exc) if isinstance(exc, ExecutionBlocked)
                                    else "OPTION_PROTECTION_WAIT_EXPIRED"})
-    with c.engine.journal.read() as db:
-        c._bound(db)
-        review = review_for_execution(
-            c.engine, db, key, request, result, quote, underlying, c.now()
-        )
-    evidence["entry_review"] = review.model_dump(mode="json")
-    c._pending_evidence(key, evidence)
+    with phase("ENTRY_REVIEW"):
+        with c.engine.journal.read() as db:
+            c._bound(db)
+            review = review_for_execution(
+                c.engine, db, key, request, result, quote, underlying, c.now()
+            )
+        evidence["entry_review"] = review.model_dump(mode="json")
+        c._pending_evidence(key, evidence)
     if review.outcome != "ELIGIBLE":
         return c._finish(key, {**evidence, "status": "HOLD", "reason": ";".join(review.reasons)})
     prepared = c.engine.prepare(

@@ -20,6 +20,14 @@ MAX_DECISION_BYTES = 16 * 1024 * 1024
 MAX_SUMMARY_FIELD = 65536
 MAX_REPORT_SOURCE_BYTES = 512 * 1024 * 1024
 REPORT_COPY_SECONDS = 5
+RUNTIME_PHASES = (
+    'NATIVE_SNAPSHOT', 'NATIVE_ACCEPT', 'NATIVE_SNAPSHOT_SPAWN', 'NATIVE_ACCEPT_SPAWN',
+    'PROTECTION', 'DELIVERY_COMMIT', 'SCAN', 'STOCK_SCAN', 'SCOPE_SCAN', 'SCOPE_QUALITY',
+    'ENTRY_MODEL_REQUEST', 'ENTRY_MODEL_ADMISSION', 'ENTRY_MODEL', 'ENTRY_MODEL_SETTLEMENT',
+    'ENTRY_PROTECTION_WAIT', 'ENTRY_REVIEW', 'STOCK_REFRESH', 'SCOPE_REFRESH', 'ADMISSION',
+    'DISPATCH', 'STOCK_ADMISSION', 'STOCK_DISPATCH', 'OPTION_MANAGEMENT_MODEL',
+    'STOCK_MANAGEMENT_MODEL', 'PORTFOLIO_MANAGEMENT_MODEL',
+)
 
 
 def codes(value):
@@ -464,11 +472,7 @@ def short_report(result):
     if runtime_timing.get('status') == 'OBSERVED':
         lines.append(f"Runtime timing: {runtime_timing['measured']}/{runtime_timing['records']} measured; "
                      f"{runtime_timing['missing_or_invalid']} incomplete/invalid; {runtime_timing['omitted']} omitted")
-        for name in ('NATIVE_SNAPSHOT', 'NATIVE_ACCEPT', 'NATIVE_SNAPSHOT_SPAWN', 'NATIVE_ACCEPT_SPAWN',
-                     'PROTECTION', 'DELIVERY_COMMIT', 'SCAN', 'STOCK_SCAN',
-                     'SCOPE_SCAN', 'SCOPE_QUALITY', 'ENTRY_MODEL', 'STOCK_REFRESH', 'SCOPE_REFRESH',
-                     'ADMISSION', 'DISPATCH', 'STOCK_ADMISSION', 'STOCK_DISPATCH',
-                     'OPTION_MANAGEMENT_MODEL', 'STOCK_MANAGEMENT_MODEL', 'PORTFOLIO_MANAGEMENT_MODEL'):
+        for name in RUNTIME_PHASES:
             values = runtime_timing.get('phases', {}).get(name)
             if values:
                 lines.append(f"{name}: n={values['samples']}; p95 {values['p95_seconds']:.3f}s; "
@@ -1134,12 +1138,7 @@ def runtime_timing_evidence(db, start, end):
     if not db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_runtime_timings'").fetchone():
         result['coverage'] = runtime_timing_coverage(db, start, end)
         return result
-    phases = {'SCAN', 'STOCK_SCAN', 'SCOPE_SCAN', 'SCOPE_QUALITY', 'ENTRY_MODEL',
-              'STOCK_REFRESH', 'SCOPE_REFRESH', 'ADMISSION', 'DISPATCH',
-              'STOCK_ADMISSION', 'STOCK_DISPATCH', 'OPTION_MANAGEMENT_MODEL',
-              'STOCK_MANAGEMENT_MODEL', 'PORTFOLIO_MANAGEMENT_MODEL',
-              'PROTECTION', 'NATIVE_SNAPSHOT', 'NATIVE_ACCEPT', 'DELIVERY_COMMIT',
-              'NATIVE_ACCEPT_SPAWN', 'NATIVE_SNAPSHOT_SPAWN'}
+    phases = set(RUNTIME_PHASES)
     statuses = {'COMPLETE', 'FAILED', 'INTERRUPTED'}
     has_packets = bool(db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_mixed_runtime_inputs'").fetchone())
     total = db.execute('SELECT COUNT(*) FROM execution_runtime_timings WHERE started_at>=? AND started_at<=?',

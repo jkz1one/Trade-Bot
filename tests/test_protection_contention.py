@@ -145,22 +145,23 @@ def test_cancelled_history_drains_before_lease_release(tmp_path, schemas, monkey
 
 
 @pytest.mark.parametrize('seed_mib', [0, 68], ids=['small', 'loaded'])
-def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, monkeypatch, seed_mib):
+@pytest.mark.parametrize('asset', ['STOCK', 'OPTION'])
+def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, monkeypatch, seed_mib, asset):
     from types import SimpleNamespace
     from decimal import Decimal
     from test_mixed_entry import owner
-    from test_mixed_runtime import runtime
     from test_mixed_selection import quote, stock_frame
     from test_mixed_native_owner import changed
-    from test_option_runtime import step
+    from test_option_runtime import enable, policy, step
     from test_option_position_coordination import management_frame
     from test_degen_options import AT
     from app.execution.economics import UsageEvidence
+    from app.mixed import portfolio_execution
     from app.mixed.connected_runtime import publication_fault, publish_async
-    from app.mixed.portfolio_store import intent
     from app.mixed.sources import StockCycleInput
     from app.options import position_judgment as j
     from app.options.coordinator import DegenFrame
+    from app.options.runtime import OptionRuntime
     from app.options.runtime_models import PortfolioRuntimePacket, RuntimeSettings
     from test_paper_session_report import module as reports
 
@@ -185,9 +186,11 @@ def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, m
         raise OSError('synthetic display failure')
     monkeypatch.setattr(display, 'copy_display_tables', failed_projection)
     try:
-        with owner(owner_dir, monkeypatch, management=True, portfolio=True,
+        with owner(owner_dir, monkeypatch, choice=asset, management=True, portfolio=True,
                    journal_name='options.db') as (c, venue, times, _):
-            r = runtime(c, owner_dir)
+            r = OptionRuntime(c, policy(owner_dir, mixed_inputs='mixed-runtime-inputs-v1',
+                              simulated_fills='mixed-quote-fills-v1'), create=True)
+            enable(r)
             settings = RuntimeSettings(limits=c.engine.limits, execution=c.engine.policy,
                 setup=c.policy, selection=c.selection, stock_policy=c.stock_policy,
                 entry_policy=c.entry_policy, position_policy=c.position_policy,
@@ -196,6 +199,16 @@ def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, m
             path.write_text(settings.model_dump_json())
             path.chmod(0o600)
             sequence = [0]
+            opening = stock_frame()
+
+            def market(*, breach=False):
+                at = times[0]
+                prices = {'bid': Decimal(599), 'ask': Decimal('599.01')} if breach else {}
+                return DegenFrame(
+                    stocks=(StockCycleInput(quote=quote(at, **prices)),),
+                    quotes=(changed(opening.quotes[0], source_at=at, received_at=at),),
+                    underlyings=(changed(opening.underlyings[0], source_at=at, received_at=at, **prices),))
+
             def send(frame, kind='MARKET'):
                 sequence[0] += 1
                 p = PortfolioRuntimePacket(sequence=sequence[0], kind=kind, recorded_at=times[0],
@@ -205,13 +218,15 @@ def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, m
                 path.write_text(p.model_dump_json())
                 path.chmod(0o600)
             async def exercise():
-                send(stock_frame(), 'CYCLE')
+                send(opening, 'CYCLE')
                 await step(r)
-                with c.engine.journal.read() as db:
-                    entry = intent(db.execute('SELECT * FROM execution_portfolio_orders').fetchone())
                 times[0] += timedelta(seconds=1)
-                venue.fill_stock(entry, entry.quantity, quote(times[0]), times[0], fill_id='stress-entry')
-                assert c.engine.reconcile(venue.snapshot(times[0]), now=times[0])['reconciled']
+                send(market())
+                await step(r)
+                snapshot = venue.snapshot(times[0])
+                entry, = snapshot.stock_orders if asset == 'STOCK' else snapshot.orders
+                assert entry.status == 'FILLED' and entry.side == 'BUY'
+                assert set(snapshot.positions) == {entry.client_id}
                 if seed_mib:
                     from soak_worker import seed_capacity
                     fence = c.engine.journal.enable_restore_fence(now=times[0])
@@ -221,6 +236,7 @@ def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, m
                 times[0] = AT + timedelta(minutes=5)
                 started, finish = asyncio.Event(), asyncio.Event()
                 async def delayed(request, _secret):
+                    assert request.packet.play_id == entry.client_id
                     started.set()
                     await finish.wait()
                     return j.result_for(request, plan=j.maintain(request.packet), count=100,
@@ -230,6 +246,15 @@ def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, m
                 send(changed(management_frame(), stocks=(StockCycleInput(quote=quote(times[0])),)), 'CYCLE')
                 await r.tick()
                 await asyncio.wait_for(started.wait(), 10)
+                native_process = portfolio_execution.run_option_process
+                acknowledgements = []
+                async def observe_native(*args, **kwargs):
+                    response = await native_process(*args, **kwargs)
+                    order = kwargs.get('stock_intent') or kwargs.get('intent')
+                    if order is not None and order.side == 'SELL' and response.order_id:
+                        acknowledgements.append(time.monotonic())
+                    return response
+                monkeypatch.setattr(portfolio_execution, 'run_option_process', observe_native)
                 p = display.DashboardPublisher(owner_dir, tmp_path / 'dashboard', os.getuid(), os.getgid(),
                                                create=True, clock_source=lambda: times[0])
                 history_task = asyncio.create_task(feed.bind_swing_sources_async(history_settings,
@@ -242,10 +267,12 @@ def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, m
                     assert await asyncio.to_thread(history_entered.wait, 2)
                     assert await asyncio.to_thread(display_entered.wait, 2)
                     times[0] += timedelta(seconds=1)
-                    send(DegenFrame(stocks=(StockCycleInput(quote=quote(times[0], bid=Decimal(599), ask=Decimal('599.01'))),)))
+                    breach_at = time.monotonic()
+                    send(market(breach=True))
                     await r.tick()
                     elapsed = time.monotonic() - started_at
-                    assert venue.submit_count == 2 and elapsed < 5
+                    assert venue.submit_count == 2 and len(acknowledgements) == 1
+                    ack_seconds = acknowledgements[0] - breach_at
                     assert not r.task.done() and not history_task.done() and not display_task.done()
                     display_release.set()
                     with pytest.raises(OSError):
@@ -254,13 +281,14 @@ def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, m
                     publication_fault(r, recovery, OSError('synthetic failed projection'), now=times[0], stage='RUNNING')
                     assert recovery.fenced and not r.task.done()
                     # Finish the already-submitted protective exit before advice/history return.
-                    with c.engine.journal.read() as db:
-                        exit_order = intent(db.execute("SELECT * FROM execution_portfolio_orders WHERE json_extract(intent_json,'$.side')='SELL'").fetchone())
                     times[0] += timedelta(seconds=1)
-                    venue.fill_stock(exit_order, exit_order.quantity, quote(times[0], bid=Decimal(599), ask=Decimal('599.01')),
-                                     times[0], fill_id='stress-exit')
-                    send(DegenFrame(stocks=(StockCycleInput(quote=quote(times[0])),)))
+                    send(market(breach=True))
                     await r.tick()
+                    after = venue.snapshot(times[0])
+                    orders = after.stock_orders if asset == 'STOCK' else after.orders
+                    assert not after.positions and len(orders) == 2
+                    assert {order.side for order in orders if order.status == 'FILLED'} == {'BUY', 'SELL'}
+                    assert not r.task.done() and not history_task.done()
                 finally:
                     history_release.set()
                     display_release.set()
@@ -283,14 +311,18 @@ def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, m
                 assert not list((tmp_path / 'dashboard').glob('.source-*'))
                 output = os.environ.get('TRADE_BOT_OFFLINE_PROOF')
                 if output:
-                    name = 'combined-contention-loaded.json' if seed_mib else 'combined-contention.json'
+                    prefix = 'combined-contention' if asset == 'STOCK' else 'combined-option-contention'
+                    name = prefix + ('-loaded.json' if seed_mib else '.json')
                     (Path(output) / name).write_text(json.dumps({
-                        'synthetic': True, 'provider_calls': False, 'model_service_calls': False,
+                        'synthetic': True, 'asset': asset, 'provider_calls': False, 'model_service_calls': False,
                         'seed_mib': seed_mib, 'journal_bytes_before_contention': initial_bytes,
                         'exit_submitted_while_all_waiting': True, 'exit_seconds': elapsed,
+                        'breach_to_native_ack_seconds': ack_seconds,
+                        'exit_filled_from_later_packet_before_advice_or_history_returned': True,
                         'report_snapshot_open_during_exit': True,
                         'native_submissions': venue.submit_count, 'accounting': view['accounting'],
                         'held_positions': len(view['positions']), 'runtime_timing': result}, indent=2))
+                assert 0 <= ack_seconds <= elapsed and elapsed < 5, (ack_seconds, elapsed)
             asyncio.run(exercise())
     finally:
         history_release.set()

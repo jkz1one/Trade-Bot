@@ -15,6 +15,47 @@ from app.options import runtime_timing as timing
 from app.options.process import run_option_process
 
 
+@pytest.mark.parametrize("outcome", ["OPEN", "HOLD", "FAILED_SETTLEMENT"])
+def test_paid_entry_local_phases_and_child_have_independent_counts(tmp_path, monkeypatch, outcome):
+    from test_degen_options import AT
+    from test_mixed_entry import owner
+    from test_mixed_native_owner import changed
+    from test_mixed_runtime import runtime
+    from test_mixed_selection import stock_frame
+    from test_option_runtime import step
+    from pathlib import Path
+    from app.options.runtime_models import PortfolioRuntimePacket
+
+    assert set(reports.RUNTIME_PHASES) == timing.PHASES
+    with owner(tmp_path, monkeypatch, choice="OPTION", portfolio=True,
+               mode="ENTER" if outcome == "OPEN" else "HOLD") as (c, venue, times, _):
+        r = runtime(c, tmp_path)
+        if outcome == "FAILED_SETTLEMENT":
+            with c.engine.journal.write() as db:
+                db.execute("CREATE TRIGGER reject_usage BEFORE INSERT ON execution_events "
+                           "WHEN NEW.kind='OPTION_MODEL_USAGE_RECORDED' BEGIN "
+                           "SELECT RAISE(ABORT,'synthetic settlement failure'); END")
+        packet = PortfolioRuntimePacket(sequence=1, kind="CYCLE", recorded_at=AT,
+            population_id=c.engine.limits.population_id,
+            frame=changed(stock_frame(), portfolio_version="portfolio-frame-v2"))
+        path = Path(r.policy.feed_file)
+        path.write_text(packet.model_dump_json())
+        path.chmod(0o600)
+        asyncio.run(step(r))
+        with c.engine.journal.read() as db:
+            trace = reports.runtime_timing_evidence(db, AT.isoformat(), times[0].isoformat())
+        statuses = trace["by_status"]
+        for name in ("ENTRY_MODEL_REQUEST", "ENTRY_MODEL_ADMISSION", "ENTRY_MODEL"):
+            assert statuses[name + ":COMPLETE"] == 1
+        state = "FAILED" if outcome == "FAILED_SETTLEMENT" else "COMPLETE"
+        assert statuses["ENTRY_MODEL_SETTLEMENT:" + state] == 1
+        for name in ("ENTRY_PROTECTION_WAIT", "ENTRY_REVIEW"):
+            assert statuses.get(name + ":COMPLETE", 0) == int(outcome == "OPEN")
+        assert trace["coverage"]["models"]["matched"] == 1
+        assert trace["coverage"]["models"]["unsettled"] == int(outcome == "FAILED_SETTLEMENT")
+        assert venue.submit_count == int(outcome == "OPEN")
+
+
 def test_native_success_timeout_and_cancellation_keep_separate_spans_and_reap(tmp_path, monkeypatch):
     children = []
     spawn = asyncio.create_subprocess_exec
