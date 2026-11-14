@@ -9,6 +9,7 @@ from decimal import Decimal, localcontext
 import pytest
 from pydantic import ValidationError
 from test_option_evaluation import bundle_for
+from test_option_managed_replay import managed_complete as managed_complete
 
 from app.options.attribution import DecisionAttribution
 from app.options.engine import fingerprint
@@ -276,91 +277,103 @@ def test_cli_serializes_analysis_without_mutating_bundle(enrolled, tmp_path):
 
 
 @pytest.mark.parametrize("unknown_management", [False, True])
-def test_primary_d_retains_entry_and_management_charges(enrolled, unknown_management):
-    c = enrolled.manifest.arms[-1]
-    definition = c.model_copy(
-        update={
-            "arm": "D",
-            "limits": c.limits.model_copy(
-                update={"account_id": "analysis-D", "population_id": "analysis-D"}
-            ),
-        }
-    )
-    extra = []
-    for arm in enrolled.evidence:
-        if arm.arm != "C":
-            continue
-        entry = arm.calls[0]
-        management = entry.model_copy(
+def test_primary_d_retains_entry_and_management_charges(
+    enrolled, managed_complete, unknown_management
+):
+    # Keep the real option entry, later management, fills, receipts and ledgers
+    # from one complete offline replay. Later sessions carry those same balances.
+    replay = EvaluationBundle.model_validate(managed_complete[-1]["bundle"])
+    first = replay.manifest.sessions[0]
+    assert first.key == enrolled.manifest.sessions[0].key
+    definitions = replay.manifest.arms
+    evidence = list(replay.evidence)
+    accounts = {a.arm: a for a in replay.evidence}
+    if unknown_management:
+        native = accounts["D"]
+        missing = next(c for c in native.calls if c.role == "MANAGEMENT")
+        evidence[evidence.index(native)] = native.model_copy(
             update={
-                "role": "MANAGEMENT",
-                "source_key": arm.cycles[0].key,
-                "usage": None
-                if unknown_management
-                else entry.usage.model_copy(
-                    update={"request_id": "managed-" + entry.usage.request_id}
+                "calls": tuple(
+                    c.model_copy(update={"usage": None}) if c == missing else c
+                    for c in native.calls
+                ),
+                "cycles": tuple(
+                    c.model_copy(
+                        update={
+                            "attribution": c.attribution.model_copy(
+                                update={"model_cost": None, "cost_status": "UNKNOWN"}
+                            )
+                        }
+                    )
+                    if c.key == missing.source_key
+                    else c
+                    for c in native.cycles
                 ),
             }
         )
-        calls = (entry, management)
-        cycles = []
-        for cycle in arm.cycles:
-            call = next((call for call in calls if call.source_key == cycle.key), None)
-            cost = None
-            if call and call.usage:
-                rates = definition.policy.cost_policy
-                cost = (
-                    call.usage.input_tokens * rates.input_per_million
-                    + call.usage.output_tokens * rates.output_per_million
-                ) / 1000000
-            cycles.append(
-                cycle.model_copy(
+    for session in enrolled.manifest.sessions[1:]:
+        template = next(
+            a for a in enrolled.evidence if a.session_key == session.key and a.arm == "A"
+        )
+        for definition in definitions:
+            account = accounts[definition.arm]
+            cycles = template.cycles
+            if definition.arm == "D":
+                cycles = tuple(
+                    c.model_copy(
+                        update={
+                            "attribution": DecisionAttribution(
+                                source_key=c.key,
+                                role="ENTRY",
+                                model_attempted=False,
+                                cost_status="NOT_CALLED",
+                            )
+                        }
+                    )
+                    for c in cycles
+                )
+            evidence.append(
+                template.model_copy(
                     update={
-                        "model_called": call is not None,
-                        "attribution": DecisionAttribution(
-                            source_key=cycle.key,
-                            role=call.role if call else "ENTRY",
-                            model_attempted=call is not None,
-                            model_cost=cost,
-                            cost_status="CONFIGURED_ESTIMATE"
-                            if cost is not None
-                            else ("UNKNOWN" if call else "NOT_CALLED"),
-                        ),
+                        "arm": definition.arm,
+                        "definition_hash": fingerprint(definition),
+                        "initial": account.closing,
+                        "closing": account.closing,
+                        "cycles": cycles,
                     }
                 )
             )
-        extra.append(
-            arm.model_copy(
-                update={
-                    "arm": "D",
-                    "definition_hash": fingerprint(definition),
-                    "calls": calls,
-                    "cycles": tuple(cycles),
-                }
-            )
-        )
-    bundle = enrolled.model_copy(
+    manifest = replay.manifest.model_copy(
         update={
-            "manifest": enrolled.manifest.model_copy(
-                update={
-                    "arms": (*enrolled.manifest.arms, definition),
-                    "session_analysis": policy(primary_arm="D"),
-                }
-            ),
-            "evidence": (*enrolled.evidence, *extra),
+            "sessions": (first, *enrolled.manifest.sessions[1:]),
+            "session_analysis": policy(primary_arm="D"),
+        }
+    )
+    bundle = replay.model_copy(
+        update={
+            "manifest": manifest,
+            "evidence": tuple(evidence),
+            "benchmarks": (*replay.benchmarks, *enrolled.benchmarks[1:]),
         }
     )
     result = evaluate(bundle)
     analysis = result["session_analysis"]
     assert analysis["endpoint"] == "D_minus_A_net_equity_per_session"
     assert analysis["economic_conclusion"] == "INCONCLUSIVE"
+    assert analysis["planned_sessions"] == 8
+    actual = result["sessions"][0]["arms"]["D"]
+    charges = actual["model_cost_by_role"]
+    assert D(charges["ENTRY"]["known_cost"]) == D(".00015")
     if unknown_management:
-        assert analysis["percentile_interval"] is None
-        assert analysis["complete_sessions"] == 0 and analysis["planned_sessions"] == 8
+        assert charges["MANAGEMENT"]["unknown_calls"] == 1
+        assert "MODEL_COST_UNKNOWN" in actual["reasons"]
+        assert analysis["percentile_interval"] is None and analysis["complete_sessions"] == 7
     else:
-        assert analysis["status"] == "COMPLETE_DIAGNOSTIC"
-        assert D(analysis["mean_net_difference"]) == D("-4.4803")
-        assert all(
-            D(row["management_net_difference_D_minus_C"]) == D("-.00015")
-            for row in result["sessions"]
+        assert D(charges["MANAGEMENT"]["known_cost"]) == D(".00015")
+        assert analysis["status"] == "COMPLETE_DIAGNOSTIC" and analysis["complete_sessions"] == 8
+        observed = managed_complete[-1]["report"]["sessions"][0]
+        assert D(analysis["mean_net_difference"]) == D(observed["paired_net_difference"]["D"]) / 8
+        assert (
+            result["sessions"][0]["management_net_difference_D_minus_C"]
+            == observed["management_net_difference_D_minus_C"]
         )
