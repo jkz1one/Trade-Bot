@@ -454,7 +454,8 @@ def short_report(result):
     if runtime_timing.get('status') == 'OBSERVED':
         lines.append(f"Runtime timing: {runtime_timing['measured']}/{runtime_timing['records']} measured; "
                      f"{runtime_timing['missing_or_invalid']} incomplete/invalid; {runtime_timing['omitted']} omitted")
-        for name in ('NATIVE_SNAPSHOT', 'NATIVE_ACCEPT', 'PROTECTION', 'SCAN', 'STOCK_SCAN',
+        for name in ('NATIVE_SNAPSHOT', 'NATIVE_ACCEPT', 'NATIVE_SNAPSHOT_SPAWN', 'NATIVE_ACCEPT_SPAWN',
+                     'PROTECTION', 'DELIVERY_COMMIT', 'SCAN', 'STOCK_SCAN',
                      'SCOPE_SCAN', 'SCOPE_QUALITY', 'ENTRY_MODEL', 'STOCK_REFRESH', 'SCOPE_REFRESH',
                      'ADMISSION', 'DISPATCH', 'STOCK_ADMISSION', 'STOCK_DISPATCH',
                      'OPTION_MANAGEMENT_MODEL', 'STOCK_MANAGEMENT_MODEL', 'PORTFOLIO_MANAGEMENT_MODEL'):
@@ -462,6 +463,9 @@ def short_report(result):
             if values:
                 lines.append(f"{name}: n={values['samples']}; p95 {values['p95_seconds']:.3f}s; "
                              f"p99 {values['p99_seconds']:.3f}s; max {values['max_seconds']:.3f}s")
+        for name, budget in runtime_timing.get('native_spawn_budget', {}).items():
+            lines.append(f"{name} remaining at start: min {budget['min_seconds']:.3f}s "
+                         f"across {budget['samples']} calls")
     if result.get('publication_failures'):
         lines.append('Account publication failed: new entries halted; protection still requires valid native data.')
     if result.get('collector_failures'):
@@ -1038,7 +1042,8 @@ def runtime_timing_evidence(db, start, end):
               'STOCK_REFRESH', 'SCOPE_REFRESH', 'ADMISSION', 'DISPATCH',
               'STOCK_ADMISSION', 'STOCK_DISPATCH', 'OPTION_MANAGEMENT_MODEL',
               'STOCK_MANAGEMENT_MODEL', 'PORTFOLIO_MANAGEMENT_MODEL',
-              'PROTECTION', 'NATIVE_SNAPSHOT', 'NATIVE_ACCEPT'}
+              'PROTECTION', 'NATIVE_SNAPSHOT', 'NATIVE_ACCEPT', 'DELIVERY_COMMIT',
+              'NATIVE_ACCEPT_SPAWN', 'NATIVE_SNAPSHOT_SPAWN'}
     statuses = {'COMPLETE', 'FAILED', 'INTERRUPTED'}
     has_packets = bool(db.execute("SELECT 1 FROM sqlite_master WHERE name='execution_mixed_runtime_inputs'").fetchone())
     total = db.execute('SELECT COUNT(*) FROM execution_runtime_timings WHERE started_at>=? AND started_at<=?',
@@ -1046,6 +1051,7 @@ def runtime_timing_evidence(db, start, end):
     result.update(status='OBSERVED', records=total, omitted=max(0, total-20000))
     values, ages, natives, packet_ages = {}, {}, {}, []
     cycle_slots, model_keys, scheduler_delays = [], [], []
+    spawn_budgets = {}
 
     def number(value, signed=False):
         return type(value) in (int, float) and math.isfinite(value) and (-86400 if signed else 0) <= value <= 86400
@@ -1082,6 +1088,9 @@ def runtime_timing_evidence(db, start, end):
                         or span.get('status') not in statuses or not number(span.get('elapsed_seconds'))
                         or any(k in span and not number(span[k], signed=True)
                                for k in ('quote_age_seconds', 'receive_lag_seconds', 'local_age_seconds'))
+                        or ('remaining_at_start_seconds' in span and
+                            (span['phase'] not in {'NATIVE_ACCEPT_SPAWN', 'NATIVE_SNAPSHOT_SPAWN'}
+                             or not number(span['remaining_at_start_seconds'], signed=True)))
                         or ('model_source_key' in span and (not isinstance(span['model_source_key'], str)
                             or not 1 <= len(span['model_source_key']) <= 200))):
                     raise ValueError
@@ -1117,6 +1126,8 @@ def runtime_timing_evidence(db, start, end):
             if span['phase'] in {'ENTRY_MODEL', 'OPTION_MANAGEMENT_MODEL',
                                  'STOCK_MANAGEMENT_MODEL', 'PORTFOLIO_MANAGEMENT_MODEL'} and 'model_source_key' in span:
                 model_keys.append(span['model_source_key'])
+            if 'remaining_at_start_seconds' in span:
+                spawn_budgets.setdefault(span['phase'], []).append(span['remaining_at_start_seconds'])
             values.setdefault(span['phase'], []).append(span['elapsed_seconds'])
             key = span['phase'] + ':' + span['status']
             result['by_status'][key] = result['by_status'].get(key, 0) + 1
@@ -1134,6 +1145,7 @@ def runtime_timing_evidence(db, start, end):
                 'native': [safe_process(n) for n in item['native']]})
     result['phases'] = {k: summary(v) for k, v in values.items()}
     result['execution_quote_clocks'] = {k: summary(v) for k, v in ages.items()}
+    result['native_spawn_budget'] = {k: {**summary(v), 'min_seconds': min(v)} for k, v in spawn_budgets.items()}
     result['native_observed_intervals'] = {k: summary(v) for k, v in natives.items()}
     result['packet_age'] = summary(packet_ages) if packet_ages else None
     result['omitted'] = max(0, total - inspected)

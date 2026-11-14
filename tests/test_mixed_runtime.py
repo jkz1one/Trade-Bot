@@ -437,6 +437,47 @@ def test_stored_mixed_delivery_rejects_changed_evidence(tmp_path, monkeypatch, d
         assert v.submit_count == 0
 
 
+def test_failed_mixed_receipt_cannot_partially_accept_scope(tmp_path, monkeypatch):
+    import sqlite3
+
+    with scope_owner(tmp_path, monkeypatch, "OPTION") as (c, venue, _, frame):
+        r = runtime(c, tmp_path, scope=True)
+        send(r, frame, kind="CYCLE")
+        with c.engine.journal.write() as db:
+            db.execute("CREATE TRIGGER reject_mixed BEFORE INSERT ON execution_mixed_runtime_inputs "
+                       "BEGIN SELECT RAISE(ABORT,'fixture mixed receipt failure'); END")
+        with pytest.raises(sqlite3.IntegrityError, match="fixture mixed receipt failure"):
+            asyncio.run(r.tick())
+        with c.engine.journal.read() as db:
+            assert db.execute("SELECT COUNT(*) FROM execution_option_scope_runtime_inputs").fetchone()[0] == 0
+            assert db.execute("SELECT feed_sequence FROM execution_option_runtime").fetchone()[0] == 0
+        assert r.scope.latest is None and r.mixed.latest is None
+        assert r.task is None and venue.submit_count == 0
+
+
+def test_failed_slot_claim_rolls_back_heartbeat_and_delivery(tmp_path, monkeypatch):
+    import sqlite3
+
+    with owner(tmp_path, monkeypatch, mode="HOLD") as (c, venue, _, _):
+        r = runtime(c, tmp_path)
+        send(r, stock_frame(), kind="CYCLE")
+        with c.engine.journal.write() as db:
+            prior = tuple(db.execute(
+                "SELECT feed_sequence,frame_hash,heartbeat_at FROM execution_option_runtime"
+            ).fetchone())
+            db.execute("CREATE TRIGGER fail_launch BEFORE INSERT ON execution_option_runtime_slots "
+                       "WHEN NEW.status='STARTED' BEGIN SELECT RAISE(ABORT,'fixture slot failure'); END")
+        with pytest.raises(sqlite3.IntegrityError, match="fixture slot failure"):
+            asyncio.run(r.tick())
+        with c.engine.journal.read() as db:
+            assert tuple(db.execute(
+                "SELECT feed_sequence,frame_hash,heartbeat_at FROM execution_option_runtime"
+            ).fetchone()) == prior
+            assert db.execute("SELECT status FROM execution_mixed_runtime_inputs").fetchone()[0] == "ACCEPTED"
+            assert db.execute("SELECT COUNT(*) FROM execution_option_runtime_slots").fetchone()[0] == 0
+        assert r.task is None and venue.submit_count == 0
+
+
 def test_interrupted_mixed_delivery_never_replays_or_refreshes(tmp_path, monkeypatch):
     with owner(tmp_path, monkeypatch, mode="HOLD") as (c, v, times, _):
         r = runtime(c, tmp_path)

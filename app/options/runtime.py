@@ -11,9 +11,9 @@ from typing import Annotated
 from pydantic import Field, TypeAdapter
 
 from app.execution.engine import ExecutionBlocked
+from app.options import runtime_timing as timing
 from app.options.coordinator import DegenCoordinator, DegenFrame
 from app.options.engine import fingerprint
-from app.options import runtime_timing as timing
 from app.options.runtime_models import (
     MixedRuntimePacket,
     PortfolioRuntimePacket,
@@ -236,6 +236,7 @@ class OptionRuntime:
             ):
                 raise ValueError("Packet and frozen runtime enrollment mismatch")
             if self.mixed is not None:
+                # Resolve held identities before the joint receipt writer takes its lock.
                 from app.mixed.runtime import validate_packet
 
                 validate_packet(self.c, packet)
@@ -258,10 +259,14 @@ class OptionRuntime:
                 ):
                     raise ValueError("Fixture feed identity, time or sequence mismatch")
             timing.bind_packet(packet, at)
-            if self.scope is not None:
-                self.scope.accept(packet, at)
-            if self.mixed is not None:
-                self.mixed.accept(packet, at)
+            inputs = [source for source in (self.scope, self.mixed) if source is not None]
+            if inputs:
+                digest = fingerprint(packet)
+                with self.c.engine.journal.write() as db:
+                    for source in inputs:
+                        source.record(db, packet, at, digest)
+                for source in inputs:
+                    source.latest = packet
         except (OSError, ValueError):
             packet, issue = None, "OPTION_RUNTIME_FEED_UNAVAILABLE"
         issue = issue or operator_issue
@@ -304,111 +309,122 @@ class OptionRuntime:
             issue = issue or "OPTION_RUNTIME_RECONCILIATION_BLOCKED"
         window = self.c.engine.calendar.current_window(at)
         current = self.c.engine.calendar.current_window(self.c.now())
-        with self.c.engine.journal.write() as db:
-            self._bound(db)
-            if issue:
-                control = self.c.engine._control(db)
-                if not control["halted"] or control["halt_reason"] != issue:
-                    self.c.engine._halt(db, issue, at)
-            db.execute(
-                "UPDATE execution_option_runtime SET status=?,heartbeat_at=?,reason=?,session_json=? WHERE id=1",
-                (
-                    "BLOCKED" if issue else "RUNNING",
-                    self.c.now().isoformat(),
-                    issue,
-                    json.dumps(
-                        {
-                            "status": "OPEN",
-                            "date": current.session_date,
-                            "opens_at": current.opens_at.isoformat(),
-                            "closes_at": current.closes_at.isoformat(),
-                        }
-                    )
-                    if current
-                    else json.dumps({"status": "CLOSED"}),
-                ),
-            )
-            if packet:
-                db.execute(
-                    "UPDATE execution_option_runtime SET feed_sequence=?,frame_hash=?,frame_json=?,feed_recorded_at=? WHERE id=1",
-                    (
-                        packet.sequence,
-                        fingerprint(packet),
-                        packet.frame.model_dump_json(),
-                        packet.recorded_at.isoformat(),
-                    ),
-                )
-        if self.scope is not None and packet is not None:
-            self.scope.apply(packet, issue)
-        if self.mixed is not None and packet is not None:
-            self.mixed.complete(packet, issue)
-        # An unclaimed slot can wait for fresh input only within its original
-        # five-minute window. Never replay it after the window or a restart.
-        with self.c.engine.journal.write() as db:
-            self._bound(db)
-            db.execute(
-                "UPDATE execution_option_runtime_slots SET status='SKIPPED',completed_at=? "
-                "WHERE status='WAITING_FOR_FEED' AND (slot<? OR ?)",
-                (self.c.now().isoformat(), int(self.c.now().timestamp()) // 300, current is None),
-            )
-        if (
-            (self.scope is not None or self.mixed is not None)
-            and packet is not None
-            and packet.kind != "CYCLE"
-        ):
-            return result
-        with self.c.engine.journal.write() as db:
-            self._bound(db)
-            if window is None:
-                return result
-            slot = int(self.c.now().timestamp()) // 300
-            # The completed protection tick may cross a session/slot boundary.
-            if current is None or current.session_date != window.session_date:
-                return result
-            previous = db.execute(
-                "SELECT MAX(slot) FROM execution_option_runtime_slots WHERE session=?",
-                (window.session_date,),
-            ).fetchone()[0]
-            start = int(window.opens_at.timestamp()) // 300 if previous is None else previous + 1
-            for missing in range(start, slot):
-                db.execute(
-                    "INSERT OR IGNORE INTO execution_option_runtime_slots VALUES(?,?,'SKIPPED','RUNTIME_SLOT_NOT_OBSERVED',?,?)",
-                    (missing, window.session_date, at.isoformat(), self.c.now().isoformat()),
-                )
-            existing = db.execute(
-                "SELECT status FROM execution_option_runtime_slots WHERE slot=?", (slot,)
-            ).fetchone()
-            if existing and existing['status'] != 'WAITING_FOR_FEED':
-                return result
-            reason = issue or ("MODEL_OR_CYCLE_IN_PROGRESS" if self.task else None)
-            control = self.c.engine._control(db)
-            if reason is None and control['halted'] and control['halt_reason'] == 'OPTION_RUNTIME_FEED_UNAVAILABLE':
-                reason = 'OPTION_RUNTIME_FEED_UNAVAILABLE'
-            waiting = reason == 'OPTION_RUNTIME_FEED_UNAVAILABLE' and self.task is None
-            status = 'WAITING_FOR_FEED' if waiting else ('SKIPPED' if reason else 'STARTED')
-            completed = self.c.now().isoformat() if reason and not waiting else None
-            if existing:
-                if waiting:
-                    return result
-                # Only a fresh CYCLE from this slot may claim deferred work.
-                if packet is None or int(packet.recorded_at.timestamp()) // 300 != slot:
-                    return result
-                db.execute(
-                    'UPDATE execution_option_runtime_slots SET status=?,reason=?,completed_at=? WHERE slot=?',
-                    (status, reason, completed, slot),
-                )
-            else:
-                db.execute(
-                    'INSERT INTO execution_option_runtime_slots VALUES(?,?,?,?,?,?)',
-                    (slot, window.session_date, status, reason, self.c.now().isoformat(), completed),
-                )
-        if reason is None:
+        # Scope actions perform their own durable transition after the heartbeat.
+        # Other packets can finish delivery and decide the slot in the same commit.
+        scope_action = self.scope is not None and packet is not None and packet.action is not None
+        with timing.phase("DELIVERY_COMMIT"):
+            if scope_action:
+                with self.c.engine.journal.write() as db:
+                    self._record_heartbeat(db, packet, issue, at, current)
+                self.scope.apply(packet, issue)
+            with self.c.engine.journal.write() as db:
+                if not scope_action:
+                    self._record_heartbeat(db, packet, issue, at, current)
+                else:
+                    self._bound(db)
+                if self.mixed is not None and packet is not None:
+                    self.mixed.complete(packet, issue, _db=db)
+                slot = self._claim_slot(db, packet, issue, at, window, current)
+        if slot is not None:
             protected_epoch = None
             if self.c.engine.portfolio_policy is not None and result.get("reconciled"):
                 with self.c.engine.journal.read() as db:
                     protected_epoch = (self.c.engine._epoch(db), fingerprint(frame))
             self.task = asyncio.create_task(self._cycle(slot, frame, protected_epoch, packet))
         return result
+
+    def _record_heartbeat(self, db, packet, issue, at, current):
+        self._bound(db)
+        if issue:
+            control = self.c.engine._control(db)
+            if not control["halted"] or control["halt_reason"] != issue:
+                self.c.engine._halt(db, issue, at)
+        db.execute(
+            "UPDATE execution_option_runtime SET status=?,heartbeat_at=?,reason=?,session_json=? WHERE id=1",
+            (
+                "BLOCKED" if issue else "RUNNING",
+                self.c.now().isoformat(),
+                issue,
+                json.dumps(
+                    {
+                        "status": "OPEN",
+                        "date": current.session_date,
+                        "opens_at": current.opens_at.isoformat(),
+                        "closes_at": current.closes_at.isoformat(),
+                    }
+                )
+                if current
+                else json.dumps({"status": "CLOSED"}),
+            ),
+        )
+        if packet:
+            db.execute(
+                "UPDATE execution_option_runtime SET feed_sequence=?,frame_hash=?,frame_json=?,feed_recorded_at=? WHERE id=1",
+                (
+                    packet.sequence,
+                    fingerprint(packet),
+                    packet.frame.model_dump_json(),
+                    packet.recorded_at.isoformat(),
+                ),
+            )
+
+    def _claim_slot(self, db, packet, issue, at, window, current):
+        # Expire deferred work before considering this packet's slot.
+        db.execute(
+            "UPDATE execution_option_runtime_slots SET status='SKIPPED',completed_at=? "
+            "WHERE status='WAITING_FOR_FEED' AND (slot<? OR ?)",
+            (self.c.now().isoformat(), int(self.c.now().timestamp()) // 300, current is None),
+        )
+        if (
+            (self.scope is not None or self.mixed is not None)
+            and packet is not None
+            and packet.kind != "CYCLE"
+        ):
+            return None
+        if window is None:
+            return None
+        slot = int(self.c.now().timestamp()) // 300
+        # The completed protection tick may cross a session/slot boundary.
+        if current is None or current.session_date != window.session_date:
+            return None
+        previous = db.execute(
+            "SELECT MAX(slot) FROM execution_option_runtime_slots WHERE session=?",
+            (window.session_date,),
+        ).fetchone()[0]
+        start = int(window.opens_at.timestamp()) // 300 if previous is None else previous + 1
+        for missing in range(start, slot):
+            db.execute(
+                "INSERT OR IGNORE INTO execution_option_runtime_slots VALUES(?,?,'SKIPPED','RUNTIME_SLOT_NOT_OBSERVED',?,?)",
+                (missing, window.session_date, at.isoformat(), self.c.now().isoformat()),
+            )
+        existing = db.execute(
+            "SELECT status FROM execution_option_runtime_slots WHERE slot=?", (slot,)
+        ).fetchone()
+        if existing and existing['status'] != 'WAITING_FOR_FEED':
+            return None
+        reason = issue or ("MODEL_OR_CYCLE_IN_PROGRESS" if self.task else None)
+        control = self.c.engine._control(db)
+        if reason is None and control['halted'] and control['halt_reason'] == 'OPTION_RUNTIME_FEED_UNAVAILABLE':
+            reason = 'OPTION_RUNTIME_FEED_UNAVAILABLE'
+        waiting = reason == 'OPTION_RUNTIME_FEED_UNAVAILABLE' and self.task is None
+        status = 'WAITING_FOR_FEED' if waiting else ('SKIPPED' if reason else 'STARTED')
+        completed = self.c.now().isoformat() if reason and not waiting else None
+        if existing:
+            if waiting:
+                return None
+            # Only a fresh CYCLE from this slot may claim deferred work.
+            if packet is None or int(packet.recorded_at.timestamp()) // 300 != slot:
+                return None
+            db.execute(
+                'UPDATE execution_option_runtime_slots SET status=?,reason=?,completed_at=? WHERE slot=?',
+                (status, reason, completed, slot),
+            )
+        else:
+            db.execute(
+                'INSERT INTO execution_option_runtime_slots VALUES(?,?,?,?,?,?)',
+                (slot, window.session_date, status, reason, self.c.now().isoformat(), completed),
+            )
+        return slot if reason is None else None
 
     async def run(self, stop, *, ready=None):
         if self.running:

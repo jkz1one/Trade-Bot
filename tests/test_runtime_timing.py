@@ -43,7 +43,12 @@ def test_native_success_timeout_and_cancellation_keep_separate_spans_and_reap(tm
         before = venue.path.read_bytes()
         asyncio.run(exercise(venue))
         assert venue.path.read_bytes() == before
-    assert [s['status'] for s in trace['spans']] == ['COMPLETE', 'FAILED', 'INTERRUPTED']
+    calls = [s for s in trace['spans'] if s['phase'] == 'NATIVE_SNAPSHOT']
+    assert [s['status'] for s in calls] == ['COMPLETE', 'FAILED', 'INTERRUPTED']
+    spawns = [s for s in trace['spans'] if s['phase'] == 'NATIVE_SNAPSHOT_SPAWN']
+    assert len(spawns) == 3
+    for span, limit in zip(spawns, (2, .4, 2), strict=True):
+        assert 0 < span['remaining_at_start_seconds'] <= limit
     assert len(trace['native']) == 3
     assert all(child.returncode is not None for child in children)
     assert str(tmp_path) not in json.dumps(trace)

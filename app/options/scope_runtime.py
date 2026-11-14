@@ -86,68 +86,69 @@ class ScopeRuntimeInputs:
                 )
 
     def accept(self, packet, at):
-        """Persist the receipt before any suspension; never replay a lost prefix."""
-        validate_packet(self.r.c, packet)
-        digest = fingerprint(packet)
         with self.r.c.engine.journal.write() as db:
-            state = self.r._bound(db)
-            item = packet.frame.scope
-            if item is not None:
-                watch = db.execute(
-                    "SELECT record_json FROM execution_option_scope_watches WHERE play_key=?",
-                    (item.play_key,),
-                ).fetchone()
-                if watch is not None:
-                    from app.options.scope import ScopeSession
-
-                    original = ScopeSession.model_validate(
-                        json.loads(watch[0])["locked_frame"]["session"]
-                    )
-                    if item.frame.session != original:
-                        raise ValueError("Scope runtime changed the original session or deadlines")
-            prior = db.execute(
-                "SELECT * FROM execution_option_scope_runtime_inputs WHERE sequence=?",
-                (packet.sequence,),
-            ).fetchone()
-            if prior:
-                if prior["packet_hash"] != digest or prior["status"] in {"PENDING", "INTERRUPTED"}:
-                    raise ValueError("Scope runtime input changed or was interrupted")
-            else:
-                if packet.sequence <= state["feed_sequence"] or (
-                    self.r.c.engine.portfolio_policy is None
-                    and packet.sequence != state["feed_sequence"] + 1
-                ):
-                    raise ValueError("Scope runtime input sequence gap")
-                if (
-                    packet.action
-                    and db.execute(
-                        "SELECT 1 FROM execution_option_scope_runtime_inputs WHERE action_key=?",
-                        (packet.action.key,),
-                    ).fetchone()
-                ):
-                    raise ValueError("Scope runtime watch action key reused")
-                db.execute(
-                    "INSERT INTO execution_option_scope_runtime_inputs VALUES(?,?,?,?,?,?,NULL)",
-                    (
-                        packet.sequence,
-                        digest,
-                        packet.model_dump_json(),
-                        at.isoformat(),
-                        packet.action.key if packet.action else None,
-                        "PENDING" if packet.action else "OBSERVED",
-                    ),
-                )
-                db.execute(
-                    "UPDATE execution_option_runtime SET feed_sequence=?,frame_hash=?,"
-                    "frame_json=?,feed_recorded_at=? WHERE id=1",
-                    (
-                        packet.sequence,
-                        digest,
-                        packet.frame.model_dump_json(),
-                        packet.recorded_at.isoformat(),
-                    ),
-                )
+            self.record(db, packet, at, fingerprint(packet))
         self.latest = packet
+
+    def record(self, db, packet, at, digest):
+        validate_packet(self.r.c, packet)
+        state = self.r._bound(db)
+        item = packet.frame.scope
+        if item is not None:
+            watch = db.execute(
+                "SELECT record_json FROM execution_option_scope_watches WHERE play_key=?",
+                (item.play_key,),
+            ).fetchone()
+            if watch is not None:
+                from app.options.scope import ScopeSession
+
+                original = ScopeSession.model_validate(
+                    json.loads(watch[0])["locked_frame"]["session"]
+                )
+                if item.frame.session != original:
+                    raise ValueError("Scope runtime changed the original session or deadlines")
+        prior = db.execute(
+            "SELECT * FROM execution_option_scope_runtime_inputs WHERE sequence=?",
+            (packet.sequence,),
+        ).fetchone()
+        if prior:
+            if prior["packet_hash"] != digest or prior["status"] in {"PENDING", "INTERRUPTED"}:
+                raise ValueError("Scope runtime input changed or was interrupted")
+        else:
+            if packet.sequence <= state["feed_sequence"] or (
+                self.r.c.engine.portfolio_policy is None
+                and packet.sequence != state["feed_sequence"] + 1
+            ):
+                raise ValueError("Scope runtime input sequence gap")
+            if (
+                packet.action
+                and db.execute(
+                    "SELECT 1 FROM execution_option_scope_runtime_inputs WHERE action_key=?",
+                    (packet.action.key,),
+                ).fetchone()
+            ):
+                raise ValueError("Scope runtime watch action key reused")
+            db.execute(
+                "INSERT INTO execution_option_scope_runtime_inputs VALUES(?,?,?,?,?,?,NULL)",
+                (
+                    packet.sequence,
+                    digest,
+                    packet.model_dump_json(),
+                    at.isoformat(),
+                    packet.action.key if packet.action else None,
+                    "PENDING" if packet.action else "OBSERVED",
+                ),
+            )
+            db.execute(
+                "UPDATE execution_option_runtime SET feed_sequence=?,frame_hash=?,"
+                "frame_json=?,feed_recorded_at=? WHERE id=1",
+                (
+                    packet.sequence,
+                    digest,
+                    packet.frame.model_dump_json(),
+                    packet.recorded_at.isoformat(),
+                ),
+            )
 
     def apply(self, packet, issue):
         if packet.action is None:

@@ -144,7 +144,8 @@ def test_cancelled_history_drains_before_lease_release(tmp_path, schemas, monkey
         feed.close()
 
 
-def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, monkeypatch):
+@pytest.mark.parametrize('seed_mib', [0, 68], ids=['small', 'loaded'])
+def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, monkeypatch, seed_mib):
     from types import SimpleNamespace
     from decimal import Decimal
     from test_mixed_entry import owner
@@ -211,6 +212,12 @@ def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, m
                 times[0] += timedelta(seconds=1)
                 venue.fill_stock(entry, entry.quantity, quote(times[0]), times[0], fill_id='stress-entry')
                 assert c.engine.reconcile(venue.snapshot(times[0]), now=times[0])['reconciled']
+                if seed_mib:
+                    from soak_worker import seed_capacity
+                    fence = c.engine.journal.enable_restore_fence(now=times[0])
+                    assert fence['status'] == 'VERIFIED'
+                    assert seed_capacity(c.engine.journal, seed_mib) > 0
+                initial_bytes = c.engine.journal.path.stat().st_size
                 times[0] = AT + timedelta(minutes=5)
                 started, finish = asyncio.Event(), asyncio.Event()
                 async def delayed(request, _secret):
@@ -276,8 +283,10 @@ def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, m
                 assert not list((tmp_path / 'dashboard').glob('.source-*'))
                 output = os.environ.get('TRADE_BOT_OFFLINE_PROOF')
                 if output:
-                    (Path(output) / 'combined-contention.json').write_text(json.dumps({
+                    name = 'combined-contention-loaded.json' if seed_mib else 'combined-contention.json'
+                    (Path(output) / name).write_text(json.dumps({
                         'synthetic': True, 'provider_calls': False, 'model_service_calls': False,
+                        'seed_mib': seed_mib, 'journal_bytes_before_contention': initial_bytes,
                         'exit_submitted_while_all_waiting': True, 'exit_seconds': elapsed,
                         'report_snapshot_open_during_exit': True,
                         'native_submissions': venue.submit_count, 'accounting': view['accounting'],

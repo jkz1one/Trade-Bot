@@ -1,14 +1,15 @@
 """Explicit delivered mixed runtime evidence; no provider or model authority."""
 
 import asyncio
+from contextlib import nullcontext
 import json
 from datetime import datetime
 
-from app.options.models import paper_market_evidence
 from app.execution.engine import ExecutionBlocked
 from app.mixed.sources import StockSwingSource, geometry
 from app.options.engine import exact, fingerprint
 from app.options.governor import _fresh
+from app.options.models import paper_market_evidence
 from app.options.runtime_models import MixedRuntimePacket, PortfolioRuntimePacket
 
 
@@ -149,48 +150,51 @@ class MixedRuntimeInputs:
 
     def accept(self, packet, at):
         validate_packet(self.r.c, packet)
-        digest = fingerprint(packet)
         with self.r.c.engine.journal.write() as db:
-            self.r._bound(db)
-            prior = db.execute(
-                "SELECT packet_hash,status FROM execution_mixed_runtime_inputs WHERE sequence=?",
-                (packet.sequence,),
-            ).fetchone()
-            if prior is not None:
-                if prior["packet_hash"] != digest or prior["status"] != "DELIVERED":
-                    raise ValueError("Mixed runtime delivery changed or interrupted")
-            else:
-                previous = (
-                    db.execute(
-                        "SELECT MAX(sequence) FROM execution_mixed_runtime_inputs"
-                    ).fetchone()[0]
-                    or 0
-                )
-                portfolio = self.r.c.engine.portfolio_policy is not None
-                if packet.sequence <= previous or (
-                    not portfolio and packet.sequence != previous + 1
-                ):
-                    raise ValueError("Mixed runtime delivery sequence gap")
-                if portfolio and packet.sequence > previous + 1:
-                    self.r.c.engine.journal.event(
-                        db,
-                        at,
-                        "PORTFOLIO_FEED_GAP",
-                        {
-                            "previous_sequence": previous,
-                            "received_sequence": packet.sequence,
-                            "missed_packets": packet.sequence - previous - 1,
-                            "continuous_coverage": False,
-                        },
-                    )
-                db.execute(
-                    "INSERT INTO execution_mixed_runtime_inputs VALUES(?,?,?,?,'ACCEPTED')",
-                    (packet.sequence, digest, packet.model_dump_json(), at.isoformat()),
-                )
+            self.record(db, packet, at, fingerprint(packet))
         self.latest = packet
 
-    def complete(self, packet, issue):
-        with self.r.c.engine.journal.write() as db:
+    def record(self, db, packet, at, digest):
+        """Persist a validated packet inside the owner's receipt transaction."""
+        self.r._bound(db)
+        prior = db.execute(
+            "SELECT packet_hash,status FROM execution_mixed_runtime_inputs WHERE sequence=?",
+            (packet.sequence,),
+        ).fetchone()
+        if prior is not None:
+            if prior["packet_hash"] != digest or prior["status"] != "DELIVERED":
+                raise ValueError("Mixed runtime delivery changed or interrupted")
+        else:
+            previous = (
+                db.execute(
+                    "SELECT MAX(sequence) FROM execution_mixed_runtime_inputs"
+                ).fetchone()[0]
+                or 0
+            )
+            portfolio = self.r.c.engine.portfolio_policy is not None
+            if packet.sequence <= previous or (
+                not portfolio and packet.sequence != previous + 1
+            ):
+                raise ValueError("Mixed runtime delivery sequence gap")
+            if portfolio and packet.sequence > previous + 1:
+                self.r.c.engine.journal.event(
+                    db,
+                    at,
+                    "PORTFOLIO_FEED_GAP",
+                    {
+                        "previous_sequence": previous,
+                        "received_sequence": packet.sequence,
+                        "missed_packets": packet.sequence - previous - 1,
+                        "continuous_coverage": False,
+                    },
+                )
+            db.execute(
+                "INSERT INTO execution_mixed_runtime_inputs VALUES(?,?,?,?,'ACCEPTED')",
+                (packet.sequence, digest, packet.model_dump_json(), at.isoformat()),
+            )
+
+    def complete(self, packet, issue, *, _db=None):
+        with nullcontext(_db) if _db is not None else self.r.c.engine.journal.write() as db:
             state = self.r._bound(db)
             if state["feed_sequence"] != packet.sequence or state["frame_hash"] != fingerprint(
                 packet

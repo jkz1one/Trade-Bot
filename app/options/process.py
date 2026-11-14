@@ -132,8 +132,11 @@ async def _run_option_process(
     trace_task = None
     phase = "SPAWN"
     try:
+        spawn_phase = "NATIVE_SNAPSHOT_SPAWN" if snapshot_read else "NATIVE_ACCEPT_SPAWN"
+        with timing_phase(spawn_phase, deadline=deadline):
+            async with asyncio.timeout(max(0, deadline - time.monotonic())):
+                child = await asyncio.shield(spawn)
         async with asyncio.timeout(max(0, deadline - time.monotonic())):
-            child = await asyncio.shield(spawn)
             trace_task = asyncio.create_task(trace.drain(child.stderr))
             phase = "REQUEST_WRITE"
             child.stdin.write(payload)

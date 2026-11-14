@@ -15,12 +15,13 @@ PHASES = {"SCAN", "STOCK_SCAN", "SCOPE_SCAN", "SCOPE_QUALITY", "ENTRY_MODEL",
           "STOCK_REFRESH", "SCOPE_REFRESH", "ADMISSION", "DISPATCH",
           "STOCK_ADMISSION", "STOCK_DISPATCH", "OPTION_MANAGEMENT_MODEL",
           "STOCK_MANAGEMENT_MODEL", "PORTFOLIO_MANAGEMENT_MODEL",
-          "PROTECTION", "NATIVE_SNAPSHOT", "NATIVE_ACCEPT"}
+          "PROTECTION", "NATIVE_SNAPSHOT", "NATIVE_ACCEPT", "DELIVERY_COMMIT",
+          "NATIVE_ACCEPT_SPAWN", "NATIVE_SNAPSHOT_SPAWN"}
 MAX_SPANS = 64
 
 
 @contextmanager
-def phase(name, *, quote=None, now=None, model_source_key=None):
+def phase(name, *, quote=None, now=None, model_source_key=None, deadline=None):
     trace = CURRENT.get()
     if trace is None:
         yield
@@ -28,6 +29,9 @@ def phase(name, *, quote=None, now=None, model_source_key=None):
     assert name in PHASES
     started, status = time.monotonic(), "COMPLETE"
     sample = {"phase": name}
+    if deadline is not None:
+        # The parent can observe a late wakeup even if the child ran on time.
+        sample["remaining_at_start_seconds"] = round(deadline - started, 6)
     if model_source_key is not None:
         sample['model_source_key'] = model_source_key
     if quote is not None and now is not None:
