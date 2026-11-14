@@ -100,7 +100,9 @@ next action. Do not replace missing evidence with a date estimate.
   a diagnostic capture for November 16 observed a new schema and failed at
   VALIDATE_PLAN before any market reads. `aae1dff` admits the exact six reviewed
   description edits. Twelve baseline cases reproduced the rejection and 526 installed
-  tests passed. Connected capture on the new implementation is pending.
+  tests passed. The host then deployed `39d8e48` and completed eight real provider reads.
+  Monday's scheduled preparation and worker operation are pending.
+  [Deployment receipt](PAPER_HOST_DEPLOYMENT_20261114.json).
   [November 14 evidence](PAPER_SCHEMA_REVISION_20261114_PROOF.json).
 - [ ] **A4 — Independent protection:** prove that model waits, history work and
   display/report failures cannot improperly stop management of an owned position.

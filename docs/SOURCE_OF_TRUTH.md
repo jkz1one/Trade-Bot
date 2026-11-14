@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.208. November 14 Robinhood historical date and option chain metadata review.
+Version 1.209. November 14 Robinhood schema review and verified host capture.
 
 The operator confirmed the November 13 installation of `ab9b090`, snapshot publication,
 dashboard reader update and scheduler installation. The source account retained its
@@ -19,8 +19,13 @@ each read. Twelve cases reproduced the old rejection. All 526 installed tests
 passed, including simulated capture, restart, damaged metadata and invalid responses.
 [Host and test evidence](PAPER_SCHEMA_REVISION_20261114_PROOF.json).
 
-Host installation of this revision and the next connected capture need operator
-verification. The separate loaded-journal timing and position-protection acceptance
+The operator deployed `39d8e48` and verified a connected November 16 catalog capture
+with eight provider reads and four option candidates. Weekend quotes failed the
+freshness check. The daily schedule is installed and enabled, and the dashboard reader
+updated. The prior saved timeout review matches the owner reported at install.
+The controller checks that match again when Monday preparation begins at 09:00 ET.
+Monday's scheduled worker and its performance still await observation.
+[Host receipt](PAPER_HOST_DEPLOYMENT_20261114.json). The separate loaded-journal timing and position-protection acceptance
 items remain open in the [delivery plan](DELIVERY_PLAN.md).
 
 ## Prior checkpoint

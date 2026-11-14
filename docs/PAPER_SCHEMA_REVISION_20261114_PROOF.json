@@ -36,5 +36,8 @@
     "network": "isolated",
     "provider": "synthetic"
   },
-  "connected_capture_after_implementation": "PENDING"
+  "connected_capture_after_implementation": {
+    "status": "CATALOG_CAPTURED",
+    "host_receipt": "PAPER_HOST_DEPLOYMENT_20261114.json"
+  }
 }

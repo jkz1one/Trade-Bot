@@ -1,5 +1,16 @@
 # Daily PAPER operation
 
+The host runs `39d8e48`. The November 14 diagnostic capture succeeded, the
+daily schedule is enabled, and the dashboard reader is updated. For Monday,
+November 16, the scheduler requests fresh data at 9:00 a.m. ET and checks launch
+eligibility from 10:00 a.m. ET. If the owner still matches the saved November 10
+timeout review, preparation can proceed. The controller checks the owner again
+at launch. Inspect the dashboard after 10:00 a.m. ET or run
+`python3 scripts/paper-daily.py status` from `/opt/trade-bot-dashboard`.
+[Deployment receipt](PAPER_HOST_DEPLOYMENT_20261114.json).
+
+## November 11 installation history
+
 The operator completed the d2046f6 recovery installation on November 11,
 including snapshot publication, the existing dashboard reader update and
 `resume --after-read-timeout daily-20261110`. The final result was
