@@ -42,9 +42,14 @@ def test_paid_entry_local_phases_and_child_have_independent_counts(tmp_path, mon
         path.write_text(packet.model_dump_json())
         path.chmod(0o600)
         asyncio.run(step(r))
+        asyncio.run(r.tick())
         with c.engine.journal.read() as db:
             trace = reports.runtime_timing_evidence(db, AT.isoformat(), times[0].isoformat())
         statuses = trace["by_status"]
+        assert trace['trace_start_write']['samples'] == trace['measured']
+        for name in ("TICK_PACKET_VALIDATION", "TICK_NEW_RECEIPT", "TICK_REPEAT_RECEIPT",
+                     "CYCLE_OPPORTUNITY_CLAIM"):
+            assert statuses[name + ":COMPLETE"] >= 1
         for name in ("ENTRY_MODEL_REQUEST", "ENTRY_MODEL_ADMISSION", "ENTRY_MODEL"):
             assert statuses[name + ":COMPLETE"] == 1
         state = "FAILED" if outcome == "FAILED_SETTLEMENT" else "COMPLETE"

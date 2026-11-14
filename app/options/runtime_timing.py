@@ -17,7 +17,8 @@ PHASES = {"SCAN", "STOCK_SCAN", "SCOPE_SCAN", "SCOPE_QUALITY", "ENTRY_MODEL",
           "STOCK_REFRESH", "SCOPE_REFRESH", "ADMISSION", "DISPATCH",
           "STOCK_ADMISSION", "STOCK_DISPATCH", "OPTION_MANAGEMENT_MODEL",
           "STOCK_MANAGEMENT_MODEL", "PORTFOLIO_MANAGEMENT_MODEL",
-          "PROTECTION", "RECONCILE_COMMIT", "PROTECTION_POSITIONS", "PROTECTION_ASSESS",
+          "TICK_PACKET_VALIDATION", "TICK_NEW_RECEIPT", "TICK_REPEAT_RECEIPT", "TICK_QUOTE_FILLS",
+          "CYCLE_OPPORTUNITY_CLAIM", "PROTECTION", "RECONCILE_COMMIT", "PROTECTION_POSITIONS", "PROTECTION_ASSESS",
           "PROTECTION_RESERVATION", "PROTECTION_HEARTBEAT", "NATIVE_SNAPSHOT", "NATIVE_ACCEPT", "DELIVERY_COMMIT",
           "NATIVE_ACCEPT_SPAWN", "NATIVE_SNAPSHOT_SPAWN"}
 MAX_SPANS = 64
@@ -75,11 +76,11 @@ def measured(name, *, quote_position=None):
     return decorate
 
 
-def bind_packet(packet, accepted_at):
+def bind_packet(packet, accepted_at, *, digest=None):
     trace = CURRENT.get()
     if trace is not None:
         from app.options.engine import fingerprint
-        trace.update(packet_sequence=packet.sequence, packet_sha256=fingerprint(packet),
+        trace.update(packet_sequence=packet.sequence, packet_sha256=digest if digest is not None else fingerprint(packet),
                      packet_age_seconds=(accepted_at - packet.recorded_at).total_seconds())
 
 
@@ -118,6 +119,7 @@ def root(runtime, kind, *, slot=None, packet=None):
     except (OSError, sqlite3.Error):
         # Diagnostics must not stop valid protection. Missing rows remain unmeasured.
         pass
+    value["trace_start_write_seconds"] = round(time.monotonic() - started, 6)
     token = CURRENT.set(value)
     if packet is not None:
         bind_packet(packet, at)

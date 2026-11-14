@@ -244,39 +244,40 @@ class OptionRuntime:
                     self.c.engine._halt(db, entry_issue, at)
         packet, issue = None, None
         try:
-            packet = read_packet(self.policy.feed_file)
-            if isinstance(packet, PortfolioRuntimePacket) != (
-                self.c.engine.portfolio_policy is not None
-            ):
-                raise ValueError("Explicit portfolio packet/owner enrollment required")
-            if isinstance(packet, MixedRuntimePacket) != (self.mixed is not None) or (
-                self.mixed is None
-                and isinstance(packet, ScopeRuntimePacket) != (self.scope is not None)
-            ):
-                raise ValueError("Packet and frozen runtime enrollment mismatch")
-            if self.mixed is not None:
-                # Resolve held identities before the joint receipt writer takes its lock.
-                from app.mixed.runtime import validate_packet
-
-                validate_packet(self.c, packet)
-            digest = fingerprint(packet)
-            with self.c.engine.journal.read() as db:
-                row = self._bound(db)
-                repeat = packet.sequence == row["feed_sequence"]
-                if (
-                    packet.population_id != self.c.engine.limits.population_id
-                    or not 0
-                    <= (at - packet.recorded_at).total_seconds()
-                    < self.policy.feed_max_age_seconds
-                    or packet.sequence < row["feed_sequence"]
-                    or (
-                        row["feed_recorded_at"]
-                        and packet.recorded_at < datetime.fromisoformat(row["feed_recorded_at"])
-                    )
-                    or (repeat and digest != row["frame_hash"])
+            with timing.phase("TICK_PACKET_VALIDATION"):
+                packet = read_packet(self.policy.feed_file)
+                if isinstance(packet, PortfolioRuntimePacket) != (
+                    self.c.engine.portfolio_policy is not None
                 ):
-                    raise ValueError("Fixture feed identity, time or sequence mismatch")
-            timing.bind_packet(packet, at)
+                    raise ValueError("Explicit portfolio packet/owner enrollment required")
+                if isinstance(packet, MixedRuntimePacket) != (self.mixed is not None) or (
+                    self.mixed is None
+                    and isinstance(packet, ScopeRuntimePacket) != (self.scope is not None)
+                ):
+                    raise ValueError("Packet and frozen runtime enrollment mismatch")
+                if self.mixed is not None:
+                    # Resolve held identities before the joint receipt writer takes its lock.
+                    from app.mixed.runtime import validate_packet
+
+                    validate_packet(self.c, packet)
+                digest = fingerprint(packet)
+                with self.c.engine.journal.read() as db:
+                    row = self._bound(db)
+                    repeat = packet.sequence == row["feed_sequence"]
+                    if (
+                        packet.population_id != self.c.engine.limits.population_id
+                        or not 0
+                        <= (at - packet.recorded_at).total_seconds()
+                        < self.policy.feed_max_age_seconds
+                        or packet.sequence < row["feed_sequence"]
+                        or (
+                            row["feed_recorded_at"]
+                            and packet.recorded_at < datetime.fromisoformat(row["feed_recorded_at"])
+                        )
+                        or (repeat and digest != row["frame_hash"])
+                    ):
+                        raise ValueError("Fixture feed identity, time or sequence mismatch")
+            timing.bind_packet(packet, at, digest=digest)
             inputs = [source for source in (self.scope, self.mixed) if source is not None]
             if inputs:
                 if repeat:
@@ -284,9 +285,10 @@ class OptionRuntime:
                     # before using this packet or releasing the owner on cancellation.
                     from app.mixed.background import run
 
-                    await run(self._verify_repeated_inputs, inputs, packet, at, digest)
+                    with timing.phase("TICK_REPEAT_RECEIPT"):
+                        await run(self._verify_repeated_inputs, inputs, packet, at, digest)
                 else:
-                    with self.c.engine.journal.write() as db:
+                    with timing.phase("TICK_NEW_RECEIPT"), self.c.engine.journal.write() as db:
                         for source in inputs:
                             source.record(db, packet, at, digest)
                 for source in inputs:
@@ -301,7 +303,8 @@ class OptionRuntime:
                 if issue is None and self.policy.simulated_fills is not None:
                     from app.mixed.quote_fills import apply_quote_fills
 
-                    apply_quote_fills(self, packet, verified_at)
+                    with timing.phase("TICK_QUOTE_FILLS"):
+                        apply_quote_fills(self, packet, verified_at)
             except RuntimePacketExpired:
                 # Keep the original receipt for completion. Supervision still
                 # reconciles the venue and receives no prices from this packet.

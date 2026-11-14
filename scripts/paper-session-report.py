@@ -30,7 +30,8 @@ MAX_REPORT_SOURCE_BYTES = 512 * 1024 * 1024
 REPORT_COPY_SECONDS = 5
 RUNTIME_PHASES = (
     'NATIVE_SNAPSHOT', 'NATIVE_ACCEPT', 'NATIVE_SNAPSHOT_SPAWN', 'NATIVE_ACCEPT_SPAWN',
-    'PROTECTION', 'RECONCILE_COMMIT', 'PROTECTION_POSITIONS', 'PROTECTION_ASSESS',
+    'TICK_PACKET_VALIDATION', 'TICK_NEW_RECEIPT', 'TICK_REPEAT_RECEIPT', 'TICK_QUOTE_FILLS',
+    'CYCLE_OPPORTUNITY_CLAIM', 'PROTECTION', 'RECONCILE_COMMIT', 'PROTECTION_POSITIONS', 'PROTECTION_ASSESS',
     'PROTECTION_RESERVATION', 'PROTECTION_HEARTBEAT', 'DELIVERY_COMMIT', 'SCAN', 'STOCK_SCAN', 'SCOPE_SCAN', 'SCOPE_QUALITY',
     'ENTRY_MODEL_REQUEST', 'ENTRY_MODEL_ADMISSION', 'ENTRY_MODEL', 'ENTRY_MODEL_SETTLEMENT',
     'ENTRY_PROTECTION_WAIT', 'ENTRY_REVIEW', 'STOCK_REFRESH', 'SCOPE_REFRESH', 'ADMISSION',
@@ -467,6 +468,10 @@ def short_report(result):
     if runtime_timing.get('status') == 'OBSERVED':
         lines.append(f"Runtime timing: {runtime_timing['measured']}/{runtime_timing['records']} measured; "
                      f"{runtime_timing['missing_or_invalid']} incomplete/invalid; {runtime_timing['omitted']} omitted")
+        trace_write = runtime_timing.get('trace_start_write')
+        if trace_write:
+            lines.append(f"Timing record start: n={trace_write['samples']}, "
+                         f"p95 {trace_write['p95_seconds']:.3f}s, max {trace_write['max_seconds']:.3f}s")
         for name in RUNTIME_PHASES:
             values = runtime_timing.get('phases', {}).get(name)
             if values:
@@ -1176,7 +1181,7 @@ def runtime_timing_evidence(db, start, end):
                        (start, end)).fetchone()[0]
     result.update(status='OBSERVED', records=total, omitted=max(0, total-20000))
     values, ages, natives, packet_ages = {}, {}, {}, []
-    cycle_slots, model_keys, scheduler_delays = [], [], []
+    cycle_slots, model_keys, scheduler_delays, start_writes = [], [], [], []
     spawn_budgets, quote_age_by_phase = {}, {}
 
     def number(value, signed=False):
@@ -1203,6 +1208,8 @@ def runtime_timing_evidence(db, start, end):
                     or type(item.get('spans_omitted')) is not int or not 0 <= item['spans_omitted'] <= 1000000
                     or type(item.get('native_omitted', 0)) is not int or not 0 <= item.get('native_omitted', 0) <= 1000000
                     or ('scheduler_delay_seconds' in item and not number(item['scheduler_delay_seconds']))):
+                raise ValueError
+            if 'trace_start_write_seconds' in item and not number(item['trace_start_write_seconds']):
                 raise ValueError
             for span in item['spans']:
                 if (not isinstance(span, dict) or span.get('phase') not in phases
@@ -1238,6 +1245,8 @@ def runtime_timing_evidence(db, start, end):
             cycle_slots.append(item['slot'])
         if item['kind'] == 'TICK' and 'scheduler_delay_seconds' in item:
             scheduler_delays.append(item['scheduler_delay_seconds'])
+        if 'trace_start_write_seconds' in item:
+            start_writes.append(item['trace_start_write_seconds'])
         label = item['kind'] + ':' + item['status']
         result['by_status'][label] = result['by_status'].get(label, 0) + 1
         values.setdefault(item['kind'], []).append(item['elapsed_seconds'])
@@ -1276,6 +1285,7 @@ def runtime_timing_evidence(db, start, end):
     result['omitted'] = max(0, total - inspected)
     result['inspected_bytes'] = inspected_bytes
     result['scheduler_delay'] = timing_summary(scheduler_delays) if scheduler_delays else None
+    result['trace_start_write'] = timing_summary(start_writes) if start_writes else None
     result['coverage'] = runtime_timing_coverage(db, start, end, cycle_slots, model_keys)
     return result
 

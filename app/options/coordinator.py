@@ -968,7 +968,7 @@ class DegenCoordinator:
         if portfolio_slot is not None:
             key += ":portfolio:" + str(portfolio_slot)
         digest = fingerprint(frame)
-        with self.engine.journal.write() as db:
+        with phase("CYCLE_OPPORTUNITY_CLAIM"), self.engine.journal.write() as db:
             self._bound(db)
             previous = db.execute(
                 "SELECT * FROM execution_option_opportunities WHERE cycle_key=?", (key,)
