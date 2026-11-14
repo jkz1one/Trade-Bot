@@ -459,6 +459,13 @@ def short_report(result):
         if why:
             lines.append('Cycle reasons: ' + '; '.join(why[:5]))
     lines.append(f"Feed recoveries: {result.get('flat_feed_recoveries', 'unknown')}; reviewed resumes: {result.get('reviewed_entry_resumes', 'unknown')}")
+    history = result.get('entry_control_history', {})
+    if history.get('records'):
+        lines.append(f"Entry control history, {history['records']} events and {history['omitted']} earlier events omitted")
+        for event in history['recent']:
+            action = ('Reviewed entry resume' if event['kind'] == 'OPTION_REVIEWED_RESUME'
+                      else 'Entry halt ' + (event['reason'] or 'REASON_UNAVAILABLE'))
+            lines.append(f"{event['at'] or 'Time unavailable'}  {action}")
     collection = result.get('collection', [])
     lines.append('Collection: ' + '; '.join(f"{s.lower()} {sum(r['attempts'] for r in collection if r['status']==s)}"
                                            for s in ('DELIVERED', 'FAILED', 'INTERRUPTED')))
@@ -811,6 +818,35 @@ def source_capture(db, sequence):
             item['oauth_error'] = oauth
         result['causes'].append(item)
     result['truncated'] = failure.get('truncated') is True
+    return result
+
+
+def entry_control_history(db, start, end):
+    """Project native halts and reviewed resumes within the requested run."""
+    result = {'status': 'UNAVAILABLE', 'records': 0, 'omitted': 0, 'recent': []}
+    if not {'occurred_at', 'kind', 'payload'} <= {r[1] for r in db.execute('PRAGMA table_info(execution_events)')}:
+        return result
+    rows = db.execute(
+        "SELECT occurred_at,kind,CASE WHEN kind='MANUAL_HALT' AND length(CAST(payload AS BLOB))<=16384 "
+        "THEN payload END,COUNT(*) OVER () FROM execution_events "
+        "WHERE kind IN ('MANUAL_HALT','OPTION_REVIEWED_RESUME') AND occurred_at>=? AND occurred_at<=? "
+        "ORDER BY rowid DESC LIMIT 8", (start, end),
+    ).fetchall()
+    for stamp, kind, payload, _ in reversed(rows):
+        try:
+            at = datetime.fromisoformat(stamp)
+            at = at.astimezone(timezone.utc).isoformat() if at.utcoffset() is not None else None
+        except (TypeError, ValueError, OverflowError):
+            at = None
+        try:
+            value = json.loads(payload) if payload else None
+        except (TypeError, ValueError, RecursionError):
+            value = None
+        reason = value.get('reason') if isinstance(value, dict) else None
+        result['recent'].append({'at': at, 'kind': kind, 'reason': reason
+                                 if isinstance(reason, str) and CODE.fullmatch(reason) else None})
+    result['records'] = rows[0][3] if rows else 0
+    result.update(status='OBSERVED', omitted=result['records'] - len(rows))
     return result
 
 
@@ -1288,6 +1324,7 @@ def report(directory, started, finished):
         result["reviewed_entry_resumes"] = db.execute(
             "SELECT COUNT(*) FROM execution_events WHERE kind='OPTION_REVIEWED_RESUME' "
             "AND occurred_at>=? AND occurred_at<=?", (start, end)).fetchone()[0]
+        result['entry_control_history'] = entry_control_history(db, start, end)
         result["current_runtime"] = [dict(r) for r in db.execute(
             "SELECT status,reason,feed_sequence FROM execution_option_runtime WHERE id=1")]
         result['accepted_packet'] = None

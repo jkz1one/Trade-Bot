@@ -194,6 +194,44 @@ def test_pre_scan_hold_is_not_a_successful_scan_or_waiting_setup(reason):
     assert 'with scans 0; without scans 1' in text
 
 
+def test_report_keeps_original_feed_halt_after_terminal_stop_and_bounds_private_data():
+    from datetime import datetime, timedelta
+
+    start = datetime.fromisoformat('2026-11-12T15:00:00+00:00')
+    end = start + timedelta(hours=3)
+    db = sqlite3.connect(':memory:')
+    try:
+        assert module.entry_control_history(db, start.isoformat(), end.isoformat())['status'] == 'UNAVAILABLE'
+        db.execute('CREATE TABLE execution_events(occurred_at,kind,payload)')
+        def put(at, kind, payload):
+            db.execute('INSERT INTO execution_events VALUES(?,?,?)', (at.isoformat(), kind, payload))
+        put(start - timedelta(seconds=1), 'MANUAL_HALT', '{"reason":"OUTSIDE_SESSION"}')
+        for i in range(5):
+            put(start + timedelta(seconds=i), 'MANUAL_HALT', '{"reason":"OPTION_RUNTIME_FEED_UNAVAILABLE"}')
+        put(start + timedelta(seconds=15), 'OPTION_REVIEWED_RESUME', '{"reason":"PRIVATE operator review"}')
+        put(start + timedelta(hours=2), 'MANUAL_HALT', '{"reason":"OPTION_RUNTIME_FEED_UNAVAILABLE"}')
+        put(start + timedelta(hours=2, seconds=5), 'MANUAL_HALT', 'PRIVATE invalid JSON')
+        put(start + timedelta(hours=2, seconds=10), 'MANUAL_HALT', '{"reason":"PRIVATE-' + 'X'*18000 + '"}')
+        put(end, 'MANUAL_HALT', '{"reason":"OPTION_RUNTIME_STOPPED"}')
+        put(end + timedelta(seconds=1), 'MANUAL_HALT', '{"reason":"OUTSIDE_SESSION"}')
+        before = db.total_changes
+        history = module.entry_control_history(db, start.isoformat(), end.isoformat())
+        assert (history['records'], history['omitted'], len(history['recent'])) == (10, 2, 8)
+        assert history['recent'][-4]['reason'] == 'OPTION_RUNTIME_FEED_UNAVAILABLE'
+        assert history['recent'][-3]['reason'] is None and history['recent'][-2]['reason'] is None
+        assert history['recent'][-1]['reason'] == 'OPTION_RUNTIME_STOPPED'
+        assert db.total_changes == before
+        value = live_result()
+        value['entry_control_history'] = history
+        value['operation'] = module.operation(value, {'Status': 'exited', 'ExitCode': 0})
+        text = module.short_report(value)
+        assert '2026-11-12T17:00:00+00:00  Entry halt OPTION_RUNTIME_FEED_UNAVAILABLE' in text
+        assert 'Reviewed entry resume' in text and '2 earlier events omitted' in text
+        assert 'PRIVATE' not in text and 'OUTSIDE_SESSION' not in text
+    finally:
+        db.close()
+
+
 def test_short_report_distinguishes_scan_coverage_and_all_retained_timeout_phases():
     value = live_result()
     value['decisions'] = [
