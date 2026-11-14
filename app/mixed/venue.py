@@ -89,12 +89,15 @@ def accept(venue, intent, now, deadline, parent_pid):
     return venue._mutate(operation, deadline=deadline, parent_pid=parent_pid, intent=intent)
 
 
-def fill(venue, intent, quantity, quote, at, *, fill_id):
+def fill(venue, intent, quantity, quote, at, *, fill_id, fill_clock=None):
     _enrolled(venue)
     intent = StockIntent.model_validate(intent.model_dump(warnings=False))
     quote = StockQuote.model_validate(quote.model_dump(warnings=False))
 
+    observed_at = at
+
     def operation(state):
+        at = fill_clock() if fill_clock is not None else observed_at
         _clock(state, at)
         order = next(o for o in state.stock_orders if o.client_id == intent.client_id)
         if (

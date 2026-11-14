@@ -26,6 +26,10 @@ from app.options.scope_runtime import ScopeRuntimeInputs, enrollment, protection
 MAX_PACKET_BYTES = 256 * 1024
 
 
+class RuntimePacketExpired(ValueError):
+    """A delivered packet became unusable while waiting for local work."""
+
+
 def read_private(path):
     fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     with os.fdopen(fd, "rb") as stream:
@@ -213,6 +217,13 @@ class OptionRuntime:
             for source in inputs:
                 source.record(db, packet, at, digest, existing_only=True)
 
+    def current_packet_time(self, packet, earliest):
+        now = self.c.now()
+        age = (now - packet.recorded_at).total_seconds()
+        if now < earliest or not 0 <= age < self.policy.feed_max_age_seconds:
+            raise RuntimePacketExpired("Packet expired or clock regressed during delivery")
+        return now
+
     async def _tick(self):
         if not self.running:
             raise ExecutionBlocked("OPTION_RUNTIME_NOT_RUNNING")
@@ -283,11 +294,19 @@ class OptionRuntime:
         except (OSError, ValueError):
             packet, issue = None, "OPTION_RUNTIME_FEED_UNAVAILABLE"
         issue = issue or operator_issue
-        if packet is not None and issue is None and self.policy.simulated_fills is not None:
-            from app.mixed.quote_fills import apply_quote_fills
-
+        market_packet = packet
+        if packet is not None:
             try:
-                apply_quote_fills(self, packet, at)
+                verified_at = self.current_packet_time(packet, at)
+                if issue is None and self.policy.simulated_fills is not None:
+                    from app.mixed.quote_fills import apply_quote_fills
+
+                    apply_quote_fills(self, packet, verified_at)
+            except RuntimePacketExpired:
+                # Keep the original receipt for completion. Supervision still
+                # reconciles the venue and receives no prices from this packet.
+                market_packet = None
+                issue = issue or "OPTION_RUNTIME_FEED_UNAVAILABLE"
             except (OSError, ValueError):
                 # An ambiguous venue update must halt entry, while the existing
                 # reconciliation and independent protection still run below.
@@ -305,7 +324,7 @@ class OptionRuntime:
                 )
         if self.scope is not None:
             self.scope.expire()
-        frame = packet.frame if packet else DegenFrame()
+        frame = market_packet.frame if market_packet else DegenFrame()
         # Feed failure never skips reconciliation/protection or invents market quotes.
         from app.mixed.portfolio_selection import stock_inputs
 

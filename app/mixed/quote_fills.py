@@ -31,6 +31,12 @@ def apply_quote_fills(runtime, packet, at):
     """Called after native delivery validation and before reconciliation/protection."""
     if runtime.policy.simulated_fills != "mixed-quote-fills-v1" or runtime.mixed is None:
         raise ValueError("Explicit frozen quote-fill policy required")
+
+    def current_time():
+        nonlocal at
+        at = runtime.current_packet_time(packet, at)
+        return at
+
     engine = runtime.c.engine
     quotes, underlyings = protection(packet.frame)
     options = _unique(quotes, lambda q: q.instrument.instrument_id)
@@ -81,11 +87,13 @@ def apply_quote_fills(runtime, packet, at):
                     datetime.fromisoformat(row["attempted_at"]),
                 )
     venue = engine.venue
-    snapshot = venue.snapshot(at)
+    snapshot = venue.snapshot(current_time())
+    current_time()
     count = 0
     for order in (*snapshot.orders, *snapshot.stock_orders):
         if order.status in TERMINAL or order.client_id not in acknowledged:
             continue
+        current_time()
         intent, attempted_at = acknowledged[order.client_id]
         stock = isinstance(intent, StockIntent)
         if at >= intent.order_expires_at:
@@ -99,6 +107,7 @@ def apply_quote_fills(runtime, packet, at):
         if size is None:
             continue
         current = venue.snapshot(at)
+        current_time()
         quantity = (stock_fill_quantity if stock else fill_quantity)(
             intent,
             order,
@@ -135,7 +144,7 @@ def apply_quote_fills(runtime, packet, at):
             }
         )
         if stock:
-            venue.fill_stock(intent, quantity, quote, at, fill_id=fill_id)
+            venue.fill_stock(intent, quantity, quote, at, fill_id=fill_id, fill_clock=current_time)
         else:
             observed = underlying.get(intent.instrument.contract.underlying)
             if observed is not None:
@@ -143,6 +152,9 @@ def apply_quote_fills(runtime, packet, at):
                     validate_underlying(engine.limits, intent, quote, observed, at)
                 except ValueError:
                     observed = None
-            venue.fill(intent, int(quantity), quote, at, fill_id=fill_id, underlying=observed)
+            venue.fill(
+                intent, int(quantity), quote, at, fill_id=fill_id, underlying=observed,
+                fill_clock=current_time,
+            )
         count += 1
     return count

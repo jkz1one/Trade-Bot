@@ -1,6 +1,7 @@
 """Installed native runtime consumes later executable quotes without manual fills."""
 
 import asyncio
+from contextlib import contextmanager
 from datetime import timedelta
 from decimal import Decimal as D
 
@@ -182,3 +183,97 @@ def test_unaccepted_packet_cannot_mutate_venue(tmp_path):
         with pytest.raises(ValueError, match="Validated native delivery"):
             apply_quote_fills(r, packet, times[0])
         assert not any(o.fills for o in v.snapshot(times[0]).stock_orders)
+
+
+@pytest.mark.parametrize("delay", [2, 10])
+@pytest.mark.parametrize("wait_for", ["receipt", "venue_snapshot", "venue_write"])
+@pytest.mark.parametrize("asset", ["STOCK", "OPTION"])
+def test_fill_uses_clock_after_verification(tmp_path, monkeypatch, wait_for, delay, asset):
+    with owner(tmp_path, asset=asset) as (c, venue, times):
+        r = start(c, tmp_path)
+        waits = []
+
+        def advance():
+            if not waits:
+                times[0] += timedelta(seconds=delay)
+                waits.append(times[0])
+
+        if wait_for == "venue_write":
+            lock = venue._db
+
+            @contextmanager
+            def delayed_lock(write=False):
+                with lock(write=write) as db:
+                    if write:
+                        advance()
+                    yield db
+
+            monkeypatch.setattr(venue, "_db", delayed_lock)
+        else:
+            target, method = (r.mixed, "record") if wait_for == "receipt" else (venue, "snapshot")
+            original = getattr(target, method)
+
+            def delayed(*args, **kwargs):
+                result = original(*args, **kwargs)
+                advance()
+                return result
+
+            monkeypatch.setattr(target, method, delayed)
+        times[0] += timedelta(seconds=1)
+        base = stock_frame()
+        source = times[0]
+        packet = send(r, DegenFrame(
+            quotes=(changed(base.quotes[0], source_at=source, received_at=source),),
+            underlyings=(changed(base.underlyings[0], source_at=source, received_at=source),),
+            stocks=(StockCycleInput(quote=quote(source)),),
+        ))
+        supervised = []
+        supervise = c.supervise
+
+        async def protection(*args, stocks=()):
+            supervised.append(len(stocks))
+            return await supervise(*args, stocks=stocks)
+
+        monkeypatch.setattr(c, "supervise", protection)
+        asyncio.run(step(r))
+        with c.engine.journal.read() as db:
+            receipt = db.execute("SELECT status FROM execution_mixed_runtime_inputs WHERE sequence=?",
+                                 (packet.sequence,)).fetchone()[0]
+            state = tuple(db.execute("SELECT status,reason FROM execution_option_runtime").fetchone())
+        snapshot = venue.snapshot(times[0])
+        order, = (*snapshot.orders, *snapshot.stock_orders)
+        assert len(waits) == 1 and venue.submit_count == 1
+        if delay == r.policy.feed_max_age_seconds:
+            assert not order.fills and supervised == [0]
+            assert receipt == "BLOCKED" and state == ("BLOCKED", "OPTION_RUNTIME_FEED_UNAVAILABLE")
+        else:
+            assert [fill.occurred_at for fill in order.fills] == waits
+            assert supervised == [1] and receipt == "DELIVERED" and state == ("RUNNING", None)
+
+
+def test_repeat_that_expires_during_verified_read_still_runs_protection(tmp_path, monkeypatch):
+    with owner(tmp_path) as (c, venue, times):
+        r = start(c, tmp_path)
+        market(r, times, ask_size=D(".1"))
+        original = r._verify_repeated_inputs
+
+        def delayed(*args):
+            original(*args)
+            times[0] += timedelta(seconds=r.policy.feed_max_age_seconds)
+
+        monkeypatch.setattr(r, "_verify_repeated_inputs", delayed)
+        supervise = c.supervise
+        markets = []
+
+        async def protection(*args, stocks=()):
+            markets.append(len(stocks))
+            return await supervise(*args, stocks=stocks)
+
+        monkeypatch.setattr(c, "supervise", protection)
+        asyncio.run(step(r))
+        with c.engine.journal.read() as db:
+            assert tuple(db.execute("SELECT status,reason FROM execution_option_runtime").fetchone()) == (
+                "BLOCKED", "OPTION_RUNTIME_FEED_UNAVAILABLE")
+            assert db.execute("SELECT status FROM execution_mixed_runtime_inputs WHERE sequence=2").fetchone()[0] == "DELIVERED"
+        assert markets == [0] and venue.submit_count == 1
+        assert venue.snapshot(times[0]).stock_orders[0].filled_quantity == D(".1")

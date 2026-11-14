@@ -352,16 +352,23 @@ class DurableOptionVenue:
         *,
         fill_id,
         underlying=None,
+        fill_clock=None,
     ):
         intent = OptionIntent.model_validate(intent.model_dump(warnings=False))
         quote = OptionQuote.model_validate(quote.model_dump(warnings=False))
         if underlying is not None:
-            from app.options.fill_evidence import validate_underlying
-
             underlying = parse_underlying(underlying.model_dump(warnings=False))
-            validate_underlying(self.limits, intent, quote, underlying, at)
+
+        observed_at = at
 
         def fill(state):
+            # Replays supply a recorded clock. A running venue samples after
+            # acquiring its write lock and validating loaded state.
+            at = fill_clock() if fill_clock is not None else observed_at
+            if underlying is not None:
+                from app.options.fill_evidence import validate_underlying
+
+                validate_underlying(self.limits, intent, quote, underlying, at)
             if self.stock_limits is not None:
                 from app.mixed.venue import _clock
 
@@ -667,10 +674,10 @@ class DurableOptionVenue:
 
         return accept(self, intent, now, deadline, parent_pid)
 
-    def fill_stock(self, intent, quantity, quote, at, *, fill_id):
+    def fill_stock(self, intent, quantity, quote, at, *, fill_id, fill_clock=None):
         from app.mixed.venue import fill
 
-        return fill(self, intent, quantity, quote, at, fill_id=fill_id)
+        return fill(self, intent, quantity, quote, at, fill_id=fill_id, fill_clock=fill_clock)
 
     def record_stock_terminal(self, client_id, status, at):
         from app.mixed.venue import terminal
