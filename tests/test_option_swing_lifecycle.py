@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
@@ -174,8 +175,31 @@ def test_terminal_record_wins_entry_race_and_paid_call_keeps_its_cost(
         if ai:
             fake_model(monkeypatch, c)
         terminal = scan(breached())
-        original = getattr(c.engine, phase)
-        if phase == "prepare":
+        if ai and phase == "prepare":
+            # The paid review and reservation hold one writer. Commit the
+            # independent terminal at the last boundary before that writer opens.
+            from app.options import entry_coordination
+
+            write = c.engine.journal.write
+
+            @contextmanager
+            def terminal_before_reservation():
+                monkeypatch.setattr(c.engine.journal, "write", write)
+                retain_scans(c, (terminal,))
+                with write() as db:
+                    yield db
+
+            review = entry_coordination.review_for_execution
+
+            def reviewed(*args, **kwargs):
+                result = review(*args, **kwargs)
+                monkeypatch.setattr(entry_coordination, "review_for_execution", review)
+                monkeypatch.setattr(c.engine.journal, "write", terminal_before_reservation)
+                return result
+
+            monkeypatch.setattr(entry_coordination, "review_for_execution", reviewed)
+        elif phase == "prepare":
+            original = c.engine.prepare
 
             def prepare(*args, **kwargs):
                 retain_scans(c, (terminal,))
@@ -183,6 +207,7 @@ def test_terminal_record_wins_entry_race_and_paid_call_keeps_its_cost(
 
             monkeypatch.setattr(c.engine, phase, prepare)
         else:
+            original = c.engine.dispatch
 
             async def dispatch(*args, **kwargs):
                 retain_scans(c, (terminal,))
@@ -191,8 +216,11 @@ def test_terminal_record_wins_entry_race_and_paid_call_keeps_its_cost(
             monkeypatch.setattr(c.engine, phase, dispatch)
         result = asyncio.run(c.cycle(shared_frame()))
         assert result["status"] != "OPEN" and venue.submit_count == 0
-        assert "SWING_SEED_TERMINAL" in json.dumps(c.engine.journal.report(now=AT))
         with c.engine.journal.read() as db:
+            assert load_terminal(db, terminal.seed) == terminal.terminal
+            assert db.execute("SELECT COUNT(*) FROM execution_events WHERE kind='SWING_SEED_TERMINAL'").fetchone()[0] == 1
+            if phase == "prepare":
+                assert db.execute("SELECT COUNT(*) FROM execution_orders").fetchone()[0] == 0
             calls = db.execute("SELECT cost FROM execution_model_calls").fetchall()
             assert len(calls) == int(ai)
             assert all(r[0] is not None and D(r[0]) > 0 for r in calls)
