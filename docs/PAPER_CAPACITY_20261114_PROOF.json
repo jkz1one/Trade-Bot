@@ -6048,5 +6048,215 @@
         "exit_filled_from_later_packet_before_advice_or_history_returned": true
       }
     ]
+  },
+  "original_selection_and_held_fill_validation": {
+    "baseline": "73487a928cde7f16433bd3398d3f8a94e56ec15d",
+    "implementation": "887b54146dd70eb01064d3fa47e2c9c02f38319f",
+    "network": "isolated; synthetic market and model, disposable owners",
+    "opening_trials": {
+      "baseline": {
+        "planned_seconds": 90,
+        "source_seed": {
+          "kind": "labeled diagnostic padding, not month-history proof",
+          "rows": 3578,
+          "initial_database_bytes": 119635968
+        },
+        "logical_cpus": 1,
+        "elapsed_seconds": 91.21493114700024,
+        "decision_coverage": {
+          "expected": 1,
+          "evaluated": 1,
+          "coverage_percent": 100.0,
+          "unmeasured_slots": [],
+          "target_met": true
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": "VERIFIED_FLAT",
+        "native_snapshot_calls": 32,
+        "native_snapshot_failures": 0,
+        "dashboard_reads": 3,
+        "report_reads": 3,
+        "feed_recoveries": 0,
+        "children_reaped": true,
+        "manifest": "661f8b7fa575bc9c842e9a5fb489b3d7a02b59d50b24fd41d47e5c0dc35009e3",
+        "report_sha256": "90c462a0ea4f31ab8d365956ba574a0b5e13d5f3686ce3328a1f1160c90435b9",
+        "opening_age_seconds": 5.92746,
+        "clock_samples": 1,
+        "plan_seconds_remaining": {
+          "at_reply": 4.133926,
+          "at_option_review": 3.566208
+        }
+      },
+      "selection": {
+        "planned_seconds": 90,
+        "source_seed": {
+          "kind": "labeled diagnostic padding, not month-history proof",
+          "rows": 3578,
+          "initial_database_bytes": 119635968
+        },
+        "logical_cpus": 1,
+        "elapsed_seconds": 91.8588595680003,
+        "decision_coverage": {
+          "expected": 1,
+          "evaluated": 1,
+          "coverage_percent": 100.0,
+          "unmeasured_slots": [],
+          "target_met": true
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": "VERIFIED_FLAT",
+        "native_snapshot_calls": 32,
+        "native_snapshot_failures": 0,
+        "dashboard_reads": 3,
+        "report_reads": 3,
+        "feed_recoveries": 0,
+        "children_reaped": true,
+        "manifest": "e2188e8929965cf4af598c62cfe89caa70ef0567f1cdadf383cd9413eb9803c3",
+        "report_sha256": "f50cccf34db47b1a784e4a7d4aabfa0a19a27bf3ac1bab0dd2ba87539d90bede",
+        "opening_age_seconds": 6.675713,
+        "clock_samples": 1,
+        "plan_seconds_remaining": {
+          "at_reply": 4.100516,
+          "at_option_review": 3.465362
+        }
+      },
+      "candidate-335": {
+        "planned_seconds": 335,
+        "source_seed": {
+          "kind": "labeled diagnostic padding, not month-history proof",
+          "rows": 3578,
+          "initial_database_bytes": 119635968
+        },
+        "logical_cpus": 1,
+        "elapsed_seconds": 336.3156869350005,
+        "decision_coverage": {
+          "expected": 2,
+          "evaluated": 2,
+          "coverage_percent": 100.0,
+          "unmeasured_slots": [],
+          "target_met": true
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": "VERIFIED_FLAT",
+        "native_snapshot_calls": 131,
+        "native_snapshot_failures": 0,
+        "dashboard_reads": 11,
+        "report_reads": 11,
+        "feed_recoveries": 0,
+        "children_reaped": true,
+        "manifest": "920ad8b9cbcf75627236205574d886776bf472fcbe4b886e142ac514b02d6186",
+        "report_sha256": "77b9caf3d95b277ee8bcafd6e7a6a2ba275500b9373763c1667a9605bd745e69",
+        "opening_age_seconds": 5.314527,
+        "clock_samples": 1,
+        "plan_seconds_remaining": {
+          "at_reply": 4.088571,
+          "at_option_review": 3.506775
+        }
+      }
+    },
+    "selection": "Intermediate 90-second trial contains the account-history changes only. The baseline failed the transaction-local read-count regression (two reads, expected one).",
+    "shared_cpu_protection": {
+      "load": "Both loaded asset cases and a separate portfolio model, PAPER report and mixed entry suite shared a single CPU. Native stop to acknowledgement, tick completion, and total time including contention setup use monotonic time. Timing varies with system load.",
+      "before": [
+        {
+          "asset": "STOCK",
+          "journal_bytes_before_contention": 72826880,
+          "contention_setup_seconds": 0.32736527600036425,
+          "breach_to_native_ack_seconds": 3.268983759999628,
+          "native_ack_to_tick_completion_seconds": 1.4238900510003987,
+          "breach_to_tick_completion_seconds": 4.692873811000027,
+          "exit_seconds": 5.020239087000391,
+          "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+          "accounting": "VERIFIED",
+          "held_positions": 0,
+          "native_submissions": 2,
+          "sell_accept_to_serialize_cpu_seconds": 0.004117,
+          "evidence_sha256": "db12e8b6c62b072416244f9b06fa25652c05e3047f5526653034bcad3b2f1790"
+        },
+        {
+          "asset": "OPTION",
+          "journal_bytes_before_contention": 72880128,
+          "contention_setup_seconds": 0.18858095299992783,
+          "breach_to_native_ack_seconds": 4.083692682000219,
+          "native_ack_to_tick_completion_seconds": 1.4788158419996762,
+          "breach_to_tick_completion_seconds": 5.562508523999895,
+          "exit_seconds": 5.751089476999823,
+          "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+          "accounting": "VERIFIED",
+          "held_positions": 0,
+          "native_submissions": 2,
+          "sell_accept_to_serialize_cpu_seconds": 0.260418,
+          "evidence_sha256": "7ca0e4793c3e56730d210c61994ac960b340b1180cf020ab0e4caca10210572d"
+        }
+      ],
+      "after": [
+        {
+          "asset": "STOCK",
+          "journal_bytes_before_contention": 72826880,
+          "contention_setup_seconds": 0.14564265700028045,
+          "breach_to_native_ack_seconds": 3.1512773439999364,
+          "native_ack_to_tick_completion_seconds": 1.4335348639997392,
+          "breach_to_tick_completion_seconds": 4.584812207999676,
+          "exit_seconds": 4.730454864999956,
+          "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+          "accounting": "VERIFIED",
+          "held_positions": 0,
+          "native_submissions": 2,
+          "sell_accept_to_serialize_cpu_seconds": 0.00354,
+          "evidence_sha256": "d4c91044b2d4f1628d53d9548532df125731afd4bd91e53fd5b2a630895cb281"
+        },
+        {
+          "asset": "OPTION",
+          "journal_bytes_before_contention": 72880128,
+          "contention_setup_seconds": 0.1918023620000895,
+          "breach_to_native_ack_seconds": 3.2964595820003524,
+          "native_ack_to_tick_completion_seconds": 1.373579547999725,
+          "breach_to_tick_completion_seconds": 4.670039130000077,
+          "exit_seconds": 4.861841492000167,
+          "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+          "accounting": "VERIFIED",
+          "held_positions": 0,
+          "native_submissions": 2,
+          "sell_accept_to_serialize_cpu_seconds": 0.004154,
+          "evidence_sha256": "e7947738f49ded57304947407207ff9c2882b0c04ae1d503c0a15c0e635775fc"
+        }
+      ],
+      "regression": "The isolated protective sell worker previously imported app.options.engine while reconstructing original option fills. The corrected worker acknowledges the sell and fills on its executable quote with that import forbidden."
+    },
+    "related": {
+      "tests": 254,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 93.569,
+      "junit_sha256": "bce04b31a99955641ea778c6fab1712dc6931a4f085cdc9de4ff63c069100a57"
+    },
+    "system": {
+      "tests": 563,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "seconds": 383.224,
+      "junit_sha256": "a7a7465f89baef65b50e995b41530b1c462cb53ea80564a8298248868e9b3373"
+    },
+    "system_skip": "Reader uid 10001 is unmapped. The suite counts overlap."
   }
 }

@@ -128,6 +128,10 @@ next action. Do not replace missing evidence with a date estimate.
   Seven new regression cases cover these clocks, including rejection at the
   exact deadline. All 211 related installed tests passed with networking disabled.
   The five-second entry-age target still needs a measured repair.
+  `887b541` reads original charge history once for the option shortlist.
+  Under the 120 MB one-CPU fixture, quote ages at reservation were 5.93
+  seconds on the baseline, 6.68 in the selection-only trial, and 5.31 in
+  the combined two-slot run. Each measured one opening and verified flat.
 - [ ] **A3 — Measured repairs:** reproduce and close the actual bottlenecks with
   before/after evidence; decide connection reuse from measurements and validate
   its isolation, refresh ownership, deadlines and cleanup if adopted.
@@ -164,6 +168,13 @@ next action. Do not replace missing evidence with a date estimate.
   A separate 73 MB option case sharing a CPU with another system suite
   acknowledged the breach in 4.51 seconds, completed in 5.99 seconds from
   the breach and filled on a later packet. The latency tail remains open.
+  A new shared-CPU baseline reproduced the slow option exit at 5.56 seconds
+  from the stop quote. On `887b541`, verifying a retained fill uses the
+  original fingerprint function without initializing the trading engine in
+  the exit worker. Stop-to-completion took 4.67 seconds for the option and
+  4.59 for the stock. Both filled from a later quote before history or model
+  advice returned. The installed system suite passed 562 cases with one
+  unmapped-UID skip. [Measurements](PAPER_CAPACITY_20261114_PROOF.json).
   `aad4e08` isolated in-run publisher failure. `d35d318` adds verified-held startup
   protection for missing/partial display snapshots, read-only protection-only host
   review and entry-resume rejection. Both startup scenarios retain the damaged
