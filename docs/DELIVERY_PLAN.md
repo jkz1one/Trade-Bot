@@ -117,6 +117,12 @@ next action. Do not replace missing evidence with a date estimate.
   `875af6b` reads the original charge history once for a paid opening's native
   admission. Before repair it read the same records five times in one writer.
   A one-CPU repeat with the original limits opened at 6.68 seconds.
+  On the month-grown account's next session at `8199a43`, the opening packet
+  was 4.65 seconds old at cycle start. The ENTER reply had 0.674 seconds of
+  validity left. Final review rejected the expired plan before reservation.
+  `66d8ea4` times the original paid receipt check, mixed and Scope selection,
+  and executable option book read. On a 120 MB two-slot run, saving the
+  Scope choice took 0.330 seconds and the opening age was 6.72 seconds.
 - [ ] **A3 — Measured repairs:** reproduce and close the actual bottlenecks with
   before/after evidence; decide connection reuse from measurements and validate
   its isolation, refresh ownership, deadlines and cleanup if adopted.
@@ -150,6 +156,9 @@ next action. Do not replace missing evidence with a date estimate.
   `5761f48` a verified existing publication halt needs no additional native
   commit at the start of the protection tick. Its loaded stock and option
   cases finished in 3.78 and 4.21 seconds with verified flat accounting.
+  A separate 73 MB option case sharing a CPU with another system suite
+  acknowledged the breach in 4.51 seconds, completed in 5.99 seconds from
+  the breach and filled on a later packet. The latency tail remains open.
   `aad4e08` isolated in-run publisher failure. `d35d318` adds verified-held startup
   protection for missing/partial display snapshots, read-only protection-only host
   review and entry-resume rejection. Both startup scenarios retain the damaged
@@ -194,6 +203,17 @@ next action. Do not replace missing evidence with a date estimate.
   two slots. A read-only reproduction found repeated forced revalidation on
   the 65th paid receipt. `8199a43` verified that display five times within
   the original two-second observer bound.
+  Its repeat on a 22-session account evaluated both slots and published through
+  shutdown, with 31 new packets and verified flat accounting. It failed the
+  known-trigger lifecycle because the first slot's plan expired before reservation.
+  The full-duration `0d79a3a` baseline finished with 25 of 72 evaluated
+  slots and verified flat accounting. It allowed zero feed recoveries.
+  With the daily allowance of two, a 335-second comparison on `77a0118`
+  evaluated both slots and completed a round trip. The opening quote was
+  7.02 seconds old. A full day on that implementation remains unverified.
+  The zero-recovery 135-minute repeat on `9710cce` evaluated 27 of 27 slots
+  and verified flat. Its 263 paired dashboard/report reads and 2,983 native
+  snapshot reads succeeded through shutdown.
   The short tests use labeled padding and sampled aggregate RSS. Host cgroup
   enforcement and connected-session effectiveness still require separate evidence.
   [Short loaded runs](PAPER_LOADED_HANDOFF_20261114_PROOF.json). [Current capacity evidence](PAPER_CAPACITY_20261114_PROOF.json).

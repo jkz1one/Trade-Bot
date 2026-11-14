@@ -1,5 +1,29 @@
 # Recovered offline system checkpoint
 
+The final paid-entry trace on `66d8ea4` passed 555 installed system cases
+with one unmapped-UID skip. All 211 related timing, Scope, selection, entry
+and report tests passed. The sets overlap. Three baseline cases reproduced
+missing phase records on `77a0118`. A further 335-second run on the final
+build evaluated both slots, completed one round trip and verified flat.
+The separate 135-minute run on `9710cce` completed 27 of 27 scheduled
+evaluations and verified flat after the worker stopped.
+
+The verified recovery monitor in `77a0118` passed 553 installed system
+checks with one unmapped-UID skip. A further 128 recovery, soak, calendar
+and report checks passed. The earlier 358-minute baseline evaluated 25
+of 72 scheduled slots. The repaired 22-session dashboard repeat evaluated
+both follow-up slots, but its original entry plan expired before reservation.
+[Duration and capacity results](PAPER_DURATION_CAPACITY.md).
+
+November 14 repository-wide regression on `875af6b` ran 7,186 cases.
+There were 7,183 passes, two failures and one unmapped-UID skip. The failing
+paid Swing retirement test injected a second writer inside the active
+reservation. `14f87e8` now commits the independent retirement just before the
+reservation. All four interleavings and all 69 related cases passed.
+The archive restart test raced the server's early rejection of an interrupted
+upload. `0dc5697` checks the 409 response with the original upload headers
+and verifies the exact stored bytes. All 51 archive cases passed.
+
 November 14 offline continuation. The pending implementation was recovered
 and published as `29ef510`. The current protection implementation `5761f48`
 passed 551 installed system checks with one unmapped-UID skip. Both loaded

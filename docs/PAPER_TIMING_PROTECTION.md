@@ -60,6 +60,12 @@ Runtime traces also report scheduler wakeup delay beyond the configured inter-ti
 wait; total tick duration is retained separately. These are observations, not
 changed process deadlines or faster freshness clocks.
 
+Paid-entry traces also time the mixed-family choice, the original Scope
+receipt check, the selection record and the read of the executable option
+book. The Scope selection span includes persistence of the choice. When the
+model chooses Scope, its market refresh has its own span before that record.
+An ordinary model HOLD ends before these phases.
+
 A2 still requires the full-session timing/capacity profile under A6. Synthetic
 timings are workspace observations, not Robinhood
 latency measurements or proof of Tuesday's exact native timeout cause.

@@ -4,6 +4,49 @@ Offline synthetic measurements from November 12–14, 2026. The operator's
 connected capture and scheduler installation are recorded in the separate
 [November 14 host receipt](PAPER_HOST_DEPLOYMENT_20261114.json).
 
+## Full-session scan coverage
+
+The full 21,480-second session on `0d79a3a` evaluated 25 of 72 expected
+slots (34.72%). A feed halt two hours into the run persisted after the
+collector recovered. This comparison allowed zero feed recoveries. Its
+original harness reported a pass on the round trip, accounting and native
+checks. The native scan records fail the 99% coverage requirement. All 3,270
+native snapshot reads succeeded, including p99 at 0.268 seconds. The
+dashboard and report each completed 664 reads. The account closed flat,
+the native database reached 179.5 MB and peak sampled process-tree RSS was
+675.0 MB.
+
+The 135-minute one-CPU repeat on `9710cce` ran beyond the original
+two-hour halt and evaluated all 27 scheduled slots, also with zero allowed
+recoveries. It completed one entry and one exit and its final account and
+restore authority verified. All 263 dashboard/report pairs and 2,983 native
+snapshot reads succeeded. Snapshot p99 was 0.209 seconds. The native
+database grew to 139.6 MB and peak sampled process-tree RSS was 600.9 MB.
+Its initial source was 72.8 MB and its single approved quote was 4.32 seconds
+old at reservation. Full-duration acceptance on the newer build is open.
+[Originals, run limits and counts](PAPER_CAPACITY_20261114_PROOF.json).
+
+The host's daily controller allows two reviewed flat-feed recoveries.
+Two healthy monitor polls previously advanced a test owner's restore
+generation from 9 to 11. `77a0118` verifies the authority and checks the
+owner and operator vetoes in a read transaction. A pending feed halt repeats
+the checks under the writer before recovery. Tampering and a concurrent
+operator halt were both rejected. The matched 335-second runs on one CPU
+started at 119.6 MB with the two-recovery allowance. Before the change one
+native acknowledgement failed, one of two slots was evaluated and the entry
+quote was 7.62 seconds old. Afterwards both slots were evaluated, both
+acknowledgements succeeded and entry age was 7.02 seconds. Each completed
+one round trip and verified flat. Neither consumed a recovery.
+
+In a further 335-second, 120 MB run on `66d8ea4`, the shared selection
+after a paid reply took 0.0006 seconds, original Scope receipt validation
+took 0.010 seconds, the selection and its journal write took 0.330 seconds,
+and reading the executable option book took 0.008 seconds. This opening
+quote was 6.72 seconds old at reservation. Both expected slots were evaluated
+and the account closed flat. These component timings come from that single
+opening. The original expired plan in the separate calendar fixture predates
+the instrumentation.
+
 ## Month-grown dashboard and independent protection
 
 The denser fixture completed all 22 exchange sessions, including the early
@@ -22,6 +65,15 @@ packet, and reused the installed plan schema. Changed source, cost or account
 evidence must validate again. All five reads verified. The first took 1.44
 seconds and subsequent reads took 0.18–0.23 seconds. The display deadline and
 original accounting checks apply to every read.
+
+The 22-session replay on `8199a43` then ran another 335 seconds on that
+account. The worker received 31 new packets, evaluated both slots, published
+its terminal dashboard and verified the account flat. There were zero
+native acceptance, runtime or publication failures. The expected round trip
+still failed. The original ENTER response arrived with 0.674 seconds left
+on its plan. The final review recorded `ORIGINAL_PLAN_DEADLINE_EXPIRED`
+and never reserved an order. The next synthetic response was HOLD.
+The entering packet was already 4.65 seconds old when its cycle began.
 
 Earlier long-run failures had different evidence. The run on `23b0669` recorded
 a report source-copy deadline and a publisher timeout. All 1,109 native
@@ -46,6 +98,13 @@ its native restore generation every tick. A changed halt still persists and
 journal tampering still stops the read. In its 120 MB run, the stock and
 option received acknowledgements at 2.39 and 2.80 seconds and completed
 at 3.78 and 4.21 seconds, respectively. Both filled and reconciled flat.
+In a later 73 MB option case sharing a CPU with another system suite, the
+acknowledgement took 4.51 seconds from the delivered breach, completion
+took 5.99 seconds from the breach, and the complete case took 6.58 seconds
+including setup. The exit filled and the account verified flat.
+On the final timed build `66d8ea4`, the 73 MB stock and option cases
+acknowledged at 1.64 and 2.22 seconds and finished 2.53 and 2.97 seconds
+after the breach. Both filled on the following executable packet.
 
 The new runtime timing on `e87ae5b` measured a 5.59-second original opening
 age at 120 MB on one CPU, two evaluated slots and one completed round trip.
@@ -225,7 +284,11 @@ unshare --user --map-root-user --net /path/to/venv/bin/python -I -W error \
   --seconds 21480 --seed-mib 68
 ```
 
-A short preflight uses `--seconds 90`. The harness refuses existing output/account
+A short preflight uses `--seconds 90`. Add `--max-feed-recoveries 2` to
+exercise the connected daily controller's allowance on a synthetic owner.
+The default zero allows a feed halt to remain visible for comparison. The
+worker records the configured allowance and the actual recovery count at
+shutdown. The harness refuses existing output/account
 paths, checkout output, symlink aliases, network interfaces, editable/source
 imports, mismatched installed application bytes, and mismatched dependency pins.
 It copies only tests, scripts and examples; market and model responses are labeled

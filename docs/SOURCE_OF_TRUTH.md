@@ -1,6 +1,24 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.214. November 14 PAPER timing, protection and month-grown accounting.
+Version 1.215. November 14 PAPER session coverage and paid-entry timing.
+
+The 358-minute baseline finished with verified flat accounting and 25 of
+72 scheduled evaluations. A feed halt persisted on its zero-recovery
+configuration. At the same 120 MB load, enabling the host's allowance of
+two in a 335-second comparison exposed a separate acknowledgement timeout.
+After the healthy monitor stopped taking a native writer on every poll,
+`77a0118` covered both slots and completed a round trip with a 7.02-second
+entry age. The 22-session repeat on `8199a43` kept publishing through the
+23rd session. Its ENTER reply had 0.674 seconds left before expiry, and
+the final review declined it before reservation.
+The 135-minute dashboard repeat on `9710cce` passed the older halt point,
+evaluated all 27 slots, completed a round trip and ended flat. All 263
+dashboard reads succeeded. The final timed build `66d8ea4` passed 555
+installed system checks with one unmapped-UID skip. Its 120 MB opening age
+was 6.72 seconds on one CPU.
+[Full durations, decision records and limits](PAPER_DURATION_CAPACITY.md).
+
+### Earlier November 14 timing and protection measurements
 
 The connected host reported `39d8e48` at its last installation. The following
 measurements used the offline branch. On `e87ae5b`, a 120 MB one-CPU run
