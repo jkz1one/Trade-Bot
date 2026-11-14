@@ -37,7 +37,8 @@ def test_native_child_completes_without_loading_owner_or_model_runtime(tmp_path,
 import sys
 class DenyModelRuntime:
     def find_spec(self, fullname, path=None, target=None):
-        for prefix in ('agents', 'app.execution.runtime', 'app.execution.judgment', 'app.agent'):
+        for prefix in ('agents', 'app.execution.runtime', 'app.execution.judgment', 'app.agent',
+                       'app.options.engine', 'app.robinhood.schedule', 'app.storage.repository'):
             if fullname == prefix or fullname.startswith(prefix + '.'):
                 raise RuntimeError('Unexpected child dependency: ' + fullname)
 sys.meta_path.insert(0, DenyModelRuntime())

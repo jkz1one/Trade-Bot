@@ -2,11 +2,10 @@
 
 from app.options.runtime_timing import measured, phase
 from app.options.models import parse_underlying
-import hashlib
 import json
 import time
 from contextlib import contextmanager
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from decimal import Context, Decimal, localcontext
 from functools import wraps
 from itertools import pairwise
@@ -20,6 +19,7 @@ from app.execution.engine import ExecutionBlocked
 from app.execution.failure import failure_details
 from app.execution.journal import ExecutionJournal
 from app.options.accounting import apply_fill, apply_receipt
+from app.options.evidence import clock, fingerprint
 from app.options.governor import admit_option
 from app.options.lifecycle import (
     CALENDAR_SOURCE,
@@ -62,12 +62,6 @@ class EntryModelBlocked(ExecutionBlocked):
     """An expected entry-risk pause, with no admitted model call or global halt."""
 
 
-def clock(now):
-    if now.tzinfo is None or now.utcoffset() is None:
-        raise ValueError("Options execution clock must be timezone-aware")
-    return now.astimezone(UTC)
-
-
 def exact(function):
     @wraps(function)
     def wrapped(*args, **kwargs):
@@ -75,38 +69,6 @@ def exact(function):
             return function(*args, **kwargs)
 
     return wrapped
-
-
-def fingerprint(value):
-    def normalize(item):
-        # Native Scope receipts contain large nested JSON records. Preserve their
-        # exact canonical bytes without repeated model/date introspection on every
-        # primitive. Subclasses retain the original normalization path below.
-        kind = type(item)
-        if item is None or kind in (str, int, float, bool):
-            return item
-        if kind is dict:
-            return {k: normalize(v) for k, v in item.items()}
-        if kind in (list, tuple):
-            return [normalize(v) for v in item]
-        if hasattr(item, "model_dump"):
-            return normalize(item.model_dump(warnings=False))
-        if isinstance(item, Decimal):
-            text = format(item, "f")
-            return text.rstrip("0").rstrip(".") if "." in text else text
-        if isinstance(item, datetime):
-            return clock(item).isoformat()
-        if hasattr(item, "isoformat"):
-            return item.isoformat()
-        if isinstance(item, dict):
-            return {k: normalize(v) for k, v in item.items()}
-        if isinstance(item, (list, tuple)):
-            return [normalize(v) for v in item]
-        return item
-
-    return hashlib.sha256(
-        json.dumps(normalize(value), sort_keys=True, separators=(",", ":")).encode()
-    ).hexdigest()
 
 
 class OptionJournal(ExecutionJournal):

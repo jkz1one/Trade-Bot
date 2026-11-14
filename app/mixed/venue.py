@@ -8,6 +8,7 @@ from uuid import uuid4
 from app.mixed.accounting import _apply_stock, _stock_fill_rules, _validate_stock_intent
 from app.mixed.models import MixedLedger
 from app.mixed.stock_models import StockFill, StockIntent, StockObservation, StockQuote
+from app.options.evidence import clock, fingerprint
 from app.options.lifecycle import TERMINAL
 
 
@@ -138,8 +139,6 @@ def fill(venue, intent, quantity, quote, at, *, fill_id):
         for old in state.stock_orders:
             # Reconstruct consumed source size without accepting receipt-time aliases.
             for f in old.fills:
-                from app.options.engine import fingerprint
-
                 key = (fingerprint(f.quote.instrument), old.side, f.quote.source_at)
                 q, used = usage.get(key, (f.quote, Decimal(0)))
                 if any(
@@ -213,8 +212,6 @@ def terminal(venue, client_id, status, at):
 
 
 def _clock(state, at):
-    from app.options.engine import clock
-
     at = clock(at)
     if any(o.updated_at > at for o in (*state.orders, *state.stock_orders)) or any(
         r.occurred_at > at for r in state.receipts

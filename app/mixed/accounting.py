@@ -24,6 +24,7 @@ from app.mixed.models import (
     StockPosition,
 )
 from app.options.accounting import apply_fill, apply_receipt
+from app.options.evidence import fingerprint
 from app.options.governor import _fresh, _supported
 from app.options.lifecycle import OptionIntent, OptionLedger
 
@@ -133,8 +134,6 @@ def _stock_fill_rules(p, intent, fill, index, used):
     if hashlib.sha256(q.model_dump_json().encode()).hexdigest() != fill.quote_hash:
         raise ValueError("MIXED_STOCK_QUOTE_HASH")
     # A changed receipt time cannot mint more size at one source instant.
-    from app.options.engine import fingerprint
-
     key = (fingerprint(q.instrument), intent.side, q.source_at)
     previous, size_used = used.get(key, (q, ZERO))
     if any(getattr(previous, k) != getattr(q, k) for k in ("bid", "ask", "bid_size", "ask_size")):
