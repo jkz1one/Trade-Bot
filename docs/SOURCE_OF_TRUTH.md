@@ -1,6 +1,45 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.212. November 14 PAPER decision coverage and protection.
+Version 1.214. November 14 PAPER timing, protection and month-grown accounting.
+
+The connected host reported `39d8e48` at its last installation. The following
+measurements used the offline branch. On `e87ae5b`, a 120 MB one-CPU run
+evaluated both slots and finished flat with a 5.59-second opening age.
+`f99a0ff` closed held stock and option positions during concurrent advice,
+history and display failures. An option stop acknowledgement took 3.95 seconds
+in a repeat and the complete tick took 5.53 seconds. On `5761f48` the next
+loaded stock and option cases completed in 3.78 and 4.21 seconds. The
+installed system suite passed 551 checks with one unmapped-UID skip.
+
+A separate month-grown account delivered 1,738 packets over 22 sessions. In
+its next real-time session on `5cf21d1`, 65 accumulated paid receipts exposed
+a dashboard verification deadline. `8199a43` verified the retained failing
+snapshot on five consecutive reads under two seconds. In matched 120 MB
+runs on that repair, one and two allocated CPUs averaged
+0.730 and 0.743 busy cores. Both recorded two evaluated slots and a round trip.
+Their opening quotes were 6.12 and 6.44 seconds old. A further one-CPU
+repeat at `875af6b` recorded a 6.68-second opening. Entry timing, scan
+coverage and host acceptance remain open.
+[Measured runs and reproductions](PAPER_DURATION_CAPACITY.md).
+
+### Prior November 14 entry and protection measurements
+
+`5cf21d1` commits an eligible option review and its native reservation together.
+The real-time 120 MB fixtures completed one round trip apiece on one and two
+CPUs. Entry source ages were 6.79 and 6.31 seconds, with 0.719 and 0.739
+busy cores on average. Both runs evaluated both scheduled slots, reconciled
+flat and recorded zero native timeouts. The installed system suite passed
+543 checks with one cross-UID skip. All authority and risk limits were kept
+throughout the offline runs.
+
+In a separate 120 MB test, independent PAPER protection received a native
+acknowledgement 2.92 seconds after delivery of a stock stop quote and 3.64
+seconds after delivery of an option stop quote. Both exits filled while
+advice and history were still blocked. The option's complete tick and
+contention setup took 5.14 seconds and missed the five-second test bound.
+`f27c9eb` adds native halt and reviewed-resume timestamps to the saved
+session report so an end-of-day stop retains an earlier feed interruption.
+[Timing and capacity evidence](PAPER_CAPACITY_20261114_PROOF.json).
 
 The full-cadence one-CPU fixture on `0d79a3a` halted entries at 16:00:33
 on its synthetic clock. The previous cycle took 12.37 seconds and the next

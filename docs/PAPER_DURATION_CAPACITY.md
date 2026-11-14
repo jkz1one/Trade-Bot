@@ -1,7 +1,64 @@
 # PAPER duration and capacity checkpoint
 
-Recorded 2026-11-12 UTC (November 11 New York session). This is offline,
-synthetic evidence; today's connected dashboard has not been reviewed here.
+Offline synthetic measurements from November 12–14, 2026. The operator's
+connected capture and scheduler installation are recorded in the separate
+[November 14 host receipt](PAPER_HOST_DEPLOYMENT_20261114.json).
+
+## Month-grown dashboard and independent protection
+
+The denser fixture completed all 22 exchange sessions, including the early
+close, with 1,738 original packets on one account. The first 335-second
+real-time follow-up on `5cf21d1` introduced the 65th paid attempt. Its
+dashboard could no longer verify the projection within its two-second budget.
+The 23rd session evaluated one of two slots. Its opening reservation used a
+9.67-second-old quote, dispatch rejected the entry and no fills occurred.
+Read-only inspection after shutdown verified the native restore authority
+and flat accounting. The rejected display was preserved.
+
+On that exact display, the previous verifier returned unavailable on three of
+five consecutive reads. `8199a43` retained more original charge proofs within
+a 32 MiB process cache, reused the portfolio reconstruction within a candidate
+packet, and reused the installed plan schema. Changed source, cost or account
+evidence must validate again. All five reads verified. The first took 1.44
+seconds and subsequent reads took 0.18–0.23 seconds. The display deadline and
+original accounting checks apply to every read.
+
+Earlier long-run failures had different evidence. The run on `23b0669` recorded
+a report source-copy deadline and a publisher timeout. All 1,109 native
+snapshot calls succeeded, and the originals showed one round trip and a flat
+account. `fa47f34` allows a source copy restarted by continuous commits to
+finish against a consistent view for up to 0.5 seconds inside its five-second
+budget. Its repeat stopped on a dashboard read after 188 seconds. The old
+harness did not retain the HTTP reason. `9710cce` reproduced and repaired a
+valid file replacement during a dashboard read and started retaining the exact
+HTTP status and safe error code. Damaged replacements still fail verification.
+
+At 120 MB, stock and option protection on `f99a0ff` acknowledged the stops in
+2.40 and 2.54 seconds. In a repeat, the option acknowledgement took 3.95
+seconds and the complete test took 5.53 seconds, missing its five-second
+bound. Both assets finished flat in both trials. The instrumented run on
+`98f0b0d` measured a further 1.23 seconds between each acknowledgement and
+tick completion. From the delivered stop book through completion, the stock
+took 3.71 seconds and the option took 4.11. History and advice were still
+blocked when the subsequent executable packet filled each exit.
+`5761f48` verifies an already-matching publication halt without advancing
+its native restore generation every tick. A changed halt still persists and
+journal tampering still stops the read. In its 120 MB run, the stock and
+option received acknowledgements at 2.39 and 2.80 seconds and completed
+at 3.78 and 4.21 seconds, respectively. Both filled and reconciled flat.
+
+The new runtime timing on `e87ae5b` measured a 5.59-second original opening
+age at 120 MB on one CPU, two evaluated slots and one completed round trip.
+Starting a durable timing record took 0.46 seconds at p95 across 138 samples.
+Checking a repeated receipt took 0.39 seconds at p95 and 1.68 at the maximum.
+On `8199a43` the matched one- and two-CPU repetitions opened at 6.12 and
+6.44 seconds, respectively, and averaged 0.730 and 0.743 busy cores. Each
+covered two of two slots, closed its position and verified the account flat.
+Inside paid admission, `875af6b` reduced five reads of original charge history
+to one within the same transaction. Its one-CPU repeat completed a round trip
+with a 6.68-second opening age and 0.739 busy cores. All 172 related checks and
+550 installed system cases passed, with one unmapped-UID system skip.
+[Per-run results and test counts](PAPER_CAPACITY_20261114_PROOF.json).
 
 ## November 14 comparable CPU runs
 
@@ -79,6 +136,23 @@ scheduled slots, completed one round trip, reconciled flat and recorded zero
 native timeouts. The new coverage check counts completed evaluations with
 original scans for both enrolled symbols. A full 21,480-second fixture has 72
 scheduled evaluations. The five-second entry target remains open.
+
+`54d8b93` measures each local step around the paid model. In the 120 MB
+one-CPU run, persisting the request took 0.316 seconds, admitting the model
+call took 0.289, and settling its reply took 0.311. The scripted model itself
+took 0.002 seconds. `5cf21d1` saves the final option review and reservation
+in one transaction. If reservation storage fails, the original review and
+model cost survive, with zero orders. The matched 335-second runs used 0.719
+and 0.739 cores, with 6.79- and 6.31-second opening ages on one and two
+allocated CPUs. Each had one approved opening and a verified protective exit.
+
+With an independently held stock or option and the dashboard, advice and
+history blocked, the 120 MB one-CPU runs acknowledged stops after 2.92
+and 3.64 seconds respectively. The entire tick from contention setup took
+4.27 and 5.14 seconds. Both later executable packets filled the exit before
+the advice and history returned. A separate 73 MB stock case sharing a CPU
+with another fixture took 6.03 seconds for the whole tick. Both breaches of
+the five-second test bound are retained in the proof.
 
 The 22-session replay on one fenced owner was repeated with 1,738 packets.
 Its final native and collector databases measured 100,388,864 and 106,459,136
@@ -158,6 +232,25 @@ It copies only tests, scripts and examples; market and model responses are label
 synthetic. It runs the actual collector/runtime loops, native subprocesses,
 publisher, report and authenticated HTTP reader. Synthetic session time advances
 one-to-one with monotonic elapsed time, without accelerated feed backpressure.
+
+The calendar regression can also run the next session at normal speed on the
+same account after the denser 22-session replay. The following example starts
+from the checkout with an installed test environment and uses a disposable
+directory. Select one available logical CPU for `taskset`.
+
+```sh
+proof=$(mktemp -d)
+TRADE_BOT_CALENDAR_DENSITY=extended TRADE_BOT_CALENDAR_PACED=1 \
+TRADE_BOT_OFFLINE_PROOF="$proof" PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 \
+taskset -c 0 unshare --user --map-root-user --net /path/to/venv/bin/python -I -W error \
+  -c 'import app,os,sys,pytest; sys.path.extend([os.getcwd(),os.getcwd()+"/tests"]); raise SystemExit(pytest.main(sys.argv[1:]))' \
+  -q -c /dev/null -p anyio.pytest_plugin --basetemp="$proof/state" tests/test_paper_calendar_growth.py
+```
+
+`calendar-growth.json` records the calendar sessions. `calendar-paced.json`
+records two decision slots, approval age, fills and accounting during the
+335-second follow-up. Both stages retain their original exchange calendar,
+catalog rollovers, model charges and restore authority.
 
 The nominal worker is pinned to one available CPU. Pass `--cpus 2` for a comparison run. Aggregate descendant RSS is sampled
 against 1 GiB; this is **not kernel cgroup enforcement** or proof of the measured

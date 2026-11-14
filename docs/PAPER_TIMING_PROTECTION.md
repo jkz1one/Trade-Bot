@@ -2,8 +2,9 @@
 
 This continues delivery-plan A2 and A4 after the recovered A1 implementation
 `29ef510`. All examples and retained runs here are isolated synthetic PAPER
-fixtures. The confirmed host remains d2046f6; no deployment, schedule change,
-account recovery or market capture is requested.
+fixtures. The operator subsequently deployed `39d8e48`. The November 14 timing
+work ran in disposable PAPER environments.
+[Host receipt](PAPER_HOST_DEPLOYMENT_20261114.json).
 
 ## Timing contract
 
@@ -137,19 +138,26 @@ their original creation time. A capture guard excludes overlap before the durabl
 attempt exists. Repeated cancellation drains background work before releasing
 its owner; validation failures still reject changed originals.
 
-Publication first creates a consistent private online backup in 64-page batches,
-releasing native read locks between steps. Projection and accounting verification
-read only that copy. Session reports independently use the same bounded-copy
-pattern in a standard-library host script, without an application dependency.
-Their owner/collector snapshots are individually consistent, not one cross-database
-atomic snapshot. Existing packet/hash checks still govern correlations.
+Publication and standalone session reports use the same standard-library
+SQLite copier. Its normal path releases native read locks between 64-page
+steps. If commits repeatedly restart the backup, one retry holds a consistent
+read transaction for up to 0.5 seconds within the existing five-second total.
+Both paths enforce the 512 MiB source-copy limit. The final dashboard projection
+still enforces its 64 MiB limit and durable commit. Each report database has
+its own consistent cutoff. Packet and hash checks correlate the two sources.
 
-Each disposable source copy is limited to 512 MiB and five seconds; these are
-diagnostic capacity bounds, not native journal or account limits. Completed display
-projection remains limited to 64 MiB. Ordinary completion/failure removes the new
-private source copy. A failed publisher retains `.pending.db` and the prior completed
-display. Abrupt process death can leave a private scratch directory for inspection;
-there is no automatic original-history deletion or damaged-display repair.
+An ordinary failure removes the private source copy. The publisher retains
+the previous completed display and the failed `.pending.db` for inspection.
+A dashboard HTTP reader checks file identity around receipt and accounting
+verification. It may retry one observed atomic replacement. Corrupt or
+repeated replacements remain unavailable.
+
+The 120 MB contention fixture records setup, fresh stop to native
+acknowledgement, and acknowledgement to tick completion. Its five-second
+assertion includes all three intervals. Run the loaded stock and option cases
+with `TRADE_BOT_PROTECTION_DENSITY=extended` for the 112 MiB diagnostic seed.
+The following eligible packet must fill the submitted exit during the blocked
+management and history calls. See the [November results](PAPER_DURATION_CAPACITY.md).
 
 Three baseline tests demonstrate event-loop blockage and native SQLite write-lock
 contention before repair. The combined installed test overlaps real history binding,

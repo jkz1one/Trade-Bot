@@ -106,6 +106,17 @@ next action. Do not replace missing evidence with a date estimate.
   fenced commit. Under the same 335-second load, one and two CPUs averaged
   0.718 and 0.732 busy cores, with original entry ages of 6.57 and 6.59
   seconds. [Coverage evidence](PAPER_CAPACITY_20261114_PROOF.json).
+  `54d8b93` measures request persistence, model admission, settlement,
+  protection wait and the final review independently of the model call.
+  `5cf21d1` commits an eligible option review with the native reservation.
+  With the same 120 MB workload both CPU allocations still exceed the
+  five-second entry target at 6.79 and 6.31 seconds.
+  `e87ae5b` measures packet validation, repeat/new receipt handling, quote
+  fills, cycle claiming and the durable trace start. One further 120 MB run
+  opened at 5.59 seconds. Persisting the timing start took 0.46 seconds at p95.
+  `875af6b` reads the original charge history once for a paid opening's native
+  admission. Before repair it read the same records five times in one writer.
+  A one-CPU repeat with the original limits opened at 6.68 seconds.
 - [ ] **A3 — Measured repairs:** reproduce and close the actual bottlenecks with
   before/after evidence; decide connection reuse from measurements and validate
   its isolation, refresh ownership, deadlines and cleanup if adopted.
@@ -127,6 +138,18 @@ next action. Do not replace missing evidence with a date estimate.
   [November 14 evidence](PAPER_SCHEMA_REVISION_20261114_PROOF.json).
 - [ ] **A4 — Independent protection:** prove that model waits, history work and
   display/report failures cannot improperly stop management of an owned position.
+  Stock and option quote-fill tests now hold history, paid management advice
+  and the failing publisher while a report snapshot is open. In the 120 MB
+  run, native acknowledgements took 2.92 and 3.64 seconds from delivery of
+  the stop book. Both ended flat. The option case took 5.14 seconds from
+  setup through tick completion and missed its five-second bound.
+  `f99a0ff` verifies the active order in the protective reservation transaction.
+  A loaded repeat took 3.95 seconds from stop to option acknowledgement and
+  5.53 seconds through completion. Both assets closed on the later book.
+  `98f0b0d` separates contention setup and post-acknowledgement work. In
+  `5761f48` a verified existing publication halt needs no additional native
+  commit at the start of the protection tick. Its loaded stock and option
+  cases finished in 3.78 and 4.21 seconds with verified flat accounting.
   `aad4e08` isolated in-run publisher failure. `d35d318` adds verified-held startup
   protection for missing/partial display snapshots, read-only protection-only host
   review and entry-resume rejection. Both startup scenarios retain the damaged
@@ -167,6 +190,10 @@ next action. Do not replace missing evidence with a date estimate.
   completed 22 trading sessions, including the early close, on one continuing
   owner with eight sampled packets per session. The denser replay and nominal
   duration measurement are recorded in the current capacity evidence.
+  The first normal-speed session after 1,738 retained packets missed one of
+  two slots. A read-only reproduction found repeated forced revalidation on
+  the 65th paid receipt. `8199a43` verified that display five times within
+  the original two-second observer bound.
   The short tests use labeled padding and sampled aggregate RSS. Host cgroup
   enforcement and connected-session effectiveness still require separate evidence.
   [Short loaded runs](PAPER_LOADED_HANDOFF_20261114_PROOF.json). [Current capacity evidence](PAPER_CAPACITY_20261114_PROOF.json).

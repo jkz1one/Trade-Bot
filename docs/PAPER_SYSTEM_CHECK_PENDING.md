@@ -1,5 +1,26 @@
 # Recovered offline system checkpoint
 
+November 14 offline continuation. The pending implementation was recovered
+and published as `29ef510`. The current protection implementation `5761f48`
+passed 551 installed system checks with one unmapped-UID skip. Both loaded
+protective exits completed while history and advice were blocked. The repository-wide run on `0349f38` completed
+7,156 cases. Its first pass had seven failures and one skip. One interrupted
+TLS upload passed in isolation. Six test failures traced to two fixture
+assumptions about the source of a management order and the name of a host
+temporary directory. Each corrected fixture passed with its related tests.
+The 65-receipt dashboard reproduction and the held stock and option timings
+are recorded in the [November 14 evidence](PAPER_CAPACITY_20261114_PROOF.json).
+
+November 14 paid-entry and protection checkpoint. `54d8b93` passed 539
+installed system cases with one cross-UID skip. `5cf21d1` passed 543 with
+the same skip and 198 related checks. Both of its 120 MB CPU comparisons
+completed a round trip and verified flat, with opening source ages above five
+seconds. The saved report on `f27c9eb` reads the in-window native halt and
+resume records. The 120 MB stock and option contention cases separately measure
+the acknowledgement and the whole tick. The option acknowledgement took
+3.64 seconds and the entire case took 5.14 seconds. See the
+[measured checkpoints](PAPER_CAPACITY_20261114_PROOF.json).
+
 November 14 decision-coverage update. The long fixture on `0d79a3a`
 missed the 99% scan-coverage target after a feed halt two hours in.
 `0349f38` and `4329383` repair stale PAPER fill and protection clocks.
