@@ -72,6 +72,18 @@ def review_for_execution(engine, db, key, request, result, quote, underlying, no
     )
 
 
+def _settle_reply(c, key, evidence, result, completed):
+    try:
+        with c.engine.journal.write() as db:
+            c._store_pending_evidence(db, key, evidence)
+            c.engine.record_entry_usage(key, result.usage, result.plan, now=completed, _db=db)
+    except Exception:
+        # The joint transaction rolled back. Keep the original reply even if
+        # its usage could not be settled. The admitted call cannot be repeated.
+        c._pending_evidence(key, evidence)
+        raise
+
+
 async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlyings, evidence):
     """One durable slot, one bounded child, no replay after interruption or uncertainty."""
     at = c.now()
@@ -158,7 +170,6 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
         evidence["entry_timely"] = (
             c._model_timely(request, at, completed) and at <= completed < packet.valid_until
         )
-        c._pending_evidence(key, evidence)
         if (
             result.request_id != request.request_id
             or result.packet_hash != fingerprint(packet)
@@ -169,6 +180,7 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
             or result.usage.model != config.costs.model
             or completed < at
         ):
+            c._pending_evidence(key, evidence)
             raise ValueError("Unknown or foreign model usage")
     except Exception as exc:  # noqa: BLE001 -- private error text is not evidence
         c._model_halt("OPTION_MODEL_COST_UNKNOWN", c.now())
@@ -183,7 +195,7 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
         )
     # Settle trustworthy usage even for rejected/late geometry. Never discard a
     # known charge because its model proposal cannot be used.
-    c.engine.record_entry_usage(key, result.usage, result.plan, now=completed)
+    _settle_reply(c, key, evidence, result, completed)
     coherent = (
         result.counted_input_tokens == result.usage.input_tokens
         and result.usage.input_tokens <= config.limits.max_input_tokens

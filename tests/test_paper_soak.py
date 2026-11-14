@@ -1,4 +1,7 @@
 import importlib.util
+import json
+import sqlite3
+from datetime import timedelta
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -77,3 +80,31 @@ def test_cpu_window_includes_reaped_child_and_excludes_setup(cpus, percent):
         "reaped_child_user_seconds": 2, "reaped_child_system_seconds": .5,
         "average_busy_cores": .6, "average_allocated_cpu_percent": percent,
     }
+
+
+def test_scan_coverage_needs_both_original_evaluations_in_the_expected_slot():
+    from soak_worker import BASE, decision_coverage
+
+    def scan(symbol, at):
+        return {"version": "degen-completed-bars-v1", "symbol": symbol, "evaluated_at": at.isoformat()}
+
+    first = int(BASE.timestamp()) // 300
+    with sqlite3.connect(":memory:") as db:
+        db.execute("CREATE TABLE execution_option_runtime_slots(slot,status)")
+        db.execute("CREATE TABLE execution_option_opportunities(cycle_key,started_at,status,result_json)")
+        for i in range(6):
+            at = BASE + timedelta(minutes=5 * i)
+            if i == 3:
+                continue
+            db.execute("INSERT INTO execution_option_runtime_slots VALUES(?,?)",
+                       (first+i, "SKIPPED" if i == 2 else "COMPLETE"))
+            values = [scan("SPY", at), scan("QQQ", BASE if i == 1 else at)]
+            db.execute("INSERT INTO execution_option_opportunities VALUES(?,?,?,?)",
+                       (f"degen:{first+i}:portfolio:0", at.isoformat(), "COMPLETE",
+                        "damaged" if i == 4 else json.dumps({"status": "HOLD", "scans": values})))
+        result = decision_coverage(db, BASE, 1500)
+        assert (result["expected"], result["evaluated"], result["coverage_percent"]) == (5, 1, 20)
+        assert [row["runtime_status"] for row in result["unmeasured_slots"]] == [
+            "COMPLETE", "SKIPPED", "MISSING", "COMPLETE"]
+        assert not result["target_met"]
+        assert decision_coverage(db, BASE, 300)["target_met"]

@@ -763,13 +763,16 @@ class DegenCoordinator:
             self.engine.journal.event(db, self.now(), "DEGEN_CYCLE_COMPLETED", result)
         return result
 
+    def _store_pending_evidence(self, db, key, evidence):
+        self._bound(db)
+        db.execute(
+            "UPDATE execution_option_opportunities SET result_json=? WHERE cycle_key=?",
+            (json.dumps(evidence, sort_keys=True), key),
+        )
+
     def _pending_evidence(self, key, evidence):
         with self.engine.journal.write() as db:
-            self._bound(db)
-            db.execute(
-                "UPDATE execution_option_opportunities SET result_json=? WHERE cycle_key=?",
-                (json.dumps(evidence, sort_keys=True), key),
-            )
+            self._store_pending_evidence(db, key, evidence)
 
     def _model_halt(self, reason, at):
         with self.engine.journal.write() as db:

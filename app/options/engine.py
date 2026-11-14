@@ -4,7 +4,7 @@ from app.options.runtime_timing import measured, phase
 from app.options.models import parse_underlying
 import json
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from datetime import datetime, timedelta
 from decimal import Context, Decimal, localcontext
 from functools import wraps
@@ -2122,7 +2122,7 @@ class OptionExecution:
         proposal = OptionProposal.model_validate(proposal.model_dump(warnings=False))
         return self._record_model_usage(source_key, usage, proposal, now=now)
 
-    def record_entry_usage(self, source_key, usage, plan, *, now):
+    def record_entry_usage(self, source_key, usage, plan, *, now, _db=None):
         from pydantic import TypeAdapter
 
         from app.options.entry_reasoning import (
@@ -2146,7 +2146,7 @@ class OptionExecution:
             | ScopeCarryShortlistPlan
             | SharedScopeCarryEntryPlan
         ).validate_python(plan.model_dump(warnings=False))
-        return self._record_model_usage(source_key, usage, plan, now=now)
+        return self._record_model_usage(source_key, usage, plan, now=now, _db=_db)
 
     def record_position_usage(self, source_key, usage, plan, *, now):
         from app.options.position_reasoning import PositionPlan
@@ -2155,7 +2155,7 @@ class OptionExecution:
         return self._record_model_usage(source_key, usage, plan, now=now)
 
     @exact
-    def _record_model_usage(self, source_key, usage, proposal, *, now):
+    def _record_model_usage(self, source_key, usage, proposal, *, now, _db=None):
         usage = UsageEvidence.model_validate(usage.model_dump(warnings=False))
         policy = self.policy.cost_policy
         if policy is None or usage.model != policy.model:
@@ -2164,7 +2164,7 @@ class OptionExecution:
             usage.input_tokens * policy.input_per_million
             + usage.output_tokens * policy.output_per_million
         ) / 1000000
-        with self.journal.write() as db:
+        with nullcontext(_db) if _db is not None else self.journal.write() as db:
             self._control(db)
             row = db.execute(
                 "SELECT * FROM execution_model_calls WHERE source_key=?", (source_key,)

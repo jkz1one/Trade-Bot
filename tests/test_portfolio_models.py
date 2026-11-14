@@ -1,6 +1,7 @@
 """Scripted full receipts only: no credentials, model service or paid calls."""
 
 import asyncio
+from contextlib import contextmanager
 import json
 from decimal import Decimal
 
@@ -27,6 +28,49 @@ def test_portfolio_entry_uses_one_original_paid_receipt_and_native_dispatch(
         with c.engine.journal.read() as db:
             calls = db.execute("SELECT * FROM execution_model_calls").fetchall()
         assert len(calls) == 1 and Decimal(calls[0]["cost"]) > 0
+
+
+@pytest.mark.parametrize("fault", [False, True])
+def test_original_model_reply_commits_with_usage_or_survives_its_rollback(tmp_path, monkeypatch, fault):
+    with owner(tmp_path, monkeypatch, mode="HOLD", portfolio=True) as (c, venue, _times, _state):
+        journal = c.engine.journal
+        if fault:
+            with journal.write() as db:
+                db.execute("CREATE TRIGGER reject_usage BEFORE INSERT ON execution_events "
+                           "WHEN NEW.kind='OPTION_MODEL_USAGE_RECORDED' BEGIN "
+                           "SELECT RAISE(ABORT,'injected receipt failure'); END")
+        write = journal.write
+        committed = []
+
+        @contextmanager
+        def observed():
+            statements = []
+            with write() as db:
+                db.set_trace_callback(statements.append)
+                yield db
+            if any("UPDATE execution_option_opportunities SET result_json" in s and
+                   '"entry_result"' in s for s in statements):
+                committed.append(any("UPDATE execution_model_calls SET usage_json" in s
+                                     for s in statements))
+
+        monkeypatch.setattr(journal, "write", observed)
+        first = asyncio.run(c.cycle(stock_frame()))
+        assert len(first["entries"]) == 1 and venue.submit_count == 0
+        with journal.read() as db:
+            stored = json.loads(db.execute("SELECT result_json FROM execution_option_opportunities").fetchone()[0])
+            call = db.execute("SELECT usage_json,cost FROM execution_model_calls").fetchone()
+            halted = db.execute("SELECT halted FROM execution_control").fetchone()[0]
+        assert stored["entry_result"]["usage"]["request_id"] and committed
+        if fault:
+            assert stored["reason"] == "DEGEN_CYCLE_FAILED" and halted
+            assert tuple(call) == (None, None)
+            asyncio.run(c.cycle(stock_frame()))
+            with journal.read() as db:
+                assert db.execute("SELECT COUNT(*) FROM execution_model_calls").fetchone()[0] == 1
+        else:
+            assert committed == [True] and not halted
+            assert json.loads(call["usage_json"]) == stored["entry_result"]["usage"]
+            assert Decimal(call["cost"]) > 0
 
 
 @pytest.mark.parametrize("mode", ["HOLD", "UNKNOWN", "ERROR"])

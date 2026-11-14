@@ -4,8 +4,9 @@ import asyncio
 import json
 import os
 import resource
+import sqlite3
 import time
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -91,6 +92,45 @@ def cpu_window(start, end, cpus):
         "average_busy_cores": round(busy, 6),
         "average_allocated_cpu_percent": round(100 * busy / cpus, 3),
     }
+
+
+def decision_coverage(db, start, seconds):
+    """Count expected fixture slots against both native slot and strategy originals."""
+    first = int(start.timestamp()) // 300
+    last = (int(start.timestamp()) + seconds - 1) // 300
+    expected = set(range(first, last + 1))
+    statuses = dict(db.execute(
+        "SELECT slot,status FROM execution_option_runtime_slots WHERE slot BETWEEN ? AND ?",
+        (first, last),
+    ))
+    # The fixture always uses the enrolled portfolio strategy. A protection-only
+    # completion or a persisted gap does not prove that the strategy evaluated.
+    scans = {}
+    for key, symbol, evaluated_at in db.execute(
+        "SELECT cycle_key,json_extract(s.value,'$.symbol'),json_extract(s.value,'$.evaluated_at') "
+        "FROM execution_option_opportunities AS o, "
+        "json_each(CASE WHEN json_valid(o.result_json) THEN o.result_json END,'$.scans') AS s "
+        "WHERE o.started_at>=? AND o.started_at<? AND o.status='COMPLETE' AND s.type='object' "
+        "AND json_extract(s.value,'$.version')='degen-completed-bars-v1'",
+        (start.isoformat(), (start + timedelta(seconds=seconds)).isoformat()),
+    ):
+        try:
+            at = datetime.fromisoformat(evaluated_at)
+            if at.utcoffset() is None:
+                continue
+            slot = int(at.timestamp()) // 300
+        except (TypeError, ValueError, OverflowError):
+            continue
+        if key == f"degen:{slot}:portfolio:0":
+            scans.setdefault(slot, set()).add(symbol)
+    evaluated = {slot for slot in expected if statuses.get(slot) == "COMPLETE"
+                 and scans.get(slot) == {"SPY", "QQQ"}}
+    missing = sorted(expected - evaluated)
+    return {"expected": len(expected), "evaluated": len(evaluated),
+            "coverage_percent": round(100 * len(evaluated) / len(expected), 3),
+            "unmeasured_slots": [{"slot": slot, "runtime_status": statuses.get(slot, "MISSING")}
+                                 for slot in missing],
+            "target_met": 100 * len(evaluated) >= 99 * len(expected)}
 
 
 def seed_capacity(journal, mib):
@@ -368,6 +408,9 @@ def run(output, seconds, seed_mib):
             reports.report, output, BASE.isoformat(), live_clock().isoformat()
         )
         save(output / "report.json", final)
+        with closing(sqlite3.connect((owner / "options.db").as_uri() + "?mode=ro", uri=True)) as db:
+            db.execute("BEGIN")
+            metrics["decision_coverage"] = decision_coverage(db, BASE, seconds)
         assert not any(child.returncode is None for child in children), "Unreaped native child"
         assert not metrics["native_snapshot_failures"], "Native snapshot deadline/read failure"
         assert not final["runtime_timing"]["by_status"].get("NATIVE_ACCEPT:FAILED"), (
@@ -407,6 +450,8 @@ def run(output, seconds, seed_mib):
         metrics["native_headroom_target_met"] = (
             metrics["native_snapshot_p99_seconds"] < settings.execution.process_timeout_seconds / 2
         )
+        if seconds >= NOMINAL_SECONDS and not metrics["decision_coverage"]["target_met"]:
+            raise AssertionError("Insufficient scheduled decision coverage")
 
     try:
         with pytest.MonkeyPatch.context() as patch:
