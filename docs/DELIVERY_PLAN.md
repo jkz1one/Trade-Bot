@@ -138,6 +138,11 @@ next action. Do not replace missing evidence with a date estimate.
   opening trials measured 5.95 and 6.70 seconds on the baseline and
   5.53 and 6.78 on the repair. Each ended flat. The five-second opening
   target remains open. [Exact trials](PAPER_CAPACITY_20261114_PROOF.json).
+  On `8447e50` the first approved quote was 6.28 seconds old, including
+  5.68 seconds when a restore digest was running. The owner thread spent
+  4.70 CPU seconds in fully contained digest calls. Ten of its calls came
+  from recording tick and cycle timing. This result uses diagnostic
+  padding and one approved opening.
 - [ ] **A3 — Measured repairs:** reproduce and close the actual bottlenecks with
   before/after evidence; decide connection reuse from measurements and validate
   its isolation, refresh ownership, deadlines and cleanup if adopted.
@@ -181,6 +186,12 @@ next action. Do not replace missing evidence with a date estimate.
   4.59 for the stock. Both filled from a later quote before history or model
   advice returned. The installed system suite passed 562 cases with one
   unmapped-UID skip. [Measurements](PAPER_CAPACITY_20261114_PROOF.json).
+  Five subsequent shared-CPU pairs all filled and verified flat. All ten
+  native protective acknowledgements took 3.59 seconds or less from the
+  stop quote. Nine of ten ticks finished within five seconds of that quote.
+  Four of ten met the fixture's full five-second bound, including setup.
+  In the last pair `7d63c74` observed the flat venue 2.40 seconds after
+  the stock's next quote and 2.22 seconds after the option's next quote.
   `aad4e08` isolated in-run publisher failure. `d35d318` adds verified-held startup
   protection for missing/partial display snapshots, read-only protection-only host
   review and entry-resume rejection. Both startup scenarios retain the damaged

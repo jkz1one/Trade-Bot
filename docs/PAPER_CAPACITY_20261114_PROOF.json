@@ -6500,5 +6500,278 @@
       "system_application_sha256": "9904993361dcf075ae05db3a638cbb4858289828c40c826f0e6b29e661902866",
       "notes": "Suites overlap. The system skip is the unmapped dashboard reader UID. Final recovery tests include rejection of damaged restore authority and a real native snapshot during the interrupted read."
     }
+  },
+  "loaded_opening_restore_and_exit_samples": {
+    "application": "e2ced111f495102943e5800a4b6bb16fc0b84469",
+    "profile_command_commit": "8447e50883001b1b5dc546bca5fbbbe189213ee2",
+    "flat_observation_fixture_commit": "7d63c74b4b4186e81adcd2cc874431515476f280",
+    "opening": {
+      "method": "Network-isolated 90-second simulated session, one logical CPU, 112 MiB diagnostic padding, two allowed feed recoveries, --profile-opening-restore. The timing wrapper invokes the original digest on every call. Intervals active in multiple threads are counted once for elapsed time. CPU uses completed intervals inside the original approved quote window.",
+      "initial_database_bytes": 119635968,
+      "opening_restore_profile": {
+        "status": "OBSERVED",
+        "reservation_at": "2026-10-28T14:00:20.354948+00:00",
+        "source_at": "2026-10-28T14:00:14.070098Z",
+        "received_at": "2026-10-28T14:00:15.070098Z",
+        "source_to_reservation": {
+          "window_seconds": 6.28485,
+          "wall_seconds_with_digest_running": 5.676709,
+          "wholly_contained_calls": 36,
+          "owner_thread_cpu_seconds": 4.704545,
+          "background_cpu_seconds": 0.445313,
+          "owner_thread_calls": {
+            "app.options.runtime_timing.root": 10,
+            "app.mixed.portfolio_execution.reconcile": 4,
+            "app.options.runtime._tick": 6,
+            "app.options.coordinator._cycle_once": 2,
+            "app.mixed.selection.collect": 2,
+            "app.options.coordinator._pending_evidence": 4,
+            "app.options.engine.begin_model_attempt": 2,
+            "app.options.entry_coordination._settle_reply": 2,
+            "app.options.entry_coordination.run_entry_cycle": 1
+          }
+        },
+        "receipt_to_reservation": {
+          "window_seconds": 5.28485,
+          "wall_seconds_with_digest_running": 4.976392,
+          "wholly_contained_calls": 32,
+          "owner_thread_cpu_seconds": 4.406602,
+          "background_cpu_seconds": 0.146464,
+          "owner_thread_calls": {
+            "app.mixed.portfolio_execution.reconcile": 4,
+            "app.options.runtime._tick": 6,
+            "app.options.runtime_timing.root": 8,
+            "app.options.coordinator._cycle_once": 2,
+            "app.mixed.selection.collect": 2,
+            "app.options.coordinator._pending_evidence": 4,
+            "app.options.engine.begin_model_attempt": 2,
+            "app.options.entry_coordination._settle_reply": 2,
+            "app.options.entry_coordination.run_entry_cycle": 1
+          }
+        }
+      },
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "final_accounting": "VERIFIED_FLAT",
+      "native_snapshot_failures": 0,
+      "report_sha256": "eb90d823a5a1a1435a9afe4003674b02210514daad0f204347db94a0bc8e4007",
+      "progress_sha256": "93d011bdd5538d4f8fa9324ead9a35645167b47fbf8466b059bd2c306644d961",
+      "related_tests": {
+        "tests": 110,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    "protection": {
+      "method": "Five successive stock/option pairs at the 73 MB starting size. In each pair the protective fixture and a 124-test portfolio/model/report suite shared one logical CPU. Each protection case required a fill from the later executable book while history and advice were still blocked. The five-second fixture limit starts before contention setup. Stop to acknowledgement, stop to tick completion and subsequent flat observations use separate monotonic clocks. Observed flat includes readback time.",
+      "shared_cpu_pairs": [
+        [
+          {
+            "asset": "STOCK",
+            "journal_bytes_before_contention": 72826880,
+            "contention_setup_seconds": 0.22935055699963414,
+            "breach_to_native_ack_seconds": 3.1398592739997184,
+            "native_ack_to_tick_completion_seconds": 1.358172545999878,
+            "breach_to_tick_completion_seconds": 4.498031819999596,
+            "exit_seconds": 4.7273823769992305,
+            "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+            "native_submissions": 2,
+            "accounting": "VERIFIED",
+            "held_positions": 0,
+            "evidence_sha256": "d62122f31d291d296151d6f450ce8786f4e3150ac44ef98f19b1c48bb920509e",
+            "fixture_five_second_target_met": true
+          },
+          {
+            "asset": "OPTION",
+            "journal_bytes_before_contention": 72880128,
+            "contention_setup_seconds": 0.33419618800053286,
+            "breach_to_native_ack_seconds": 3.365443925999898,
+            "native_ack_to_tick_completion_seconds": 1.4143197519997557,
+            "breach_to_tick_completion_seconds": 4.779763677999654,
+            "exit_seconds": 5.113959866000187,
+            "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+            "native_submissions": 2,
+            "accounting": "VERIFIED",
+            "held_positions": 0,
+            "evidence_sha256": "9d365cd97a3c4a1f7804c0776880008a87b64124bc9767b785784e4fd91604bb",
+            "fixture_five_second_target_met": false
+          }
+        ],
+        [
+          {
+            "asset": "STOCK",
+            "journal_bytes_before_contention": 72826880,
+            "contention_setup_seconds": 0.4853696720001608,
+            "breach_to_native_ack_seconds": 3.586400293999759,
+            "native_ack_to_tick_completion_seconds": 1.5252735510002822,
+            "breach_to_tick_completion_seconds": 5.111673845000041,
+            "exit_seconds": 5.597043517000202,
+            "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+            "native_submissions": 2,
+            "accounting": "VERIFIED",
+            "held_positions": 0,
+            "evidence_sha256": "98aee9f3af8276bedf0631b14bdc8d9c032c399f3ce739841e8aaed824a9e6ef",
+            "fixture_five_second_target_met": false
+          },
+          {
+            "asset": "OPTION",
+            "journal_bytes_before_contention": 72880128,
+            "contention_setup_seconds": 0.29727718899994215,
+            "breach_to_native_ack_seconds": 3.318714922000254,
+            "native_ack_to_tick_completion_seconds": 1.410928242999944,
+            "breach_to_tick_completion_seconds": 4.729643165000198,
+            "exit_seconds": 5.02692035400014,
+            "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+            "native_submissions": 2,
+            "accounting": "VERIFIED",
+            "held_positions": 0,
+            "evidence_sha256": "76fb68ae8b9897cb5d53f5b2494a3b36ff24418bcdcd670a0ef53b33905355a1",
+            "fixture_five_second_target_met": false
+          }
+        ],
+        [
+          {
+            "asset": "STOCK",
+            "journal_bytes_before_contention": 72826880,
+            "contention_setup_seconds": 0.2731325119993926,
+            "breach_to_native_ack_seconds": 3.126688240000476,
+            "native_ack_to_tick_completion_seconds": 1.4169549649996043,
+            "breach_to_tick_completion_seconds": 4.54364320500008,
+            "exit_seconds": 4.816775716999473,
+            "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+            "native_submissions": 2,
+            "accounting": "VERIFIED",
+            "held_positions": 0,
+            "evidence_sha256": "541fd1ccf5bfa6adb3e3885ad447dffaf08c8a17c430fae972bb9c0b5b7f7fa5",
+            "fixture_five_second_target_met": true
+          },
+          {
+            "asset": "OPTION",
+            "journal_bytes_before_contention": 72880128,
+            "contention_setup_seconds": 0.12213958099982847,
+            "breach_to_native_ack_seconds": 3.1955026890000227,
+            "native_ack_to_tick_completion_seconds": 1.4589800539997668,
+            "breach_to_tick_completion_seconds": 4.6544827429997895,
+            "exit_seconds": 4.776622323999618,
+            "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+            "native_submissions": 2,
+            "accounting": "VERIFIED",
+            "held_positions": 0,
+            "evidence_sha256": "3742e4043c1ecda0324163287188db8ab98921d0ad5b3462da60fe1ea14b5363",
+            "fixture_five_second_target_met": true
+          }
+        ],
+        [
+          {
+            "asset": "STOCK",
+            "journal_bytes_before_contention": 72826880,
+            "contention_setup_seconds": 0.41076825100026326,
+            "breach_to_native_ack_seconds": 3.129045302999657,
+            "native_ack_to_tick_completion_seconds": 1.511007712000719,
+            "breach_to_tick_completion_seconds": 4.640053015000376,
+            "exit_seconds": 5.050821266000639,
+            "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+            "native_submissions": 2,
+            "accounting": "VERIFIED",
+            "held_positions": 0,
+            "evidence_sha256": "b0e7cc6ff118dc18b5dd24602a99f1381b6cade9e9f641f70a653d65d1d0516f",
+            "fixture_five_second_target_met": false
+          },
+          {
+            "asset": "OPTION",
+            "journal_bytes_before_contention": 72880128,
+            "contention_setup_seconds": 0.3351818529999946,
+            "breach_to_native_ack_seconds": 3.423105587000464,
+            "native_ack_to_tick_completion_seconds": 1.4619963559998723,
+            "breach_to_tick_completion_seconds": 4.885101943000336,
+            "exit_seconds": 5.220283796000331,
+            "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+            "native_submissions": 2,
+            "accounting": "VERIFIED",
+            "held_positions": 0,
+            "evidence_sha256": "abf6e2e8625b6823458efd9599505e9f6fdf32439a206d6365534769d2ded77f",
+            "fixture_five_second_target_met": false
+          }
+        ],
+        [
+          {
+            "asset": "STOCK",
+            "journal_bytes_before_contention": 72826880,
+            "contention_setup_seconds": 0.2953794490003929,
+            "breach_to_native_ack_seconds": 3.3146402249994935,
+            "native_ack_to_tick_completion_seconds": 1.3606282860000647,
+            "breach_to_tick_completion_seconds": 4.675268510999558,
+            "exit_seconds": 4.970647959999951,
+            "next_quote_to_flat_observed_seconds": 2.399610935000055,
+            "breach_to_flat_observed_seconds": 7.445501299999705,
+            "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+            "native_submissions": 2,
+            "accounting": "VERIFIED",
+            "held_positions": 0,
+            "evidence_sha256": "fe096f4060dc397a08fcaf0d92dccbfaea78d062fcce7e86302fc1ccf8d400f1",
+            "fixture_five_second_target_met": true
+          },
+          {
+            "asset": "OPTION",
+            "journal_bytes_before_contention": 72880128,
+            "contention_setup_seconds": 0.33775449199947616,
+            "breach_to_native_ack_seconds": 3.479666492000433,
+            "native_ack_to_tick_completion_seconds": 1.4671170339997843,
+            "breach_to_tick_completion_seconds": 4.9467835260002175,
+            "exit_seconds": 5.284538017999694,
+            "next_quote_to_flat_observed_seconds": 2.2193383759995413,
+            "breach_to_flat_observed_seconds": 7.548714933000156,
+            "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+            "native_submissions": 2,
+            "accounting": "VERIFIED",
+            "held_positions": 0,
+            "evidence_sha256": "8f3c1f53bcaa74096b1c15c0bd646e10c8484df1402a345cfedfaa78f8a04523",
+            "fixture_five_second_target_met": false
+          }
+        ]
+      ],
+      "single_cpu_without_peer": [
+        {
+          "asset": "STOCK",
+          "journal_bytes_before_contention": 72826880,
+          "contention_setup_seconds": 0.25492430800022703,
+          "breach_to_native_ack_seconds": 1.7512140449998697,
+          "native_ack_to_tick_completion_seconds": 0.8065158070003235,
+          "breach_to_tick_completion_seconds": 2.557729852000193,
+          "exit_seconds": 2.8126541600004202,
+          "next_quote_to_flat_observed_seconds": 1.1510550570001215,
+          "breach_to_flat_observed_seconds": 3.9046277900006316,
+          "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+          "native_submissions": 2,
+          "accounting": "VERIFIED",
+          "held_positions": 0,
+          "evidence_sha256": "55f33e5ed34e6eab50f47210df831391a4c29e6923a6c1093de904434fb63766",
+          "fixture_five_second_target_met": true
+        },
+        {
+          "asset": "OPTION",
+          "journal_bytes_before_contention": 72880128,
+          "contention_setup_seconds": 0.21875368599921785,
+          "breach_to_native_ack_seconds": 1.7300678720002907,
+          "native_ack_to_tick_completion_seconds": 0.7136862650004332,
+          "breach_to_tick_completion_seconds": 2.443754137000724,
+          "exit_seconds": 2.6625078229999417,
+          "next_quote_to_flat_observed_seconds": 1.0889317909995953,
+          "breach_to_flat_observed_seconds": 3.7205852950000917,
+          "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+          "native_submissions": 2,
+          "accounting": "VERIFIED",
+          "held_positions": 0,
+          "evidence_sha256": "5d6bbfa819387c935a9835651c0090add835eae25d0c5cda6d7b7bc0a33f8a22",
+          "fixture_five_second_target_met": true
+        }
+      ]
+    }
   }
 }
