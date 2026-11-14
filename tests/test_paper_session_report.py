@@ -497,6 +497,43 @@ def test_projected_paid_timing_is_boolean_and_preserves_scope_input_reason():
         assert 'DO_NOT_EXPOSE' not in json.dumps(result)
 
 
+@pytest.mark.parametrize('review_at, expected', [
+    (None, None),
+    ('2026-11-30T15:00:34.339153Z', 0.0),
+    ('2026-11-30T10:00:34.439153-05:00', -0.1),
+    ('2026-11-30T15:00:33Z', None),
+    ('2026-11-30T15:00:34', None),
+    ('private clock text', None),
+])
+def test_paid_plan_time_remaining_from_original_clocks(review_at, expected):
+    raw = {'entry_timely': True, 'entry_completed_at': '2026-11-30T15:00:33.665493+00:00',
+           'entry_request': {'packet': {'valid_until': '2026-11-30T15:00:34.339153Z'}},
+           'status': 'HOLD', 'reason': 'ORIGINAL_PLAN_DEADLINE_EXPIRED'}
+    if review_at is not None:
+        raw['entry_review_at'] = review_at
+    with sqlite3.connect(':memory:') as db:
+        db.execute('CREATE TABLE execution_option_opportunities(cycle_key,result_json)')
+        db.execute('INSERT INTO execution_option_opportunities VALUES(?,?)', ('first', json.dumps(raw)))
+        first = {'cycle_key': 'first', **module.decision_evidence(db, 'first')}
+        assert first['plan_seconds_remaining'] == {'at_reply': 0.67366, 'at_option_review': expected}
+        raw.update(entry_completed_at='2026-11-30T15:00:34.635776Z', entry_timely=False,
+                   reason='ENTRY_MODEL_HOLD_OR_REJECTED')
+        raw.pop('entry_review_at', None)
+        db.execute('INSERT INTO execution_option_opportunities VALUES(?,?)', ('second', json.dumps(raw)))
+        second = {'cycle_key': 'second', **module.decision_evidence(db, 'second')}
+        assert second['plan_seconds_remaining'] == {'at_reply': -0.296623, 'at_option_review': None}
+        value = live_result() | {'first_decisions': [first], 'decisions': [first, second]}
+        lines = [s for s in module.short_report(value).splitlines() if 'Paid plan time remaining' in s]
+        assert len(lines) == 2 and '+0.674s' in lines[0] and '-0.297s' in lines[1]
+        assert 'ORIGINAL_PLAN_DEADLINE_EXPIRED' in lines[0]
+        assert 'private clock text' not in json.dumps(first)
+        raw['entry_request']['packet']['valid_until'] = {'private': 'invalid'}
+        db.execute('UPDATE execution_option_opportunities SET result_json=? WHERE cycle_key=?',
+                   (json.dumps(raw), 'second'))
+        assert module.decision_evidence(db, 'second')['plan_seconds_remaining'] == {
+            'at_reply': None, 'at_option_review': None}
+
+
 def test_health_block_is_not_reported_as_waiting_for_a_setup():
     value = live_result()
     value['decisions'][0].update(reason=['ENTRY_HEALTH_BLOCKED'], scans=[])

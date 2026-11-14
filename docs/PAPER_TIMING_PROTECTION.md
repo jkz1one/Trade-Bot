@@ -66,6 +66,12 @@ book. The Scope selection span includes persistence of the choice. When the
 model chooses Scope, its market refresh has its own span before that record.
 An ordinary model HOLD ends before these phases.
 
+The session report shows the signed time remaining until the original packet
+deadline at the saved model reply and, when available, the option review.
+Positive values mean time remained. Older runs can show the reply margin
+from their existing clocks. The report leaves the review margin unavailable
+when the review clock was never saved.
+
 A2 still requires the full-session timing/capacity profile under A6. Synthetic
 timings are workspace observations, not Robinhood
 latency measurements or proof of Tuesday's exact native timeout cause.

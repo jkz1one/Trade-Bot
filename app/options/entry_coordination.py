@@ -262,9 +262,11 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
     with phase("ENTRY_REVIEW"):
         with c.engine.journal.read() as db:
             c._bound(db)
+            review_at = c.now()
             review = review_for_execution(
-                c.engine, db, key, request, result, quote, underlying, c.now()
+                c.engine, db, key, request, result, quote, underlying, review_at
             )
+        evidence["entry_review_at"] = review_at.isoformat()
         evidence["entry_review"] = review.model_dump(mode="json")
     if review.outcome != "ELIGIBLE":
         return c._finish(key, {**evidence, "status": "HOLD", "reason": ";".join(review.reasons)})

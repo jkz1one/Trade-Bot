@@ -123,6 +123,11 @@ next action. Do not replace missing evidence with a date estimate.
   `66d8ea4` times the original paid receipt check, mixed and Scope selection,
   and executable option book read. On a 120 MB two-slot run, saving the
   Scope choice took 0.330 seconds and the opening age was 6.72 seconds.
+  Paid option reviews now save the clock used to assess the original plan.
+  The session report shows the time remaining at the model reply and review.
+  Seven new regression cases cover these clocks, including rejection at the
+  exact deadline. All 211 related installed tests passed with networking disabled.
+  The five-second entry-age target still needs a measured repair.
 - [ ] **A3 — Measured repairs:** reproduce and close the actual bottlenecks with
   before/after evidence; decide connection reuse from measurements and validate
   its isolation, refresh ownership, deadlines and cleanup if adopted.

@@ -158,11 +158,38 @@ def decision_evidence(db, key):
                             for name in ('issues', 'exclusions')}
                            for index in range(min(count('$.read_plans'), 12))]
     summary = outcome(json.dumps(value))
+    if summary['entry_timely'] is not None:
+        bounded()
+        summary['plan_seconds_remaining'] = plan_seconds_remaining(db, key)
     summary.update(option_candidates=count('$.candidates'), stock_candidates=count('$.stock_candidates'),
                    total_scans=count('$.scans'), scans_omitted=max(0, count('$.scans') - 12))
     summary['inventory_timing'] = inventory_timing(db, key, value['scans'])
     return {'evidence_available': True, 'evidence_bytes': size,
             'omitted_summary_fields': omitted, **summary}
+
+
+def plan_seconds_remaining(db, key):
+    """Signed seconds to the original paid plan's deadline at each recorded check."""
+    paths = ('$.entry_request.packet.valid_until', '$.entry_completed_at', '$.entry_review_at')
+    projection = ','.join(
+        f"CASE WHEN json_type(result_json,'{path}')='text' "
+        f"AND length(json_extract(result_json,'{path}')) BETWEEN 1 AND 64 "
+        f"THEN json_extract(result_json,'{path}') END" for path in paths)
+    row = db.execute(f"SELECT {projection} FROM execution_option_opportunities WHERE cycle_key=?",
+                     (key,)).fetchone()
+    def utc(stamp):
+        try:
+            at = datetime.fromisoformat(stamp)
+            return at.astimezone(timezone.utc) if at.tzinfo is not None else None
+        except (TypeError, ValueError, OverflowError):
+            return None
+
+    deadline, reply, review = map(utc, row)
+    return {
+        'at_reply': (deadline - reply).total_seconds() if deadline and reply else None,
+        'at_option_review': (deadline - review).total_seconds()
+        if deadline and reply and review and review >= reply else None,
+    }
 
 
 def inventory_timing(db, key, scans):
@@ -383,6 +410,19 @@ def short_report(result):
                 fallback = 'scan recorded; entry checks below'
         lines.append(family + ': ' + (reasons(issues) or fallback))
     lines.append('Last decision: ' + (reasons([decision.get('status'), decision.get('reason')]) or 'none recorded'))
+    shown = set()
+    for item in [*result.get('first_decisions', []), *result.get('decisions', [])]:
+        key = item.get('cycle_key')
+        if key in shown:
+            continue
+        remaining = item.get('plan_seconds_remaining', {})
+        values = [f"{label} {remaining[field]:+.3f}s"
+                  for field, label in (('at_reply', 'at reply'), ('at_option_review', 'at option review'))
+                  if remaining.get(field) is not None]
+        if values:
+            shown.add(key)
+            why = reasons(item.get('reason')) or reasons(item.get('status'))
+            lines.append(f"Paid plan time remaining ({why}) " + ', '.join(values))
     checks = codes([decision.get('issues'), decision.get('blocker'),
                     decision.get('rejections'), decision.get('contract_exclusions')])
     if checks:
