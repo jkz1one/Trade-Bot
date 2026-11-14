@@ -5,11 +5,12 @@ import json
 import os
 import re
 import sqlite3
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
 from app.domain.models import utc_now
-from app.mixed.dashboard_snapshot import VERSION, published
+from app.mixed.dashboard_snapshot import VERSION, file_identity, published
 from app.mixed.observer import MixedObserver
 from app.mixed.paper_health import display
 from app.options.engine import clock, fingerprint
@@ -50,29 +51,52 @@ def parse_binding(raw):
     return binding
 
 
-def guard(directory, binding, *, clock_source=utc_now):
+class PublicationReplaced(ValueError):
+    pass
+
+
+@contextmanager
+def stable_publication(directory, binding):
+    """Detect replacement separately from unreadable or invalid evidence."""
+    path = Path(directory) / "options.db"
+    uid, gid = binding["reader_uid"], binding["reader_gid"]
+    original = file_identity(path, uid, gid)
     try:
-        receipt = published(Path(directory), binding, include_runtime=True)
-        if receipt is None:
-            raise ValueError("Completed snapshot required")
-        age = (
-            clock(clock_source()) - datetime.fromisoformat(receipt["published_at"])
-        ).total_seconds()
-        terminal = (receipt["stored_runtime"]["status"] in ("STOPPED", "FAILED")
-                    and receipt["stored_runtime"]["halted"])
-        if age < 0 or (age > MAX_PUBLICATION_AGE and not terminal):
-            raise ValueError("Recent snapshot publication required")
-        return receipt | {"publication_age_seconds": age,
-                          "publication_state": "STOPPED_RECORDS" if terminal else "CURRENT"}
-    except sqlite3.Error as exc:
-        raise ValueError("Snapshot receipt unavailable") from exc
+        yield
+    finally:
+        if file_identity(path, uid, gid) != original:
+            raise PublicationReplaced("Snapshot replaced during this read")
+
+
+def read_publication(directory, binding, clock_source, project=None):
+    for attempt in range(2):
+        try:
+            with stable_publication(directory, binding):
+                receipt = published(Path(directory), binding, include_runtime=True)
+                if receipt is None:
+                    raise ValueError("Completed snapshot required")
+                age = (clock(clock_source()) - datetime.fromisoformat(receipt["published_at"])).total_seconds()
+                terminal = (receipt["stored_runtime"]["status"] in ("STOPPED", "FAILED")
+                            and receipt["stored_runtime"]["halted"])
+                if age < 0 or (age > MAX_PUBLICATION_AGE and not terminal):
+                    raise ValueError("Recent snapshot publication required")
+                receipt = receipt | {"publication_age_seconds": age,
+                                     "publication_state": "STOPPED_RECORDS" if terminal else "CURRENT"}
+                return receipt, project() if project is not None else None
+        except PublicationReplaced:
+            if attempt:
+                raise
+        except sqlite3.Error as exc:
+            raise ValueError("Snapshot receipt unavailable") from exc
+
+
+def guard(directory, binding, *, clock_source=utc_now):
+    return read_publication(directory, binding, clock_source)[0]
 
 
 def inspect(directory, binding, *, clock_source=utc_now):
-    receipt = guard(directory, binding, clock_source=clock_source)
-    report = MixedObserver(
-        Path(directory) / "options.db", binding["population_id"], clock=clock_source
-    ).report()
+    observer = MixedObserver(Path(directory) / "options.db", binding["population_id"], clock=clock_source)
+    receipt, report = read_publication(directory, binding, clock_source, observer.report)
     if report.get("status") != "OK" or report.get("accounting") != "VERIFIED":
         raise ValueError("Native snapshot accounting unavailable")
     release = inspect_release()
@@ -112,6 +136,7 @@ def create_app(directory, binding, password_file, *, clock_source=utc_now, allow
         clock=clock_source,
         paper_operation=lambda: display(directory, fingerprint(binding), binding["publisher_uid"], clock_source()),
         stored_guard=lambda: guard(directory, binding, clock_source=clock_source),
+        stored_read=lambda project: read_publication(directory, binding, clock_source, project)[1],
     )
 
 

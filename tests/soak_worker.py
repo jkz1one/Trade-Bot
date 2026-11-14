@@ -364,6 +364,14 @@ def run(output, seconds, seed_mib):
                 client.auth = ("trader", PASSWORD)
                 response = client.get("/api/mixed")
                 if response.status_code != 200:
+                    failure = {"http_status": response.status_code}
+                    body = response.json()
+                    if isinstance(body, dict):
+                        if body.get("detail") == "Dashboard snapshot unavailable or not updating":
+                            failure["reason"] = "SNAPSHOT_GUARD_UNAVAILABLE"
+                        elif body.get("reason") == "STORED_EVIDENCE_UNAVAILABLE":
+                            failure["reason"] = "STORED_EVIDENCE_UNAVAILABLE"
+                    metrics["dashboard_failure"] = failure
                     raise ValueError("SOAK_DASHBOARD_UNAVAILABLE")
                 if response.json().get("accounting") != "VERIFIED":
                     raise ValueError("SOAK_ACCOUNTING_UNVERIFIED")

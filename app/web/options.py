@@ -67,8 +67,11 @@ def create_options_app(
     review_at=None,
     operator_key_file=None,
     stored_guard=None,
+    stored_read=None,
     paper_operation=None,
 ):
+    if stored_read is not None and stored_guard is None:
+        raise ValueError("Snapshot report reader requires a receipt guard")
     if stored_guard is not None and (
         not mixed or review_at is not None or operator_key_file is not None
     ):
@@ -131,6 +134,14 @@ def create_options_app(
             except (OSError, ValueError, RuntimeError, KeyError, TypeError):
                 raise HTTPException(503, "Dashboard snapshot unavailable or not updating") from None
 
+    def account_report(**filters):
+        if stored_read is None:
+            return observer.report(**filters)
+        try:
+            return stored_read(lambda: observer.report(**filters))
+        except (OSError, ValueError, RuntimeError, KeyError, TypeError):
+            raise HTTPException(503, "Dashboard snapshot unavailable or not updating") from None
+
     def authenticate(_login=Depends(login)):
         guard_account()
 
@@ -177,7 +188,7 @@ def create_options_app(
                 media_type="application/javascript",
             )
 
-        @app.get("/desk/snapshot", dependencies=[Depends(authenticate)])
+        @app.get("/desk/snapshot", dependencies=[Depends(login if stored_read else authenticate)])
         def desk_snapshot(
             limit: int = Query(25, ge=1, le=100),
             before: int | None = Query(None, ge=1),
@@ -186,7 +197,7 @@ def create_options_app(
         ):
             if family != "ALL":
                 raise HTTPException(422, "Mixed desk shows the common account; use ALL")
-            data = observer.report(limit=limit, before=before, family=family)
+            data = account_report(limit=limit, before=before, family=family)
             data["admin_enabled"] = (
                 operator_key_file is not None
                 and data.get("schema") == "mixed-portfolio-observer-v2"
@@ -222,7 +233,7 @@ def create_options_app(
             else "paused"
         )
 
-    @app.get("/api/mixed" if mixed else "/api/options", dependencies=[Depends(authenticate)])
+    @app.get("/api/mixed" if mixed else "/api/options", dependencies=[Depends(login if stored_read else authenticate)])
     def api(
         limit: int = Query(25, ge=1, le=100),
         before: int | None = Query(None, ge=1),
@@ -230,7 +241,7 @@ def create_options_app(
     ):
         if mixed and family != "ALL":
             raise HTTPException(422, "Mixed desk shows the common account; use ALL")
-        data = observer.report(limit=limit, before=before, family=family)
+        data = account_report(limit=limit, before=before, family=family)
         data["admin_enabled"] = (
             operator_key_file is not None and data.get("schema") == "mixed-portfolio-observer-v2"
         )
@@ -247,17 +258,18 @@ def create_options_app(
         refresh: bool | None = None,
     ):
         ops = paper_operation() if paper_operation else None
+        if mixed and family != "ALL":
+            raise HTTPException(422, "Mixed desk shows the common account; use ALL")
         try:
-            guard_account()
+            if stored_read is None:
+                guard_account()
+            data = account_report(limit=limit, before=before, family=family)
         except HTTPException as exc:
             if ops is None or exc.status_code != 503:
                 raise
             return templates.TemplateResponse(
                 request, "paper_unavailable.html", {"ops": ops}, status_code=503,
             )
-        if mixed and family != "ALL":
-            raise HTTPException(422, "Mixed desk shows the common account; use ALL")
-        data = observer.report(limit=limit, before=before, family=family)
         data["admin_enabled"] = (
             operator_key_file is not None and data.get("schema") == "mixed-portfolio-observer-v2"
         )

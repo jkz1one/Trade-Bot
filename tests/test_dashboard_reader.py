@@ -293,3 +293,43 @@ def test_failure_visible_with_or_without_account_snapshot_and_login_required(tmp
         assert "Controller updates have stopped" in client.get("/desk/operation").text
         path.unlink()
         assert "Status unavailable" in client.get("/desk/operation").text
+
+
+@pytest.mark.parametrize("replacement", ["verified", "damaged", "repeated"])
+def test_atomic_publication_during_account_read_reopens_and_verifies_one_generation(
+    tmp_path, monkeypatch, replacement
+):
+    import shutil
+    from app.mixed.observer import MixedObserver
+
+    _, directory, binding, secret = setup(tmp_path)
+    now = lambda: AT + timedelta(seconds=3)
+    app = reader.create_app(directory, binding, str(secret), clock_source=now)
+    path = directory / "options.db"
+    next_file = directory / "replacement.db"
+    shutil.copyfile(path, next_file)
+    next_file.chmod(0o600)
+    if replacement == "damaged":
+        with sqlite3.connect(next_file) as db:
+            raw = json.loads(db.execute("SELECT payload FROM dashboard_snapshot").fetchone()[0])
+            raw["binding_sha256"] = "0" * 64
+            db.execute("UPDATE dashboard_snapshot SET payload=?", (json.dumps(raw),))
+    original = MixedObserver._snapshot
+    replaced = []
+    def project(self, db, *args):
+        value = original(self, db, *args)
+        if not replaced or replacement == "repeated":
+            if replaced:
+                shutil.copyfile(path, next_file)
+                next_file.chmod(0o600)
+            os.replace(next_file, path)
+            replaced.append(True)
+        return value
+    monkeypatch.setattr(MixedObserver, "_snapshot", project)
+    with TestClient(app) as client:
+        client.auth = ("trader", PASSWORD)
+        response = client.get("/api/mixed")
+    assert len(replaced) == (2 if replacement == "repeated" else 1)
+    assert response.status_code == (200 if replacement == "verified" else 503)
+    if replacement == "verified":
+        assert response.json()["accounting"] == "VERIFIED"
