@@ -5,6 +5,9 @@ from datetime import date
 import pytest
 from test_contract_catalog import captures as captures  # noqa: PLC0414
 from test_read_schema_contract import (
+    date_and_chain_schemas as date_and_chain_schemas,  # noqa: PLC0414
+)
+from test_read_schema_contract import (
     description_schemas as description_schemas,  # noqa: PLC0414
 )
 from test_read_schema_contract import (
@@ -82,12 +85,13 @@ def context(captures):
 
 
 @pytest.mark.parametrize("future_quote", [False, True])
-@pytest.mark.parametrize("new_revision", [False, True])
+@pytest.mark.parametrize("revision", [None, "interval_description_schemas", "date_and_chain_schemas"])
 def test_capture_sequence_produces_reviewable_symbol_catalog(
-        captures, future_quote, new_revision, interval_description_schemas):
-    if new_revision:
+        captures, future_quote, revision, request):
+    if revision:
+        observed = request.getfixturevalue(revision)
         for artifact in captures:
-            artifact["result"]["schemas"] = interval_description_schemas.model_dump(mode="json")
+            artifact["result"]["schemas"] = observed.model_dump(mode="json")
     if future_quote:
         from datetime import datetime, timedelta
         received = datetime.fromisoformat(captures[2]["result"]["collected_at"])

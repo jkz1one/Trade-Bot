@@ -19,13 +19,9 @@ def description_schemas():
         'robinhood_read_schemas_20261104.json').read_text())
 
 
-@pytest.fixture
-def interval_description_schemas(description_schemas):
-    # The operator supplied exact field changes plus the full metadata digest,
-    # not an original capture timestamp. Retain the base fixture's test clock.
-    delta = json.loads((Path(__file__).parent / 'fixtures' /
-        'robinhood_read_schema_delta_20261112.json').read_text())
-    value = description_schemas.model_dump()
+def apply_delta(base, filename):
+    delta = json.loads((Path(__file__).parent / 'fixtures' / filename).read_text())
+    value = base.model_dump()
     assert value['sha256'] == delta['base_sha256']
     for change in delta['changes']:
         node = value['tools']
@@ -37,13 +33,26 @@ def interval_description_schemas(description_schemas):
     return ReadSchemas.model_validate(value)
 
 
-@pytest.fixture(params=['description_schemas', 'interval_description_schemas'])
+@pytest.fixture
+def interval_description_schemas(description_schemas):
+    return apply_delta(description_schemas, 'robinhood_read_schema_delta_20261112.json')
+
+
+@pytest.fixture
+def date_and_chain_schemas(interval_description_schemas):
+    return apply_delta(interval_description_schemas, 'robinhood_read_schema_delta_20261114.json')
+
+
+REVISIONS = ['schemas', 'description_schemas', 'interval_description_schemas', 'date_and_chain_schemas']
+
+
+@pytest.fixture(params=REVISIONS[1:])
 def compatible_schemas(request):
     return request.getfixturevalue(request.param)
 
 
-@pytest.mark.parametrize('left', ['schemas', 'description_schemas', 'interval_description_schemas'])
-@pytest.mark.parametrize('right', ['schemas', 'description_schemas', 'interval_description_schemas'])
+@pytest.mark.parametrize('left', REVISIONS)
+@pytest.mark.parametrize('right', REVISIONS)
 def test_reviewed_revision_pairs_preserve_original_metadata(request, left, right):
     from app.options.read_mapping import reviewed_schemas
     a, b = request.getfixturevalue(left), request.getfixturevalue(right)
@@ -105,7 +114,7 @@ def test_supplied_revision_changes_exactly_one_top_level_description(schemas, de
     assert schemas.model_dump() == old and description_schemas.model_dump() == new
 
 
-@pytest.mark.parametrize('damage', ['description', 'input', 'output', 'annotation', 'name', 'nested_description', 'interval_description', 'required', 'argument_type'])
+@pytest.mark.parametrize('damage', ['description', 'input', 'output', 'annotation', 'name', 'nested_description', 'interval_description', 'chain_guide', 'required', 'argument_type'])
 def test_unreviewed_metadata_cannot_use_description_exception(schemas, compatible_schemas, damage):
     from app.options.read_gateway import CapturePlan, OptionReadGateway, ReadSample
     from app.options.read_mapping import reviewed_schemas
@@ -117,6 +126,8 @@ def test_unreviewed_metadata_cannot_use_description_exception(schemas, compatibl
         tool['annotations']['readOnlyHint'] = False
     elif damage == 'interval_description':
         tool['inputSchema']['properties']['interval']['description'] += ' unreviewed'
+    elif damage == 'chain_guide':
+        value['tools']['get_option_chains']['outputSchema']['properties']['guide']['description'] += ' unreviewed'
     elif damage == 'required':
         tool['inputSchema']['required'] = []
     elif damage == 'argument_type':

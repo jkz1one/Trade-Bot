@@ -28,13 +28,15 @@ READ_TOOLS = frozenset(ReadTool.__args__)
 MAX_SCHEMA_BYTES = 128 * 1024
 MAX_SAMPLE_BYTES = 128 * 1024
 # Exact reviewed metadata revisions. November 4 adds completed-bar timing
-# documentation. November 12 additionally clarifies both historical interval
-# descriptions. Argument rules, output schemas and capability annotations match.
+# documentation. November 12 clarifies intervals. November 14 clarifies the
+# historical date bounds and the two option-chain output descriptions.
 REVIEWED_SCHEMA_SHA256 = "d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15"
 COMPLETED_BARS_DESCRIPTION_SHA256 = "77f5aaac0e67dd9fb194d35bdbfb3779a351f52db8c6594a90dadd4f3fc5e272"
 INTERVAL_DESCRIPTION_SHA256 = "dc15d335d30cd024e60910982942cf27d4c51dd83651630630c6b6e1cfa27718"
+DATE_AND_CHAIN_DESCRIPTION_SHA256 = "05c635c9451e7257954ba11a111a47323a5ac2c1e743d820a0cc4ca5c2733eff"
 REVIEWED_SCHEMA_DIGESTS = frozenset({
     REVIEWED_SCHEMA_SHA256, COMPLETED_BARS_DESCRIPTION_SHA256, INTERVAL_DESCRIPTION_SHA256,
+    DATE_AND_CHAIN_DESCRIPTION_SHA256,
 })
 
 
@@ -75,9 +77,9 @@ class ReadSchemas(OptionRecord):
 
 
 def same_schema_contract(left, right):
-    """Match three exact reviewed revisions without rewriting original evidence.
+    """Match exact reviewed revisions without rewriting original evidence.
 
-    Only the three reviewed documentation fields may differ after both complete
+    Only the reviewed documentation fields may differ after both complete
     metadata digests pass the allowlist. All other nested fields still match.
     """
     if left is None or right is None:
@@ -93,7 +95,13 @@ def same_schema_contract(left, right):
         del value["sha256"]
         value["tools"]["get_equity_historicals"].pop("description", None)
         for name in ("get_equity_historicals", "get_option_historicals"):
-            value["tools"][name]["inputSchema"]["properties"]["interval"].pop("description", None)
+            fields = value["tools"][name]["inputSchema"]["properties"]
+            for parameter in ("interval", "start_time", "end_time"):
+                fields[parameter].pop("description", None)
+        chain_output = value["tools"]["get_option_chains"]["outputSchema"]["properties"]
+        chain_output["guide"].pop("description", None)
+        chain_fields = chain_output["data"]["properties"]["chains"]["items"]["properties"]
+        chain_fields["extended_hours_state"].pop("description", None)
     return a == b
 
 
