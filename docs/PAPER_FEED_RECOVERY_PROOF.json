@@ -1,0 +1,65 @@
+{
+  "version": "paper-feed-recovery-offline-v1",
+  "base_commit": "b51d64c7f49c31f2ee8ac1bbd9581174e5b86a56",
+  "base_tree": "fb235d9f9cd781c19538031fe1804507af275bfb",
+  "application_files": 316,
+  "source_wheel_installed_bytes_match": true,
+  "runtime_pinned_dependencies_verified": 60,
+  "wheel_sha256": "861e403210bc605b9f398b996c5b16c4881542ddc571167a2e08be92be98542f",
+  "changed_tests_and_host_scripts_copies_match": true,
+  "installed_testing": "Python 3.12, isolated -I, warnings as errors, explicit anyio plugin, copied tests/scripts outside checkout with no app directory; real child processes use the installed wheel.",
+  "verification_runs": [
+    {
+      "report": "installed.xml",
+      "passed": 264,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "report": "final.xml",
+      "passed": 71,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "unique_passed_cases": 266,
+  "unique_failed_cases": 0,
+  "suites": {
+    "tests.test_combined_session_feed": 7,
+    "tests.test_connected_feed_recovery": 21,
+    "tests.test_connected_runtime": 19,
+    "tests.test_option_read_capture": 58,
+    "tests.test_paper_session_report": 31,
+    "tests.test_paper_session_start": 25,
+    "tests.test_portfolio_feed": 7,
+    "tests.test_preopen_inputs": 16,
+    "tests.test_preopen_replay": 4,
+    "tests.test_scope_feed": 13,
+    "tests.test_session_host": 40,
+    "tests.test_swing_feed": 25
+  },
+  "source_sha256": {
+    "app/mixed/connected_runtime.py": "63a1efaaa7222139f71c6b7742115adb9b5962b87f8e32c849bdf458fbedaa47",
+    "app/mixed/continuous_feed.py": "75f304210a50f7cc5e165c46f3e3c4f7d52972f5e5d5a550d3badb71a74df999",
+    "scripts/connected-session-host.py": "8fc54afe1c3ada5a61c2c361fea39da915a206a502f844514993eae93c398574",
+    "scripts/paper-session-report.py": "0b187bbdbf7a1904dcbc9051d1f45cdc640bc69eff742cffae059dbdc961baae",
+    "scripts/paper-session-start.py": "03120826aac0ade4fe3d67a4ef3178cf9b2cb60ea06d3fb5df4a9eec40b6a235",
+    "tests/test_paper_session_report.py": "bb01490a3f645153ecd29c64664265a816ff47e8ae972f376d741ed9c9b39619",
+    "tests/test_paper_session_start.py": "69f6dab53dad91e1dac7ae0d421ee3fc83cff03bf803b1acc12a5fbcd670c707",
+    "tests/test_portfolio_feed.py": "975007e9b4b5021226ed527809776d474b133b5b8219ca6dd76be258e61810e2",
+    "tests/test_session_host.py": "561b1841cc538ccae3164d6a75c9689c2f1aacced3b30b2ce54f68991f3b5f18",
+    "tests/test_connected_feed_recovery.py": "4c93c30ec4e63d145909a175c9937fadb0ab94ebfe11db2265c9840ec0c8e041"
+  },
+  "acceptance_limits": [
+    "No provider or model calls, brokerage orders, host changes or market acceptance in these fixtures.",
+    "November 3 host report proves four no-admitted-contract decisions then eleven decisions blocked after a feed-timeout halt; model calls and fills remain zero.",
+    "Later source capture cause still needs original saved capture.failure stage/classes/status; authentication failure is not established.",
+    "Mid-run recovery is explicitly reviewed and disabled by default; cap is per run, at most three, with no automatic restart.",
+    "Manual/other halt history vetoes recovery even if a subsequent feed fault overwrites the current reason. Held/pending/unknown-cost cases remain blocked.",
+    "No relaxation of original quote, heartbeat, budget, loss, account or session gates. Historical first sample cannot authorize entry without a new valid advancing sample.",
+    "Scope original history/exact bindings and real continuous post-cost timing remain unresolved; Swing interpolated daily bars remain rejected.",
+    "The unchanged legacy five-second Scope SDK-worker timeout documented in PAPER_SCOPE_OPERATION_PROOF.json was not part of this targeted release suite and remains unresolved."
+  ]
+}

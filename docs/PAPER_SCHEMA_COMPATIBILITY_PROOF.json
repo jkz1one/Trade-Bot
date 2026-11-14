@@ -1,0 +1,89 @@
+{
+  "version": "paper-schema-compatibility-offline-v1",
+  "base_commit": "b2e5d844052e0583b84aff36a7771a80e465a1f8",
+  "base_tree": "d9665c3438d23fd49f452b873e7bd4407d74e736",
+  "application_files": 317,
+  "source_wheel_installed_bytes_match": true,
+  "runtime_pinned_dependencies_verified": 60,
+  "wheel_sha256": "5b7b06b0ddc130bbecb6afc3a5ae927f875af1bd6f0ebcd2353d517e520ecca7",
+  "changed_tests_and_fixture_copies_match": true,
+  "installed_testing": "Python 3.12, isolated -I, warnings as errors, explicit anyio plugin; copied tests/scripts outside checkout with no app source; native subprocesses use installed wheel.",
+  "verification_runs": [
+    {
+      "report": "installed.xml",
+      "passed": 553,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "unique_passed_cases": 553,
+  "unique_failed_cases": 0,
+  "suites": {
+    "tests.test_combined_session_feed": 7,
+    "tests.test_connected_feed_recovery": 21,
+    "tests.test_connected_runtime": 19,
+    "tests.test_continuous_strategy_delivery": 15,
+    "tests.test_contract_catalog": 52,
+    "tests.test_feed_rollover": 34,
+    "tests.test_host_bundle": 9,
+    "tests.test_option_read_capture": 58,
+    "tests.test_option_read_diagnostics": 14,
+    "tests.test_paper_session_start": 25,
+    "tests.test_portfolio_feed": 7,
+    "tests.test_preopen_inputs": 16,
+    "tests.test_preopen_replay": 8,
+    "tests.test_read_auth_host": 12,
+    "tests.test_read_schema_contract": 13,
+    "tests.test_robinhood_oauth_refresh": 17,
+    "tests.test_robinhood_read_mapping": 100,
+    "tests.test_schema_artifact": 12,
+    "tests.test_scope_feed": 16,
+    "tests.test_session_capture": 14,
+    "tests.test_session_host": 40,
+    "tests.test_simulation_session": 6,
+    "tests.test_swing_bar_mapping_proof": 13,
+    "tests.test_swing_feed": 25
+  },
+  "source_sha256": {
+    "app/mixed/continuous_feed.py": "a625f700f962e92087201f289ae4ee799ba94833bde5ec073bb6146f5a8d9d91",
+    "app/mixed/contract_catalog.py": "c07504b420a9f50dc07bcf810d585a6c1124c21cb615b03a58b90d80ab9acc97",
+    "app/mixed/session_capture.py": "bcab70d17d14ac00165b7dec90d337a3a20aca7d60ad1e9975bc57b8ce605515",
+    "app/options/read_capture.py": "020f4f6ff7f7d7bed161a6304d9fed4400a177aabceb17c16f7c6e11c48e9564",
+    "app/options/read_gateway.py": "a77eeb3e8b9e4cca2f47658b049751ba7c3561dd7eb6696a0c3da79a2d1db80c",
+    "app/options/read_mapping.py": "9c951c91cec2285ccfd656ff501552f8e5dce7352f5b2ced954c0f1cc736a370",
+    "tests/test_contract_catalog.py": "7eac84b8639953441480214960612b960e72545552e62b8402cada1481ac2b45",
+    "tests/test_preopen_replay.py": "3dd2f3500297a8051115bf71c99b5de68a72e5da42d2d0d7f87aa9d79ae65353",
+    "tests/test_read_schema_contract.py": "db5708615cc75f6deb6c2df6ef017854e08e1f56cb4eef40a82cc4ab6359928d",
+    "tests/test_robinhood_read_mapping.py": "0e2c9f32d2120cc8679ee9dadc01ac82e97a83087e39d117fc9598a62233a5cb",
+    "tests/test_schema_artifact.py": "2c234df5f8b43fc15c3c7e2ec6d24e2978d21c22a21b3d69d9bc0b9255dc2bde",
+    "tests/test_scope_feed.py": "7ccf22623a5cef70b23872a24903cd982c7d63e8d02c8242df83ac1a516e82c7",
+    "tests/test_session_capture.py": "30defcedddfabd5e808b2730c11086a141773128e88fe4c0b70df5a5c4c1ebda",
+    "tests/fixtures/robinhood_read_schemas_20261104.json": "e9074baeab6da12df7db9376161678f026a5b69d5d074cd9d4964ac32704c68a"
+  },
+  "schema_evidence": {
+    "operator_attachment_sha256": "b558e2973b5048825d96b2137a4dd761e2cf5c073ec4d5be6b638327fd7a462e",
+    "operator_attachment_bytes": 34070,
+    "original_schema_sha256": "d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15",
+    "observed_schema_sha256": "77f5aaac0e67dd9fb194d35bdbfb3779a351f52db8c6594a90dadd4f3fc5e272",
+    "observed_captured_at": "2026-11-05T02:32:13.894179Z",
+    "changed_tool_paths": [
+      "get_equity_historicals.description"
+    ],
+    "all_input_output_schemas_equal": true,
+    "all_tool_names_annotations_equal": true,
+    "review": "Appended documentation states only completed bars are returned, end_time rounds down to a UTC interval boundary, daily bars require the next UTC day as end, unfinished larger intervals need intraday reads, and start_time cannot be future.",
+    "fixture": "tests/fixtures/robinhood_read_schemas_20261104.json",
+    "fixture_sha256": "e9074baeab6da12df7db9376161678f026a5b69d5d074cd9d4964ac32704c68a"
+  },
+  "acceptance_limits": [
+    "Exactly two full reviewed metadata digests are compatible; all other description, nested schema, name or annotation changes remain rejected.",
+    "Gateway, parent capture, collector, catalog, Scope delivery and pre-open replay retain actual incoming metadata/digests while preserving the original enrolled schema/configuration.",
+    "Both revisions pass the same quote/bar validation suite, including malformed, future, delayed, incomplete and interpolated evidence. Native completed-bar and UTC daily boundaries are unchanged.",
+    "No live provider/model calls, host changes, authorization calls or actual connected trading acceptance occurred during these offline tests.",
+    "Account balances, journals, positions, halts, two-play cap, $1000 initial capital, $1/day and $5 total AI budget and LIVE-disabled policy are unchanged.",
+    "A deployment build is required. No schema file replacement, re-enrollment, login or repeated discovery is needed.",
+    "Current-day contract inputs, valid original Swing daily history, exact reviewed Scope inputs/capacity and real continuous post-cost Scope timing remain open; no connected fill or full lifecycle has been observed.",
+    "The pre-existing five-second Scope SDK-worker timeout in PAPER_SCOPE_OPERATION_PROOF.json remains outside this fix. The production-budget lifecycle test in test_continuous_strategy_delivery passes."
+  ]
+}

@@ -1,0 +1,112 @@
+"""Sequential native selection: shared configured priorities, at most one paid call."""
+
+from app.execution.engine import ExecutionBlocked
+from app.mixed.accounting import reconstruct
+from app.mixed.portfolio_protection import entry_guard
+from app.mixed.portfolio_store import history
+
+
+async def cycle(c, frame, *, _protected_epoch=None):
+    from app.options.coordinator import DegenFrame
+    from app.options.scope_runtime import protection
+
+    frame = DegenFrame.model_validate(frame.model_dump())
+    managed = None
+    if _protected_epoch is not None:
+        from app.mixed.portfolio_execution import fresh
+        from app.options.engine import fingerprint
+
+        try:
+            with c.engine.journal.read() as db:
+                c._bound(db)
+                fresh(c.engine, db, c.engine.portfolio_policy, c.now())
+                if _protected_epoch == (c.engine._epoch(db), fingerprint(frame)):
+                    managed = {"reconciled": True, "reused_runtime_protection": True}
+        except ExecutionBlocked:
+            pass
+    if managed is None:
+        managed = await c.supervise(*protection(frame), stocks=stock_inputs(frame))
+    if not managed.get("reconciled"):
+        return {"status": "HOLD", "reason": "PORTFOLIO_PROTECTION_REQUIRED", "management": managed}
+    results = []
+    paid = c.judgment_limits is not None or c.entry_policy is not None
+    status, reason = "COMPLETE", None
+    for slot in range(1 if paid else 2):
+        if slot:
+            # A preceding entry changed the shared book. Reconcile and protect
+            # that new state before considering the remaining capacity.
+            managed = await c.supervise(*protection(frame), stocks=stock_inputs(frame))
+            if not managed.get("reconciled"):
+                status, reason = "HOLD", "PORTFOLIO_PROTECTION_REQUIRED"
+                break
+        try:
+            with c.engine.journal.read() as db:
+                c._bound(db)
+                h = history(c.engine, db, c.engine.portfolio_policy, c.now())
+                projected = reconstruct(h)
+                if len(projected.commitments) >= h.policy.max_plays:
+                    status = "HELD" if projected.ledger.positions else "HOLD"
+                    reason = "PLAY_CAPACITY"
+                    break
+                entry_guard(c.engine, db, c.engine.portfolio_policy, c.now())
+                protected_epoch = c.engine._epoch(db)
+        except ExecutionBlocked as exc:
+            status, reason = "HOLD", str(exc)
+            break
+        outcome = await c._cycle_once(
+            frame, portfolio_slot=slot, _protected_epoch=protected_epoch
+        )
+        results.append(outcome)
+        if outcome.get("status") not in {"OPEN", "FILLED", "PARTIAL"}:
+            break
+    if c.position_policy is not None:
+        # A healthy held play does not occupy the free slot. Preserve the existing
+        # one-paid-call budget: native management follows only if no entry call
+        # was admitted in this completed slot, including a rejected/unknown call.
+        prefix = "degen:" + str(int(c.now().timestamp()) // 300) + ":portfolio:"
+        with c.engine.journal.read() as db:
+            entry_call = db.execute(
+                "SELECT 1 FROM execution_model_calls WHERE source_key LIKE ?", (prefix + "%",)
+            ).fetchone()
+        if entry_call is None:
+            from app.mixed.portfolio_management import run
+
+            advice = await run(c, frame)
+            managed["discretionary"] = advice
+            if advice.get("status") != "FLAT":
+                status = "HELD"
+    return {"status": status, "reason": reason, "entries": results, "management": managed}
+
+
+def stock_inputs(frame):
+    from app.mixed.quote_fills import _unique
+
+    values = _unique(
+        (x.quote for x in (*frame.stocks, *frame.held_stocks)), lambda q: q.instrument.instrument_id
+    )
+    from app.mixed.sources import StockCycleInput
+
+    return tuple(StockCycleInput(quote=q) for q in values.values())
+
+
+def held_instruments(c, *, require_reconciled=False):
+    """Durable held plus pending originals, including contracts absent from current scans."""
+    from app.mixed.portfolio_store import intent
+
+    with c.engine.journal.read() as db:
+        c._bound(db)
+        if require_reconciled:
+            from app.mixed.portfolio_observer import verified_portfolio
+
+            _, _, _, projection = verified_portfolio(c.engine, db, c.engine.portfolio_policy, c.now())
+        else:
+            h = history(c.engine, db, c.engine.portfolio_policy, c.now())
+            projection = reconstruct(h)
+        identities = {x.play_id for x in projection.commitments}
+        return tuple(
+            intent(r).instrument
+            for r in db.execute(
+                "SELECT * FROM execution_portfolio_orders WHERE json_extract(intent_json,'$.side')='BUY'"
+            )
+            if r["play_id"] in identities
+        )

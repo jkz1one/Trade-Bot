@@ -1,0 +1,86 @@
+{
+  "version": "paper-entry-timing-offline-v1",
+  "base_commit": "b2436f3084563a3e0e231222b814e0ff42c7edbc",
+  "application_files": 320,
+  "source_wheel_installed_bytes_match": true,
+  "runtime_pinned_dependencies_verified": 60,
+  "wheel_sha256": "a5e3efb18d27c9c61fd10162aae5f6e6f46d5dd562e2a015c6c0e7be5a0842ef",
+  "unique_passed_cases": 813,
+  "verification": [
+    {
+      "report": "installed.xml",
+      "cases": 784,
+      "failures": 5,
+      "sha256": "101e6e85537024310f8c2ce4cec8d72e5d691e50bc611747811a020da60a779c"
+    },
+    {
+      "report": "final.xml",
+      "cases": 52,
+      "failures": 0,
+      "sha256": "e8e0b5327f505d26c4749e17071ae97471c94ea9aa07ccfd7f9e73b1b0a61e43"
+    }
+  ],
+  "installed_testing": "Python 3.12 -I -W error; noneditable wheel; copied tests/scripts/examples outside checkout; plugin autoload disabled with explicit anyio; root-owned host fixtures run in isolated user namespace mapping the current user to root. Source/wheel/install application bytes and all runtime pins verified.",
+  "baseline": {
+    "report": "before.xml",
+    "expected_failed_cases": 3,
+    "sha256": "ddc45a6a163f29c706146562941e1898e9e055ed2fb55454d1e10d77e856142d",
+    "reproductions": [
+      "Three sequential four-second reads expire original inventory before direct selection",
+      "Twenty-second history after books ages original quotes by twenty seconds",
+      "Four reads precede the first runtime selection and prevent the option lifecycle"
+    ]
+  },
+  "fixture_adjustment": "Five older intraday-failure cases assumed history was the last read. Current-order tests locate history by tool; a separate legacy quote-first missing-history test preserves saved-capture compatibility. Final XML replaces the entire corresponding module, including the replaced parameter identity. The new worker failure and clock tests use the actual worker and normalizer.",
+  "new_regressions": [
+    "Original stale inventory remains rejected without native submissions",
+    "First runtime selection reuses exactly matching completed protection; another play gets fresh reconciliation",
+    "Different frame, changed epoch or expired original account snapshot requires new protection",
+    "Twenty-second synthetic history latency precedes current quotes; historical exception remains failed while protection books continue",
+    "Native runtime admits two option entries, fills later quotes, submits and fills protective exits, reopens identical cash/orders without replay"
+  ],
+  "host_evidence": {
+    "run_id": "paper-1106-151939-cd07ea",
+    "inventory_source_age_seconds": {
+      "SPY": 26.297,
+      "QQQ": 25.798
+    },
+    "metadata_max_age_seconds": 10,
+    "inventory_receive_lag_seconds": {
+      "SPY": 0.696,
+      "QQQ": 0.196
+    },
+    "clock_order_valid": true,
+    "fills": 0,
+    "model_cost": "0",
+    "confirmed_setups": 0,
+    "watching_setups": 12,
+    "status": "STOPPED"
+  },
+  "source_sha256": {
+    "app/mixed/continuous_feed.py": "9835b5de02799a6c59bf98b76404506030b5eac888fe1e3e1159d279571f3e89",
+    "app/mixed/portfolio_selection.py": "49e9f10c89edfebb61444313f4e4323a2bab496b19257e51b3cdf5a90e2abc7e",
+    "app/options/coordinator.py": "3eb306165ccaf968321dfa71b4273fddbd793b54034719f919527ee3cd7b5c66",
+    "app/options/read_worker.py": "35a9fee757ad0b0808aadc61c20658b809ef3af31b96537da6fa7c446a883362",
+    "app/options/runtime.py": "96a6c130973acdf39d50fbc1447afdb4311886c7586103f7ddfb3028f2c34302",
+    "tests/test_paper_entry_latency.py": "b06a04d498df191bb362fb9a04633857be16d39230c5638248b7e08398277baa",
+    "tests/test_continuous_strategy_delivery.py": "65ecab7d90e2d7aa9cc8ae36da8395cc7f98a1283fbafb9d671628d6f7265dd0"
+  },
+  "limits_unchanged": [
+    "Account/population and enrollment",
+    "Balances, positions, journals and halts",
+    "Original source and receive clocks",
+    "Quote/account validation",
+    "Read quota, deadlines and recovery bounds",
+    "$1000 capital, two plays, $1/day and $5 total AI"
+  ],
+  "limitations": [
+    "Synthetic elapsed times are not host benchmarks or proof of the exact distribution of all 26 seconds",
+    "Host read timeouts and sustained original quote timing require connected confirmation",
+    "Swing original daily history and usable SPX history/exact reviewed Scope terms remain unavailable",
+    "No connected fill or complete connected entry-to-exit lifecycle observed"
+  ],
+  "live_enabled": false,
+  "provider_calls": false,
+  "host_changed_by_assistant": false
+}

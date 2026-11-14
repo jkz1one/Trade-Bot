@@ -1,0 +1,195 @@
+{
+  "version": "paper-system-check-proof-v1",
+  "recorded_at_date_utc": "2026-11-11",
+  "base_commit": "0608547f3a702263dd63bfc4a5a8463171a3140d",
+  "synthetic": true,
+  "provider_calls": false,
+  "model_service_calls": false,
+  "host_changed_by_assistant": false,
+  "live_enabled": false,
+  "identity": {
+    "application_files": 329,
+    "source_wheel_installed_bytes_match": true,
+    "runtime_pins_verified": 60,
+    "wheel_sha256": "61659afb2920cd76a5ace2421648068a8a1b4bdadc6ff2f99d867fd478af7188",
+    "python_version": "3.12.14",
+    "syntax_checked_files": 9
+  },
+  "kit_summary": {
+    "version": "paper-system-check-v1",
+    "status": "PASSED",
+    "synthetic": true,
+    "provider_calls": false,
+    "model_service_calls": false,
+    "live_enabled": false,
+    "market_acceptance": "UNVERIFIED",
+    "wall_clock_soak": "NOT_RUN",
+    "host_acceptance": "UNVERIFIED",
+    "application_files": 329,
+    "runtime_pins": 60,
+    "application_manifest_sha256": "3de36a5dc1204a861ce04c4b864f0bec74d6bb07e7e1f371d2fb91de7d0f3015",
+    "test_exit_code": 0
+  },
+  "verification": [
+    {
+      "name": "integrated-kit",
+      "cases": 279,
+      "passed": 279,
+      "failures": 0,
+      "skipped": 0,
+      "elapsed_seconds": 296.725,
+      "junit_sha256": "b83d8773b9c87f79385f7f9aea6e20bb520e09f258fdb550a3aea86bffd12955",
+      "test_modules": [
+        "tests/test_connected_system.py",
+        "tests/test_feed_timing.py",
+        "tests/test_option_read_capture.py",
+        "tests/test_connected_runtime.py",
+        "tests/test_connected_feed_recovery.py",
+        "tests/test_connected_cycle_handoff.py",
+        "tests/test_connected_publisher.py",
+        "tests/test_dashboard_reader.py",
+        "tests/test_paper_session_report.py",
+        "tests/test_paper_daily.py"
+      ]
+    },
+    {
+      "name": "related-regressions",
+      "cases": 122,
+      "passed": 122,
+      "failures": 0,
+      "skipped": 0,
+      "elapsed_seconds": 81.091,
+      "junit_sha256": "1bcf377c96576524fbc205b3c51d9282235864b06c40ee20d30481949a64286e",
+      "test_modules": [
+        "tests/test_swing_binding.py",
+        "tests/test_portfolio_feed.py",
+        "tests/test_scope_feed.py",
+        "tests/test_read_schema_cache.py",
+        "tests/test_read_schema_contract.py",
+        "tests/test_combined_session_feed.py",
+        "tests/test_schema_artifact.py",
+        "tests/test_observed_profile_lifecycle.py",
+        "tests/test_read_worker_imports.py",
+        "tests/test_feed_rollover.py"
+      ]
+    }
+  ],
+  "unique_passed_cases": 401,
+  "scenarios": [
+    {
+      "artifact": "evidence/paper-system-check-normal.json",
+      "sha256": "cb5c580e024945fe77002a8578b815886b03d73931c2b5b6b6baf0ea539d8dcd",
+      "capture_attempts": 35,
+      "collection": [
+        {
+          "status": "DELIVERED",
+          "attempts": 35,
+          "first_sequence": 1,
+          "last_sequence": 35
+        }
+      ],
+      "native_process_calls": 35,
+      "native_process_max_seconds": 0.33733774799998173,
+      "authenticated_dashboard_successful_reads": 85,
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "timing_measurements": 35,
+      "missing_or_invalid_timings": 0,
+      "model_attempts": 2,
+      "simulated_settled_model_cost": "0.00004",
+      "controller_asserted_status": "FAILED",
+      "early_stop_asserted_visible": true,
+      "actual_model_service_spend": "0"
+    },
+    {
+      "artifact": "evidence/paper-system-check-read-timeout.json",
+      "sha256": "4ffd9eb1b76409cd8545ef92eff8cc1c7cd428a5bd7ed853d1968384d8347e30",
+      "capture_attempts": 35,
+      "collection": [
+        {
+          "status": "DELIVERED",
+          "attempts": 34,
+          "first_sequence": 1,
+          "last_sequence": 35
+        },
+        {
+          "status": "FAILED",
+          "attempts": 1,
+          "first_sequence": 3,
+          "last_sequence": 3
+        }
+      ],
+      "native_process_calls": 37,
+      "native_process_max_seconds": 0.3641170089999832,
+      "authenticated_dashboard_successful_reads": 90,
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "timing_measurements": 35,
+      "missing_or_invalid_timings": 0,
+      "model_attempts": 2,
+      "simulated_settled_model_cost": "0.00004",
+      "controller_asserted_status": "FAILED",
+      "early_stop_asserted_visible": true,
+      "actual_model_service_spend": "0"
+    }
+  ],
+  "checklist": {
+    "A1": "COMPLETE_OFFLINE_BOUNDARIES",
+    "A2": "PARTIAL_COLLECTOR_AND_READ_CHILD",
+    "A3": "OPEN",
+    "A4": "OPEN",
+    "A5": "OPEN",
+    "A6": "OPEN"
+  },
+  "limitations": [
+    "Accelerated session clock paced at fixture capture boundaries; actual process deadlines and loop waits are monotonic. Not a full-duration soak or a provider latency benchmark.",
+    "Provider/model responses and Docker inspection are synthetic. The native subprocesses, collector/run, runtime/run, scanner, simulator, journals, publisher and authenticated HTTP reader are real installed code.",
+    "Controller/report boundary runs against the exact fake worker identity and retained synthetic report. Docker/systemd itself was not exercised.",
+    "Publisher failure still stops trading components. Held-position failure isolation is open.",
+    "Full production packet/cycle/native/scan/model/admission timing correlation remains open.",
+    "No host resource-profile soak, cross-UID host acceptance, browser visual acceptance, connected entry or connected round trip established.",
+    "Exact cause of the delayed Tuesday native process remains unverified.",
+    "Scope requires valid original SPX history and exact reviewed contract/session bindings. Swing original-history/target validation remains independent."
+  ],
+  "fixture_development_corrections": [
+    "Initialize the synthetic stopped owner through its actual runtime stop path in the prior slot.",
+    "Create the HTTP reader once with the production degraded-status setting; accelerated replay may temporarily outrun publication.",
+    "Wait for protection completion before advancing the fixture clock; do not relax original-quote freshness.",
+    "Pass independent-status evidence by its keyword-only arguments."
+  ],
+  "unchanged": [
+    "local-simulation / connected-simulation-1000-v1 account and enrollment",
+    "Native balances, positions, halts and journals",
+    "$1000 initial virtual capital; two plays; eight catalog slots",
+    "$1/day and $5 total model budgets",
+    "Original quote freshness, validation and process deadlines",
+    "Read-only Robinhood; local simulated execution; LIVE disabled"
+  ],
+  "source_sha256": {
+    "app/mixed/continuous_feed.py": "2c25b1335a9ca1374553ddf61623eeafad084ba83196e4b0d397e0d9fa436ca6",
+    "app/mixed/feed_timing.py": "60db706aa3730ce2f0d147dae8a7412c460eece77920f5a783907688540f3b1a",
+    "app/options/read_capture.py": "1d9d83b9afd66f6974b29ab629368ab02513df550d34626c9e3a96e036a56573",
+    "app/options/read_worker.py": "0881b2e1a8bfe4e816682730b78bf2cc383a6c3e0f8ad9107c80a7909ea6f28b",
+    "scripts/paper-session-report.py": "248d0f8b7abb2cb513421393f54c27b8f86e981f93ad35e4090b4f591047ce85",
+    "scripts/paper-system-check.py": "9791fdd037141d9140dc1972f61a27a0d73888e0d55401fc28bb6031348a2873",
+    "tests/test_option_read_capture.py": "3b5a8a9b6fc53fdfe648b14635ac9e50809a5edd5731626bd3c49c57d0a00763",
+    "tests/test_connected_system.py": "fc045f07477ff726815524d06db84d1ae7bdca13646d2129b56229750219ca75",
+    "tests/test_feed_timing.py": "d081ad5907a79289b9dead2b7825d3d7372d62823f29f1872d312389f074131f"
+  },
+  "test_results": {
+    "artifact": "evidence/paper-system-check-tests.json",
+    "sha256": "95654c14cbcb91b6c6c6ab383c427483d0225b8a849091dd9d8871d51eba9346",
+    "cases": 401,
+    "bounded_case_names": 1
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "version": "paper-host-deployment-receipt-v1",
+  "evidence_source": "operator supplied terminal output",
+  "recorded_date_ny": "2026-11-11",
+  "release": "d2046f6363084ca26fc850130eb94cba51f07b6d",
+  "image_id": "sha256:82c6abc2a82934deda5c928522ce39eccd53e57eae121f7f2b5efad7ba3aa034",
+  "schedule": {
+    "target_session": "2026-11-11",
+    "prepare_at": "2026-11-11T14:00:00+00:00",
+    "start_at": "2026-11-11T15:00:00+00:00",
+    "close_at": "2026-11-11T21:00:00+00:00",
+    "timezone": "America/New_York",
+    "prepare_local": "09:00",
+    "start_local": "10:00",
+    "close_local": "16:00"
+  },
+  "installation": {
+    "status": "DAILY_SCHEDULE_INSTALLED",
+    "updated": true,
+    "paused": false
+  },
+  "snapshot": {
+    "status": "PUBLISHED",
+    "published_at": "2026-11-11T05:27:28.349863+00:00",
+    "binding_sha256": "5b6e64e424402a11e2ec95f3db864dea5a06c09ffd65c5d2a098c428852d037f",
+    "checkpoint": {
+      "feed_sequence": 1432,
+      "owner_revision": 5453,
+      "runtime_generation": 15
+    },
+    "source_database_bytes": 70516736,
+    "display_database_bytes": 29933568,
+    "fills": 0,
+    "held_plays": 0,
+    "source_modified": false
+  },
+  "reader": {
+    "status": "DASHBOARD_READER_UPDATED",
+    "previous": "trade-bot-dashboard-reader-66bc5114cc85"
+  },
+  "reviewed_resume": {
+    "status": "SCHEDULE_RESUMED",
+    "after_read_timeout": "daily-20261110",
+    "automatic_failure_retry": false
+  },
+  "pre_review_owner": {
+    "runtime_status": "FAILED",
+    "halt_reason": "OPTION_RUNTIME_FAILED",
+    "entry_halted": true,
+    "start_blockers": [
+      "OWNER_NOT_NORMALLY_STOPPED",
+      "OWNER_HALT_REQUIRES_REVIEW"
+    ]
+  },
+  "population_id": "connected-simulation-1000-v1",
+  "live_enabled": false,
+  "direct_host_access": false,
+  "subsequent_worker_start_observed": false,
+  "connected_lifecycle_observed": false,
+  "limitations": [
+    "Receipt confirms installation, publication, reader update and reviewed schedule resume; it does not confirm the next worker launch or full-session reliability.",
+    "Native failed history is retained; the saved review authorizes the next eligible launch against the exact owner state. Startup still requires native reconciliation and valid fresh feed.",
+    "Independent operating status is deployed; actual browser visual acceptance remains unverified.",
+    "The offline system-check code remains local and unpublished while the workspace command service is unavailable."
+  ]
+}

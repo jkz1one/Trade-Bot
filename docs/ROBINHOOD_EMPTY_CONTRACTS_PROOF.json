@@ -1,0 +1,45 @@
+{
+  "version": "robinhood-empty-contracts-v1",
+  "reviewed_head": "d19d4ee395081c2094d78cdc7425ce938099d326",
+  "capture_id": "dc802a20006f48beb3cab49177b34596",
+  "collected_at": "2026-10-25T04:56:10.735817Z",
+  "schema_sha256": "d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15",
+  "completed_reads": 2,
+  "returned_contracts": 0,
+  "pagination_cursors": 0,
+  "input_output_schemas_revalidated": true,
+  "original_plan_exact_match": true,
+  "supplied_artifacts": {
+    "samples(2).json": {
+      "bytes": 37757,
+      "sha256": "c7806b56f4ae3c98f2cfdbfd489e9e191c36e3cefdc5a13a864e3bc3d65b9961"
+    },
+    "summary(4).json": {
+      "bytes": 325,
+      "sha256": "13b21adaad07a6a1953d314f5943304f652a953f30fb3d62b565823fc167ea1d"
+    }
+  },
+  "cause": "NOT_ESTABLISHED",
+  "next_diagnostic": {
+    "plan": "examples/robinhood-contract-format-read-plan.json",
+    "sha256": "fb395c123226d5d0369e0c3bb846138ad57572c8e31e252e3804463b30a2f208",
+    "changed_fields": [
+      "calls[0].arguments.strike_price",
+      "calls[1].arguments.strike_price"
+    ],
+    "before": [
+      "760",
+      "705"
+    ],
+    "after": [
+      "760.0000",
+      "705.0000"
+    ],
+    "schema_example": "150.0000",
+    "numeric_strikes_unchanged": true,
+    "executed": false
+  },
+  "application_changes": false,
+  "workspace_provider_calls": 0,
+  "connected_paper_ready": false
+}

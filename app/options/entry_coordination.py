@@ -1,0 +1,308 @@
+"""Frozen broader-entry PAPER coordination on the existing single-owner journal."""
+
+import asyncio
+import json
+from datetime import datetime, timedelta
+from uuid import uuid4
+from app.options.runtime_timing import phase
+
+from app.execution.engine import ExecutionBlocked
+from app.options import entry_judgment as judgment
+from app.options.engine import fingerprint
+from app.options.entry_reasoning import EntryOpportunity, EntryPacket, review_entry_plan
+
+
+def review_for_execution(engine, db, key, request, result, quote, underlying, now, *, exclude=None):
+    """Require the full durable receipt, settled cost and fresh admission, never a projection."""
+    result = judgment.validate_result(request, result)
+    strategy = db.execute("SELECT policy_json FROM execution_option_strategy WHERE id=1").fetchone()
+    row = db.execute(
+        "SELECT result_json FROM execution_option_opportunities WHERE cycle_key=?", (key,)
+    ).fetchone()
+    model = db.execute("SELECT * FROM execution_model_calls WHERE source_key=?", (key,)).fetchone()
+    evidence = json.loads(row[0]) if row and row[0] else {}
+    config = json.loads(strategy[0]) if strategy else {}
+    if (
+        result.error is not None
+        or result.plan.action != "ENTER"
+        or request.packet.cycle_key != key
+        or request.packet.limits != engine._effective_limits()
+        or request.configuration.costs != engine.policy.cost_policy
+        or config.get("entry_model") != request.configuration.model_dump(mode="json")
+        or evidence.get("entry_request") != request.model_dump(mode="json")
+        or evidence.get("entry_result") != result.model_dump(mode="json")
+        or evidence.get("entry_timely") is not True
+        or model is None
+        or model["cost"] is None
+        or model["packet_hash"] != fingerprint(judgment.request_content(request))
+        or model["decision_hash"] != fingerprint(result.plan)
+        or model["usage_json"] != result.usage.model_dump_json()
+        or not request.packet.as_of
+        <= datetime.fromisoformat(evidence["entry_completed_at"])
+        < request.packet.valid_until
+    ):
+        raise ExecutionBlocked("FULL_SETTLED_ENTRY_RECEIPT_REQUIRED")
+    market_sequence = evidence.get("option_market_sequence")
+    mixed = getattr(getattr(engine, "_option_runtime", None), "mixed", None)
+    if market_sequence is not None and mixed is None:
+        raise ExecutionBlocked("PAID_OPTION_MARKET_SUPERSEDED")
+    if mixed is not None and not getattr(result.plan, "scope", False):
+        sequence, option, reference = mixed.option_market(db, quote.instrument, now)
+        if (market_sequence is not None and market_sequence != sequence
+                or option != quote or reference != underlying):
+            raise ExecutionBlocked("PAID_OPTION_MARKET_SUPERSEDED")
+    for o in request.packet.opportunities:
+        if o.session != engine._session(o.candidate.instrument.contract, now):
+            raise ExecutionBlocked("ENTRY_SESSION_BINDING_CHANGED")
+    if engine.portfolio_policy is not None:
+        from app.mixed.portfolio_models import candidate_account
+
+        account = candidate_account(
+            engine, db, quote.instrument.contract.underlying, now, exclude=exclude
+        )
+    else:
+        account = engine._account(db, now, exclude=exclude)
+    return review_entry_plan(
+        request.packet,
+        result.plan,
+        quote=quote,
+        underlying=underlying,
+        account=account,
+        now=now,
+    )
+
+
+def _settle_reply(c, key, evidence, result, completed):
+    try:
+        with c.engine.journal.write() as db:
+            c._store_pending_evidence(db, key, evidence)
+            c.engine.record_entry_usage(key, result.usage, result.plan, now=completed, _db=db)
+    except Exception:
+        # The joint transaction rolled back. Keep the original reply even if
+        # its usage could not be settled. The admitted call cannot be repeated.
+        c._pending_evidence(key, evidence)
+        raise
+
+
+async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlyings, evidence):
+    """One durable slot, one bounded child, no replay after interruption or uncertainty."""
+    at = c.now()
+    try:
+        secret = c._model_secret()
+    except (OSError, ValueError):
+        return c._finish(
+            key, {**evidence, "status": "HOLD", "reason": "PRIVATE_MODEL_KEY_UNAVAILABLE"}
+        )
+    config = judgment.configuration(c.engine.policy.cost_policy, c.judgment_limits, c.entry_policy)
+    opportunities = []
+    for candidate in candidates:
+        from app.options.swing_batch import scan_matches
+
+        matches = [s for s in scans if scan_matches(s, candidate)]
+        if len(matches) != 1:
+            raise ValueError("Exactly one family-specific scan required")
+        scan = matches[0]
+        quote, underlying = (
+            quotes[candidate.instrument.instrument_id],
+            underlyings[candidate.symbol],
+        )
+        opportunities.append(
+            EntryOpportunity(
+                candidate=candidate,
+                scan=scan,
+                quote=quote,
+                underlying=underlying,
+                session=c.engine._session(candidate.instrument.contract, at),
+                evidence_ids=tuple(fingerprint(x) for x in (scan, quote, underlying)),
+            )
+        )
+    from app.mixed.entry import evidence_for
+
+    stocks = evidence_for(c, key, evidence) if c.entry_policy.mixed_selection is not None else ()
+    as_of = scans[0].evaluated_at
+    scope = evidence.get("scope_candidate") if c.entry_policy.scope_selection is not None else None
+    packet = EntryPacket(
+        **portfolio_packet(c, as_of),
+        decision_id=fingerprint(
+            {"population": c.engine.limits.population_id, "cycle": key, "configuration": config}
+        ),
+        cycle_key=key,
+        model_configuration_hash=fingerprint(config),
+        as_of=as_of,
+        valid_until=min(
+            *(o.candidate.admission.valid_until for o in opportunities),
+            *(o.admission.approval_expires_at for o in stocks),
+            *([datetime.fromisoformat(scope["binding"]["valid_until"])] if scope else []),
+            account.captured_at + timedelta(seconds=c.engine.limits.account_max_age_seconds),
+            datetime.fromtimestamp((int(as_of.timestamp()) // 300 + 1) * 300, tz=as_of.tzinfo),
+        ),
+        account=account,
+        limits=c.engine._effective_limits(),
+        policy=c.entry_policy,
+        opportunities=tuple(opportunities),
+        stocks=stocks,
+        scope=scope,
+    )
+    at = c.now()
+    if not packet.as_of <= at < packet.valid_until:
+        return c._finish(key, {**evidence, "status": "HOLD", "reason": "ENTRY_PLAN_EXPIRED_BEFORE_MODEL"})
+    request = judgment.create_request(packet, config, request_id=uuid4().hex, now=at)
+    if len(request.model_dump_json().encode()) > judgment.MAX_REQUEST_BYTES:
+        return c._finish(
+            key, {**evidence, "status": "HOLD", "reason": "MODEL_PACKET_CAPACITY_EXCEEDED"}
+        )
+    evidence["entry_request"] = request.model_dump(mode="json")
+    evidence["model_input_hash"] = fingerprint(judgment.request_content(request))
+    # Full request precedes cost admission. A crash at either boundary leaves a
+    # retained STARTED slot; reopening interrupts it and never retries the call.
+    with phase("ENTRY_MODEL_REQUEST"):
+        c._pending_evidence(key, {**evidence, "status": "MODEL_PENDING"})
+    before_model = c.now()
+    if not at <= before_model < packet.valid_until:
+        return c._finish(key, {**evidence, "status": "HOLD", "reason": "ENTRY_PLAN_EXPIRED_BEFORE_MODEL"})
+    with phase("ENTRY_MODEL_ADMISSION"):
+        c.engine.begin_model_attempt(key, evidence["model_input_hash"], now=before_model)
+    try:
+        with phase("ENTRY_MODEL", model_source_key=key):
+            result = await c._model_run(request, secret, broad=True)
+        result = judgment.EntryResult.model_validate(result.model_dump(warnings=False))
+        evidence["entry_result"] = result.model_dump(mode="json")
+        completed = c.now()
+        evidence["entry_completed_at"] = completed.isoformat()
+        evidence["entry_timely"] = (
+            c._model_timely(request, at, completed) and at <= completed < packet.valid_until
+        )
+        if (
+            result.request_id != request.request_id
+            or result.packet_hash != fingerprint(packet)
+            or result.configuration_hash != fingerprint(config)
+            or result.plan.packet_hash != fingerprint(packet)
+            or result.plan.decision_id != packet.decision_id
+            or result.usage is None
+            or result.usage.model != config.costs.model
+            or completed < at
+        ):
+            c._pending_evidence(key, evidence)
+            raise ValueError("Unknown or foreign model usage")
+    except Exception as exc:  # noqa: BLE001 -- private error text is not evidence
+        c._model_halt("OPTION_MODEL_COST_UNKNOWN", c.now())
+        return c._finish(
+            key,
+            {
+                **evidence,
+                "status": "HOLD",
+                "reason": "OPTION_MODEL_COST_UNKNOWN",
+                "model_error_class": type(exc).__name__,
+            },
+        )
+    # Settle trustworthy usage even for rejected/late geometry. Never discard a
+    # known charge because its model proposal cannot be used.
+    with phase("ENTRY_MODEL_SETTLEMENT"):
+        _settle_reply(c, key, evidence, result, completed)
+    coherent = (
+        result.counted_input_tokens == result.usage.input_tokens
+        and result.usage.input_tokens <= config.limits.max_input_tokens
+        and result.usage.output_tokens <= config.limits.max_output_tokens
+    )
+    if not coherent:
+        c._model_halt("OPTION_MODEL_EVIDENCE_REJECTED", completed)
+    if (
+        result.error is not None
+        or not coherent
+        or not evidence["entry_timely"]
+        or result.plan.action == "HOLD"
+    ):
+        return c._finish(
+            key, {**evidence, "status": "HOLD", "reason": "ENTRY_MODEL_HOLD_OR_REJECTED"}
+        )
+    if c.entry_policy.mixed_selection is not None:
+        if getattr(result.plan, "stock", False):
+            from app.mixed.entry import execute
+
+            return await execute(c, key, evidence, request, result)
+        from app.mixed.selection import select
+
+        # The shared-Scope path commits both selection receipts before execution.
+        with phase("ENTRY_MIXED_SELECTION"):
+            select(c, key, evidence, persist=c.entry_policy.scope_selection is None)
+    if c.entry_policy.scope_selection is not None:
+        from app.options.scope_ai import choose_after_usage
+
+        scope_result = await choose_after_usage(c, key, evidence, request, result)
+        if scope_result is not None:
+            return scope_result
+    selected = next((x for x in candidates if x.candidate_id == result.plan.candidate_id), None)
+    if selected is None:
+        c._model_halt("OPTION_MODEL_EVIDENCE_REJECTED", completed)
+        return c._finish(key, {**evidence, "status": "HOLD", "reason": "UNKNOWN_ENTRY_CANDIDATE"})
+    mixed = getattr(getattr(c.engine, "_option_runtime", None), "mixed", None)
+    if mixed is None:
+        quotes, underlyings = c._execution_market(quotes, underlyings)
+        quote, underlying = quotes[selected.instrument.instrument_id], underlyings[selected.symbol]
+    else:
+        # A model response may arrive during a later delivery's protection tick.
+        # Stay inside the original plan deadline and use one complete delivery.
+        try:
+            with phase("ENTRY_PROTECTION_WAIT"):
+                async with asyncio.timeout(max(0, (packet.valid_until - c.now()).total_seconds())):
+                    await mixed.wait_for_protection()
+            with phase("ENTRY_OPTION_MARKET_READ"), c.engine.journal.read() as db:
+                sequence, quote, underlying = mixed.option_market(db, selected.instrument, c.now())
+            evidence["option_market_sequence"] = sequence
+            original = quotes[selected.instrument.instrument_id]
+            if (quote.source_at == original.source_at and quote.source == original.source
+                    and any(getattr(quote, k) != getattr(original, k)
+                            for k in ("bid", "ask", "bid_size", "ask_size"))):
+                raise ExecutionBlocked("CONFLICTING_OPTION_SOURCE_BOOK")
+        except (ExecutionBlocked, TimeoutError) as exc:
+            return c._finish(key, {**evidence, "status": "HOLD",
+                                   "reason": "OPTION_EXECUTION_MARKET_UNAVAILABLE",
+                                   "blocker": str(exc) if isinstance(exc, ExecutionBlocked)
+                                   else "OPTION_PROTECTION_WAIT_EXPIRED"})
+    with phase("ENTRY_REVIEW"):
+        with c.engine.journal.read() as db:
+            c._bound(db)
+            review = review_for_execution(
+                c.engine, db, key, request, result, quote, underlying, c.now()
+            )
+        evidence["entry_review"] = review.model_dump(mode="json")
+    if review.outcome != "ELIGIBLE":
+        return c._finish(key, {**evidence, "status": "HOLD", "reason": ";".join(review.reasons)})
+    # Native admission rechecks the original review inside this fenced write.
+    # Commit the evidence and its reservation before starting any dispatch.
+    try:
+        with c.engine.journal.write() as db:
+            c._store_pending_evidence(db, key, evidence)
+            prepared = c.engine.prepare(
+                key, review.proposal, quote, underlying, now=c.now(),
+                origin="MODEL", entry_request=request, entry_result=result, _db=db,
+            )
+    except Exception:
+        # The reservation rolled back. Keep the review with the settled model reply.
+        c._pending_evidence(key, evidence)
+        raise
+    evidence["prepared"] = prepared
+    if prepared["status"] != "PREPARED":
+        return c._finish(
+            key, {**evidence, "status": "HOLD", "reason": "FRESH_ENTRY_ADMISSION_REJECTED"}
+        )
+    status = await c.engine.dispatch(prepared["client_id"], quote, underlying, now=c.now())
+    return c._finish(
+        key,
+        {
+            **evidence,
+            "status": status,
+            "client_id": prepared["client_id"],
+            "candidate_id": selected.candidate_id,
+        },
+    )
+
+
+def portfolio_packet(c, at):
+    if c.engine.portfolio_policy is None:
+        return {}
+    from app.mixed.portfolio_store import history
+
+    with c.engine.journal.read() as db:
+        h = history(c.engine, db, c.engine.portfolio_policy, at)
+    return {"version": "portfolio-entry-packet-v2", "portfolio_history": h}

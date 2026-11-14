@@ -1,0 +1,1290 @@
+{
+  "version": "paper-scope-operation-offline-v1",
+  "base_commit": "dfe3bf0b8586fbf13e2960dac2164d7dcca1ca5e",
+  "base_tree": "306f9faae1eadd31b8f759994b34c9ac42b5652f",
+  "wheel_sha256": "cacbab1ddac46b2c6cdc2e32ccf8b90e69876bac5ede0c626ca85751e0f0bb4d",
+  "application_files": 316,
+  "source_wheel_installed_bytes_match": true,
+  "changed_tests_and_host_scripts_copies_match": true,
+  "runtime_pinned_dependencies_verified": 60,
+  "installed_testing": "Python 3.12, isolated -I, warnings as errors, explicit anyio pytest plugin, copied tests and scripts outside source checkout, native subprocess suites run serially.",
+  "verification_runs": [
+    {
+      "report": "release-verified.xml",
+      "passed": 226,
+      "failures": 1,
+      "failed_cases": [
+        "tests.test_option_scope_position::test_scope_management_packet_restart_worker_and_tamper"
+      ],
+      "skips": 0
+    },
+    {
+      "report": "scope-worker-final.xml",
+      "passed": 0,
+      "failures": 1,
+      "failed_cases": [
+        "tests.test_option_scope_position::test_scope_management_packet_restart_worker_and_tamper"
+      ],
+      "skips": 0
+    },
+    {
+      "report": "scope-families-final.xml",
+      "passed": 2,
+      "failures": 0,
+      "failed_cases": [],
+      "skips": 0
+    },
+    {
+      "report": "management-production.xml",
+      "passed": 9,
+      "failures": 0,
+      "failed_cases": [],
+      "skips": 0
+    }
+  ],
+  "latest_result_per_case": "One unchanged legacy five-second worker case remains timed out; production-budget worker is a separate passing case.",
+  "known_unresolved_cases": [
+    "tests.test_option_scope_position::test_scope_management_packet_restart_worker_and_tamper"
+  ],
+  "unique_passed_cases": 237,
+  "unique_failed_cases": 1,
+  "suites": {
+    "tests.test_combined_session_feed": 7,
+    "tests.test_connected_runtime": 19,
+    "tests.test_mixed_quote_fills": 15,
+    "tests.test_observed_profile_lifecycle": 2,
+    "tests.test_observed_scope_lifecycle": 2,
+    "tests.test_option_scope_arbitration": 20,
+    "tests.test_option_scope_position": 18,
+    "tests.test_paper_session_report": 27,
+    "tests.test_paper_session_start": 21,
+    "tests.test_portfolio_scope": 9,
+    "tests.test_preopen_inputs": 16,
+    "tests.test_preopen_replay": 4,
+    "tests.test_scope_feed": 13,
+    "tests.test_scope_price_options": 17,
+    "tests.test_scope_sources": 9,
+    "tests.test_session_host": 33,
+    "tests.test_simulation_session": 6
+  },
+  "source_sha256": {
+    "app/mixed/scope_feed.py": "16c98078341825596f91301e63bd779a8f7f977d0eda14d8c98495abb4a0048c",
+    "app/options/scope_arbitration.py": "45d46a38b3040d8c9a2c2c4142f68b3e7bcc31aac5ea74f562501b0599fab834",
+    "scripts/paper-session-report.py": "1ce95263f79b139593189d8c36b9ea8eedc2ee6f76c4f3eba216c0e4cd658cef",
+    "scripts/paper-session-start.py": "a8b9b64a9599614b95974f0e0554a2fd9f7b7d289566bd874d5f1453b4eed2f8",
+    "tests/test_observed_scope_lifecycle.py": "70a4a5f740376b3dcbd61b19051476e2880f711c678dcfe5d1d3f7e49c7a6490",
+    "tests/test_scope_feed.py": "0db0f50af9410a4aaab3819c7dcb30303ce465b2bd3264b8e7195183b2f7d1bf",
+    "tests/test_option_scope_ai.py": "0956f4bf0aeb3663e63025dc76ca7faafd97de1d52f51c3c566f0e5b04303e3e",
+    "tests/test_paper_session_report.py": "d263230d3ce42bc881726961690418d246e07fe8cdb599c141dc61537ae32e12",
+    "tests/test_paper_session_start.py": "88a768162297c3867e6be6bbb5194313cc1b2b1cfcaf26995966ea093e848acc",
+    "tests/test_portfolio_scope.py": "03e4c5165cb5f429df5d084de3c33272e5eb3c036e5a92e7d210aeb274da272d"
+  },
+  "earlier_findings": [
+    "Unowned SPX reference in held-only inputs reproduced and corrected.",
+    "Preflight diagnostic concatenation of typed blockers reproduced and corrected to blocker.code.",
+    "Restart-status assertion corrected to preserve OPTION_RUNTIME_INTERRUPTED instead of expecting a cleared halt.",
+    "Owned Scope watch re-admission reproduced by existing portfolio management test and corrected without removing duplicate-entry protection.",
+    "One pre-final source run encountered FixtureProcessTimeout on initial entry; unchanged bounded native deadline retained. The installed broad sweep also encountered the existing five-second Scope worker timeout; its isolated rerun also timed out. Cold worker import measurements were 3.3-4.4 seconds. The existing production 15-second process budget and 20-second management lease are tested separately, without changing application settings or quote validity.",
+    "An earlier broad run was interrupted; its partial results are not counted. Final counts exclude all overlapping earlier test passes."
+  ],
+  "acceptance_limits": [
+    "All model responses and market receipts used in lifecycle fixtures are scripted; no authenticated provider/model calls or real orders.",
+    "No direct host access, deployment, connected simulated fill or connected complete lifecycle was observed.",
+    "Production-profile Scope fixture uses explicit synthetic SPXW/session binding and explicitly driven tick timing. It does not prove continuous run-loop cadence or authorize a host binding.",
+    "Scope original SPX history, exact reviewed binding, eight-contract catalog capacity and timely post-cost delivery remain unresolved.",
+    "Swing original daily history remains blocked by the operator-reported interpolated source bars.",
+    "Existing local-simulation account, connected-simulation-1000-v1 population, balances, positions, journals, halts, enrollment, two-play maximum, $1/day and $5 total AI limits are unchanged; LIVE remains disabled."
+  ],
+  "cases": [
+    {
+      "case": "tests.test_combined_session_feed::test_catalog_capacity_still_rejects_ninth_contract",
+      "case_sha256": "c1e57a5d063878e624e915e804b0d2388edeb4d90644c10a2e54eb1937a27251",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_combined_session_feed::test_collector_retains_safe_failure_stage_and_original_capture",
+      "case_sha256": "14ad5404f4f1098f6471ac90dd78bcda5b351406da12e16c4533b0a406827c42",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_combined_session_feed::test_combined_eight_contracts_deliver_without_optional_swing_history[False]",
+      "case_sha256": "c73cb66ca0528ebc50c08d82a16087cc803cdac3434bb4e300174e0cd2141bf6",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_combined_session_feed::test_combined_eight_contracts_deliver_without_optional_swing_history[True]",
+      "case_sha256": "aad0c6f8697ca090c4702c2c2fddcd2ee1f9099cd950d5c567fb7067b365d919",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_combined_session_feed::test_scan_retry_cap_preserves_quote_polls_and_resets_next_slot[False]",
+      "case_sha256": "eb6d396866c340d037c2969c6db62cf6ff1911ddb466287f3d0436751c9e6093",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_combined_session_feed::test_scan_retry_cap_preserves_quote_polls_and_resets_next_slot[True]",
+      "case_sha256": "aa5599977104ecd13e74f54c6f05ff66e0a5314e547da51abf1814db77dbd9ee",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_combined_session_feed::test_transient_unusable_quote_retries_scan_after_restart",
+      "case_sha256": "64c2dfd408875e2e845f2485cd67ff326a7cebf4a8652cab9ff8934529132d74",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_changed_enrollment_rejected_before_owner_open[collector]",
+      "case_sha256": "0d3979c1ce97611dfcb8074916308ebfaaf9effbf8812cde7cb6a3fcc39349e8",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_changed_enrollment_rejected_before_owner_open[runtime]",
+      "case_sha256": "b5cb3e3caf1f400f5e7e8830cc7f4a3fa768487c4ff4b98838ff89c8f20b4229",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_check_is_read_only_and_does_not_open_credentials",
+      "case_sha256": "ce9f84cac1ddf268772909b73c7d52cff8dbd323027bb053b6df220a901ac784",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_component_failure_or_early_return_drains_sibling[False-COLLECTOR]",
+      "case_sha256": "0f639cfa690f64dfd086d949dea23349a5b754e8a17f91012c7910ad1aa0662b",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_component_failure_or_early_return_drains_sibling[False-RUNTIME]",
+      "case_sha256": "56cb47218f8cc8d62836da815d4237bbd6ead9fb506eb66936d607f02a026d3c",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_component_failure_or_early_return_drains_sibling[True-COLLECTOR]",
+      "case_sha256": "f77b8be471c9bda8621aba82be28bd61fa4ba54f8b57f127c687e8ff4a78be03",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_component_failure_or_early_return_drains_sibling[True-RUNTIME]",
+      "case_sha256": "20bd706524cc4c86ac9731c8459ac24dad8f04364ff123d8fad40bfc204a2c50",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_failed_first_tick_never_starts_collector_and_releases_lease",
+      "case_sha256": "3fed3dc2afd5f9fe71fc96aecaa7d3f92a94de048a2a4b976fb73450f529a582",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_frozen_review_rejected_before_state_changes[event]",
+      "case_sha256": "0fc4dde8ff36f19920d6376079cb1aaf66713f84698326d255edf032ce31c34a",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_frozen_review_rejected_before_state_changes[reason]",
+      "case_sha256": "fdd797552f5e398b02cd3c49a30fb08031181ebfe493345b786961fc48590b18",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_missing_enrollment_never_creates_population",
+      "case_sha256": "ef3ae1bea49f452c96eadc49678e15ac33b8ce28130501967ab99710fefa136f",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_native_restart_consumes_next_delivery_without_reset_or_duplicate_owner[False-False-False]",
+      "case_sha256": "51d02053b32f54691f906161a17892a6894b7110cd04ad36d52607859eda0a17",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_native_restart_consumes_next_delivery_without_reset_or_duplicate_owner[False-True-False]",
+      "case_sha256": "cbfe7f4fca00012696d53c0564dbaf2c77d09be7263cc1b568da5a762cf6741e",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_native_restart_consumes_next_delivery_without_reset_or_duplicate_owner[False-True-True]",
+      "case_sha256": "92564c5a368345aaec1a0f49f77d915c4bb75407e0a19e6a85c33bc314a6c141",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_native_restart_consumes_next_delivery_without_reset_or_duplicate_owner[True-False-False]",
+      "case_sha256": "51813249f780e4fc326823a1540049f30b620e7dde2318699aede0cdc20924b3",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_native_restart_consumes_next_delivery_without_reset_or_duplicate_owner[True-True-False]",
+      "case_sha256": "6b76591b5b2d7365520d49024479181cf859870d05979d06d9d7afa6f30f16c5",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_native_restart_consumes_next_delivery_without_reset_or_duplicate_owner[True-True-True]",
+      "case_sha256": "19715635e7d76f12939a70129051cb05f6ce6b284f5d1e908d63582e598814ee",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_shutdown_deadline_cancels_and_awaits_stuck_collector",
+      "case_sha256": "b913cfcfd3ca07a1bc16704e862468fa728d82d363e9cc81f6599b3299a1d792",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_connected_runtime::test_supervisor_cancellation_drains_components_and_propagates",
+      "case_sha256": "f398041df15aa258c1c84dece8609a2655f23755ac5aad27a60e09263ba50150",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_mixed_quote_fills::test_conflicting_quote_delivery_halts_without_filling",
+      "case_sha256": "b0f2fc28408cfb28aae9b15ee1a35312312ed9e7e67075f40a1a4491b4feacdc",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_mixed_quote_fills::test_default_runtime_does_not_gain_fill_authority[OPTION]",
+      "case_sha256": "085f2ba23604006f5f6854ea6b7a1bed6c2c72169afa41fb1c10a3a4a25cd84f",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_mixed_quote_fills::test_default_runtime_does_not_gain_fill_authority[STOCK]",
+      "case_sha256": "09cc7f07ba6d1901bd1098119978b185504b9694a5e576f3bd3a30c1c2f43809",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_mixed_quote_fills::test_expired_acknowledged_order_expires_without_synthetic_fill",
+      "case_sha256": "0b563843ae21fbff521a2f4d7aca1e164215e39a2914fb013d1345dd0e6b072b",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_mixed_quote_fills::test_option_fills_retain_underlying_and_alias_size_limit",
+      "case_sha256": "975ca4b5480289e63bf104c61c6a7016b3fea86256ec9053186f1bafa8b3d784",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_mixed_quote_fills::test_policy_requires_mixed_and_is_frozen",
+      "case_sha256": "ac46fd5440038b1aca4f30d155c96a2e33df07f00e3715b053706eac1af9670b",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_mixed_quote_fills::test_repeated_packet_and_receipt_alias_cannot_replenish_source_size",
+      "case_sha256": "60de6cee6a9db5dbab80320f4e93de1c29c1c461411a59d4407d03fbdc797fcd",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_mixed_quote_fills::test_stock_entry_and_independent_exit_fill_from_later_quotes",
+      "case_sha256": "26940e0fa503f1860608de31123f8580f0656dfe6b963c072cfd9b8f246fec33",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_mixed_quote_fills::test_unaccepted_packet_cannot_mutate_venue",
+      "case_sha256": "2f1e43bafc56374166c669d419b66790d5cf777db4a40aa85c1f8e93779740a6",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_mixed_quote_fills::test_unexecutable_quote_never_fills[delayed]",
+      "case_sha256": "58d5e30af0685f3a69c96a2192ec41204d6e5d981690746976142fd817f1c30f",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_mixed_quote_fills::test_unexecutable_quote_never_fills[over_limit]",
+      "case_sha256": "44a5017eb8056e4520bd9315a0549112d248bba2f2974c591ce1654e0eceddd0",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_mixed_quote_fills::test_unexecutable_quote_never_fills[same_clock]",
+      "case_sha256": "0bc1324c3be4a032ae42521a1c10b526c30e560e120ac8a00e230803b2f66779",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_mixed_quote_fills::test_unexecutable_quote_never_fills[stale]",
+      "case_sha256": "5420d862dd73ef323b2ecce543e72e05a535f3ecd548a46c052d9a61364453d1",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_mixed_quote_fills::test_unexecutable_quote_never_fills[unknown_size]",
+      "case_sha256": "0318d1e62f08855f63795cbd13f42a0dc100d90e7f9747a899eac25171063346",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_mixed_quote_fills::test_unknown_attempt_is_not_replayed_or_filled",
+      "case_sha256": "2819cc616547ef992b7e21da7b8f86c2004623fb8b581d78aaf02850429461da",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_observed_profile_lifecycle::test_production_profile_two_options_fill_and_exit_independently[CALL]",
+      "case_sha256": "bf300466926c6d43d1e7b2a8393a834e9c75eef98c0d8d2edf3d211859716158",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_observed_profile_lifecycle::test_production_profile_two_options_fill_and_exit_independently[PUT]",
+      "case_sha256": "4be19b4f00612f574a141ccefce62cd8da1f043c911f71ee1eeab2ec60f50e12",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_observed_scope_lifecycle::test_production_scope_feed_lifecycle[fresh]",
+      "case_sha256": "9137884832bc980b1e195d9fb8dd61e01026d2ed6f232307826a475ba878e02a",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_observed_scope_lifecycle::test_production_scope_feed_lifecycle[late]",
+      "case_sha256": "99081278cc7b9caeff4c3423509d6e8dc0b37a08810f2d3f12de489aa0dfd950",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_atomic_selection_failure_consumes_nothing",
+      "case_sha256": "60faa40e61cd6765cf260ed36d5d3e5c4fd3be8ef0b1385eacecfd7d516902b1",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_direct_scope_prepare_cannot_bypass_shared_cycle",
+      "case_sha256": "dec7bc03fcf5f02d8ecbdfbc4fcc3126fd5423dca0a2f6b122a604161ba79688",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_full_cost_outcome_and_common_loss_guard[False-DEGEN]",
+      "case_sha256": "29287ffc6b89e9f37f7ff5423e6af13eb08591e7d6d98785d82af8e4c09ded69",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_full_cost_outcome_and_common_loss_guard[False-SCOPE]",
+      "case_sha256": "b8e3ac31370aa34fe3686dcbe768409a86237c6bf21c52a03298116290ceebb6",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_full_cost_outcome_and_common_loss_guard[True-DEGEN]",
+      "case_sha256": "a3e1c951d0d4c29dfe8c520c59f3442411a62da3a525f0fb7a2ee2b608f4a522",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_full_cost_outcome_and_common_loss_guard[True-SCOPE]",
+      "case_sha256": "e1e104f0114194ccee9561ffa796f7dbcd05016104a1bee355fdd972fc45d93a",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_ineligible_scope_leaves_degen_available",
+      "case_sha256": "ff43cc3c258a917cc4f7bcf49ece06cee50143530b3d84609c6daf13ab8b200e",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_legacy_hashes_omit_enrollment_and_model_boundary",
+      "case_sha256": "a7d61b33c2c26197f32a0f35a9e2bcaf152c077b20cb0e4097cd2f9e556e3a61",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_missing_scope_cannot_silently_select_degen",
+      "case_sha256": "fcde93485219a7f39da691fe8487cd73f77cee20d7dce29d78c30ee0b6936416",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_prepared_restart_and_selection_tamper_fail_before_attempt[False]",
+      "case_sha256": "f352d620700883641d3d2a535c039ad5666dc9dbe7a0ef1cb820d4a4338c90d9",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_prepared_restart_and_selection_tamper_fail_before_attempt[True]",
+      "case_sha256": "0cda4358f3420a3a04b189016566e3ee01cacac5d3fd22dbc316e4449e4fe315",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_scope_can_win_without_admitted_degen",
+      "case_sha256": "33c531e8396ff2d701e087632612d3a01b9f5a2703d4ac8778018226e7e9a11c",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_shared_scope_held_cycle_keeps_original_target_management",
+      "case_sha256": "8df1aa7c06615f234ee7469666288a5ecd52121478081d72f337a4ab86e101ef",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_shared_selection_native_fill_and_portable_accounting[priority0-CALL]",
+      "case_sha256": "aa7232c5685f5305d3cd6e5cee3df65c37f25eda10dd7d5a1b1b33dd030c4b9e",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_shared_selection_native_fill_and_portable_accounting[priority0-PUT]",
+      "case_sha256": "a099031bf1ccc5638e8ccd57642671a5e9ec424c066be422eb1b89ef3786dfaa",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_shared_selection_native_fill_and_portable_accounting[priority1-CALL]",
+      "case_sha256": "a96684051777408bb0a54c33e779051c8f474bfbf912451b812934ef334a8dc0",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_shared_selection_native_fill_and_portable_accounting[priority1-PUT]",
+      "case_sha256": "604cfa8dd6b26c86a546c72a43808b5b9a9b33bbf2f0d9ffc60a2b075e21409f",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_shared_selection_native_fill_and_portable_accounting[priority2-CALL]",
+      "case_sha256": "b60d374fdf99a817a5e7f60ccb385511ebe4759f002346c71bf3eae48b5b34d4",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_shared_selection_native_fill_and_portable_accounting[priority2-PUT]",
+      "case_sha256": "a6f01938fa745ea3c12129442e2e09502786e7169fc73db2ee4cd0f7b82348fb",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_arbitration::test_unknown_cost_blocks_only_its_independent_owner",
+      "case_sha256": "cbad0dfca985ac70ace66b37dfb7585e825c2ce009498aff3a59aa83db727e2f",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_paid_scope_management_failure_and_independent_protection[late]",
+      "case_sha256": "f44b026fee5883c68fa8d4e981ab16e496ea6f6f721bf3c1ed57c5ba76e78577",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_paid_scope_management_failure_and_independent_protection[stop]",
+      "case_sha256": "8e9a1109999acbb0bcb518752df529cf91acd403ebad17810664bb5d18a2d29d",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_paid_scope_management_failure_and_independent_protection[unknown]",
+      "case_sha256": "89da5ca1756dc833d9cf5063836d849927e3ebe0772337ab099b00b927e121b3",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_scope_context_failure_starts_no_management_call[foreign_play]",
+      "case_sha256": "b82b836db58d2b0d7763a757ef0816e78eb715ffd4d6c0237152f2ae33358881",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_scope_context_failure_starts_no_management_call[foreign_quote]",
+      "case_sha256": "9d82d2796299e4d3c4a3f9a875192f61e726b20af4248bc1593cd2a42d3534fe",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_scope_context_failure_starts_no_management_call[missing]",
+      "case_sha256": "e529905113f350e5ad725c4c1c2ca7df201206b545aa6cb04264875da502ee4b",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_scope_context_failure_starts_no_management_call[payload]",
+      "case_sha256": "42b8f86974e000572b9c36bd077432b1ecd986d6583d69dde44737f9d1d90ec1",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_scope_context_failure_starts_no_management_call[stale]",
+      "case_sha256": "18707f842dfb54de9bea18f61b07c104928cadf2bcd02325c77cb02effc6c128",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_scope_management_packet_restart_worker_and_tamper",
+      "case_sha256": "d37627ca386a79ec4fcbea3547342425d0bd6a245ebf06ad760fa6f49776470e",
+      "status": "TIMED_OUT"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_scope_management_requires_explicit_policy",
+      "case_sha256": "f2c44bfff24b5f062080e50714c2e9a3d2bd2acaa12a6668d21fa66e163788a9",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_scope_native_management[EXIT_ALL-CALL]",
+      "case_sha256": "155720c685f3732cc0db3e607c82bb7320b3cf0148f36e6df26ac5db663b4686",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_scope_native_management[EXIT_ALL-PUT]",
+      "case_sha256": "3cc9d21da278e8e4f05b216f96881c9415ebeca732889253fe14201caa81ed0a",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_scope_native_management[MAINTAIN-CALL]",
+      "case_sha256": "ac9e345646f583c373535be65abdf7a87e926058f6b1564a986e0efacd590e95",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_scope_native_management[MAINTAIN-PUT]",
+      "case_sha256": "a48d376a50c58d0f2b2f67c214de30fda441e01324ee16fa5ae9cdab16408426",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_scope_native_management[TIGHTEN-CALL]",
+      "case_sha256": "0c1fcfa62b06ac2fd883f017030764baf319cdf7aedd88b6d33056a40637c68b",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_scope_native_management[TIGHTEN-PUT]",
+      "case_sha256": "47efb35fa0888b425d5cefc6d6035aaf0d4287d7b71cac5b69007cba46193933",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_shared_scope_management_owner_retains_other_families[DEGEN]",
+      "case_sha256": "7c39b469607d1708f5228fd5514777243fc2ce5e53dbddccbfdf1e67996ac834",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_option_scope_position::test_shared_scope_management_owner_retains_other_families[SWING]",
+      "case_sha256": "8cb4591b36f54d5eed6eeb90825be837c435d9fd5e7b10fb7cede746e8d43f08",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_expired_or_unchanged_paid_evidence_is_not_a_no_setup_claim[entry_timely-False-ENTRY_RESPONSE_EXPIRED]",
+      "case_sha256": "206ad7814c9191fb4cfc8da29d207c0c5cce36dc6701fd49260c40855abac491",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_expired_or_unchanged_paid_evidence_is_not_a_no_setup_claim[scope_admission_reasons-value1-SCOPE_WATCH_NEW_SOURCE_OBSERVATIONS_REQUIRED]",
+      "case_sha256": "d3a0995443ec761b7e72e4460be3bcec18c9a5c40a4f37ef1eb1d5b1ee0c7718",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_legacy_mixed_owner_counts_stock_and_option_fills",
+      "case_sha256": "035a1a9da377eb95d826836afa49807a3dbd7e041e75d37162c714abc02c4a8b",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_live_operation_keeps_process_setup_and_family_gaps_distinct[container_failed-FAILED]",
+      "case_sha256": "b4cccf721b041d26ec4375bcfc20e654b50bee06a9f20931d3c3143b725f38a0",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_live_operation_keeps_process_setup_and_family_gaps_distinct[failed-FAILED]",
+      "case_sha256": "8461d497ab4d34c3a1cb861a95216f7046f59a52d5b0da9caa46d2b463634101",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_live_operation_keeps_process_setup_and_family_gaps_distinct[halted-MISSING_INPUTS]",
+      "case_sha256": "b9f84a2c234b96d66834ed023d1a90c7d9a96f74fdc83574251da8557cf6f759",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_live_operation_keeps_process_setup_and_family_gaps_distinct[history-MISSING_INPUTS]",
+      "case_sha256": "24419709666606dc830358fb106a529a3a87aefd36e8d85ec98a110121d7c708",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_live_operation_keeps_process_setup_and_family_gaps_distinct[no_heartbeat-MISSING_INPUTS]",
+      "case_sha256": "c8c3b903bbc2560c077329cfcb2bed7bbb458008999704ec81ffa9ef841360f7",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_live_operation_keeps_process_setup_and_family_gaps_distinct[quote-MISSING_INPUTS]",
+      "case_sha256": "b824ae320fdac08196b437d59d4d25930c4c7ca00dad1c7cd18784c423b28e18",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_live_operation_keeps_process_setup_and_family_gaps_distinct[running-RUNNING]",
+      "case_sha256": "24abf4f65d0fbac7847876c7b7929bb2d15c05e0ad98c948ee575a2beb251f0e",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_live_operation_keeps_process_setup_and_family_gaps_distinct[stale-MISSING_INPUTS]",
+      "case_sha256": "63f563db396c578b4e3e6f8627737b3f6c097c4958bd8f2f8b49db33a39e1ccf",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_live_operation_keeps_process_setup_and_family_gaps_distinct[stopped-STOPPED]",
+      "case_sha256": "df7f7cd15f6ec1388fa14bbd1b7ddaa7d8dc5b243c5ce1d366390ed7eab0918a",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_live_operation_keeps_process_setup_and_family_gaps_distinct[waiting-WAITING_FOR_SETUP]",
+      "case_sha256": "7f5ec55284f192e943a122809218e6a3bfdef88853e47a93e656a40ed07662df",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_missing_database_is_not_created",
+      "case_sha256": "244b4f55e0144eab21071f96b2813e650dbdf58d54f01610d24c38605afd1f6f",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_oversized_summary_field_is_explicit_without_hiding_other_evidence",
+      "case_sha256": "c159bac6ae42e3fd83c5e3a48b2d16b54e4e900406279f7fcd9bbf0765e5934a",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_portfolio_receipts_are_authoritative_even_with_empty_legacy_tables",
+      "case_sha256": "10ac99dc8297bdb59137cadc544bc9e858e6683bdbf8faed8f23f34624f0c85a",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_projected_paid_timing_is_boolean_and_preserves_scope_input_reason",
+      "case_sha256": "e9a8f50b3b4745d9546c3f029783069d68b9ca9f020884159f400ff0a9b2450a",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_reason_extraction_is_bounded_and_does_not_print_prose",
+      "case_sha256": "636614650adbd27afd458805925cd3a89116819709bbcc449d4c0138792dd6ac",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_running_container_uses_current_window_without_wait_or_mutation",
+      "case_sha256": "3a44e8bbd075c54153f173a516ebf62a7d8f3f044a9c8f52371f4f3407ff00f1",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_runtime_clocks_use_frozen_thresholds_and_keep_original_timestamps",
+      "case_sha256": "85f58468a44864c486c9c8414ca4089d7c4274a8f9b6d8000add1b69223b8961",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_runtime_failure_report_keeps_timing_without_private_payload",
+      "case_sha256": "3914164d3f3b0060856ac1ca93b80acd0387e60dab076e0cac7e0cb1ae5a7d1e",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_saved_report_scopes_cycles_and_extracts_rejections_without_writes[False]",
+      "case_sha256": "1b0a76c6948482a747a6908161a2c0475e6a3e78889219bc45555a3c45eb6902",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_saved_report_scopes_cycles_and_extracts_rejections_without_writes[True]",
+      "case_sha256": "57b487c759b69f38b02fbf33532341a540d0dde108c745a92a05d920d869cd17",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_unavailable_decision_does_not_invent_empty_scan_or_zero_candidates[oversized-parameter]",
+      "case_sha256": "ef9e327bdd87a951905bb2a4c85c4c9e3ebe0257bad94b644790096d851f50c8",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_unavailable_decision_does_not_invent_empty_scan_or_zero_candidates[None-MISSING]",
+      "case_sha256": "43c76888ba4ed3153e9e88c3905ac49d3743c1d8a9314763ff809cb0f649ab0e",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_unavailable_decision_does_not_invent_empty_scan_or_zero_candidates[invalid-INVALID_JSON]",
+      "case_sha256": "808f62a112e72cf0ae94518c85262747b0b313ae5e7b42b653bd15e75474085c",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_report::test_unstarted_or_unrelated_container_never_reads_account",
+      "case_sha256": "4d666c79c5dba1ba11aa4163e48e404f19df6ac1f6254887171adef0ae93be36",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_catalog_report_without_status_is_accepted",
+      "case_sha256": "8b2f6db60cffca27f39473c31db4b4afbe562f2592b69e8f2225550937d01457",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_daily_duration_stays_bounded_and_reuses_existing_preparation[21600]",
+      "case_sha256": "3d9c4373331650cdef2dc17a4c780eddb9542ca0779a2501b781f7802167f672",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_daily_duration_stays_bounded_and_reuses_existing_preparation[23400]",
+      "case_sha256": "ad8ce37a242e93697307396e70709ce148134e1afe06326a92e5f841581fc44f",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_daily_duration_stays_bounded_and_reuses_existing_preparation[600]",
+      "case_sha256": "59ade8e85634fede619c6edc48db4ec31ecdb9b5af1e0ce558a158ba1389a12a",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_daily_duration_stays_bounded_and_reuses_existing_preparation[60]",
+      "case_sha256": "4e1667e5dd5b87aeac00e8ce3ddffc35f5aa4f48230b9b6fcb9d5245b2c18e69",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_exact_reviews_flow_to_enrollment_snapshot_and_run",
+      "case_sha256": "1c476880af0e0cda371ab7c705e2581bc1c71f227296902f1fce89adaea0fb10",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_existing_run_refused_before_preparation",
+      "case_sha256": "39bc77e913f0a602f278675789e08b18df8497304bd444edb5eb4a7eb399ebc1",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_failed_subprocess_reports_structured_error_without_traceback[stderr]",
+      "case_sha256": "43d1c187489685a53385ca7aebad952aa3db83c9b31451a31f3a734979a3b1d4",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_failed_subprocess_reports_structured_error_without_traceback[stdout]",
+      "case_sha256": "d0dc276d65dab08d0e924b1c63f38961dde75788793f2d26f61461cf68f31f5e",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_future_combined_prepare_and_next_day_start_do_not_reenroll",
+      "case_sha256": "d8f621cc351f067132ac7644683183f57b6b35692c77a34069742b34c7c55aea",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_out_of_bound_daily_duration_cannot_start[23401]",
+      "case_sha256": "18daf59e110f8d107ef0473d0b43d14cab820bf97b0072326f2f4ebd0f1c5dc6",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_out_of_bound_daily_duration_cannot_start[59]",
+      "case_sha256": "16f863f0c08c348c3bd1bdc6946ae5f9b0c10ffb2607e701f0197191899ad82c",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_out_of_bound_daily_duration_cannot_start[True]",
+      "case_sha256": "b83c2b8a514a30ecad56912c7889450d2d4c8e56eca0303a16b285f850acd503",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_prepared_start_refuses_wrong_date_policy_live_or_blocked[date]",
+      "case_sha256": "e47e027df25f87f8433af7c90e7dce1c38ccbb7d766537da9aab71c0fd7bdf87",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_prepared_start_refuses_wrong_date_policy_live_or_blocked[live]",
+      "case_sha256": "0cc4cccebf915449fb7ebd2aa18875a58eaa2805d702af951bf0a7e0b92faacf",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_prepared_start_refuses_wrong_date_policy_live_or_blocked[policy]",
+      "case_sha256": "efcaa2c858ee2cc7419dad283e5163de60e5c33c610d0140b6a1f54ad679f835",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_prepared_start_refuses_wrong_date_policy_live_or_blocked[ready]",
+      "case_sha256": "bc01d2f3bdc93d02d52985087178511b8f97db296245af671d513d9d82e6c7f3",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_snapshot_failure_retains_prepared_receipt_for_retry",
+      "case_sha256": "45b060a74b5e736bb02f5e0a31c9b572f3f3fe5353ef85c1709198f1168d6729",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_start_returns_exact_stop_command_without_stopping",
+      "case_sha256": "1ae58fd9db2edabfafc73e79fb26bec92b9998d8d371a42c4fbed9a62a6b6c62",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_wait_reports_even_failed_runtime_and_does_not_restart[0]",
+      "case_sha256": "74e837c501108bdb5812c520f580ad12e9e153745e24ca84020b88539d50bc2b",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_paper_session_start::test_wait_reports_even_failed_runtime_and_does_not_restart[2]",
+      "case_sha256": "cc62f59f995879a33a8d5fdbafb41c3ef54b1e51344ef891a904fad836c6951e",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_portfolio_scope::test_owned_scope_context_cannot_be_reused_as_an_entry[foreign]",
+      "case_sha256": "22023f1d9ac0faa3b35f2c1c69ddf74d04db77ad98a30456def6b1a49cb16be9",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_portfolio_scope::test_owned_scope_context_cannot_be_reused_as_an_entry[missing]",
+      "case_sha256": "59c103f17ead66f0cda61a74e15df6db2abc6e3371ae236506a7c5c8a3ad063c",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_portfolio_scope::test_paid_scope_uses_full_original_receipt_and_shared_native_owner",
+      "case_sha256": "4196805f47bbc54365adbcda79b3342dce836b2356b0cec92c5a64eaaec15fe2",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_portfolio_scope::test_scope_management_retains_full_original_packet_and_exact_cost_owner[EXIT_ALL-False]",
+      "case_sha256": "7ca4fdbf01e38385b6da63a7b4b06624e70cf22b7a3df1bff25e28b8aca09c0c",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_portfolio_scope::test_scope_management_retains_full_original_packet_and_exact_cost_owner[MAINTAIN-False]",
+      "case_sha256": "ddc7043e026c390ef37e3c09b6dafc64b10842e60f7349fb0f632fb244d74c88",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_portfolio_scope::test_scope_management_retains_full_original_packet_and_exact_cost_owner[MAINTAIN-True]",
+      "case_sha256": "0375cf62fd43e65de18f38ae071d2dee79767ae0ddfaf644d295dab9ac10dc1e",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_portfolio_scope::test_scope_management_retains_full_original_packet_and_exact_cost_owner[TIGHTEN-False]",
+      "case_sha256": "371542881ac1ec73f4d4e14d958b3b2192d84dd1552562d729b4c6230867e902",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_portfolio_scope::test_scope_native_portfolio_entry_partial_exit_restart_identity[CALL]",
+      "case_sha256": "0c45618d87bf9ba2cb8bf5ca14715d3ca311d99b748eaf870d69e1275872fc3b",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_portfolio_scope::test_scope_native_portfolio_entry_partial_exit_restart_identity[PUT]",
+      "case_sha256": "84e3b28f8b36c99d9c8b5db4afc1176f615a9e6154a53bb44184976c77acce48",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_inputs::test_active_owner_and_wrong_target_refuse_before_provider",
+      "case_sha256": "449efa738887354b15d5f1d5283f58c5b5ce7489c4be7f51e6033cf21e766646",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_inputs::test_install_saved_history_without_accepting_packet_or_reading_provider[binding-clock]",
+      "case_sha256": "42799b77ceeebe7d191fb786172224f5706b4810ddbba527b51f385d9e1eb005",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_inputs::test_install_saved_history_without_accepting_packet_or_reading_provider[binding-mapping]",
+      "case_sha256": "4aa41fd03ff87b0214803391bafc96975f277516f13afd31f991ee15cb8283e2",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_inputs::test_install_saved_history_without_accepting_packet_or_reading_provider[interpolation-clock]",
+      "case_sha256": "9b7b29b5c5bc1938945b767a86ab78e6423fb1866a62bba7c87d96e71418fb4d",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_inputs::test_install_saved_history_without_accepting_packet_or_reading_provider[interpolation-mapping]",
+      "case_sha256": "6d91d83aad24d08d602c598a55116b3db1ebae5bdd2a95faeb49a8e9547f770e",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_inputs::test_install_saved_history_without_accepting_packet_or_reading_provider[missing-clock]",
+      "case_sha256": "7a174bd90bf5761774b53f8c67507a7c3c0e0fbf42b7104fe3e88f156bb2df02",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_inputs::test_install_saved_history_without_accepting_packet_or_reading_provider[missing-mapping]",
+      "case_sha256": "9979d636c0c5a86c7e0bcf1c3c3fc94aacfb1f1fd94659f82843eb1f00a21916",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_inputs::test_install_saved_history_without_accepting_packet_or_reading_provider[none-clock]",
+      "case_sha256": "bf597269017946f51b66334b009527bfe4cb79c5377238fe9040dc10f0ed8189",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_inputs::test_install_saved_history_without_accepting_packet_or_reading_provider[none-mapping]",
+      "case_sha256": "485a0d479aadeadb4a8dac42d20b99679e69d5ff5895bd91d00483e1e2d571a2",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_inputs::test_install_saved_history_without_accepting_packet_or_reading_provider[receipt-clock]",
+      "case_sha256": "39d0c71c467c97bef606fcbfbfc51819b32e933068a551cb1eb50aba1dd486eb",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_inputs::test_install_saved_history_without_accepting_packet_or_reading_provider[receipt-mapping]",
+      "case_sha256": "565e5fee7c5d74ef2c8a6478dc4718bfd8c24ca0f1cf6eda55b74b2819fd62a3",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_inputs::test_preopen_preserves_owner_and_retains_original_history[False]",
+      "case_sha256": "3fc8869696b75ab2543213e86fa2997a1d905eda00ca388e290ed73bf379c471",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_inputs::test_preopen_preserves_owner_and_retains_original_history[True]",
+      "case_sha256": "027bb16bde8096c921f4a8b44f41ac9c6288ea4a43c49870e7c0d7829ddb0dbb",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_inputs::test_quote_clock_failure_reports_and_recovers_history_automatically[False]",
+      "case_sha256": "57645d6d1fc9d22ee17b2b7522e909a673df3a868ac8ad1196b87b8e5d4520b5",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_inputs::test_quote_clock_failure_reports_and_recovers_history_automatically[True]",
+      "case_sha256": "38a8d0d0d73aabfc0b7453bf583dd2ebbd3ec20d727679870fb029dad70f8087",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_inputs::test_weekend_date_keys_include_friday_without_future_bounds",
+      "case_sha256": "80a78cc903bb96835d1d7c058ed8c0cafec627ee4a7cad809a758dc58e507c54",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_replay::test_saved_preopen_reports_each_series_without_new_reads[interpolation]",
+      "case_sha256": "95f8088af80f190d12f6504d032d1cf2ec5e6d3d3ec655f45661535c6b427d21",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_replay::test_saved_preopen_reports_each_series_without_new_reads[missing]",
+      "case_sha256": "d0829da3958a6a9b31d867b002da3d101c270e3781f28b3421e40a60f61518db",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_replay::test_saved_preopen_reports_each_series_without_new_reads[none]",
+      "case_sha256": "7cc510eec6b90fa8de71fea4b35ef7a047ee545fc3dcc290318c50d4c4d2f52b",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_preopen_replay::test_saved_preopen_reports_each_series_without_new_reads[wrong_binding]",
+      "case_sha256": "35620b73bd9c749bb8d2bf53c15a08a27a59d6a40d40cef2fcb2405c85e8bf29",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_feed::test_collector_retains_pinned_reads_counts_quota_and_delivers_native_watch[None]",
+      "case_sha256": "6f759a1b3cda4b8968cbb0acf121d965b9ffef2bd75ccbae3a78f8411cdb5340",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_feed::test_collector_retains_pinned_reads_counts_quota_and_delivers_native_watch[failed]",
+      "case_sha256": "9a460f3a9538d230e1e493c2cde0b2c3b2f922984e0f62c12df7c72c64d1ef24",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_feed::test_collector_retains_pinned_reads_counts_quota_and_delivers_native_watch[identity]",
+      "case_sha256": "318f5ed9021df4755a90c1a91aef9545bf61b0af6a98f8cf0c070ebc0bf38f80",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_feed::test_completed_bar_marker_survives_scope_assembly_without_restamping",
+      "case_sha256": "c3522c95ef04e32de5ac324c81d384a03e3235e54ce617f21530c8fd955bcf01",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_feed::test_completed_history_can_cover_hold_but_not_missing_next_bar",
+      "case_sha256": "023420c4fd74903acd6abc0bdced0699b0c561bb1ba5d14e4b44c93ee7a2ac40",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_feed::test_current_index_can_invalidate_watch_without_replacing_missing_history",
+      "case_sha256": "48f36d72b69589fa8505831de1c03459c2ef5633cb5d58e6a678e73cac1067ef",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_feed::test_delivered_call_waiting_for_owner_is_not_a_terminal_watch_or_replayed_call",
+      "case_sha256": "ee2b4c6b2ddf9063fbd816b54bb9f64e206ab26c4725150dc6d6ec45b663d443",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_feed::test_incomplete_spx_keeps_peer_books_and_index_reference_only",
+      "case_sha256": "0fef6c52cbe034d74c72ba19218faab38910ceba958e136664ef9d1e2089f551",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_feed::test_native_watch_delivery_arming_cycle_and_no_terminal_replay",
+      "case_sha256": "ada76521830bddd5e5db332eea2c5c55587ee0cd02a9e3e788a6c4eb9d607baf",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_feed::test_owned_scope_keeps_protection_reference_when_history_is_missing",
+      "case_sha256": "54c1253dc10683e22b90dfce580bac3ff478e5e708d002096abfcd6f3e44a110",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_feed::test_scope_preflight_reports_original_blocker_without_enabling_entry",
+      "case_sha256": "14e580ee6fe994159b743f3840fa633669b3d4a5c23786f72a918b78e8d60ca5",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_feed::test_scope_worker_pins_before_calls_and_rejects_extra_calls",
+      "case_sha256": "69ea7f41ddf8bf5e5355152f1778c65588201d5bf70967a09f9c3e0f5011326c",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_feed::test_terminal_watch_with_retained_armed_history_never_reappears",
+      "case_sha256": "82c322afa6d35cb3500433e978cb9315b4017b54231bafaa6d71d5eb3ab3fe1f",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_price_options::test_context_and_future_bars_remain_blocked",
+      "case_sha256": "21b33332939c9772cd983a4aaf484ca3b55fd7b2a39ec86e49c8d5ca23399b25",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_price_options::test_index_reference_drives_native_unfilled_barrier_without_a_fake_book[CALL]",
+      "case_sha256": "bac7549afb50a262d39f9392b64a5d3d4b6b93f62da75ce11ad14611aef79d68",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_price_options::test_index_reference_drives_native_unfilled_barrier_without_a_fake_book[PUT]",
+      "case_sha256": "b1eab4be0c03bbe98d96e2c1581858374761345f1070daaebd3e6c84dfc2c61f",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_price_options::test_index_reference_survives_native_packet_roundtrip",
+      "case_sha256": "62284fb7c3980359273412dc576b2cd6308a036e94539210e5c213f1a4056dcc",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_price_options::test_observed_market_evidence_is_explicit_and_never_context_clearance",
+      "case_sha256": "befa622442005c67e72f4d6b648c1ebc81173170d9438542402aabc1cef1ed6f",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_price_options::test_policy_requires_explicit_variant_and_structural_path",
+      "case_sha256": "23c83ae46dbf3f454c45019c5c1f2dafc539b6a5271cb83108b8882ad279cae1",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_price_options::test_price_patterns_without_volume_or_invented_context[CALL-compression_expansion]",
+      "case_sha256": "fa48af473ac05da226715dc6e806e6c60e4f8081e6727342f0ebcfe774a2ad0b",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_price_options::test_price_patterns_without_volume_or_invented_context[CALL-failed_break_reversal]",
+      "case_sha256": "60fecdf49533ac455e562badaac80c514ba258b7f0e131b39d1888c101b3cbf5",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_price_options::test_price_patterns_without_volume_or_invented_context[CALL-opening_range_break_hold]",
+      "case_sha256": "08786dc12a470cb7f6a6a20be15e788fc97403cb68d459c639708a4485f29a85",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_price_options::test_price_patterns_without_volume_or_invented_context[CALL-trap_reversal]",
+      "case_sha256": "78fb47db65994575eee1f8b25db3370bf42cb48202694968aa766d4263eb1c4b",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_price_options::test_price_patterns_without_volume_or_invented_context[PUT-compression_expansion]",
+      "case_sha256": "b5b1f10d025e9ecfebd8f2edc37b12914781d6077d6c3d31dc80034ae1051ade",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_price_options::test_price_patterns_without_volume_or_invented_context[PUT-failed_break_reversal]",
+      "case_sha256": "dabe47de184dfe8e6c4d988e8848988087687d332bd5a56c4b6ca3297600e2c6",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_price_options::test_price_patterns_without_volume_or_invented_context[PUT-opening_range_break_hold]",
+      "case_sha256": "c0982786aa6f52b337d38004874adad2aabce4522f22635557cf3c4314a33515",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_price_options::test_price_patterns_without_volume_or_invented_context[PUT-trap_reversal]",
+      "case_sha256": "31616a52306422846b938aa72d1dbd133926f744f282bf13ca4c5c46bd9e6835",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_price_options::test_price_scope_index_reference_enters_fills_and_closes_native_owner[CALL]",
+      "case_sha256": "1bdf72a450408d64b6167695afd511c45e4375e92aea56d2c05057cdf6231b2e",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_price_options::test_price_scope_index_reference_enters_fills_and_closes_native_owner[PUT]",
+      "case_sha256": "df7d2c4f3304d2ea9cea1fc1d3eac30dad955df7d82bd1037ae4c24de3e2bff1",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_price_options::test_price_variant_locks_native_watch_and_preserves_frozen_policy",
+      "case_sha256": "f7be32ea5c292455e0503c7100973fd660b7a85c5e1fa3d8231c65030f172bab",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_sources::test_complete_original_price_history_reaches_native_scope_scan",
+      "case_sha256": "dbaa38348c12d77d5ca1d5e2f2416987ae81d793348886fbc5743f33f0b6b3e8",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_sources::test_mapper_cannot_repair_unusable_inputs[clock]",
+      "case_sha256": "ed7551ef237d69651b53c012cb87db436e82d1fb1fd898106855e46e7cf075e5",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_sources::test_mapper_cannot_repair_unusable_inputs[duplicate]",
+      "case_sha256": "c16255724b1c5a1526adcd356dc9873ba26409a086bed9a5572550f8f937c2f3",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_sources::test_mapper_cannot_repair_unusable_inputs[future_receipt]",
+      "case_sha256": "100f6f2f0dc839a9258370f75780a977cba92012997870fde8cd4495ae31ddbd",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_sources::test_mapper_cannot_repair_unusable_inputs[gap]",
+      "case_sha256": "fd19aa955dd39f9a9e0646bae13c3d109930d2002a8ae22415edeaf811870cb0",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_sources::test_mapper_cannot_repair_unusable_inputs[identity]",
+      "case_sha256": "227b3d872af0c88fcc1305a6797c5d197be55346f6bf662919c6572162d8d036",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_sources::test_mapper_cannot_repair_unusable_inputs[interpolated]",
+      "case_sha256": "bd877dd20ad4f218d60dd218349a4a5e02c04a04b15b93c37a864a27cc0c8f0b",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_sources::test_mapper_cannot_repair_unusable_inputs[unknown]",
+      "case_sha256": "1ec742f276d919266585e5bcc209509d571d0af89a2fd398637464030cbf507f",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_scope_sources::test_original_after_close_capture_preserves_unknowns_and_stale_venue_clock",
+      "case_sha256": "d4acb3be6c4454142b3ae7f7491dda2c8b08f93ff942f40425d6051e0412e168",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_capture_session_retains_private_evidence_without_owner_mount[False]",
+      "case_sha256": "21b6bf3714086f0d340cb8929dbd5a495c01cdefc9869e77aafb112394344a6d",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_capture_session_retains_private_evidence_without_owner_mount[True]",
+      "case_sha256": "fc28eb54a56a1cfe2275948ef1be137a98351f0569b41b5ff16c035b3f08b1a8",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_changed_cpu_capacity_requires_a_new_review_before_launch",
+      "case_sha256": "e39a8519fb1702198a7189afb436310b9d467b49624c01cdb409322aee0e020a",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_changed_worker_after_start_stops_only_new_session",
+      "case_sha256": "1ee04994f73e608974471894fec1d77b93cb23711bf7398f31897666faa9cbf0",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_enrollment_and_run_mounts_keep_offline_stages_without_broker_auth",
+      "case_sha256": "70bbe4fec91eae83506c180d0fbd66ac1b62035b6b13fcdc40aeb43d10d53135",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_execute_reports_only_fixed_rollover_failure_codes",
+      "case_sha256": "122bad0677d6b0e56258ddfb2e2b0fbd5e2a7f32d77b28ee998e71f7ef31eaab",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_existing_active_session_prevents_another_launch",
+      "case_sha256": "3600ff4fcebfbb7af79d1ab17f9d6f5c539e312017f6f4bfd8d47aadf7d4df1e",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_existing_snapshot_uses_native_publish_without_recreating[False]",
+      "case_sha256": "19d26232754ba162391bb002c33f33d0d999c3a56cd0ba0101b5d387ed136b4b",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_existing_snapshot_uses_native_publish_without_recreating[True]",
+      "case_sha256": "75ea10b07e59a2bec8170014055155a4b54f41cfdc2ddca7828325658560057e",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_history_report_is_offline_read_only_without_restart",
+      "case_sha256": "83504d15aca77b027abc3125473c970bcc25b47d967a6f3f9ad19fa128a446f4",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_incomplete_upgraded_owner_does_not_create_snapshot",
+      "case_sha256": "5d09b51a651068c45e5efc8e88d25a0169bd80289f09837c8fdddb7bf61c0783",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_invalid_bounded_run_is_refused[0-a]",
+      "case_sha256": "1b1bc0aef86da23810434870fdf1b782afee95094f3061e83b1776dbd055d0fa",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_invalid_bounded_run_is_refused[60-../a]",
+      "case_sha256": "31e31910bda882d1fb0d29de2d8ed7aeb23adbfa3e96015488ad287c366cc22a",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_invalid_bounded_run_is_refused[60-]",
+      "case_sha256": "32ef58957aaba5d3e2dfa226736a90584bfaf345ea63af6ab94b24ebfed60d00",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_invalid_bounded_run_is_refused[60-a,readonly]",
+      "case_sha256": "2ac00625a23f670f49dc40d9f2cf94317811cf212abe9f5f2bda87e13b69acad",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_invalid_bounded_run_is_refused[86401-a]",
+      "case_sha256": "1012876176612826b5e062fe33038eade4a58cafe9452d39a132aaf9183bf234",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_invalid_bounded_run_is_refused[True-a]",
+      "case_sha256": "54870d433998e18b82ef6729b8aa062892569d82993dea965912e3acc42a5bce",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_modified_cpu_quota_cannot_bypass_review",
+      "case_sha256": "c10c5af727b8b32431dc30577ea50c33b6607faa919573753fdf12916c8d4c9e",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_preopen_collection_mounts_owner_read_only_without_model_or_publisher[132]",
+      "case_sha256": "e32e9e38cafe4e72917debca1fc9bff9f7120472358aa3b99bd6649144e8626f",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_preopen_collection_mounts_owner_read_only_without_model_or_publisher[None]",
+      "case_sha256": "67dfa849e9352692f3e521c4d7e617b9a55c6fc47caaa5badcb3cd75f683a0cf",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_preopen_failure_returns_native_bounded_diagnostic_without_stderr",
+      "case_sha256": "1de18af3ac41818484fce51ee90fa7c2b05cfc0547852cb7c42533b35b7a8e1c",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_private_mount_rejects_symlink_and_public_file",
+      "case_sha256": "7a61f922a33ce0d66df7ac5d37f7c9034344f4dacdf6408dc43e3c43df362da7",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_resume_requires_review_binding_and_reaches_bounded_container",
+      "case_sha256": "35023f1cdebbeea617be30147aef82879e71d3cab3d486b370e8cd7da5a62e7c",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_saved_preopen_report_is_read_only_and_offline",
+      "case_sha256": "1bde09092760793d53707659d035974349170b19336df20f4bf9d9f016e092b3",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_session_preparation_mounts_optional_original_earnings_read_only",
+      "case_sha256": "e423b151fdfcf79283fcd4aff7e9eeba821bd12433b59bc58b77e48f145d48a7",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_snapshot_destination_change_cannot_reuse_run_review",
+      "case_sha256": "63ed8debcebec030a626450993f93f0ab24c7fdfb36549b31a6cc782f38c4f63",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_stale_host_review_refuses_before_launch",
+      "case_sha256": "28fda792210630d3b9af6a7efaa39ac2c7e3516ee3a1f4317fd233fe961fafd7",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_stop_does_not_require_image_or_configuration",
+      "case_sha256": "d65d4481813ee16d6b965222549fe70e9f69178b383abc602b7837b251470e63",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_stop_requires_exact_container_id_and_retains_it",
+      "case_sha256": "82d74d86d5e8484db015d0ad7a9f76c6d3fd40075a4908907ee766e73deae725",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_strategy_upgrade_mounts_only_apply_configuration_writable[apply-strategy-upgrade]",
+      "case_sha256": "9c2babe8b4b70b93e38e168efa9acb0ca0e0975759dbe26094689786c04eec5a",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_strategy_upgrade_mounts_only_apply_configuration_writable[review-strategy-upgrade]",
+      "case_sha256": "8d2cb9eee704b824f7964946d6a6c8210e9c5a4c400cf6c8c51e27bbc92eaf4c",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_swing_preparation_uses_separate_readonly_capture_mount",
+      "case_sha256": "be3f64b5ff3ff607d40915144003ccbd7d37a8f229e959a97a13d37d78a97a27",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_session_host::test_upgraded_owner_gets_separate_bound_snapshot_for_create_review_and_run",
+      "case_sha256": "af3e8abf1b18aed8b09dc4371c6075f20b477e7393cddc5f6ba45e55a1d5bdd6",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_simulation_session::test_catalog_proposal_reports_stale_analytic_drift_without_promoting_it",
+      "case_sha256": "dec2513709efc1fbb43079e381eccecd47506a63a723a9f1ac1ac46659d95443",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_simulation_session::test_flat_recovery_retains_native_guards",
+      "case_sha256": "c94b7ff12ed886e6bc28a93d05ff9ab6e3063e156dd1b11c7976fbd7e904df25",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_simulation_session::test_observed_swing_history_is_an_explicit_rollover_change",
+      "case_sha256": "e68684bea8c800035ba491aff971072a3b3a29eac301fb0851ae3511be320372",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_simulation_session::test_original_capture_becomes_labeled_simulation_not_verified_terms",
+      "case_sha256": "ae052dce694230105e63ab047158db226c9533aff2750521dda08870fcc0feac",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_simulation_session::test_reviewed_future_swing_and_same_day_degen_share_session",
+      "case_sha256": "d5168902239ee56a5376ea7d1e91051e0785a2e12bf5477d326779c10bdadbb3",
+      "status": "PASSED"
+    },
+    {
+      "case": "tests.test_simulation_session::test_reviewed_restart_resumes_only_after_native_ready",
+      "case_sha256": "66deffdef510c199011933c05bacb3e4f1089ec1f10a4eb4006d62fb2f52b7c7",
+      "status": "PASSED"
+    }
+  ]
+}

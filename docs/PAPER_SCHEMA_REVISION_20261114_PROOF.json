@@ -1,0 +1,43 @@
+{
+  "version": "paper-schema-compatibility-proof-v1",
+  "implementation": "aae1dffe3196a5d0d1f77c07e5d94a76f081f939",
+  "observed_on_host": {
+    "release": "ab9b09026a27a92115d5b687a3be481062e00230",
+    "image_id": "sha256:e3d24459d055195a97b6fcd0c03b147488621637b9fb8f1ae3ee0ebc35c084d0",
+    "snapshot": "PUBLISHED",
+    "source_modified": false,
+    "reader": "DASHBOARD_READER_UPDATED",
+    "schedule": "DAILY_SCHEDULE_INSTALLED",
+    "november_13_preparation_failures": 3,
+    "november_16_diagnostic_stage": "VALIDATE_PLAN",
+    "market_read_attempts": 0,
+    "observed_schema_sha256": "05c635c9451e7257954ba11a111a47323a5ac2c1e743d820a0cc4ca5c2733eff"
+  },
+  "baseline": {
+    "selected": "New revision cases against ab9b090",
+    "passed": 10,
+    "failed": 12
+  },
+  "installed": {
+    "passed": 526,
+    "skipped": 0,
+    "errors": 0,
+    "failures": 0,
+    "suite_cases": {
+      "": 526
+    },
+    "application_files": 331,
+    "source_wheel_installed_bytes_match": true,
+    "application_manifest_sha256": "ddc5a94fa1c94453c7750c57b8c6e5344659f916c1868feba60c7a9b3f3eb9c7",
+    "wheel_sha256": "17be7af5a4b478b09d234604850a257148f660d31b38417c3e888aeb886e21f3",
+    "junit_sha256": "24c0b64ed346b5fe9de41ceb892d8b5d2fd423406441f5698795804e05640c4b",
+    "runtime_pins": 60,
+    "pip_check": "PASS",
+    "network": "isolated",
+    "provider": "synthetic"
+  },
+  "connected_capture_after_implementation": {
+    "status": "CATALOG_CAPTURED",
+    "host_receipt": "PAPER_HOST_DEPLOYMENT_20261114.json"
+  }
+}
