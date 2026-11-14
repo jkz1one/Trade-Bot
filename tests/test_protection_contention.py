@@ -284,9 +284,11 @@ def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, m
                     assert recovery.fenced and not r.task.done()
                     # Finish the already-submitted protective exit before advice/history return.
                     times[0] += timedelta(seconds=1)
+                    next_quote_at = time.monotonic()
                     send(market(breach=True))
                     await r.tick()
                     after = venue.snapshot(times[0])
+                    flat_observed_at = time.monotonic()
                     orders = after.stock_orders if asset == 'STOCK' else after.orders
                     assert not after.positions and len(orders) == 2
                     assert {order.side for order in orders if order.status == 'FILLED'} == {'BUY', 'SELL'}
@@ -326,11 +328,13 @@ def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, m
                         'breach_to_native_ack_seconds': ack_seconds,
                         'native_ack_to_tick_completion_seconds': tick_finished - acknowledgements[0],
                         'breach_to_tick_completion_seconds': tick_finished - breach_at,
+                        'breach_to_flat_observed_seconds': flat_observed_at - breach_at,
+                        'next_quote_to_flat_observed_seconds': flat_observed_at - next_quote_at,
                         'exit_filled_from_later_packet_before_advice_or_history_returned': True,
                         'report_snapshot_open_during_exit': True,
                         'native_submissions': venue.submit_count, 'accounting': view['accounting'],
                         'held_positions': len(view['positions']), 'runtime_timing': result}, indent=2))
-                assert started_at <= breach_at <= acknowledgements[0] <= tick_finished
+                assert started_at <= breach_at <= acknowledgements[0] <= tick_finished <= next_quote_at <= flat_observed_at
                 assert elapsed < 5, (ack_seconds, elapsed)
             asyncio.run(exercise())
     finally:
