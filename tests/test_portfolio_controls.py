@@ -292,3 +292,65 @@ def test_pending_and_superseded_reconciliation_cannot_confirm_flat_supervision(t
         assert stale == {"reconciled": False, "issues": ["PORTFOLIO_READ_SUPERSEDED"]}
         with engine.journal.read() as db:
             assert db.execute("SELECT heartbeat_at FROM execution_supervisor").fetchone() is None
+
+
+def test_protective_sell_reservation_uses_the_checked_native_order_view(tmp_path, monkeypatch):
+    with owned(tmp_path) as (engine, venue):
+        entries, at = open_pair(engine, venue)
+        at += timedelta(seconds=1)
+        quotes = tuple(q(i, at, bid="89", ask="89.01") for i in entries)
+        reserve = engine.prepare_stock
+        checked = []
+
+        def observe(*args, **kwargs):
+            db = kwargs.get("_db")
+            assert db is not None and db.in_transaction
+            assert not db.execute("SELECT 1 FROM execution_portfolio_orders WHERE active_play=?",
+                                  (kwargs["play_id"],)).fetchone()
+            result = reserve(*args, **kwargs)
+            assert db.execute("SELECT active_play FROM execution_portfolio_orders WHERE client_id=?",
+                              (result["client_id"],)).fetchone()[0] == kwargs["play_id"]
+            checked.append(kwargs["play_id"])
+            return result
+
+        monkeypatch.setattr(engine, "prepare_stock", observe)
+        result = asyncio.run(engine.protective_tick(now=at, stock_quotes=quotes))
+        assert set(checked) == {i.client_id for i in entries}
+        assert all(r["status"] == "OPEN" for r in result["plays"].values())
+
+
+def test_failed_full_exit_reservation_keeps_partial_close_superseded(tmp_path, monkeypatch):
+    from decimal import Decimal
+    from app.execution.engine import ExecutionBlocked
+    from app.mixed.models import StockProposal
+
+    with owned(tmp_path) as (engine, venue):
+        (first, other), at = open_pair(engine, venue)
+        close = StockProposal(action="CLOSE", instrument=first.instrument, thesis="Partial close")
+        partial = engine.prepare_stock("test-subset", close, q(first, at), now=at,
+                                       play_id=first.client_id, close_quantity=Decimal(".1"))
+        assert partial["status"] == "PREPARED", partial
+        reserve = engine.prepare_stock
+
+        def failed(*args, **kwargs):
+            if kwargs.get("play_id") == first.client_id:
+                raise ExecutionBlocked("INJECTED_RESERVATION_FAILURE")
+            return reserve(*args, **kwargs)
+
+        monkeypatch.setattr(engine, "prepare_stock", failed)
+        at += timedelta(seconds=1)
+        quotes = (q(first, at, bid="89", ask="89.01"), q(other, at))
+        outcome = asyncio.run(engine.protective_tick(now=at, stock_quotes=quotes))
+        assert outcome["plays"][first.client_id]["status"] == "BLOCKED"
+        with engine.journal.read() as db:
+            row = db.execute("SELECT status,attempted_at,active_play FROM execution_portfolio_orders "
+                             "WHERE client_id=?", (partial["client_id"],)).fetchone()
+            assert tuple(row) == ("REJECTED", None, None)
+            assert db.execute("SELECT count(*) FROM execution_events WHERE kind='PORTFOLIO_PARTIAL_CLOSE_SUPERSEDED' "
+                              "AND client_id=?", (partial["client_id"],)).fetchone()[0] == 1
+        assert venue.submit_count == 2
+        monkeypatch.setattr(engine, "prepare_stock", reserve)
+        at += timedelta(seconds=1)
+        quotes = (q(first, at, bid="89", ask="89.01"), q(other, at))
+        retried = asyncio.run(engine.protective_tick(now=at, stock_quotes=quotes))
+        assert retried["plays"][first.client_id]["status"] == "OPEN" and venue.submit_count == 3

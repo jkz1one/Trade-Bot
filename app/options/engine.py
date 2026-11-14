@@ -1310,7 +1310,8 @@ class OptionExecution:
                     },
                 )
             raise
-        return self.reconcile(result.snapshot, now=now, _epoch=epoch, _supervise_flat=supervise_flat)
+        with phase("RECONCILE_COMMIT"):
+            return self.reconcile(result.snapshot, now=now, _epoch=epoch, _supervise_flat=supervise_flat)
 
     @exact
     def reconcile(self, snapshot, *, now, _epoch=None, _supervise_flat=False):
@@ -2226,6 +2227,7 @@ class OptionExecution:
         origin="DETERMINISTIC",
         close_quantity=None,
         play_id=None,
+        _db=None,
     ):
         if self.portfolio_policy is not None:
             from app.mixed.portfolio_execution import prepare_stock
@@ -2239,6 +2241,7 @@ class OptionExecution:
                 origin=origin,
                 close_quantity=close_quantity,
                 play_id=play_id,
+                _db=_db,
             )
         if play_id is not None:
             raise ValueError("Explicit portfolio identity requires portfolio enrollment")

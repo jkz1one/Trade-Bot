@@ -14,6 +14,7 @@ from app.mixed.portfolio_store import control, history
 from app.mixed.stock_models import StockPosition, StockQuote
 from app.options.engine import clock, exact, fingerprint
 from app.options.governor import _fresh
+from app.options.runtime_timing import phase
 
 
 @exact
@@ -187,9 +188,8 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
     """Visit every held play even when another instrument cannot be managed."""
     from decimal import Decimal
 
-    from app.mixed.models import StockProposal
     from app.mixed.portfolio_store import intent as stored_intent
-    from app.options.models import OptionProposal, OptionQuote, parse_underlying
+    from app.options.models import OptionQuote, parse_underlying
 
     now = clock(now)
 
@@ -224,7 +224,7 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
         return reconciliation
     if "supervision" in reconciliation:
         return reconciliation["supervision"]
-    with engine.journal.read() as db:
+    with phase("PROTECTION_POSITIONS"), engine.journal.read() as db:
         held = reconstruct(history(engine, db, p, current_time())).ledger.positions
     results = {}
     for identity, position in held.items():
@@ -237,11 +237,12 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
         underlying = None if stock else underlying_quotes.get(position.contract.underlying)
         try:
             current_time()
-            result = (
-                assess_stock(engine, identity, quote, now=now)
-                if stock
-                else assess_option(engine, identity, quote, underlying, now=now)
-            )
+            with phase("PROTECTION_ASSESS"):
+                result = (
+                    assess_stock(engine, identity, quote, now=now)
+                    if stock
+                    else assess_option(engine, identity, quote, underlying, now=now)
+                )
             results[identity] = result
             if not stock and result["status"] == "HEALTHY" and result["target_exit_stage"]:
                 from app.mixed.portfolio_targets import tick as target_tick
@@ -252,7 +253,7 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
                 continue
             if result["status"] != "EXIT_REQUIRED":
                 continue
-            with engine.journal.write() as db:
+            with phase("PROTECTION_RESERVATION"), engine.journal.write() as db:
                 engine._control(db)
                 active = db.execute(
                     "SELECT * FROM execution_portfolio_orders WHERE active_play=?", (identity,)
@@ -303,43 +304,13 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
                     ),
                     Decimal(0),
                 )
-            # A fresh book can authorize a new close after an unattempted
-            # rejection. Repeated source clocks identify the same decision.
-            source = (
-                ("stock-protection:" if stock else "option-protection:")
-                + fingerprint({
-                    "play_id": identity, "filled": filled,
-                    "source_at": quote.source_at,
-                    "underlying_source_at": underlying.source_at if underlying else None,
-                })
-            )
-            if stock:
-                prepared = engine.prepare_stock(
-                    source,
-                    StockProposal(
-                        action="CLOSE",
-                        instrument=position.instrument,
-                        thesis="Independent mandatory stock exit",
-                    ),
-                    quote,
-                    now=current_time(),
-                    origin="PROTECTIVE",
-                    play_id=identity,
-                )
-            else:
-                prepared = engine.prepare(
-                    source,
-                    OptionProposal(
-                        action="CLOSE",
-                        contract=position.contract,
-                        thesis="Independent mandatory option exit",
-                    ),
-                    quote,
-                    underlying,
-                    now=current_time(),
-                    origin="PROTECTIVE",
-                    play_id=identity,
-                )
+                # A superseded partial must stay retired if full-exit storage
+                # fails. Ordinary closes reserve in the same checked transaction.
+                superseded_partial = active is not None
+                if not superseded_partial:
+                    prepared = reserve_exit(engine, db, identity, position, filled, quote, underlying, current_time())
+            if superseded_partial:
+                prepared = reserve_exit(engine, None, identity, position, filled, quote, underlying, current_time())
             if prepared["status"] != "PREPARED":
                 results[identity] = prepared
                 continue
@@ -353,9 +324,31 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
             }
         except (ValueError, ExecutionBlocked) as exc:
             results[identity] = {"status": "BLOCKED", "reason": str(exc)}
-    with engine.journal.write() as db:
+    with phase("PROTECTION_HEARTBEAT"), engine.journal.write() as db:
         engine._control(db)
         return record_supervision(engine, db, current_time(), results)
+
+
+def reserve_exit(engine, db, identity, position, filled, quote, underlying, now):
+    from app.mixed.models import StockProposal
+    from app.options.models import OptionProposal
+
+    stock = isinstance(position, StockPosition)
+    source = ("stock-protection:" if stock else "option-protection:") + fingerprint({
+        "play_id": identity, "filled": filled, "source_at": quote.source_at,
+        "underlying_source_at": underlying.source_at if underlying else None,
+    })
+    if stock:
+        return engine.prepare_stock(
+            source, StockProposal(action="CLOSE", instrument=position.instrument,
+                                  thesis="Independent mandatory stock exit"),
+            quote, now=now, origin="PROTECTIVE", play_id=identity, _db=db,
+        )
+    return engine.prepare(
+        source, OptionProposal(action="CLOSE", contract=position.contract,
+                               thesis="Independent mandatory option exit"),
+        quote, underlying, now=now, origin="PROTECTIVE", play_id=identity, _db=db,
+    )
 
 
 def record_supervision(engine, db, now, results):

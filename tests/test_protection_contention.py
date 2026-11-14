@@ -301,6 +301,9 @@ def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, m
                     assert db.execute('SELECT COUNT(*) FROM execution_model_calls WHERE cost IS NULL').fetchone()[0] == 0
                     assert db.execute('SELECT COUNT(*) FROM execution_model_calls').fetchone()[0] == 2
                     result = reports.runtime_timing_evidence(db, AT.isoformat(), times[0].isoformat())
+                    for name in ('RECONCILE_COMMIT', 'PROTECTION_POSITIONS', 'PROTECTION_ASSESS',
+                                 'PROTECTION_RESERVATION', 'PROTECTION_HEARTBEAT'):
+                        assert result['by_status'][name + ':COMPLETE'] >= 1
                     assert result['coverage']['models']['matched'] == 2
                     assert result['coverage']['models']['without_matched_trace'] == 0
                 from app.mixed.observer import MixedObserver
