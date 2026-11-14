@@ -1,5 +1,12 @@
 # Recovered offline system checkpoint
 
+The November 14 installed system run on `e2ced11` passed 565 checks with
+one unmapped dashboard reader UID. The reviewed feed-recovery monitor now
+verifies the journal in a read-only worker. The native owner rechecks the
+operator veto, generation, account and original market clocks before any
+resume. A separate regression completed a native snapshot while the
+verification read was held open. [Measurements](PAPER_CAPACITY_20261114_PROOF.json).
+
 The final paid-entry trace on `66d8ea4` passed 555 installed system cases
 with one unmapped-UID skip. All 211 related timing, Scope, selection, entry
 and report tests passed. The sets overlap. Three baseline cases reproduced

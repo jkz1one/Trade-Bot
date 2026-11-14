@@ -6258,5 +6258,247 @@
       "junit_sha256": "a7a7465f89baef65b50e995b41530b1c462cb53ea80564a8298248868e9b3373"
     },
     "system_skip": "Reader uid 10001 is unmapped. The suite counts overlap."
+  },
+  "verified_recovery_poll_scheduling": {
+    "baseline": "0210d15d7f106326d41814085a6da9470ece77db",
+    "implementation": "e2ced111f495102943e5800a4b6bb16fc0b84469",
+    "conditions": "Synthetic offline account and model. One logical CPU per timing run. Network namespace isolated. No connected operation.",
+    "responsiveness": {
+      "method": "Eight consecutive fully verified healthy recovery polls per build on separate copies of the same closed account. A coroutine requested a ten-millisecond wakeup. Each sample records the real poll duration and greatest wakeup delay above ten milliseconds.",
+      "baseline": {
+        "journal_bytes": 122957824,
+        "samples": [
+          {
+            "poll_seconds": 0.137002,
+            "maximum_loop_lag_seconds": 0.127085,
+            "heartbeats": 1
+          },
+          {
+            "poll_seconds": 0.134763,
+            "maximum_loop_lag_seconds": 0.124833,
+            "heartbeats": 1
+          },
+          {
+            "poll_seconds": 0.138825,
+            "maximum_loop_lag_seconds": 0.128891,
+            "heartbeats": 1
+          },
+          {
+            "poll_seconds": 0.143232,
+            "maximum_loop_lag_seconds": 0.133293,
+            "heartbeats": 1
+          },
+          {
+            "poll_seconds": 0.133735,
+            "maximum_loop_lag_seconds": 0.123799,
+            "heartbeats": 1
+          },
+          {
+            "poll_seconds": 0.134451,
+            "maximum_loop_lag_seconds": 0.124517,
+            "heartbeats": 1
+          },
+          {
+            "poll_seconds": 0.13819,
+            "maximum_loop_lag_seconds": 0.128252,
+            "heartbeats": 1
+          },
+          {
+            "poll_seconds": 0.14651,
+            "maximum_loop_lag_seconds": 0.136576,
+            "heartbeats": 1
+          }
+        ],
+        "median_peak_delay_seconds": 0.127669,
+        "maximum_delay_seconds": 0.136576,
+        "sha256": "f560a9e0dac345e53f040425882d4e5b33501f785b9b1892a5143d1bf59680b8"
+      },
+      "implementation": {
+        "journal_bytes": 122957824,
+        "samples": [
+          {
+            "poll_seconds": 0.21102,
+            "maximum_loop_lag_seconds": 0.003987,
+            "heartbeats": 21
+          },
+          {
+            "poll_seconds": 0.144688,
+            "maximum_loop_lag_seconds": 0.004629,
+            "heartbeats": 14
+          },
+          {
+            "poll_seconds": 0.151181,
+            "maximum_loop_lag_seconds": 0.001773,
+            "heartbeats": 15
+          },
+          {
+            "poll_seconds": 0.143638,
+            "maximum_loop_lag_seconds": 0.003386,
+            "heartbeats": 14
+          },
+          {
+            "poll_seconds": 0.169501,
+            "maximum_loop_lag_seconds": 0.002045,
+            "heartbeats": 17
+          },
+          {
+            "poll_seconds": 0.140358,
+            "maximum_loop_lag_seconds": 0.00498,
+            "heartbeats": 14
+          },
+          {
+            "poll_seconds": 0.155751,
+            "maximum_loop_lag_seconds": 0.005298,
+            "heartbeats": 15
+          },
+          {
+            "poll_seconds": 0.167174,
+            "maximum_loop_lag_seconds": 0.004693,
+            "heartbeats": 16
+          }
+        ],
+        "median_peak_delay_seconds": 0.004308,
+        "maximum_delay_seconds": 0.005298,
+        "sha256": "562a9c2e3682e7ae4b80fab0719a23790f046d91ad23fccaec842fd6e9db095b"
+      }
+    },
+    "opening_trials": {
+      "method": "Four 90-second runs in the recorded order, each starting with 112 MiB of labeled diagnostic padding and two allowed feed recoveries. Each produced one opening.",
+      "ordered_trials": [
+        {
+          "revision": "baseline",
+          "opening_age_seconds": 5.948497,
+          "opening_samples": 1,
+          "initial_database_bytes": 119635968,
+          "elapsed_seconds": 90.69774594500086,
+          "measured_cpu": {
+            "elapsed_seconds": 90.697729,
+            "worker_user_seconds": 66.290932,
+            "worker_system_seconds": 10.803418,
+            "reaped_child_user_seconds": 1.551671,
+            "reaped_child_system_seconds": 0.396812,
+            "average_busy_cores": 0.871497,
+            "average_allocated_cpu_percent": 87.15
+          },
+          "outcome": {
+            "status": "RECORDED",
+            "entry_fills": 1,
+            "exit_fills": 1,
+            "completed_round_trips": 1,
+            "carry_in_exits": 0
+          },
+          "final_accounting": "VERIFIED_FLAT",
+          "native_snapshot_failures": 0,
+          "feed_recoveries": 0,
+          "report_sha256": "8f801df6238bfb0c92b40a8e1367fee30d5c0c06047a7bbc5d4a4c4fc815edd6"
+        },
+        {
+          "revision": "implementation",
+          "opening_age_seconds": 5.531786,
+          "opening_samples": 1,
+          "initial_database_bytes": 119635968,
+          "elapsed_seconds": 91.54010918900076,
+          "measured_cpu": {
+            "elapsed_seconds": 91.540085,
+            "worker_user_seconds": 66.071782,
+            "worker_system_seconds": 10.568693,
+            "reaped_child_user_seconds": 1.62578,
+            "reaped_child_system_seconds": 0.448286,
+            "average_busy_cores": 0.859891,
+            "average_allocated_cpu_percent": 85.989
+          },
+          "outcome": {
+            "status": "RECORDED",
+            "entry_fills": 1,
+            "exit_fills": 1,
+            "completed_round_trips": 1,
+            "carry_in_exits": 0
+          },
+          "final_accounting": "VERIFIED_FLAT",
+          "native_snapshot_failures": 0,
+          "feed_recoveries": 0,
+          "report_sha256": "d7d16ad16644ec04fc2f47089c2436889c1fd1d93f08cbcd33f2659a44acb0cb"
+        },
+        {
+          "revision": "implementation",
+          "opening_age_seconds": 6.776451,
+          "opening_samples": 1,
+          "initial_database_bytes": 119635968,
+          "elapsed_seconds": 91.78293786100039,
+          "measured_cpu": {
+            "elapsed_seconds": 91.782922,
+            "worker_user_seconds": 64.554856,
+            "worker_system_seconds": 12.065709,
+            "reaped_child_user_seconds": 1.67952,
+            "reaped_child_system_seconds": 0.290521,
+            "average_busy_cores": 0.856266,
+            "average_allocated_cpu_percent": 85.627
+          },
+          "outcome": {
+            "status": "RECORDED",
+            "entry_fills": 1,
+            "exit_fills": 1,
+            "completed_round_trips": 1,
+            "carry_in_exits": 0
+          },
+          "final_accounting": "VERIFIED_FLAT",
+          "native_snapshot_failures": 0,
+          "feed_recoveries": 0,
+          "report_sha256": "5525707cdd77ac164a86e4a71ab533b2433cdbc2247000f8aff3e6be13617a18"
+        },
+        {
+          "revision": "baseline",
+          "opening_age_seconds": 6.7049,
+          "opening_samples": 1,
+          "initial_database_bytes": 119635968,
+          "elapsed_seconds": 91.35079657699953,
+          "measured_cpu": {
+            "elapsed_seconds": 91.350779,
+            "worker_user_seconds": 64.378002,
+            "worker_system_seconds": 14.378561,
+            "reaped_child_user_seconds": 1.670132,
+            "reaped_child_system_seconds": 0.266848,
+            "average_busy_cores": 0.883337,
+            "average_allocated_cpu_percent": 88.334
+          },
+          "outcome": {
+            "status": "RECORDED",
+            "entry_fills": 1,
+            "exit_fills": 1,
+            "completed_round_trips": 1,
+            "carry_in_exits": 0
+          },
+          "final_accounting": "VERIFIED_FLAT",
+          "native_snapshot_failures": 0,
+          "feed_recoveries": 0,
+          "report_sha256": "cc4765c67b4fe9517183d8ed0f3ccc7419af1aa865ab618702c0c5bce2204aaa"
+        }
+      ]
+    },
+    "regressions": {
+      "installed_system": {
+        "tests": 566,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1,
+        "junit_sha256": "fca17a9c1ee7e56638d303474de9a1979a3ac876f0df209660ffd8c536aca123"
+      },
+      "focused": {
+        "tests": 58,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "junit_sha256": "a8e65d585e5fb82ff92bc49b6d2ec1db11126850bbfbfd4050849942286b6108"
+      },
+      "final_recovery": {
+        "tests": 26,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "junit_sha256": "c84dc8447a24d3ffc76309f1bb2ddbcd14218f9d11530872e6f97c8397a5c538"
+      },
+      "system_application_sha256": "9904993361dcf075ae05db3a638cbb4858289828c40c826f0e6b29e661902866",
+      "notes": "Suites overlap. The system skip is the unmapped dashboard reader UID. Final recovery tests include rejection of damaged restore authority and a real native snapshot during the interrupted read."
+    }
   }
 }

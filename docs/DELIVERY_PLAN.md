@@ -132,6 +132,12 @@ next action. Do not replace missing evidence with a date estimate.
   Under the 120 MB one-CPU fixture, quote ages at reservation were 5.93
   seconds on the baseline, 6.68 in the selection-only trial, and 5.31 in
   the combined two-slot run. Each measured one opening and verified flat.
+  `e2ced11` moves the verified feed-recovery read off the owner loop.
+  On the same 123 MB account the longest delay to a ten-millisecond wakeup
+  fell from 137 ms to 5.3 ms across eight polls per build. Four one-CPU
+  opening trials measured 5.95 and 6.70 seconds on the baseline and
+  5.53 and 6.78 on the repair. Each ended flat. The five-second opening
+  target remains open. [Exact trials](PAPER_CAPACITY_20261114_PROOF.json).
 - [ ] **A3 — Measured repairs:** reproduce and close the actual bottlenecks with
   before/after evidence; decide connection reuse from measurements and validate
   its isolation, refresh ownership, deadlines and cleanup if adopted.
