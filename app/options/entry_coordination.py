@@ -207,7 +207,8 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
             return await execute(c, key, evidence, request, result)
         from app.mixed.selection import select
 
-        select(c, key, evidence)
+        # The shared-Scope path commits both selection receipts before execution.
+        select(c, key, evidence, persist=c.entry_policy.scope_selection is None)
     if c.entry_policy.scope_selection is not None:
         from app.options.scope_ai import choose_after_usage
 

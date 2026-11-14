@@ -427,3 +427,33 @@ def test_paid_stock_receipt_tampering_blocks_attempt(tmp_path, monkeypatch, dama
             )
         assert asyncio.run(dispatch(out["client_id"], quote(times[0]), now=times[0])) == "REJECTED"
         assert v.submit_count == 0
+
+
+def test_repeated_entry_cost_reads_reject_changed_originals(tmp_path, monkeypatch):
+    from app.execution.engine import ExecutionBlocked
+    from app.mixed import paid_costs
+
+    with owner(tmp_path, monkeypatch) as (c, _, _, _):
+        assert asyncio.run(c.cycle(stock_frame()))["status"] == "OPEN"
+        policy = c.engine.policy
+        with c.engine.journal.write() as db:
+            original = paid_costs.records(db, policy)
+            assert len(original) == 1
+            before = paid_costs._cached_entry_cost_proof.cache_info().hits
+            assert paid_costs.records(db, policy) == original
+            assert paid_costs._cached_entry_cost_proof.cache_info().hits > before
+            changes = (
+                "UPDATE execution_model_calls SET cost='0'",
+                "UPDATE execution_option_opportunities SET fingerprint='changed'",
+                "UPDATE execution_option_opportunities SET result_json=json_set(result_json,'$.candidates',json('[]'))",
+                "UPDATE execution_option_strategy SET policy_json=json_set(policy_json,'$.entry_model',json('{}'))",
+                "DELETE FROM execution_model_calls",
+            )
+            for change in changes:
+                db.execute("SAVEPOINT changed_proof")
+                db.execute(change)
+                with pytest.raises((ExecutionBlocked, ValueError)):
+                    paid_costs.records(db, policy)
+                db.execute("ROLLBACK TO changed_proof")
+                db.execute("RELEASE changed_proof")
+                assert paid_costs.records(db, policy) == original

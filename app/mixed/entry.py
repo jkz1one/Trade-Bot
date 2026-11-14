@@ -133,18 +133,22 @@ def review_original(packet, plan):
 
 
 def validate_stored(db, key, evidence, *, usable=True):
+    strategy = db.execute("SELECT policy_json FROM execution_option_strategy WHERE id=1").fetchone()[0]
+    configuration = db.execute("SELECT config_json FROM execution_control WHERE id=1").fetchone()[0]
+    call = db.execute("SELECT * FROM execution_model_calls WHERE source_key=?", (key,)).fetchone()
+    row = db.execute(
+        "SELECT inputs_json,started_at,fingerprint FROM execution_option_opportunities WHERE cycle_key=?",
+        (key,),
+    ).fetchone()
+    return _validate_entry_sources(key, evidence, strategy, configuration, call, row, usable=usable)
+
+
+def _validate_entry_sources(key, evidence, strategy, configuration, call, row, *, usable):
     from app.options import entry_judgment as j
 
-    config = json.loads(
-        db.execute("SELECT policy_json FROM execution_option_strategy WHERE id=1").fetchone()[0]
-    )
-    owner = OptionExecutionPolicy.model_validate(
-        json.loads(
-            db.execute("SELECT config_json FROM execution_control WHERE id=1").fetchone()[0]
-        )["policy"]
-    )
+    config = json.loads(strategy)
+    owner = OptionExecutionPolicy.model_validate(json.loads(configuration)["policy"])
     request = j.EntryRequest.model_validate(evidence["entry_request"])
-    call = db.execute("SELECT * FROM execution_model_calls WHERE source_key=?", (key,)).fetchone()
     if (
         owner.mixed_owner is None
         or owner.mixed_owner.reasoning != "mixed-paid-entry-v1"
@@ -158,10 +162,6 @@ def validate_stored(db, key, evidence, *, usable=True):
         raise ExecutionBlocked("MIXED_FULL_ENTRY_REQUEST_REQUIRED")
     from app.options.coordinator import DegenFrame
 
-    row = db.execute(
-        "SELECT inputs_json,started_at,fingerprint FROM execution_option_opportunities WHERE cycle_key=?",
-        (key,),
-    ).fetchone()
     frame = DegenFrame.model_validate_json(row["inputs_json"])
     if (
         fingerprint(frame) != row["fingerprint"]

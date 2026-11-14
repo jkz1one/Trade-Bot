@@ -426,18 +426,28 @@ class OptionRuntime:
             )
         return slot if reason is None else None
 
-    async def run(self, stop, *, ready=None):
+    async def run(self, stop, *, ready=None, delivery_event=None):
         if self.running:
             raise ExecutionBlocked("OPTION_RUNTIME_ALREADY_RUNNING")
         if type(stop) is not asyncio.Event:
             raise ValueError("Explicit runtime shutdown event required")
         if ready is not None and type(ready) is not asyncio.Event:
             raise ValueError("Explicit first-tick readiness event required")
+        if delivery_event is not None and (
+            type(delivery_event) is not asyncio.Event or delivery_event is stop or delivery_event is ready
+        ):
+            raise ValueError("Separate collector delivery event required")
         self.stop = stop
         self.running = True
         failed = False
         from app.options.release_identity import inspect_release
 
+        async def wake_on_stop():
+            await stop.wait()
+            delivery_event.set()
+
+        stopper = asyncio.create_task(wake_on_stop()) if delivery_event is not None else None
+        wake = delivery_event if delivery_event is not None else stop
         try:
             release = inspect_release(now=self.c.now())
             with self.c.engine.journal.write() as db:
@@ -456,13 +466,17 @@ class OptionRuntime:
                 )
             due = time.monotonic()
             while not stop.is_set():
+                # A delivery during protection stays set for the following tick.
+                # The timer still supervises held positions during feed outages.
+                if delivery_event is not None:
+                    delivery_event.clear()
                 self._scheduler_delay = max(0, time.monotonic() - due)
                 await self.tick()
                 if ready is not None:
                     ready.set()
                 due = time.monotonic() + self.policy.tick_seconds
                 try:
-                    await asyncio.wait_for(stop.wait(), self.policy.tick_seconds)
+                    await asyncio.wait_for(wake.wait(), self.policy.tick_seconds)
                 except TimeoutError:
                     pass
         except BaseException:
@@ -504,3 +518,6 @@ class OptionRuntime:
                     )
             finally:
                 self.running = False
+                if stopper is not None:
+                    stopper.cancel()
+                    await asyncio.gather(stopper, return_exceptions=True)

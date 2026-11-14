@@ -132,11 +132,13 @@ def retire_expired(c, db, seed):
 
 
 def retain_scans(c, scans):
+    terminals = [s for s in scans if s.version == "swing-next-session-v1" and s.terminal is not None]
+    if not terminals:
+        return
     with c.engine.journal.write() as db:
         c._bound(db)
-        for scan in scans:
-            if scan.version == "swing-next-session-v1" and scan.terminal is not None:
-                retain_terminal(c, db, scan.seed, scan.terminal)
+        for scan in terminals:
+            retain_terminal(c, db, scan.seed, scan.terminal)
 
 
 @exact
@@ -217,6 +219,20 @@ def observe_quotes(c, underlyings):
     window = c.engine.calendar.current_window(at)
     if window is None:
         return
+    # An empty session has no quote-driven terminal to persist. Take a consistent
+    # read first and repeat the lookup under the owner lock if a seed exists.
+    single = "SELECT seed_json FROM execution_option_swing_seeds WHERE session=?"
+    batch = (
+        "SELECT s.seed_json FROM execution_option_swing_batch_seeds s "
+        "JOIN execution_option_swing_batches b ON s.batch_hash=b.batch_hash WHERE b.session=?"
+    )
+    sources = [single]
+    if c.swing_policy.family_batch is not None:
+        sources.append(batch)
+    with c.engine.journal.read() as db:
+        c._bound(db)
+        if not any(db.execute(sql + " LIMIT 1", (window.session_date,)).fetchone() for sql in sources):
+            return
     with c.engine.journal.write() as db:
         ledger = c._bound(db)
         if (
@@ -226,15 +242,7 @@ def observe_quotes(c, underlyings):
             ).fetchone()
         ):
             return
-        rows = db.execute(
-            "SELECT seed_json FROM execution_option_swing_seeds WHERE session=?",
-            (window.session_date,),
-        ).fetchall()
-        if c.swing_policy.family_batch is not None:
-            rows += db.execute(
-                "SELECT s.seed_json FROM execution_option_swing_batch_seeds s JOIN execution_option_swing_batches b ON s.batch_hash=b.batch_hash WHERE b.session=?",
-                (window.session_date,),
-            ).fetchall()
+        rows = (row for sql in sources for row in db.execute(sql, (window.session_date,)))
         for row in rows:
             seed = SwingSeed.model_validate_json(row[0])
             quotes = [q for q in underlyings if q.symbol == seed.history.symbol]

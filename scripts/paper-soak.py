@@ -61,8 +61,12 @@ def validate(output, seconds, seed_mib):
     }
 
 
-def run(output, seconds, seed_mib):
+def run(output, seconds, seed_mib, *, cpus=1):
     identity = validate(output, seconds, seed_mib)
+    available = sorted(os.sched_getaffinity(0))
+    if type(cpus) is not int or cpus not in (1, 2) or len(available) < cpus:
+        raise ValueError("REQUESTED_CPU_AFFINITY_UNAVAILABLE")
+    affinity = available[:cpus]
     output.mkdir(mode=0o700)
     result = {
         "version": "paper-soak-launch-v1",
@@ -70,6 +74,7 @@ def run(output, seconds, seed_mib):
         **identity,
         "seconds": seconds,
         "seed_mib": seed_mib,
+        "worker_cpu_affinity": affinity,
         "network": "ISOLATED",
         "host_acceptance": "UNVERIFIED",
         "wall_clock_soak": "PENDING",
@@ -90,7 +95,7 @@ def run(output, seconds, seed_mib):
     health.mkdir(parents=True)
     shutil.copy(ROOT / "app/mixed/paper_health.py", health / "paper_health.py")
     bootstrap = (
-        "import os,sys;os.sched_setaffinity(0,{min(os.sched_getaffinity(0))});"
+        f"import os,sys;os.sched_setaffinity(0,{affinity!r});"
         "sys.path[:0]=" + repr([str(output / "stage"), str(output / "stage/tests")]) + ";"
         "from pathlib import Path;from soak_worker import run;run(Path("
         + repr(str(output))
@@ -159,9 +164,11 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--seconds", type=int, default=NOMINAL_SECONDS)
     parser.add_argument("--seed-mib", type=int, default=68)
+    parser.add_argument("--cpus", type=int, choices=(1, 2), default=1,
+                        help="Logical CPUs for the worker and children (nominal profile: 1)")
     args = parser.parse_args()
     try:
-        value = run(args.output, args.seconds, args.seed_mib)
+        value = run(args.output, args.seconds, args.seed_mib, cpus=args.cpus)
     except (OSError, ValueError) as exc:
         value = {"status": "UNAVAILABLE", "reason": str(exc), "live_enabled": False}
     print(json.dumps(value, sort_keys=True))

@@ -27,10 +27,10 @@ def test_one_protection_read_reaches_selection_before_original_inventory_expires
         original = engine.reconcile_fixture
         reads = []
 
-        async def delayed(*, now):
+        async def delayed(*, now, **kwargs):
             reads.append(now)
             times[0] += timedelta(seconds=4)
-            return await original(now=times[0])
+            return await original(now=times[0], **kwargs)
 
         monkeypatch.setattr(engine, 'reconcile_fixture', delayed)
         outcome = asyncio.run(c.cycle(frame))
@@ -49,9 +49,9 @@ def test_expired_original_inventory_still_cannot_enter(tmp_path, monkeypatch):
         c = coordinator(engine, times, two_symbols())
         original = engine.reconcile_fixture
 
-        async def delayed(*, now):
+        async def delayed(*, now, **kwargs):
             times[0] += timedelta(seconds=26.297)
-            return await original(now=times[0])
+            return await original(now=times[0], **kwargs)
 
         monkeypatch.setattr(engine, 'reconcile_fixture', delayed)
         outcome = asyncio.run(c.cycle(frame))
@@ -180,9 +180,9 @@ def test_runtime_handoff_requires_exact_frame_state_and_original_account_age(tmp
         original = engine.reconcile_fixture
         reads = []
 
-        async def observed(*, now):
+        async def observed(*, now, **kwargs):
             reads.append(now)
-            return await original(now=now)
+            return await original(now=now, **kwargs)
 
         monkeypatch.setattr(engine, 'reconcile_fixture', observed)
         asyncio.run(c.cycle(frame, _protected_epoch=handoff))
@@ -219,10 +219,10 @@ def test_runtime_reuses_protection_then_fills_exits_and_restarts_without_replay(
         original = engine.reconcile_fixture
         reads = []
 
-        async def delayed(*, now):
+        async def delayed(*, now, **kwargs):
             reads.append(now)
             times[0] += timedelta(seconds=4)
-            return await original(now=times[0])
+            return await original(now=times[0], **kwargs)
 
         monkeypatch.setattr(engine, 'reconcile_fixture', delayed)
         deliver(r, frame, 'CYCLE')

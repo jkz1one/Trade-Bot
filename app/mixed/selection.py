@@ -206,28 +206,30 @@ def collect(c, key, frame, evidence, *, evaluated_at=None):
     if len(by_symbol) != len(frame.stocks) or set(by_symbol) != set(c.policy.symbols):
         raise ValueError("EXACT_STOCK_SOURCE_COVERAGE_REQUIRED")
     accepted, rejected = [], {}
-    with c.engine.journal.write() as db:
+    scans = {}
+    lock_swing = c.stock_policy.swing is not None and not frame.swing_unavailable
+    for symbol in c.policy.symbols:
+        item = by_symbol[symbol]
+        if c.stock_policy.swing is None and (item.swing is not None or item.catalyst is not None):
+            raise ValueError("STOCK_SWING_NOT_ENROLLED")
+        if lock_swing and (
+            item.swing is None or (item.catalyst is None and c.stock_policy.swing.input_basis is None)
+        ):
+            raise ValueError("STOCK_COMPLETE_SWING_SOURCE_REQUIRED")
+        scans[symbol] = candidates(
+            item, histories[symbol], c.policy, c.stock_policy, c.engine.policy,
+            c.engine.calendar, now=evaluated_at, swing_unavailable=frame.swing_unavailable,
+        )
+    # Pure source rejections need no reservation, loss-control or terminal write.
+    # All state-dependent admissions and Swing locks still share the fenced writer.
+    writes = lock_swing or any(proposed or terminals for proposed, _, terminals in scans.values())
+    transaction = c.engine.journal.write if writes else c.engine.journal.read
+    with transaction() as db:
         c._bound(db)
-        for symbol in c.policy.symbols:
+        for symbol, (proposed, issues, terminals) in scans.items():
             item = by_symbol[symbol]
-            if c.stock_policy.swing is None and (
-                item.swing is not None or item.catalyst is not None
-            ):
-                raise ValueError("STOCK_SWING_NOT_ENROLLED")
-            if c.stock_policy.swing is not None and not frame.swing_unavailable:
-                if item.swing is None or (item.catalyst is None and c.stock_policy.swing.input_basis is None):
-                    raise ValueError("STOCK_COMPLETE_SWING_SOURCE_REQUIRED")
+            if lock_swing:
                 lock(c, db, item)
-            proposed, issues, terminals = candidates(
-                item,
-                histories[symbol],
-                c.policy,
-                c.stock_policy,
-                c.engine.policy,
-                c.engine.calendar,
-                now=evaluated_at,
-                swing_unavailable=frame.swing_unavailable,
-            )
             rejected[symbol] = issues
             for family, reason in terminals.items():
                 retire(
@@ -314,9 +316,10 @@ def collect(c, key, frame, evidence, *, evaluated_at=None):
     evidence.update(stock_candidates=accepted, stock_rejections=rejected)
 
 
-def select(c, key, evidence):
+def select(c, key, evidence, *, persist=True):
     evidence["mixed_selection"] = receipt(c.stock_policy, key, evidence)
-    c._pending_evidence(key, evidence)
+    if persist:
+        c._pending_evidence(key, evidence)
     return evidence["mixed_selection"]["selected"]
 
 

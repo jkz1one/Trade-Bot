@@ -141,7 +141,8 @@ async def choose_after_usage(c, key, evidence, request, result):
         from app.mixed.selection import select
 
         select(c, key, evidence)
-    c._pending_evidence(key, evidence)
+    else:
+        c._pending_evidence(key, evidence)
     return await execute_scope(c, key, SimpleNamespace(scope=fresh), evidence)
 
 

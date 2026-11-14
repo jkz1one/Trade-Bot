@@ -1,6 +1,8 @@
 """Actual owner races, signed limits, per-play exits and read-only two-card views."""
 
 import asyncio
+import json
+import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from datetime import timedelta
@@ -229,3 +231,64 @@ def test_approval_event_tampering_blocks_reconciliation(tmp_path):
         result = e.reconcile(v.snapshot(NOW), now=NOW)
         assert not result["reconciled"]
         assert result["issues"] == ["PORTFOLIO_ORIGINAL_APPROVAL_EVIDENCE_CHANGED"]
+
+
+def test_flat_protection_commits_one_fenced_heartbeat(tmp_path):
+    from app.execution import restore
+
+    with owned(tmp_path) as (engine, _):
+        initial = restore.enable(engine.journal, now=NOW)
+        outcome = asyncio.run(engine.protective_tick(now=NOW))
+        assert outcome == {"reconciled": True, "plays": {}}
+        with engine.journal.read() as db:
+            heartbeat = db.execute(
+                "SELECT status,heartbeat_at,result_json FROM execution_supervisor WHERE id=1"
+            ).fetchone()
+            assert tuple(heartbeat) == ("HEALTHY", NOW.isoformat(), json.dumps(outcome, sort_keys=True))
+            verified = restore.status(db, restore.authority_path(engine.journal.path))
+            assert verified["status"] == "VERIFIED"
+            assert verified["generation"] == initial["generation"] + 1
+
+
+def test_failed_flat_heartbeat_rolls_back_snapshot_and_generation(tmp_path):
+    from app.execution import restore
+
+    with owned(tmp_path) as (engine, _):
+        restore.enable(engine.journal, now=NOW)
+        with engine.journal.write() as db:
+            db.execute(
+                "CREATE TRIGGER execution_supervisor_fault BEFORE INSERT ON execution_supervisor "
+                "BEGIN SELECT RAISE(ABORT,'injected heartbeat failure'); END"
+            )
+
+        def saved():
+            with engine.journal.read() as db:
+                state = restore.status(db, restore.authority_path(engine.journal.path))
+                assert state["status"] == "VERIFIED"
+                return (
+                    state["generation"],
+                    db.execute("SELECT snapshot_json FROM execution_portfolio_control").fetchone()[0],
+                    db.execute("SELECT COUNT(*) FROM execution_snapshots").fetchone()[0],
+                    db.execute("SELECT COUNT(*) FROM execution_events").fetchone()[0],
+                )
+
+        before = saved()
+        with pytest.raises(sqlite3.IntegrityError, match="injected heartbeat failure"):
+            asyncio.run(engine.protective_tick(now=NOW + timedelta(seconds=1)))
+        assert saved() == before
+
+
+def test_pending_and_superseded_reconciliation_cannot_confirm_flat_supervision(tmp_path):
+    from app.mixed.portfolio_execution import reconcile
+
+    with owned(tmp_path) as (engine, venue):
+        entry, quote = stock("SPY")
+        pending = engine.prepare_stock("pending", entry, quote, now=NOW)
+        assert pending["status"] == "PREPARED"
+        snapshot = venue.snapshot(NOW)
+        reconciled = reconcile(engine, snapshot, now=NOW, supervise_flat=True)
+        assert reconciled["reconciled"] and "supervision" not in reconciled
+        stale = reconcile(engine, snapshot, now=NOW, epoch="superseded", supervise_flat=True)
+        assert stale == {"reconciled": False, "issues": ["PORTFOLIO_READ_SUPERSEDED"]}
+        with engine.journal.read() as db:
+            assert db.execute("SELECT heartbeat_at FROM execution_supervisor").fetchone() is None

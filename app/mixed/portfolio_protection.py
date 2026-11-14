@@ -209,9 +209,11 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
         or len(underlying_quotes) != len(underlyings)
     ):
         raise ValueError("Unique portfolio quotes required")
-    reconciliation = await engine.reconcile_fixture(now=now)
+    reconciliation = await engine.reconcile_fixture(now=now, supervise_flat=True)
     if not reconciliation["reconciled"]:
         return reconciliation
+    if "supervision" in reconciliation:
+        return reconciliation["supervision"]
     with engine.journal.read() as db:
         held = reconstruct(history(engine, db, p, now)).ledger.positions
     results = {}
@@ -335,18 +337,23 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
             }
         except (ValueError, ExecutionBlocked) as exc:
             results[identity] = {"status": "BLOCKED", "reason": str(exc)}
-    result = {"reconciled": True, "plays": results}
     with engine.journal.write() as db:
         engine._control(db)
-        db.execute(
-            "INSERT INTO execution_supervisor VALUES(1,?,'HEALTHY',NULL,1,?,?,NULL,NULL) ON CONFLICT(id) DO UPDATE SET status=excluded.status,heartbeat_at=excluded.heartbeat_at,result_json=excluded.result_json",
-            (engine.policy.model_dump_json(), now.isoformat(), json.dumps(result, sort_keys=True)),
-        )
-        if any(
-            r.get("status") in {"BLOCKED", "EXIT_BLOCKED", "EXIT_REVIEW_REQUIRED", "UNKNOWN"}
-            for r in results.values()
-        ):
-            db.execute("UPDATE execution_supervisor SET status='BLOCKED' WHERE id=1")
+        return record_supervision(engine, db, now, results)
+
+
+def record_supervision(engine, db, now, results):
+    """Commit the protection result under the caller's verified owner transaction."""
+    result = {"reconciled": True, "plays": results}
+    db.execute(
+        "INSERT INTO execution_supervisor VALUES(1,?,'HEALTHY',NULL,1,?,?,NULL,NULL) ON CONFLICT(id) DO UPDATE SET status=excluded.status,heartbeat_at=excluded.heartbeat_at,result_json=excluded.result_json",
+        (engine.policy.model_dump_json(), now.isoformat(), json.dumps(result, sort_keys=True)),
+    )
+    if any(
+        r.get("status") in {"BLOCKED", "EXIT_BLOCKED", "EXIT_REVIEW_REQUIRED", "UNKNOWN"}
+        for r in results.values()
+    ):
+        db.execute("UPDATE execution_supervisor SET status='BLOCKED' WHERE id=1")
     return result
 
 

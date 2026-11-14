@@ -522,6 +522,7 @@ async def run(
             raise ValueError("Owner changed before reviewed recovery")
         feed = ContinuousFeed(feed_directory, policy, schemas)
         feed.cycle_needed = runtime.needs_cycle
+        feed.delivery_event = asyncio.Event()
         from app.mixed.scope_refresh import ConnectedScopeRefresh, enabled
         scope_refresh = None
         recovery = FlatFeedRecovery(max_feed_recoveries, locked_owner['runtime_generation'] + 1,
@@ -559,7 +560,7 @@ async def run(
             ready = asyncio.Event()
 
             async def trade(stop):
-                await runtime.run(stop, ready=ready)
+                await runtime.run(stop, ready=ready, delivery_event=feed.delivery_event)
 
             async def collect(stop):
                 if not await await_ready(ready, stop):

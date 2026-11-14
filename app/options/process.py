@@ -68,6 +68,30 @@ async def run_option_process(
                                          intent=intent, stock_intent=stock_intent, deadline=deadline)
 
 
+async def _spawn_option_child(module, payload, env):
+    # A fixed request that fits the kernel pipe can accompany the child at exec.
+    # The child still validates it and checks its original lease before committing.
+    # Use the existing async stream when the pipe cannot hold the entire request.
+    read_fd, write_fd = os.pipe()
+    with os.fdopen(read_fd, "rb", buffering=0) as source:
+        try:
+            os.set_blocking(write_fd, False)
+            try:
+                buffered = os.write(write_fd, payload) == len(payload)
+            except BlockingIOError:
+                buffered = False
+        finally:
+            os.close(write_fd)
+        return await asyncio.create_subprocess_exec(
+            sys.executable, "-I", "-m", module,
+            stdin=source if buffered else asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            start_new_session=True,
+            env=env,
+        )
+
+
 async def _run_option_process(
     venue, *, now, timeout_seconds, intent=None, stock_intent=None, deadline=None
 ):
@@ -114,19 +138,8 @@ async def _run_option_process(
     if len(payload) > MAX_REQUEST_BYTES:
         raise FixtureProcessProtocolError("Option request exceeds fixed protocol")
     env = {key: os.environ[key] for key in ("PATH", "LANG", "LC_ALL") if key in os.environ}
-    spawn = asyncio.create_task(
-        asyncio.create_subprocess_exec(
-            sys.executable,
-            "-I",
-            "-m",
-            "app.options.snapshot_worker" if snapshot_read else "app.options.worker",
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-            start_new_session=True,
-            env=env,
-        )
-    )
+    module = "app.options.snapshot_worker" if snapshot_read else "app.options.worker"
+    spawn = asyncio.create_task(_spawn_option_child(module, payload, env))
     child = None
     trace = TraceReader()
     trace_task = None
@@ -138,10 +151,11 @@ async def _run_option_process(
                 child = await asyncio.shield(spawn)
         async with asyncio.timeout(max(0, deadline - time.monotonic())):
             trace_task = asyncio.create_task(trace.drain(child.stderr))
-            phase = "REQUEST_WRITE"
-            child.stdin.write(payload)
-            await child.stdin.drain()
-            child.stdin.close()
+            if child.stdin is not None:
+                phase = "REQUEST_WRITE"
+                child.stdin.write(payload)
+                await child.stdin.drain()
+                child.stdin.close()
             phase = "RESPONSE_READ"
             data = bytearray()
             while chunk := await child.stdout.read(4096):

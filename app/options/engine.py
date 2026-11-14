@@ -1310,7 +1310,7 @@ class OptionExecution:
             + [dict(self._control(db))]
         )
 
-    async def reconcile_fixture(self, *, now):
+    async def reconcile_fixture(self, *, now, supervise_flat=False):
         now = clock(now)
         with self.journal.read() as db:
             self._control(db)
@@ -1339,14 +1339,14 @@ class OptionExecution:
                     },
                 )
             raise
-        return self.reconcile(result.snapshot, now=now, _epoch=epoch)
+        return self.reconcile(result.snapshot, now=now, _epoch=epoch, _supervise_flat=supervise_flat)
 
     @exact
-    def reconcile(self, snapshot, *, now, _epoch=None):
+    def reconcile(self, snapshot, *, now, _epoch=None, _supervise_flat=False):
         if self.portfolio_policy is not None:
             from app.mixed.portfolio_execution import reconcile
 
-            return reconcile(self, snapshot, now=now, epoch=_epoch)
+            return reconcile(self, snapshot, now=now, epoch=_epoch, supervise_flat=_supervise_flat)
         now = clock(now)
         with self.journal.write() as db:
             c = self._control(db)

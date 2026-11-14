@@ -1209,7 +1209,8 @@ class DegenCoordinator:
             if self.scope_policy is not None:
                 from app.options.scope_arbitration import collect, execute_scope
 
-                shared_choice = collect(self, key, frame, evidence)
+                # Mixed selection immediately commits both family receipts together.
+                shared_choice = collect(self, key, frame, evidence, persist=self.stock_policy is None)
                 if (
                     self.stock_policy is None
                     and self.scope_policy.version == "shared-scope-entry-v1"
@@ -1236,12 +1237,13 @@ class DegenCoordinator:
             if self.stock_policy is not None:
                 from app.mixed.selection import execute_stock, select
 
-                shared_choice = select(self, key, evidence)
-                if self.stock_policy.paid_selection is not None and (
-                    candidates
-                    or evidence.get("stock_candidates")
-                    or evidence.get("scope_candidate")
-                ):
+                paid_candidates = self.stock_policy.paid_selection is not None and (
+                    candidates or evidence.get("stock_candidates") or evidence.get("scope_candidate")
+                )
+                # A paid cycle retains these choices with its full request before
+                # cost authorization. Direct execution needs the selection receipt now.
+                shared_choice = select(self, key, evidence, persist=not paid_candidates)
+                if paid_candidates:
                     from app.options.entry_coordination import run_entry_cycle
 
                     return await run_entry_cycle(

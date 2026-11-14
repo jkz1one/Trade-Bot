@@ -107,3 +107,39 @@ def test_stderr_flood_does_not_deadlock_cleanup_or_retain_content(tmp_path, monk
     assert details["option_process"]["child_stages"] == []
     assert "private-token" not in json.dumps(details)
     assert all(c.returncode is not None for c in children)
+
+
+@pytest.mark.parametrize("pipe_result", ["buffered", "partial", "full"])
+def test_child_receives_one_complete_request_and_is_reaped(tmp_path, monkeypatch, pipe_result):
+    import os
+
+    from app.options import process
+
+    spawn = asyncio.create_subprocess_exec
+    write = os.write
+    children = []
+
+    async def tracked(*args, **kwargs):
+        child = await spawn(*args, **kwargs)
+        children.append(child)
+        return child
+
+    def constrained(fd, payload):
+        # Intercept only the fixture request. The event loop owns other pipes.
+        if b'"deadline_monotonic"' in payload:
+            if pipe_result == "partial":
+                return write(fd, payload[:5])
+            if pipe_result == "full":
+                # Only the initial preload is full. The asyncio fallback pipe is separate.
+                monkeypatch.setattr(process.os, "write", write)
+                raise BlockingIOError
+        return write(fd, payload)
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", tracked)
+    monkeypatch.setattr(process.os, "write", constrained)
+    with owned(tmp_path) as (_, venue, _):
+        expected = venue.snapshot(NOW)
+        result = asyncio.run(run_option_process(venue, now=NOW, timeout_seconds=2))
+        assert result.snapshot == expected
+    assert len(children) == 1 and children[0].returncode == 0
+    assert (children[0].stdin is None) == (pipe_result == "buffered")

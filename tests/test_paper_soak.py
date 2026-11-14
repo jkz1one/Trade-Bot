@@ -55,3 +55,13 @@ def test_reject_network_before_import_or_state_creation(isolated, tmp_path, monk
     with pytest.raises(ValueError, match="NETWORK_NAMESPACE"):
         soak.run(output, 75, 68)
     assert not output.exists()
+
+
+@pytest.mark.parametrize("cpus", [0, 2, 3, True])
+def test_cpu_comparison_cannot_expand_available_affinity(cpus, tmp_path, monkeypatch):
+    monkeypatch.setattr(soak, "validate", lambda *_: {})
+    monkeypatch.setattr(soak.os, "sched_getaffinity", lambda _: {7})
+    output = tmp_path / "new"
+    with pytest.raises(ValueError, match="CPU_AFFINITY"):
+        soak.run(output, 90, 68, cpus=cpus)
+    assert not output.exists()

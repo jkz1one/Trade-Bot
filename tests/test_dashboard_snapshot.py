@@ -460,12 +460,19 @@ def test_publish_after_owner_outgrows_display_with_two_verified_plays(tmp_path):
     with sqlite3.connect(journal) as db:
         # Grow the original append-only input table. JSON whitespace is ignored
         # by the canonical packet hash. Each packet has its own native sequence.
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS execution_option_scope_runtime_inputs("
+            "sequence INTEGER PRIMARY KEY,packet_hash TEXT NOT NULL,packet_json TEXT NOT NULL,"
+            "accepted_at TEXT NOT NULL,action_key TEXT UNIQUE,status TEXT NOT NULL,result_json TEXT)"
+        )
         for seq in range(1, 1026):
             packet = value.packets[1].model_copy(update={"sequence": seq})
-            db.execute("INSERT INTO execution_mixed_runtime_inputs VALUES (?,?,?,?,?)", (
-                seq, fingerprint(packet), packet.model_dump_json().ljust(65536),
-                packet.recorded_at.isoformat(), "DELIVERED",
-            ))
+            fields = (seq, fingerprint(packet), packet.model_dump_json().ljust(65536),
+                      packet.recorded_at.isoformat())
+            db.execute("INSERT INTO execution_mixed_runtime_inputs VALUES (?,?,?,?,?)",
+                       (*fields, "DELIVERED"))
+            db.execute("INSERT INTO execution_option_scope_runtime_inputs VALUES (?,?,?,?,?,?,?)",
+                       (*fields, None, "OBSERVED", None))
         db.execute("UPDATE execution_option_runtime SET feed_sequence=?,frame_hash=?,"
                    "status='STOPPED',reason='OPTION_RUNTIME_STOPPED'", (seq, fingerprint(packet)))
         db.execute("UPDATE execution_control SET halted=1,halt_reason='OPTION_RUNTIME_STOPPED'")
@@ -489,6 +496,10 @@ def test_publish_after_owner_outgrows_display_with_two_verified_plays(tmp_path):
     ).report(limit=100)
     with sqlite3.connect(directory / "options.db") as db:
         assert db.execute("SELECT sequence FROM execution_mixed_runtime_inputs").fetchall() == [(seq,)]
+        assert db.execute(
+            "SELECT COUNT(*),COUNT(DISTINCT packet_hash),MAX(length(packet_json)) "
+            "FROM execution_option_scope_runtime_inputs WHERE status='OBSERVED'"
+        ).fetchone() == (seq, seq, 0)
     assert digest(source) == before
 
 

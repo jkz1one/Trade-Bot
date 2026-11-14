@@ -627,3 +627,43 @@ def test_installed_cli_init_run_shutdown_and_reuse_rejection(tmp_path):
         timeout=20,
     )
     assert reused.returncode == 2 and json.loads(reused.stdout)["status"] == "UNAVAILABLE"
+
+
+def test_delivery_wakes_waiting_runtime_and_arrival_during_protection_is_retained(
+    tmp_path, monkeypatch
+):
+    with owned_strategy(tmp_path) as (c, _, _, _, _, _):
+        runtime = OptionRuntime(
+            c, policy(tmp_path, tick_seconds=2.0, heartbeat_max_age_seconds=15), create=True
+        )
+
+        async def exercise():
+            stop, delivery, ready = asyncio.Event(), asyncio.Event(), asyncio.Event()
+            second, release, third = asyncio.Event(), asyncio.Event(), asyncio.Event()
+            calls = 0
+
+            async def tick():
+                nonlocal calls
+                calls += 1
+                if calls == 2:
+                    second.set()
+                    await release.wait()
+                if calls == 3:
+                    third.set()
+
+            monkeypatch.setattr(runtime, "tick", tick)
+            worker = asyncio.create_task(runtime.run(stop, ready=ready, delivery_event=delivery))
+            try:
+                await asyncio.wait_for(ready.wait(), 2)
+                delivery.set()
+                await asyncio.wait_for(second.wait(), 1)
+                delivery.set()
+                release.set()
+                await asyncio.wait_for(third.wait(), 1)
+                assert calls == 3
+            finally:
+                release.set()
+                stop.set()
+                await asyncio.wait_for(worker, 1)
+
+        asyncio.run(exercise())

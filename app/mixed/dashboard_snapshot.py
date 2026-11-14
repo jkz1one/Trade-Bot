@@ -198,8 +198,17 @@ def copy_display_tables(db):
         db.execute(ddl)
         columns = [r[1] for r in db.execute(f"PRAGMA main.table_info({name})")]
         names = ",".join('"' + column.replace('"', '""') + '"' for column in columns)
+        selected = names
+        if name == "execution_option_scope_runtime_inputs":
+            # The desk reads receipt metadata for every sequence. The owner
+            # retains the full packets. Keep action evidence in the display as well.
+            selected = ",".join(
+                """CASE WHEN action_key IS NULL AND status='OBSERVED' THEN '' ELSE packet_json END"""
+                if column == "packet_json" else '"' + column.replace('"', '""') + '"'
+                for column in columns
+            )
         db.execute(
-            f"INSERT INTO main.{name}(rowid,{names}) SELECT rowid,{names} FROM owner.{name}"
+            f"INSERT INTO main.{name}(rowid,{names}) SELECT rowid,{selected} FROM owner.{name}"
             + windows.get(name, "")
         )
     # The accounting verifier checks the enrolled cross-asset lock definitions.

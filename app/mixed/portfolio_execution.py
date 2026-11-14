@@ -426,7 +426,7 @@ async def submit(engine, i, now, started):
 
 
 @exact
-def reconcile(engine, snapshot, *, now, epoch=None):
+def reconcile(engine, snapshot, *, now, epoch=None, supervise_flat=False):
     from app.mixed.portfolio_store import control
     from app.mixed.portfolio_venue import PortfolioVenueSnapshot
 
@@ -548,13 +548,23 @@ def reconcile(engine, snapshot, *, now, epoch=None):
                 "PORTFOLIO_RECONCILED",
                 {"snapshot_id": snap.snapshot_id, "play_ids": list(result.ledger.positions), "attempt_recovery": recovery},
             )
-            db.execute("RELEASE portfolio_reconciliation")
-            return {
+            outcome = {
                 "reconciled": True,
                 "positions": len(result.ledger.positions),
                 "attempt_recovery": recovery,
                 "snapshot_id": snap.snapshot_id,
             }
+            if (
+                supervise_flat
+                and not result.ledger.positions
+                and not result.commitments
+                and not unresolved
+            ):
+                from app.mixed.portfolio_protection import record_supervision
+
+                outcome["supervision"] = record_supervision(engine, db, now, {})
+            db.execute("RELEASE portfolio_reconciliation")
+            return outcome
         except (ValueError, ExecutionBlocked) as exc:
             db.execute("ROLLBACK TO portfolio_reconciliation")
             db.execute("RELEASE portfolio_reconciliation")

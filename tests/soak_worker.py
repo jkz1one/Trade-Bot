@@ -138,6 +138,7 @@ def run(output, seconds, seed_mib):
     finally:
         publisher.close()
 
+    cpu_count = len(os.sched_getaffinity(0))
     metrics = {
         "version": "paper-soak-result-v1",
         "status": "RUNNING",
@@ -148,6 +149,7 @@ def run(output, seconds, seed_mib):
         "planned_seconds": seconds,
         "nominal_worker_seconds": NOMINAL_SECONDS,
         "wall_clock_full_duration": "PENDING" if seconds >= NOMINAL_SECONDS else "NOT_REQUESTED",
+        "nominal_cpu_profile": cpu_count == 1,
         "source_seed": {
             "kind": "labeled diagnostic padding, not month-history proof",
             "rows": seed_rows,
@@ -155,7 +157,7 @@ def run(output, seconds, seed_mib):
         },
         "memory_enforcement": "sampled aggregate RSS ceiling; not a kernel cgroup",
         "memory_limit_bytes": 1024**3,
-        "logical_cpus": len(os.sched_getaffinity(0)),
+        "logical_cpus": cpu_count,
         "native_snapshot_calls": 0,
         "native_snapshot_failures": 0,
         "native_snapshot_max_seconds": 0,
@@ -343,6 +345,9 @@ def run(output, seconds, seed_mib):
         save(output / "report.json", final)
         assert not any(child.returncode is None for child in children), "Unreaped native child"
         assert not metrics["native_snapshot_failures"], "Native snapshot deadline/read failure"
+        assert not final["runtime_timing"]["by_status"].get("NATIVE_ACCEPT:FAILED"), (
+            "Native acceptance failure"
+        )
         assert not final["runtime_failures"], "Runtime failure"
         assert not final["publication_failures"], "Publication failure"
         assert final["run_execution"]["completed_round_trips"] >= 1, (
@@ -389,9 +394,10 @@ def run(output, seconds, seed_mib):
             patch.setattr(position_judgment, "run_position_process", management)
             asyncio.run(exercise())
         metrics["status"] = "PASSED"
-        metrics["wall_clock_full_duration"] = (
-            "OBSERVED" if seconds >= NOMINAL_SECONDS else "NOT_RUN"
-        )
+        if seconds >= NOMINAL_SECONDS:
+            metrics["wall_clock_full_duration"] = "OBSERVED" if cpu_count == 1 else "COMPARISON_ONLY"
+        else:
+            metrics["wall_clock_full_duration"] = "NOT_RUN"
     except BaseException as exc:
         metrics.update(status="FAILED", failure_class=type(exc).__name__, failure=str(exc)[:200])
         raise

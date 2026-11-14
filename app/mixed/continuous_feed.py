@@ -488,6 +488,7 @@ class ContinuousFeed:
             raise ValueError("Absolute dedicated feed directory required")
         self.policy = FeedPolicy.model_validate(policy.model_dump())
         self.cycle_needed = None
+        self.delivery_event = None
         self._checked_history = None
         self._checked_binding = None
         self._tick_active = False
@@ -632,7 +633,10 @@ class ContinuousFeed:
             return {'status': 'CAPTURE_IN_PROGRESS'}
         self._tick_active = True
         try:
-            return await self._tick(**kwargs)
+            result = await self._tick(**kwargs)
+            if self.delivery_event is not None and result["status"] == "DELIVERED":
+                self.delivery_event.set()
+            return result
         finally:
             self._tick_active = False
 

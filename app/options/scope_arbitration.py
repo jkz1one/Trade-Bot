@@ -373,7 +373,7 @@ def verify_entry(db, intent, approval):
 
 
 @measured("SCOPE_SCAN")
-def collect(c, key, frame, evidence):
+def collect(c, key, frame, evidence, *, persist=True):
     """Refresh Scope's owned admission after reconciliation; no event follows before prepare."""
     with c.engine.journal.read() as db:
         rows = db.execute(
@@ -442,7 +442,8 @@ def collect(c, key, frame, evidence):
     selected = evidence["scope_arbitration"]["selected"]
     if selected and selected["family"] != "SCOPE":
         evidence["candidate_id"] = selected["candidate_id"]
-    c._pending_evidence(key, evidence)
+    if persist:
+        c._pending_evidence(key, evidence)
     return selected
 
 

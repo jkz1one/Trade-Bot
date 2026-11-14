@@ -3,6 +3,7 @@
 import json
 from datetime import datetime
 from decimal import Decimal
+from functools import lru_cache
 
 from app.mixed.models import CostRecord
 from app.options.engine import exact, fingerprint
@@ -12,11 +13,32 @@ def enrolled(policy):
     return policy.mixed_owner is not None and policy.mixed_owner.reasoning == "mixed-paid-entry-v1"
 
 
+@exact
+def _entry_cost_proof(strategy, configuration, call_items, inputs, started_at, frame_hash, evidence):
+    # Pure validation of the same immutable SQL values used for original entry
+    # checks. Cache just the clock bounds and evidence hash, never entry authority.
+    from app.mixed.entry import _validate_entry_sources
+
+    call = dict(call_items)
+    frame = {"inputs_json": inputs, "started_at": started_at, "fingerprint": frame_hash}
+    request, _, _ = _validate_entry_sources(
+        call["source_key"], json.loads(evidence), strategy, configuration, call, frame, usable=False
+    )
+    return (
+        request.packet.as_of,
+        request.packet.valid_until,
+        fingerprint({"request": request, "call": call}),
+    )
+
+
+# At most 64 keys of 256 Ki characters each (at most 64 MiB of string storage).
+# Larger inputs undergo identical validation without being retained.
+_cached_entry_cost_proof = lru_cache(maxsize=64)(_entry_cost_proof)
+
+
 def records(db, policy):
     if not enrolled(policy):
         return ()
-    from app.mixed.entry import validate_stored
-
     result = []
     calls = db.execute(
         "SELECT * FROM execution_model_calls ORDER BY started_at,source_key"
@@ -33,14 +55,16 @@ def records(db, policy):
                 and row["cycle_key"] not in keys
             ):
                 raise ValueError("MIXED_MODEL_ATTEMPT_MISSING")
+    entry_configuration = None
     for call in calls:
         row = db.execute(
-            "SELECT result_json FROM execution_option_opportunities WHERE cycle_key=?",
+            "SELECT result_json,inputs_json,started_at,fingerprint FROM execution_option_opportunities WHERE cycle_key=?",
             (call["source_key"],),
         ).fetchone()
         if row is None:
             raise ValueError("MIXED_MODEL_OPPORTUNITY_MISSING")
-        evidence = json.loads(row[0] or "{}")
+        result_json = row["result_json"] or "{}"
+        evidence = json.loads(result_json)
         entry_id = None
         kind = "ENTRY_MODEL"
         if "position_request" in evidence:
@@ -65,8 +89,25 @@ def records(db, policy):
                 request = PositionRequest.model_validate(evidence["position_request"])
                 decision_attribution(db, call["source_key"], evidence, policy)
                 entry_id = request.packet.entry.client_id
+            as_of, valid_until = request.packet.as_of, request.packet.valid_until
+            evidence_hash = fingerprint({"request": request, "call": dict(call)})
         else:
-            request, _, _ = validate_stored(db, call["source_key"], evidence, usable=False)
+            if entry_configuration is None:
+                entry_configuration = (
+                    db.execute("SELECT policy_json FROM execution_option_strategy WHERE id=1").fetchone()[0],
+                    db.execute("SELECT config_json FROM execution_control WHERE id=1").fetchone()[0],
+                )
+            # SQLite columns with TEXT affinity can still contain other types.
+            # Validate such originals directly, without admitting them to the cache.
+            sources = (*entry_configuration, *row, *call)
+            cacheable = all(value is None or isinstance(value, str) for value in sources)
+            proof = _entry_cost_proof
+            if cacheable and sum(len(value) for value in sources if value is not None) <= 256 * 1024:
+                proof = _cached_entry_cost_proof
+            as_of, valid_until, evidence_hash = proof(
+                *entry_configuration, tuple(dict(call).items()),
+                row["inputs_json"], row["started_at"], row["fingerprint"], result_json,
+            )
             if policy.mixed_owner.portfolio is not None:
                 selected = db.execute(
                     "SELECT client_id FROM execution_portfolio_orders WHERE (source_key=? OR json_extract(approval_json,'$.inputs.scope_arbitration.cycle_key')=?) AND json_extract(intent_json,'$.side')='BUY'",
@@ -74,7 +115,7 @@ def records(db, policy):
                 ).fetchone()
                 entry_id = selected[0] if selected else None
         at = datetime.fromisoformat(call["started_at"])
-        if not request.packet.as_of <= at < request.packet.valid_until:
+        if not as_of <= at < valid_until:
             raise ValueError("MIXED_MODEL_ATTEMPT_CLOCK_CHANGED")
         result.append(
             CostRecord(
@@ -83,7 +124,7 @@ def records(db, policy):
                 entry_client_id=entry_id,
                 occurred_at=at,
                 amount=Decimal(call["cost"]) if call["cost"] is not None else None,
-                evidence_hash=fingerprint({"request": request, "call": dict(call)}),
+                evidence_hash=evidence_hash,
             )
         )
     return tuple(result)

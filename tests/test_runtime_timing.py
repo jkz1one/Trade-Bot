@@ -89,6 +89,10 @@ def test_cycle_context_isolated_from_concurrent_protection_and_original_clocks()
     span = records[0]['spans'][0]
     assert (span['quote_age_seconds'], span['receive_lag_seconds'], span['local_age_seconds']) == (3, 1, 2)
     assert timing.CURRENT.get() is None
+    measured = reports.runtime_timing_evidence(db, NOW.isoformat(), NOW.isoformat())
+    assert measured["quote_age_by_phase"] == {"TICK:DISPATCH": {
+        "samples": 1, "p50_seconds": 3, "p95_seconds": 3, "p99_seconds": 3, "max_seconds": 3,
+    }}
     db.close()
 
 

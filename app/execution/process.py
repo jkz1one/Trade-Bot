@@ -69,7 +69,8 @@ async def _terminate(process):
             pass
 
     output = asyncio.create_task(drain())
-    process.stdin.close()
+    if process.stdin is not None:
+        process.stdin.close()
     send(signal.SIGTERM)
     try:
         await asyncio.wait_for(process.wait(), TERMINATION_GRACE_SECONDS)

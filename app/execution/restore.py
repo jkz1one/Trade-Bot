@@ -12,6 +12,7 @@ import sqlite3
 import sys
 import uuid
 from collections import OrderedDict
+from json.encoder import encode_basestring_ascii
 from pathlib import Path
 from threading import Lock
 from urllib.parse import quote
@@ -19,13 +20,8 @@ from urllib.parse import quote
 AUTHORITY_SCHEMA = "execution-restore-authority-v1"
 
 
-class _RowEncodingCache:
-    """Memoize only row serialization, never database verification results.
-
-    Every digest reads every SQL row. Exact typed cell equality is required for
-    reuse; schema, canonical row ordering and the final SHA256 stay unchanged.
-    Bound retained key/value bytes and entries across concurrent readers.
-    """
+class _TextEncodingCache:
+    """Reuse exact JSON string tokens across audit rows with different IDs."""
 
     def __init__(self, max_bytes=192 * 1024 * 1024, max_entries=32768):
         self.max_bytes = max_bytes
@@ -34,27 +30,15 @@ class _RowEncodingCache:
         self.values = OrderedDict()
         self.lock = Lock()
 
-    def encode(self, row):
-        cells = []
-        for cell in row:
-            if cell is None or type(cell) in (str, int):
-                cells.append((type(cell), cell))
-            elif type(cell) is float:
-                # Python equality conflates -0.0 and 0.0; v1 JSON does not.
-                cells.append((float, cell.hex()))
-            else:
-                return json.dumps(list(row), separators=(",", ":")).encode()
-        key = tuple(cells)
+    def encode(self, value, delimiter):
+        key = (value, delimiter)
         with self.lock:
-            if key in self.values:
+            entry = self.values.get(key)
+            if entry is not None:
                 self.values.move_to_end(key)
-                return self.values[key][0]
-        value = json.dumps(list(row), separators=(",", ":")).encode()
-        weight = (
-            sys.getsizeof(key)
-            + sys.getsizeof(value)
-            + sum(sys.getsizeof(pair) + sys.getsizeof(pair[1]) for pair in key)
-        )
+                return entry[0]
+        token = encode_basestring_ascii(value).encode("ascii") + delimiter
+        weight = sys.getsizeof(key) + sys.getsizeof(value) + sys.getsizeof(token)
         if weight <= self.max_bytes and self.max_entries > 0:
             with self.lock:
                 if key in self.values:
@@ -65,12 +49,34 @@ class _RowEncodingCache:
                 ):
                     _, (_, old_weight) = self.values.popitem(last=False)
                     self.size -= old_weight
-                self.values[key] = (value, weight)
+                self.values[key] = (token, weight)
                 self.size += weight
-        return value
+        return token
 
 
-_ROW_ENCODINGS = _RowEncodingCache()
+_TEXT_ENCODINGS = _TextEncodingCache()
+
+
+def _row_tokens(row):
+    # Each token includes its trailing comma or bracket. Delimiters cannot be
+    # part of an unquoted scalar, so tuple order equals canonical row-byte order,
+    # including prefix cases such as [1], [10] and [1,0], [10,0].
+    tokens = []
+    last = len(row) - 1
+    for index, value in enumerate(row):
+        delimiter = b"]" if index == last else b","
+        if type(value) is str:
+            token = _TEXT_ENCODINGS.encode(value, delimiter)
+        elif type(value) is int:
+            token = str(value).encode("ascii") + delimiter
+        elif value is None:
+            token = b"null" + delimiter
+        else:
+            # Keep v1 spelling of floats (including signed zero), and the
+            # original rejection of unsupported SQLite blob values.
+            token = json.dumps(value, separators=(",", ":")).encode("ascii") + delimiter
+        tokens.append(token)
+    return tuple(tokens)
 
 
 def authority_path(path):
@@ -96,11 +102,11 @@ def _digest(db):
         if row[0] == "table":
             # Schema-derived names, escaped as identifiers, never supplied SQL.
             name = row[1].replace('"', '""')
-            values = sorted(
-                _ROW_ENCODINGS.encode(r) for r in db.execute(f'SELECT * FROM main."{name}"')
-            )
-            for value in values:
-                digest.update(value)
+            rows = sorted(_row_tokens(r) for r in db.execute(f'SELECT * FROM main."{name}"'))
+            for tokens in rows:
+                digest.update(b"[")
+                for token in tokens:
+                    digest.update(token)
                 digest.update(b"\n")
     return digest.hexdigest()
 
