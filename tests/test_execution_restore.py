@@ -49,6 +49,22 @@ def fenced(context):
     return engine, venue, settings, operator
 
 
+def test_verified_read_preserves_generation_and_rejects_changed_journal(fenced):
+    engine, _, _, _ = fenced
+    journal = engine.journal
+    original = journal.report()["restore_fence"]
+    with journal.read(verify_restore=True) as db:
+        assert db.execute("SELECT generation FROM execution_restore_binding").fetchone()[0] == original["generation"]
+        with pytest.raises(sqlite3.OperationalError, match="readonly"):
+            db.execute("UPDATE execution_control SET halted=1")
+    assert journal.report()["restore_fence"] == original
+    with sqlite3.connect(journal.path) as raw:
+        raw.execute("UPDATE execution_control SET halt_reason='tampered'")
+    with pytest.raises(ValueError, match="RESTORED_OR_CHANGED_EXECUTION_JOURNAL"):
+        with journal.read(verify_restore=True):
+            pytest.fail("Changed evidence was exposed as verified")
+
+
 def test_rotation_retires_key_halts_and_requires_new_generation(fenced):
     engine, _, settings, operator = fenced
     pending = command(operator, "RESUME")

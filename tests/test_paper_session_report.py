@@ -754,3 +754,58 @@ def test_final_log_report_projects_bounded_failure_fields(monkeypatch, payload, 
     monkeypatch.setattr(module.subprocess, 'run', logs)
     assert module.terminal_failures('a'*64) == expected
     assert module.terminal_failures('daily-20261109') == []
+
+def test_approved_entry_freshness_uses_original_reservations_and_reports_missing_evidence():
+    from datetime import UTC, datetime, timedelta
+
+    first = datetime(2026, 10, 28, 14, tzinfo=UTC)
+    end = first + timedelta(hours=1)
+    db = sqlite3.connect(':memory:')
+    try:
+        def measure():
+            return module.entry_freshness(db, first.isoformat(), end.isoformat())
+
+        assert measure()['status'] == 'UNAVAILABLE'
+        db.execute('CREATE TABLE execution_events(sequence INTEGER PRIMARY KEY,kind TEXT,'
+                   'occurred_at TEXT,client_id TEXT,payload TEXT)')
+        db.execute('CREATE TABLE execution_portfolio_orders(client_id TEXT PRIMARY KEY,play_id TEXT,'
+                   'asset TEXT,intent_json TEXT,approval_json TEXT)')
+
+        def reserve(client, asset, side, at, age):
+            ident = {'instrument_id': asset + '-example'}
+            intent = {'instrument': ident, 'client_id': client, 'side': side, 'prepared_at': at.isoformat()}
+            approval = {'admission': {'outcome': 'APPROVED'}, 'inputs': {
+                'proposal': {'action': 'OPEN_LONG' if side == 'BUY' else 'CLOSE'},
+                'quote': {'source_at': (at - timedelta(seconds=age)).isoformat(),
+                          'received_at': (at - timedelta(seconds=age - 1)).isoformat(),
+                          'instrument': ident},
+            }}
+            db.execute('INSERT INTO execution_portfolio_orders VALUES(?,?,?,?,?)',
+                       (client, client if side == 'BUY' else 'previous-play', asset,
+                        json.dumps(intent), json.dumps(approval)))
+            db.execute('INSERT INTO execution_events VALUES(NULL,?,?,?,?)',
+                       ('PORTFOLIO_RESERVED', at.isoformat(), client,
+                        json.dumps({'play_id': client if side == 'BUY' else 'previous-play', 'approval': approval})))
+
+        reserve('prior', 'OPTION', 'BUY', first - timedelta(days=1), 99)
+        reserve('exit', 'STOCK', 'SELL', first, 59)
+        assert measure()['status'] == 'NO_ENTRIES'
+        reserve('first', 'STOCK', 'BUY', first, 2)
+        reserve('second', 'OPTION', 'BUY', end, 6)
+        good = measure()
+        assert good['status'] == 'OBSERVED' and good['reservations'] == good['measured'] == 2
+        assert good['clocks']['quote_age'] == {
+            'samples': 2, 'p50_seconds': 2, 'p95_seconds': 6, 'p99_seconds': 6, 'max_seconds': 6
+        }
+        assert good['clocks']['receive_lag']['max_seconds'] == 1
+        assert good['clocks']['local_age']['max_seconds'] == 5
+        db.execute("UPDATE execution_portfolio_orders SET approval_json=json_set(approval_json, "
+                   "'$.inputs.quote.source_at', '$.changed') WHERE client_id='second'")
+        db.execute("INSERT INTO execution_events VALUES(NULL,'PORTFOLIO_RESERVED',?,'lost','{}')", (first.isoformat(),))
+        partial = measure()
+        assert (partial['status'], partial['reservations'], partial['measured'],
+                partial['missing_or_invalid']) == ('PARTIAL', 3, 1, 2)
+        db.execute("INSERT INTO execution_events VALUES(NULL,'PORTFOLIO_RESERVED',?,'first','{}')", (first.isoformat(),))
+        assert measure()['measured'] == 0 and measure()['missing_or_invalid'] == 3
+    finally:
+        db.close()

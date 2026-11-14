@@ -228,3 +228,56 @@ def test_entry_lease_expiring_during_persistence_skips_model_without_cost_or_hal
         with c.engine.journal.read() as db:
             assert db.execute('SELECT COUNT(*) FROM execution_model_calls').fetchone()[0] == 0
             assert not db.execute('SELECT halted FROM execution_control').fetchone()[0]
+
+
+def test_native_snapshot_crossing_a_paid_hold_is_superseded_without_halting(tmp_path, monkeypatch):
+    from datetime import timedelta
+
+    from app.mixed.portfolio_selection import stock_inputs
+    from app.options import engine as engine_module
+    from app.options.engine import fingerprint
+    from app.options.scope_runtime import protection
+
+    with owner(tmp_path, monkeypatch, mode="HOLD", portfolio=True) as (c, venue, times, _):
+        async def exercise():
+            started, resume = asyncio.Event(), asyncio.Event()
+            native = engine_module.run_option_process
+            first = True
+
+            async def delayed(*args, **kwargs):
+                nonlocal first
+                wait = first
+                first = False
+                response = await native(*args, **kwargs)
+                if wait:
+                    started.set()
+                    await resume.wait()
+                return response
+
+            frame = stock_frame()
+            # Establish the ordinary runtime protection handoff before the native
+            # read. Only the paid HOLD changes between capture and reconciliation.
+            supervised = await c.supervise(*protection(frame), stocks=stock_inputs(frame))
+            assert supervised["reconciled"]
+            with c.engine.journal.read() as db:
+                handoff = (c.engine._epoch(db), fingerprint(frame))
+            monkeypatch.setattr(engine_module, "run_option_process", delayed)
+            pending = asyncio.create_task(c.engine.reconcile_fixture(now=times[0]))
+            try:
+                await asyncio.wait_for(started.wait(), 3)
+                times[0] += timedelta(seconds=1)
+                decision = await c.cycle(frame, _protected_epoch=handoff)
+                assert decision["entries"][0]["status"] == "HOLD"
+            finally:
+                resume.set()
+            assert await pending == {"reconciled": False, "issues": ["PORTFOLIO_READ_SUPERSEDED"]}
+            assert (await c.engine.reconcile_fixture(now=times[0]))["reconciled"]
+            with c.engine.journal.read() as db:
+                settled = db.execute(
+                    "SELECT COUNT(*) FROM execution_model_calls WHERE cost IS NOT NULL"
+                ).fetchone()[0]
+                assert settled == 1
+                assert not c.engine._control(db)["halted"]
+            assert venue.submit_count == 0
+
+        asyncio.run(exercise())

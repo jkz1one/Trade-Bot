@@ -54,6 +54,33 @@ def test_native_success_timeout_and_cancellation_keep_separate_spans_and_reap(tm
     assert str(tmp_path) not in json.dumps(trace)
 
 
+
+def test_already_finished_native_snapshot_retains_completed_stages(tmp_path, monkeypatch):
+    spawn = asyncio.create_subprocess_exec
+
+    async def finished(*args, **kwargs):
+        child = await spawn(*args, **kwargs)
+        # The preloaded request can finish while the parent's event loop is busy.
+        await child.wait()
+        return child
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", finished)
+    trace = {"spans": [], "native": [], "spans_omitted": 0}
+    with owned(tmp_path) as (_, venue, _):
+        token = timing.CURRENT.set(trace)
+        try:
+            result = asyncio.run(run_option_process(venue, now=NOW, timeout_seconds=2))
+        finally:
+            timing.CURRENT.reset(token)
+        assert result.snapshot == venue.snapshot(NOW)
+    (native,) = trace["native"]
+    assert native["parent_phase"] == "RESPONSE_VALIDATE"
+    assert native["child_trace_status"] == "OBSERVED"
+    assert [item["stage"] for item in native["child_stages"]] == [
+        "REQUEST", "VENUE_OPEN", "SNAPSHOT", "SERIALIZE", "COMPLETE",
+    ]
+
+
 @contextmanager
 def runtime(db):
     @contextmanager

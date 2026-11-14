@@ -253,6 +253,9 @@ def test_coordinated_options_lifecycle_restart_publication_and_report(
         assert second['status'] == 'STOPPED'
     assert len(models) == 2
     report = reports.report(tmp_path, start.isoformat(), now[0].isoformat())
+    freshness = report['entry_freshness']
+    assert freshness['status'] == 'OBSERVED' and freshness['measured'] == freshness['reservations'] == 2
+    assert all(v['samples'] == 2 for v in freshness['clocks'].values())
     assert report['run_execution'] == dict(status='RECORDED', entry_fills=2, exit_fills=2,
                                          completed_round_trips=2, carry_in_exits=0)
     assert report['account_total_fills'] == 4

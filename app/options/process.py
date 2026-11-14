@@ -144,6 +144,7 @@ async def _run_option_process(
     trace = TraceReader()
     trace_task = None
     phase = "SPAWN"
+    validated = False
     try:
         spawn_phase = "NATIVE_SNAPSHOT_SPAWN" if snapshot_read else "NATIVE_ACCEPT_SPAWN"
         with timing_phase(spawn_phase, deadline=deadline):
@@ -200,6 +201,7 @@ async def _run_option_process(
                 or getattr(result.snapshot, "portfolio_policy", None) != venue.portfolio_policy
             ):
                 raise FixtureProcessProtocolError("Invalid option snapshot binding")
+            validated = True
             return result
     except TimeoutError:
         failure = FixtureProcessTimeout("Option child deadline exceeded")
@@ -210,9 +212,9 @@ async def _run_option_process(
         )
         raise failure from None
     finally:
-        native_diagnostics(OptionProcessDiagnostics(
-            phase, time.monotonic() - started, trace.invalid, tuple(trace.records)
-        ))
+        elapsed = time.monotonic() - started
+        if not validated:
+            native_diagnostics(OptionProcessDiagnostics(phase, elapsed, trace.invalid, tuple(trace.records)))
         if child is None:
             while not spawn.done():
                 try:
@@ -230,3 +232,8 @@ async def _run_option_process(
             if trace_task is not None:
                 trace_task.cancel()
                 await asyncio.gather(trace_task, return_exceptions=True)
+            if validated:
+                # A preloaded child may have exited before its trace reader first
+                # runs. Reaping gives the reader a turn with the buffered stderr.
+                # The recorded validation time and the original deadline stay fixed.
+                native_diagnostics(OptionProcessDiagnostics(phase, elapsed, trace.invalid, tuple(trace.records)))

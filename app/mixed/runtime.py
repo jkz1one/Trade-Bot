@@ -154,7 +154,7 @@ class MixedRuntimeInputs:
             self.record(db, packet, at, fingerprint(packet))
         self.latest = packet
 
-    def record(self, db, packet, at, digest):
+    def record(self, db, packet, at, digest, *, existing_only=False):
         """Persist a validated packet inside the owner's receipt transaction."""
         self.r._bound(db)
         prior = db.execute(
@@ -165,6 +165,8 @@ class MixedRuntimeInputs:
             if prior["packet_hash"] != digest or prior["status"] != "DELIVERED":
                 raise ValueError("Mixed runtime delivery changed or interrupted")
         else:
+            if existing_only:
+                raise ValueError("Mixed runtime receipt missing for repeated packet")
             previous = (
                 db.execute(
                     "SELECT MAX(sequence) FROM execution_mixed_runtime_inputs"

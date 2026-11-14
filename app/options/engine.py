@@ -1296,6 +1296,13 @@ class OptionExecution:
                             "SELECT * FROM execution_portfolio_control WHERE id=1"
                         ).fetchone()
                     ),
+                    # A model charge can commit while the native snapshot child
+                    # runs. Reconcile it on the next read using its original clock.
+                    [
+                        dict(r) for r in db.execute(
+                            "SELECT * FROM execution_model_calls ORDER BY source_key"
+                        )
+                    ],
                 ]
             )
         extra = []

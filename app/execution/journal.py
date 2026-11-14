@@ -162,11 +162,15 @@ class ExecutionJournal:
             db.close()
 
     @contextmanager
-    def read(self):
+    def read(self, *, verify_restore=False):
         db = sqlite3.connect("file:" + quote(str(self.path)) + "?mode=ro", uri=True)
         db.row_factory = sqlite3.Row
         try:
             db.execute("BEGIN")
+            if verify_restore:
+                fence = restore.status(db, restore.authority_path(self.path))
+                if fence["status"] == "BLOCKED":
+                    raise ValueError(fence["reason"])
             yield db
         finally:
             db.close()

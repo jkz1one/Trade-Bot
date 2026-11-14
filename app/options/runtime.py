@@ -205,6 +205,14 @@ class OptionRuntime:
             # Model cancellation must not cancel this independent completion.
             completed.set_result(success)
 
+    def _verify_repeated_inputs(self, inputs, packet, at, digest):
+        with self.c.engine.journal.read(verify_restore=True) as db:
+            state = self._bound(db)
+            if state["feed_sequence"] != packet.sequence or state["frame_hash"] != digest:
+                raise ValueError("Repeated runtime packet was superseded")
+            for source in inputs:
+                source.record(db, packet, at, digest, existing_only=True)
+
     async def _tick(self):
         if not self.running:
             raise ExecutionBlocked("OPTION_RUNTIME_NOT_RUNNING")
@@ -240,8 +248,10 @@ class OptionRuntime:
                 from app.mixed.runtime import validate_packet
 
                 validate_packet(self.c, packet)
+            digest = fingerprint(packet)
             with self.c.engine.journal.read() as db:
                 row = self._bound(db)
+                repeat = packet.sequence == row["feed_sequence"]
                 if (
                     packet.population_id != self.c.engine.limits.population_id
                     or not 0
@@ -252,19 +262,22 @@ class OptionRuntime:
                         row["feed_recorded_at"]
                         and packet.recorded_at < datetime.fromisoformat(row["feed_recorded_at"])
                     )
-                    or (
-                        packet.sequence == row["feed_sequence"]
-                        and fingerprint(packet) != row["frame_hash"]
-                    )
+                    or (repeat and digest != row["frame_hash"])
                 ):
                     raise ValueError("Fixture feed identity, time or sequence mismatch")
             timing.bind_packet(packet, at)
             inputs = [source for source in (self.scope, self.mixed) if source is not None]
             if inputs:
-                digest = fingerprint(packet)
-                with self.c.engine.journal.write() as db:
-                    for source in inputs:
-                        source.record(db, packet, at, digest)
+                if repeat:
+                    # The read opens its own SQLite connections. Drain verification
+                    # before using this packet or releasing the owner on cancellation.
+                    from app.mixed.background import run
+
+                    await run(self._verify_repeated_inputs, inputs, packet, at, digest)
+                else:
+                    with self.c.engine.journal.write() as db:
+                        for source in inputs:
+                            source.record(db, packet, at, digest)
                 for source in inputs:
                     source.latest = packet
         except (OSError, ValueError):

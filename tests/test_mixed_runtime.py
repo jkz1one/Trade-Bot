@@ -437,6 +437,79 @@ def test_stored_mixed_delivery_rejects_changed_evidence(tmp_path, monkeypatch, d
         assert v.submit_count == 0
 
 
+@pytest.mark.parametrize("damage", [None, "missing", "interrupted"])
+def test_repeat_checks_existing_mixed_delivery_without_recreating_it(tmp_path, monkeypatch, damage):
+    from contextlib import contextmanager
+
+    with owner(tmp_path, monkeypatch, mode="HOLD") as (c, venue, _, _):
+        r = runtime(c, tmp_path)
+        c.engine.journal.enable_restore_fence(now=c.now())
+        send(r, DegenFrame(stocks=(StockCycleInput(quote=quote()),)))
+        asyncio.run(step(r))
+        if damage:
+            with c.engine.journal.write() as db:
+                if damage == "missing":
+                    db.execute("DELETE FROM execution_mixed_runtime_inputs")
+                else:
+                    db.execute("UPDATE execution_mixed_runtime_inputs SET status='INTERRUPTED'")
+        read = c.engine.journal.read
+        verified = []
+
+        @contextmanager
+        def observed(**kwargs):
+            with read(**kwargs) as db:
+                if kwargs.get("verify_restore"):
+                    verified.append(True)
+                yield db
+
+        monkeypatch.setattr(c.engine.journal, "read", observed)
+        asyncio.run(step(r))
+        assert len(verified) == 1 and venue.submit_count == 0
+        with read() as db:
+            state = db.execute("SELECT status,reason FROM execution_option_runtime").fetchone()
+            receipt = db.execute("SELECT status FROM execution_mixed_runtime_inputs").fetchone()
+        if damage:
+            assert tuple(state) == ("BLOCKED", "OPTION_RUNTIME_FEED_UNAVAILABLE")
+            assert (receipt[0] if receipt else None) == (None if damage == "missing" else "INTERRUPTED")
+        else:
+            assert tuple(state) == ("RUNNING", None) and receipt[0] == "DELIVERED"
+
+
+def test_cancelled_repeat_drains_verification_before_owner_can_close(tmp_path, monkeypatch):
+    import threading
+
+    with owner(tmp_path, monkeypatch, mode="HOLD") as (c, venue, _, _):
+        r = runtime(c, tmp_path)
+        send(r, DegenFrame(stocks=(StockCycleInput(quote=quote()),)))
+        asyncio.run(step(r))
+        entered, release, finished = threading.Event(), threading.Event(), threading.Event()
+        original = r._verify_repeated_inputs
+
+        def delayed(*args):
+            entered.set()
+            assert release.wait(3)
+            original(*args)
+            finished.set()
+
+        monkeypatch.setattr(r, "_verify_repeated_inputs", delayed)
+
+        async def cancel():
+            task = asyncio.create_task(r.tick())
+            try:
+                assert await asyncio.to_thread(entered.wait, 2)
+                task.cancel()
+                await asyncio.sleep(.01)
+                assert not task.done() and not finished.is_set()
+            finally:
+                release.set()
+            with pytest.raises(asyncio.CancelledError):
+                await task
+            assert finished.is_set()
+
+        asyncio.run(cancel())
+        assert venue.submit_count == 0
+
+
 def test_failed_mixed_receipt_cannot_partially_accept_scope(tmp_path, monkeypatch):
     import sqlite3
 

@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import math
 import re
 import sqlite3
 import subprocess
@@ -428,6 +429,15 @@ def short_report(result):
                      f"prior-run plays fully exited {execution['carry_in_exits']}")
     elif execution:
         lines.append("Run execution: unavailable (" + (reasons(execution.get('reason')) or 'unknown') + ")")
+    freshness = result.get('entry_freshness', {})
+    if 'quote_age' in freshness.get('clocks', {}):
+        ages = freshness['clocks']['quote_age']
+        lines.append(f"Approved entry quote age from source, {freshness['measured']}/{freshness['reservations']} "
+                     f"reservations measured, p95 {ages['p95_seconds']:.3f}s, max {ages['max_seconds']:.3f}s")
+    elif freshness.get('status') == 'NO_ENTRIES':
+        lines.append('Approved entry quote age unmeasured. The run recorded zero opening reservations.')
+    elif freshness:
+        lines.append('Approved entry quote age unavailable from the recorded reservations.')
     recovery = result.get('attempt_recovery')
     if recovery and (recovery['matched_in_run'] or recovery['unresolved_at_last_snapshot']):
         lines.append(f"Order recovery: matched {recovery['matched_in_run']}; "
@@ -914,7 +924,6 @@ def authorization_required(failure):
 
 def timing_evidence(db, start, end):
     """Bounded diagnostic summaries, including failures and missing measurements."""
-    import math
 
     total = db.execute('SELECT COUNT(*) FROM attempts WHERE started_at>=? AND started_at<=?',
                        (start, end)).fetchone()[0]
@@ -1031,9 +1040,93 @@ def runtime_timing_coverage(db, start, end, cycle_slots=(), model_keys=()):
     return result
 
 
+def timing_summary(items):
+    ordered = sorted(items)
+    return {
+        'samples': len(ordered),
+        **{name + '_seconds': ordered[math.ceil(p * len(ordered)) - 1]
+           for name, p in (('p50', .5), ('p95', .95), ('p99', .99), ('max', 1))},
+    }
+
+
+def entry_freshness(db, start, end):
+    """Measure native opening reservations from their original approval clocks."""
+    result = {'status': 'UNAVAILABLE', 'reservations': None, 'measured': 0,
+              'missing_or_invalid': 0, 'omitted': 0, 'clocks': {}}
+    tables = {
+        'execution_events': {'sequence', 'kind', 'occurred_at', 'client_id', 'payload'},
+        'execution_portfolio_orders': {'client_id', 'play_id', 'asset', 'intent_json', 'approval_json'},
+    }
+    for table, required in tables.items():
+        if not required <= {row[1] for row in db.execute(f'PRAGMA table_info({table})')}:
+            return result
+    # Every reservation has an event with its original UTC clock. Group by entry
+    # client so a duplicate cannot give that entry twice the statistical weight.
+    events = """SELECT client_id, MIN(occurred_at) AS at, COUNT(*) AS copies, MIN(sequence) AS event
+                FROM execution_events WHERE kind='PORTFOLIO_RESERVED'
+                AND occurred_at>=? AND occurred_at<=? GROUP BY client_id"""
+    sql = f"""WITH reserved AS ({events})
+        SELECT reserved.at, reserved.copies, reserved.event, o.asset, o.client_id, COUNT(*) OVER (),
+               length(CAST(o.intent_json AS BLOB)), length(CAST(o.approval_json AS BLOB)),
+               length(CAST(e.payload AS BLOB))
+        FROM reserved JOIN execution_events e ON e.sequence=reserved.event LEFT JOIN execution_portfolio_orders o ON o.client_id=reserved.client_id
+        WHERE o.play_id IS NULL OR o.play_id=o.client_id
+        ORDER BY reserved.at DESC, reserved.client_id LIMIT 20000"""
+    source, received, local = [], [], []
+    count = inspected = inspected_bytes = 0
+    for row in db.execute(sql, (start, end)):
+        at, copies, sequence, asset, client, count, intent_bytes, approval_bytes, event_bytes = row
+        if inspected_bytes >= 64 * 1024 * 1024:
+            break
+        inspected += 1
+        try:
+            if (copies != 1 or not client or asset not in ('STOCK', 'OPTION')
+                    or not all(type(n) is int and 0 < n <= MAX_DECISION_BYTES
+                               for n in (intent_bytes, approval_bytes, event_bytes))):
+                raise ValueError
+            size = intent_bytes + approval_bytes + event_bytes
+            if inspected_bytes + size > 64 * 1024 * 1024:
+                inspected -= 1
+                break
+            inspected_bytes += size
+            intent_raw, approval_raw = db.execute(
+                'SELECT intent_json, approval_json FROM execution_portfolio_orders WHERE client_id=?',
+                (client,),
+            ).fetchone()
+            intent, approval = json.loads(intent_raw), json.loads(approval_raw)
+            event = db.execute('SELECT payload FROM execution_events WHERE sequence=?', (sequence,)).fetchone()
+            if json.loads(event[0]) != {'play_id': client, 'approval': approval}:
+                raise ValueError
+            inputs = approval['inputs']
+            quote = inputs['quote']
+            prepared = datetime.fromisoformat(intent['prepared_at'])
+            origin = datetime.fromisoformat(quote['source_at'])
+            arrival = datetime.fromisoformat(quote['received_at'])
+            if (intent['client_id'] != client or intent['side'] != 'BUY'
+                    or inputs['proposal']['action'] != 'OPEN_LONG'
+                    or approval['admission']['outcome'] != 'APPROVED'
+                    or not isinstance(intent['instrument'], dict)
+                    or not intent['instrument'].get('instrument_id')
+                    or intent['instrument'] != quote['instrument']
+                    or any(v.tzinfo is None for v in (prepared, origin, arrival))
+                    or prepared != datetime.fromisoformat(at) or not origin <= arrival <= prepared):
+                raise ValueError
+            source.append((prepared - origin).total_seconds())
+            received.append((arrival - origin).total_seconds())
+            local.append((prepared - arrival).total_seconds())
+        except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
+            result['missing_or_invalid'] += 1
+    result.update(reservations=count, measured=len(source), omitted=count - inspected)
+    if source:
+        result['clocks'] = {k: timing_summary(v) for k, v in
+                            (('quote_age', source), ('receive_lag', received), ('local_age', local))}
+    result['status'] = ('PARTIAL' if result['missing_or_invalid'] or result['omitted']
+                        else 'OBSERVED' if source else 'NO_ENTRIES')
+    return result
+
+
 def runtime_timing_evidence(db, start, end):
     """Bounded runtime diagnostics with explicit unfinished/omitted denominators."""
-    import math
 
     result = {'status': 'UNAVAILABLE', 'records': 0, 'measured': 0,
               'missing_or_invalid': 0, 'omitted': 0, 'spans_omitted': 0, 'native_omitted': 0,
@@ -1058,11 +1151,6 @@ def runtime_timing_evidence(db, start, end):
 
     def number(value, signed=False):
         return type(value) in (int, float) and math.isfinite(value) and (-86400 if signed else 0) <= value <= 86400
-
-    def summary(items):
-        ordered = sorted(items)
-        return {'samples': len(items), **{name+'_seconds': ordered[max(0, math.ceil(p*len(items))-1)]
-            for name, p in (('p50', .5), ('p95', .95), ('p99', .99), ('max', 1))}}
 
     rows = db.execute('SELECT id,started_at,CASE WHEN length(payload_json)<=65536 THEN payload_json END AS payload '
         'FROM execution_runtime_timings WHERE started_at>=? AND started_at<=? ORDER BY id DESC LIMIT 20000', (start, end))
@@ -1149,15 +1237,15 @@ def runtime_timing_evidence(db, start, end):
             result['recent'].append({'id': row['id'], 'started_at': row['started_at'],
                 **{k: item[k] for k in ('kind', 'status', 'generation', 'slot', 'packet_sequence', 'packet_sha256', 'elapsed_seconds')},
                 'native': [safe_process(n) for n in item['native']]})
-    result['phases'] = {k: summary(v) for k, v in values.items()}
-    result['execution_quote_clocks'] = {k: summary(v) for k, v in ages.items()}
-    result['quote_age_by_phase'] = {k: summary(v) for k, v in quote_age_by_phase.items()}
-    result['native_spawn_budget'] = {k: {**summary(v), 'min_seconds': min(v)} for k, v in spawn_budgets.items()}
-    result['native_observed_intervals'] = {k: summary(v) for k, v in natives.items()}
-    result['packet_age'] = summary(packet_ages) if packet_ages else None
+    result['phases'] = {k: timing_summary(v) for k, v in values.items()}
+    result['execution_quote_clocks'] = {k: timing_summary(v) for k, v in ages.items()}
+    result['quote_age_by_phase'] = {k: timing_summary(v) for k, v in quote_age_by_phase.items()}
+    result['native_spawn_budget'] = {k: {**timing_summary(v), 'min_seconds': min(v)} for k, v in spawn_budgets.items()}
+    result['native_observed_intervals'] = {k: timing_summary(v) for k, v in natives.items()}
+    result['packet_age'] = timing_summary(packet_ages) if packet_ages else None
     result['omitted'] = max(0, total - inspected)
     result['inspected_bytes'] = inspected_bytes
-    result['scheduler_delay'] = summary(scheduler_delays) if scheduler_delays else None
+    result['scheduler_delay'] = timing_summary(scheduler_delays) if scheduler_delays else None
     result['coverage'] = runtime_timing_coverage(db, start, end, cycle_slots, model_keys)
     return result
 
@@ -1219,6 +1307,7 @@ def report(directory, started, finished):
             "SELECT halted,halt_reason FROM execution_control WHERE id=1")]
         (result["account_total_fills"], result["fill_count_source"],
          result["run_execution"]) = fill_evidence(db, start, end)
+        result['entry_freshness'] = entry_freshness(db, start, end)
         result['model_spending'] = spending(db, start, end)
         result["runtime_failures"] = runtime_failures(db, start, end)
         event_columns = {r[1] for r in db.execute('PRAGMA table_info(execution_events)')}

@@ -90,7 +90,7 @@ class ScopeRuntimeInputs:
             self.record(db, packet, at, fingerprint(packet))
         self.latest = packet
 
-    def record(self, db, packet, at, digest):
+    def record(self, db, packet, at, digest, *, existing_only=False):
         validate_packet(self.r.c, packet)
         state = self.r._bound(db)
         item = packet.frame.scope
@@ -115,6 +115,8 @@ class ScopeRuntimeInputs:
             if prior["packet_hash"] != digest or prior["status"] in {"PENDING", "INTERRUPTED"}:
                 raise ValueError("Scope runtime input changed or was interrupted")
         else:
+            if existing_only:
+                raise ValueError("Scope runtime receipt missing for repeated packet")
             if packet.sequence <= state["feed_sequence"] or (
                 self.r.c.engine.portfolio_policy is None
                 and packet.sequence != state["feed_sequence"] + 1
