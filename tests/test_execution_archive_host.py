@@ -204,6 +204,7 @@ def test_unit_command_retains_complete_and_interrupted_evidence_on_stop_and_rest
             assert process.wait(timeout=40) == (0 if death == signal.SIGTERM else -signal.SIGKILL)
             assert time.monotonic() - started < int(values("TimeoutStopSec")[0])
     partial = incoming.read_bytes()
+    assert partial == body[:65536]
     with ArchiveStore(a.root) as store:
         report = store.report()
         assert report["admitted_objects"] == 2
@@ -212,7 +213,10 @@ def test_unit_command_retains_complete_and_interrupted_evidence_on_stop_and_rest
     with owner(a):
         assert request(a, method="GET", pin=complete_pin)[:2] == (200, complete)
         assert request(a, body=complete)[0] == 200 and target.stat().st_ino == identity
-        assert request(a, body=body)[0] == 409 and incoming.read_bytes() == partial
+        # The retained partial is rejected from the original upload headers.
+        code, payload, _ = request(a, body=body, send_body=False)
+        assert code == 409 and json.loads(payload) == {"status": "UNAVAILABLE"}
+        assert incoming.read_bytes() == partial
         assert request(a, body=b"distinct future object")[0] == 201
 
 
