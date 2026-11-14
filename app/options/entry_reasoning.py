@@ -234,32 +234,31 @@ class EntryPacket(OptionRecord):
                 )
             ):
                 raise ValueError("Exact confirmed setup, candidate and evidence binding required")
-            actual = admit_option(
-                c.proposal,
-                o.quote,
-                o.underlying,
-                self.account,
-                self.limits,
-                o.session,
-                now=self.as_of,
-            )
             if self.portfolio_history is not None:
-                from app.mixed.portfolio_admission import admit_portfolio_option
+                from app.mixed.portfolio_admission import _admit_projected_option
 
-                reviewed = admit_portfolio_option(
+                # This validator already reconstructed this exact history above.
+                # Each candidate still uses its own contract, quote and exposure.
+                actual = _admit_projected_option(
                     c.proposal,
                     o.quote,
                     o.underlying,
-                    self.portfolio_history,
+                    h,
+                    projected,
                     o.session,
                     now=self.as_of,
                     reconciled=self.account.reconciled,
                     entry_halted=self.account.entry_halted,
                 )
-                actual = OptionAdmission(
-                    **reviewed.model_dump(
-                        exclude={"policy_version", "history_hash", "proposal_hash", "play_id"}
-                    )
+            else:
+                actual = admit_option(
+                    c.proposal,
+                    o.quote,
+                    o.underlying,
+                    self.account,
+                    self.limits,
+                    o.session,
+                    now=self.as_of,
                 )
             if (
                 actual != c.admission

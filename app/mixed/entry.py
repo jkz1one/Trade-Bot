@@ -197,13 +197,14 @@ def _validate_entry_sources(key, evidence, strategy, configuration, call, row, *
         else None
     )
     if call["cost"] is not None:
+        packet_hash = fingerprint(request.packet)
         if (
             result is None
             or result.usage is None
             or result.request_id != request.request_id
-            or result.packet_hash != fingerprint(request.packet)
+            or result.packet_hash != packet_hash
             or result.configuration_hash != fingerprint(request.configuration)
-            or result.plan.packet_hash != fingerprint(request.packet)
+            or result.plan.packet_hash != packet_hash
             or result.plan.decision_id != request.packet.decision_id
             or call["decision_hash"] != fingerprint(result.plan)
             or call["usage_json"] != result.usage.model_dump_json()

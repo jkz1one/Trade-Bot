@@ -439,9 +439,12 @@ def test_repeated_entry_cost_reads_reject_changed_originals(tmp_path, monkeypatc
         with c.engine.journal.write() as db:
             original = paid_costs.records(db, policy)
             assert len(original) == 1
-            before = paid_costs._cached_entry_cost_proof.cache_info().hits
+            from unittest.mock import Mock
+
+            validate = Mock(wraps=paid_costs._entry_cost_proof)
+            monkeypatch.setattr(paid_costs, "_entry_cost_proof", validate)
             assert paid_costs.records(db, policy) == original
-            assert paid_costs._cached_entry_cost_proof.cache_info().hits > before
+            validate.assert_not_called()
             changes = (
                 "UPDATE execution_model_calls SET cost='0'",
                 "UPDATE execution_option_opportunities SET fingerprint='changed'",
@@ -457,3 +460,31 @@ def test_repeated_entry_cost_reads_reject_changed_originals(tmp_path, monkeypatc
                 db.execute("ROLLBACK TO changed_proof")
                 db.execute("RELEASE changed_proof")
                 assert paid_costs.records(db, policy) == original
+
+
+def test_paid_entry_cost_cache_holds_a_month_of_originals_and_evicts_by_bytes(monkeypatch):
+    from datetime import UTC, datetime
+    import sqlite3
+    from unittest.mock import Mock
+    from app.mixed import paid_costs
+
+    validator = Mock(return_value=(datetime.now(UTC), datetime.now(UTC), "a" * 64))
+    monkeypatch.setattr(paid_costs, "_entry_cost_proof", validator)
+    cache = paid_costs._EntryCostProofCache()
+    with sqlite3.connect(":memory:") as db:
+        db.row_factory = sqlite3.Row
+        evidence = "x" * 100_000
+        row = db.execute(
+            "SELECT ? AS result_json,'{}' AS inputs_json,'at' AS started_at,'frame' AS fingerprint",
+            (evidence,),
+        ).fetchone()
+        calls = [db.execute("SELECT ? AS source_key", (str(i),)).fetchone() for i in range(65)]
+        for _ in range(2):
+            for call in calls:
+                cache.proof("policy", "config", call, row)
+        assert validator.call_count == len(calls)
+        small = paid_costs._EntryCostProofCache(max_bytes=150_000)
+        for call in [calls[0], calls[1], calls[0]]:
+            small.proof("policy", "config", call, row)
+        assert validator.call_count == len(calls) + 3
+        assert 0 < small.size <= small.max_bytes and len(small.entries) == 1

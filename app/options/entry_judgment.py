@@ -8,6 +8,8 @@ import time
 from decimal import Context, localcontext
 from typing import Literal
 
+from functools import lru_cache
+
 from agents import AgentOutputSchema
 from pydantic import Field, model_validator
 
@@ -53,6 +55,13 @@ contracts, source IDs or probabilities, promise profit, relax limits or force a
 trade. Return only the strict EntryPlan schema. Software independently reviews
 fresh evidence and may reject any proposal. Never issue management or exit orders.
 """
+
+
+@lru_cache(maxsize=8)
+def _plan_schema(plan):
+    # Every request gets its own decoded object. Only the installed model
+    # class's immutable schema encoding is shared between original receipts.
+    return json.dumps(AgentOutputSchema(plan).json_schema(), separators=(",", ":"))
 
 
 def instructions(policy):
@@ -169,7 +178,7 @@ class EntryModelConfiguration(OptionRecord):
             self.prompt_version != prompt_version(self.entry_policy)
             or self.prompt_hash != fingerprint(instructions(self.entry_policy))
             or self.schema_hash
-            != fingerprint(AgentOutputSchema(plan_class(self.entry_policy)).json_schema())
+            != fingerprint(json.loads(_plan_schema(plan_class(self.entry_policy))))
         ):
             raise ValueError("Frozen entry prompt/schema mismatch")
         with localcontext(Context(prec=192)):
@@ -189,7 +198,7 @@ def configuration(costs, limits, entry_policy):
         entry_policy=EntryReasoningPolicy.model_validate(entry_policy.model_dump(warnings=False)),
         prompt_version=prompt_version(entry_policy),
         prompt_hash=fingerprint(instructions(entry_policy)),
-        schema_hash=fingerprint(AgentOutputSchema(plan_class(entry_policy)).json_schema()),
+        schema_hash=fingerprint(json.loads(_plan_schema(plan_class(entry_policy)))),
     )
 
 
@@ -347,7 +356,7 @@ def request_content(request):
                 "type": "json_schema",
                 "name": "EntryPlan",
                 "strict": True,
-                "schema": AgentOutputSchema(plan_class(request.packet.policy)).json_schema(),
+                "schema": json.loads(_plan_schema(plan_class(request.packet.policy))),
             }
         },
     }

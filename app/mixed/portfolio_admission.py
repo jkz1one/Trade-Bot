@@ -50,6 +50,41 @@ def admit_portfolio_option(
         raise ValueError("Only a portfolio close requires exact play identity")
     with localcontext(Context(prec=192)):
         result = reconstruct(history)
+        admitted = _admit_projected_option(
+            proposal,
+            quote,
+            underlying,
+            history,
+            result,
+            session,
+            now=now,
+            reconciled=reconciled,
+            entry_halted=entry_halted,
+            play_id=play_id,
+        )
+        return PortfolioOptionAdmission(
+            **admitted.model_dump(exclude={"policy_version"}),
+            history_hash=fingerprint(history),
+            proposal_hash=fingerprint(proposal),
+            play_id=play_id,
+        )
+
+
+def _admit_projected_option(
+    proposal,
+    quote,
+    underlying,
+    history,
+    result,
+    session,
+    *,
+    now,
+    reconciled,
+    entry_halted,
+    play_id=None,
+):
+    """Price one candidate during this validation of its complete portfolio history."""
+    with localcontext(Context(prec=192)):
         account = _account(history, result, reconciled, entry_halted, play_id=play_id)
         if proposal.action == "OPEN_LONG":
             contract = proposal.contract
@@ -72,10 +107,4 @@ def admit_portfolio_option(
                 "exit_fee_per_contract": limits.exit_fee_per_contract + limits.exit_fee_per_order,
             }
         )
-        admitted = admit_option(proposal, quote, underlying, account, effective, session, now=now)
-        return PortfolioOptionAdmission(
-            **admitted.model_dump(exclude={"policy_version"}),
-            history_hash=fingerprint(history),
-            proposal_hash=fingerprint(proposal),
-            play_id=play_id,
-        )
+        return admit_option(proposal, quote, underlying, account, effective, session, now=now)

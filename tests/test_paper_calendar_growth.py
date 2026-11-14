@@ -11,6 +11,7 @@ from datetime import timedelta
 import json
 import os
 from pathlib import Path
+import time
 from uuid import NAMESPACE_URL, uuid5
 
 import pytest
@@ -85,8 +86,22 @@ def test_calendar_month_preserves_one_fenced_owner(tmp_path, captures, schemas, 
     save(policy_file, base.model_dump(mode="json"))
     save(schemas_file, schemas.model_dump(mode="json"))
     clock = [exchange.session_open(sessions[0]).to_pydatetime() - timedelta(hours=1)]
+    paced = os.environ.get("TRADE_BOT_CALENDAR_PACED") == "1"
+    paced_start = None
+    if paced:
+        from app.options.release_identity import inspect_release
+
+        assert os.environ.get("TRADE_BOT_CALENDAR_DENSITY") == "extended"
+        assert inspect_release().status == "VERIFIED_FILES"
+        assert len(os.sched_getaffinity(0)) == 1
+        assert all(
+            line.split(":")[0].strip() == "lo"
+            for line in Path("/proc/net/dev").read_text().splitlines()[2:]
+        )
 
     def now():
+        if paced_start is not None:
+            return clock[0] + timedelta(seconds=time.monotonic() - paced_start)
         return clock[0]
 
     initialize(owner, settings, clock=now)
@@ -112,13 +127,15 @@ def test_calendar_month_preserves_one_fenced_owner(tmp_path, captures, schemas, 
         publisher.close()
 
     original_open = connected.existing_runtime
+    normal_feed_loop = ContinuousFeed.run
     calls, observations = [], []
+    entry_call = 1
     runtime = None
 
     async def model(request, _secret, *, broad):
         calls.append(request.packet.decision_id)
         plan = entry_judgment.hold(request.packet)
-        if len(calls) == 1:
+        if len(calls) == entry_call:
             item = request.packet.opportunities[0]
             stop = item.candidate.proposal.underlying_invalidation
             anchor = item.underlying.ask
@@ -213,12 +230,13 @@ def test_calendar_month_preserves_one_fenced_owner(tmp_path, captures, schemas, 
     observer = MixedObserver(native_path, population, clock=now, native_journal=True)
     last_sequence = 0
     authority_id = None
-    for number, label in enumerate(sessions):
+
+    def prepare_session(label, *, rollover):
         day = label.date()
         opens = exchange.session_open(label).to_pydatetime()
         closes = exchange.session_close(label).to_pydatetime()
         clock[0] = opens - timedelta(minutes=20)
-        if number:
+        if rollover:
             next_file = tmp_path / f"catalog-{day}.json"
             proposal = session_policy(base, day, exchange)
             save(next_file, proposal.model_dump(mode="json"))
@@ -227,7 +245,25 @@ def test_calendar_month_preserves_one_fenced_owner(tmp_path, captures, schemas, 
             feed_rollover.apply(
                 *rollover_args, expected_review=review["review_sha256"], clock_source=now
             )
-        start = opens + timedelta(minutes=30)
+        clock[0] = opens + timedelta(minutes=30)
+        return day, opens, closes
+
+    def run_worker(stop):
+        check = connected.check(*args, clock_source=now)[0]
+        return connected.run(
+            *args,
+            stop,
+            clock_source=now,
+            snapshot_directory=dashboard,
+            reader_uid=os.getuid(),
+            reader_gid=os.getgid(),
+            resume_flat_reviewed_revision=check["owner_state"]["owner_revision"],
+            max_feed_recoveries=0,
+        )
+
+    for number, label in enumerate(sessions):
+        day, opens, closes = prepare_session(label, rollover=bool(number))
+        start = clock[0]
         sample_times = [start + timedelta(seconds=s) for s in (0, 12, 24, 36, 48, 60)]
         # The larger offline capacity run samples intermediate market deliveries.
         if os.environ.get("TRADE_BOT_CALENDAR_DENSITY") == "extended":
@@ -235,20 +271,7 @@ def test_calendar_month_preserves_one_fenced_owner(tmp_path, captures, schemas, 
         sample_times = sorted(
             {*sample_times, start + timedelta(minutes=5), closes - timedelta(minutes=3)}
         )
-        clock[0] = start
-        revision = connected.check(*args, clock_source=now)[0]["owner_state"]["owner_revision"]
-        outcome = asyncio.run(
-            connected.run(
-                *args,
-                asyncio.Event(),
-                clock_source=now,
-                snapshot_directory=dashboard,
-                reader_uid=os.getuid(),
-                reader_gid=os.getgid(),
-                resume_flat_reviewed_revision=revision,
-                max_feed_recoveries=0,
-            )
-        )
+        outcome = asyncio.run(run_worker(asyncio.Event()))
         assert outcome["status"] == "STOPPED" and outcome["dashboard_published"]
         report = reports.report(tmp_path, start.isoformat(), now().isoformat())
         assert not report["runtime_failures"] and not report["publication_failures"]
@@ -301,3 +324,103 @@ def test_calendar_month_preserves_one_fenced_owner(tmp_path, captures, schemas, 
         for a, b in zip(observations, observations[1:])
     )
     assert (closes - opens).total_seconds() == 3.5 * 3600
+    if not paced:
+        return
+
+    from soak_worker import cpu_sample, cpu_window, decision_coverage
+
+    day, _, _ = prepare_session(exchange.next_session(sessions[-1]), rollover=True)
+    start = clock[0]
+    before_bytes = native_path.stat().st_size
+    before_calls = len(calls)
+    entry_call = before_calls + 1
+
+    async def paced_feed(feed, stop, **kwargs):
+        async def capture(policy, **request):
+            at = now()
+            exit_symbol = "SPY" if at >= start + timedelta(seconds=30) else None
+            response = await market_reader(at, feed.policy_for(day), exit_symbol=exit_symbol)(
+                policy, **request
+            )
+            await asyncio.sleep(max(0, (response.collected_at - now()).total_seconds()))
+            return response
+
+        await normal_feed_loop(feed, stop, reader=capture, **kwargs)
+
+    monkeypatch.setattr(ContinuousFeed, "run", paced_feed)
+    seconds = 335
+
+    failure = None
+
+    async def exercise():
+        nonlocal paced_start, failure
+        stop = asyncio.Event()
+        worker = run_worker(stop)
+        initial_cpu = cpu_sample()
+        paced_start = initial_cpu[0]
+        task = asyncio.create_task(worker)
+        try:
+            done, _ = await asyncio.wait({task}, timeout=seconds)
+        finally:
+            stop.set()
+            try:
+                outcome = await asyncio.wait_for(task, 60)
+            except connected.ComponentFailure as exc:
+                failure = exc
+                outcome = {"status": str(exc), "dashboard_published": False}
+        assert failure is not None or not done, "Worker ended before the calendar follow-up cutoff"
+        return outcome, cpu_window(initial_cpu, cpu_sample(), 1)
+
+    outcome, cpu = asyncio.run(exercise())
+    end = now()
+    report = reports.report(tmp_path, start.isoformat(), end.isoformat())
+    with observer.read() as db:
+        state = restore.status(db, restore.authority_path(native_path))
+        assert state["status"] == "VERIFIED" and state["authority_id"] == authority_id
+        coverage = decision_coverage(db, start, seconds)
+        sequence = db.execute("SELECT feed_sequence FROM execution_option_runtime").fetchone()[0]
+    view = observer.report(limit=100)
+    result = {
+        "synthetic": True,
+        "provider_calls": False,
+        "external_model_calls": False,
+        "history_sessions": len(sessions),
+        "retained_prior_packets": last_sequence,
+        "retained_prior_model_calls": before_calls,
+        "next_calendar_session": str(day),
+        "duration_seconds": seconds,
+        "new_packets": sequence - last_sequence,
+        "model_calls": len(calls) - before_calls,
+        "start_native_bytes": before_bytes,
+        "final_native_bytes": native_path.stat().st_size,
+        "cpu": cpu,
+        "coverage": coverage,
+        "prior_generation": observations[-1]["restore_generation"],
+        "ending_generation": state["generation"],
+        "operator_outcome": outcome["status"],
+        "published": outcome["dashboard_published"],
+        "execution": report["run_execution"],
+        "entry_freshness": report["entry_freshness"],
+        "native_accept_failures": report["runtime_timing"]["by_status"].get(
+            "NATIVE_ACCEPT:FAILED", 0
+        ),
+        "runtime_failures": len(report["runtime_failures"]),
+        "publication_failures": len(report["publication_failures"]),
+        "accounting": view.get("accounting"),
+        "held_positions": len(view["positions"]),
+    }
+    if output := os.environ.get("TRADE_BOT_OFFLINE_PROOF"):
+        Path(output, "calendar-paced.json").write_text(json.dumps(result, indent=2))
+    if failure is not None:
+        raise failure
+    assert outcome["status"] == "STOPPED" and outcome["dashboard_published"]
+    assert (
+        coverage["target_met"]
+        and not report["runtime_failures"]
+        and not report["publication_failures"]
+    )
+    assert view["accounting"] == "VERIFIED" and not view["positions"]
+    assert (
+        report["run_execution"]["completed_round_trips"] == 1
+        and not result["native_accept_failures"]
+    )
