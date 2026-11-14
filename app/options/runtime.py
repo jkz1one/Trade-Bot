@@ -224,6 +224,21 @@ class OptionRuntime:
             raise RuntimePacketExpired("Packet expired or clock regressed during delivery")
         return now
 
+    def _ensure_entry_halt(self, reason, at):
+        journal = self.c.engine.journal
+        # A verified existing halt can be observed without advancing the restore
+        # authority on every protection tick. A changed halt still needs a writer.
+        with journal.read(verify_restore=True) as db:
+            self._bound(db)
+            control = self.c.engine._control(db)
+            if control["halted"] and control["halt_reason"] == reason:
+                return
+        with journal.write() as db:
+            self._bound(db)
+            control = self.c.engine._control(db)
+            if not control["halted"] or control["halt_reason"] != reason:
+                self.c.engine._halt(db, reason, at)
+
     async def _tick(self):
         if not self.running:
             raise ExecutionBlocked("OPTION_RUNTIME_NOT_RUNNING")
@@ -237,11 +252,7 @@ class OptionRuntime:
         operator_issue = self.operator.poll(now=at) if self.operator is not None else None
         entry_issue = self.entry_fault or operator_issue
         if entry_issue:
-            with self.c.engine.journal.write() as db:
-                self._bound(db)
-                control = self.c.engine._control(db)
-                if not control["halted"] or control["halt_reason"] != entry_issue:
-                    self.c.engine._halt(db, entry_issue, at)
+            self._ensure_entry_halt(entry_issue, at)
         packet, issue = None, None
         try:
             with timing.phase("TICK_PACKET_VALIDATION"):

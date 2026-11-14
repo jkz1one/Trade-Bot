@@ -667,3 +667,45 @@ def test_delivery_wakes_waiting_runtime_and_arrival_during_protection_is_retaine
                 await asyncio.wait_for(worker, 1)
 
         asyncio.run(exercise())
+
+
+def test_repeated_publication_fault_preserves_the_verified_halt_before_reading_prices(tmp_path, monkeypatch):
+    from app.execution import restore
+    from app.options import runtime as runtime_module
+
+    class StopAfterControl(Exception):
+        pass
+
+    with owned_strategy(tmp_path) as (c, _, _, times, _, _):
+        runtime = OptionRuntime(c, policy(tmp_path), create=True)
+        enable(runtime)
+        journal = c.engine.journal
+        assert journal.enable_restore_fence(now=times[0])["status"] == "VERIFIED"
+        reason = "CONNECTED_PUBLICATION_FAILED"
+        runtime.entry_fault = reason
+
+        def interrupt_price_read(_):
+            raise StopAfterControl
+
+        monkeypatch.setattr(runtime_module, "read_packet", interrupt_price_read)
+        authority = restore.authority_path(journal.path)
+
+        def state():
+            with journal.read() as db:
+                control = c.engine._control(db)
+                return control["halt_reason"], restore.status(db, authority)["generation"]
+
+        with journal.write() as db:
+            c.engine._halt(db, "OPTION_RUNTIME_FEED_UNAVAILABLE", times[0])
+        before = state()[1]
+        with pytest.raises(StopAfterControl):
+            asyncio.run(runtime._tick())
+        assert state() == (reason, before + 1)
+        with pytest.raises(StopAfterControl):
+            asyncio.run(runtime._tick())
+        assert state() == (reason, before + 1)
+
+        with sqlite3.connect(journal.path) as damaged:
+            damaged.execute("UPDATE execution_option_runtime SET reason='tampered' WHERE id=1")
+        with pytest.raises(ValueError, match="RESTORED_OR_CHANGED_EXECUTION_JOURNAL"):
+            asyncio.run(runtime._tick())
