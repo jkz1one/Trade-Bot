@@ -36,7 +36,68 @@ def test_healthy_recovery_poll_preserves_restore_generation_and_checks_authority
             changed.execute("UPDATE execution_control SET halt_reason='unverified'")
         with pytest.raises(ValueError, match='RESTORE'):
             recovery.observe(runtime, AT)
+        with pytest.raises(ValueError, match='RESTORE'):
+            asyncio.run(recovery.poll(runtime, lambda: AT, asyncio.Event()))
         assert recovery.used == 0
+
+
+@pytest.mark.parametrize('interruption', ['stop', 'publication', 'cancel'])
+def test_recovery_drains_interrupted_verified_read_without_arming(tmp_path, schemas, monkeypatch, interruption):
+    import threading
+
+    args, _, _ = enrolled(tmp_path, schemas)
+    with existing_runtime(args[0], clock=lambda: AT) as (runtime, _):
+        journal = runtime.c.engine.journal
+        with journal.write() as db:
+            generation = runtime._bound(db)['generation']
+            revision = journal.revision(db)
+            runtime.c.engine._halt(db, 'OPTION_RUNTIME_FEED_UNAVAILABLE', AT)
+            db.execute("UPDATE execution_option_runtime SET status='BLOCKED',reason='OPTION_RUNTIME_FEED_UNAVAILABLE'")
+        recovery = FlatFeedRecovery(2, generation, AT, start_revision=revision)
+        read = journal.read
+        release = threading.Event()
+
+        async def scenario():
+            active = asyncio.Event()
+            loop = asyncio.get_running_loop()
+            owner_thread = threading.get_ident()
+            stop = asyncio.Event()
+
+            @contextmanager
+            def slow_read(*, verify_restore):
+                assert verify_restore and threading.get_ident() != owner_thread
+                with read(verify_restore=True) as db:
+                    loop.call_soon_threadsafe(active.set)
+                    assert release.wait(8)
+                    yield db
+
+            monkeypatch.setattr(journal, 'read', slow_read)
+            task = asyncio.create_task(recovery.poll(runtime, lambda: AT, stop))
+            try:
+                await asyncio.wait_for(active.wait(), 2)
+                if interruption == 'publication':
+                    runtime.entry_fault = 'CONNECTED_PUBLICATION_FAILED'
+                    recovery.fenced = True
+                elif interruption == 'stop':
+                    from app.options.process import run_option_process
+                    venue = runtime.c.engine.venue
+                    result = await run_option_process(venue, now=AT, timeout_seconds=3)
+                    assert result.snapshot == venue.snapshot(AT)
+                    stop.set()
+                else:
+                    task.cancel()
+                await asyncio.sleep(0)
+                assert not task.done()
+            finally:
+                release.set()
+            if interruption == 'cancel':
+                with pytest.raises(asyncio.CancelledError):
+                    await task
+            else:
+                assert not await task
+            assert recovery.halt is None and recovery.first is None and recovery.used == 0
+
+        asyncio.run(scenario())
 
 
 def test_operator_halt_between_recovery_read_and_write_fences_the_allowance(tmp_path, schemas, monkeypatch):
@@ -209,9 +270,9 @@ def test_reviewed_runner_recovers_one_outage_then_stops_and_restart_stays_halted
             revision = runtime.c.engine.journal.revision(db)
 
     phases, observations = [], []
-    original_observe = FlatFeedRecovery.observe
-    def observed(self, runtime, now):
-        result = original_observe(self, runtime, now)
+    original_poll = FlatFeedRecovery.poll
+    async def observed(self, runtime, clock_source, stop):
+        result = await original_poll(self, runtime, clock_source, stop)
         with runtime.c.engine.journal.read() as db:
             row = runtime._bound(db)
             value = (self.halt, self.first, self.used, row['status'], row['reason'],
@@ -219,7 +280,7 @@ def test_reviewed_runner_recovers_one_outage_then_stops_and_restart_stays_halted
         if not observations or observations[-1] != value:
             observations.append(value)
         return result
-    monkeypatch.setattr(FlatFeedRecovery, 'observe', observed)
+    monkeypatch.setattr(FlatFeedRecovery, 'poll', observed)
     async def wait_for(predicate):
         async with asyncio.timeout(8):
             while not predicate():

@@ -15,6 +15,7 @@ from pathlib import Path
 
 from app.domain.models import utc_now
 from app.execution.failure import failure_details
+from app.mixed import background
 from app.mixed.connected_check import connection_report
 from app.mixed.continuous_feed import ContinuousFeed, FeedPolicy
 from app.mixed.observer import MixedObserver
@@ -398,7 +399,7 @@ class FlatFeedRecovery:
         self.used, self.halt, self.first = 0, None, None
         self.start_revision, self.fenced = start_revision, False
 
-    def _feed_halt_pending(self, runtime, db, current):
+    def _feed_state(self, runtime, db, current):
         if current['generation'] != self.generation:
             raise ValueError("Feed recovery cannot cross runtime generations")
         # A later feed error can overwrite the control row's halt reason.
@@ -410,16 +411,38 @@ class FlatFeedRecovery:
             "AND json_extract(payload,'$.command.action') IN ('HALT','REVOKE_KEY'))) LIMIT 1",
             (self.start_revision,),
         ).fetchone():
-            self.fenced = True
-            return False
+            return "OPERATOR_VETO"
         control = runtime.c.engine._control(db)
         if control['halted'] and control['halt_reason'] == 'OPTION_RUNTIME_FEED_UNAVAILABLE':
-            return True
-        self.halt, self.first = None, None
-        return False
+            return 'OPTION_RUNTIME_FEED_UNAVAILABLE'
+        return None
+
+    def _verified_state(self, runtime):
+        with runtime.c.engine.journal.read(verify_restore=True) as db:
+            return self._feed_state(runtime, db, runtime._bound(db))
+
+    def _pending(self, state):
+        if state == "OPERATOR_VETO":
+            self.fenced = True
+        elif state is None:
+            self.halt, self.first = None, None
+        return state == 'OPTION_RUNTIME_FEED_UNAVAILABLE'
 
     def observe(self, runtime, now):
         if self.used >= self.maximum or self.fenced:
+            return False
+        return self._recover(runtime, self._verified_state(runtime), lambda: now)
+
+    async def poll(self, runtime, clock_source, stop):
+        if self.used >= self.maximum or self.fenced or runtime.entry_fault or stop.is_set():
+            return False
+        state = await background.run(self._verified_state, runtime)
+        if self.fenced or runtime.entry_fault or stop.is_set():
+            return False
+        return self._recover(runtime, state, clock_source)
+
+    def _recover(self, runtime, state, clock_source):
+        if not self._pending(state):
             return False
         from zoneinfo import ZoneInfo
         from app.execution.engine import ExecutionBlocked
@@ -428,13 +451,10 @@ class FlatFeedRecovery:
         from app.options.governor import _fresh
 
         engine = runtime.c.engine
-        with engine.journal.read(verify_restore=True) as db:
-            if not self._feed_halt_pending(runtime, db, runtime._bound(db)):
-                return False
         # A recovery can act only on evidence checked again under the owner writer.
         with engine.journal.write() as db:
             current = runtime._bound(db)
-            if not self._feed_halt_pending(runtime, db, current):
+            if not self._pending(self._feed_state(runtime, db, current)):
                 return False
             event = db.execute("SELECT sequence,occurred_at FROM execution_events "
                                "WHERE kind='MANUAL_HALT' ORDER BY sequence DESC LIMIT 1").fetchone()
@@ -451,6 +471,7 @@ class FlatFeedRecovery:
             if current['status'] != 'RUNNING' or current['reason'] is not None:
                 self.first = None
                 return False
+            now = clock_source()
             if (now.astimezone(ZoneInfo('America/New_York')).date()
                     != self.started_at.astimezone(ZoneInfo('America/New_York')).date()
                     or engine.calendar.current_window(now) is None):
@@ -609,7 +630,7 @@ async def run(
                             await asyncio.sleep(0.25)
                             continue
                         if startup_resumed:
-                            recovery.observe(runtime, at)
+                            await recovery.poll(runtime, clock_source, stop)
                             await asyncio.sleep(0.25)
                             continue
                         with runtime.c.engine.journal.read() as db:
