@@ -65,3 +65,15 @@ def test_cpu_comparison_cannot_expand_available_affinity(cpus, tmp_path, monkeyp
     with pytest.raises(ValueError, match="CPU_AFFINITY"):
         soak.run(output, 90, 68, cpus=cpus)
     assert not output.exists()
+
+
+@pytest.mark.parametrize("cpus, percent", [(1, 60.0), (2, 30.0)])
+def test_cpu_window_includes_reaped_child_and_excludes_setup(cpus, percent):
+    from soak_worker import cpu_window
+
+    result = cpu_window((100, 25, 20, 11, 5), (110, 28, 20.5, 13, 5.5), cpus)
+    assert result == {
+        "elapsed_seconds": 10, "worker_user_seconds": 3, "worker_system_seconds": .5,
+        "reaped_child_user_seconds": 2, "reaped_child_system_seconds": .5,
+        "average_busy_cores": .6, "average_allocated_cpu_percent": percent,
+    }

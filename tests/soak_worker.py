@@ -72,6 +72,27 @@ def tree_sample(root):
     }
 
 
+def cpu_sample():
+    worker = resource.getrusage(resource.RUSAGE_SELF)
+    children = resource.getrusage(resource.RUSAGE_CHILDREN)
+    return (time.monotonic(), worker.ru_utime, worker.ru_stime, children.ru_utime, children.ru_stime)
+
+
+def cpu_window(start, end, cpus):
+    elapsed, user, system, child_user, child_system = (b - a for a, b in zip(start, end, strict=True))
+    if elapsed <= 0 or min(user, system, child_user, child_system) < 0:
+        raise ValueError("CPU accounting requires an increasing observation window")
+    busy = (user + system + child_user + child_system) / elapsed
+    return {
+        "elapsed_seconds": round(elapsed, 6),
+        "worker_user_seconds": round(user, 6), "worker_system_seconds": round(system, 6),
+        "reaped_child_user_seconds": round(child_user, 6),
+        "reaped_child_system_seconds": round(child_system, 6),
+        "average_busy_cores": round(busy, 6),
+        "average_allocated_cpu_percent": round(100 * busy / cpus, 3),
+    }
+
+
 def seed_capacity(journal, mib):
     """Labeled diagnostic padding, not fabricated measured or accounting history."""
     if not mib:
@@ -280,7 +301,8 @@ def run(output, seconds, seed_mib):
         revision = connected.check(*args, clock_source=live_clock)[0]["owner_state"][
             "owner_revision"
         ]
-        started[0] = time.monotonic()
+        cpu_start = cpu_sample()
+        started[0] = cpu_start[0]
         task = asyncio.create_task(
             connected.run(
                 *args,
@@ -337,7 +359,10 @@ def run(output, seconds, seed_mib):
                 await asyncio.sleep(min(1, max(0, seconds - (time.monotonic() - started[0]))))
         finally:
             stop.set()
-            await asyncio.wait_for(task, 60)
+            try:
+                await asyncio.wait_for(task, 60)
+            finally:
+                metrics["worker_window_cpu"] = cpu_window(cpu_start, cpu_sample(), cpu_count)
         metrics["elapsed_seconds"] = time.monotonic() - started[0]
         final = await asyncio.to_thread(
             reports.report, output, BASE.isoformat(), live_clock().isoformat()

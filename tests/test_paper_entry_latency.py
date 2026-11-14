@@ -19,6 +19,65 @@ def option_frame():
     ))
 
 
+@pytest.mark.parametrize("wait_for", ["snapshot", "unattempted_reservation"])
+def test_held_stops_use_fresh_books_across_waits(tmp_path, monkeypatch, wait_for):
+    from test_mixed_venue import q
+    from test_portfolio_controls import get_intent
+    from app.mixed.sources import StockCycleInput
+
+    with owned(tmp_path, at=AT) as (engine, venue):
+        times, frame = [AT], two_symbols()
+        c = coordinator(engine, times, frame)
+        outcome = asyncio.run(c.cycle(frame))
+        entries = [get_intent(engine, row["client_id"]) for row in outcome["entries"]]
+        at = AT + timedelta(seconds=1)
+        times[0] = at
+        assert len(entries) == 2
+        for entry in entries:
+            book = next(x.quote for x in frame.stocks if x.quote.instrument == entry.instrument)
+            venue.fill_stock(entry, entry.quantity, changed(book, source_at=at, received_at=at),
+                             at, fill_id=entry.client_id)
+        assert engine.reconcile(venue.snapshot(at), now=at)["reconciled"]
+        reconcile = engine.reconcile_fixture
+        waits = []
+
+        async def delayed(*, now, **kwargs):
+            result = await reconcile(now=now, **kwargs)
+            if not waits:
+                times[0] += timedelta(seconds=engine.limits.account_max_age_seconds)
+                waits.append(times[0])
+            return result
+
+        def books(now):
+            return tuple(StockCycleInput(quote=q(entry, now, bid=entry.original_invalidation,
+                                                ask=entry.original_invalidation))
+                         for entry in entries)
+
+        if wait_for == "snapshot":
+            monkeypatch.setattr(engine, "reconcile_fixture", delayed)
+        else:
+            prepare = engine.prepare_stock
+
+            def slow_reservation(*args, **kwargs):
+                result = prepare(*args, **kwargs)
+                if not waits and result["status"] == "PREPARED":
+                    times[0] += timedelta(seconds=engine.limits.account_max_age_seconds)
+                    waits.append(times[0])
+                return result
+
+            monkeypatch.setattr(engine, "prepare_stock", slow_reservation)
+        first = asyncio.run(c.supervise(stocks=books(at)))
+        assert set(first["plays"]) == {entry.client_id for entry in entries}
+        statuses = {play["status"] for play in first["plays"].values()}
+        assert statuses == ({"BLOCKED"} if wait_for == "snapshot" else {"BLOCKED", "REJECTED"})
+        assert venue.submit_count == 2 and len(venue.snapshot(times[0]).positions) == 2
+        second = asyncio.run(c.supervise(stocks=books(times[0])))
+        assert all(play["status"] == "OPEN" for play in second["plays"].values()), second
+        assert venue.submit_count == 4
+        asyncio.run(c.supervise(stocks=books(times[0])))
+        assert venue.submit_count == 4
+
+
 def test_one_protection_read_reaches_selection_before_original_inventory_expires(tmp_path, monkeypatch):
     with owned(tmp_path, at=AT) as (engine, venue):
         times = [AT]

@@ -77,7 +77,7 @@ def review_close(engine, db, identity, proposal, stage, origin, now):
         raise ExecutionBlocked("OPTION_TARGET_QUANTITY_CHANGED")
 
 
-async def tick(engine, identity, quote, underlying, now, assessed):
+async def tick(engine, identity, quote, underlying, now, assessed, *, clock_source=None):
     from app.options.models import OptionProposal
 
     with engine.journal.read() as db:
@@ -96,6 +96,8 @@ async def tick(engine, identity, quote, underlying, now, assessed):
         quantity, sold = remaining(db, p, p.target_exit_stage)
     if not quantity:
         return assessed
+    if clock_source is not None:
+        now = clock_source()
     key = "target:" + fingerprint(
         {
             "play_id": identity,
@@ -123,7 +125,9 @@ async def tick(engine, identity, quote, underlying, now, assessed):
         return prepared
     return {
         **assessed,
-        "status": await engine.dispatch(prepared["client_id"], quote, underlying, now=now),
+        "status": await engine.dispatch(
+            prepared["client_id"], quote, underlying, now=clock_source() if clock_source else now
+        ),
         "client_id": prepared["client_id"],
     }
 

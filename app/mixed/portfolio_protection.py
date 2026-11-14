@@ -12,7 +12,7 @@ from app.mixed.native_models import StockProtection
 from app.mixed.portfolio_execution import fresh, policy
 from app.mixed.portfolio_store import control, history
 from app.mixed.stock_models import StockPosition, StockQuote
-from app.options.engine import clock, exact
+from app.options.engine import clock, exact, fingerprint
 from app.options.governor import _fresh
 
 
@@ -183,7 +183,7 @@ def tighten(engine, play_id, price, quote, underlying, *, now, stock=False, _db=
         return {"status": "TIGHTENED", "play_id": play_id, "price": str(price)}
 
 
-async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()):
+async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=(), clock_source=None):
     """Visit every held play even when another instrument cannot be managed."""
     from decimal import Decimal
 
@@ -192,6 +192,16 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
     from app.options.models import OptionProposal, OptionQuote, parse_underlying
 
     now = clock(now)
+
+    def current_time():
+        nonlocal now
+        if clock_source is not None:
+            observed = clock(clock_source())
+            if observed < now:
+                raise ValueError("Portfolio protection clock moved backwards")
+            now = observed
+        return now
+
     p = policy(engine)
     quotes = {
         q.instrument.instrument_id: StockQuote.model_validate(q.model_dump()) for q in stock_quotes
@@ -215,7 +225,7 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
     if "supervision" in reconciliation:
         return reconciliation["supervision"]
     with engine.journal.read() as db:
-        held = reconstruct(history(engine, db, p, now)).ledger.positions
+        held = reconstruct(history(engine, db, p, current_time())).ledger.positions
     results = {}
     for identity, position in held.items():
         stock = isinstance(position, StockPosition)
@@ -226,6 +236,7 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
         )
         underlying = None if stock else underlying_quotes.get(position.contract.underlying)
         try:
+            current_time()
             result = (
                 assess_stock(engine, identity, quote, now=now)
                 if stock
@@ -236,7 +247,7 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
                 from app.mixed.portfolio_targets import tick as target_tick
 
                 results[identity] = await target_tick(
-                    engine, identity, quote, underlying, now, result
+                    engine, identity, quote, underlying, now, result, clock_source=current_time
                 )
                 continue
             if result["status"] != "EXIT_REQUIRED":
@@ -292,11 +303,15 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
                     ),
                     Decimal(0),
                 )
+            # A fresh book can authorize a new close after an unattempted
+            # rejection. Repeated source clocks identify the same decision.
             source = (
                 ("stock-protection:" if stock else "option-protection:")
-                + identity
-                + ":"
-                + str(filled)
+                + fingerprint({
+                    "play_id": identity, "filled": filled,
+                    "source_at": quote.source_at,
+                    "underlying_source_at": underlying.source_at if underlying else None,
+                })
             )
             if stock:
                 prepared = engine.prepare_stock(
@@ -307,7 +322,7 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
                         thesis="Independent mandatory stock exit",
                     ),
                     quote,
-                    now=now,
+                    now=current_time(),
                     origin="PROTECTIVE",
                     play_id=identity,
                 )
@@ -321,25 +336,26 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
                     ),
                     quote,
                     underlying,
-                    now=now,
+                    now=current_time(),
                     origin="PROTECTIVE",
                     play_id=identity,
                 )
             if prepared["status"] != "PREPARED":
                 results[identity] = prepared
                 continue
+            dispatch_at = current_time()
             results[identity] = {
                 **result,
-                "status": await engine.dispatch_stock(prepared["client_id"], quote, now=now)
+                "status": await engine.dispatch_stock(prepared["client_id"], quote, now=dispatch_at)
                 if stock
-                else await engine.dispatch(prepared["client_id"], quote, underlying, now=now),
+                else await engine.dispatch(prepared["client_id"], quote, underlying, now=dispatch_at),
                 "client_id": prepared["client_id"],
             }
         except (ValueError, ExecutionBlocked) as exc:
             results[identity] = {"status": "BLOCKED", "reason": str(exc)}
     with engine.journal.write() as db:
         engine._control(db)
-        return record_supervision(engine, db, now, results)
+        return record_supervision(engine, db, current_time(), results)
 
 
 def record_supervision(engine, db, now, results):
@@ -350,7 +366,7 @@ def record_supervision(engine, db, now, results):
         (engine.policy.model_dump_json(), now.isoformat(), json.dumps(result, sort_keys=True)),
     )
     if any(
-        r.get("status") in {"BLOCKED", "EXIT_BLOCKED", "EXIT_REVIEW_REQUIRED", "UNKNOWN"}
+        r.get("status") in {"BLOCKED", "EXIT_BLOCKED", "EXIT_REVIEW_REQUIRED", "UNKNOWN", "REJECTED"}
         for r in results.values()
     ):
         db.execute("UPDATE execution_supervisor SET status='BLOCKED' WHERE id=1")

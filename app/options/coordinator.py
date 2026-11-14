@@ -893,6 +893,7 @@ class DegenCoordinator:
                 option_quotes=quotes,
                 underlyings=underlyings,
                 stock_quotes=tuple(x.quote for x in stocks),
+                clock_source=self.now,
             )
         """Fast owned-position management, independent of the five-minute entry claim."""
         scope_underlying = ()

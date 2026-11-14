@@ -1818,7 +1818,8 @@ class OptionExecution:
             return payload
 
     async def protective_tick(
-        self, quote=None, underlying=None, *, now, stock_quotes=(), option_quotes=(), underlyings=()
+        self, quote=None, underlying=None, *, now, stock_quotes=(), option_quotes=(),
+        underlyings=(), clock_source=None,
     ):
         if self.portfolio_policy is not None:
             from app.mixed.portfolio_protection import tick
@@ -1829,6 +1830,7 @@ class OptionExecution:
                 stock_quotes=stock_quotes,
                 option_quotes=(*option_quotes, *((quote,) if quote else ())),
                 underlyings=(*underlyings, *((underlying,) if underlying else ())),
+                clock_source=clock_source,
             )
         if option_quotes or underlyings:
             raise ValueError("Portfolio quote collections require explicit enrollment")
