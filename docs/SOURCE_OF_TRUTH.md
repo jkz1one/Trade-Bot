@@ -1,11 +1,37 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.211. November 14 offline PAPER timing and capacity.
+Version 1.212. November 14 PAPER decision coverage and protection.
+
+The full-cadence one-CPU fixture on `0d79a3a` halted entries at 16:00:33
+on its synthetic clock. The previous cycle took 12.37 seconds and the next
+capture took 25.17 seconds from start to publication. Feed and dashboard updates
+continued. The fixture's recovery allowance was zero. More than one expected
+decision slot had already been missed, which rules out the 99% scan target for
+this run. The duration and short-run results are recorded separately.
+
+`0349f38` checks original packet freshness after receipt verification and again
+inside the simulated venue's fill transaction. `4329383` checks the clock after
+native reconciliation, before protective reservations and again at dispatch.
+A fresh observation can protect a still-held position after an unattempted stale
+reservation. On a 119.6 MB journal, an independently held stock exited in 3.61
+seconds while model, history and display work waited. In matched 335-second
+runs the worker and children used 0.73 and 0.75 cores on average with one
+and two CPUs allocated. Both ended flat. The five-second entry-age target and
+connected-host capacity assessment remain open. The host's deployed release is
+`39d8e48`. On `23b0669`, original model evidence and its charge settle in a
+single fenced commit. One and two CPUs used 0.718 and 0.732 busy cores on
+the same 335-second fixture. The source was 6.57 and 6.59 seconds old at
+entry. Both runs evaluated both scheduled slots and finished flat with one
+round trip and zero native timeouts. The duration harness now counts original
+per-symbol evaluations across every expected slot.
+[Offline measurements](PAPER_CAPACITY_20261114_PROOF.json).
+
+### Earlier November 14 capacity measurements
 
 Branch implementation `42648c6` completed the 120 MB simulated entry and
 protective exit on one CPU in two 90-second runs and two 335-second runs.
 The original quote was 6.01–6.84 seconds old at admission across these four
-fixtures. A deliberately competing worker missed its first entry window and
+fixtures. A run sharing its CPU with another fixture missed its first entry window and
 finished its short run holding one simulated position. The five-second
 admission target and sustained capacity remain open. The separate held-position
 test submitted its protective exit in 4.10 seconds with advice, history and

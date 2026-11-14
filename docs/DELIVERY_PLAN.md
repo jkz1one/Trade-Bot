@@ -97,6 +97,15 @@ next action. Do not replace missing evidence with a date estimate.
   Two short and two two-slot one-CPU runs completed the known lifecycle.
   Approved source ages ranged from 6.01 to 6.84 seconds across the four.
   [Comparable runs](PAPER_CAPACITY_20261114_PROOF.json).
+  `4329383` measures scheduled worker and reaped-child CPU. Matched 335-second
+  tests used 0.73 and 0.75 busy cores on average. Original source age was 6.75
+  and 6.18 seconds at the respective opening reservations. The older full
+  fixture lost decision coverage after a feed halt despite continued dashboard
+  and collector activity. `23b0669` counts scheduled evaluations from both
+  original symbol scans and settles a trusted model reply and charge in one
+  fenced commit. Under the same 335-second load, one and two CPUs averaged
+  0.718 and 0.732 busy cores, with original entry ages of 6.57 and 6.59
+  seconds. [Coverage evidence](PAPER_CAPACITY_20261114_PROOF.json).
 - [ ] **A3 — Measured repairs:** reproduce and close the actual bottlenecks with
   before/after evidence; decide connection reuse from measurements and validate
   its isolation, refresh ownership, deadlines and cleanup if adopted.
@@ -140,6 +149,11 @@ next action. Do not replace missing evidence with a date estimate.
   The regression preserves the settled charge and keeps the owner running.
   On `42648c6` the same contention test submitted the exit in 4.10 seconds.
   [Protection and accounting evidence](PAPER_CAPACITY_20261114_PROOF.json).
+  `0349f38` and `4329383` recheck the running clock after local receipt,
+  snapshot and reservation waits. A stale quote cannot fill an order and a
+  new executable quote can close an earlier unattempted rejection. An actual
+  held-position exit completed in 3.61 seconds under the 120 MB contention
+  fixture. Two simultaneous stops recovered independently on fresh books.
 - [ ] **A5 — Failure/restart matrix:** exercise every condition in A's matrix;
   preserve accounting, unknown outcomes and bounded recovery without duplicates.
 - [ ] **A6 — Duration and capacity:** pass accelerated calendar/multi-day cases

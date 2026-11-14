@@ -747,6 +747,423 @@
         "report_sha256": "354160f3e6addc176cee858214880fbeb1f91bfd68eb7cc4d7d101f5cd814586",
         "application_manifest_sha256": "63303dd93ef0ba1faccbd882863fbbc2c3ff719cfd6d1a95effb06a25c1c0595"
       }
+    ],
+    "fill_0349f38": [
+      {
+        "status": "PASSED",
+        "planned_seconds": 335,
+        "logical_cpus": 1,
+        "source_database_bytes": 122847232,
+        "peak_tree_rss_bytes": 346144768,
+        "elapsed_seconds": 336.4514841599994,
+        "native_snapshot_calls": 133,
+        "native_snapshot_failures": 0,
+        "native_snapshot_p99_seconds": 0.177621196000473,
+        "native_snapshot_max_seconds": 0.1786611499992432,
+        "native_deadline_seconds": 5.0,
+        "native_headroom_target_met": true,
+        "children_reaped": true,
+        "children_reaped_count": 134,
+        "dashboard_reads": 11,
+        "report_reads": 11,
+        "capture_attempts": 33,
+        "entry_model_calls": 1,
+        "final_accounting": "VERIFIED_FLAT",
+        "wall_clock_full_duration": "NOT_RUN",
+        "source_growth_bytes": 3252224,
+        "application_manifest_sha256": "9f15cbc2df782252186f938414e8662e8d8cf27499f41f245d287ceef4ac196b",
+        "seed_bytes": 119635968,
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "runtime_failures": 0,
+        "publication_failures": 0,
+        "native_accept_failures": 0,
+        "capture_failures": 0,
+        "decision_coverage": {
+          "expected": 2,
+          "evaluated": 2,
+          "coverage_percent": 100.0,
+          "unmeasured_slots": [],
+          "target_met": true
+        },
+        "report_observed_through": "2026-10-28T14:05:36.451647+00:00",
+        "report_sha256": "55718c82b1836d6ae2704a48f67024cca348ee70dceb2c2466676e438a798abe",
+        "approved_entry_freshness": {
+          "status": "OBSERVED",
+          "reservations": 1,
+          "measured": 1,
+          "missing_or_invalid": 0,
+          "omitted": 0,
+          "clocks": {
+            "quote_age": {
+              "samples": 1,
+              "p50_seconds": 6.790608,
+              "p95_seconds": 6.790608,
+              "p99_seconds": 6.790608,
+              "max_seconds": 6.790608
+            },
+            "receive_lag": {
+              "samples": 1,
+              "p50_seconds": 1.0,
+              "p95_seconds": 1.0,
+              "p99_seconds": 1.0,
+              "max_seconds": 1.0
+            },
+            "local_age": {
+              "samples": 1,
+              "p50_seconds": 5.790608,
+              "p95_seconds": 5.790608,
+              "p99_seconds": 5.790608,
+              "max_seconds": 5.790608
+            }
+          }
+        }
+      }
+    ],
+    "held_4329383": [
+      {
+        "status": "PASSED",
+        "planned_seconds": 335,
+        "logical_cpus": 1,
+        "source_database_bytes": 122847232,
+        "peak_tree_rss_bytes": 332087296,
+        "elapsed_seconds": 336.2544208290001,
+        "native_snapshot_calls": 132,
+        "native_snapshot_failures": 0,
+        "native_snapshot_p99_seconds": 0.2515389079999295,
+        "native_snapshot_max_seconds": 0.25248828300027526,
+        "native_deadline_seconds": 5.0,
+        "native_headroom_target_met": true,
+        "children_reaped": true,
+        "children_reaped_count": 133,
+        "dashboard_reads": 11,
+        "report_reads": 11,
+        "capture_attempts": 33,
+        "entry_model_calls": 1,
+        "final_accounting": "VERIFIED_FLAT",
+        "worker_window_cpu": {
+          "elapsed_seconds": 336.254276,
+          "worker_user_seconds": 194.438827,
+          "worker_system_seconds": 45.884828,
+          "reaped_child_user_seconds": 4.91798,
+          "reaped_child_system_seconds": 1.252195,
+          "average_busy_cores": 0.733058,
+          "average_allocated_cpu_percent": 73.306
+        },
+        "wall_clock_full_duration": "NOT_RUN",
+        "source_growth_bytes": 3239936,
+        "application_manifest_sha256": "8536af6fed25a681ca05c05264f47c2e9e014a8a5ef3c022dd60b62e3d17fdfa",
+        "seed_bytes": 119635968,
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "runtime_failures": 0,
+        "publication_failures": 0,
+        "native_accept_failures": 0,
+        "capture_failures": 0,
+        "decision_coverage": {
+          "expected": 2,
+          "evaluated": 2,
+          "coverage_percent": 100.0,
+          "unmeasured_slots": [],
+          "target_met": true
+        },
+        "report_observed_through": "2026-10-28T14:05:36.254430+00:00",
+        "report_sha256": "22c65e6fc896919d53ef26e5c530eebfda048e666e8af428992b67e693060988",
+        "approved_entry_freshness": {
+          "status": "OBSERVED",
+          "reservations": 1,
+          "measured": 1,
+          "missing_or_invalid": 0,
+          "omitted": 0,
+          "clocks": {
+            "quote_age": {
+              "samples": 1,
+              "p50_seconds": 6.754523,
+              "p95_seconds": 6.754523,
+              "p99_seconds": 6.754523,
+              "max_seconds": 6.754523
+            },
+            "receive_lag": {
+              "samples": 1,
+              "p50_seconds": 1.0,
+              "p95_seconds": 1.0,
+              "p99_seconds": 1.0,
+              "max_seconds": 1.0
+            },
+            "local_age": {
+              "samples": 1,
+              "p50_seconds": 5.754523,
+              "p95_seconds": 5.754523,
+              "p99_seconds": 5.754523,
+              "max_seconds": 5.754523
+            }
+          }
+        }
+      },
+      {
+        "status": "PASSED",
+        "planned_seconds": 335,
+        "logical_cpus": 2,
+        "source_database_bytes": 122855424,
+        "peak_tree_rss_bytes": 333082624,
+        "elapsed_seconds": 335.92790332799996,
+        "native_snapshot_calls": 132,
+        "native_snapshot_failures": 0,
+        "native_snapshot_p99_seconds": 0.08462272500037216,
+        "native_snapshot_max_seconds": 0.10112983199906012,
+        "native_deadline_seconds": 5.0,
+        "native_headroom_target_met": true,
+        "children_reaped": true,
+        "children_reaped_count": 134,
+        "dashboard_reads": 11,
+        "report_reads": 11,
+        "capture_attempts": 33,
+        "entry_model_calls": 1,
+        "final_accounting": "VERIFIED_FLAT",
+        "worker_window_cpu": {
+          "elapsed_seconds": 335.92788,
+          "worker_user_seconds": 195.330216,
+          "worker_system_seconds": 50.947802,
+          "reaped_child_user_seconds": 4.528301,
+          "reaped_child_system_seconds": 1.205346,
+          "average_busy_cores": 0.750196,
+          "average_allocated_cpu_percent": 37.51
+        },
+        "wall_clock_full_duration": "NOT_RUN",
+        "source_growth_bytes": 3235840,
+        "application_manifest_sha256": "8536af6fed25a681ca05c05264f47c2e9e014a8a5ef3c022dd60b62e3d17fdfa",
+        "seed_bytes": 119635968,
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "runtime_failures": 0,
+        "publication_failures": 0,
+        "native_accept_failures": 0,
+        "capture_failures": 0,
+        "decision_coverage": {
+          "expected": 2,
+          "evaluated": 2,
+          "coverage_percent": 100.0,
+          "unmeasured_slots": [],
+          "target_met": true
+        },
+        "report_observed_through": "2026-10-28T14:05:35.927912+00:00",
+        "report_sha256": "04341276c050bbf6142eb6d74de6be6e985ca4813b165dee416dc62392409b9f",
+        "approved_entry_freshness": {
+          "status": "OBSERVED",
+          "reservations": 1,
+          "measured": 1,
+          "missing_or_invalid": 0,
+          "omitted": 0,
+          "clocks": {
+            "quote_age": {
+              "samples": 1,
+              "p50_seconds": 6.17583,
+              "p95_seconds": 6.17583,
+              "p99_seconds": 6.17583,
+              "max_seconds": 6.17583
+            },
+            "receive_lag": {
+              "samples": 1,
+              "p50_seconds": 1.0,
+              "p95_seconds": 1.0,
+              "p99_seconds": 1.0,
+              "max_seconds": 1.0
+            },
+            "local_age": {
+              "samples": 1,
+              "p50_seconds": 5.17583,
+              "p95_seconds": 5.17583,
+              "p99_seconds": 5.17583,
+              "max_seconds": 5.17583
+            }
+          }
+        }
+      }
+    ],
+    "settled_23b0669": [
+      {
+        "status": "PASSED",
+        "planned_seconds": 335,
+        "logical_cpus": 1,
+        "source_database_bytes": 122810368,
+        "peak_tree_rss_bytes": 318320640,
+        "elapsed_seconds": 336.51200867899934,
+        "native_snapshot_calls": 134,
+        "native_snapshot_failures": 0,
+        "native_snapshot_p99_seconds": 0.13148707700020168,
+        "native_snapshot_max_seconds": 0.48594957400018757,
+        "native_deadline_seconds": 5.0,
+        "native_headroom_target_met": true,
+        "children_reaped": true,
+        "children_reaped_count": 135,
+        "dashboard_reads": 11,
+        "report_reads": 11,
+        "capture_attempts": 33,
+        "entry_model_calls": 1,
+        "final_accounting": "VERIFIED_FLAT",
+        "worker_window_cpu": {
+          "elapsed_seconds": 336.511982,
+          "worker_user_seconds": 197.025791,
+          "worker_system_seconds": 38.432125,
+          "reaped_child_user_seconds": 4.915296,
+          "reaped_child_system_seconds": 1.268345,
+          "average_busy_cores": 0.718077,
+          "average_allocated_cpu_percent": 71.808
+        },
+        "wall_clock_full_duration": "NOT_RUN",
+        "source_growth_bytes": 3215360,
+        "application_manifest_sha256": "a1866fdb97311bb6ddc28ba5052517eb80cba61817c79cff09900084e118b640",
+        "seed_bytes": 119635968,
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "runtime_failures": 0,
+        "publication_failures": 0,
+        "native_accept_failures": 0,
+        "capture_failures": 0,
+        "decision_coverage": {
+          "expected": 2,
+          "evaluated": 2,
+          "coverage_percent": 100.0,
+          "unmeasured_slots": [],
+          "target_met": true
+        },
+        "report_observed_through": "2026-10-28T14:05:36.512021+00:00",
+        "report_sha256": "17f9095d355ad49ff0fd719dae32d88b59a89d8e233f2b7f01e6c764bce42dc3",
+        "approved_entry_freshness": {
+          "status": "OBSERVED",
+          "reservations": 1,
+          "measured": 1,
+          "missing_or_invalid": 0,
+          "omitted": 0,
+          "clocks": {
+            "quote_age": {
+              "samples": 1,
+              "p50_seconds": 6.566318,
+              "p95_seconds": 6.566318,
+              "p99_seconds": 6.566318,
+              "max_seconds": 6.566318
+            },
+            "receive_lag": {
+              "samples": 1,
+              "p50_seconds": 1.0,
+              "p95_seconds": 1.0,
+              "p99_seconds": 1.0,
+              "max_seconds": 1.0
+            },
+            "local_age": {
+              "samples": 1,
+              "p50_seconds": 5.566318,
+              "p95_seconds": 5.566318,
+              "p99_seconds": 5.566318,
+              "max_seconds": 5.566318
+            }
+          }
+        }
+      },
+      {
+        "status": "PASSED",
+        "planned_seconds": 335,
+        "logical_cpus": 2,
+        "source_database_bytes": 122834944,
+        "peak_tree_rss_bytes": 334954496,
+        "elapsed_seconds": 337.60904210399895,
+        "native_snapshot_calls": 137,
+        "native_snapshot_failures": 0,
+        "native_snapshot_p99_seconds": 0.1298725149990787,
+        "native_snapshot_max_seconds": 0.2186496280010033,
+        "native_deadline_seconds": 5.0,
+        "native_headroom_target_met": true,
+        "children_reaped": true,
+        "children_reaped_count": 137,
+        "dashboard_reads": 11,
+        "report_reads": 11,
+        "capture_attempts": 33,
+        "entry_model_calls": 1,
+        "final_accounting": "VERIFIED_FLAT",
+        "worker_window_cpu": {
+          "elapsed_seconds": 337.609023,
+          "worker_user_seconds": 201.815957,
+          "worker_system_seconds": 39.496587,
+          "reaped_child_user_seconds": 4.75885,
+          "reaped_child_system_seconds": 1.210413,
+          "average_busy_cores": 0.73245,
+          "average_allocated_cpu_percent": 36.623
+        },
+        "wall_clock_full_duration": "NOT_RUN",
+        "source_growth_bytes": 3293184,
+        "application_manifest_sha256": "a1866fdb97311bb6ddc28ba5052517eb80cba61817c79cff09900084e118b640",
+        "seed_bytes": 119635968,
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "runtime_failures": 0,
+        "publication_failures": 0,
+        "native_accept_failures": 0,
+        "capture_failures": 0,
+        "decision_coverage": {
+          "expected": 2,
+          "evaluated": 2,
+          "coverage_percent": 100.0,
+          "unmeasured_slots": [],
+          "target_met": true
+        },
+        "report_observed_through": "2026-10-28T14:05:37.609050+00:00",
+        "report_sha256": "908eb415a067b454b709b739b8ffc9b72caa12e788ae8a8c52943e2355461651",
+        "approved_entry_freshness": {
+          "status": "OBSERVED",
+          "reservations": 1,
+          "measured": 1,
+          "missing_or_invalid": 0,
+          "omitted": 0,
+          "clocks": {
+            "quote_age": {
+              "samples": 1,
+              "p50_seconds": 6.592255,
+              "p95_seconds": 6.592255,
+              "p99_seconds": 6.592255,
+              "max_seconds": 6.592255
+            },
+            "receive_lag": {
+              "samples": 1,
+              "p50_seconds": 1.0,
+              "p95_seconds": 1.0,
+              "p99_seconds": 1.0,
+              "max_seconds": 1.0
+            },
+            "local_age": {
+              "samples": 1,
+              "p50_seconds": 5.592255,
+              "p95_seconds": 5.592255,
+              "p99_seconds": 5.592255,
+              "max_seconds": 5.592255
+            }
+          }
+        }
+      }
     ]
   },
   "store_verification": [
@@ -937,23 +1354,22 @@
   },
   "full_duration": {
     "status": "RUNNING",
-    "elapsed_seconds": 7708.157051126999,
     "planned_seconds": 21480,
-    "wall_clock_full_duration": "PENDING",
     "logical_cpus": 1,
-    "peak_tree_rss_bytes": 649089024,
-    "source_database_bytes": 121815040,
-    "capture_attempts": 677,
-    "dashboard_reads": 244,
-    "report_reads": 244,
-    "native_snapshot_calls": 1835,
+    "source_database_bytes": 135290880,
+    "peak_tree_rss_bytes": 665473024,
+    "elapsed_seconds": 10646.391583123997,
+    "native_snapshot_calls": 2203,
     "native_snapshot_failures": 0,
     "native_snapshot_max_seconds": 0.3793252220002614,
-    "children_reaped_count": 1836,
-    "implementation": "0d79a3a",
-    "snapshot_utc": "2026-11-14T10:29:44+00:00",
-    "initial_database_bytes": 72822784,
-    "cycle_count": 25,
+    "children_reaped_count": 2205,
+    "dashboard_reads": 336,
+    "report_reads": 336,
+    "capture_attempts": 923,
+    "entry_model_calls": 1,
+    "wall_clock_full_duration": "PENDING",
+    "application_manifest_sha256": "fadf8df298f62be5a21f08039bb54c797ffe12c5616b1fcb114b70ee6f201bd9",
+    "seed_bytes": 72822784,
     "execution": {
       "status": "RECORDED",
       "entry_fills": 1,
@@ -963,9 +1379,84 @@
     },
     "runtime_failures": 0,
     "publication_failures": 0,
-    "capture_failures": 0,
     "native_accept_failures": 0,
-    "application_manifest_sha256": "fadf8df298f62be5a21f08039bb54c797ffe12c5616b1fcb114b70ee6f201bd9"
+    "capture_failures": 0,
+    "decision_coverage": {
+      "expected": 36,
+      "evaluated": 25,
+      "coverage_percent": 69.444,
+      "unmeasured_slots": [
+        {
+          "slot": 5977345,
+          "runtime_status": "MISSING"
+        },
+        {
+          "slot": 5977346,
+          "runtime_status": "MISSING"
+        },
+        {
+          "slot": 5977347,
+          "runtime_status": "MISSING"
+        },
+        {
+          "slot": 5977348,
+          "runtime_status": "MISSING"
+        },
+        {
+          "slot": 5977349,
+          "runtime_status": "MISSING"
+        },
+        {
+          "slot": 5977350,
+          "runtime_status": "MISSING"
+        },
+        {
+          "slot": 5977351,
+          "runtime_status": "MISSING"
+        },
+        {
+          "slot": 5977352,
+          "runtime_status": "MISSING"
+        },
+        {
+          "slot": 5977353,
+          "runtime_status": "MISSING"
+        },
+        {
+          "slot": 5977354,
+          "runtime_status": "MISSING"
+        },
+        {
+          "slot": 5977355,
+          "runtime_status": "MISSING"
+        }
+      ],
+      "target_met": false
+    },
+    "report_observed_through": "2026-10-28T16:57:01.257311+00:00",
+    "implementation": "0d79a3a",
+    "entry_halt": {
+      "reason": "OPTION_RUNTIME_FEED_UNAVAILABLE",
+      "synthetic_clock": "2026-10-28T16:00:33.261427+00:00",
+      "preceding_cycle_packet": 634,
+      "cycle_wall_seconds": 12.367519,
+      "next_wakeup_late_seconds": 12.34247651500118,
+      "next_capture_sequence": 635,
+      "capture_to_publication_seconds": 25.16924,
+      "capture_phases_seconds": {
+        "PREPARE": 0.006788,
+        "HISTORY_PLAN": 0.000612,
+        "CAPTURE": 17.423608,
+        "PERSIST_CAPTURE": 0.010886,
+        "SOURCE_BINDING": 0.002843,
+        "HISTORY_BINDING": 3.341263,
+        "NORMALIZE": 4.352603,
+        "SOURCE_CLOCK_CHECK": 0.010162,
+        "PUBLISH": 0.020473
+      },
+      "feed_recovery_budget_in_fixture": 0
+    },
+    "release_acceptance": "FAILED_SCAN_COVERAGE"
   },
   "shared_cpu_stress": {
     "note": "While a second disposable one-CPU process used the same affinity, the fixture missed its entry before admission. This case is separate from the quiet one-CPU trials.",
@@ -1154,5 +1645,368 @@
     "CPU affinity and a sampled RSS ceiling do not reproduce Docker CPU quota, cross-UID restrictions, or connected market or model latency.",
     "A recovered native acknowledgement timeout counts as a failed deadline even if both fills are verified.",
     "The p95 engineering headroom target is five seconds from the original quote source to an approved opening reservation. A session with no openings is unmeasured."
-  ]
+  ],
+  "decision_coverage_definition": {
+    "source": "Expected five-minute slots in the requested fixture interval; both SPY and QQQ original DEGEN evaluations must match the slot and its native completion. An ordinary evaluated HOLD is counted.",
+    "target_percent": 99,
+    "warmup_excluded": false,
+    "scope": "Full synthetic fixture uses the pre-session provisioning period for warmup. Native originals are checked also for runs predating this diagnostic."
+  },
+  "verified_journal_shapes": {
+    "calendar_1738": {
+      "main_bytes": 100388864,
+      "restore_generation": 10555,
+      "exact_authority_sha256": "432f1f19bc38d9196183dec1a688e532ad594c5531a1a09864e265c0ae2ea42d",
+      "full_verified_digest_passes": [
+        {
+          "seconds": 0.176965,
+          "cpu_seconds": 0.176979
+        },
+        {
+          "seconds": 0.173535,
+          "cpu_seconds": 0.173128
+        },
+        {
+          "seconds": 0.176673,
+          "cpu_seconds": 0.17666
+        },
+        {
+          "seconds": 0.170274,
+          "cpu_seconds": 0.170282
+        }
+      ],
+      "largest_native_tables": [
+        [
+          "execution_option_scope_runtime_inputs",
+          33251328,
+          8118
+        ],
+        [
+          "execution_mixed_runtime_inputs",
+          33251328,
+          8118
+        ],
+        [
+          "execution_snapshots",
+          17563648,
+          4288
+        ],
+        [
+          "execution_option_opportunities",
+          7643136,
+          1866
+        ],
+        [
+          "execution_events",
+          4952064,
+          1209
+        ],
+        [
+          "execution_runtime_timings",
+          2691072,
+          657
+        ]
+      ]
+    },
+    "padded_335_seconds": {
+      "main_bytes": 122888192,
+      "restore_generation": 644,
+      "exact_authority_sha256": "bec975f8bc726664e6eeb6c73f8707390fcebf00e7b5cb60f2031283ceb38b58",
+      "full_verified_digest_passes": [
+        {
+          "seconds": 0.170493,
+          "cpu_seconds": 0.170497
+        },
+        {
+          "seconds": 0.161499,
+          "cpu_seconds": 0.161507
+        },
+        {
+          "seconds": 0.14275,
+          "cpu_seconds": 0.142758
+        },
+        {
+          "seconds": 0.151019,
+          "cpu_seconds": 0.150854
+        }
+      ],
+      "largest_native_tables": [
+        [
+          "execution_runtime_timings",
+          119271424,
+          29119
+        ],
+        [
+          "execution_snapshots",
+          1306624,
+          319
+        ],
+        [
+          "execution_option_scope_runtime_inputs",
+          626688,
+          153
+        ],
+        [
+          "execution_mixed_runtime_inputs",
+          626688,
+          153
+        ],
+        [
+          "execution_events",
+          249856,
+          61
+        ],
+        [
+          "execution_option_opportunities",
+          135168,
+          33
+        ]
+      ]
+    }
+  },
+  "calendar_extended_compact": {
+    "full_cadence": false,
+    "samples_per_session": 79,
+    "sessions": 22,
+    "first": {
+      "session": "2026-10-28",
+      "open": "2026-10-28T13:30:00+00:00",
+      "close": "2026-10-28T20:00:00+00:00",
+      "last_sequence": 79,
+      "round_trips": 1,
+      "native_bytes": 5046272,
+      "collector_bytes": 4980736,
+      "display_bytes": 2142208,
+      "restore_generation": 493
+    },
+    "last": {
+      "session": "2026-11-27",
+      "open": "2026-11-27T14:30:00+00:00",
+      "close": "2026-11-27T18:00:00+00:00",
+      "last_sequence": 1738,
+      "round_trips": 0,
+      "native_bytes": 100388864,
+      "collector_bytes": 106459136,
+      "display_bytes": 14753792,
+      "restore_generation": 10555
+    },
+    "synthetic_model_calls": 64,
+    "complete_round_trips": 1,
+    "samples_sha256": "bc2b2194e48a4fe264ef06f2866052149888f3a6dc4e1de5c80e98d6c2054bcf",
+    "release": "1e67fd7 plus the isolated account-epoch fix tested in 5f5f96c",
+    "tested": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 1,
+      "seconds": 3634.0,
+      "junit_sha256": "f48f6ecf989969c26f19e71e23a52a93187817ddf99a5800dfd3dffb04fafb3a"
+    }
+  },
+  "position_protection_clock_fixes": {
+    "fill_implementation": "0349f38f2a0f647d311bdb2552d2f1bea44140fd",
+    "held_implementation": "432938325e2f83df71048c712f7bc9312e5e0dee",
+    "fresh_fill_cases_baseline": {
+      "tests": 13,
+      "failures": 13,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 0,
+      "seconds": 11.366,
+      "junit_sha256": "7c60b8e87370d0a8bc1b3642bc28ef730c1415726248e3409a3b2b12f2470ebc"
+    },
+    "fill_implementation_related": {
+      "tests": 206,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 206,
+      "seconds": 123.571,
+      "junit_sha256": "d57c27151b1027b4931f3a7eb0358f94dfbf4d9df68aa70c1ebc8586dbffd55f"
+    },
+    "fill_implementation_system": {
+      "tests": 533,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "passed": 532,
+      "seconds": 398.801,
+      "junit_sha256": "424a6bf101bb85815dcf1d1d6ad18cea292d2d896caa4ddb36e42933fb4ad08b"
+    },
+    "held_slow_snapshot_baseline": {
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 0,
+      "seconds": 4.895,
+      "junit_sha256": "0b17b9a593dd9b4feff155654559d407c49d6f962305536837ac2dddd8b0484a"
+    },
+    "two_position_fresh_quote_retry_before_repair": {
+      "tests": 2,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 1,
+      "seconds": 6.353,
+      "junit_sha256": "137b59399f07a1884ed8fc897a807e1d38bd7c3a9c702b04777761da87f4d680"
+    },
+    "held_implementation_related": {
+      "tests": 118,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 118,
+      "seconds": 82.407,
+      "junit_sha256": "1d570276c3edf060e9c24b73cbf7102195a986ea34b7cc650d9f2dee61cf07f4"
+    },
+    "held_implementation_system": {
+      "tests": 533,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "passed": 532,
+      "seconds": 398.663,
+      "junit_sha256": "4764babfa8af6b81d59bf42bd35fb11a8f0b32118da60f5f95005105d4bd9d4e"
+    },
+    "cpu_reporting": {
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 14,
+      "seconds": 2.412,
+      "junit_sha256": "ad66b605af66d350dd4f868ad3652ac210a9ceb7598ff7712d16cbfdf89b3e84"
+    },
+    "fill_release_contended_exit": {
+      "journal_bytes_before_contention": 119623680,
+      "exit_submitted_while_all_waiting": true,
+      "exit_seconds": 3.880585221000729,
+      "report_snapshot_open_during_exit": true,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "source_sha256": "c8ae4efa0f581598a020a14a575c02a17039793d1532c8193158c73389829c66"
+    },
+    "held_release_contended_exit": {
+      "journal_bytes_before_contention": 119623680,
+      "exit_submitted_while_all_waiting": true,
+      "exit_seconds": 3.6078773619992717,
+      "report_snapshot_open_during_exit": true,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "source_sha256": "9917ead42236f96e9742f93cf3af697a7da40126892b8ea82b7c8b9c09597ab0"
+    }
+  },
+  "settled_reply_and_coverage": {
+    "implementation": "23b06693b28eb53324d267173c5573106e1808c2",
+    "joint_receipt_baseline": {
+      "tests": 2,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 1,
+      "seconds": 4.17,
+      "junit_sha256": "95ce509e3d2e45e6d5a3cc6c2937e228e04554c90439d5dfa818b0b7d106d1c5"
+    },
+    "coverage_tests": {
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 15,
+      "seconds": 2.66,
+      "junit_sha256": "93d4708b4bf98998aa4941f78eb7b9b93967b5f1f5dda6b666943fd1472442d9"
+    },
+    "related": {
+      "tests": 248,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 248,
+      "seconds": 130.417,
+      "junit_sha256": "e8b945bea737a93b8b90a7f14e5d2d2acdc0f354b586bbce33bdef6f2f03a3ca"
+    },
+    "integrated": {
+      "tests": 535,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "passed": 534,
+      "seconds": 402.829,
+      "junit_sha256": "7e2bb8c2cfd3af4734f278cd661665804e285c2d2a16756e1e5d03f874058d6c"
+    }
+  },
+  "held_horizon_repeat": {
+    "status": "RUNNING",
+    "planned_seconds": 8100,
+    "logical_cpus": 1,
+    "source_database_bytes": 77406208,
+    "peak_tree_rss_bytes": 329551872,
+    "elapsed_seconds": 434.0867481719997,
+    "native_snapshot_calls": 216,
+    "native_snapshot_failures": 0,
+    "native_snapshot_max_seconds": 0.2761669020001136,
+    "children_reaped_count": 218,
+    "dashboard_reads": 15,
+    "report_reads": 15,
+    "capture_attempts": 43,
+    "entry_model_calls": 1,
+    "wall_clock_full_duration": "NOT_REQUESTED",
+    "application_manifest_sha256": "a1866fdb97311bb6ddc28ba5052517eb80cba61817c79cff09900084e118b640",
+    "seed_bytes": 72822784,
+    "execution": {
+      "status": "RECORDED",
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "carry_in_exits": 0
+    },
+    "runtime_failures": 0,
+    "publication_failures": 0,
+    "native_accept_failures": 0,
+    "capture_failures": 0,
+    "decision_coverage": {
+      "expected": 2,
+      "evaluated": 2,
+      "coverage_percent": 100.0,
+      "unmeasured_slots": [],
+      "target_met": true
+    },
+    "report_observed_through": "2026-10-28T14:07:11.945999+00:00",
+    "approved_entry_freshness": {
+      "status": "OBSERVED",
+      "reservations": 1,
+      "measured": 1,
+      "missing_or_invalid": 0,
+      "omitted": 0,
+      "clocks": {
+        "quote_age": {
+          "samples": 1,
+          "p50_seconds": 3.847792,
+          "p95_seconds": 3.847792,
+          "p99_seconds": 3.847792,
+          "max_seconds": 3.847792
+        },
+        "receive_lag": {
+          "samples": 1,
+          "p50_seconds": 1.0,
+          "p95_seconds": 1.0,
+          "p99_seconds": 1.0,
+          "max_seconds": 1.0
+        },
+        "local_age": {
+          "samples": 1,
+          "p50_seconds": 2.847792,
+          "p95_seconds": 2.847792,
+          "p99_seconds": 2.847792,
+          "max_seconds": 2.847792
+        }
+      }
+    },
+    "implementation": "23b06693b28eb53324d267173c5573106e1808c2",
+    "test_note": "135-minute same-seed run crosses the original two-hour halt. The uncertainty and recovery limits were preserved."
+  }
 }

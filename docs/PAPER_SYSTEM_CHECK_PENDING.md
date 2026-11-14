@@ -1,5 +1,16 @@
 # Recovered offline system checkpoint
 
+November 14 decision-coverage update. The long fixture on `0d79a3a`
+missed the 99% scan-coverage target after a feed halt two hours in.
+`0349f38` and `4329383` repair stale PAPER fill and protection clocks.
+Both passed the installed system suite with 532 passes and one unmapped-UID
+skip. The held-position repair passed 118 related cases and the loaded
+contention fixture. `23b0669` passed 248 related checks and the 532-case
+system suite with the same single skip. Its two 120 MB runs evaluated both
+expected slots and completed one round trip in each CPU configuration. The
+22-session replay finished with 1,738 packets and verified flat accounting.
+[Measured cases](PAPER_CAPACITY_20261114_PROOF.json).
+
 November 14 capacity continuation. Branch implementations `1e67fd7`, `5f5f96c`
 and `42648c6` are published. The integrated system suite passed 532 cases with one unmapped-UID
 skip. The final report revision also passed 89 cases including all five integrated

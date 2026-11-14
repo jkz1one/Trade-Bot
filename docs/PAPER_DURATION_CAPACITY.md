@@ -36,7 +36,7 @@ repository to validate its clock. The repaired child uses the same canonical
 clock and fingerprint directly. In a profiled approval with the same original
 intent, CPU time between the accept and serialize markers fell from 0.286 seconds
 to 0.005 seconds. Whole-child CPU time fell from 0.788 to 0.507 seconds.
-Under deliberately shared one-CPU load, the first slot expired before the
+During a run sharing one CPU with another fixture, the first slot expired before the
 model. The next slot filled an entry 21 seconds before the short fixture
 ended. No exit was observed by that cutoff and the round-trip gate failed.
 
@@ -49,6 +49,45 @@ packets, 100,446,208 native bytes and a 47,824,896-byte display before the
 Scope display compaction. Full trading cadence over the whole month remains
 unmeasured. The real-time duration measurement is tracked in the evidence file.
 [Machine-readable measurements and acceptance limits](PAPER_CAPACITY_20261114_PROOF.json).
+
+## Decision coverage and measured CPU
+
+The nominal fixture on `0d79a3a` stopped evaluating new entries after its
+two-hour mark. At 16:00:33 on the synthetic clock, the runtime recorded
+`OPTION_RUNTIME_FEED_UNAVAILABLE`. The preceding cycle lasted 12.37 seconds,
+the next wakeup was 12.34 seconds late, and capture 635 took 25.17 seconds.
+The collector subsequently delivered fresh packets and the dashboard continued
+publishing. The run had no feed recoveries available. Passing native reads,
+dashboard refreshes or a single completed round trip cannot recover missed
+decision slots. The delivery plan specifies 99% coverage.
+
+On `4329383`, one and two allocated CPUs averaged 0.73 and 0.75 busy cores
+respectively over the same 335-second workload. CPU accounting covers the
+worker and reaped children from worker launch through drain. Both runs evaluated
+both expected slots, finished flat and recorded one option entry and
+one protective exit. Source ages at the opening reservation were 6.75 and
+6.18 seconds. The full-duration result and the test of the earlier halt are
+tracked independently.
+
+`23b0669` records a model's original reply and its verified charge in one
+fenced transaction. An injected write failure rolls back the charge, retains
+the original reply through the independent interruption path and halts the
+attempt. In two further matched 335-second runs the worker and its children
+used 0.718 and 0.732 cores on one and two allocated CPUs. The opening quote
+was 6.57 and 6.59 seconds old, respectively. Each run evaluated both
+scheduled slots, completed one round trip, reconciled flat and recorded zero
+native timeouts. The new coverage check counts completed evaluations with
+original scans for both enrolled symbols. A full 21,480-second fixture has 72
+scheduled evaluations. The five-second entry target remains open.
+
+The 22-session replay on one fenced owner was repeated with 1,738 packets.
+Its final native and collector databases measured 100,388,864 and 106,459,136
+bytes. The derived dashboard was 14,753,792 bytes, compared with 47,824,896 in
+the reference replay. Each final session report and the retained account
+verified. Four warm digest checks on the finished native database took
+0.170–0.177 seconds and matched its stored authority hash. The exchange
+schedule included the November 27 early close. Sampling omitted the intervening
+market ticks. [Measured cases and limitations](PAPER_CAPACITY_20261114_PROOF.json).
 
 ## Earlier November 14 preflight
 
