@@ -223,7 +223,8 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
         from app.mixed.selection import select
 
         # The shared-Scope path commits both selection receipts before execution.
-        select(c, key, evidence, persist=c.entry_policy.scope_selection is None)
+        with phase("ENTRY_MIXED_SELECTION"):
+            select(c, key, evidence, persist=c.entry_policy.scope_selection is None)
     if c.entry_policy.scope_selection is not None:
         from app.options.scope_ai import choose_after_usage
 
@@ -245,7 +246,7 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
             with phase("ENTRY_PROTECTION_WAIT"):
                 async with asyncio.timeout(max(0, (packet.valid_until - c.now()).total_seconds())):
                     await mixed.wait_for_protection()
-            with c.engine.journal.read() as db:
+            with phase("ENTRY_OPTION_MARKET_READ"), c.engine.journal.read() as db:
                 sequence, quote, underlying = mixed.option_market(db, selected.instrument, c.now())
             evidence["option_market_sequence"] = sequence
             original = quotes[selected.instrument.instrument_id]

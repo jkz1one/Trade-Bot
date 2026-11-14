@@ -71,12 +71,13 @@ async def choose_after_usage(c, key, evidence, request, result):
     from app.mixed.scope_refresh import ScopeRefreshUnavailable
 
     # Validate even a forged local worker response before a refresh or selection.
-    with c.engine.journal.read() as db:
+    with phase("ENTRY_SCOPE_RECEIPT_CHECK"), c.engine.journal.read() as db:
         validate_stored(db, key, evidence, c.scope_policy)
     if not result.plan.scope:
-        evidence["candidate_id"] = result.plan.candidate_id
-        evidence["scope_arbitration"] = selection(c.scope_policy, key, evidence)
-        c._pending_evidence(key, evidence)
+        with phase("ENTRY_SCOPE_SELECTION"):
+            evidence["candidate_id"] = result.plan.candidate_id
+            evidence["scope_arbitration"] = selection(c.scope_policy, key, evidence)
+            c._pending_evidence(key, evidence)
         return None
     # Reader receives only the selected play. It cannot supply balances or terms.
     remaining = (request.packet.valid_until - c.now()).total_seconds()
@@ -136,13 +137,14 @@ async def choose_after_usage(c, key, evidence, request, result):
             decision_hash=fingerprint(result.plan),
             now=c.now(),
         )
-    evidence["scope_arbitration"] = selection(c.scope_policy, key, evidence)
-    if c.stock_policy is not None:
-        from app.mixed.selection import select
+    with phase("ENTRY_SCOPE_SELECTION"):
+        evidence["scope_arbitration"] = selection(c.scope_policy, key, evidence)
+        if c.stock_policy is not None:
+            from app.mixed.selection import select
 
-        select(c, key, evidence)
-    else:
-        c._pending_evidence(key, evidence)
+            select(c, key, evidence)
+        else:
+            c._pending_evidence(key, evidence)
     return await execute_scope(c, key, SimpleNamespace(scope=fresh), evidence)
 
 

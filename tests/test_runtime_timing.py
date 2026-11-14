@@ -54,11 +54,33 @@ def test_paid_entry_local_phases_and_child_have_independent_counts(tmp_path, mon
             assert statuses[name + ":COMPLETE"] == 1
         state = "FAILED" if outcome == "FAILED_SETTLEMENT" else "COMPLETE"
         assert statuses["ENTRY_MODEL_SETTLEMENT:" + state] == 1
-        for name in ("ENTRY_PROTECTION_WAIT", "ENTRY_REVIEW"):
+        for name in ("ENTRY_MIXED_SELECTION", "ENTRY_OPTION_MARKET_READ",
+                     "ENTRY_PROTECTION_WAIT", "ENTRY_REVIEW"):
             assert statuses.get(name + ":COMPLETE", 0) == int(outcome == "OPEN")
         assert trace["coverage"]["models"]["matched"] == 1
         assert trace["coverage"]["models"]["unsettled"] == int(outcome == "FAILED_SETTLEMENT")
         assert venue.submit_count == int(outcome == "OPEN")
+
+
+@pytest.mark.parametrize("choice", ["DEGEN", "SCOPE"])
+def test_paid_selection_timing_keeps_original_check_separate_from_refresh(tmp_path, monkeypatch, choice):
+    from test_option_scope_ai import ai_owner
+
+    trace = {"spans": [], "spans_omitted": 0, "native": [], "native_omitted": 0}
+    with ai_owner(tmp_path, monkeypatch, family=choice) as (c, _, _, frame, _):
+        token = timing.CURRENT.set(trace)
+        try:
+            result = asyncio.run(c.cycle(frame))
+        finally:
+            timing.CURRENT.reset(token)
+    assert result["status"] == "OPEN", result
+    names = [span["phase"] for span in trace["spans"]]
+    assert names.count("ENTRY_SCOPE_RECEIPT_CHECK") == 1
+    assert names.count("ENTRY_SCOPE_SELECTION") == 1
+    assert names.count("SCOPE_REFRESH") == int(choice == "SCOPE")
+    if choice == "SCOPE":
+        assert names.index("ENTRY_SCOPE_RECEIPT_CHECK") < names.index("SCOPE_REFRESH")
+        assert names.index("SCOPE_REFRESH") < names.index("ENTRY_SCOPE_SELECTION")
 
 
 def test_native_success_timeout_and_cancellation_keep_separate_spans_and_reap(tmp_path, monkeypatch):

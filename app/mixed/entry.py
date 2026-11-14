@@ -307,7 +307,8 @@ async def execute(c, key, evidence, request, result):
     with c.engine.journal.read() as db:
         validate_stored(db, key, evidence)
     original = review_original(request.packet, result.plan)
-    select(c, key, evidence)
+    with phase("ENTRY_MIXED_SELECTION"):
+        select(c, key, evidence)
     try:
         async with asyncio.timeout(max(0, (request.packet.valid_until - c.now()).total_seconds())):
             with phase("STOCK_REFRESH"):
