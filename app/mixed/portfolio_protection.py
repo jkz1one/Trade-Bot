@@ -116,12 +116,16 @@ def assess_stock(engine, play_id, quote, *, now, _db=None):
 
 def entry_guard(engine, db, p, now):
     """Every held play must have completed fresh protection before optional risk."""
+    projection = reconstruct(history(engine, db, p, now))
+    _verify_entry_guards(engine, db, p, projection.ledger.positions, now)
+
+
+def _verify_entry_guards(engine, db, p, positions, now):
+    """Check the guards for all positions reconstructed in this transaction."""
     from datetime import datetime
 
-    h = history(engine, db, p, now)
-    projection = reconstruct(h)
     guards = json.loads(control(engine, db, p)["protection_json"])
-    for play_id in projection.ledger.positions:
+    for play_id in positions:
         saved = guards.get(play_id)
         if saved is None or not timedelta(0) <= now - datetime.fromisoformat(
             saved["assessed_at"]

@@ -363,3 +363,28 @@ def test_native_snapshot_crossing_a_paid_hold_is_superseded_without_halting(tmp_
             assert venue.submit_count == 0
 
         asyncio.run(exercise())
+
+
+def test_paid_entry_admission_reads_original_charge_history_once_in_its_transaction(tmp_path, monkeypatch):
+    from app.mixed import paid_costs, portfolio_models
+
+    with owner(tmp_path, monkeypatch, mode="HOLD", portfolio=True) as (c, venue, _times, _state):
+        admit, original = portfolio_models.admit_attempt, paid_costs.records
+        reads = []
+
+        def counted(db, policy):
+            assert db.in_transaction
+            reads.append(db)
+            return original(db, policy)
+
+        def observe(engine, db, *args):
+            with monkeypatch.context() as patch:
+                patch.setattr(paid_costs, "records", counted)
+                return admit(engine, db, *args)
+
+        monkeypatch.setattr(portfolio_models, "admit_attempt", observe)
+        result = asyncio.run(c.cycle(stock_frame()))
+        assert result["entries"][0]["reason"] == "ENTRY_MODEL_HOLD_OR_REJECTED"
+        assert len(reads) == 1 and venue.submit_count == 0
+        with c.engine.journal.read() as db:
+            assert db.execute("SELECT COUNT(*) FROM execution_model_calls WHERE cost IS NOT NULL").fetchone()[0] == 1

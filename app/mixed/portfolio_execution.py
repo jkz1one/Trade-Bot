@@ -51,17 +51,24 @@ def fresh(engine, db, p, now):
     return c, snap
 
 
-def selection_account(engine, db, now):
-    """Read-only shared budget summary. Candidates still require instrument-specific review."""
+def selection_snapshot(engine, db, now):
+    """Reconstruct one fresh transaction view for the account and its admission checks."""
     from app.mixed.governor import _account
 
     p = policy(engine)
     c, snap = fresh(engine, db, p, now)
     h = history(engine, db, p, now)
-    account = _account(h, reconstruct(h), True, bool(c["halted"]))
-    return account.model_copy(
+    projection = reconstruct(h)
+    account = _account(h, projection, True, bool(c["halted"])).model_copy(
         update={"captured_at": snap.captured_at, "snapshot_id": snap.snapshot_id}
     )
+    return account, h, projection
+
+
+def selection_account(engine, db, now):
+    """Read-only shared budget summary. Candidates still require instrument-specific review."""
+    account, _, _ = selection_snapshot(engine, db, now)
+    return account
 
 
 @exact

@@ -254,12 +254,12 @@ def validate_admission(engine, db, key, input_hash, now):
     frozen = json.loads(
         db.execute("SELECT policy_json FROM execution_option_strategy WHERE id=1").fetchone()[0]
     )
+    snapshot = None
     if engine.portfolio_policy is not None:
-        from app.mixed.portfolio_execution import selection_account
-        from app.mixed.portfolio_store import history
+        from app.mixed.portfolio_execution import selection_snapshot
 
-        account = selection_account(engine, db, now)
-        h = history(engine, db, engine.portfolio_policy, now)
+        snapshot = selection_snapshot(engine, db, now)
+        account, h, _ = snapshot
         if request.packet.portfolio_history is None or request.packet.portfolio_history.model_dump(
             exclude={"captured_at"}
         ) != h.model_dump(exclude={"captured_at"}):
@@ -285,6 +285,7 @@ def validate_admission(engine, db, key, input_hash, now):
         )
         if raw not in evidence.get("stock_candidates", []) or item.execution != engine.policy:
             raise ExecutionBlocked("MIXED_STOCK_ALTERNATIVES_CHANGED")
+    return snapshot
 
 
 def stock_ceiling(db, key, data, candidate, *, now, original):

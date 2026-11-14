@@ -7,8 +7,7 @@ from app.execution import economics
 from app.execution.engine import ExecutionBlocked
 from app.mixed.accounting import reconstruct
 from app.mixed.portfolio_accounting import candidate_blockers, remaining_budget
-from app.mixed.portfolio_execution import selection_account
-from app.mixed.portfolio_protection import entry_guard
+from app.mixed.portfolio_protection import _verify_entry_guards
 from app.mixed.portfolio_store import history
 from app.options.engine import exact
 
@@ -39,23 +38,20 @@ def admit_attempt(engine, db, source_key, input_hash, now, position_request):
         from app.mixed.portfolio_management import current, validate_admission
 
         validate_admission(engine, db, source_key, position_request, input_hash, now)
-        account = current(engine, db, position_request.packet.play_id, now)[3]
-    else:
-        from app.mixed.entry import validate_admission
-
-        validate_admission(engine, db, source_key, input_hash, now)
-        entry_guard(engine, db, engine.portfolio_policy, now)
-        account = selection_account(engine, db, now)
-    h = history(engine, db, engine.portfolio_policy, now)
-    projection = reconstruct(h)
-    budget = (
-        min(
+        h, _, _, account = current(engine, db, position_request.packet.play_id, now)
+        projection = reconstruct(h)
+        budget = min(
             projection.daily_loss_available or Decimal(0),
             projection.total_loss_available or Decimal(0),
         )
-        if position_request is not None
-        else remaining_budget(h, projection, "")
-    )
+    else:
+        from app.mixed.entry import validate_admission
+
+        # Request validation read the fresh account, holdings and original charges
+        # under this same admission writer. The guard and budget use that view.
+        account, h, projection = validate_admission(engine, db, source_key, input_hash, now)
+        _verify_entry_guards(engine, db, engine.portfolio_policy, projection.ledger.positions, now)
+        budget = remaining_budget(h, projection, "")
     policy = engine.policy.cost_policy
     summary = economics.summary(db, now)
     day = now.astimezone(ZoneInfo("America/New_York")).date().isoformat()
