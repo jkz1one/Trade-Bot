@@ -255,12 +255,10 @@ def collect(c, key, frame, evidence, *, evaluated_at=None):
                     if c.engine.portfolio_policy is not None:
                         from app.mixed.governor import admit_stock
                         from app.mixed.native_execution import session
-                        from app.mixed.portfolio_execution import selection_account
+                        from app.mixed.portfolio_execution import selection_snapshot
                         from app.mixed.portfolio_loss import guard
-                        from app.mixed.portfolio_store import history
 
-                        account = selection_account(c.engine, db, evaluated_at)
-                        h = history(c.engine, db, c.engine.portfolio_policy, evaluated_at)
+                        account, h, _ = selection_snapshot(c.engine, db, evaluated_at)
                         window = session(c.engine, candidate.proposal.instrument, evaluated_at)
                         guard(
                             c.engine,

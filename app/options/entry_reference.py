@@ -5,7 +5,7 @@ from fractions import Fraction
 
 from pydantic import TypeAdapter, ValidationError
 
-from app.options.engine import fingerprint
+from app.options.evidence import fingerprint
 from app.options.lifecycle import EntryUnderlyingReference, EntryUnderlyingSample, OptionFill
 from app.options.models import Money
 

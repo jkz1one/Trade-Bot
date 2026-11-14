@@ -57,7 +57,7 @@ def selection_snapshot(engine, db, now):
 
     p = policy(engine)
     c, snap = fresh(engine, db, p, now)
-    h = history(engine, db, p, now)
+    h = history(engine, db, p, now, snapshot=snap)
     projection = reconstruct(h)
     account = _account(h, projection, True, bool(c["halted"])).model_copy(
         update={"captured_at": snap.captured_at, "snapshot_id": snap.snapshot_id}

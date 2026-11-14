@@ -1161,13 +1161,9 @@ class DegenCoordinator:
             with self.engine.journal.read() as db:
                 portfolio_history = None
                 if self.engine.portfolio_policy is not None:
-                    from app.mixed.portfolio_execution import selection_account
-                    from app.mixed.portfolio_store import history
+                    from app.mixed.portfolio_execution import selection_snapshot
 
-                    account = selection_account(self.engine, db, scan_at)
-                    portfolio_history = history(
-                        self.engine, db, self.engine.portfolio_policy, scan_at
-                    )
+                    account, portfolio_history, _ = selection_snapshot(self.engine, db, scan_at)
                 else:
                     account = self.engine._account(db, scan_at)
             candidates, rejections = [], {}

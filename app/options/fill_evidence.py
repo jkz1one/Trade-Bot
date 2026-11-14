@@ -5,7 +5,7 @@ from datetime import timedelta
 from decimal import ROUND_CEILING, ROUND_FLOOR
 
 from app.options.models import paper_market_evidence
-from app.options.engine import fingerprint
+from app.options.evidence import fingerprint
 from app.options.governor import _fresh, _tick_price
 
 

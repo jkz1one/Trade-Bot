@@ -388,3 +388,41 @@ def test_paid_entry_admission_reads_original_charge_history_once_in_its_transact
         assert len(reads) == 1 and venue.submit_count == 0
         with c.engine.journal.read() as db:
             assert db.execute("SELECT COUNT(*) FROM execution_model_calls WHERE cost IS NOT NULL").fetchone()[0] == 1
+
+
+def test_option_shortlist_reads_charge_history_once_per_selection_snapshot(tmp_path, monkeypatch):
+    from app.mixed import paid_costs
+    from collections import Counter
+
+    with owner(tmp_path, monkeypatch, mode="HOLD", portfolio=True) as (c, venue, _, _):
+        original = paid_costs.records
+        reads = Counter()
+        active = False
+        quote_plan = c.quote_plan
+
+        def planned(*args, **kwargs):
+            nonlocal active
+            result = quote_plan(*args, **kwargs)
+            active = True
+            return result
+
+        def counted(db, policy):
+            if active:
+                reads[db] += 1
+            return original(db, policy)
+
+        from app.mixed import selection
+        collect = selection.collect
+
+        def begin_stock_scan(*args, **kwargs):
+            nonlocal active
+            active = False
+            return collect(*args, **kwargs)
+
+        monkeypatch.setattr(c, "quote_plan", planned)
+        monkeypatch.setattr(selection, "collect", begin_stock_scan)
+        monkeypatch.setattr(paid_costs, "records", counted)
+        result = asyncio.run(c.cycle(stock_frame()))
+        assert result["entries"][0]["reason"] == "ENTRY_MODEL_HOLD_OR_REJECTED"
+        assert list(reads.values()) == [1]
+        assert venue.submit_count == 0

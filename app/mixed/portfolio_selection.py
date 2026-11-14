@@ -2,7 +2,7 @@
 
 from app.execution.engine import ExecutionBlocked
 from app.mixed.accounting import reconstruct
-from app.mixed.portfolio_protection import entry_guard
+from app.mixed.portfolio_protection import _verify_entry_guards
 from app.mixed.portfolio_store import history
 
 
@@ -48,7 +48,9 @@ async def cycle(c, frame, *, _protected_epoch=None):
                     status = "HELD" if projected.ledger.positions else "HOLD"
                     reason = "PLAY_CAPACITY"
                     break
-                entry_guard(c.engine, db, c.engine.portfolio_policy, c.now())
+                _verify_entry_guards(
+                    c.engine, db, c.engine.portfolio_policy, projected.ledger.positions, c.now()
+                )
                 protected_epoch = c.engine._epoch(db)
         except ExecutionBlocked as exc:
             status, reason = "HOLD", str(exc)
