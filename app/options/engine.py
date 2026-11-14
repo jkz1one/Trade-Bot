@@ -467,6 +467,7 @@ class OptionExecution:
         entry_time_protection=None,
         scope_entry=None,
         play_id=None,
+        _db=None,
     ):
         if self.portfolio_policy is not None:
             from app.mixed.portfolio_options import prepare
@@ -488,6 +489,7 @@ class OptionExecution:
                 entry_result=entry_result,
                 target_exit_stage=target_exit_stage,
                 scope_entry=scope_entry,
+                _db=_db,
             )
         if play_id is not None:
             raise ValueError("Portfolio identity requires explicit enrollment")
@@ -578,7 +580,7 @@ class OptionExecution:
             inputs["scope_entry"] = scope_entry.model_dump(mode="json")
             bound_inputs["scope_entry"] = scope_entry
         digest = fingerprint(bound_inputs)
-        with self.journal.write() as db:
+        with nullcontext(_db) if _db is not None else self.journal.write() as db:
             self._control(db)
             old = db.execute(
                 "SELECT * FROM execution_option_decisions WHERE source_key=?", (source_key,)

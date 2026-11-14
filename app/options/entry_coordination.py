@@ -265,19 +265,21 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
                 c.engine, db, key, request, result, quote, underlying, c.now()
             )
         evidence["entry_review"] = review.model_dump(mode="json")
-        c._pending_evidence(key, evidence)
     if review.outcome != "ELIGIBLE":
         return c._finish(key, {**evidence, "status": "HOLD", "reason": ";".join(review.reasons)})
-    prepared = c.engine.prepare(
-        key,
-        review.proposal,
-        quote,
-        underlying,
-        now=c.now(),
-        origin="MODEL",
-        entry_request=request,
-        entry_result=result,
-    )
+    # Native admission rechecks the original review inside this fenced write.
+    # Commit the evidence and its reservation before starting any dispatch.
+    try:
+        with c.engine.journal.write() as db:
+            c._store_pending_evidence(db, key, evidence)
+            prepared = c.engine.prepare(
+                key, review.proposal, quote, underlying, now=c.now(),
+                origin="MODEL", entry_request=request, entry_result=result, _db=db,
+            )
+    except Exception:
+        # The reservation rolled back. Keep the review with the settled model reply.
+        c._pending_evidence(key, evidence)
+        raise
     evidence["prepared"] = prepared
     if prepared["status"] != "PREPARED":
         return c._finish(

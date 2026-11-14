@@ -30,6 +30,44 @@ def test_portfolio_entry_uses_one_original_paid_receipt_and_native_dispatch(
         assert len(calls) == 1 and Decimal(calls[0]["cost"]) > 0
 
 
+@pytest.mark.parametrize("portfolio", [False, True])
+@pytest.mark.parametrize("fault", [False, True])
+def test_paid_option_review_and_reservation_share_commit_or_retain_review(tmp_path, monkeypatch, portfolio, fault):
+    with owner(tmp_path, monkeypatch, choice="OPTION", portfolio=portfolio) as (c, venue, _, _state):
+        journal = c.engine.journal
+        orders = "execution_portfolio_orders" if portfolio else "execution_orders"
+        if fault:
+            with journal.write() as db:
+                db.execute(f"CREATE TRIGGER reject_entry BEFORE INSERT ON {orders} BEGIN "
+                           "SELECT RAISE(ABORT,'synthetic reservation failure'); END")
+        write = journal.write
+        review_commits = []
+
+        @contextmanager
+        def observe():
+            statements = []
+            with write() as db:
+                db.set_trace_callback(statements.append)
+                yield db
+            if any("UPDATE execution_option_opportunities SET result_json" in sql and
+                   '"entry_review"' in sql for sql in statements):
+                review_commits.append(any(f"INSERT INTO {orders}" in sql for sql in statements))
+
+        monkeypatch.setattr(journal, "write", observe)
+        asyncio.run(c.cycle(stock_frame()))
+        with journal.read() as db:
+            stored = json.loads(db.execute("SELECT result_json FROM execution_option_opportunities").fetchone()[0])
+            assert db.execute("SELECT COUNT(*) FROM execution_model_calls WHERE cost IS NOT NULL").fetchone()[0] == 1
+            assert db.execute(f"SELECT COUNT(*) FROM {orders}").fetchone()[0] == int(not fault)
+        assert stored["entry_review"]["outcome"] == "ELIGIBLE"
+        assert review_commits == [not fault]
+        assert venue.submit_count == int(not fault)
+        if fault:
+            assert stored["reason"] == "DEGEN_CYCLE_FAILED"
+            asyncio.run(c.cycle(stock_frame()))
+            assert venue.submit_count == 0
+
+
 @pytest.mark.parametrize("fault", [False, True])
 def test_original_model_reply_commits_with_usage_or_survives_its_rollback(tmp_path, monkeypatch, fault):
     with owner(tmp_path, monkeypatch, mode="HOLD", portfolio=True) as (c, venue, _times, _state):
