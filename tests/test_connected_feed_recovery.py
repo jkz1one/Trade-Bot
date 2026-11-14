@@ -1,6 +1,8 @@
 """Native timeout/recovery integration; no provider, model, or brokerage calls."""
 import asyncio
 import json
+import sqlite3
+from contextlib import closing, contextmanager
 from datetime import timedelta
 
 import pytest
@@ -11,6 +13,63 @@ from test_robinhood_read_mapping import AT, schemas as schemas  # noqa: F401
 from app.mixed.connected_runtime import FlatFeedRecovery, run
 from app.mixed.continuous_feed import ContinuousFeed
 from app.options.runtime_cli import existing_runtime
+
+
+def test_healthy_recovery_poll_preserves_restore_generation_and_checks_authority(tmp_path, schemas):
+    args, _, _ = enrolled(tmp_path, schemas)
+    with existing_runtime(args[0], clock=lambda: AT) as (runtime, _):
+        engine = runtime.c.engine
+        journal = engine.journal
+        with journal.read() as db:
+            assert not engine._control(db)['halted']
+            generation = runtime._bound(db)['generation']
+            revision = journal.revision(db)
+        authority = journal.enable_restore_fence(now=AT)
+        recovery = FlatFeedRecovery(2, generation, AT, start_revision=revision)
+        for _ in range(2):
+            assert not recovery.observe(runtime, AT)
+        with journal.read(verify_restore=True) as db:
+            observed = db.execute('SELECT generation FROM execution_restore_binding').fetchone()[0]
+            assert observed == authority['generation']
+            assert journal.revision(db) == revision
+        with closing(sqlite3.connect(journal.path)) as changed, changed:
+            changed.execute("UPDATE execution_control SET halt_reason='unverified'")
+        with pytest.raises(ValueError, match='RESTORE'):
+            recovery.observe(runtime, AT)
+        assert recovery.used == 0
+
+
+def test_operator_halt_between_recovery_read_and_write_fences_the_allowance(tmp_path, schemas, monkeypatch):
+    args, _, _ = enrolled(tmp_path, schemas)
+    with existing_runtime(args[0], clock=lambda: AT) as (runtime, _):
+        engine = runtime.c.engine
+        journal = engine.journal
+        with journal.write() as db:
+            generation = runtime._bound(db)['generation']
+            revision = journal.revision(db)
+            engine._halt(db, 'OPTION_RUNTIME_FEED_UNAVAILABLE', AT)
+            db.execute("UPDATE execution_option_runtime SET status='BLOCKED',"
+                       "reason='OPTION_RUNTIME_FEED_UNAVAILABLE'")
+        writer = journal.write
+
+        @contextmanager
+        def operator_then_writer():
+            with writer() as db:
+                engine._halt(db, 'OPERATOR_HALT', AT)
+                engine._halt(db, 'OPTION_RUNTIME_FEED_UNAVAILABLE', AT)
+            with writer() as db:
+                yield db
+
+        monkeypatch.setattr(journal, 'write', operator_then_writer)
+        recovery = FlatFeedRecovery(2, generation, AT, start_revision=revision)
+        assert not recovery.observe(runtime, AT)
+        assert recovery.fenced and recovery.used == 0 and recovery.halt is None
+        with journal.read(verify_restore=True) as db:
+            assert engine._control(db)['halted']
+            resumed = db.execute(
+                "SELECT count(*) FROM execution_events WHERE kind='OPTION_REVIEWED_RESUME'"
+            ).fetchone()[0]
+            assert resumed == 0
 
 
 @pytest.mark.parametrize('maximum', [0, 1, 3])

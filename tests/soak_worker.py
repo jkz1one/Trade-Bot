@@ -149,7 +149,7 @@ def seed_capacity(journal, mib):
         return db.execute("SELECT COUNT(*) FROM execution_runtime_timings").fetchone()[0] - before
 
 
-def run(output, seconds, seed_mib):
+def run(output, seconds, seed_mib, *, max_feed_recoveries=0):
     from types import SimpleNamespace
 
     from app.options import engine as engine_module
@@ -219,6 +219,7 @@ def run(output, seconds, seed_mib):
         "memory_enforcement": "sampled aggregate RSS ceiling; not a kernel cgroup",
         "memory_limit_bytes": 1024**3,
         "logical_cpus": cpu_count,
+        "max_feed_recoveries": max_feed_recoveries,
         "native_snapshot_calls": 0,
         "native_snapshot_failures": 0,
         "native_snapshot_max_seconds": 0,
@@ -352,7 +353,7 @@ def run(output, seconds, seed_mib):
                 reader_uid=os.getuid(),
                 reader_gid=os.getgid(),
                 resume_flat_reviewed_revision=revision,
-                max_feed_recoveries=0,
+                max_feed_recoveries=max_feed_recoveries,
             )
         )
         app = create_app(
@@ -408,7 +409,8 @@ def run(output, seconds, seed_mib):
         finally:
             stop.set()
             try:
-                await asyncio.wait_for(task, 60)
+                outcome = await asyncio.wait_for(task, 60)
+                metrics["feed_recoveries"] = outcome["feed_recoveries"]
             finally:
                 metrics["worker_window_cpu"] = cpu_window(cpu_start, cpu_sample(), cpu_count)
         metrics["elapsed_seconds"] = time.monotonic() - started[0]

@@ -61,8 +61,10 @@ def validate(output, seconds, seed_mib):
     }
 
 
-def run(output, seconds, seed_mib, *, cpus=1):
+def run(output, seconds, seed_mib, *, cpus=1, max_feed_recoveries=0):
     identity = validate(output, seconds, seed_mib)
+    if type(max_feed_recoveries) is not int or not 0 <= max_feed_recoveries <= 3:
+        raise ValueError("FEED_RECOVERY_ALLOWANCE_MUST_BE_0_TO_3")
     available = sorted(os.sched_getaffinity(0))
     if type(cpus) is not int or cpus not in (1, 2) or len(available) < cpus:
         raise ValueError("REQUESTED_CPU_AFFINITY_UNAVAILABLE")
@@ -74,6 +76,7 @@ def run(output, seconds, seed_mib, *, cpus=1):
         **identity,
         "seconds": seconds,
         "seed_mib": seed_mib,
+        "max_feed_recoveries": max_feed_recoveries,
         "worker_cpu_affinity": affinity,
         "network": "ISOLATED",
         "host_acceptance": "UNVERIFIED",
@@ -104,7 +107,7 @@ def run(output, seconds, seed_mib, *, cpus=1):
         + str(seconds)
         + ","
         + str(seed_mib)
-        + ")"
+        + f",max_feed_recoveries={max_feed_recoveries})"
     )
     env = {key: os.environ[key] for key in ("PATH", "LANG", "LC_ALL") if key in os.environ}
     env.update(
@@ -167,9 +170,12 @@ if __name__ == "__main__":
     parser.add_argument("--seed-mib", type=int, default=68)
     parser.add_argument("--cpus", type=int, choices=(1, 2), default=1,
                         help="Logical CPUs for the worker and children (nominal profile: 1)")
+    parser.add_argument("--max-feed-recoveries", type=int, choices=range(4), default=0,
+                        help="Reviewed flat feed recoveries in this disposable run")
     args = parser.parse_args()
     try:
-        value = run(args.output, args.seconds, args.seed_mib, cpus=args.cpus)
+        value = run(args.output, args.seconds, args.seed_mib, cpus=args.cpus,
+                    max_feed_recoveries=args.max_feed_recoveries)
     except (OSError, ValueError) as exc:
         value = {"status": "UNAVAILABLE", "reason": str(exc), "live_enabled": False}
     print(json.dumps(value, sort_keys=True))

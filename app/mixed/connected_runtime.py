@@ -398,6 +398,26 @@ class FlatFeedRecovery:
         self.used, self.halt, self.first = 0, None, None
         self.start_revision, self.fenced = start_revision, False
 
+    def _feed_halt_pending(self, runtime, db, current):
+        if current['generation'] != self.generation:
+            raise ValueError("Feed recovery cannot cross runtime generations")
+        # A later feed error can overwrite the control row's halt reason.
+        # Retained operator/other halt evidence still vetoes this allowance.
+        if db.execute(
+            "SELECT 1 FROM execution_events WHERE sequence>? AND ("
+            "(kind='MANUAL_HALT' AND json_extract(payload,'$.reason')!='OPTION_RUNTIME_FEED_UNAVAILABLE') "
+            "OR (kind='OPTIONS_OPERATOR_COMMAND' AND json_extract(payload,'$.result.status')='APPLIED' "
+            "AND json_extract(payload,'$.command.action') IN ('HALT','REVOKE_KEY'))) LIMIT 1",
+            (self.start_revision,),
+        ).fetchone():
+            self.fenced = True
+            return False
+        control = runtime.c.engine._control(db)
+        if control['halted'] and control['halt_reason'] == 'OPTION_RUNTIME_FEED_UNAVAILABLE':
+            return True
+        self.halt, self.first = None, None
+        return False
+
     def observe(self, runtime, now):
         if self.used >= self.maximum or self.fenced:
             return False
@@ -408,24 +428,13 @@ class FlatFeedRecovery:
         from app.options.governor import _fresh
 
         engine = runtime.c.engine
+        with engine.journal.read(verify_restore=True) as db:
+            if not self._feed_halt_pending(runtime, db, runtime._bound(db)):
+                return False
+        # A recovery can act only on evidence checked again under the owner writer.
         with engine.journal.write() as db:
             current = runtime._bound(db)
-            if current['generation'] != self.generation:
-                raise ValueError("Feed recovery cannot cross runtime generations")
-            # A later feed error can overwrite the control row's halt reason.
-            # Retained operator/other halt evidence must still veto this allowance.
-            if db.execute(
-                "SELECT 1 FROM execution_events WHERE sequence>? AND ("
-                "(kind='MANUAL_HALT' AND json_extract(payload,'$.reason')!='OPTION_RUNTIME_FEED_UNAVAILABLE') "
-                "OR (kind='OPTIONS_OPERATOR_COMMAND' AND json_extract(payload,'$.result.status')='APPLIED' "
-                "AND json_extract(payload,'$.command.action') IN ('HALT','REVOKE_KEY'))) LIMIT 1",
-                (self.start_revision,),
-            ).fetchone():
-                self.fenced = True
-                return False
-            control = engine._control(db)
-            if not control['halted'] or control['halt_reason'] != 'OPTION_RUNTIME_FEED_UNAVAILABLE':
-                self.halt, self.first = None, None
+            if not self._feed_halt_pending(runtime, db, current):
                 return False
             event = db.execute("SELECT sequence,occurred_at FROM execution_events "
                                "WHERE kind='MANUAL_HALT' ORDER BY sequence DESC LIMIT 1").fetchone()
@@ -435,7 +444,7 @@ class FlatFeedRecovery:
             if self.halt is None or self.halt[0] != event['sequence']:
                 # Arm only while the native runtime itself reports the feed fault.
                 # A manually retained halt on an otherwise healthy runtime is not ours.
-                if current['status'] != 'BLOCKED' or current['reason'] != control['halt_reason']:
+                if current['status'] != 'BLOCKED' or current['reason'] != 'OPTION_RUNTIME_FEED_UNAVAILABLE':
                     return False
                 self.halt = (event['sequence'], current['feed_sequence'])
                 self.first = None

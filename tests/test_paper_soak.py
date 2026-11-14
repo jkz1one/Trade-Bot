@@ -82,6 +82,15 @@ def test_cpu_window_includes_reaped_child_and_excludes_setup(cpus, percent):
     }
 
 
+@pytest.mark.parametrize("allowance", [-1, 4, True, 1.5])
+def test_invalid_recovery_allowance_leaves_output_absent(tmp_path, monkeypatch, allowance):
+    monkeypatch.setattr(soak, "validate", lambda *_: {})
+    output = tmp_path / "new"
+    with pytest.raises(ValueError, match="FEED_RECOVERY_ALLOWANCE"):
+        soak.run(output, 90, 68, max_feed_recoveries=allowance)
+    assert not output.exists()
+
+
 def test_scan_coverage_needs_both_original_evaluations_in_the_expected_slot():
     from soak_worker import BASE, decision_coverage
 
