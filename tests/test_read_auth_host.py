@@ -50,9 +50,11 @@ def test_check_is_bounded_schema_only_and_projects_safe_results(host, monkeypatc
     assert args[-2:] == ("--timeout-seconds", "30")
     assert "app.options.read_cli" in args and "discover" in args and "-it" not in args
     mounts = [args[i + 1] for i, value in enumerate(args) if value == "--mount"]
-    assert len(mounts) == 3
-    assert not any("/state" in value or "/secrets" in value or "/exports" in value for value in mounts)
-    assert any(value.endswith("/auth/discovery.json,readonly") for value in mounts)
+    assert sorted(mounts) == sorted([
+        f"type=bind,src={host.AUTH},dst=/auth",
+        f"type=bind,src={host.AUTH / 'discovery.json'},dst=/auth/discovery.json,readonly",
+        f"type=bind,src={result['private_directory']},dst=/out",
+    ])
     assert result["market_reads"] == result["model_calls"] == 0
     assert calls[-1][0] == ("stop", "--time", "5", args[args.index("--name") + 1])
 

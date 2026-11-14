@@ -144,7 +144,8 @@ def test_cancelled_history_drains_before_lease_release(tmp_path, schemas, monkey
         feed.close()
 
 
-@pytest.mark.parametrize('seed_mib', [0, 68], ids=['small', 'loaded'])
+@pytest.mark.parametrize('seed_mib', [0, 112 if os.environ.get('TRADE_BOT_PROTECTION_DENSITY') == 'extended' else 68],
+                         ids=['small', 'loaded'])
 @pytest.mark.parametrize('asset', ['STOCK', 'OPTION'])
 def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, monkeypatch, seed_mib, asset):
     from types import SimpleNamespace
@@ -270,7 +271,8 @@ def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, m
                     breach_at = time.monotonic()
                     send(market(breach=True))
                     await r.tick()
-                    elapsed = time.monotonic() - started_at
+                    tick_finished = time.monotonic()
+                    elapsed = tick_finished - started_at
                     assert venue.submit_count == 2 and len(acknowledgements) == 1
                     ack_seconds = acknowledgements[0] - breach_at
                     assert not r.task.done() and not history_task.done() and not display_task.done()
@@ -320,12 +322,16 @@ def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, m
                         'synthetic': True, 'asset': asset, 'provider_calls': False, 'model_service_calls': False,
                         'seed_mib': seed_mib, 'journal_bytes_before_contention': initial_bytes,
                         'exit_submitted_while_all_waiting': True, 'exit_seconds': elapsed,
+                        'contention_setup_seconds': breach_at - started_at,
                         'breach_to_native_ack_seconds': ack_seconds,
+                        'native_ack_to_tick_completion_seconds': tick_finished - acknowledgements[0],
+                        'breach_to_tick_completion_seconds': tick_finished - breach_at,
                         'exit_filled_from_later_packet_before_advice_or_history_returned': True,
                         'report_snapshot_open_during_exit': True,
                         'native_submissions': venue.submit_count, 'accounting': view['accounting'],
                         'held_positions': len(view['positions']), 'runtime_timing': result}, indent=2))
-                assert 0 <= ack_seconds <= elapsed and elapsed < 5, (ack_seconds, elapsed)
+                assert started_at <= breach_at <= acknowledgements[0] <= tick_finished
+                assert elapsed < 5, (ack_seconds, elapsed)
             asyncio.run(exercise())
     finally:
         history_release.set()
