@@ -1,14 +1,17 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.210. November 14 PAPER timing and position-protection checkpoint.
+Version 1.211. November 14 offline PAPER timing and capacity.
 
-On the branch, `0d79a3a` completes a simulated entry and protective exit in
-both the 90-second and 335-second runs on a 72,822,784-byte journal and one CPU.
-The longer run completed two five-minute decision slots. In a separate loaded
-test the owner submitted its protective exit in 3.37 seconds while history,
-advice and display publication waited with a report open. Full-duration capacity,
-month-growth and connected performance remain open. The host runs `39d8e48`.
-[Run evidence](PAPER_LOADED_HANDOFF_20261114_PROOF.json).
+Branch implementation `42648c6` completed the 120 MB simulated entry and
+protective exit on one CPU in two 90-second runs and two 335-second runs.
+The original quote was 6.01–6.84 seconds old at admission across these four
+fixtures. A deliberately competing worker missed its first entry window and
+finished its short run holding one simulated position. The five-second
+admission target and sustained capacity remain open. The separate held-position
+test submitted its protective exit in 4.10 seconds with advice, history and
+dashboard work blocked. The sampled calendar covers 22 sessions including the
+early close. The connected host runs `39d8e48`.
+[Timing, capacity and test evidence](PAPER_CAPACITY_20261114_PROOF.json).
 
 ### November 14 Robinhood schema review and verified host capture
 

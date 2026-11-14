@@ -88,6 +88,15 @@ next action. Do not replace missing evidence with a date estimate.
   age at dispatch fell from 8.91 seconds on the loaded baseline to 7.32 and
   6.83 seconds in the final 90- and 335-second runs. Full-session timing and
   capacity profiling remain under A6. [Loaded run evidence](PAPER_LOADED_HANDOFF_20261114_PROOF.json).
+  `5f5f96c` measures original approved entry source age, receive lag and local
+  time from matched reservation evidence. At 120 MB normal one- and two-CPU
+  short runs reached admission at 6.55 and 6.30 seconds. The repeated one-CPU
+  deadline miss was subsequently recovered. Terminal child progress is retained
+  even when the child finishes before the parent observes spawn.
+  `42648c6` removes a scheduler import from the native venue clock check.
+  Two short and two two-slot one-CPU runs completed the known lifecycle.
+  Approved source ages ranged from 6.01 to 6.84 seconds across the four.
+  [Comparable runs](PAPER_CAPACITY_20261114_PROOF.json).
 - [ ] **A3 — Measured repairs:** reproduce and close the actual bottlenecks with
   before/after evidence; decide connection reuse from measurements and validate
   its isolation, refresh ownership, deadlines and cleanup if adopted.
@@ -125,6 +134,12 @@ next action. Do not replace missing evidence with a date estimate.
   claims. [Loaded protection evidence](PAPER_LOADED_HANDOFF_20261114_PROOF.json).
   Sustained full-duration resource-profile proof remains under A6. Unverified
   startup exposure retains its authority/accounting rejection boundary.
+  At 119,623,680 bytes the combined blockage case submitted the stock exit
+  in 4.53 seconds on one CPU. The final account was verified flat. A native
+  snapshot crossed by a paid model charge now requests fresh reconciliation.
+  The regression preserves the settled charge and keeps the owner running.
+  On `42648c6` the same contention test submitted the exit in 4.10 seconds.
+  [Protection and accounting evidence](PAPER_CAPACITY_20261114_PROOF.json).
 - [ ] **A5 — Failure/restart matrix:** exercise every condition in A's matrix;
   preserve accounting, unknown outcomes and bounded recovery without duplicates.
 - [ ] **A6 — Duration and capacity:** pass accelerated calendar/multi-day cases
@@ -133,11 +148,14 @@ next action. Do not replace missing evidence with a date estimate.
   The [November 12 preflight](PAPER_DURATION_CAPACITY.md) passed the small-journal
   lifecycle and exposed a 73 MB dispatch timeout. `0d79a3a` passes that short
   loaded preflight and a two-slot run with the same original limits and restore
-  fence. The second slot recorded `ENTRY_MODEL_RISK_PAUSE`. Next run the full
-  21,480 seconds and measure growth on representative multi-session history.
+  fence. The second slot recorded `ENTRY_MODEL_RISK_PAUSE`. The full
+  21,480-second wall-clock test started on that build. The accelerated calendar
+  completed 22 trading sessions, including the early close, on one continuing
+  owner with eight sampled packets per session. The denser replay and nominal
+  duration measurement are recorded in the current capacity evidence.
   The short tests use labeled padding and sampled aggregate RSS. Host cgroup
   enforcement and connected-session effectiveness still require separate evidence.
-  [Short loaded runs](PAPER_LOADED_HANDOFF_20261114_PROOF.json).
+  [Short loaded runs](PAPER_LOADED_HANDOFF_20261114_PROOF.json). [Current capacity evidence](PAPER_CAPACITY_20261114_PROOF.json).
 
 ### B — Operating dashboard and control
 

@@ -1,0 +1,1158 @@
+{
+  "version": "paper-offline-capacity-20261114-v1",
+  "date_utc": "2026-11-14",
+  "branch": "slice2/robinhood-read-shadow",
+  "host_release": "39d8e48c5f4bfefeed7d5b05682edb733ddb8e8a",
+  "initial_branch": "293e68e312fecf23e1d76bb9f357de2b50f221a5",
+  "first_implementation": "1e67fd7945a8d9fe0aecdc07f3cd5be049df3bb5",
+  "followup_implementation": "5f5f96c3f70ad5d10f5e243c5152f088b8807dd8",
+  "native_implementation": "42648c675f3dc6b186f2deada4c6b9e8e154fea7",
+  "environment": {
+    "market_inputs": "synthetic",
+    "model_responses": "scripted",
+    "venue": "durable local PAPER child",
+    "network": "loopback only",
+    "live_enabled": false,
+    "connected_account_calls": 0,
+    "external_provider_calls": 0,
+    "external_model_calls": 0,
+    "rss_limit_bytes": 1073741824,
+    "memory_enforcement": "sampled process tree",
+    "final_app_files": 332,
+    "runtime_dependency_pins": 60
+  },
+  "trials": {
+    "baseline_293e68e": [
+      {
+        "logical_cpus": 1,
+        "planned_seconds": 90,
+        "status": "FAILED",
+        "failure": "Known fixture lifecycle did not complete",
+        "peak_tree_rss_bytes": 530956288,
+        "cpu_user_seconds": 79.687889,
+        "cpu_system_seconds": 9.330513,
+        "elapsed_seconds": 92.64375888500035,
+        "children_reaped": true,
+        "native_snapshot_calls": 13,
+        "native_snapshot_failures": 0,
+        "seed_database_bytes": 119635968,
+        "entry_model_calls": 0,
+        "runtime_cycles": 1,
+        "approved_entries": 0,
+        "approved_entry_source_age_seconds": null,
+        "approved_entry_receive_lag_seconds": null,
+        "native_accept_failures": 0,
+        "attempt_recovery": {
+          "matched_in_run": 0,
+          "unresolved_at_last_snapshot": 0
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 0,
+          "exit_fills": 0,
+          "completed_round_trips": 0,
+          "carry_in_exits": 0
+        },
+        "final_accounting": null,
+        "durable_order_statuses": [],
+        "report_sha256": "bb28a1b8d862b4b9fc6f14c8c405a98ee653607543f1892ce9c785d1605ca163",
+        "application_manifest_sha256": "fadf8df298f62be5a21f08039bb54c797ffe12c5616b1fcb114b70ee6f201bd9"
+      },
+      {
+        "logical_cpus": 2,
+        "planned_seconds": 90,
+        "status": "FAILED",
+        "failure": "Known fixture lifecycle did not complete",
+        "peak_tree_rss_bytes": 526741504,
+        "cpu_user_seconds": 80.703635,
+        "cpu_system_seconds": 10.48456,
+        "elapsed_seconds": 92.48066232699966,
+        "children_reaped": true,
+        "native_snapshot_calls": 13,
+        "native_snapshot_failures": 0,
+        "seed_database_bytes": 119635968,
+        "entry_model_calls": 0,
+        "runtime_cycles": 1,
+        "approved_entries": 0,
+        "approved_entry_source_age_seconds": null,
+        "approved_entry_receive_lag_seconds": null,
+        "native_accept_failures": 0,
+        "attempt_recovery": {
+          "matched_in_run": 0,
+          "unresolved_at_last_snapshot": 0
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 0,
+          "exit_fills": 0,
+          "completed_round_trips": 0,
+          "carry_in_exits": 0
+        },
+        "final_accounting": null,
+        "durable_order_statuses": [],
+        "report_sha256": "fa5112cc57b2d3457cd07e23161c97ec7239fd61bf10d7e9d804a05f21e00b73",
+        "application_manifest_sha256": "fadf8df298f62be5a21f08039bb54c797ffe12c5616b1fcb114b70ee6f201bd9"
+      }
+    ],
+    "first_implementation_1e67fd7": [
+      {
+        "logical_cpus": 1,
+        "planned_seconds": 90,
+        "status": "PASSED",
+        "peak_tree_rss_bytes": 306327552,
+        "cpu_user_seconds": 51.766206,
+        "cpu_system_seconds": 9.038245,
+        "elapsed_seconds": 91.55069866899976,
+        "children_reaped": true,
+        "native_snapshot_calls": 43,
+        "native_snapshot_failures": 0,
+        "seed_database_bytes": 72822784,
+        "entry_model_calls": 1,
+        "runtime_cycles": 1,
+        "approved_entries": 1,
+        "approved_entry_source_age_seconds": 4.070994,
+        "approved_entry_receive_lag_seconds": 1.0,
+        "native_accept_failures": 0,
+        "attempt_recovery": {
+          "matched_in_run": 0,
+          "unresolved_at_last_snapshot": 0
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": "VERIFIED_FLAT",
+        "durable_order_statuses": [
+          [
+            "BUY",
+            "FILLED"
+          ],
+          [
+            "SELL",
+            "FILLED"
+          ]
+        ],
+        "report_sha256": "997654805b14fe54c5449c04a12e0b2b3a675512a838e80c8d0ad18191deaf0f",
+        "application_manifest_sha256": "69ae442640ada68ae11d524a03c77f5b200b0916a3f2b00bc9aa193099c85368"
+      },
+      {
+        "logical_cpus": 1,
+        "planned_seconds": 90,
+        "status": "PASSED",
+        "peak_tree_rss_bytes": 304377856,
+        "cpu_user_seconds": 62.008963,
+        "cpu_system_seconds": 11.22353,
+        "elapsed_seconds": 91.13926658799937,
+        "children_reaped": true,
+        "native_snapshot_calls": 32,
+        "native_snapshot_failures": 0,
+        "seed_database_bytes": 119635968,
+        "entry_model_calls": 1,
+        "runtime_cycles": 1,
+        "approved_entries": 1,
+        "approved_entry_source_age_seconds": 6.835859,
+        "approved_entry_receive_lag_seconds": 1.0,
+        "native_accept_failures": 0,
+        "attempt_recovery": {
+          "matched_in_run": 0,
+          "unresolved_at_last_snapshot": 0
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": "VERIFIED_FLAT",
+        "durable_order_statuses": [
+          [
+            "BUY",
+            "FILLED"
+          ],
+          [
+            "SELL",
+            "FILLED"
+          ]
+        ],
+        "report_sha256": "0fdad1660f4e28bac1d96f3755bf92a7b6ab00afafecbcd49c6c6887de3ff1fb",
+        "application_manifest_sha256": "69ae442640ada68ae11d524a03c77f5b200b0916a3f2b00bc9aa193099c85368"
+      },
+      {
+        "logical_cpus": 2,
+        "planned_seconds": 90,
+        "status": "PASSED",
+        "peak_tree_rss_bytes": 303931392,
+        "cpu_user_seconds": 62.093121,
+        "cpu_system_seconds": 12.503853,
+        "elapsed_seconds": 90.91167019300156,
+        "children_reaped": true,
+        "native_snapshot_calls": 32,
+        "native_snapshot_failures": 0,
+        "seed_database_bytes": 119635968,
+        "entry_model_calls": 1,
+        "runtime_cycles": 1,
+        "approved_entries": 1,
+        "approved_entry_source_age_seconds": 6.409062,
+        "approved_entry_receive_lag_seconds": 1.0,
+        "native_accept_failures": 0,
+        "attempt_recovery": {
+          "matched_in_run": 0,
+          "unresolved_at_last_snapshot": 0
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": "VERIFIED_FLAT",
+        "durable_order_statuses": [
+          [
+            "BUY",
+            "FILLED"
+          ],
+          [
+            "SELL",
+            "FILLED"
+          ]
+        ],
+        "report_sha256": "6d6834ef88abb6cc87592515a56ebaa5fbe7fc406143281a4e8694626195f5e6",
+        "application_manifest_sha256": "69ae442640ada68ae11d524a03c77f5b200b0916a3f2b00bc9aa193099c85368"
+      },
+      {
+        "logical_cpus": 1,
+        "planned_seconds": 90,
+        "status": "FAILED",
+        "failure": "Native acceptance failure",
+        "peak_tree_rss_bytes": 306765824,
+        "cpu_user_seconds": 60.679269,
+        "cpu_system_seconds": 13.376474,
+        "elapsed_seconds": 92.34941160299968,
+        "children_reaped": true,
+        "native_snapshot_calls": 31,
+        "native_snapshot_failures": 0,
+        "seed_database_bytes": 119635968,
+        "entry_model_calls": 1,
+        "runtime_cycles": 1,
+        "approved_entries": 1,
+        "approved_entry_source_age_seconds": 6.960344,
+        "approved_entry_receive_lag_seconds": 1.0,
+        "native_accept_failures": 1,
+        "attempt_recovery": {
+          "matched_in_run": 1,
+          "unresolved_at_last_snapshot": 0
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": null,
+        "durable_order_statuses": [
+          [
+            "BUY",
+            "FILLED"
+          ],
+          [
+            "SELL",
+            "FILLED"
+          ]
+        ],
+        "report_sha256": "72c4f213f73f20424cdd057584b977bca24337b6aab76dcba4cad61a95ada215",
+        "application_manifest_sha256": "69ae442640ada68ae11d524a03c77f5b200b0916a3f2b00bc9aa193099c85368"
+      },
+      {
+        "logical_cpus": 1,
+        "planned_seconds": 335,
+        "status": "FAILED",
+        "failure": "Native acceptance failure",
+        "peak_tree_rss_bytes": 325902336,
+        "cpu_user_seconds": 202.247096,
+        "cpu_system_seconds": 43.198222,
+        "elapsed_seconds": 337.883691604,
+        "children_reaped": true,
+        "native_snapshot_calls": 129,
+        "native_snapshot_failures": 0,
+        "seed_database_bytes": 119635968,
+        "entry_model_calls": 1,
+        "runtime_cycles": 1,
+        "approved_entries": 1,
+        "approved_entry_source_age_seconds": 6.875458,
+        "approved_entry_receive_lag_seconds": 1.0,
+        "native_accept_failures": 1,
+        "attempt_recovery": {
+          "matched_in_run": 1,
+          "unresolved_at_last_snapshot": 0
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": null,
+        "durable_order_statuses": [
+          [
+            "BUY",
+            "FILLED"
+          ],
+          [
+            "SELL",
+            "FILLED"
+          ]
+        ],
+        "report_sha256": "d6a901453866884c0518528523262c4f5c827e6083a2d3f44c82c01d0173df65",
+        "application_manifest_sha256": "69ae442640ada68ae11d524a03c77f5b200b0916a3f2b00bc9aa193099c85368"
+      },
+      {
+        "logical_cpus": 2,
+        "planned_seconds": 335,
+        "status": "PASSED",
+        "peak_tree_rss_bytes": 330539008,
+        "cpu_user_seconds": 208.014365,
+        "cpu_system_seconds": 43.506113,
+        "elapsed_seconds": 336.08321941300164,
+        "children_reaped": true,
+        "native_snapshot_calls": 130,
+        "native_snapshot_failures": 0,
+        "seed_database_bytes": 119635968,
+        "entry_model_calls": 1,
+        "runtime_cycles": 2,
+        "approved_entries": 1,
+        "approved_entry_source_age_seconds": 6.477855,
+        "approved_entry_receive_lag_seconds": 1.0,
+        "native_accept_failures": 0,
+        "attempt_recovery": {
+          "matched_in_run": 0,
+          "unresolved_at_last_snapshot": 0
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": "VERIFIED_FLAT",
+        "durable_order_statuses": [
+          [
+            "BUY",
+            "FILLED"
+          ],
+          [
+            "SELL",
+            "FILLED"
+          ]
+        ],
+        "report_sha256": "e1b0956e30c7f77590e4baa802578ab7bb553d9b77e7a9ed28cbae0fb12cb333",
+        "application_manifest_sha256": "69ae442640ada68ae11d524a03c77f5b200b0916a3f2b00bc9aa193099c85368"
+      }
+    ],
+    "native_42648c6": [
+      {
+        "logical_cpus": 1,
+        "planned_seconds": 90,
+        "status": "PASSED",
+        "peak_tree_rss_bytes": 308240384,
+        "cpu_user_seconds": 57.58761,
+        "cpu_system_seconds": 14.968847,
+        "elapsed_seconds": 90.95172970299973,
+        "children_reaped": true,
+        "native_snapshot_calls": 32,
+        "native_snapshot_failures": 0,
+        "seed_database_bytes": 119635968,
+        "entry_model_calls": 1,
+        "runtime_cycles": 1,
+        "approved_entries": 1,
+        "approved_entry_source_age_seconds": 6.835712,
+        "approved_entry_receive_lag_seconds": 1.0,
+        "native_accept_failures": 0,
+        "attempt_recovery": {
+          "matched_in_run": 0,
+          "unresolved_at_last_snapshot": 0
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": "VERIFIED_FLAT",
+        "durable_order_statuses": [
+          [
+            "BUY",
+            "FILLED"
+          ],
+          [
+            "SELL",
+            "FILLED"
+          ]
+        ],
+        "report_sha256": "e1264f1a588feca8f14bf288e06cb9d9e9a9e1dbea2a220bc892703ccdd688fa",
+        "application_manifest_sha256": "ea4a998d5dd1a5cf5fa590b941dd3eb412b93e102929d0b7a72332e03cde385c"
+      },
+      {
+        "logical_cpus": 1,
+        "planned_seconds": 90,
+        "status": "PASSED",
+        "peak_tree_rss_bytes": 305541120,
+        "cpu_user_seconds": 58.306462,
+        "cpu_system_seconds": 15.074676,
+        "elapsed_seconds": 92.42142263200003,
+        "children_reaped": true,
+        "native_snapshot_calls": 32,
+        "native_snapshot_failures": 0,
+        "seed_database_bytes": 119635968,
+        "entry_model_calls": 1,
+        "runtime_cycles": 1,
+        "approved_entries": 1,
+        "approved_entry_source_age_seconds": 6.75201,
+        "approved_entry_receive_lag_seconds": 1.0,
+        "native_accept_failures": 0,
+        "attempt_recovery": {
+          "matched_in_run": 0,
+          "unresolved_at_last_snapshot": 0
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": "VERIFIED_FLAT",
+        "durable_order_statuses": [
+          [
+            "BUY",
+            "FILLED"
+          ],
+          [
+            "SELL",
+            "FILLED"
+          ]
+        ],
+        "report_sha256": "538cb1c1b317258c1de1ca79caa14b86e94cec7f701ed3be2bdf6a1f2254767e",
+        "application_manifest_sha256": "ea4a998d5dd1a5cf5fa590b941dd3eb412b93e102929d0b7a72332e03cde385c"
+      },
+      {
+        "logical_cpus": 2,
+        "planned_seconds": 90,
+        "status": "PASSED",
+        "peak_tree_rss_bytes": 302370816,
+        "cpu_user_seconds": 57.863757,
+        "cpu_system_seconds": 15.534511,
+        "elapsed_seconds": 91.1282046999986,
+        "children_reaped": true,
+        "native_snapshot_calls": 32,
+        "native_snapshot_failures": 0,
+        "seed_database_bytes": 119635968,
+        "entry_model_calls": 1,
+        "runtime_cycles": 1,
+        "approved_entries": 1,
+        "approved_entry_source_age_seconds": 6.759377,
+        "approved_entry_receive_lag_seconds": 1.0,
+        "native_accept_failures": 0,
+        "attempt_recovery": {
+          "matched_in_run": 0,
+          "unresolved_at_last_snapshot": 0
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": "VERIFIED_FLAT",
+        "durable_order_statuses": [
+          [
+            "BUY",
+            "FILLED"
+          ],
+          [
+            "SELL",
+            "FILLED"
+          ]
+        ],
+        "report_sha256": "9601ca466a58409e5ea02ac67c9a7f46a7ffa6655bd841a576e9b44d35a24f4b",
+        "application_manifest_sha256": "ea4a998d5dd1a5cf5fa590b941dd3eb412b93e102929d0b7a72332e03cde385c"
+      },
+      {
+        "logical_cpus": 1,
+        "planned_seconds": 335,
+        "status": "PASSED",
+        "peak_tree_rss_bytes": 339120128,
+        "cpu_user_seconds": 198.684686,
+        "cpu_system_seconds": 43.864096,
+        "elapsed_seconds": 336.28339895299905,
+        "children_reaped": true,
+        "native_snapshot_calls": 133,
+        "native_snapshot_failures": 0,
+        "seed_database_bytes": 119635968,
+        "entry_model_calls": 1,
+        "runtime_cycles": 2,
+        "approved_entries": 1,
+        "approved_entry_source_age_seconds": 6.011851,
+        "approved_entry_receive_lag_seconds": 1.0,
+        "native_accept_failures": 0,
+        "attempt_recovery": {
+          "matched_in_run": 0,
+          "unresolved_at_last_snapshot": 0
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": "VERIFIED_FLAT",
+        "durable_order_statuses": [
+          [
+            "BUY",
+            "FILLED"
+          ],
+          [
+            "SELL",
+            "FILLED"
+          ]
+        ],
+        "report_sha256": "7d9bb1bf900bd0c2d06c6992045a4d7430a42be3698881fcd55b7df0b0227d91",
+        "application_manifest_sha256": "ea4a998d5dd1a5cf5fa590b941dd3eb412b93e102929d0b7a72332e03cde385c"
+      },
+      {
+        "logical_cpus": 1,
+        "planned_seconds": 335,
+        "status": "PASSED",
+        "peak_tree_rss_bytes": 326254592,
+        "cpu_user_seconds": 197.875431,
+        "cpu_system_seconds": 47.5706,
+        "elapsed_seconds": 336.47549937999975,
+        "children_reaped": true,
+        "native_snapshot_calls": 132,
+        "native_snapshot_failures": 0,
+        "seed_database_bytes": 119635968,
+        "entry_model_calls": 1,
+        "runtime_cycles": 2,
+        "approved_entries": 1,
+        "approved_entry_source_age_seconds": 6.395892,
+        "approved_entry_receive_lag_seconds": 1.0,
+        "native_accept_failures": 0,
+        "attempt_recovery": {
+          "matched_in_run": 0,
+          "unresolved_at_last_snapshot": 0
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": "VERIFIED_FLAT",
+        "durable_order_statuses": [
+          [
+            "BUY",
+            "FILLED"
+          ],
+          [
+            "SELL",
+            "FILLED"
+          ]
+        ],
+        "report_sha256": "da63efe5a5a28925c79c63ad279eb2a9175d58f994f0a473a658105c17253620",
+        "application_manifest_sha256": "ea4a998d5dd1a5cf5fa590b941dd3eb412b93e102929d0b7a72332e03cde385c"
+      }
+    ],
+    "followup_5f5f96c": [
+      {
+        "logical_cpus": 1,
+        "planned_seconds": 90,
+        "status": "PASSED",
+        "peak_tree_rss_bytes": 345751552,
+        "cpu_user_seconds": 60.704967,
+        "cpu_system_seconds": 12.949528,
+        "elapsed_seconds": 91.38258839799892,
+        "children_reaped": true,
+        "native_snapshot_calls": 33,
+        "native_snapshot_failures": 0,
+        "seed_database_bytes": 119635968,
+        "entry_model_calls": 1,
+        "runtime_cycles": 1,
+        "approved_entries": 1,
+        "approved_entry_source_age_seconds": 6.549403,
+        "approved_entry_receive_lag_seconds": 1.0,
+        "native_accept_failures": 0,
+        "attempt_recovery": {
+          "matched_in_run": 0,
+          "unresolved_at_last_snapshot": 0
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": "VERIFIED_FLAT",
+        "durable_order_statuses": [
+          [
+            "BUY",
+            "FILLED"
+          ],
+          [
+            "SELL",
+            "FILLED"
+          ]
+        ],
+        "report_sha256": "b65a4098b31a5b2eb376eb62a5af87464dcd906c9058da19a1cc03ef01c34b8c",
+        "application_manifest_sha256": "63303dd93ef0ba1faccbd882863fbbc2c3ff719cfd6d1a95effb06a25c1c0595"
+      },
+      {
+        "logical_cpus": 2,
+        "planned_seconds": 90,
+        "status": "PASSED",
+        "peak_tree_rss_bytes": 305061888,
+        "cpu_user_seconds": 60.577084,
+        "cpu_system_seconds": 13.926067,
+        "elapsed_seconds": 90.85974155000076,
+        "children_reaped": true,
+        "native_snapshot_calls": 33,
+        "native_snapshot_failures": 0,
+        "seed_database_bytes": 119635968,
+        "entry_model_calls": 1,
+        "runtime_cycles": 1,
+        "approved_entries": 1,
+        "approved_entry_source_age_seconds": 6.29655,
+        "approved_entry_receive_lag_seconds": 1.0,
+        "native_accept_failures": 0,
+        "attempt_recovery": {
+          "matched_in_run": 0,
+          "unresolved_at_last_snapshot": 0
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": "VERIFIED_FLAT",
+        "durable_order_statuses": [
+          [
+            "BUY",
+            "FILLED"
+          ],
+          [
+            "SELL",
+            "FILLED"
+          ]
+        ],
+        "report_sha256": "82c56911582b274bd384a4cd461edfae1d29dcbb677ed3f256a63e7356d293b2",
+        "application_manifest_sha256": "63303dd93ef0ba1faccbd882863fbbc2c3ff719cfd6d1a95effb06a25c1c0595"
+      },
+      {
+        "logical_cpus": 1,
+        "planned_seconds": 335,
+        "status": "PASSED",
+        "peak_tree_rss_bytes": 344928256,
+        "cpu_user_seconds": 200.975031,
+        "cpu_system_seconds": 41.55029,
+        "elapsed_seconds": 336.33286443999896,
+        "children_reaped": true,
+        "native_snapshot_calls": 133,
+        "native_snapshot_failures": 0,
+        "seed_database_bytes": 119635968,
+        "entry_model_calls": 1,
+        "runtime_cycles": 2,
+        "approved_entries": 1,
+        "approved_entry_source_age_seconds": 6.553193,
+        "approved_entry_receive_lag_seconds": 1.0,
+        "native_accept_failures": 0,
+        "attempt_recovery": {
+          "matched_in_run": 0,
+          "unresolved_at_last_snapshot": 0
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": "VERIFIED_FLAT",
+        "durable_order_statuses": [
+          [
+            "BUY",
+            "FILLED"
+          ],
+          [
+            "SELL",
+            "FILLED"
+          ]
+        ],
+        "report_sha256": "cd9730148b2ee4f3e70dabadd313119730f1ede1c4c9b083f56ea75465528a1b",
+        "application_manifest_sha256": "63303dd93ef0ba1faccbd882863fbbc2c3ff719cfd6d1a95effb06a25c1c0595"
+      },
+      {
+        "logical_cpus": 1,
+        "planned_seconds": 335,
+        "status": "FAILED",
+        "failure": "Native acceptance failure",
+        "peak_tree_rss_bytes": 364724224,
+        "cpu_user_seconds": 196.645901,
+        "cpu_system_seconds": 44.14523,
+        "elapsed_seconds": 336.6733339660004,
+        "children_reaped": true,
+        "native_snapshot_calls": 134,
+        "native_snapshot_failures": 0,
+        "seed_database_bytes": 119635968,
+        "entry_model_calls": 1,
+        "runtime_cycles": 1,
+        "approved_entries": 1,
+        "approved_entry_source_age_seconds": 6.21014,
+        "approved_entry_receive_lag_seconds": 1.0,
+        "native_accept_failures": 1,
+        "attempt_recovery": {
+          "matched_in_run": 1,
+          "unresolved_at_last_snapshot": 0
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "final_accounting": null,
+        "durable_order_statuses": [
+          [
+            "BUY",
+            "FILLED"
+          ],
+          [
+            "SELL",
+            "FILLED"
+          ]
+        ],
+        "report_sha256": "354160f3e6addc176cee858214880fbeb1f91bfd68eb7cc4d7d101f5cd814586",
+        "application_manifest_sha256": "63303dd93ef0ba1faccbd882863fbbc2c3ff719cfd6d1a95effb06a25c1c0595"
+      }
+    ]
+  },
+  "store_verification": [
+    {
+      "database_bytes": 73900032,
+      "generation": 294,
+      "authority_hash": "b5ce401ed2f8d1af1383439e50884700fa8aa5f8dfb8486ada7ff8cb8414a7e3",
+      "baseline_warm_seconds": [
+        0.094663,
+        0.201825,
+        0.100116
+      ],
+      "repaired_warm_seconds": [
+        0.085836,
+        0.088485,
+        0.100724
+      ]
+    },
+    {
+      "database_bytes": 120045568,
+      "generation": 124,
+      "authority_hash": "23c777d61cdf180240ef2d564ca0b637af09ca44aa73a41f133058333c054bf6",
+      "baseline_warm_seconds": [
+        0.359327,
+        0.421772,
+        0.421916
+      ],
+      "repaired_warm_seconds": [
+        0.146763,
+        0.157639,
+        0.161423
+      ]
+    },
+    {
+      "database_bytes": 16924672,
+      "generation": 2275,
+      "authority_hash": "da12d21144448b7cef37fc584b3d975cfad00f8db7263f62903b950b3cdd645c",
+      "baseline_warm_seconds": [
+        0.033417,
+        0.033478,
+        0.036841
+      ],
+      "repaired_warm_seconds": [
+        0.037984,
+        0.035345,
+        0.037017
+      ]
+    }
+  ],
+  "position_protection_112_mib_seed": {
+    "journal_bytes_before_contention": 119623680,
+    "exit_submitted_while_all_waiting": true,
+    "exit_seconds": 4.529926913000963,
+    "report_snapshot_open_during_exit": true,
+    "native_submissions": 2,
+    "accounting": "VERIFIED",
+    "held_positions": 0,
+    "source_sha256": "b31ac16992f41b6ed862f5c46b12e1a13a322621dd6375b4ff31a1314c00a947"
+  },
+  "position_protection_final": {
+    "journal_bytes_before_contention": 119623680,
+    "exit_submitted_while_all_waiting": true,
+    "exit_seconds": 4.0965789269994275,
+    "report_snapshot_open_during_exit": true,
+    "native_submissions": 2,
+    "accounting": "VERIFIED",
+    "held_positions": 0,
+    "source_sha256": "827eaec409e18352f4f39418737d7f36a13c23a784f0708c4dbb72db2d34350d"
+  },
+  "calendar_sparse": {
+    "full_cadence": false,
+    "samples_per_session": 8,
+    "sessions": 22,
+    "first": {
+      "session": "2026-10-28",
+      "open": "2026-10-28T13:30:00+00:00",
+      "close": "2026-10-28T20:00:00+00:00",
+      "last_sequence": 8,
+      "round_trips": 1,
+      "native_bytes": 1265664,
+      "collector_bytes": 593920,
+      "display_bytes": 929792,
+      "restore_generation": 113
+    },
+    "last": {
+      "session": "2026-11-27",
+      "open": "2026-11-27T14:30:00+00:00",
+      "close": "2026-11-27T18:00:00+00:00",
+      "last_sequence": 176,
+      "round_trips": 0,
+      "native_bytes": 16879616,
+      "collector_bytes": 11259904,
+      "display_bytes": 8523776,
+      "restore_generation": 1864
+    },
+    "synthetic_model_calls": 43,
+    "complete_round_trips": 1,
+    "samples_sha256": "1fd33a15c8fa63573783bffe979e2e3541009d7d109f2a37cac3643a4ef9cb78",
+    "release": "1e67fd7",
+    "tested": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 1,
+      "seconds": 222.725,
+      "junit_sha256": "2fe3b9f86ecd0605b3b297cf3f0f50234e5814c63c2e2ef43a54c0f099ba0223"
+    },
+    "delivered_packets": 176,
+    "retained_account": true,
+    "daily_flat_verified": true
+  },
+  "installed_tests": {
+    "first_system": {
+      "tests": 526,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "passed": 525,
+      "seconds": 421.721,
+      "junit_sha256": "213574c3a2066456631a94e014b3e24ac49f3564040b402aac37858d819fb392"
+    },
+    "first_related": {
+      "tests": 308,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 308,
+      "seconds": 313.761,
+      "junit_sha256": "89766ac68a10b643e8c1e86484efb42a01fecd9547bde91ba747ac14bb5f068b"
+    },
+    "followup_system": {
+      "tests": 533,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "passed": 532,
+      "seconds": 412.948,
+      "junit_sha256": "16332a3c2e4784dd2beecf4af3dec5929b486b8ad388add93829a2d166bfd563"
+    },
+    "followup_related": {
+      "tests": 140,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 140,
+      "seconds": 64.038,
+      "junit_sha256": "defcabfba40113d13ae9fe1c65be766d6ce5882ffbb252ed677fb9695b6f1eb6"
+    },
+    "final_report_and_five_lifecycles": {
+      "tests": 89,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 89,
+      "seconds": 228.287,
+      "junit_sha256": "a25f10899151fa09a4eabe033fd07d919c992e513a416d747a0fa521dde1f89e"
+    },
+    "sampled_calendar": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 1,
+      "seconds": 222.725,
+      "junit_sha256": "2fe3b9f86ecd0605b3b297cf3f0f50234e5814c63c2e2ef43a54c0f099ba0223"
+    },
+    "native_imports_and_accounting": {
+      "tests": 282,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 282,
+      "seconds": 105.869,
+      "junit_sha256": "f1ebcacca6aaa8f99aee37c9a044fb418a2c2ad2de76fdd6e7bc46f9b13228b1"
+    },
+    "final_implementation_system": {
+      "tests": 533,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "passed": 532,
+      "seconds": 403.376,
+      "junit_sha256": "72d462a5df0ec1c04c4d82db004dd40fe4f51338cda730f380bce46b91686369"
+    },
+    "cross_uid_skip": "Reader UID 10001 is not mapped in this workspace.",
+    "counts_overlap": true
+  },
+  "full_duration": {
+    "status": "RUNNING",
+    "elapsed_seconds": 7708.157051126999,
+    "planned_seconds": 21480,
+    "wall_clock_full_duration": "PENDING",
+    "logical_cpus": 1,
+    "peak_tree_rss_bytes": 649089024,
+    "source_database_bytes": 121815040,
+    "capture_attempts": 677,
+    "dashboard_reads": 244,
+    "report_reads": 244,
+    "native_snapshot_calls": 1835,
+    "native_snapshot_failures": 0,
+    "native_snapshot_max_seconds": 0.3793252220002614,
+    "children_reaped_count": 1836,
+    "implementation": "0d79a3a",
+    "snapshot_utc": "2026-11-14T10:29:44+00:00",
+    "initial_database_bytes": 72822784,
+    "cycle_count": 25,
+    "execution": {
+      "status": "RECORDED",
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "carry_in_exits": 0
+    },
+    "runtime_failures": 0,
+    "publication_failures": 0,
+    "capture_failures": 0,
+    "native_accept_failures": 0,
+    "application_manifest_sha256": "fadf8df298f62be5a21f08039bb54c797ffe12c5616b1fcb114b70ee6f201bd9"
+  },
+  "shared_cpu_stress": {
+    "note": "While a second disposable one-CPU process used the same affinity, the fixture missed its entry before admission. This case is separate from the quiet one-CPU trials.",
+    "trial": {
+      "logical_cpus": 1,
+      "planned_seconds": 90,
+      "status": "FAILED",
+      "failure": "Known fixture lifecycle did not complete",
+      "peak_tree_rss_bytes": 292237312,
+      "cpu_user_seconds": 42.423268,
+      "cpu_system_seconds": 10.00804,
+      "elapsed_seconds": 91.98803988600048,
+      "children_reaped": true,
+      "native_snapshot_calls": 26,
+      "native_snapshot_failures": 0,
+      "seed_database_bytes": 119635968,
+      "entry_model_calls": 0,
+      "runtime_cycles": 1,
+      "approved_entries": 0,
+      "approved_entry_source_age_seconds": null,
+      "approved_entry_receive_lag_seconds": null,
+      "native_accept_failures": 0,
+      "attempt_recovery": {
+        "matched_in_run": 0,
+        "unresolved_at_last_snapshot": 0
+      },
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 0,
+        "exit_fills": 0,
+        "completed_round_trips": 0,
+        "carry_in_exits": 0
+      },
+      "final_accounting": null,
+      "durable_order_statuses": [],
+      "report_sha256": "3cedc07cff481898ecf282989bd564d0af57391b4e2839162b250553d985a7ae",
+      "application_manifest_sha256": "63303dd93ef0ba1faccbd882863fbbc2c3ff719cfd6d1a95effb06a25c1c0595"
+    }
+  },
+  "shared_cpu_native_stress": {
+    "note": "Two fixtures initially shared one CPU. The first slot expired before the model, the second had an acknowledged and filled BUY. The short window ended before a protective exit was observed. The run failed its round-trip gate. The durable intent and position were retained.",
+    "trial": {
+      "logical_cpus": 1,
+      "planned_seconds": 335,
+      "status": "FAILED",
+      "failure": "Known fixture lifecycle did not complete",
+      "peak_tree_rss_bytes": 307064832,
+      "cpu_user_seconds": 181.492068,
+      "cpu_system_seconds": 43.014003,
+      "elapsed_seconds": 335.99796310499914,
+      "children_reaped": true,
+      "native_snapshot_calls": 126,
+      "native_snapshot_failures": 0,
+      "seed_database_bytes": 119635968,
+      "entry_model_calls": 1,
+      "runtime_cycles": 2,
+      "approved_entries": 1,
+      "approved_entry_source_age_seconds": 7.624729,
+      "approved_entry_receive_lag_seconds": 1.0,
+      "native_accept_failures": 0,
+      "attempt_recovery": {
+        "matched_in_run": 0,
+        "unresolved_at_last_snapshot": 0
+      },
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 0,
+        "completed_round_trips": 0,
+        "carry_in_exits": 0
+      },
+      "final_accounting": null,
+      "durable_order_statuses": [
+        [
+          "BUY",
+          "FILLED"
+        ]
+      ],
+      "report_sha256": "8e684098edb1832b5c45b04e6c2764e64608a0e7ac040d6419225e7c5c77c9a9",
+      "application_manifest_sha256": "ea4a998d5dd1a5cf5fa590b941dd3eb412b93e102929d0b7a72332e03cde385c"
+    }
+  },
+  "native_dependency_profile": {
+    "baseline": {
+      "cpu_seconds_from_accept_to_serialize": 0.285738,
+      "whole_child_cpu_seconds": 0.787622,
+      "import_profile_sha256": "3a417f097cc1a0214148e55ff9ca53faf0bc02212aeefa950aa605f18ba07408",
+      "profiled": true
+    },
+    "final": {
+      "cpu_seconds_from_accept_to_serialize": 0.004857,
+      "whole_child_cpu_seconds": 0.506782,
+      "import_profile_sha256": "8e5857a22d8ec429b95fc2c1ab8ddf9121a4841f9a069415039be6d878ebd30a",
+      "profiled": true
+    },
+    "reproduced_baseline_denied_import_cases": 3,
+    "baseline_junit_sha256": "f268f825d87ab681ee36e697f546e05f4efc79a7d81a36674da923b6ab13c954",
+    "repair": "Venue checks import the shared tool-free clock and fingerprint directly. The same native account, eligibility, lease and confirmation checks run."
+  },
+  "regressions": {
+    "crossing_model_charge": {
+      "before": "MIXED_COST_ID_OR_TIME_CONFLICT",
+      "after": "PORTFOLIO_READ_SUPERSEDED then fresh snapshot reconciled",
+      "model_calls_settled": 1,
+      "orders_submitted": 0,
+      "account_halted": false,
+      "baseline_test_log_sha256": "cafe5248d74570fca30119d65ba82c8672b80a003de56b35528f3e9cc0062044"
+    },
+    "already_exited_child": {
+      "before": "NOT_OBSERVED",
+      "after": "OBSERVED",
+      "observed": [
+        "REQUEST",
+        "VENUE_OPEN",
+        "SNAPSHOT",
+        "SERIALIZE",
+        "COMPLETE"
+      ],
+      "deadline": "validation and timeout accounting use original monotonic clock",
+      "baseline_test_log_sha256": "0ce469dd54f7583ec8cfdff1549099dc0a1491b201551cb3627e354840e91047"
+    },
+    "derived_display_capacity": {
+      "before": "SQLite display page limit reached with 1025 large packets",
+      "after": "same originals fit under the original 64 MiB display maximum",
+      "original_packet_bodies": "retained in native evidence",
+      "baseline_junit_sha256": "d20ebcfb117ec4dc3aec5fa9e9b3a36770dc44cb3722520d8a2c52ff36ba2dae"
+    },
+    "calendar_dashboard": {
+      "baseline_complete_sessions": 16,
+      "first_failed_session_number": 17,
+      "baseline_failure": "CONNECTED_PUBLICATION_FAILED",
+      "baseline_junit_sha256": "8e32fa6a5c3c9bca1314ab380869f22c098d35e3e7b58926eef7682cfb7f9bce",
+      "original_snapshot_warm_verified_seconds": [
+        0.0745,
+        0.0804
+      ],
+      "original_snapshot_cold_verified_seconds_approximate": 1.22
+    }
+  },
+  "calendar_extended_reference": {
+    "full_cadence": false,
+    "samples_per_session": 79,
+    "sessions": 22,
+    "first": {
+      "session": "2026-10-28",
+      "open": "2026-10-28T13:30:00+00:00",
+      "close": "2026-10-28T20:00:00+00:00",
+      "last_sequence": 79,
+      "round_trips": 1,
+      "native_bytes": 5046272,
+      "collector_bytes": 4980736,
+      "display_bytes": 3645440,
+      "restore_generation": 498
+    },
+    "last": {
+      "session": "2026-11-27",
+      "open": "2026-11-27T14:30:00+00:00",
+      "close": "2026-11-27T18:00:00+00:00",
+      "last_sequence": 1738,
+      "round_trips": 0,
+      "native_bytes": 100446208,
+      "collector_bytes": 106459136,
+      "display_bytes": 47824896,
+      "restore_generation": 10675
+    },
+    "synthetic_model_calls": 64,
+    "complete_round_trips": 1,
+    "samples_sha256": "92e1546ee113b85b80ff2174aca3cae7e0c1bba5db68854c49d3cc0d7ef030d2",
+    "release": "experimental installed 1e67fd7 precursor, before compact Scope projection",
+    "tested": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 1,
+      "seconds": 3463.851,
+      "junit_sha256": "07256d399bbacd0a0b5aa933fb2e2a618ac701d87c18b9d9b2854bdd922eabd4"
+    },
+    "delivered_packets": 1738,
+    "retained_account": true,
+    "daily_flat_verified": true
+  },
+  "limits": [
+    "Short loaded fixtures use labeled diagnostic padding.",
+    "The calendar scenarios use scheduled samples across 22 sessions. They do not model all packets for 22 full trading days.",
+    "CPU affinity and a sampled RSS ceiling do not reproduce Docker CPU quota, cross-UID restrictions, or connected market or model latency.",
+    "A recovered native acknowledgement timeout counts as a failed deadline even if both fills are verified.",
+    "The p95 engineering headroom target is five seconds from the original quote source to an approved opening reservation. A session with no openings is unmeasured."
+  ]
+}

@@ -1,5 +1,13 @@
 # Recovered offline system checkpoint
 
+November 14 capacity continuation. Branch implementations `1e67fd7`, `5f5f96c`
+and `42648c6` are published. The integrated system suite passed 532 cases with one unmapped-UID
+skip. The final report revision also passed 89 cases including all five integrated
+lifecycles. The final native/portfolio checks passed 282 cases. The suites overlap.
+Four ordinary 120 MB one-CPU trials of the latest release finished flat. A shared-CPU
+case ended before its late entry could exit. The host remains on `39d8e48`.
+[Capacity and timing checkpoint](PAPER_DURATION_CAPACITY.md).
+
 November 14 loaded-journal follow-up: branch implementation `0d79a3a` completed
 the previously failing 73 MB simulation twice with verified flat accounting.
 The separate loaded protection case met its five-second exit bound. The host

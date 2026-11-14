@@ -3,7 +3,54 @@
 Recorded 2026-11-12 UTC (November 11 New York session). This is offline,
 synthetic evidence; today's connected dashboard has not been reviewed here.
 
-## November 14 follow-up
+## November 14 comparable CPU runs
+
+The offline worker uses synthetic quotes and model responses, a real SQLite owner,
+the local native venue subprocess and the authenticated dashboard reader. These
+short runs start with 119,635,968 bytes, including labeled diagnostic padding.
+
+| Implementation and run | Logical CPUs | Approved entry source age | Native acceptance | Final fills |
+| --- | ---: | ---: | --- | --- |
+| `293e68e`, 90 seconds | 1 | Unmeasured | No entry reached the model | 0 entry, 0 exit |
+| `293e68e`, 90 seconds | 2 | Unmeasured | No entry reached the model | 0 entry, 0 exit |
+| `5f5f96c`, 90 seconds | 1 | 6.55 s | Within deadline | 1 entry, 1 exit |
+| `5f5f96c`, 90 seconds | 2 | 6.30 s | Within deadline | 1 entry, 1 exit |
+| `5f5f96c`, first 335 seconds | 1 | 6.55 s | Within deadline | 1 entry, 1 exit |
+| `5f5f96c`, repeated 335 seconds | 1 | 6.21 s | Acknowledgement timed out, recovered during reconciliation | 1 entry, 1 exit |
+| `42648c6`, two 90-second runs | 1 | 6.84 s, 6.75 s | Within both deadlines | Each 1 entry, 1 exit |
+| `42648c6`, one 90-second run | 2 | 6.76 s | Within deadline | 1 entry, 1 exit |
+| `42648c6`, two 335-second runs | 1 | 6.01 s, 6.40 s | Within both deadlines | Each 1 entry, 1 exit |
+
+The five-second p95 entry-age target remains open. Both `5f5f96c` short entries
+spent one second between the source and receipt. Remaining time through admission
+was 5.55 and 5.30 seconds respectively. The report reads matching native
+reservation and approval records. It counts an opening once, including a
+subsequently failed dispatch. Missing originals and zero-entry windows remain
+explicit. A completed fill after a timed-out acknowledgement still fails the
+latency check. A separate one-CPU contention fixture on 119,623,680 bytes
+submitted the held stock exit in 4.53 seconds, then in 4.10 seconds on `42648c6` and
+both finished verified flat.
+
+The native child previously imported the full options owner, scheduler and
+repository to validate its clock. The repaired child uses the same canonical
+clock and fingerprint directly. In a profiled approval with the same original
+intent, CPU time between the accept and serialize markers fell from 0.286 seconds
+to 0.005 seconds. Whole-child CPU time fell from 0.788 to 0.507 seconds.
+Under deliberately shared one-CPU load, the first slot expired before the
+model. The next slot filled an entry 21 seconds before the short fixture
+ended. No exit was observed by that cutoff and the round-trip gate failed.
+
+On the same 120,045,568-byte source, three warm full journal digest passes fell
+from 0.359–0.422 seconds to 0.147–0.161 seconds with identical authority hashes.
+The earlier calendar replay first failed dashboard publication on session 17.
+The repaired calendar completed all 22 sessions with eight sampled packets each
+on one continuing account, including the November 27 early close. The denser reference run also passed with 1,738
+packets, 100,446,208 native bytes and a 47,824,896-byte display before the
+Scope display compaction. Full trading cadence over the whole month remains
+unmeasured. The real-time duration measurement is tracked in the evidence file.
+[Machine-readable measurements and acceptance limits](PAPER_CAPACITY_20261114_PROOF.json).
+
+## Earlier November 14 preflight
 
 `0d79a3a` passed the 73 MB short preflight and a 335-second two-slot run
 on one CPU. Both finished with one entry, one protective exit and verified
@@ -65,7 +112,6 @@ unshare --user --map-root-user --net /path/to/venv/bin/python -I -W error \
   --seconds 21480 --seed-mib 68
 ```
 
-This documents the duration target, not a request to run a known-failing long test.
 A short preflight uses `--seconds 90`. The harness refuses existing output/account
 paths, checkout output, symlink aliases, network interfaces, editable/source
 imports, mismatched installed application bytes, and mismatched dependency pins.
@@ -74,7 +120,7 @@ synthetic. It runs the actual collector/runtime loops, native subprocesses,
 publisher, report and authenticated HTTP reader. Synthetic session time advances
 one-to-one with monotonic elapsed time, without accelerated feed backpressure.
 
-The worker is pinned to one available CPU. Aggregate descendant RSS is sampled
+The nominal worker is pinned to one available CPU. Pass `--cpus 2` for a comparison run. Aggregate descendant RSS is sampled
 against 1 GiB; this is **not kernel cgroup enforcement** or proof of the measured
 host profile. The runner bounds elapsed duration, records worker identity, drains
 its process group on interruption, and records FAILED unless both child and
@@ -98,5 +144,5 @@ The earlier five-scenario integration evidence remains in
 [PAPER_CONTENTION_PROOF.json](PAPER_CONTENTION_PROOF.json).
 
 No connected account, model/provider service, host deployment, schedule or limits
-were changed. The last confirmed host remains d2046f6. Main, the event branch, and
+were changed. The November 12 evidence used host release d2046f6. The operator subsequently confirmed 39d8e48. Main, the event branch, and
 PR #1's draft status/title/body are preserved.
