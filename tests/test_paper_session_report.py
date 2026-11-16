@@ -896,3 +896,22 @@ def test_text_report_retains_the_last_publication_failure_location():
     text = module.short_report(result)
     assert 'Last publication failure: TimeoutError at app/mixed/sqlite_copy.py:24' in text
     assert 'PRIVATE' not in text
+
+
+def test_text_report_shows_failed_native_calls_alongside_reconciled_fills():
+    result = live_result()
+    result['run_execution'] = {'status': 'RECORDED', 'entry_fills': 1, 'exit_fills': 1,
+                               'completed_round_trips': 1, 'carry_in_exits': 0}
+    result['attempt_recovery'] = {'matched_in_run': 1, 'unresolved_at_last_snapshot': 0}
+    timing = result['runtime_timing'] = dict(status='OBSERVED', records=4, measured=3,
+                                             omitted=0, missing_or_invalid=1)
+    for counts in ({}, {'NATIVE_ACCEPT:COMPLETE': 3}):
+        timing['by_status'] = counts
+        assert 'Local order acknowledgement calls' not in module.short_report(result)
+    timing['by_status'] = {'NATIVE_ACCEPT:COMPLETE': 1, 'NATIVE_ACCEPT:FAILED': 1,
+                           'NATIVE_SNAPSHOT:COMPLETE': 4, 'NATIVE_SNAPSHOT:INTERRUPTED': 2}
+    text = module.short_report(result)
+    assert 'Local order acknowledgement calls (measured 2, failed 1, interrupted 0)' in text
+    assert 'Local snapshot calls (measured 6, failed 0, interrupted 2)' in text
+    assert 'Order recovery: matched 1; unresolved at last reconciliation 0' in text
+    assert 'completed round trips 1' in text

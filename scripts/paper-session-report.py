@@ -509,6 +509,13 @@ def short_report(result):
     if runtime_timing.get('status') == 'OBSERVED':
         lines.append(f"Runtime timing: {runtime_timing['measured']}/{runtime_timing['records']} measured; "
                      f"{runtime_timing['missing_or_invalid']} incomplete/invalid; {runtime_timing['omitted']} omitted")
+        counts = runtime_timing.get('by_status', {})
+        for phase, label in (('NATIVE_ACCEPT', 'order acknowledgement'), ('NATIVE_SNAPSHOT', 'snapshot')):
+            failed = counts.get(phase + ':FAILED', 0)
+            interrupted = counts.get(phase + ':INTERRUPTED', 0)
+            if failed or interrupted:
+                measured = counts.get(phase + ':COMPLETE', 0) + failed + interrupted
+                lines.append(f"Local {label} calls (measured {measured}, failed {failed}, interrupted {interrupted})")
         trace_write = runtime_timing.get('trace_start_write')
         if trace_write:
             lines.append(f"Timing record start: n={trace_write['samples']}, "
