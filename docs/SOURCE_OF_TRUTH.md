@@ -1,6 +1,26 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.216. November 16 UTC. Offline PAPER timing and protection.
+Version 1.217. November 16 UTC. Offline PAPER entry and protective exits.
+
+On `365791d`, three 335-second replays started from independent copies of
+the same account with 1,769 retained packets and 66 model charges. Two
+replays evaluated both scheduled slots, opened the option and filled its
+protective exit. This happened once on one CPU and once on two. The other
+one-CPU run had 89 ms left when it started the order worker, received no
+acknowledgement and missed the next slot. The three opening quotes were
+7.66–7.92 seconds old at reservation. The target is five seconds.
+In a separate one-CPU replay that filled both ways, two account-journal
+integrity scans used 0.53 of the 0.80 seconds spent checking the opening
+order before handoff.
+
+With advice and history blocked and a second test suite sharing one CPU,
+the PAPER venue acknowledged the stock and option stops in 3.35 and 2.86
+seconds. Both filled on the next quote and finished flat. The installed
+application passed 604 system checks with one unmapped-reader-UID skip.
+The last operator-confirmed host installation is `39d8e48`.
+[Replays, test results and protection timings](PAPER_ENTRY_ACK_20261116_PROOF.json).
+
+### Earlier November 16 journal and dashboard measurements
 
 On one CPU, `9aeb3ea` reduced median repeat verification of the padded
 journal from 254 to 95 ms. The private dashboard and report copies on

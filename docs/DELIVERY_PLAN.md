@@ -169,6 +169,24 @@ next action. Do not replace missing evidence with a date estimate.
   The two-slot run evaluated both opportunities and served every paired
   dashboard and report check. The five-second entry target remains open.
   [November 16 trials](PAPER_TIMING_20261116_PROOF.json).
+  `6cb503d` stores the ordinary option selection with its paid reply. On
+  copies of the same month-grown account, time from reply to final review
+  fell from 0.778 to 0.455 seconds in the first comparison. `8b87749`
+  reproduced all 66 original charges and reduced the median repeat history
+  read from 56.8 to 7.0 ms. An expiry proven to precede native handoff
+  now releases the reservation. A missing acknowledgement after handoff
+  still records an uncertain attempt. The local acceptance worker on
+  `365791d` uses its own transport thread and promptly delivers its exit
+  status. The failed final replay reached review with 2.520 seconds left.
+  The interval from dispatch entry to native launch used 1.216 seconds
+  and left 0.089 seconds for acceptance. In the successful one-CPU repeat
+  it used 0.884 seconds and left 0.945 seconds. In an earlier profiled
+  dispatch that rejected its order, two journal integrity scans took
+  0.526 of 0.535 seconds. A separate 90-second replay on the final build
+  timed those scans around an eligible order. They used 0.533 of 0.799
+  seconds in the opening check and 0.337 of 0.403 seconds in the exit
+  check. That trade filled both ways and verified flat.
+  [Recorded timing phases](PAPER_ENTRY_ACK_20261116_PROOF.json).
 - [ ] **A3 — Measured repairs:** reproduce and close the actual bottlenecks with
   before/after evidence; decide connection reuse from measurements and validate
   its isolation, refresh ownership, deadlines and cleanup if adopted.
@@ -237,6 +255,13 @@ next action. Do not replace missing evidence with a date estimate.
   3.16 seconds. Both filled on the next quote before advice or history
   returned. Including setup, the cases took 4.94 and 4.91 seconds.
   [Protection measurements](PAPER_TIMING_20261116_PROOF.json).
+  On `365791d` with 128 competing checks, the stock stop reached native
+  acknowledgement in 3.35 seconds and the option stop in 2.86 seconds.
+  The stock and option ticks finished in 4.46 and 4.23 seconds including
+  contention setup. Both positions filled on the next quote while advice
+  and history were still blocked. The subsequent flat-account observation
+  took 1.80 and 1.89 seconds from that quote.
+  [Loaded protection trials](PAPER_ENTRY_ACK_20261116_PROOF.json).
   `aad4e08` isolated in-run publisher failure. `d35d318` adds verified-held startup
   protection for missing/partial display snapshots, read-only protection-only host
   review and entry-resume rejection. Both startup scenarios retain the damaged
@@ -307,6 +332,15 @@ next action. Do not replace missing evidence with a date estimate.
   to review was 1.126 seconds. The final application verified the same
   authority and flat accounting at packet 1,769 using read-only access.
   [Session and timing evidence](PAPER_TIMING_20261116_PROOF.json).
+  On separate copies of that stopped account, the next synthetic session
+  on `365791d` evaluated one of two slots with zero fills on the first
+  one-CPU run. The one-CPU repeat and two-CPU run each evaluated both
+  slots and completed one round trip. Opening quote ages in trial order
+  were 7.924, 7.656 and 7.736 seconds. The separate 119.6 MB padded
+  one-CPU run evaluated both slots, completed a round trip and served all
+  11 paired dashboard and report reads. Its opening age was 5.308 seconds.
+  Full 358-minute coverage on this build remains unverified.
+  [Account replays and capacity comparison](PAPER_ENTRY_ACK_20261116_PROOF.json).
   The short tests use labeled padding and sampled aggregate RSS. Host cgroup
   enforcement and connected-session effectiveness still require separate evidence.
   [Short loaded runs](PAPER_LOADED_HANDOFF_20261114_PROOF.json). [Current capacity evidence](PAPER_CAPACITY_20261114_PROOF.json).

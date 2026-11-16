@@ -1,5 +1,22 @@
 # Recovered offline system checkpoint
 
+November 16 UTC. The installed `365791d` application passed 604 system
+checks. The single skip requires a mapped reader UID 10001. Another
+188 related cases passed, including the seven isolated native handoff
+checks. The 48 host tests also passed after the test-only change in
+`976b303` checked each read-only mount against its approved source and
+destination. These test groups overlap.
+
+The padded account completed its entry and protective exit. On the
+month-grown account, two of three runs completed that round trip and
+evaluated both scheduled slots. The third recorded an uncertain attempt
+with no fills and one missed slot. All three verified their accounting and
+finished with zero held positions. The stock and option protective exits
+under separate contention both filled while history and advice were
+blocked. The five-second opening goal and the full 358-minute run remain
+open. The last confirmed host release is `39d8e48`.
+[Results, baselines and timing traces](PAPER_ENTRY_ACK_20261116_PROOF.json).
+
 November 16 UTC. The installed `2646944` application passed 590 system
 checks with one skip for unmapped reader UID 10001. All 15 copy deadline
 and writer-interference cases passed. In the separate shared-CPU test,
