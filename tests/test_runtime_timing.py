@@ -150,6 +150,174 @@ def test_unusable_option_choice_preserves_exact_charge_and_raw_reply(tmp_path, m
         assert asyncio.run(c.cycle(frame)) == result and venue.submit_count == 0
 
 
+def test_portfolio_ack_is_validated_while_owner_loop_is_occupied(tmp_path, monkeypatch):
+    import threading
+    from test_mixed_entry import owner
+    from test_mixed_selection import stock_frame
+    from app.options import process
+
+    entered, validated = threading.Event(), threading.Event()
+    observed = []
+    transport = process._run_option_process
+
+    async def exercise(c):
+        owner_loop = asyncio.get_running_loop()
+
+        def busy_tick():
+            entered.set()
+            observed.append(validated.wait(2))
+
+        async def accept(venue, **request):
+            if request.get("intent") is None:
+                return await transport(venue, **request)
+            owner_loop.call_soon_threadsafe(busy_tick)
+            assert await asyncio.to_thread(entered.wait, 1)
+            result = await transport(venue, **request)
+            validated.set()
+            return result
+
+        monkeypatch.setattr(process, "_run_option_process", accept)
+        return await c.cycle(stock_frame())
+
+    with owner(tmp_path, monkeypatch, choice="OPTION", portfolio=True) as (c, venue, _, _):
+        result = asyncio.run(exercise(c))
+        assert observed == [True]
+        assert result["entries"][0]["status"] == "OPEN" and venue.submit_count == 1
+
+
+@pytest.mark.parametrize("accepted", [False, True])
+def test_cancelled_portfolio_handoff_reaps_the_native_child(tmp_path, monkeypatch, accepted):
+    from test_mixed_entry import owner
+    from test_mixed_selection import stock_frame
+
+    children = []
+    spawn = asyncio.create_subprocess_exec
+
+    async def observe(*args, **kwargs):
+        child = await spawn(*args, **kwargs)
+        if args[-1] == "app.options.worker":
+            children.append(child)
+        return child
+
+    async def exercise(c, venue):
+        task = asyncio.create_task(c.cycle(stock_frame()))
+        async with asyncio.timeout(6):
+            while not children or (accepted and venue.submit_count == 0):
+                await asyncio.sleep(.01)
+        task.cancel()
+        if accepted:
+            await asyncio.sleep(.02)
+            task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", observe)
+    with owner(tmp_path, monkeypatch, choice="OPTION", portfolio=True) as (c, venue, _, _):
+        venue.fault = "IGNORE_TERM_AFTER_ACCEPT" if accepted else "STALL_BEFORE_ACCEPT"
+        asyncio.run(exercise(c, venue))
+        assert len(children) == 1 and children[0].returncode is not None
+        assert venue.submit_count == int(accepted)
+        with c.engine.journal.read() as db:
+            assert db.execute("SELECT status FROM execution_portfolio_orders").fetchone()[0] == "UNKNOWN"
+            assert db.execute("SELECT halted FROM execution_control").fetchone()[0]
+
+
+def test_native_queue_time_consumes_original_portfolio_deadline(tmp_path, monkeypatch):
+    import time
+    from test_mixed_entry import owner
+    from test_mixed_selection import stock_frame
+    from app.mixed import portfolio_execution
+    from app.options import process
+
+    deadlines, children = [], []
+    native, spawn = process._run_option_process, process._spawn_option_child
+
+    async def short_lease(venue, **request):
+        request["deadline"] = min(request["deadline"], time.monotonic() + .05)
+        deadlines.append(request["deadline"])
+        return await process.run_option_process(venue, **request)
+
+    async def queued(venue, **request):
+        if request.get("intent") is not None:
+            assert request["deadline"] == deadlines[-1]
+            await asyncio.sleep(max(0, request["deadline"] - time.monotonic()) + .01)
+        return await native(venue, **request)
+
+    async def observed(module, *args):
+        if module == "app.options.worker":
+            children.append(module)
+        return await spawn(module, *args)
+
+    monkeypatch.setattr(portfolio_execution, "run_option_process", short_lease)
+    monkeypatch.setattr(process, "_run_option_process", queued)
+    monkeypatch.setattr(process, "_spawn_option_child", observed)
+    with owner(tmp_path, monkeypatch, choice="OPTION", portfolio=True) as (c, venue, _, _):
+        result = asyncio.run(c.cycle(stock_frame()))
+        assert len(deadlines) == 1 and not children and venue.submit_count == 0
+        assert result["entries"][0]["status"] == "REJECTED"
+        with c.engine.journal.read() as db:
+            assert not db.execute("SELECT halted FROM execution_control").fetchone()[0]
+
+
+def test_cancelled_queued_portfolio_accept_never_starts_transport(monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event
+    from app.options import process
+
+    release = Event()
+    called = []
+
+    class DelayedExecutor(ThreadPoolExecutor):
+        def submit(self, function, *args, **kwargs):
+            def delayed():
+                release.wait(5)
+                return function(*args, **kwargs)
+            return super().submit(delayed)
+
+    async def transport(*args, **kwargs):
+        called.append(True)
+
+    async def exercise():
+        task = asyncio.create_task(process._isolated_accept(None))
+        try:
+            await asyncio.sleep(0)
+            task.cancel()
+            await asyncio.sleep(0)
+            assert not task.done()
+        finally:
+            release.set()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+    monkeypatch.setattr(process, "ThreadPoolExecutor", DelayedExecutor)
+    monkeypatch.setattr(process, "_run_option_process", transport)
+    asyncio.run(exercise())
+    assert not called
+
+
+def test_portfolio_handoff_runs_with_default_executor_fully_occupied(monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event
+    from app.options import process
+
+    release = Event()
+    async def transport(*args, **kwargs):
+        return "observed"
+
+    async def exercise():
+        loop = asyncio.get_running_loop()
+        loop.set_default_executor(ThreadPoolExecutor(max_workers=1))
+        busy = loop.run_in_executor(None, release.wait, 5)
+        try:
+            assert await asyncio.wait_for(process._isolated_accept(None), 1) == "observed"
+        finally:
+            release.set()
+            await busy
+
+    monkeypatch.setattr(process, "_run_option_process", transport)
+    asyncio.run(exercise())
+
+
 def test_native_success_timeout_and_cancellation_keep_separate_spans_and_reap(tmp_path, monkeypatch):
     children = []
     spawn = asyncio.create_subprocess_exec

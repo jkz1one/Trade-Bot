@@ -5,6 +5,8 @@ import json
 import os
 import sys
 import time
+from concurrent.futures import Future, ThreadPoolExecutor
+from contextvars import copy_context
 from datetime import datetime
 from typing import Literal
 
@@ -60,12 +62,68 @@ class OptionProcessResult(OptionRecord):
     snapshot: PortfolioVenueSnapshot | OptionVenueSnapshot | None = None
 
 
+class NativeAcceptNotStarted(FixtureProcessTimeout):
+    """The local acceptance child was never started for this intent."""
+
+
+async def _isolated_accept(venue, **request):
+    # The owner loop can be busy committing another tick. The private loop
+    # must launch, read, validate and reap the same child on the original lease.
+    cancelled = Future()
+
+    async def accept():
+        loop = asyncio.get_running_loop()
+        task = asyncio.current_task()
+
+        def cancel_operation(_):
+            try:
+                loop.call_soon_threadsafe(task.cancel)
+            except RuntimeError:
+                if not loop.is_closed():
+                    raise
+
+        cancelled.add_done_callback(cancel_operation)
+        if cancelled.done():
+            raise asyncio.CancelledError
+        with timing_phase("NATIVE_ACCEPT_TRANSPORT"):
+            return await _run_option_process(venue, **request)
+
+    def drive():
+        return asyncio.run(accept())
+
+    # Submit immediately. Waiting for the owner's next loop turn can itself
+    # exhaust the lease. Copy its diagnostic context into this single operation.
+    # History and publication may already occupy every default-executor thread.
+    with ThreadPoolExecutor(max_workers=1, thread_name_prefix="paper-venue-accept") as executor:
+        worker = asyncio.get_running_loop().run_in_executor(executor, copy_context().run, drive)
+        try:
+            return await asyncio.shield(worker)
+        except asyncio.CancelledError:
+            cancelled.set_result(None)
+            while not worker.done():
+                try:
+                    await asyncio.shield(worker)
+                except asyncio.CancelledError:
+                    continue
+                except Exception:
+                    break
+            if not worker.cancelled():
+                worker.exception()
+            raise
+
+
 async def run_option_process(
     venue, *, now, timeout_seconds, intent=None, stock_intent=None, deadline=None
 ):
-    with timing_phase("NATIVE_ACCEPT" if intent is not None or stock_intent is not None else "NATIVE_SNAPSHOT"):
-        return await _run_option_process(venue, now=now, timeout_seconds=timeout_seconds,
-                                         intent=intent, stock_intent=stock_intent, deadline=deadline)
+    accept = intent is not None or stock_intent is not None
+    with timing_phase("NATIVE_ACCEPT" if accept else "NATIVE_SNAPSHOT"):
+        run = _run_option_process
+        if accept and type(venue) is DurableOptionVenue and venue.portfolio_policy is not None:
+            timeout_at = time.monotonic() + timeout_seconds
+            deadline = min(deadline, timeout_at) if deadline is not None else timeout_at
+            run = _isolated_accept
+        return await run(venue, now=now, timeout_seconds=timeout_seconds,
+                         intent=intent, stock_intent=stock_intent, deadline=deadline)
 
 
 async def _spawn_option_child(module, payload, env):
@@ -139,6 +197,9 @@ async def _run_option_process(
         raise FixtureProcessProtocolError("Option request exceeds fixed protocol")
     env = {key: os.environ[key] for key in ("PATH", "LANG", "LC_ALL") if key in os.environ}
     module = "app.options.snapshot_worker" if snapshot_read else "app.options.worker"
+    if not snapshot_read and time.monotonic() >= deadline:
+        # No spawn task exists. A timeout once that task exists stays uncertain.
+        raise NativeAcceptNotStarted("Local acceptance deadline expired before spawn")
     spawn = asyncio.create_task(_spawn_option_child(module, payload, env))
     child = None
     trace = TraceReader()

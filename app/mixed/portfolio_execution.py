@@ -18,7 +18,7 @@ from app.mixed.portfolio_venue import PortfolioVenueSnapshot
 from app.mixed.stock_models import StockIntent, StockQuote
 from app.options.engine import clock, exact, fingerprint
 from app.options.lifecycle import TERMINAL
-from app.options.process import run_option_process
+from app.options.process import NativeAcceptNotStarted, run_option_process
 
 
 def policy(engine):
@@ -391,10 +391,17 @@ async def submit(engine, i, now, started):
         engine.policy.process_timeout_seconds, (i.approval_expires_at - now).total_seconds()
     )
     try:
-        checked = time.monotonic()
-        if checked >= deadline:
-            # The SUBMITTING receipt is durable, but this caller has not handed
-            # the order to a child. Only this boundary can prove no send.
+        try:
+            if time.monotonic() >= deadline:
+                raise NativeAcceptNotStarted("Local acceptance deadline expired before handoff")
+            result = await run_option_process(
+                engine.venue, now=now, timeout_seconds=engine.policy.process_timeout_seconds,
+                deadline=deadline, **arguments,
+            )
+        except NativeAcceptNotStarted:
+            # The durable intent and its attempt remain auditable. Both paths
+            # raising this exception precede creation of a native child.
+            observed_at = now + timedelta(seconds=time.monotonic() - started)
             with engine.journal.write() as db:
                 engine._control(db)
                 changed = db.execute(
@@ -405,18 +412,11 @@ async def submit(engine, i, now, started):
                 if changed.rowcount != 1:
                     raise ExecutionBlocked("PORTFOLIO_ATTEMPT_CHANGED")
                 engine.journal.event(
-                    db, now + timedelta(seconds=checked - started), "PORTFOLIO_DISPATCH_REJECTED",
+                    db, observed_at, "PORTFOLIO_DISPATCH_REJECTED",
                     {"play_id": i.closing_entry_client_id or client_id,
                      "reason": "NATIVE_DEADLINE_EXPIRED_BEFORE_SUBMISSION"}, client_id,
                 )
             return "REJECTED"
-        result = await run_option_process(
-            engine.venue,
-            now=now,
-            timeout_seconds=engine.policy.process_timeout_seconds,
-            deadline=deadline,
-            **arguments,
-        )
         with engine.journal.write() as db:
             engine._control(db)
             row = db.execute(
