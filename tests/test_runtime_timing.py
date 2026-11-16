@@ -150,6 +150,38 @@ def test_unusable_option_choice_preserves_exact_charge_and_raw_reply(tmp_path, m
         assert asyncio.run(c.cycle(frame)) == result and venue.submit_count == 0
 
 
+def test_native_ack_received_before_unrelated_interpreter_teardown(tmp_path, monkeypatch):
+    import sys
+    import time
+    from test_mixed_entry import owner
+    from test_mixed_selection import stock_frame
+    from app.mixed import portfolio_execution
+
+    spawn, native = asyncio.create_subprocess_exec, portfolio_execution.run_option_process
+    program = (
+        "import atexit,runpy,time;"
+        "atexit.register(time.sleep,5);"
+        "runpy.run_module('app.options.worker',run_name='__main__')"
+    )
+
+    async def slow_teardown(*args, **kwargs):
+        if args[-1] == "app.options.worker":
+            assert args == (sys.executable, "-I", "-m", "app.options.worker")
+            args = (sys.executable, "-I", "-c", program)
+        return await spawn(*args, **kwargs)
+
+    async def bounded(venue, **request):
+        request["deadline"] = min(request["deadline"], time.monotonic() + 2)
+        return await native(venue, **request)
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", slow_teardown)
+    monkeypatch.setattr(portfolio_execution, "run_option_process", bounded)
+    with owner(tmp_path, monkeypatch, choice="OPTION", portfolio=True) as (c, venue, _, _):
+        result = asyncio.run(c.cycle(stock_frame()))
+        assert venue.submit_count == 1
+        assert result["entries"][0]["status"] == "OPEN"
+
+
 def test_portfolio_ack_is_validated_while_owner_loop_is_occupied(tmp_path, monkeypatch):
     import threading
     from test_mixed_entry import owner

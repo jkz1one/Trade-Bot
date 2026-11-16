@@ -74,4 +74,10 @@ def main():
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    status = main()
+    if status == 0:
+        # The venue transaction and response are complete. Deliver EOF and the
+        # actual exit status without spending the remaining lease on interpreter teardown.
+        sys.stdout.flush()
+        os._exit(0)
+    raise SystemExit(status)
