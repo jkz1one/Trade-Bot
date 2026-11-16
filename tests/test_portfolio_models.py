@@ -30,6 +30,52 @@ def test_portfolio_entry_uses_one_original_paid_receipt_and_native_dispatch(
         assert len(calls) == 1 and Decimal(calls[0]["cost"]) > 0
 
 
+@pytest.mark.parametrize("choice", ["OPTION", "STOCK"])
+@pytest.mark.parametrize("before_send", [True, False])
+def test_portfolio_timeout_distinguishes_proven_unsent_from_uncertain(
+    tmp_path, monkeypatch, choice, before_send
+):
+    from test_paper_session_report import live_result, module as reports
+    from app.execution.process import FixtureProcessTimeout
+    from app.mixed import portfolio_execution
+
+    with owner(tmp_path, monkeypatch, choice=choice, portfolio=True) as (c, venue, times, _):
+        submit = portfolio_execution.submit
+        handoffs = []
+
+        async def late_submit(engine, intent, now, started):
+            return await submit(engine, intent, now, started - engine.policy.process_timeout_seconds)
+
+        async def missing_ack(*args, **kwargs):
+            handoffs.append(1)
+            raise FixtureProcessTimeout("synthetic missing acknowledgement")
+
+        monkeypatch.setattr(portfolio_execution, "run_option_process", missing_ack)
+        if before_send:
+            monkeypatch.setattr(portfolio_execution, "submit", late_submit)
+        result = asyncio.run(c.cycle(stock_frame()))
+        entry, = result["entries"]
+        assert entry["status"] == ("REJECTED" if before_send else "UNKNOWN"), entry
+        assert len(handoffs) == int(not before_send)
+        with c.engine.journal.read() as db:
+            order, = db.execute("SELECT status,active_play,attempted_at FROM execution_portfolio_orders")
+            assert order["status"] == entry["status"] and order["attempted_at"] is not None
+            assert (order["active_play"] is None) == before_send
+            assert bool(db.execute("SELECT halted FROM execution_control").fetchone()[0]) != before_send
+            assert db.execute("SELECT COUNT(*) FROM execution_model_calls WHERE cost IS NOT NULL").fetchone()[0] == 1
+            diagnostics = reports.owner_diagnostics(db, "2000", "2099")
+            assert diagnostics["expired_before_native_submission"] == int(before_send)
+            rendered = reports.short_report(live_result() | diagnostics)
+            assert ("Orders that expired before native submission: 1" in rendered) == before_send
+            if before_send:
+                event, = db.execute("SELECT payload FROM execution_events WHERE kind='PORTFOLIO_DISPATCH_REJECTED'")
+                assert json.loads(event[0])["reason"] == "NATIVE_DEADLINE_EXPIRED_BEFORE_SUBMISSION"
+        if before_send:
+            assert c.engine.reconcile(venue.snapshot(times[0]), now=times[0])["reconciled"]
+        asyncio.run(c.cycle(stock_frame()))
+        assert len(handoffs) == int(not before_send)
+
+
 @pytest.mark.parametrize("portfolio", [False, True])
 @pytest.mark.parametrize("fault", [False, True])
 def test_paid_option_review_and_reservation_share_commit_or_retain_review(tmp_path, monkeypatch, portfolio, fault):

@@ -387,15 +387,34 @@ async def dispatch_stock(engine, client_id, quote, *, now):
 async def submit(engine, i, now, started):
     client_id = i.client_id
     arguments = {"stock_intent" if isinstance(i, StockIntent) else "intent": i}
+    deadline = started + min(
+        engine.policy.process_timeout_seconds, (i.approval_expires_at - now).total_seconds()
+    )
     try:
+        checked = time.monotonic()
+        if checked >= deadline:
+            # The SUBMITTING receipt is durable, but this caller has not handed
+            # the order to a child. Only this boundary can prove no send.
+            with engine.journal.write() as db:
+                engine._control(db)
+                changed = db.execute(
+                    "UPDATE execution_portfolio_orders SET status='REJECTED',active_play=NULL "
+                    "WHERE client_id=? AND status='SUBMITTING' AND attempted_at=? AND order_id IS NULL",
+                    (client_id, now.isoformat()),
+                )
+                if changed.rowcount != 1:
+                    raise ExecutionBlocked("PORTFOLIO_ATTEMPT_CHANGED")
+                engine.journal.event(
+                    db, now + timedelta(seconds=checked - started), "PORTFOLIO_DISPATCH_REJECTED",
+                    {"play_id": i.closing_entry_client_id or client_id,
+                     "reason": "NATIVE_DEADLINE_EXPIRED_BEFORE_SUBMISSION"}, client_id,
+                )
+            return "REJECTED"
         result = await run_option_process(
             engine.venue,
             now=now,
             timeout_seconds=engine.policy.process_timeout_seconds,
-            deadline=started
-            + min(
-                engine.policy.process_timeout_seconds, (i.approval_expires_at - now).total_seconds()
-            ),
+            deadline=deadline,
             **arguments,
         )
         with engine.journal.write() as db:

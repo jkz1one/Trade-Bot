@@ -23,10 +23,14 @@ def _entry_cost_proof(
     # checks. Cache just the clock bounds and evidence hash, never entry authority.
     from app.mixed.entry import _validate_entry_sources
 
+    data = json.loads(evidence)
+    if "position_request" in data:
+        # Management binds the currently stored play and is validated by its own path.
+        return None
     call = dict(call_items)
     frame = {"inputs_json": inputs, "started_at": started_at, "fingerprint": frame_hash}
     request, _, _ = _validate_entry_sources(
-        call["source_key"], json.loads(evidence), strategy, configuration, call, frame, usable=False
+        call["source_key"], data, strategy, configuration, call, frame, usable=False
     )
     return (
         request.packet.as_of,
@@ -68,6 +72,8 @@ class _EntryCostProofCache:
                 self.entries.move_to_end(key)
                 return self.entries[key][0]
         result = _entry_cost_proof(*key)
+        if result is None:
+            return None
         # Charge shared strings on every key, plus tuples, mapping overhead,
         # and the two clocks and digest retained in the immutable result.
         weight = (
@@ -101,19 +107,19 @@ def records(db, policy):
     calls = db.execute(
         "SELECT * FROM execution_model_calls ORDER BY started_at,source_key"
     ).fetchall()
-    keys = {c["source_key"] for c in calls}
     # Lost calls cannot silently turn a retained response into free advice.
     if db.execute(
         "SELECT 1 FROM sqlite_master WHERE name='execution_option_opportunities'"
     ).fetchone():
-        for row in db.execute("SELECT cycle_key,result_json FROM execution_option_opportunities"):
+        for row in db.execute(
+            "SELECT o.result_json FROM execution_option_opportunities o "
+            "WHERE NOT EXISTS (SELECT 1 FROM execution_model_calls m WHERE m.source_key=o.cycle_key)"
+        ):
             evidence = json.loads(row["result_json"] or "{}")
-            if (
-                any(k in evidence for k in ("entry_result", "position_result"))
-                and row["cycle_key"] not in keys
-            ):
+            if "entry_result" in evidence or "position_result" in evidence:
                 raise ValueError("MIXED_MODEL_ATTEMPT_MISSING")
     entry_configuration = None
+    buy_orders = None
     for call in calls:
         row = db.execute(
             "SELECT result_json,inputs_json,started_at,fingerprint FROM execution_option_opportunities WHERE cycle_key=?",
@@ -121,11 +127,22 @@ def records(db, policy):
         ).fetchone()
         if row is None:
             raise ValueError("MIXED_MODEL_OPPORTUNITY_MISSING")
-        result_json = row["result_json"] or "{}"
-        evidence = json.loads(result_json)
+        evidence = None
+        if entry_configuration is None:
+            evidence = json.loads(row["result_json"] or "{}")
+            if "position_request" not in evidence:
+                entry_configuration = (
+                    db.execute("SELECT policy_json FROM execution_option_strategy WHERE id=1").fetchone()[0],
+                    db.execute("SELECT config_json FROM execution_control WHERE id=1").fetchone()[0],
+                )
+        # The entry cache checks the complete raw opportunity and call. A hit
+        # also proves this is an entry, without decoding its whole reply again.
+        entry_proof = _entry_costs.proof(*entry_configuration, call, row) if entry_configuration else None
         entry_id = None
         kind = "ENTRY_MODEL"
-        if "position_request" in evidence:
+        if entry_proof is None:
+            if evidence is None:
+                evidence = json.loads(row["result_json"] or "{}")
             kind = "MANAGEMENT_MODEL"
             if evidence["position_request"]["packet"]["version"] == "portfolio-position-packet-v2":
                 from app.mixed.portfolio_management import stored
@@ -150,22 +167,21 @@ def records(db, policy):
             as_of, valid_until = request.packet.as_of, request.packet.valid_until
             evidence_hash = fingerprint({"request": request, "call": dict(call)})
         else:
-            if entry_configuration is None:
-                entry_configuration = (
-                    db.execute(
-                        "SELECT policy_json FROM execution_option_strategy WHERE id=1"
-                    ).fetchone()[0],
-                    db.execute("SELECT config_json FROM execution_control WHERE id=1").fetchone()[
-                        0
-                    ],
-                )
-            as_of, valid_until, evidence_hash = _entry_costs.proof(*entry_configuration, call, row)
+            as_of, valid_until, evidence_hash = entry_proof
             if policy.mixed_owner.portfolio is not None:
-                selected = db.execute(
-                    "SELECT client_id FROM execution_portfolio_orders WHERE (source_key=? OR json_extract(approval_json,'$.inputs.scope_arbitration.cycle_key')=?) AND json_extract(intent_json,'$.side')='BUY'",
-                    (call["source_key"], call["source_key"]),
-                ).fetchone()
-                entry_id = selected[0] if selected else None
+                if buy_orders is None:
+                    # Read source bindings once from this transaction. Decisions
+                    # without a fill still get their original reserved entry ID.
+                    buy_orders = {}
+                    for order in db.execute(
+                        "SELECT client_id,source_key,json_extract(approval_json,"
+                        "'$.inputs.scope_arbitration.cycle_key') FROM execution_portfolio_orders "
+                        "WHERE json_extract(intent_json,'$.side')='BUY' ORDER BY rowid"
+                    ):
+                        buy_orders.setdefault(order[1], order[0])
+                        if order[2] is not None:
+                            buy_orders.setdefault(order[2], order[0])
+                entry_id = buy_orders.get(call["source_key"])
         at = datetime.fromisoformat(call["started_at"])
         if not as_of <= at < valid_until:
             raise ValueError("MIXED_MODEL_ATTEMPT_CLOCK_CHANGED")

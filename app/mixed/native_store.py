@@ -132,6 +132,7 @@ def allocations(engine, db, at):
     if not 0 <= (end - start).days <= 366:
         raise ValueError("MIXED_ALLOCATION_HORIZON")
     p = engine.policy.mixed_owner
+    policy_hash = fingerprint(p)
     values = (
         ("DATA", p.daily_data_cost),
         ("HOST", p.daily_host_cost),
@@ -143,7 +144,7 @@ def allocations(engine, db, at):
             kind=kind,
             occurred_at=max(opened, datetime.combine(day, time.min, zone)),
             amount=amount,
-            evidence_hash=fingerprint(p),
+            evidence_hash=policy_hash,
         )
         for day in (start + timedelta(days=i) for i in range((end - start).days + 1))
         for kind, amount in values

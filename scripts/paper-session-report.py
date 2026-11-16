@@ -476,6 +476,9 @@ def short_report(result):
         lines.append('Approved entry quote age unmeasured. The run recorded zero opening reservations.')
     elif freshness:
         lines.append('Approved entry quote age unavailable from the recorded reservations.')
+    expired = result.get('expired_before_native_submission')
+    if expired:
+        lines.append(f"Orders that expired before native submission: {expired}")
     recovery = result.get('attempt_recovery')
     if recovery and (recovery['matched_in_run'] or recovery['unresolved_at_last_snapshot']):
         lines.append(f"Order recovery: matched {recovery['matched_in_run']}; "
@@ -795,6 +798,11 @@ def owner_diagnostics(db, start, end):
     ):
         result['decision_reason_counts'].append({**dict(row), 'reason': codes(row['reason'])})
     if 'payload' in {r[1] for r in db.execute('PRAGMA table_info(execution_events)')}:
+        result['expired_before_native_submission'] = db.execute(
+            "SELECT COUNT(*) FROM execution_events WHERE kind='PORTFOLIO_DISPATCH_REJECTED' "
+            "AND occurred_at>=? AND occurred_at<=? AND CASE WHEN length(payload)<=65536 "
+            "AND json_valid(payload) THEN json_extract(payload,'$.reason') END="
+            "'NATIVE_DEADLINE_EXPIRED_BEFORE_SUBMISSION'", (start, end)).fetchone()[0]
         recovery = attempt_recovery_counts(db, start, end)
         if recovery is not None:
             result['attempt_recovery'] = recovery
