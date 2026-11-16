@@ -137,3 +137,40 @@ def test_repeated_commits_cannot_restart_private_copy_indefinitely(tmp_path, mon
         assert snapshot.execute("SELECT value FROM marker").fetchone()[0] == a
     if stall == "transient":
         assert copy_modes == [False, True, False]
+
+
+@pytest.mark.parametrize("stop", ["pinned_deadline", "final_deadline", "final_capacity"])
+def test_private_copy_enforces_original_bounds_after_restart(monkeypatch, stop):
+    from types import SimpleNamespace
+    from app.mixed import sqlite_copy
+
+    # Drive SQLite's progress callback at its exact limits without depending
+    # on the scheduler. The tests above exercise real file backups and writers.
+    now = [0.0]
+    attempts = []
+    monkeypatch.setattr(sqlite_copy, "time", SimpleNamespace(monotonic=lambda: now[0]))
+
+    class ControlledBackup(sqlite3.Connection):
+        def backup(self, target, *, progress, **kwargs):
+            attempts.append(self.in_transaction)
+            if len(attempts) == 1:
+                progress(sqlite3.SQLITE_OK, 4, 8)
+                progress(sqlite3.SQLITE_OK, 4, 8)
+            elif self.in_transaction:
+                now[0] = 1.0 if stop == "pinned_deadline" else sqlite_copy.PINNED_COPY_SECONDS
+                progress(sqlite3.SQLITE_OK, 2, 8)
+            else:
+                if stop == "final_deadline":
+                    now[0] = 1.0
+                pages = 9 if stop == "final_capacity" else 8
+                progress(sqlite3.SQLITE_DONE, 0, pages)
+
+    with closing(sqlite3.connect(":memory:", factory=ControlledBackup)) as source:
+        page_size = source.execute("PRAGMA page_size").fetchone()[0]
+        with closing(sqlite3.connect(":memory:")) as target:
+            error, message = (ValueError, "size") if stop == "final_capacity" else (TimeoutError, "time")
+            with pytest.raises(error, match=message):
+                sqlite_copy.private_backup(source, target, deadline=1.0, max_bytes=8 * page_size,
+                                           capacity_error="size", deadline_error="time")
+        assert not source.in_transaction
+    assert attempts == ([False, True] if stop == "pinned_deadline" else [False, True, False])
