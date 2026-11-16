@@ -1429,5 +1429,142 @@
         "sha256": "c75a1137e8dbe735cf98249cdafca565208448a43bc559d46833fc4b2ce15b4e"
       }
     }
+  },
+  "stopped_trial_journal_profile": {
+    "method": "Each stopped trial database and its independent authority were opened read-only and immutable. The installed application ran one warm-up plus nine full scans on one pinned CPU per database. Every digest matched its saved authority. SQLite trace intervals include table reading and processing through the next statement. These timings exclude active worker contention.",
+    "trials": {
+      "ack-335": {
+        "scans": 9,
+        "v1_digest": "64e9d01995e5bef0f7bf71c217500166c3c34bf5a9897b289c23d551dd21ae39",
+        "source_bytes": 106700800,
+        "median_seconds": 0.122519,
+        "largest_intervals": [
+          {
+            "name": "execution_option_scope_runtime_inputs",
+            "median_seconds": 0.032174,
+            "percent_of_median_scan": 26.3
+          },
+          {
+            "name": "execution_mixed_runtime_inputs",
+            "median_seconds": 0.031476,
+            "percent_of_median_scan": 25.7
+          },
+          {
+            "name": "execution_snapshots",
+            "median_seconds": 0.018672,
+            "percent_of_median_scan": 15.2
+          },
+          {
+            "name": "execution_events",
+            "median_seconds": 0.012512,
+            "percent_of_median_scan": 10.2
+          },
+          {
+            "name": "execution_runtime_timings",
+            "median_seconds": 0.010697,
+            "percent_of_median_scan": 8.7
+          }
+        ]
+      },
+      "ack-repeat-335": {
+        "scans": 9,
+        "v1_digest": "7e5a6605357e0909362202c421a1361507dd253628ed498b4b4077b8ed1bf33c",
+        "source_bytes": 107995136,
+        "median_seconds": 0.122363,
+        "largest_intervals": [
+          {
+            "name": "execution_option_scope_runtime_inputs",
+            "median_seconds": 0.032868,
+            "percent_of_median_scan": 26.9
+          },
+          {
+            "name": "execution_mixed_runtime_inputs",
+            "median_seconds": 0.031404,
+            "percent_of_median_scan": 25.7
+          },
+          {
+            "name": "execution_snapshots",
+            "median_seconds": 0.018918,
+            "percent_of_median_scan": 15.5
+          },
+          {
+            "name": "execution_events",
+            "median_seconds": 0.013787,
+            "percent_of_median_scan": 11.3
+          },
+          {
+            "name": "execution_runtime_timings",
+            "median_seconds": 0.010512,
+            "percent_of_median_scan": 8.6
+          }
+        ]
+      },
+      "ack-two-core-335": {
+        "scans": 9,
+        "v1_digest": "d3163c0a44827ffc5979e6ddd98d7a5f4a1164b0803656fc56a777abf400ca0c",
+        "source_bytes": 107909120,
+        "median_seconds": 0.123156,
+        "largest_intervals": [
+          {
+            "name": "execution_option_scope_runtime_inputs",
+            "median_seconds": 0.03314,
+            "percent_of_median_scan": 26.9
+          },
+          {
+            "name": "execution_mixed_runtime_inputs",
+            "median_seconds": 0.031034,
+            "percent_of_median_scan": 25.2
+          },
+          {
+            "name": "execution_snapshots",
+            "median_seconds": 0.019272,
+            "percent_of_median_scan": 15.6
+          },
+          {
+            "name": "execution_events",
+            "median_seconds": 0.013806,
+            "percent_of_median_scan": 11.2
+          },
+          {
+            "name": "execution_runtime_timings",
+            "median_seconds": 0.010726,
+            "percent_of_median_scan": 8.7
+          }
+        ]
+      },
+      "ack-scan-90": {
+        "scans": 9,
+        "v1_digest": "34399344636e5e7cc1015936f11b8dfd1c5e626a14bc431d05ba3940206644d5",
+        "source_bytes": 105279488,
+        "median_seconds": 0.11911,
+        "largest_intervals": [
+          {
+            "name": "execution_option_scope_runtime_inputs",
+            "median_seconds": 0.032732,
+            "percent_of_median_scan": 27.5
+          },
+          {
+            "name": "execution_mixed_runtime_inputs",
+            "median_seconds": 0.031758,
+            "percent_of_median_scan": 26.7
+          },
+          {
+            "name": "execution_snapshots",
+            "median_seconds": 0.018205,
+            "percent_of_median_scan": 15.3
+          },
+          {
+            "name": "execution_events",
+            "median_seconds": 0.01222,
+            "percent_of_median_scan": 10.3
+          },
+          {
+            "name": "execution_runtime_timings",
+            "median_seconds": 0.010254,
+            "percent_of_median_scan": 8.6
+          }
+        ]
+      }
+    }
   }
 }
