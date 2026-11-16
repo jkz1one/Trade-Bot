@@ -152,6 +152,22 @@ next action. Do not replace missing evidence with a date estimate.
   and 7.97 seconds. The repaired short repeat admitted at 5.60 seconds,
   and the two-slot repeat admitted at 4.86 seconds. Another short run
   admitted at 4.89 seconds before the publisher failed its private copy.
+  The one-CPU run with both repairs recorded one failed native acknowledgement
+  with 1.76 seconds left at spawn start. It recovered the order and missed
+  the second slot. The matched two-CPU run admitted at 5.91 seconds,
+  evaluated both slots and finished flat. Average busy cores were 0.72
+  and 0.83 over the respective 335-second windows. At 90 seconds two CPUs
+  admitted at 4.76 seconds and finished flat. One CPU admitted at 4.75
+  seconds and then hit the report and publisher copy errors described in A4.
+  `88c9ba0` shows failed and interrupted local calls in
+  the text report alongside the matched attempt and the actual fills.
+  On the retained padded database, the timing table took 86% of a warm
+  journal scan. On the unpadded 18-session account, Scope and mixed input
+  tables were the largest intervals at 28% and 24%.
+  On `2646944`, the 90- and 335-second one-CPU runs admitted at 4.995
+  and 5.091 seconds. Each completed one round trip and verified flat.
+  The two-slot run evaluated both opportunities and served every paired
+  dashboard and report check. The five-second entry target remains open.
   [November 16 trials](PAPER_TIMING_20261116_PROOF.json).
 - [ ] **A3 — Measured repairs:** reproduce and close the actual bottlenecks with
   before/after evidence; decide connection reuse from measurements and validate
@@ -209,6 +225,14 @@ next action. Do not replace missing evidence with a date estimate.
   history still blocked. `0c46df3` releases its pinned read lock before
   a final incremental dashboard or report copy. Tests cover a quieting
   writer, repeated restarts, size growth and the original deadline.
+  With both repairs, the stock and option stops were acknowledged in 3.26
+  and 3.31 seconds. Their full cases took 4.87 and 5.26 seconds.
+  In another short run a report timeout triggered fixture shutdown after
+  the entry filled. The publisher also abandoned its released copy at
+  the first writer restart. `2646944` lets that copy continue when it
+  reaches new pages between restarts. Both real SQLite readers completed
+  through two intervening commits, and all 15 deadline and lock cases
+  passed. Persistent rewinds still release the reader early.
   [Protection measurements](PAPER_TIMING_20261116_PROOF.json).
   `aad4e08` isolated in-run publisher failure. `d35d318` adds verified-held startup
   protection for missing/partial display snapshots, read-only protection-only host
@@ -265,6 +289,19 @@ next action. Do not replace missing evidence with a date estimate.
   The zero-recovery 135-minute repeat on `9710cce` evaluated 27 of 27 slots
   and verified flat. Its 263 paired dashboard/report reads and 2,983 native
   snapshot reads succeeded through shutdown.
+  The later 358-minute attempt stopped after 44 minutes 51 seconds with
+  nine completed cycles. Its last report recorded one round trip. A separate
+  replay stopped after 18 sessions. Neither checkpoint proves completion.
+  The `0c46df3` application subsequently completed all 22 exchange sessions
+  with eight sampled packets per session on one owner and verified the
+  original journal authority after each session.
+  The denser replay used an intermediate restore build. It delivered 1,738
+  packets across 22 sessions. Its next 335-second session published and
+  evaluated both slots. The first plan had 0.403 seconds left at reply and
+  expired 0.723 seconds before its final review. The expected round trip
+  was missed. The final application verified the same authority and flat
+  accounting at packet 1,769 using read-only access.
+  [Session and timing evidence](PAPER_TIMING_20261116_PROOF.json).
   The short tests use labeled padding and sampled aggregate RSS. Host cgroup
   enforcement and connected-session effectiveness still require separate evidence.
   [Short loaded runs](PAPER_LOADED_HANDOFF_20261114_PROOF.json). [Current capacity evidence](PAPER_CAPACITY_20261114_PROOF.json).

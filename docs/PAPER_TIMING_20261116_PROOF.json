@@ -6,7 +6,7 @@
     "market_provider_calls": 0,
     "external_model_calls": 0,
     "live_enabled": false,
-    "logical_cpus_per_worker": 1,
+    "worker_cpu_allocations": "One or two as labeled in each trial.",
     "max_feed_recoveries_in_opening_trials": 2,
     "connected_host_last_confirmed": "39d8e48",
     "full_scheduled_duration_seconds": 21480
@@ -15,6 +15,7 @@
     "baseline": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
     "exact_restore_prefix": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
     "copy_retry": "0c46df30bd51d8400ce8bebbd1af0db0a274282e",
+    "advancing_unpinned_copy": "2646944668eefc05e19f5fb5b6698ac89792509e",
     "copy_bound_regressions": "a8c338c21823b02901cbebe1e08ebca707523926"
   },
   "restore_verification": {
@@ -68,7 +69,76 @@
         "median_warm_seconds": 0.19156
       }
     },
-    "sampling": "Two fresh processes per application and source. Each records one cold and eight warm complete rescans. Both sources retain their original authority digest."
+    "sampling": "Two fresh processes per application and source. Each records one cold and eight warm complete rescans. Both sources retain their original authority digest.",
+    "remaining_table_costs": {
+      "padded": {
+        "scans": 4,
+        "v1_digest": "ecdd8c040cd9ac1dbde3646c4558ac9f1d29d1f005d59465af79c4c608ff1acc",
+        "source_bytes": 122957824,
+        "median_seconds": 0.119165,
+        "largest_intervals": [
+          {
+            "name": "execution_runtime_timings",
+            "median_seconds": 0.102321,
+            "percent_of_median_scan": 85.9
+          },
+          {
+            "name": "execution_snapshots",
+            "median_seconds": 0.003757,
+            "percent_of_median_scan": 3.2
+          },
+          {
+            "name": "execution_events",
+            "median_seconds": 0.002354,
+            "percent_of_median_scan": 2.0
+          },
+          {
+            "name": "execution_mixed_runtime_inputs",
+            "median_seconds": 0.00105,
+            "percent_of_median_scan": 0.9
+          },
+          {
+            "name": "execution_option_scope_runtime_inputs",
+            "median_seconds": 0.0009,
+            "percent_of_median_scan": 0.8
+          }
+        ]
+      },
+      "month": {
+        "scans": 4,
+        "v1_digest": "3b91fedc9f9315eb2fcd819b19f7b3b99f3b9f8a11de1bdba83b5ec4c39615b0",
+        "source_bytes": 82972672,
+        "median_seconds": 0.15282,
+        "largest_intervals": [
+          {
+            "name": "execution_option_scope_runtime_inputs",
+            "median_seconds": 0.042839,
+            "percent_of_median_scan": 28.0
+          },
+          {
+            "name": "execution_mixed_runtime_inputs",
+            "median_seconds": 0.037013,
+            "percent_of_median_scan": 24.2
+          },
+          {
+            "name": "execution_snapshots",
+            "median_seconds": 0.022045,
+            "percent_of_median_scan": 14.4
+          },
+          {
+            "name": "execution_events",
+            "median_seconds": 0.014474,
+            "percent_of_median_scan": 9.5
+          },
+          {
+            "name": "execution_runtime_timings",
+            "median_seconds": 0.013577,
+            "percent_of_median_scan": 8.9
+          }
+        ]
+      }
+    },
+    "table_profile_method": "Four warm read-only scans of each retained file. Each SQLite SELECT interval includes fetching, encoding and verifying that table until the next SELECT or digest return. Percentages use the median whole scan and may not sum to 100."
   },
   "opening_trials": [
     {
@@ -76,6 +146,7 @@
       "group": "overlapping_suites",
       "commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
       "manifest": "9904993361dcf075ae05db3a638cbb4858289828c40c826f0e6b29e661902866",
+      "logical_cpus": 1,
       "planned_seconds": 90,
       "status": "FAILED",
       "initial_database_bytes": 119635968,
@@ -85,6 +156,13 @@
       "owner_thread_cpu_seconds_in_fully_contained_digests": 7.067424,
       "snapshot_failures": 0,
       "native_snapshot_calls": 22,
+      "native_accept_failures": 1,
+      "publication_failures": 0,
+      "acknowledgement_recovery": {
+        "matched_in_run": 0,
+        "unresolved_at_last_snapshot": 1
+      },
+      "paired_dashboard_and_report_reads": 3,
       "report_scope": "after_shutdown",
       "run_execution": {
         "status": "RECORDED",
@@ -92,6 +170,15 @@
         "exit_fills": 0,
         "completed_round_trips": 0,
         "carry_in_exits": 0
+      },
+      "worker_window_cpu": {
+        "elapsed_seconds": 92.286263,
+        "worker_user_seconds": 65.023387,
+        "worker_system_seconds": 14.149145,
+        "reaped_child_user_seconds": 1.616502,
+        "reaped_child_system_seconds": 0.452777,
+        "average_busy_cores": 0.880324,
+        "average_allocated_cpu_percent": 88.032
       },
       "evaluated_slots": 1,
       "expected_slots": 1,
@@ -102,6 +189,7 @@
       "group": "overlapping_suites",
       "commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
       "manifest": "9904993361dcf075ae05db3a638cbb4858289828c40c826f0e6b29e661902866",
+      "logical_cpus": 1,
       "planned_seconds": 90,
       "status": "PASSED",
       "initial_database_bytes": 119635968,
@@ -111,6 +199,13 @@
       "owner_thread_cpu_seconds_in_fully_contained_digests": 6.009523,
       "snapshot_failures": 0,
       "native_snapshot_calls": 26,
+      "native_accept_failures": 0,
+      "publication_failures": 0,
+      "acknowledgement_recovery": {
+        "matched_in_run": 0,
+        "unresolved_at_last_snapshot": 0
+      },
+      "paired_dashboard_and_report_reads": 3,
       "report_scope": "after_shutdown",
       "run_execution": {
         "status": "RECORDED",
@@ -118,6 +213,15 @@
         "exit_fills": 1,
         "completed_round_trips": 1,
         "carry_in_exits": 0
+      },
+      "worker_window_cpu": {
+        "elapsed_seconds": 94.690456,
+        "worker_user_seconds": 67.118622,
+        "worker_system_seconds": 18.470462,
+        "reaped_child_user_seconds": 1.906149,
+        "reaped_child_system_seconds": 0.413557,
+        "average_busy_cores": 0.928381,
+        "average_allocated_cpu_percent": 92.838
       },
       "evaluated_slots": 1,
       "expected_slots": 1,
@@ -129,6 +233,7 @@
       "group": "overlapping_suites",
       "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
       "manifest": "f560862a59b5b7ed761289064cf1ff0d9f1f35d03aa37cea60f9eb24412565ff",
+      "logical_cpus": 1,
       "planned_seconds": 90,
       "status": "FAILED",
       "initial_database_bytes": 119635968,
@@ -138,6 +243,13 @@
       "owner_thread_cpu_seconds_in_fully_contained_digests": null,
       "snapshot_failures": 0,
       "native_snapshot_calls": 3,
+      "native_accept_failures": 0,
+      "publication_failures": 0,
+      "acknowledgement_recovery": {
+        "matched_in_run": 0,
+        "unresolved_at_last_snapshot": 0
+      },
+      "paired_dashboard_and_report_reads": 0,
       "report_scope": "after_shutdown",
       "run_execution": {
         "carry_in_exits": 0,
@@ -146,6 +258,15 @@
         "exit_fills": 0,
         "status": "RECORDED"
       },
+      "worker_window_cpu": {
+        "elapsed_seconds": 8.072097,
+        "worker_user_seconds": 4.637077,
+        "worker_system_seconds": 2.506572,
+        "reaped_child_user_seconds": 0.113578,
+        "reaped_child_system_seconds": 0.036059,
+        "average_busy_cores": 0.903518,
+        "average_allocated_cpu_percent": 90.352
+      },
       "failure": "REPORT_SOURCE_COPY_DEADLINE"
     },
     {
@@ -153,6 +274,7 @@
       "group": "overlapping_suites",
       "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
       "manifest": "f560862a59b5b7ed761289064cf1ff0d9f1f35d03aa37cea60f9eb24412565ff",
+      "logical_cpus": 1,
       "planned_seconds": 90,
       "status": "PASSED",
       "initial_database_bytes": 119635968,
@@ -162,6 +284,13 @@
       "owner_thread_cpu_seconds_in_fully_contained_digests": 3.48637,
       "snapshot_failures": 0,
       "native_snapshot_calls": 38,
+      "native_accept_failures": 0,
+      "publication_failures": 0,
+      "acknowledgement_recovery": {
+        "matched_in_run": 0,
+        "unresolved_at_last_snapshot": 0
+      },
+      "paired_dashboard_and_report_reads": 3,
       "report_scope": "after_shutdown",
       "run_execution": {
         "status": "RECORDED",
@@ -169,6 +298,15 @@
         "exit_fills": 1,
         "completed_round_trips": 1,
         "carry_in_exits": 0
+      },
+      "worker_window_cpu": {
+        "elapsed_seconds": 90.715283,
+        "worker_user_seconds": 49.231252,
+        "worker_system_seconds": 18.8368,
+        "reaped_child_user_seconds": 2.251885,
+        "reaped_child_system_seconds": 0.540363,
+        "average_busy_cores": 0.781129,
+        "average_allocated_cpu_percent": 78.113
       },
       "evaluated_slots": 1,
       "expected_slots": 1,
@@ -180,6 +318,7 @@
       "group": "overlapping_suites",
       "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
       "manifest": "f560862a59b5b7ed761289064cf1ff0d9f1f35d03aa37cea60f9eb24412565ff",
+      "logical_cpus": 1,
       "planned_seconds": 335,
       "status": "PASSED",
       "initial_database_bytes": 119635968,
@@ -189,6 +328,13 @@
       "owner_thread_cpu_seconds_in_fully_contained_digests": 3.218429,
       "snapshot_failures": 0,
       "native_snapshot_calls": 153,
+      "native_accept_failures": 0,
+      "publication_failures": 0,
+      "acknowledgement_recovery": {
+        "matched_in_run": 0,
+        "unresolved_at_last_snapshot": 0
+      },
+      "paired_dashboard_and_report_reads": 11,
       "report_scope": "after_shutdown",
       "run_execution": {
         "status": "RECORDED",
@@ -196,6 +342,15 @@
         "exit_fills": 1,
         "completed_round_trips": 1,
         "carry_in_exits": 0
+      },
+      "worker_window_cpu": {
+        "elapsed_seconds": 335.808279,
+        "worker_user_seconds": 173.035246,
+        "worker_system_seconds": 71.423138,
+        "reaped_child_user_seconds": 6.562625,
+        "reaped_child_system_seconds": 1.925827,
+        "average_busy_cores": 0.753248,
+        "average_allocated_cpu_percent": 75.325
       },
       "evaluated_slots": 2,
       "expected_slots": 2,
@@ -207,6 +362,7 @@
       "group": "sequential",
       "commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
       "manifest": "9904993361dcf075ae05db3a638cbb4858289828c40c826f0e6b29e661902866",
+      "logical_cpus": 1,
       "planned_seconds": 90,
       "status": "PASSED",
       "initial_database_bytes": 119635968,
@@ -216,6 +372,13 @@
       "owner_thread_cpu_seconds_in_fully_contained_digests": 6.099396,
       "snapshot_failures": 0,
       "native_snapshot_calls": 26,
+      "native_accept_failures": 0,
+      "publication_failures": 0,
+      "acknowledgement_recovery": {
+        "matched_in_run": 0,
+        "unresolved_at_last_snapshot": 0
+      },
+      "paired_dashboard_and_report_reads": 3,
       "report_scope": "after_shutdown",
       "run_execution": {
         "status": "RECORDED",
@@ -223,6 +386,15 @@
         "exit_fills": 1,
         "completed_round_trips": 1,
         "carry_in_exits": 0
+      },
+      "worker_window_cpu": {
+        "elapsed_seconds": 95.15119,
+        "worker_user_seconds": 69.986757,
+        "worker_system_seconds": 17.427584,
+        "reaped_child_user_seconds": 1.954223,
+        "reaped_child_system_seconds": 0.368137,
+        "average_busy_cores": 0.943096,
+        "average_allocated_cpu_percent": 94.31
       },
       "evaluated_slots": 1,
       "expected_slots": 1,
@@ -234,6 +406,7 @@
       "group": "sequential",
       "commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
       "manifest": "9904993361dcf075ae05db3a638cbb4858289828c40c826f0e6b29e661902866",
+      "logical_cpus": 1,
       "planned_seconds": 90,
       "status": "PASSED",
       "initial_database_bytes": 119635968,
@@ -243,6 +416,13 @@
       "owner_thread_cpu_seconds_in_fully_contained_digests": 6.311691,
       "snapshot_failures": 0,
       "native_snapshot_calls": 24,
+      "native_accept_failures": 0,
+      "publication_failures": 0,
+      "acknowledgement_recovery": {
+        "matched_in_run": 0,
+        "unresolved_at_last_snapshot": 0
+      },
+      "paired_dashboard_and_report_reads": 3,
       "report_scope": "after_shutdown",
       "run_execution": {
         "status": "RECORDED",
@@ -250,6 +430,15 @@
         "exit_fills": 1,
         "completed_round_trips": 1,
         "carry_in_exits": 0
+      },
+      "worker_window_cpu": {
+        "elapsed_seconds": 91.273328,
+        "worker_user_seconds": 66.294329,
+        "worker_system_seconds": 15.911255,
+        "reaped_child_user_seconds": 1.926768,
+        "reaped_child_system_seconds": 0.398399,
+        "average_busy_cores": 0.926128,
+        "average_allocated_cpu_percent": 92.613
       },
       "evaluated_slots": 1,
       "expected_slots": 1,
@@ -261,6 +450,7 @@
       "group": "sequential",
       "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
       "manifest": "f560862a59b5b7ed761289064cf1ff0d9f1f35d03aa37cea60f9eb24412565ff",
+      "logical_cpus": 1,
       "planned_seconds": 90,
       "status": "FAILED",
       "initial_database_bytes": 119635968,
@@ -270,6 +460,13 @@
       "owner_thread_cpu_seconds_in_fully_contained_digests": null,
       "snapshot_failures": 0,
       "native_snapshot_calls": 26,
+      "native_accept_failures": 0,
+      "publication_failures": 1,
+      "acknowledgement_recovery": {
+        "matched_in_run": 0,
+        "unresolved_at_last_snapshot": 0
+      },
+      "paired_dashboard_and_report_reads": 2,
       "report_scope": "after_shutdown",
       "run_execution": {
         "carry_in_exits": 0,
@@ -278,6 +475,15 @@
         "exit_fills": 1,
         "status": "RECORDED"
       },
+      "worker_window_cpu": {
+        "elapsed_seconds": 69.18779,
+        "worker_user_seconds": 36.180023,
+        "worker_system_seconds": 15.382823,
+        "reaped_child_user_seconds": 2.061561,
+        "reaped_child_system_seconds": 0.348721,
+        "average_busy_cores": 0.780096,
+        "average_allocated_cpu_percent": 78.01
+      },
       "failure": "CONNECTED_COMPONENT_STOPPED:PUBLISHER"
     },
     {
@@ -285,6 +491,7 @@
       "group": "sequential",
       "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
       "manifest": "f560862a59b5b7ed761289064cf1ff0d9f1f35d03aa37cea60f9eb24412565ff",
+      "logical_cpus": 1,
       "planned_seconds": 90,
       "status": "PASSED",
       "initial_database_bytes": 119635968,
@@ -294,6 +501,13 @@
       "owner_thread_cpu_seconds_in_fully_contained_digests": 3.756644,
       "snapshot_failures": 0,
       "native_snapshot_calls": 37,
+      "native_accept_failures": 0,
+      "publication_failures": 0,
+      "acknowledgement_recovery": {
+        "matched_in_run": 0,
+        "unresolved_at_last_snapshot": 0
+      },
+      "paired_dashboard_and_report_reads": 3,
       "report_scope": "after_shutdown",
       "run_execution": {
         "status": "RECORDED",
@@ -301,6 +515,15 @@
         "exit_fills": 1,
         "completed_round_trips": 1,
         "carry_in_exits": 0
+      },
+      "worker_window_cpu": {
+        "elapsed_seconds": 91.758836,
+        "worker_user_seconds": 48.397111,
+        "worker_system_seconds": 22.076918,
+        "reaped_child_user_seconds": 2.319188,
+        "reaped_child_system_seconds": 0.492867,
+        "average_busy_cores": 0.798681,
+        "average_allocated_cpu_percent": 79.868
       },
       "evaluated_slots": 1,
       "expected_slots": 1,
@@ -312,6 +535,7 @@
       "group": "sequential",
       "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
       "manifest": "f560862a59b5b7ed761289064cf1ff0d9f1f35d03aa37cea60f9eb24412565ff",
+      "logical_cpus": 1,
       "planned_seconds": 335,
       "status": "PASSED",
       "initial_database_bytes": 119635968,
@@ -321,6 +545,13 @@
       "owner_thread_cpu_seconds_in_fully_contained_digests": 3.514372,
       "snapshot_failures": 0,
       "native_snapshot_calls": 142,
+      "native_accept_failures": 0,
+      "publication_failures": 0,
+      "acknowledgement_recovery": {
+        "matched_in_run": 0,
+        "unresolved_at_last_snapshot": 0
+      },
+      "paired_dashboard_and_report_reads": 11,
       "report_scope": "after_shutdown",
       "run_execution": {
         "status": "RECORDED",
@@ -329,9 +560,278 @@
         "completed_round_trips": 1,
         "carry_in_exits": 0
       },
+      "worker_window_cpu": {
+        "elapsed_seconds": 336.789077,
+        "worker_user_seconds": 175.226726,
+        "worker_system_seconds": 80.307152,
+        "reaped_child_user_seconds": 6.891743,
+        "reaped_child_system_seconds": 1.736436,
+        "average_busy_cores": 0.784355,
+        "average_allocated_cpu_percent": 78.435
+      },
       "evaluated_slots": 2,
       "expected_slots": 2,
       "native_snapshot_p99_seconds": 0.18109706199902575,
+      "final_accounting": "VERIFIED_FLAT"
+    },
+    {
+      "trial": "combined_335",
+      "group": "sequential",
+      "commit": "0c46df30bd51d8400ce8bebbd1af0db0a274282e",
+      "manifest": "42e5f9076e5501a605a0e4c738c8f5d8e2ef0dbbbf343dbd1839b2dddf2ca66d",
+      "logical_cpus": 1,
+      "planned_seconds": 335,
+      "status": "FAILED",
+      "initial_database_bytes": 119635968,
+      "quote_age_seconds": 7.557955,
+      "measured_reservations": 1,
+      "wall_seconds_with_digest_running": 6.516486,
+      "owner_thread_cpu_seconds_in_fully_contained_digests": 5.750577,
+      "snapshot_failures": 0,
+      "native_snapshot_calls": 141,
+      "native_accept_failures": 1,
+      "publication_failures": 0,
+      "acknowledgement_recovery": {
+        "matched_in_run": 1,
+        "unresolved_at_last_snapshot": 0
+      },
+      "paired_dashboard_and_report_reads": 11,
+      "report_scope": "after_shutdown",
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "worker_window_cpu": {
+        "elapsed_seconds": 336.449128,
+        "worker_user_seconds": 164.150689,
+        "worker_system_seconds": 70.130183,
+        "reaped_child_user_seconds": 7.278943,
+        "reaped_child_system_seconds": 1.91406,
+        "average_busy_cores": 0.723657,
+        "average_allocated_cpu_percent": 72.366
+      },
+      "evaluated_slots": 1,
+      "expected_slots": 2,
+      "failure": "Native acceptance failure"
+    },
+    {
+      "trial": "combined_two_cpus_335",
+      "group": "sequential",
+      "commit": "0c46df30bd51d8400ce8bebbd1af0db0a274282e",
+      "manifest": "42e5f9076e5501a605a0e4c738c8f5d8e2ef0dbbbf343dbd1839b2dddf2ca66d",
+      "logical_cpus": 2,
+      "planned_seconds": 335,
+      "status": "PASSED",
+      "initial_database_bytes": 119635968,
+      "quote_age_seconds": 5.913699,
+      "measured_reservations": 1,
+      "wall_seconds_with_digest_running": 4.598863,
+      "owner_thread_cpu_seconds_in_fully_contained_digests": 4.095837,
+      "snapshot_failures": 0,
+      "native_snapshot_calls": 143,
+      "native_accept_failures": 0,
+      "publication_failures": 0,
+      "acknowledgement_recovery": {
+        "matched_in_run": 0,
+        "unresolved_at_last_snapshot": 0
+      },
+      "paired_dashboard_and_report_reads": 11,
+      "report_scope": "after_shutdown",
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "worker_window_cpu": {
+        "elapsed_seconds": 335.811186,
+        "worker_user_seconds": 184.011807,
+        "worker_system_seconds": 84.909876,
+        "reaped_child_user_seconds": 6.831946,
+        "reaped_child_system_seconds": 1.791347,
+        "average_busy_cores": 0.826491,
+        "average_allocated_cpu_percent": 41.325
+      },
+      "evaluated_slots": 2,
+      "expected_slots": 2,
+      "native_snapshot_p99_seconds": 0.19316328300192254,
+      "final_accounting": "VERIFIED_FLAT"
+    },
+    {
+      "trial": "compare_two_short",
+      "group": "sequential",
+      "commit": "0c46df30bd51d8400ce8bebbd1af0db0a274282e",
+      "manifest": "42e5f9076e5501a605a0e4c738c8f5d8e2ef0dbbbf343dbd1839b2dddf2ca66d",
+      "logical_cpus": 2,
+      "planned_seconds": 90,
+      "status": "PASSED",
+      "initial_database_bytes": 119635968,
+      "quote_age_seconds": 4.762715,
+      "measured_reservations": 1,
+      "wall_seconds_with_digest_running": 4.086809,
+      "owner_thread_cpu_seconds_in_fully_contained_digests": 3.864281,
+      "snapshot_failures": 0,
+      "native_snapshot_calls": 35,
+      "native_accept_failures": 0,
+      "publication_failures": 0,
+      "acknowledgement_recovery": {
+        "matched_in_run": 0,
+        "unresolved_at_last_snapshot": 0
+      },
+      "paired_dashboard_and_report_reads": 3,
+      "report_scope": "after_shutdown",
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "worker_window_cpu": {
+        "elapsed_seconds": 90.958568,
+        "worker_user_seconds": 50.017054,
+        "worker_system_seconds": 25.133018,
+        "reaped_child_user_seconds": 2.402486,
+        "reaped_child_system_seconds": 0.564328,
+        "average_busy_cores": 0.858818,
+        "average_allocated_cpu_percent": 42.941
+      },
+      "evaluated_slots": 1,
+      "expected_slots": 1,
+      "native_snapshot_p99_seconds": 0.13994413600448752,
+      "final_accounting": "VERIFIED_FLAT"
+    },
+    {
+      "trial": "compare_one_short",
+      "group": "sequential",
+      "commit": "0c46df30bd51d8400ce8bebbd1af0db0a274282e",
+      "manifest": "42e5f9076e5501a605a0e4c738c8f5d8e2ef0dbbbf343dbd1839b2dddf2ca66d",
+      "logical_cpus": 1,
+      "planned_seconds": 90,
+      "status": "FAILED",
+      "initial_database_bytes": 119635968,
+      "quote_age_seconds": 4.746301,
+      "measured_reservations": 1,
+      "wall_seconds_with_digest_running": null,
+      "owner_thread_cpu_seconds_in_fully_contained_digests": null,
+      "snapshot_failures": 0,
+      "native_snapshot_calls": 14,
+      "native_accept_failures": 0,
+      "publication_failures": 1,
+      "acknowledgement_recovery": {
+        "matched_in_run": 0,
+        "unresolved_at_last_snapshot": 0
+      },
+      "paired_dashboard_and_report_reads": 1,
+      "report_scope": "after_shutdown",
+      "run_execution": {
+        "carry_in_exits": 0,
+        "completed_round_trips": 0,
+        "entry_fills": 1,
+        "exit_fills": 0,
+        "status": "RECORDED"
+      },
+      "worker_window_cpu": {
+        "elapsed_seconds": 41.863222,
+        "worker_user_seconds": 23.727334,
+        "worker_system_seconds": 9.974214,
+        "reaped_child_user_seconds": 1.518114,
+        "reaped_child_system_seconds": 0.238081,
+        "average_busy_cores": 0.84699,
+        "average_allocated_cpu_percent": 84.699
+      },
+      "failure": "CONNECTED_COMPONENT_STOPPED:PUBLISHER"
+    },
+    {
+      "trial": "advancing_90",
+      "group": "sequential",
+      "commit": "2646944668eefc05e19f5fb5b6698ac89792509e",
+      "manifest": "ff6d7771d249ee4f313633635ff198570ae922b9aebe43d480595e8386c9db34",
+      "logical_cpus": 1,
+      "planned_seconds": 90,
+      "status": "PASSED",
+      "initial_database_bytes": 119635968,
+      "quote_age_seconds": 4.995257,
+      "measured_reservations": 1,
+      "wall_seconds_with_digest_running": 4.273493,
+      "owner_thread_cpu_seconds_in_fully_contained_digests": 3.431476,
+      "snapshot_failures": 0,
+      "native_snapshot_calls": 36,
+      "native_accept_failures": 0,
+      "publication_failures": 0,
+      "acknowledgement_recovery": {
+        "matched_in_run": 0,
+        "unresolved_at_last_snapshot": 0
+      },
+      "paired_dashboard_and_report_reads": 3,
+      "report_scope": "after_shutdown",
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "worker_window_cpu": {
+        "elapsed_seconds": 91.697477,
+        "worker_user_seconds": 49.353331,
+        "worker_system_seconds": 20.502472,
+        "reaped_child_user_seconds": 2.711864,
+        "reaped_child_system_seconds": 0.522602,
+        "average_busy_cores": 0.79708,
+        "average_allocated_cpu_percent": 79.708
+      },
+      "evaluated_slots": 1,
+      "expected_slots": 1,
+      "native_snapshot_p99_seconds": 0.20631588700052816,
+      "final_accounting": "VERIFIED_FLAT"
+    },
+    {
+      "trial": "advancing_335",
+      "group": "sequential",
+      "commit": "2646944668eefc05e19f5fb5b6698ac89792509e",
+      "manifest": "ff6d7771d249ee4f313633635ff198570ae922b9aebe43d480595e8386c9db34",
+      "logical_cpus": 1,
+      "planned_seconds": 335,
+      "status": "PASSED",
+      "initial_database_bytes": 119635968,
+      "quote_age_seconds": 5.091493,
+      "measured_reservations": 1,
+      "wall_seconds_with_digest_running": 4.380295,
+      "owner_thread_cpu_seconds_in_fully_contained_digests": 3.59313,
+      "snapshot_failures": 0,
+      "native_snapshot_calls": 143,
+      "native_accept_failures": 0,
+      "publication_failures": 0,
+      "acknowledgement_recovery": {
+        "matched_in_run": 0,
+        "unresolved_at_last_snapshot": 0
+      },
+      "paired_dashboard_and_report_reads": 11,
+      "report_scope": "after_shutdown",
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "worker_window_cpu": {
+        "elapsed_seconds": 336.040318,
+        "worker_user_seconds": 176.682543,
+        "worker_system_seconds": 75.35356,
+        "reaped_child_user_seconds": 6.930119,
+        "reaped_child_system_seconds": 1.770154,
+        "average_busy_cores": 0.775908,
+        "average_allocated_cpu_percent": 77.591
+      },
+      "evaluated_slots": 2,
+      "expected_slots": 2,
+      "native_snapshot_p99_seconds": 0.2352407360012876,
       "final_accounting": "VERIFIED_FLAT"
     }
   ],
@@ -705,6 +1205,52 @@
       "trace_start_write_p95_seconds": 0.34571
     },
     {
+      "trial": "combined-exit",
+      "group": "sequential",
+      "commit": "0c46df30bd51d8400ce8bebbd1af0db0a274282e",
+      "asset": "STOCK",
+      "journal_bytes_before_contention": 72826880,
+      "contention_setup_seconds": 0.502143,
+      "breach_to_native_ack_seconds": 3.260335,
+      "native_ack_to_tick_completion_seconds": 1.111085,
+      "breach_to_tick_completion_seconds": 4.37142,
+      "next_quote_to_flat_observed_seconds": 1.865301,
+      "exit_seconds": 4.873563,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": true,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.275815,
+        "NATIVE_ACCEPT": 1.039315,
+        "PROTECTION_RESERVATION": 0.426959
+      },
+      "trace_start_write_p95_seconds": 0.301269
+    },
+    {
+      "trial": "combined-exit",
+      "group": "sequential",
+      "commit": "0c46df30bd51d8400ce8bebbd1af0db0a274282e",
+      "asset": "OPTION",
+      "journal_bytes_before_contention": 72880128,
+      "contention_setup_seconds": 0.70177,
+      "breach_to_native_ack_seconds": 3.31322,
+      "native_ack_to_tick_completion_seconds": 1.241887,
+      "breach_to_tick_completion_seconds": 4.555107,
+      "next_quote_to_flat_observed_seconds": 1.906507,
+      "exit_seconds": 5.256878,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": false,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.36186,
+        "NATIVE_ACCEPT": 0.957402,
+        "PROTECTION_RESERVATION": 0.474801
+      },
+      "trace_start_write_p95_seconds": 0.321866
+    },
+    {
       "trial": "final-system",
       "group": "installed_system",
       "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
@@ -749,6 +1295,52 @@
         "PROTECTION_RESERVATION": 0.298508
       },
       "trace_start_write_p95_seconds": 0.218514
+    },
+    {
+      "trial": "combined-system",
+      "group": "installed_system",
+      "commit": "0c46df30bd51d8400ce8bebbd1af0db0a274282e",
+      "asset": "STOCK",
+      "journal_bytes_before_contention": 72826880,
+      "contention_setup_seconds": 0.343161,
+      "breach_to_native_ack_seconds": 1.628809,
+      "native_ack_to_tick_completion_seconds": 0.61831,
+      "breach_to_tick_completion_seconds": 2.247119,
+      "next_quote_to_flat_observed_seconds": 0.94022,
+      "exit_seconds": 2.59028,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": true,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.196993,
+        "NATIVE_ACCEPT": 0.476018,
+        "PROTECTION_RESERVATION": 0.224027
+      },
+      "trace_start_write_p95_seconds": 0.153181
+    },
+    {
+      "trial": "combined-system",
+      "group": "installed_system",
+      "commit": "0c46df30bd51d8400ce8bebbd1af0db0a274282e",
+      "asset": "OPTION",
+      "journal_bytes_before_contention": 72880128,
+      "contention_setup_seconds": 0.366954,
+      "breach_to_native_ack_seconds": 1.803887,
+      "native_ack_to_tick_completion_seconds": 0.583976,
+      "breach_to_tick_completion_seconds": 2.387864,
+      "next_quote_to_flat_observed_seconds": 1.060623,
+      "exit_seconds": 2.754818,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": true,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.137365,
+        "NATIVE_ACCEPT": 0.495076,
+        "PROTECTION_RESERVATION": 0.244575
+      },
+      "trace_start_write_p95_seconds": 0.202721
     }
   ],
   "trial_notes": {
@@ -814,10 +1406,18 @@
       "skipped": 0
     },
     "overlap": "The suites overlap. The system skip requires a second mapped UID.",
+    "combined_system": {
+      "passed": 587,
+      "tests": 588,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 1
+    },
     "combined_test_checkout": "a8c338c21823b02901cbebe1e08ebca707523926"
   },
   "interrupted_prior_runs": {
     "wall": {
+      "manifest": "920ad8b9cbcf75627236205574d886776bf472fcbe4b886e142ac514b02d6186",
       "checkpoint_seconds": 2690.747,
       "completed_cycles": 9,
       "run_execution": {
@@ -842,21 +1442,345 @@
       "accelerated_round_trips": 1
     }
   },
+  "combined_sampled_calendar": {
+    "completed_sessions": 22,
+    "packets": 176,
+    "samples_per_session": 8,
+    "native_bytes": 17240064,
+    "collector_bytes": 11259904,
+    "display_bytes": 8716288,
+    "last_session": "2026-11-27",
+    "early_close": "2026-11-27T18:00:00+00:00",
+    "accelerated_round_trips": 1,
+    "result": {
+      "passed": 1,
+      "tests": 1,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    }
+  },
   "dense_calendar": {
     "manifest": "63f8424406e45e4165f3bace56e14ec775774ec9a0ab0035944fa22acabac8fa",
     "base_commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
     "only_differing_application_file": "app/execution/restore.py",
     "file_sha256": "2f21d1b505fc5bd3722d4e4693ee71aeeaa285a6a4ac928763725f0c566dc27c",
     "build": "Intermediate exact-prefix build, before the final long-string and concurrent-reader optimizations.",
-    "completed_sessions": 16,
-    "packets": 1264,
+    "completed_sessions": 22,
+    "packets": 1738,
     "samples_per_session": 79,
-    "native_bytes": 73297920,
-    "collector_bytes": 77508608,
-    "display_bytes": 10952704,
-    "last_session": "2026-11-18",
-    "early_close": null,
+    "native_bytes": 101117952,
+    "collector_bytes": 106459136,
+    "display_bytes": 14913536,
+    "last_session": "2026-11-27",
+    "early_close": "2026-11-27T18:00:00+00:00",
     "accelerated_round_trips": 1,
-    "terminal_result_available": false
+    "terminal_result_available": true,
+    "paced_followup": {
+      "synthetic": true,
+      "provider_calls": false,
+      "external_model_calls": false,
+      "history_sessions": 22,
+      "retained_prior_packets": 1738,
+      "retained_prior_model_calls": 64,
+      "next_calendar_session": "2026-11-30",
+      "duration_seconds": 335,
+      "new_packets": 31,
+      "model_calls": 2,
+      "start_native_bytes": 101117952,
+      "final_native_bytes": 103739392,
+      "cpu": {
+        "elapsed_seconds": 336.63761,
+        "worker_user_seconds": 233.044414,
+        "worker_system_seconds": 54.957337,
+        "reaped_child_user_seconds": 3.822495,
+        "reaped_child_system_seconds": 1.254527,
+        "average_busy_cores": 0.870606,
+        "average_allocated_cpu_percent": 87.061
+      },
+      "coverage": {
+        "expected": 2,
+        "evaluated": 2,
+        "coverage_percent": 100.0,
+        "unmeasured_slots": [],
+        "target_met": true
+      },
+      "decision_reason_counts": [
+        {
+          "reason": [
+            "ORIGINAL_PLAN_DEADLINE_EXPIRED"
+          ],
+          "decisions": 1,
+          "first_at": "2026-11-30T15:00:30.151431+00:00",
+          "last_at": "2026-11-30T15:00:30.151431+00:00"
+        },
+        {
+          "reason": [
+            "ENTRY_MODEL_HOLD_OR_REJECTED"
+          ],
+          "decisions": 1,
+          "first_at": "2026-11-30T15:05:09.566474+00:00",
+          "last_at": "2026-11-30T15:05:09.566474+00:00"
+        }
+      ],
+      "prior_generation": 10494,
+      "ending_generation": 10923,
+      "operator_outcome": "STOPPED",
+      "published": true,
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 0,
+        "exit_fills": 0,
+        "completed_round_trips": 0,
+        "carry_in_exits": 0
+      },
+      "entry_freshness": {
+        "status": "NO_ENTRIES",
+        "reservations": 0,
+        "measured": 0,
+        "missing_or_invalid": 0,
+        "omitted": 0,
+        "clocks": {}
+      },
+      "native_accept_failures": 0,
+      "runtime_failures": 0,
+      "publication_failures": 0,
+      "accounting": "VERIFIED",
+      "held_positions": 0
+    },
+    "result": {
+      "passed": 0,
+      "tests": 1,
+      "errors": 0,
+      "failures": 1,
+      "skipped": 0
+    },
+    "final_application_read_only_audit": {
+      "application_commit": "2646944668eefc05e19f5fb5b6698ac89792509e",
+      "verification": "current installed application, read-only on the stopped dense calendar account",
+      "native_bytes": 103739392,
+      "native_file_sha256": "fedfa2f8ebe55796ce58b541465ddb3797763aa1d60b550238cc003d26693ea8",
+      "authority_file_sha256": "524aa23e9789e152143ae786d5dbf8a719219b31adbf76eb10d7a42b287bd41c",
+      "hashes_unchanged_after_audit": true,
+      "fence_status": "VERIFIED",
+      "generation": 10923,
+      "sequence": 1769,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "cold_verification_seconds": 1.073396,
+      "warm_verification_seconds": [
+        0.170138,
+        0.150925,
+        0.151973
+      ]
+    },
+    "paced_decision_clocks": [
+      {
+        "cycle_key": "degen:5986836:portfolio:0",
+        "reason": [
+          "ORIGINAL_PLAN_DEADLINE_EXPIRED"
+        ],
+        "plan_seconds_remaining": {
+          "at_reply": 0.402642,
+          "at_option_review": -0.723069
+        }
+      },
+      {
+        "cycle_key": "degen:5986837:portfolio:0",
+        "reason": [
+          "ENTRY_MODEL_HOLD_OR_REJECTED"
+        ],
+        "plan_seconds_remaining": {
+          "at_reply": 0.677287,
+          "at_option_review": null
+        }
+      }
+    ]
+  },
+  "one_cpu_acknowledgement_failure": {
+    "trial": "combined_335",
+    "commit": "0c46df30bd51d8400ce8bebbd1af0db0a274282e",
+    "root_kind": "CYCLE",
+    "slot": 5977320,
+    "related_spans": [
+      {
+        "elapsed_seconds": 0.73033,
+        "phase": "NATIVE_ACCEPT_SPAWN",
+        "remaining_at_start_seconds": 1.757109,
+        "status": "COMPLETE"
+      },
+      {
+        "elapsed_seconds": 2.082249,
+        "phase": "NATIVE_ACCEPT",
+        "status": "FAILED"
+      }
+    ],
+    "parent_phase": "RESPONSE_READ",
+    "pre_cleanup_child_stages": [
+      {
+        "cpu_seconds": 1.5e-05,
+        "elapsed_seconds": 0.009028,
+        "stage": "IMPORTS"
+      }
+    ],
+    "measurement_limit": "These are the stages the parent observed before cleanup. Later reconciliation matched the attempt.",
+    "decision_coverage": {
+      "expected": 2,
+      "evaluated": 1,
+      "coverage_percent": 50.0,
+      "unmeasured_slots": [
+        {
+          "slot": 5977321,
+          "runtime_status": "MISSING"
+        }
+      ],
+      "target_met": false
+    },
+    "reconciliation": {
+      "matched_in_run": 1,
+      "unresolved_at_last_snapshot": 0
+    },
+    "observed_fills": {
+      "status": "RECORDED",
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "carry_in_exits": 0
+    }
+  },
+  "released_copy_repeat": {
+    "baseline_trial": "compare_one_short",
+    "baseline_commit": "0c46df30bd51d8400ce8bebbd1af0db0a274282e",
+    "exit_fills_at_test_cutoff": 0,
+    "publication_error_class": "TimeoutError",
+    "retained_last_frame": {
+      "file": "app/mixed/sqlite_copy.py",
+      "line": 71
+    },
+    "observed": "A report-copy timeout triggered the test harness shutdown. The publisher also stopped its last unpinned copy after a writer restart. One entry and no exit fill had been recorded at cutoff.",
+    "repair_commit": "2646944668eefc05e19f5fb5b6698ac89792509e",
+    "behavior": "Once the pinned reader is released, a writer may restart the incremental copy while it reaches more pages between restarts. Repeated rewinds at the same point abort, with the same original deadline and page limit.",
+    "regression_before": {
+      "passed": 13,
+      "tests": 15,
+      "errors": 0,
+      "failures": 2,
+      "skipped": 0
+    },
+    "regression_after": {
+      "passed": 15,
+      "tests": 15,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    }
+  },
+  "native_worker_startup": {
+    "application_commit": "0c46df30bd51d8400ce8bebbd1af0db0a274282e",
+    "fresh_processes": 8,
+    "median": {
+      "process_wall_seconds": 0.488905,
+      "imports_wall_seconds": 0.3971535,
+      "imports_cpu_seconds": 0.3959395
+    },
+    "samples": [
+      {
+        "process_wall_seconds": 0.59091,
+        "imports_wall_seconds": 0.490931,
+        "imports_cpu_seconds": 0.485528
+      },
+      {
+        "process_wall_seconds": 0.459523,
+        "imports_wall_seconds": 0.370368,
+        "imports_cpu_seconds": 0.365342
+      },
+      {
+        "process_wall_seconds": 0.472608,
+        "imports_wall_seconds": 0.379476,
+        "imports_cpu_seconds": 0.379343
+      },
+      {
+        "process_wall_seconds": 0.510777,
+        "imports_wall_seconds": 0.41869,
+        "imports_cpu_seconds": 0.417266
+      },
+      {
+        "process_wall_seconds": 0.563033,
+        "imports_wall_seconds": 0.449071,
+        "imports_cpu_seconds": 0.447933
+      },
+      {
+        "process_wall_seconds": 0.476344,
+        "imports_wall_seconds": 0.384573,
+        "imports_cpu_seconds": 0.382186
+      },
+      {
+        "process_wall_seconds": 0.501466,
+        "imports_wall_seconds": 0.409734,
+        "imports_cpu_seconds": 0.409693
+      },
+      {
+        "process_wall_seconds": 0.465214,
+        "imports_wall_seconds": 0.368182,
+        "imports_cpu_seconds": 0.365864
+      }
+    ],
+    "separate_import_time_sample": {
+      "app.execution.process": {
+        "self_seconds": 0.009102,
+        "cumulative_seconds": 0.172812
+      },
+      "app.execution.worker": {
+        "self_seconds": 0.000163,
+        "cumulative_seconds": 0.000163
+      },
+      "app.options.lifecycle": {
+        "self_seconds": 0.04911,
+        "cumulative_seconds": 0.058246
+      },
+      "app.mixed.models": {
+        "self_seconds": 0.029784,
+        "cumulative_seconds": 0.158764
+      },
+      "app.mixed.portfolio_accounting": {
+        "self_seconds": 0.024766,
+        "cumulative_seconds": 0.190581
+      },
+      "app.options.venue": {
+        "self_seconds": 0.005132,
+        "cumulative_seconds": 0.005272
+      },
+      "app.mixed.portfolio_venue": {
+        "self_seconds": 0.01077,
+        "cumulative_seconds": 0.206715
+      },
+      "app.options.process": {
+        "self_seconds": 0.009202,
+        "cumulative_seconds": 0.216462
+      }
+    },
+    "scope": "Existing native child entrypoint with empty input. It stops at request validation before opening a venue. Module cumulative times may overlap. This probes startup independently of the failed parent trace."
+  },
+  "read_only_text_report": {
+    "commit": "88c9ba05eb20efbd71fc3be546bc83c47aa0e32e",
+    "regression_before_change": {
+      "passed": 0,
+      "tests": 1,
+      "errors": 0,
+      "failures": 1,
+      "skipped": 0
+    },
+    "related_checks": {
+      "passed": 111,
+      "tests": 111,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "output_from_saved_failed_run": [
+      "Run execution: entry fills 1; exit fills 1; completed round trips 1; prior-run plays fully exited 0",
+      "Order recovery: matched 1; unresolved at last reconciliation 0",
+      "Local order acknowledgement calls (measured 2, failed 1, interrupted 0)"
+    ]
   }
 }

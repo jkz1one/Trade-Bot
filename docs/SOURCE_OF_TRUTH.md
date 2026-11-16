@@ -1,6 +1,22 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.215. November 14 PAPER session coverage and paid-entry timing.
+Version 1.216. November 16 UTC. Offline PAPER timing and protection.
+
+On one CPU, `9aeb3ea` reduced median repeat verification of the padded
+journal from 254 to 95 ms. The private dashboard and report copies on
+`2646944` can finish through intervening writes while releasing the native
+read lock between page batches. On that build the 90- and 335-second runs
+admitted their opening quotes at 4.995 and 5.091 seconds. Both completed
+a round trip and verified flat. The longer run evaluated both slots, served
+all 11 paired dashboard/report reads and completed 143 native snapshots.
+
+In a preceding one-CPU run, an acknowledgement timeout was reconciled and
+the next scheduled slot was missed. The text report now shows a failed
+local acknowledgement alongside any subsequent fills and reconciliation.
+The last confirmed connected host release is `39d8e48`.
+[Run records and acceptance limits](PAPER_TIMING_20261116_PROOF.json).
+
+### November 14 PAPER session coverage and paid-entry timing
 
 The 358-minute baseline finished with verified flat accounting and 25 of
 72 scheduled evaluations. A feed halt persisted on its zero-recovery

@@ -1,5 +1,13 @@
 # Recovered offline system checkpoint
 
+November 16 UTC. The installed `0c46df3` application with the copy-bound
+regressions in `a8c338c` passed 587 system checks. Reader UID 10001 is
+unmapped here and accounts for the one skip. The text report in `88c9ba0`
+passed 111 overlapping report, timing and private-copy cases. On the saved
+one-CPU failure it reports one failed acknowledgement in two measured calls,
+one subsequently matched attempt, and one completed round trip.
+[Offline tests and timings](PAPER_TIMING_20261116_PROOF.json).
+
 The November 14 installed system run on `e2ced11` passed 565 checks with
 one unmapped dashboard reader UID. The reviewed feed-recovery monitor now
 verifies the journal in a read-only worker. The native owner rechecks the
