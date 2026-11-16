@@ -513,7 +513,7 @@ def test_swing_preparation_uses_separate_readonly_capture_mount(tmp_path, monkey
 
 def test_scope_setup_review_is_readonly_and_never_requires_stopping_workers(tmp_path, monkeypatch):
     m = load()
-    captures = tmp_path/'captures'
+    captures = tmp_path/'owner-review-captures'
     captures.mkdir(mode=0o700)
     for name in ('contracts.json','quotes-1.json','quotes-2.json','quotes-3.json'):
         p = captures/name
@@ -531,8 +531,13 @@ def test_scope_setup_review_is_readonly_and_never_requires_stopping_workers(tmp_
     call = calls[0]
     assert call[1]=='app.mixed.scope_setup' and '--candidate-id=explicit-id' in call[2]
     assert '--output' not in call[2] and '--report' not in call[2]
-    assert all(x.endswith(',readonly') for x in call[3] if x.startswith('type=bind'))
-    assert not any('/auth' in x or '/owner' in x or 'model_key' in x for x in call[3])
+    assert call[3][::2] == ['--mount'] * 4
+    assert sorted(call[3][1::2]) == sorted([
+        f'type=bind,src={captures},dst=/captures,readonly',
+        f'type=bind,src={evidence},dst=/scope/binding.json,readonly',
+        f'type=bind,src={evidence},dst=/scope/scope_contract_capture.json,readonly',
+        f'type=bind,src={evidence},dst=/scope/scope_input.json,readonly',
+    ])
 
 
 @pytest.mark.parametrize('sequence', [None, 132])
