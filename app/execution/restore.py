@@ -12,12 +12,18 @@ import sqlite3
 import sys
 import uuid
 from collections import OrderedDict
+from itertools import count
 from json.encoder import encode_basestring_ascii
 from pathlib import Path
 from threading import Lock
 from urllib.parse import quote
 
 AUTHORITY_SCHEMA = "execution-restore-authority-v1"
+
+
+# Handles are process-local, never recycled, and start outside the JSON grammar.
+# They stand only for exact text/delimiter pairs found in the bounded encoding cache.
+_handles = count(1)
 
 
 class _TextEncodingCache:
@@ -29,16 +35,34 @@ class _TextEncodingCache:
         self.size = 0
         self.values = OrderedDict()
         self.lock = Lock()
+        self.recent_long = [None] * 16
 
     def encode(self, value, delimiter):
+        return self.tokens(value, delimiter)[0]
+
+    def tokens(self, value, delimiter):
+        # SQLite returns a new string for each row. When a long cell repeats,
+        # exact equality lets the dict reuse its original key's computed hash.
         key = (value, delimiter)
+        slot = len(value) % len(self.recent_long) if len(value) > 4096 else None
         with self.lock:
+            if slot is not None:
+                recent = self.recent_long[slot]
+                if recent is not None and recent == key:
+                    key = recent
             entry = self.values.get(key)
             if entry is not None:
                 self.values.move_to_end(key)
+                if slot is not None:
+                    self.recent_long[slot] = next(reversed(self.values))
                 return entry[0]
         token = encode_basestring_ascii(value).encode("ascii") + delimiter
-        weight = sys.getsizeof(key) + sys.getsizeof(value) + sys.getsizeof(token)
+        comparison = (b"@" + str(next(_handles)).encode("ascii") + delimiter
+                      if len(token) > 128 else token)
+        pair = (token, comparison)
+        weight = sys.getsizeof(key) + sys.getsizeof(value) + sys.getsizeof(token) + sys.getsizeof(pair)
+        if comparison is not token:
+            weight += sys.getsizeof(comparison)
         if weight <= self.max_bytes and self.max_entries > 0:
             with self.lock:
                 if key in self.values:
@@ -47,26 +71,34 @@ class _TextEncodingCache:
                 while self.values and (
                     self.size + weight > self.max_bytes or len(self.values) >= self.max_entries
                 ):
-                    _, (_, old_weight) = self.values.popitem(last=False)
+                    evicted, (_, old_weight) = self.values.popitem(last=False)
+                    if len(evicted[0]) > 4096:
+                        old_slot = len(evicted[0]) % len(self.recent_long)
+                        if self.recent_long[old_slot] is evicted:
+                            self.recent_long[old_slot] = None
                     self.size -= old_weight
-                self.values[key] = (token, weight)
+                self.values[key] = (pair, weight)
+                if slot is not None:
+                    self.recent_long[slot] = key
                 self.size += weight
-        return token
+        return pair
 
 
 _TEXT_ENCODINGS = _TextEncodingCache()
 
 
-def _row_tokens(row):
+def _row_tokens(row, comparison=None):
     # Each token includes its trailing comma or bracket. Delimiters cannot be
     # part of an unquoted scalar, so tuple order equals canonical row-byte order,
     # including prefix cases such as [1], [10] and [1,0], [10,0].
     tokens = []
+    if comparison is not None:
+        comparison.extend(b"[")
     last = len(row) - 1
     for index, value in enumerate(row):
         delimiter = b"]" if index == last else b","
         if type(value) is str:
-            token = _TEXT_ENCODINGS.encode(value, delimiter)
+            token, reference = _TEXT_ENCODINGS.tokens(value, delimiter)
         elif type(value) is int:
             token = str(value).encode("ascii") + delimiter
         elif value is None:
@@ -76,6 +108,10 @@ def _row_tokens(row):
             # original rejection of unsupported SQLite blob values.
             token = json.dumps(value, separators=(",", ":")).encode("ascii") + delimiter
         tokens.append(token)
+        if comparison is not None:
+            comparison.extend(reference if type(value) is str else token)
+    if comparison is not None:
+        comparison.extend(b"\n")
     return tuple(tokens)
 
 
@@ -91,24 +127,68 @@ def _binding(db):
     return db.execute("SELECT * FROM main.execution_restore_binding WHERE id=1").fetchone()
 
 
+# A prefix consists of the exact schema and rows read during the last full
+# scan and the corresponding v1 SHA state. Other callers can still scan
+# concurrently. A miss, an eviction or a different SQLite row order simply
+# computes the canonical sorted v1 stream again.
+_PREFIX_BYTES = 4 * 1024 * 1024
+_PREFIX_ITEMS = 256
+_prefix_lock = Lock()
+_prefixes = ()
+
+
 def _digest(db):
-    """Hash complete logical state, including schema, receipts, keys and audit rows."""
+    global _prefixes
+    if not _prefix_lock.acquire(blocking=False):
+        # A simultaneous reader can compare with the last immutable prefix.
+        # Only the lock holder publishes a replacement.
+        return _scan(db, _prefixes, _PREFIX_BYTES, retain=False)[0]
+    try:
+        digest, prefixes = _scan(db, _prefixes, _PREFIX_BYTES)
+        _prefixes = prefixes
+        return digest
+    finally:
+        _prefix_lock.release()
+
+
+def _scan(db, previous, budget, *, retain=True):
     digest = hashlib.sha256()
-    for row in db.execute(
+    prefixes = []
+    matching = True
+    schema = db.execute(
         "SELECT type,name,sql FROM main.sqlite_master WHERE name GLOB 'execution_*' "
         "AND type IN ('table','trigger','index') ORDER BY type,name"
-    ):
-        digest.update(json.dumps(list(row), separators=(",", ":")).encode())
+    )
+    for index, row in enumerate(schema):
+        definition = json.dumps(list(row), separators=(",", ":")).encode()
+        budget -= len(definition)
+        may_compare = retain or (matching and index < len(previous))
+        comparison = bytearray() if may_compare and budget > 0 and index < _PREFIX_ITEMS else None
+        rows = []
         if row[0] == "table":
-            # Schema-derived names, escaped as identifiers, never supplied SQL.
             name = row[1].replace('"', '""')
-            rows = sorted(_row_tokens(r) for r in db.execute(f'SELECT * FROM main."{name}"'))
+            for item in db.execute(f'SELECT * FROM main."{name}"'):
+                rows.append(_row_tokens(item, comparison))
+                if comparison is not None and len(comparison) > budget:
+                    comparison = None
+                    budget = 0
+        if (matching and comparison is not None and index < len(previous)
+                and previous[index][:2] == (definition, comparison)):
+            digest = previous[index][2].copy()
+        else:
+            matching = False
+            digest.update(definition)
+            rows.sort()
             for tokens in rows:
                 digest.update(b"[")
                 for token in tokens:
                     digest.update(token)
                 digest.update(b"\n")
-    return digest.hexdigest()
+        if comparison is not None:
+            budget -= len(comparison)
+            if retain:
+                prefixes.append((definition, bytes(comparison), digest.copy()))
+    return digest.hexdigest(), tuple(prefixes)
 
 
 def _attach(db, path, *, writable):
