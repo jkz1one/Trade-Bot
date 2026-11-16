@@ -1,0 +1,862 @@
+{
+  "version": "paper-timing-proof-20261116-v1",
+  "scope": {
+    "synthetic": true,
+    "network": "isolated namespaces",
+    "market_provider_calls": 0,
+    "external_model_calls": 0,
+    "live_enabled": false,
+    "logical_cpus_per_worker": 1,
+    "max_feed_recoveries_in_opening_trials": 2,
+    "connected_host_last_confirmed": "39d8e48",
+    "full_scheduled_duration_seconds": 21480
+  },
+  "code": {
+    "baseline": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
+    "exact_restore_prefix": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+    "copy_retry": "0c46df30bd51d8400ce8bebbd1af0db0a274282e",
+    "copy_bound_regressions": "a8c338c21823b02901cbebe1e08ebca707523926"
+  },
+  "restore_verification": {
+    "legacy_differential": {
+      "seed": 7021511,
+      "operations": 384,
+      "v1_comparisons": 1152,
+      "result_sha256": "616cbc990896c9d1594cb25e90db2d2581e3261b375c5bf5e1a942bb4d81f478"
+    },
+    "baseline": {
+      "padded": {
+        "source_bytes": 122957824,
+        "v1_digest": "ecdd8c040cd9ac1dbde3646c4558ac9f1d29d1f005d59465af79c4c608ff1acc",
+        "cold_seconds": [
+          0.564772,
+          0.287268
+        ],
+        "warm_samples": 16,
+        "median_warm_seconds": 0.25381
+      },
+      "month": {
+        "source_bytes": 82972672,
+        "v1_digest": "3b91fedc9f9315eb2fcd819b19f7b3b99f3b9f8a11de1bdba83b5ec4c39615b0",
+        "cold_seconds": [
+          1.240741,
+          0.889714
+        ],
+        "warm_samples": 16,
+        "median_warm_seconds": 0.29707
+      }
+    },
+    "exact_prefix": {
+      "padded": {
+        "source_bytes": 122957824,
+        "v1_digest": "ecdd8c040cd9ac1dbde3646c4558ac9f1d29d1f005d59465af79c4c608ff1acc",
+        "cold_seconds": [
+          0.241041,
+          0.229105
+        ],
+        "warm_samples": 16,
+        "median_warm_seconds": 0.095268
+      },
+      "month": {
+        "source_bytes": 82972672,
+        "v1_digest": "3b91fedc9f9315eb2fcd819b19f7b3b99f3b9f8a11de1bdba83b5ec4c39615b0",
+        "cold_seconds": [
+          0.94681,
+          0.699838
+        ],
+        "warm_samples": 16,
+        "median_warm_seconds": 0.19156
+      }
+    },
+    "sampling": "Two fresh processes per application and source. Each records one cold and eight warm complete rescans. Both sources retain their original authority digest."
+  },
+  "opening_trials": [
+    {
+      "trial": "prev_1",
+      "group": "overlapping_suites",
+      "commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
+      "manifest": "9904993361dcf075ae05db3a638cbb4858289828c40c826f0e6b29e661902866",
+      "planned_seconds": 90,
+      "status": "FAILED",
+      "initial_database_bytes": 119635968,
+      "quote_age_seconds": 9.357304,
+      "measured_reservations": 1,
+      "wall_seconds_with_digest_running": 8.484185,
+      "owner_thread_cpu_seconds_in_fully_contained_digests": 7.067424,
+      "snapshot_failures": 0,
+      "native_snapshot_calls": 22,
+      "report_scope": "after_shutdown",
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 0,
+        "exit_fills": 0,
+        "completed_round_trips": 0,
+        "carry_in_exits": 0
+      },
+      "evaluated_slots": 1,
+      "expected_slots": 1,
+      "failure": "Native acceptance failure"
+    },
+    {
+      "trial": "prev_2",
+      "group": "overlapping_suites",
+      "commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
+      "manifest": "9904993361dcf075ae05db3a638cbb4858289828c40c826f0e6b29e661902866",
+      "planned_seconds": 90,
+      "status": "PASSED",
+      "initial_database_bytes": 119635968,
+      "quote_age_seconds": 7.535388,
+      "measured_reservations": 1,
+      "wall_seconds_with_digest_running": 6.95144,
+      "owner_thread_cpu_seconds_in_fully_contained_digests": 6.009523,
+      "snapshot_failures": 0,
+      "native_snapshot_calls": 26,
+      "report_scope": "after_shutdown",
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "evaluated_slots": 1,
+      "expected_slots": 1,
+      "native_snapshot_p99_seconds": 0.15724389699607855,
+      "final_accounting": "VERIFIED_FLAT"
+    },
+    {
+      "trial": "final_1",
+      "group": "overlapping_suites",
+      "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+      "manifest": "f560862a59b5b7ed761289064cf1ff0d9f1f35d03aa37cea60f9eb24412565ff",
+      "planned_seconds": 90,
+      "status": "FAILED",
+      "initial_database_bytes": 119635968,
+      "quote_age_seconds": null,
+      "measured_reservations": null,
+      "wall_seconds_with_digest_running": null,
+      "owner_thread_cpu_seconds_in_fully_contained_digests": null,
+      "snapshot_failures": 0,
+      "native_snapshot_calls": 3,
+      "report_scope": "after_shutdown",
+      "run_execution": {
+        "carry_in_exits": 0,
+        "completed_round_trips": 0,
+        "entry_fills": 0,
+        "exit_fills": 0,
+        "status": "RECORDED"
+      },
+      "failure": "REPORT_SOURCE_COPY_DEADLINE"
+    },
+    {
+      "trial": "final_2",
+      "group": "overlapping_suites",
+      "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+      "manifest": "f560862a59b5b7ed761289064cf1ff0d9f1f35d03aa37cea60f9eb24412565ff",
+      "planned_seconds": 90,
+      "status": "PASSED",
+      "initial_database_bytes": 119635968,
+      "quote_age_seconds": 5.553139,
+      "measured_reservations": 1,
+      "wall_seconds_with_digest_running": 4.151897,
+      "owner_thread_cpu_seconds_in_fully_contained_digests": 3.48637,
+      "snapshot_failures": 0,
+      "native_snapshot_calls": 38,
+      "report_scope": "after_shutdown",
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "evaluated_slots": 1,
+      "expected_slots": 1,
+      "native_snapshot_p99_seconds": 0.17936939599894686,
+      "final_accounting": "VERIFIED_FLAT"
+    },
+    {
+      "trial": "final_335",
+      "group": "overlapping_suites",
+      "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+      "manifest": "f560862a59b5b7ed761289064cf1ff0d9f1f35d03aa37cea60f9eb24412565ff",
+      "planned_seconds": 335,
+      "status": "PASSED",
+      "initial_database_bytes": 119635968,
+      "quote_age_seconds": 4.508845,
+      "measured_reservations": 1,
+      "wall_seconds_with_digest_running": 3.691692,
+      "owner_thread_cpu_seconds_in_fully_contained_digests": 3.218429,
+      "snapshot_failures": 0,
+      "native_snapshot_calls": 153,
+      "report_scope": "after_shutdown",
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "evaluated_slots": 2,
+      "expected_slots": 2,
+      "native_snapshot_p99_seconds": 0.22450551800284302,
+      "final_accounting": "VERIFIED_FLAT"
+    },
+    {
+      "trial": "solo-baseline_short",
+      "group": "sequential",
+      "commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
+      "manifest": "9904993361dcf075ae05db3a638cbb4858289828c40c826f0e6b29e661902866",
+      "planned_seconds": 90,
+      "status": "PASSED",
+      "initial_database_bytes": 119635968,
+      "quote_age_seconds": 7.558862,
+      "measured_reservations": 1,
+      "wall_seconds_with_digest_running": 7.000329,
+      "owner_thread_cpu_seconds_in_fully_contained_digests": 6.099396,
+      "snapshot_failures": 0,
+      "native_snapshot_calls": 26,
+      "report_scope": "after_shutdown",
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "evaluated_slots": 1,
+      "expected_slots": 1,
+      "native_snapshot_p99_seconds": 0.24790705100167543,
+      "final_accounting": "VERIFIED_FLAT"
+    },
+    {
+      "trial": "solo-baseline_repeat",
+      "group": "sequential",
+      "commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
+      "manifest": "9904993361dcf075ae05db3a638cbb4858289828c40c826f0e6b29e661902866",
+      "planned_seconds": 90,
+      "status": "PASSED",
+      "initial_database_bytes": 119635968,
+      "quote_age_seconds": 7.966466,
+      "measured_reservations": 1,
+      "wall_seconds_with_digest_running": 7.222902,
+      "owner_thread_cpu_seconds_in_fully_contained_digests": 6.311691,
+      "snapshot_failures": 0,
+      "native_snapshot_calls": 24,
+      "report_scope": "after_shutdown",
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "evaluated_slots": 1,
+      "expected_slots": 1,
+      "native_snapshot_p99_seconds": 0.15355866000027163,
+      "final_accounting": "VERIFIED_FLAT"
+    },
+    {
+      "trial": "solo-patched_short",
+      "group": "sequential",
+      "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+      "manifest": "f560862a59b5b7ed761289064cf1ff0d9f1f35d03aa37cea60f9eb24412565ff",
+      "planned_seconds": 90,
+      "status": "FAILED",
+      "initial_database_bytes": 119635968,
+      "quote_age_seconds": 4.890794,
+      "measured_reservations": 1,
+      "wall_seconds_with_digest_running": null,
+      "owner_thread_cpu_seconds_in_fully_contained_digests": null,
+      "snapshot_failures": 0,
+      "native_snapshot_calls": 26,
+      "report_scope": "after_shutdown",
+      "run_execution": {
+        "carry_in_exits": 0,
+        "completed_round_trips": 1,
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "status": "RECORDED"
+      },
+      "failure": "CONNECTED_COMPONENT_STOPPED:PUBLISHER"
+    },
+    {
+      "trial": "solo-patched_repeat",
+      "group": "sequential",
+      "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+      "manifest": "f560862a59b5b7ed761289064cf1ff0d9f1f35d03aa37cea60f9eb24412565ff",
+      "planned_seconds": 90,
+      "status": "PASSED",
+      "initial_database_bytes": 119635968,
+      "quote_age_seconds": 5.602441,
+      "measured_reservations": 1,
+      "wall_seconds_with_digest_running": 4.376396,
+      "owner_thread_cpu_seconds_in_fully_contained_digests": 3.756644,
+      "snapshot_failures": 0,
+      "native_snapshot_calls": 37,
+      "report_scope": "after_shutdown",
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "evaluated_slots": 1,
+      "expected_slots": 1,
+      "native_snapshot_p99_seconds": 0.16637534499750473,
+      "final_accounting": "VERIFIED_FLAT"
+    },
+    {
+      "trial": "solo-patched_two_slots",
+      "group": "sequential",
+      "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+      "manifest": "f560862a59b5b7ed761289064cf1ff0d9f1f35d03aa37cea60f9eb24412565ff",
+      "planned_seconds": 335,
+      "status": "PASSED",
+      "initial_database_bytes": 119635968,
+      "quote_age_seconds": 4.855032,
+      "measured_reservations": 1,
+      "wall_seconds_with_digest_running": 4.060524,
+      "owner_thread_cpu_seconds_in_fully_contained_digests": 3.514372,
+      "snapshot_failures": 0,
+      "native_snapshot_calls": 142,
+      "report_scope": "after_shutdown",
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "evaluated_slots": 2,
+      "expected_slots": 2,
+      "native_snapshot_p99_seconds": 0.18109706199902575,
+      "final_accounting": "VERIFIED_FLAT"
+    }
+  ],
+  "held_exit_trials": [
+    {
+      "trial": "before-1",
+      "group": "overlapping_suites",
+      "commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
+      "asset": "STOCK",
+      "journal_bytes_before_contention": 72826880,
+      "contention_setup_seconds": 0.383927,
+      "breach_to_native_ack_seconds": 6.122645,
+      "native_ack_to_tick_completion_seconds": 2.850709,
+      "breach_to_tick_completion_seconds": 8.973354,
+      "next_quote_to_flat_observed_seconds": 4.323629,
+      "exit_seconds": 9.357282,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": false,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.615198,
+        "NATIVE_ACCEPT": 1.51751,
+        "PROTECTION_RESERVATION": 0.885338
+      },
+      "trace_start_write_p95_seconds": 0.734778
+    },
+    {
+      "trial": "before-1",
+      "group": "overlapping_suites",
+      "commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
+      "asset": "OPTION",
+      "journal_bytes_before_contention": 72880128,
+      "contention_setup_seconds": 0.63013,
+      "breach_to_native_ack_seconds": 5.224414,
+      "native_ack_to_tick_completion_seconds": 2.417348,
+      "breach_to_tick_completion_seconds": 7.641762,
+      "next_quote_to_flat_observed_seconds": 3.611123,
+      "exit_seconds": 8.271891,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": false,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.61437,
+        "NATIVE_ACCEPT": 1.663484,
+        "PROTECTION_RESERVATION": 0.824006
+      },
+      "trace_start_write_p95_seconds": 0.70645
+    },
+    {
+      "trial": "before-2",
+      "group": "overlapping_suites",
+      "commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
+      "asset": "STOCK",
+      "journal_bytes_before_contention": 72826880,
+      "contention_setup_seconds": 0.49157,
+      "breach_to_native_ack_seconds": 4.661639,
+      "native_ack_to_tick_completion_seconds": 2.006467,
+      "breach_to_tick_completion_seconds": 6.668107,
+      "next_quote_to_flat_observed_seconds": 3.086379,
+      "exit_seconds": 7.159677,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": false,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.721112,
+        "NATIVE_ACCEPT": 1.569365,
+        "PROTECTION_RESERVATION": 0.688234
+      },
+      "trace_start_write_p95_seconds": 0.649404
+    },
+    {
+      "trial": "before-2",
+      "group": "overlapping_suites",
+      "commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
+      "asset": "OPTION",
+      "journal_bytes_before_contention": 72880128,
+      "contention_setup_seconds": 0.527779,
+      "breach_to_native_ack_seconds": 4.895932,
+      "native_ack_to_tick_completion_seconds": 2.186743,
+      "breach_to_tick_completion_seconds": 7.082675,
+      "next_quote_to_flat_observed_seconds": 3.644974,
+      "exit_seconds": 7.610454,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": false,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.569631,
+        "NATIVE_ACCEPT": 1.085254,
+        "PROTECTION_RESERVATION": 0.693658
+      },
+      "trace_start_write_p95_seconds": 0.710875
+    },
+    {
+      "trial": "after-1",
+      "group": "overlapping_suites",
+      "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+      "asset": "STOCK",
+      "journal_bytes_before_contention": 72826880,
+      "contention_setup_seconds": 0.890992,
+      "breach_to_native_ack_seconds": 4.864116,
+      "native_ack_to_tick_completion_seconds": 1.732875,
+      "breach_to_tick_completion_seconds": 6.596991,
+      "next_quote_to_flat_observed_seconds": 2.721918,
+      "exit_seconds": 7.487983,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": false,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.407378,
+        "NATIVE_ACCEPT": 1.554758,
+        "PROTECTION_RESERVATION": 0.701853
+      },
+      "trace_start_write_p95_seconds": 0.435855
+    },
+    {
+      "trial": "after-1",
+      "group": "overlapping_suites",
+      "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+      "asset": "OPTION",
+      "journal_bytes_before_contention": 72880128,
+      "contention_setup_seconds": 0.470092,
+      "breach_to_native_ack_seconds": 5.585765,
+      "native_ack_to_tick_completion_seconds": 1.519885,
+      "breach_to_tick_completion_seconds": 7.10565,
+      "next_quote_to_flat_observed_seconds": 2.738879,
+      "exit_seconds": 7.575742,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": false,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.355942,
+        "NATIVE_ACCEPT": 1.616397,
+        "PROTECTION_RESERVATION": 0.838437
+      },
+      "trace_start_write_p95_seconds": 0.537989
+    },
+    {
+      "trial": "after-2",
+      "group": "overlapping_suites",
+      "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+      "asset": "STOCK",
+      "journal_bytes_before_contention": 72826880,
+      "contention_setup_seconds": 0.227516,
+      "breach_to_native_ack_seconds": 3.635943,
+      "native_ack_to_tick_completion_seconds": 1.340129,
+      "breach_to_tick_completion_seconds": 4.976072,
+      "next_quote_to_flat_observed_seconds": 2.113809,
+      "exit_seconds": 5.203588,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": false,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.322676,
+        "NATIVE_ACCEPT": 1.090053,
+        "PROTECTION_RESERVATION": 0.500088
+      },
+      "trace_start_write_p95_seconds": 0.325439
+    },
+    {
+      "trial": "after-2",
+      "group": "overlapping_suites",
+      "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+      "asset": "OPTION",
+      "journal_bytes_before_contention": 72880128,
+      "contention_setup_seconds": 0.612118,
+      "breach_to_native_ack_seconds": 3.804809,
+      "native_ack_to_tick_completion_seconds": 1.299913,
+      "breach_to_tick_completion_seconds": 5.104722,
+      "next_quote_to_flat_observed_seconds": 2.093257,
+      "exit_seconds": 5.71684,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": false,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.376551,
+        "NATIVE_ACCEPT": 1.129192,
+        "PROTECTION_RESERVATION": 0.574048
+      },
+      "trace_start_write_p95_seconds": 0.410866
+    },
+    {
+      "trial": "solo-exit-baseline_short",
+      "group": "sequential",
+      "commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
+      "asset": "STOCK",
+      "journal_bytes_before_contention": 72826880,
+      "contention_setup_seconds": 0.521948,
+      "breach_to_native_ack_seconds": 4.78756,
+      "native_ack_to_tick_completion_seconds": 2.151614,
+      "breach_to_tick_completion_seconds": 6.939174,
+      "next_quote_to_flat_observed_seconds": 3.212357,
+      "exit_seconds": 7.461123,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": false,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.600255,
+        "NATIVE_ACCEPT": 1.463282,
+        "PROTECTION_RESERVATION": 0.699458
+      },
+      "trace_start_write_p95_seconds": 0.533321
+    },
+    {
+      "trial": "solo-exit-baseline_short",
+      "group": "sequential",
+      "commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
+      "asset": "OPTION",
+      "journal_bytes_before_contention": 72880128,
+      "contention_setup_seconds": 0.649173,
+      "breach_to_native_ack_seconds": 4.848637,
+      "native_ack_to_tick_completion_seconds": 2.117423,
+      "breach_to_tick_completion_seconds": 6.966059,
+      "next_quote_to_flat_observed_seconds": 3.399548,
+      "exit_seconds": 7.615232,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": false,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.541242,
+        "NATIVE_ACCEPT": 1.243265,
+        "PROTECTION_RESERVATION": 0.766146
+      },
+      "trace_start_write_p95_seconds": 0.554003
+    },
+    {
+      "trial": "solo-exit-baseline_repeat",
+      "group": "sequential",
+      "commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
+      "asset": "STOCK",
+      "journal_bytes_before_contention": 72826880,
+      "contention_setup_seconds": 0.565642,
+      "breach_to_native_ack_seconds": 4.945829,
+      "native_ack_to_tick_completion_seconds": 2.061835,
+      "breach_to_tick_completion_seconds": 7.007664,
+      "next_quote_to_flat_observed_seconds": 3.237416,
+      "exit_seconds": 7.573306,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": false,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.502152,
+        "NATIVE_ACCEPT": 1.094404,
+        "PROTECTION_RESERVATION": 0.800839
+      },
+      "trace_start_write_p95_seconds": 0.596885
+    },
+    {
+      "trial": "solo-exit-baseline_repeat",
+      "group": "sequential",
+      "commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
+      "asset": "OPTION",
+      "journal_bytes_before_contention": 72880128,
+      "contention_setup_seconds": 0.628345,
+      "breach_to_native_ack_seconds": 4.985133,
+      "native_ack_to_tick_completion_seconds": 2.300645,
+      "breach_to_tick_completion_seconds": 7.285778,
+      "next_quote_to_flat_observed_seconds": 3.384161,
+      "exit_seconds": 7.914123,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": false,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.550881,
+        "NATIVE_ACCEPT": 1.144188,
+        "PROTECTION_RESERVATION": 0.761081
+      },
+      "trace_start_write_p95_seconds": 0.584642
+    },
+    {
+      "trial": "solo-exit-patched_short",
+      "group": "sequential",
+      "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+      "asset": "STOCK",
+      "journal_bytes_before_contention": 72826880,
+      "contention_setup_seconds": 0.734478,
+      "breach_to_native_ack_seconds": 3.467387,
+      "native_ack_to_tick_completion_seconds": 1.292027,
+      "breach_to_tick_completion_seconds": 4.759414,
+      "next_quote_to_flat_observed_seconds": 2.069673,
+      "exit_seconds": 5.493892,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": false,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.312751,
+        "NATIVE_ACCEPT": 1.25869,
+        "PROTECTION_RESERVATION": 0.471374
+      },
+      "trace_start_write_p95_seconds": 0.332084
+    },
+    {
+      "trial": "solo-exit-patched_short",
+      "group": "sequential",
+      "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+      "asset": "OPTION",
+      "journal_bytes_before_contention": 72880128,
+      "contention_setup_seconds": 0.638946,
+      "breach_to_native_ack_seconds": 3.587443,
+      "native_ack_to_tick_completion_seconds": 1.231224,
+      "breach_to_tick_completion_seconds": 4.818667,
+      "next_quote_to_flat_observed_seconds": 2.048544,
+      "exit_seconds": 5.457614,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": false,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.306982,
+        "NATIVE_ACCEPT": 1.075738,
+        "PROTECTION_RESERVATION": 0.527595
+      },
+      "trace_start_write_p95_seconds": 0.339681
+    },
+    {
+      "trial": "solo-exit-patched_repeat",
+      "group": "sequential",
+      "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+      "asset": "STOCK",
+      "journal_bytes_before_contention": 72826880,
+      "contention_setup_seconds": 0.683028,
+      "breach_to_native_ack_seconds": 3.380946,
+      "native_ack_to_tick_completion_seconds": 1.239283,
+      "breach_to_tick_completion_seconds": 4.620229,
+      "next_quote_to_flat_observed_seconds": 1.945043,
+      "exit_seconds": 5.303257,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": false,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.310691,
+        "NATIVE_ACCEPT": 1.121256,
+        "PROTECTION_RESERVATION": 0.4787
+      },
+      "trace_start_write_p95_seconds": 0.320867
+    },
+    {
+      "trial": "solo-exit-patched_repeat",
+      "group": "sequential",
+      "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+      "asset": "OPTION",
+      "journal_bytes_before_contention": 72880128,
+      "contention_setup_seconds": 0.286785,
+      "breach_to_native_ack_seconds": 3.64943,
+      "native_ack_to_tick_completion_seconds": 1.327851,
+      "breach_to_tick_completion_seconds": 4.977281,
+      "next_quote_to_flat_observed_seconds": 2.072718,
+      "exit_seconds": 5.264066,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": false,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.326686,
+        "NATIVE_ACCEPT": 1.228867,
+        "PROTECTION_RESERVATION": 0.523108
+      },
+      "trace_start_write_p95_seconds": 0.34571
+    },
+    {
+      "trial": "final-system",
+      "group": "installed_system",
+      "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+      "asset": "STOCK",
+      "journal_bytes_before_contention": 72826880,
+      "contention_setup_seconds": 0.239217,
+      "breach_to_native_ack_seconds": 1.818542,
+      "native_ack_to_tick_completion_seconds": 0.663572,
+      "breach_to_tick_completion_seconds": 2.482114,
+      "next_quote_to_flat_observed_seconds": 1.045891,
+      "exit_seconds": 2.721331,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": true,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.170142,
+        "NATIVE_ACCEPT": 0.557783,
+        "PROTECTION_RESERVATION": 0.238269
+      },
+      "trace_start_write_p95_seconds": 0.184658
+    },
+    {
+      "trial": "final-system",
+      "group": "installed_system",
+      "commit": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+      "asset": "OPTION",
+      "journal_bytes_before_contention": 72880128,
+      "contention_setup_seconds": 0.339517,
+      "breach_to_native_ack_seconds": 1.828896,
+      "native_ack_to_tick_completion_seconds": 0.754946,
+      "breach_to_tick_completion_seconds": 2.583842,
+      "next_quote_to_flat_observed_seconds": 1.088566,
+      "exit_seconds": 2.92336,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": true,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.162176,
+        "NATIVE_ACCEPT": 0.488328,
+        "PROTECTION_RESERVATION": 0.298508
+      },
+      "trace_start_write_p95_seconds": 0.218514
+    }
+  ],
+  "trial_notes": {
+    "sequential": "Opening and competing stock/option pairs ran consecutively, with a dense calendar on a separate logical CPU. The held-exit pair shared one CPU with the same 124-case peer suite.",
+    "installed_system": "Held exits from the installed system suite without an additional peer pinned to the same CPU.",
+    "overlapping_suites": "The earlier measurements also overlapped other local checks. Retained separately.",
+    "opening": "Quote age at the actual native reservation uses the original quote timestamp. A null age has no observed reservation in the indicated report.",
+    "exit": "exit_seconds includes setup before the stop book and ends when its tick finishes. Each retained case acknowledged the sell with history, advice and display work blocked and a report open, filled from the next packet, and verified flat."
+  },
+  "copy_retry": {
+    "reproduced_on": "9aeb3ea7865b2267e9c12d02b3267a0df3532a32",
+    "deterministic_baseline": {
+      "passed": 4,
+      "tests": 6,
+      "errors": 0,
+      "failures": 2,
+      "skipped": 0
+    },
+    "with_repair": {
+      "passed": 13,
+      "tests": 13,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "exact_bounds_baseline": {
+      "passed": 1,
+      "tests": 3,
+      "errors": 0,
+      "failures": 2,
+      "skipped": 0
+    },
+    "exact_bounds_repair": {
+      "passed": 3,
+      "tests": 3,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "observed": "The sequential pre-repair publisher recorded a RUNNING TimeoutError at the pinned source backup. A separate report trial ended early with REPORT_SOURCE_COPY_DEADLINE.",
+    "limits": "One pinned SQLite read with the existing 0.5-second cap. The released reader may finish one incremental copy within the original deadline. A further restart ends the attempt."
+  },
+  "installed_checks": {
+    "prefix_system": {
+      "passed": 565,
+      "tests": 566,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 1
+    },
+    "restore_and_checkpoint_related": {
+      "passed": 167,
+      "tests": 167,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "exact_compatibility": {
+      "passed": 9,
+      "tests": 9,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "overlap": "The suites overlap. The system skip requires a second mapped UID.",
+    "combined_test_checkout": "a8c338c21823b02901cbebe1e08ebca707523926"
+  },
+  "interrupted_prior_runs": {
+    "wall": {
+      "checkpoint_seconds": 2690.747,
+      "completed_cycles": 9,
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "native_snapshot_failures": 0,
+      "terminal_proof": false
+    },
+    "calendar": {
+      "completed_sessions": 18,
+      "packets": 1422,
+      "samples_per_session": 79,
+      "native_bytes": 82382848,
+      "collector_bytes": 87175168,
+      "display_bytes": 12226560,
+      "last_session": "2026-11-20",
+      "early_close": null,
+      "accelerated_round_trips": 1
+    }
+  },
+  "dense_calendar": {
+    "manifest": "63f8424406e45e4165f3bace56e14ec775774ec9a0ab0035944fa22acabac8fa",
+    "base_commit": "dfed420bdabd62be403bc22a9aa54fed1ac5c61b",
+    "only_differing_application_file": "app/execution/restore.py",
+    "file_sha256": "2f21d1b505fc5bd3722d4e4693ee71aeeaa285a6a4ac928763725f0c566dc27c",
+    "build": "Intermediate exact-prefix build, before the final long-string and concurrent-reader optimizations.",
+    "completed_sessions": 16,
+    "packets": 1264,
+    "samples_per_session": 79,
+    "native_bytes": 73297920,
+    "collector_bytes": 77508608,
+    "display_bytes": 10952704,
+    "last_session": "2026-11-18",
+    "early_close": null,
+    "accelerated_round_trips": 1,
+    "terminal_result_available": false
+  }
+}

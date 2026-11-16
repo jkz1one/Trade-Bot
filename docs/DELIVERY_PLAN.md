@@ -143,6 +143,16 @@ next action. Do not replace missing evidence with a date estimate.
   4.70 CPU seconds in fully contained digest calls. Ten of its calls came
   from recording tick and cycle timing. This result uses diagnostic
   padding and one approved opening.
+  `9aeb3ea` compares the exact rescanned SQLite schema and rows with the
+  preceding scan before reusing its SHA-256 prefix. Both retained account
+  digests matched. Median warm verification fell from 254 to 95 ms on
+  the 123 MB padded journal and from 297 to 192 ms on the 83 MB journal
+  grown over 18 sampled sessions. The repair matched the original verifier
+  in 1,152 comparisons. The two baseline 90-second runs admitted at 7.56
+  and 7.97 seconds. The repaired short repeat admitted at 5.60 seconds,
+  and the two-slot repeat admitted at 4.86 seconds. Another short run
+  admitted at 4.89 seconds before the publisher failed its private copy.
+  [November 16 trials](PAPER_TIMING_20261116_PROOF.json).
 - [ ] **A3 — Measured repairs:** reproduce and close the actual bottlenecks with
   before/after evidence; decide connection reuse from measurements and validate
   its isolation, refresh ownership, deadlines and cleanup if adopted.
@@ -192,6 +202,14 @@ next action. Do not replace missing evidence with a date estimate.
   Four of ten met the fixture's full five-second bound, including setup.
   In the last pair `7d63c74` observed the flat venue 2.40 seconds after
   the stock's next quote and 2.22 seconds after the option's next quote.
+  In two matched stock/option pairs sharing one CPU with another test suite,
+  `9aeb3ea` acknowledged all four stops in 3.38–3.65 seconds and completed
+  the stop ticks in 4.62–4.98 seconds. Including contention setup, all four
+  exceeded five seconds. Each filled from the next quote with advice and
+  history still blocked. `0c46df3` releases its pinned read lock before
+  a final incremental dashboard or report copy. Tests cover a quieting
+  writer, repeated restarts, size growth and the original deadline.
+  [Protection measurements](PAPER_TIMING_20261116_PROOF.json).
   `aad4e08` isolated in-run publisher failure. `d35d318` adds verified-held startup
   protection for missing/partial display snapshots, read-only protection-only host
   review and entry-resume rejection. Both startup scenarios retain the damaged
