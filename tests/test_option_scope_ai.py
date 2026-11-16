@@ -176,17 +176,14 @@ def test_shared_ai_can_choose_degen_or_hold(tmp_path, monkeypatch):
 
 
 def test_option_review_records_its_actual_clock_when_paid_plan_expires(tmp_path, monkeypatch):
-    from app.options import scope_ai
-
     with ai_owner(tmp_path, monkeypatch, family="DEGEN") as (c, venue, times, frame, state):
-        original = scope_ai.choose_after_usage
+        market = c._execution_market
 
-        async def choose_then_expire(*args):
-            selected = await original(*args)
+        def market_at_deadline(*args):
             times[0] = state["request"].packet.valid_until
-            return selected
+            return market(*args)
 
-        monkeypatch.setattr(scope_ai, "choose_after_usage", choose_then_expire)
+        monkeypatch.setattr(c, "_execution_market", market_at_deadline)
         result = asyncio.run(c.cycle(frame))
         assert result["entry_timely"] and result["reason"] == "ORIGINAL_PLAN_DEADLINE_EXPIRED"
         assert result["entry_review_at"] == state["request"].packet.valid_until.isoformat()

@@ -73,12 +73,6 @@ async def choose_after_usage(c, key, evidence, request, result):
     # Validate even a forged local worker response before a refresh or selection.
     with phase("ENTRY_SCOPE_RECEIPT_CHECK"), c.engine.journal.read() as db:
         validate_stored(db, key, evidence, c.scope_policy)
-    if not result.plan.scope:
-        with phase("ENTRY_SCOPE_SELECTION"):
-            evidence["candidate_id"] = result.plan.candidate_id
-            evidence["scope_arbitration"] = selection(c.scope_policy, key, evidence)
-            c._pending_evidence(key, evidence)
-        return None
     # Reader receives only the selected play. It cannot supply balances or terms.
     remaining = (request.packet.valid_until - c.now()).total_seconds()
     if remaining <= 0:

@@ -83,6 +83,73 @@ def test_paid_selection_timing_keeps_original_check_separate_from_refresh(tmp_pa
         assert names.index("SCOPE_REFRESH") < names.index("ENTRY_SCOPE_SELECTION")
 
 
+def test_regular_option_first_settled_commit_already_contains_both_choices(tmp_path, monkeypatch):
+    from test_option_scope_ai import ai_owner
+
+    with ai_owner(tmp_path, monkeypatch, family="DEGEN", portfolio=True) as (c, venue, _, frame, _):
+        journal = c.engine.journal
+        write = journal.write
+        settled = []
+
+        @contextmanager
+        def observe_commits():
+            with write() as db:
+                yield db
+            if not settled:
+                # An independent reader can see only committed charge and choice evidence.
+                with journal.read() as db:
+                    row = db.execute(
+                        "SELECT o.result_json FROM execution_option_opportunities o "
+                        "JOIN execution_model_calls m ON m.source_key=o.cycle_key "
+                        "WHERE m.cost IS NOT NULL"
+                    ).fetchone()
+                if row:
+                    settled.append(json.loads(row[0]))
+
+        monkeypatch.setattr(journal, "write", observe_commits)
+        result = asyncio.run(c.cycle(frame))
+        assert venue.submit_count == 1, result
+        receipt, = settled
+        candidate = receipt["entry_result"]["plan"]["candidate_id"]
+        assert receipt["mixed_selection"]["selected"]["candidate_id"] == candidate
+        assert receipt["scope_arbitration"]["selected"]["candidate_id"] == candidate
+        assert receipt["entry_request"]["packet"]["cycle_key"] == receipt["scope_arbitration"]["cycle_key"]
+
+
+@pytest.mark.parametrize("failure", ["receipt", "write"])
+def test_unusable_option_choice_preserves_exact_charge_and_raw_reply(tmp_path, monkeypatch, failure):
+    from test_option_scope_ai import ai_owner
+    from app.execution.engine import ExecutionBlocked
+    from app.options import scope_ai
+
+    with ai_owner(tmp_path, monkeypatch, family="DEGEN") as (c, venue, _, frame, _):
+        if failure == "receipt":
+            def reject(*args):
+                raise ExecutionBlocked("REJECTED_SELECTION_RECEIPT")
+
+            monkeypatch.setattr(scope_ai, "validate_stored", reject)
+        else:
+            with c.engine.journal.write() as db:
+                db.execute(
+                    "CREATE TRIGGER reject_choice BEFORE UPDATE OF result_json "
+                    "ON execution_option_opportunities WHEN "
+                    "json_extract(NEW.result_json,'$.scope_arbitration.selected') IS NOT NULL "
+                    "BEGIN SELECT RAISE(ABORT,'rejected choice'); END"
+                )
+        result = asyncio.run(c.cycle(frame))
+        assert result["status"] == "HOLD" and venue.submit_count == 0, result
+        assert result["entry_timely"] and result["entry_result"]["plan"]["action"] == "ENTER"
+        assert "scope_arbitration" not in result or result["scope_arbitration"]["selected"] is None
+        with c.engine.journal.read() as db:
+            call, = db.execute("SELECT cost,usage_json FROM execution_model_calls")
+            assert call["cost"] is not None
+            assert json.loads(call["usage_json"]) == result["entry_result"]["usage"]
+            assert db.execute(
+                "SELECT COUNT(*) FROM execution_events WHERE kind='OPTION_MODEL_USAGE_RECORDED'"
+            ).fetchone()[0] == 1
+        assert asyncio.run(c.cycle(frame)) == result and venue.submit_count == 0
+
+
 def test_native_success_timeout_and_cancellation_keep_separate_spans_and_reap(tmp_path, monkeypatch):
     children = []
     spawn = asyncio.create_subprocess_exec

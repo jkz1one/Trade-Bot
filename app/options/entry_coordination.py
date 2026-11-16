@@ -72,16 +72,47 @@ def review_for_execution(engine, db, key, request, result, quote, underlying, no
     )
 
 
-def _settle_reply(c, key, evidence, result, completed):
+def _regular_option_choice(c, db, key, evidence, result):
+    # Only pure selection work belongs in the settlement writer. A Scope refresh
+    # or stock execution still starts after the paid reply is durably committed.
+    chosen = evidence.copy()
+    if c.entry_policy.mixed_selection is not None:
+        from app.mixed.selection import select
+
+        with phase("ENTRY_MIXED_SELECTION"):
+            select(c, key, chosen, persist=False)
+    if c.entry_policy.scope_selection is not None:
+        from app.options.scope_ai import validate_stored
+        from app.options.scope_arbitration import selection
+
+        with phase("ENTRY_SCOPE_RECEIPT_CHECK"):
+            validate_stored(db, key, chosen, c.scope_policy)
+        with phase("ENTRY_SCOPE_SELECTION"):
+            chosen["candidate_id"] = result.plan.candidate_id
+            chosen["scope_arbitration"] = selection(c.scope_policy, key, chosen)
+    return chosen
+
+
+def _settle_reply(c, key, evidence, result, completed, *, select_option):
+    # If selection or its write fails after usage was accepted, settle the exact
+    # reply alone. Never let unusable advice discard a known charge.
+    selecting = False
     try:
         with c.engine.journal.write() as db:
-            c._store_pending_evidence(db, key, evidence)
             c.engine.record_entry_usage(key, result.usage, result.plan, now=completed, _db=db)
+            pending = evidence
+            if select_option:
+                selecting = True
+                pending = _regular_option_choice(c, db, key, evidence, result)
+            c._store_pending_evidence(db, key, pending)
     except Exception:
-        # The joint transaction rolled back. Keep the original reply even if
-        # its usage could not be settled. The admitted call cannot be repeated.
-        c._pending_evidence(key, evidence)
+        if selecting:
+            _settle_reply(c, key, evidence, result, completed, select_option=False)
+        else:
+            # Full transaction rolled back. Keep the reply on the admitted call.
+            c._pending_evidence(key, evidence)
         raise
+    evidence.update(pending)
 
 
 async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlyings, evidence):
@@ -195,42 +226,38 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
                 "model_error_class": type(exc).__name__,
             },
         )
-    # Settle trustworthy usage even for rejected/late geometry. Never discard a
-    # known charge because its model proposal cannot be used.
-    with phase("ENTRY_MODEL_SETTLEMENT"):
-        _settle_reply(c, key, evidence, result, completed)
     coherent = (
         result.counted_input_tokens == result.usage.input_tokens
         and result.usage.input_tokens <= config.limits.max_input_tokens
         and result.usage.output_tokens <= config.limits.max_output_tokens
     )
+    usable = coherent and evidence["entry_timely"] and result.error is None and result.plan.action == "ENTER"
+    stock = getattr(result.plan, "stock", False)
+    scope = getattr(result.plan, "scope", False)
+    with phase("ENTRY_MODEL_SETTLEMENT"):
+        _settle_reply(c, key, evidence, result, completed, select_option=(
+            usable and not stock and not scope
+            and (c.entry_policy.mixed_selection is not None or c.entry_policy.scope_selection is not None)
+        ))
     if not coherent:
         c._model_halt("OPTION_MODEL_EVIDENCE_REJECTED", completed)
-    if (
-        result.error is not None
-        or not coherent
-        or not evidence["entry_timely"]
-        or result.plan.action == "HOLD"
-    ):
+    if not usable:
         return c._finish(
             key, {**evidence, "status": "HOLD", "reason": "ENTRY_MODEL_HOLD_OR_REJECTED"}
         )
-    if c.entry_policy.mixed_selection is not None:
-        if getattr(result.plan, "stock", False):
-            from app.mixed.entry import execute
+    if c.entry_policy.mixed_selection is not None and stock:
+        from app.mixed.entry import execute
 
-            return await execute(c, key, evidence, request, result)
-        from app.mixed.selection import select
-
-        # The shared-Scope path commits both selection receipts before execution.
-        with phase("ENTRY_MIXED_SELECTION"):
-            select(c, key, evidence, persist=c.entry_policy.scope_selection is None)
-    if c.entry_policy.scope_selection is not None:
+        return await execute(c, key, evidence, request, result)
+    if c.entry_policy.scope_selection is not None and scope:
         from app.options.scope_ai import choose_after_usage
 
-        scope_result = await choose_after_usage(c, key, evidence, request, result)
-        if scope_result is not None:
-            return scope_result
+        if c.entry_policy.mixed_selection is not None:
+            from app.mixed.selection import select
+
+            with phase("ENTRY_MIXED_SELECTION"):
+                select(c, key, evidence, persist=False)
+        return await choose_after_usage(c, key, evidence, request, result)
     selected = next((x for x in candidates if x.candidate_id == result.plan.candidate_id), None)
     if selected is None:
         c._model_halt("OPTION_MODEL_EVIDENCE_REJECTED", completed)
