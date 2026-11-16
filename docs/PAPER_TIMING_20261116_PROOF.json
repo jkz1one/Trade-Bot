@@ -1341,10 +1341,102 @@
         "PROTECTION_RESERVATION": 0.244575
       },
       "trace_start_write_p95_seconds": 0.202721
+    },
+    {
+      "trial": "advancing-system",
+      "group": "installed_system",
+      "commit": "2646944668eefc05e19f5fb5b6698ac89792509e",
+      "asset": "STOCK",
+      "journal_bytes_before_contention": 72826880,
+      "contention_setup_seconds": 0.380313,
+      "breach_to_native_ack_seconds": 1.698772,
+      "native_ack_to_tick_completion_seconds": 0.549991,
+      "breach_to_tick_completion_seconds": 2.248763,
+      "next_quote_to_flat_observed_seconds": 0.920387,
+      "exit_seconds": 2.629076,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": true,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.194992,
+        "NATIVE_ACCEPT": 0.550762,
+        "PROTECTION_RESERVATION": 0.212707
+      },
+      "trace_start_write_p95_seconds": 0.146524
+    },
+    {
+      "trial": "advancing-system",
+      "group": "installed_system",
+      "commit": "2646944668eefc05e19f5fb5b6698ac89792509e",
+      "asset": "OPTION",
+      "journal_bytes_before_contention": 72880128,
+      "contention_setup_seconds": 0.192213,
+      "breach_to_native_ack_seconds": 1.70215,
+      "native_ack_to_tick_completion_seconds": 0.558673,
+      "breach_to_tick_completion_seconds": 2.260823,
+      "next_quote_to_flat_observed_seconds": 0.964157,
+      "exit_seconds": 2.453037,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": true,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.153975,
+        "NATIVE_ACCEPT": 0.521515,
+        "PROTECTION_RESERVATION": 0.230353
+      },
+      "trace_start_write_p95_seconds": 0.16095
+    },
+    {
+      "trial": "advancing-exit",
+      "group": "sequential",
+      "commit": "2646944668eefc05e19f5fb5b6698ac89792509e",
+      "asset": "STOCK",
+      "journal_bytes_before_contention": 72826880,
+      "contention_setup_seconds": 0.642687,
+      "breach_to_native_ack_seconds": 3.178388,
+      "native_ack_to_tick_completion_seconds": 1.120547,
+      "breach_to_tick_completion_seconds": 4.298935,
+      "next_quote_to_flat_observed_seconds": 1.791737,
+      "exit_seconds": 4.941622,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": true,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.275563,
+        "NATIVE_ACCEPT": 0.991505,
+        "PROTECTION_RESERVATION": 0.405808
+      },
+      "trace_start_write_p95_seconds": 0.291326
+    },
+    {
+      "trial": "advancing-exit",
+      "group": "sequential",
+      "commit": "2646944668eefc05e19f5fb5b6698ac89792509e",
+      "asset": "OPTION",
+      "journal_bytes_before_contention": 72880128,
+      "contention_setup_seconds": 0.604824,
+      "breach_to_native_ack_seconds": 3.161928,
+      "native_ack_to_tick_completion_seconds": 1.14759,
+      "breach_to_tick_completion_seconds": 4.309518,
+      "next_quote_to_flat_observed_seconds": 1.84214,
+      "exit_seconds": 4.914342,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "within_fixture_budget": true,
+      "fixture_timing_max_seconds": {
+        "PROTECTION_HEARTBEAT": 0.279566,
+        "NATIVE_ACCEPT": 0.862304,
+        "PROTECTION_RESERVATION": 0.455679
+      },
+      "trace_start_write_p95_seconds": 0.303965
     }
   ],
   "trial_notes": {
-    "sequential": "Opening and competing stock/option pairs ran consecutively, with a dense calendar on a separate logical CPU. The held-exit pair shared one CPU with the same 124-case peer suite.",
+    "sequential": "Opening trials and competing stock/option pairs ran consecutively. The dense calendar used a separate logical CPU until its follow-up ended. Each competing held-exit pair shared one CPU with the same 124 peer cases. The final shared-CPU pair ran after the dense calendar ended.",
     "installed_system": "Held exits from the installed system suite without an additional peer pinned to the same CPU.",
     "overlapping_suites": "The earlier measurements also overlapped other local checks. Retained separately.",
     "opening": "Quote age at the actual native reservation uses the original quote timestamp. A null age has no observed reservation in the indicated report.",
@@ -1413,7 +1505,14 @@
       "failures": 0,
       "skipped": 1
     },
-    "combined_test_checkout": "a8c338c21823b02901cbebe1e08ebca707523926"
+    "combined_test_checkout": "a8c338c21823b02901cbebe1e08ebca707523926",
+    "final_system": {
+      "passed": 590,
+      "tests": 591,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 1
+    }
   },
   "interrupted_prior_runs": {
     "wall": {
@@ -1595,7 +1694,25 @@
           "at_option_review": null
         }
       }
-    ]
+    ],
+    "expired_cycle_trace": {
+      "slot": 5986836,
+      "reply_to_option_review_seconds": 1.125711,
+      "cycle_elapsed_seconds": 5.936277,
+      "phase_seconds": {
+        "ENTRY_MODEL_REQUEST": 0.489599,
+        "ENTRY_MODEL_ADMISSION": 0.682747,
+        "ENTRY_MODEL": 0.009173,
+        "ENTRY_MODEL_SETTLEMENT": 0.609934,
+        "ENTRY_MIXED_SELECTION": 0.001735,
+        "ENTRY_SCOPE_RECEIPT_CHECK": 0.042048,
+        "ENTRY_SCOPE_SELECTION": 0.456892,
+        "ENTRY_PROTECTION_WAIT": 0.000251,
+        "ENTRY_OPTION_MARKET_READ": 0.006134,
+        "ENTRY_REVIEW": 0.180918
+      },
+      "note": "Individual phase durations can nest. The reply-to-review interval uses the original saved timestamps."
+    }
   },
   "one_cpu_acknowledgement_failure": {
     "trial": "combined_335",

@@ -9,6 +9,8 @@ read lock between page batches. On that build the 90- and 335-second runs
 admitted their opening quotes at 4.995 and 5.091 seconds. Both completed
 a round trip and verified flat. The longer run evaluated both slots, served
 all 11 paired dashboard/report reads and completed 143 native snapshots.
+With a second test suite sharing one CPU, the stock and option protection
+cases both completed inside five seconds and verified flat.
 
 In a preceding one-CPU run, an acknowledgement timeout was reconciled and
 the next scheduled slot was missed. The text report now shows a failed

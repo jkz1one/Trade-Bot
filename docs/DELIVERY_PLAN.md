@@ -232,7 +232,10 @@ next action. Do not replace missing evidence with a date estimate.
   the first writer restart. `2646944` lets that copy continue when it
   reaches new pages between restarts. Both real SQLite readers completed
   through two intervening commits, and all 15 deadline and lock cases
-  passed. Persistent rewinds still release the reader early.
+  passed. Persistent rewinds still release the reader early. In the final
+  shared-CPU pair the stock and option acknowledged the stops in 3.18 and
+  3.16 seconds. Both filled on the next quote before advice or history
+  returned. Including setup, the cases took 4.94 and 4.91 seconds.
   [Protection measurements](PAPER_TIMING_20261116_PROOF.json).
   `aad4e08` isolated in-run publisher failure. `d35d318` adds verified-held startup
   protection for missing/partial display snapshots, read-only protection-only host
@@ -299,8 +302,10 @@ next action. Do not replace missing evidence with a date estimate.
   packets across 22 sessions. Its next 335-second session published and
   evaluated both slots. The first plan had 0.403 seconds left at reply and
   expired 0.723 seconds before its final review. The expected round trip
-  was missed. The final application verified the same authority and flat
-  accounting at packet 1,769 using read-only access.
+  was missed. In that cycle, persisting the settled model result took 0.610
+  seconds and Scope selection took 0.457 seconds. The total time from reply
+  to review was 1.126 seconds. The final application verified the same
+  authority and flat accounting at packet 1,769 using read-only access.
   [Session and timing evidence](PAPER_TIMING_20261116_PROOF.json).
   The short tests use labeled padding and sampled aggregate RSS. Host cgroup
   enforcement and connected-session effectiveness still require separate evidence.

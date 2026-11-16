@@ -1,11 +1,14 @@
 # Recovered offline system checkpoint
 
-November 16 UTC. The installed `0c46df3` application with the copy-bound
-regressions in `a8c338c` passed 587 system checks. Reader UID 10001 is
-unmapped here and accounts for the one skip. The text report in `88c9ba0`
-passed 111 overlapping report, timing and private-copy cases. On the saved
-one-CPU failure it reports one failed acknowledgement in two measured calls,
-one subsequently matched attempt, and one completed round trip.
+November 16 UTC. The installed `2646944` application passed 590 system
+checks with one skip for unmapped reader UID 10001. All 15 copy deadline
+and writer-interference cases passed. In the separate shared-CPU test,
+both the stock and option protective exits filled and the full cases
+finished in 4.94 and 4.91 seconds. The competing 124 cases passed.
+The preceding `0c46df3` application passed 587 system checks. The text
+report in `88c9ba0` passed 111 overlapping report, timing and private-copy
+cases. On a saved failure it reports one failed acknowledgement in two
+measured calls, one subsequently matched attempt, and a completed round trip.
 [Offline tests and timings](PAPER_TIMING_20261116_PROOF.json).
 
 The November 14 installed system run on `e2ced11` passed 565 checks with
