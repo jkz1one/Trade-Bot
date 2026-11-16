@@ -19,7 +19,7 @@ SUITES = ('connected_system', 'feed_timing', 'runtime_timing', 'option_read_capt
           'dashboard_reader', 'paper_session_report', 'paper_daily', 'mixed_runtime',
           'option_runtime', 'portfolio_models', 'session_host', 'dashboard_snapshot',
           'protection_contention', 'swing_feed', 'swing_binding', 'portfolio_feed',
-          'combined_session_feed')
+          'combined_session_feed', 'restore_encoding', 'snapshot_copy_lock')
 
 
 def run(output):

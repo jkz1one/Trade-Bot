@@ -56,5 +56,16 @@ def private_backup(source, target, *, deadline, max_bytes, capacity_error, deadl
         source.execute("BEGIN")
         try:
             copy(limit, allow_restart=False)
+        except TimeoutError:
+            if not limit <= time.monotonic() < deadline:
+                raise
+        else:
+            return
         finally:
             source.rollback()
+        # The writer can commit between batches again. If it restarts this
+        # last attempt too, stop without taking another pinned read lock.
+        try:
+            copy(deadline, allow_restart=True)
+        except _CopyRestarted:
+            raise TimeoutError(deadline_error) from None

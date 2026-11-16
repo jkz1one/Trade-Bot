@@ -54,7 +54,7 @@ def test_copy_setup_transient_lock_and_deadline(tmp_path, monkeypatch, backend, 
 
 
 @pytest.mark.parametrize("backend", ["dashboard", "report"])
-@pytest.mark.parametrize("stall", [False, True])
+@pytest.mark.parametrize("stall", ["none", "persistent", "transient"])
 def test_repeated_commits_cannot_restart_private_copy_indefinitely(tmp_path, monkeypatch, backend, stall):
     """Write between SQLite backup steps, including while the bounded retry holds its view."""
     source = tmp_path / "paced.db"
@@ -78,13 +78,23 @@ def test_repeated_commits_cannot_restart_private_copy_indefinitely(tmp_path, mon
                 return
             commits.append(True)
 
+    copy_modes = []
+
     class FrequentWriter(sqlite3.Connection):
         def backup(self, target, *, progress, **kwargs):
+            pinned = self.in_transaction
+            copy_modes.append(pinned)
+            writer_quiet = stall == "transient" and True in copy_modes and not pinned
+            if writer_quiet:
+                before = len(commits)
+                commit_marker()
+                assert len(commits) == before + 1
+
             def write_after_step(status, remaining, total):
-                if self.in_transaction and stall:
+                if pinned and stall != "none":
                     time.sleep(.03)
                 progress(status, remaining, total)
-                if status == sqlite3.SQLITE_OK and 0 < remaining < total:
+                if not writer_quiet and status == sqlite3.SQLITE_OK and 0 < remaining < total:
                     commit_marker()
             return super().backup(target, progress=write_after_step, **kwargs)
 
@@ -102,14 +112,16 @@ def test_repeated_commits_cannot_restart_private_copy_indefinitely(tmp_path, mon
         dashboard_snapshot.copy_source(source, destination, time.monotonic() + .6)
         return connect(destination)
 
-    if stall:
+    if stall != "none":
         from app.mixed import sqlite_copy
         monkeypatch.setattr(sqlite_copy if backend == "dashboard" else reports._copy,
                             "PINNED_COPY_SECONDS", .02)
+    if stall == "persistent":
         began = time.monotonic()
         with pytest.raises(TimeoutError):
             private_view()
         assert time.monotonic() - began < .4
+        assert copy_modes.count(True) == 1
         assert commits
         before = len(commits)
         commit_marker()
@@ -123,3 +135,5 @@ def test_repeated_commits_cannot_restart_private_copy_indefinitely(tmp_path, mon
         commit_marker()
         assert len(commits) == before + 1
         assert snapshot.execute("SELECT value FROM marker").fetchone()[0] == a
+    if stall == "transient":
+        assert copy_modes == [False, True, False]
