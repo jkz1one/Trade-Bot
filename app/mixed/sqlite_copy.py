@@ -28,18 +28,24 @@ def private_backup(source, target, *, deadline, max_bytes, capacity_error, deadl
                     raise
                 time.sleep(max(0, min(.01, limit - time.monotonic())))
 
-    def copy(limit, *, allow_restart):
+    def copy(limit, *, pinned=False, retry_while_advancing=False):
         page_size = scalar("PRAGMA page_size", limit)
         previous = None
+        furthest_page = 0
+        last_restart_page = -1
 
         def progress(status, remaining, total):
-            nonlocal previous
+            nonlocal previous, furthest_page, last_restart_page
             if total * page_size > max_bytes:
                 raise ValueError(capacity_error)
             check(limit)
-            if status == sqlite3.SQLITE_OK:
-                if allow_restart and previous is not None and remaining >= previous:
-                    raise _CopyRestarted
+            if status == sqlite3.SQLITE_OK and not pinned:
+                if previous is not None and remaining >= previous:
+                    if not retry_while_advancing or furthest_page <= last_restart_page:
+                        raise _CopyRestarted
+                    last_restart_page = furthest_page
+                if retry_while_advancing:
+                    furthest_page = max(furthest_page, total - remaining)
                 previous = remaining
 
         count = scalar("PRAGMA page_count", limit)
@@ -50,12 +56,12 @@ def private_backup(source, target, *, deadline, max_bytes, capacity_error, deadl
     # The dashboard's final publication performs its own commit and fsync.
     target.execute("PRAGMA synchronous=OFF")
     try:
-        copy(deadline, allow_restart=True)
+        copy(deadline)
     except _CopyRestarted:
         limit = min(deadline, time.monotonic() + PINNED_COPY_SECONDS)
         source.execute("BEGIN")
         try:
-            copy(limit, allow_restart=False)
+            copy(limit, pinned=True)
         except TimeoutError:
             if not limit <= time.monotonic() < deadline:
                 raise
@@ -63,9 +69,9 @@ def private_backup(source, target, *, deadline, max_bytes, capacity_error, deadl
             return
         finally:
             source.rollback()
-        # The writer can commit between batches again. If it restarts this
-        # last attempt too, stop without taking another pinned read lock.
+        # Let writers commit between batches while the copy reaches new pages.
+        # Repeated rewinds at the same point stop without another pinned read.
         try:
-            copy(deadline, allow_restart=True)
+            copy(deadline, retry_while_advancing=True)
         except _CopyRestarted:
             raise TimeoutError(deadline_error) from None

@@ -54,7 +54,7 @@ def test_copy_setup_transient_lock_and_deadline(tmp_path, monkeypatch, backend, 
 
 
 @pytest.mark.parametrize("backend", ["dashboard", "report"])
-@pytest.mark.parametrize("stall", ["none", "persistent", "transient"])
+@pytest.mark.parametrize("stall", ["none", "persistent", "transient", "advancing"])
 def test_repeated_commits_cannot_restart_private_copy_indefinitely(tmp_path, monkeypatch, backend, stall):
     """Write between SQLite backup steps, including while the bounded retry holds its view."""
     source = tmp_path / "paced.db"
@@ -79,13 +79,14 @@ def test_repeated_commits_cannot_restart_private_copy_indefinitely(tmp_path, mon
             commits.append(True)
 
     copy_modes = []
+    commit_at_pages = [64, 192] if stall == "advancing" else []
 
     class FrequentWriter(sqlite3.Connection):
         def backup(self, target, *, progress, **kwargs):
             pinned = self.in_transaction
             copy_modes.append(pinned)
-            writer_quiet = stall == "transient" and True in copy_modes and not pinned
-            if writer_quiet:
+            released = stall in {"transient", "advancing"} and True in copy_modes and not pinned
+            if released:
                 before = len(commits)
                 commit_marker()
                 assert len(commits) == before + 1
@@ -94,8 +95,14 @@ def test_repeated_commits_cannot_restart_private_copy_indefinitely(tmp_path, mon
                 if pinned and stall != "none":
                     time.sleep(.03)
                 progress(status, remaining, total)
-                if not writer_quiet and status == sqlite3.SQLITE_OK and 0 < remaining < total:
-                    commit_marker()
+                if status == sqlite3.SQLITE_OK and 0 < remaining < total:
+                    if not released:
+                        commit_marker()
+                    elif commit_at_pages and total - remaining >= commit_at_pages[0]:
+                        before = len(commits)
+                        commit_marker()
+                        assert len(commits) == before + 1
+                        commit_at_pages.pop(0)
             return super().backup(target, progress=write_after_step, **kwargs)
 
     def monitored(database, **kwargs):
@@ -135,7 +142,8 @@ def test_repeated_commits_cannot_restart_private_copy_indefinitely(tmp_path, mon
         commit_marker()
         assert len(commits) == before + 1
         assert snapshot.execute("SELECT value FROM marker").fetchone()[0] == a
-    if stall == "transient":
+    if stall in {"transient", "advancing"}:
+        assert not commit_at_pages
         assert copy_modes == [False, True, False]
 
 
