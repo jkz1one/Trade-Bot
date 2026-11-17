@@ -267,7 +267,9 @@ next action. Do not replace missing evidence with a date estimate.
   release's three-step failure was reproduced offline. Both the prior
   accounting checkpoint and the failed display evidence survived recovery.
   A two-position fixture kept both positions and the original native
-  account. The connected recovery and subsequent session remain open.
+  account. The operator recovered the connected display at 10:30 p.m.
+  New York time on November 16. The next steps are installing that release
+  for the scheduler and reader and observing the next PAPER session.
   [Host observations and tests](PAPER_SNAPSHOT_RECOVERY_20261116.json).
   `aad4e08` isolated in-run publisher failure. `d35d318` adds verified-held startup
   protection for missing/partial display snapshots, read-only protection-only host

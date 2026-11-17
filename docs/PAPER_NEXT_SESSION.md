@@ -6,12 +6,19 @@ Monday's captures and preopen preparation succeeded on `39d8e48`. At
 10:00:56 a.m. New York time the dashboard snapshot exceeded its deadline.
 The next two attempts found a retained failed snapshot. The controller
 exhausted its three reviews before starting a worker. The host log does
-not identify the stage of the first timeout. The last confirmed host
-release is `39d8e48`. [Host log and offline recovery tests](PAPER_SNAPSHOT_RECOVERY_20261116.json).
+not identify the stage of the first timeout.
+
+At 10:30 p.m. New York time on November 16, the operator built `fd7ff01`
+in a separate checkout and recovered the host display. It published feed
+sequence 1432 with zero held plays, retained the failed files under
+`.retained-snapshot-fd01-35ac8e` and left the account source intact.
+The scheduler and reader were last confirmed on `39d8e48`. Continue at
+[Install after successful recovery](#install-after-successful-recovery).
+[Host receipts and offline recovery tests](PAPER_SNAPSHOT_RECOVERY_20261116.json).
 
 ### Recover the display
 
-On the stopped host, run this block from a root shell. It builds the tested
+The operator completed this block on November 16. It builds the tested
 image in a separate checkout. The candidate uses the same bound source and
 reader identity as the existing publisher. It validates a fresh copy within
 the original five-second budget. After that verified display is durable,

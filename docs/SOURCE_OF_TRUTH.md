@@ -1,13 +1,16 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.218. November 16, New York time. Monday's connected PAPER session.
+Version 1.219. November 16, New York time. Monday's connected PAPER session.
 
 Monday's daily worker did not launch on `39d8e48`. Preparation succeeded.
 The first dashboard snapshot timed out at 10:00:56 a.m., and the next two
 attempts found a retained pending file. The deployed code reports the
-publication deadline without its internal stage. In an offline reproduction,
-`fd7ff01` recovered the same bound display and preserved the failed SQLite
-file. The host still requires operator recovery and installation.
+publication deadline without its internal stage. At 10:30 p.m. New York
+time, the operator ran `fd7ff01` from a separate host checkout. It published
+the display at feed sequence 1432, retained the failed snapshot files and
+left the native account intact. The scheduler and reader last confirmed on
+the host are still `39d8e48`. Their installation receipts for `fd7ff01`
+and the next PAPER session are pending.
 [Host procedure](PAPER_NEXT_SESSION.md#november-16-dashboard-snapshot-recovery).
 [Host and fixture evidence](PAPER_SNAPSHOT_RECOVERY_20261116.json).
 

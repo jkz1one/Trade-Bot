@@ -35,7 +35,36 @@
     "worker_id_recorded": false,
     "session_report_reason": "SESSION_INSPECTION_FAILED",
     "original_timeout_substage": "UNMEASURED",
-    "host_recovery": "UNVERIFIED"
+    "host_recovery": "PUBLISHED",
+    "recovery_release": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+    "recovery_build": {
+      "image_id": "sha256:2a3b7021e86f43152f8ba3a0a8c4bac3f413f664f575fe0952bbb46f51435645",
+      "status": "IMAGE_BUILT"
+    },
+    "recovery_receipt": {
+      "binding_sha256": "5b6e64e424402a11e2ec95f3db864dea5a06c09ffd65c5d2a098c428852d037f",
+      "checkpoint": {
+        "feed_sequence": 1432,
+        "owner_revision": 5453,
+        "runtime_generation": 15
+      },
+      "credentials_opened": false,
+      "display_database_bytes": 10264576,
+      "display_history": "portfolio-snapshot-v1",
+      "execution_authority": false,
+      "fills": 0,
+      "held_plays": 0,
+      "live_enabled": false,
+      "population_id": "connected-simulation-1000-v1",
+      "provider_calls": false,
+      "published_at": "2026-11-17T03:30:16.529561+00:00",
+      "retained_directory": ".retained-snapshot-fd01-35ac8e",
+      "source_database_bytes": 70516736,
+      "source_modified": false,
+      "status": "PUBLISHED",
+      "version": "native-dashboard-snapshot-v1"
+    },
+    "scheduler_and_reader_installation": "PENDING"
   },
   "offline": {
     "network": "private namespace with loopback only",

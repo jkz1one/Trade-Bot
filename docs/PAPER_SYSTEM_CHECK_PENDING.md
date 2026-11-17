@@ -7,8 +7,12 @@ recovery and host cases passed. A separate replay on the deployed
 publisher recovered that same display, and the original release accepted
 the published receipt. On one CPU a separate 135.9 MB synthetic source
 with two held plays recovered in 0.132 seconds after an injected timeout.
-The original account files matched byte for byte in both fixtures. The
-connected host result is pending.
+The original account files matched byte for byte in both fixtures. At
+10:30 p.m. New York time on November 16, the operator also recovered the
+connected display from a separate `fd7ff01` checkout. The published receipt
+reports owner revision 5453, feed sequence 1432, runtime generation 15,
+zero held plays and an unmodified source. The scheduler and reader
+installation receipts are pending.
 [Recovery evidence](PAPER_SNAPSHOT_RECOVERY_20261116.json).
 
 November 16 UTC. The installed `365791d` application passed 604 system
