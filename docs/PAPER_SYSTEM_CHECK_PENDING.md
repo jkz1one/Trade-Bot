@@ -1,5 +1,16 @@
 # Recovered offline system checkpoint
 
+The installed `fd7ff01` application passed 613 integrated checks. One
+cross-UID test requires a mapped reader UID 10001. Thirteen overlapping
+recovery and host cases passed. A separate replay on the deployed
+`39d8e48` code reproduced the deadline followed by two refusals. The new
+publisher recovered that same display, and the original release accepted
+the published receipt. On one CPU a separate 135.9 MB synthetic source
+with two held plays recovered in 0.132 seconds after an injected timeout.
+The original account files matched byte for byte in both fixtures. The
+connected host result is pending.
+[Recovery evidence](PAPER_SNAPSHOT_RECOVERY_20261116.json).
+
 November 16 UTC. The installed `365791d` application passed 604 system
 checks. The single skip requires a mapped reader UID 10001. Another
 188 related cases passed, including the seven isolated native handoff

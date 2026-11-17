@@ -262,6 +262,13 @@ next action. Do not replace missing evidence with a date estimate.
   and history were still blocked. The subsequent flat-account observation
   took 1.80 and 1.89 seconds from that quote.
   [Loaded protection trials](PAPER_ENTRY_ACK_20261116_PROOF.json).
+  On November 16 the host stopped before launch at dashboard publication.
+  `fd7ff01` adds explicit stopped-host display recovery. The deployed
+  release's three-step failure was reproduced offline. Both the prior
+  accounting checkpoint and the failed display evidence survived recovery.
+  A two-position fixture kept both positions and the original native
+  account. The connected recovery and subsequent session remain open.
+  [Host observations and tests](PAPER_SNAPSHOT_RECOVERY_20261116.json).
   `aad4e08` isolated in-run publisher failure. `d35d318` adds verified-held startup
   protection for missing/partial display snapshots, read-only protection-only host
   review and entry-resume rejection. Both startup scenarios retain the damaged

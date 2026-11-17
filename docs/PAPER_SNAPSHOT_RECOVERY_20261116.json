@@ -1,0 +1,167 @@
+{
+  "version": "paper-dashboard-recovery-20261116-v1",
+  "tested_release": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+  "operator_observation": {
+    "target_session": "2026-11-16",
+    "run_id": "daily-20261116",
+    "release": "39d8e48c5f4bfefeed7d5b05682edb733ddb8e8a",
+    "preopen_status": "PREOPEN_INPUTS_PREPARED",
+    "preopen_sequence": 1438,
+    "preopen_model_calls": 0,
+    "preopen_orders_submitted": 0,
+    "operator_journal": [
+      {
+        "at": "2026-11-16T15:00:56Z",
+        "step": "snapshot",
+        "status": "UNAVAILABLE",
+        "reason": "DASHBOARD_SNAPSHOT_DEADLINE"
+      },
+      {
+        "at": "2026-11-16T15:01:48Z",
+        "step": "snapshot",
+        "status": "UNAVAILABLE",
+        "reason": "DASHBOARD_PENDING_SNAPSHOT_RETAINED"
+      },
+      {
+        "at": "2026-11-16T15:02:45Z",
+        "step": "snapshot",
+        "status": "UNAVAILABLE",
+        "reason": "DASHBOARD_PENDING_SNAPSHOT_RETAINED"
+      }
+    ],
+    "controller_reason": "LAUNCH_REVIEW_RETRY_LIMIT",
+    "review_attempts": 3,
+    "launch_attempt_recorded": false,
+    "worker_id_recorded": false,
+    "session_report_reason": "SESSION_INSPECTION_FAILED",
+    "original_timeout_substage": "UNMEASURED",
+    "host_recovery": "UNVERIFIED"
+  },
+  "offline": {
+    "network": "private namespace with loopback only",
+    "external_market_calls": false,
+    "external_model_calls": false,
+    "live_enabled": false,
+    "installed": {
+      "application_files": 333,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "82df83122b3fd2b23fa3104c42666f3d2095a4b9857d83130968a3bfb344d3a3"
+    },
+    "system": {
+      "tests": 614,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 1,
+      "passed": 613,
+      "xml_sha256": "598d2d6071742b7aab7839b9fa1d35d1dc33988e3af05339659fb5976588f228",
+      "skip_reason": "Reader 10001 is not mapped in this environment: uid"
+    },
+    "targeted_overlapping": {
+      "tests": 13,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "passed": 13,
+      "xml_sha256": "30afc3be53d54acbec4e0854c222f1e44c05a54900c8d95f9a3b1fa5e399d084"
+    },
+    "deployed_release_reproduction": {
+      "baseline_release": "39d8e48c5f4bfefeed7d5b05682edb733ddb8e8a",
+      "synthetic": true,
+      "injection": "hold display projection past the existing five-second deadline",
+      "old_publisher_attempts": [
+        {
+          "reason": "DASHBOARD_SNAPSHOT_DEADLINE",
+          "seconds": 5.076538
+        },
+        {
+          "reason": "DASHBOARD_PENDING_SNAPSHOT_RETAINED",
+          "seconds": 0.003257
+        },
+        {
+          "reason": "DASHBOARD_PENDING_SNAPSHOT_RETAINED",
+          "seconds": 0.002333
+        }
+      ],
+      "source_before": {
+        "options.db.runtime.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "venue.db": "1bea299bb925a57c52b6be0572fc1eb727baa313571185508d299ee7840692e7",
+        "options.db": "686cde94b40a5f23bbf5eaf569a1346a1657fc17757412e59ada0acaad7dacd8",
+        "options.db.authority.db": "fee91d3c39056353222b59e9ba844f815214696b3c9d5532f6652e98dbaeee4a",
+        "runtime.json": "b35cb8ce667eae815ddf8fb9a6d9f120056547822dcfa613ae261ec0f9d30ad6"
+      },
+      "previous_checkpoint": {
+        "owner_revision": 7,
+        "runtime_generation": 0,
+        "feed_sequence": 0
+      },
+      "previous_display_sha256": "2403b89f5770ccb2658128e1d58daa120b316c7b351b5059cfe10a2c7d07efcc",
+      "failed_file_sha256": "342d4656fe8c04034d2c171789fe35b4948b4aaa0f4619d218d14d73f922fd0c",
+      "recovery_seconds": 0.032801,
+      "result": "PUBLISHED",
+      "original_failed_file_retained": true,
+      "source_files_unchanged": true,
+      "next_ordinary_publication": "PUBLISHED",
+      "live_enabled": false,
+      "deployed_snapshot_checker_accepted_new_publication": true
+    },
+    "large_synthetic_replay": {
+      "synthetic": true,
+      "cpu_affinity": [
+        4
+      ],
+      "deadline_seconds": 5,
+      "fixture": "two held plays, 1,025 retained inputs in each of the two runtime-input tables",
+      "injected_deadline_stage": "PROJECT_DISPLAY",
+      "end_to_end_recovery_seconds": 0.132005,
+      "status": "PUBLISHED",
+      "checkpoint": {
+        "owner_revision": 23,
+        "runtime_generation": 0,
+        "feed_sequence": 1025
+      },
+      "held_plays": 2,
+      "fills": 2,
+      "source_database_bytes": 135880704,
+      "display_database_bytes": 651264,
+      "source_modified": false,
+      "provider_calls": false,
+      "credentials_opened": false,
+      "execution_authority": false,
+      "live_enabled": false,
+      "pending_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_files_unchanged_and_native_account_report_matched": true
+    },
+    "large_replay_scope": "The native test fixture used padded input rows. A deliberate delay during display projection forced the first deadline. The timed recovery and the comparison with the original native report ran without the injected delay.",
+    "scratch_trial_detail": "An earlier attempt to set up the larger fixture used a clock preceding its two fills and failed its initial accounting check before the deadline experiment. The completed trial used the original fixture clock two seconds after entry.",
+    "operator_runbook": {
+      "method": "Both shell blocks ran using real disposable Git worktrees, simulated systemd/Docker/host commands, and a network-isolated local remote. The actual host recovery remains unverified.",
+      "cases": {
+        "success": {
+          "recovery_exit": 0,
+          "installation_exit": 0,
+          "checkout": "fd7ff01"
+        },
+        "timeout": {
+          "recovery_exit": 2,
+          "installation_exit": null,
+          "checkout": "39d8e48"
+        },
+        "failed_install": {
+          "recovery_exit": 0,
+          "installation_exit": 1,
+          "checkout": "39d8e48"
+        },
+        "service_busy": {
+          "recovery_exit": 0,
+          "installation_exit": 1,
+          "checkout": "39d8e48"
+        },
+        "worker_busy": {
+          "recovery_exit": 0,
+          "installation_exit": 1,
+          "checkout": "39d8e48"
+        }
+      }
+    }
+  }
+}

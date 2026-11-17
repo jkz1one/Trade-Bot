@@ -1,5 +1,92 @@
 # Daily PAPER operation
 
+## November 16 dashboard snapshot recovery
+
+Monday's captures and preopen preparation succeeded on `39d8e48`. At
+10:00:56 a.m. New York time the dashboard snapshot exceeded its deadline.
+The next two attempts found a retained failed snapshot. The controller
+exhausted its three reviews before starting a worker. The host log does
+not identify the stage of the first timeout. The last confirmed host
+release is `39d8e48`. [Host log and offline recovery tests](PAPER_SNAPSHOT_RECOVERY_20261116.json).
+
+### Recover the display
+
+On the stopped host, run this block from a root shell. It builds the tested
+image in a separate checkout. The candidate uses the same bound source and
+reader identity as the existing publisher. It validates a fresh copy within
+the original five-second budget. After that verified display is durable,
+it retains the failed file and any SQLite companions under the private
+directory named in its reply. The native account is mounted read-only.
+
+```bash
+(
+  set -eu
+  cd /opt/trade-bot-dashboard
+  release=fd7ff0186690fc5192fb93f959087acbec28f74c
+  git fetch origin slice2/robinhood-read-shadow
+  git merge-base --is-ancestor HEAD "$release"
+  git merge-base --is-ancestor "$release" FETCH_HEAD
+  candidate=$(mktemp -d)
+  git worktree add --detach "$candidate" "$release"
+  trap 'git worktree remove "$candidate"' EXIT
+  python3 "$candidate/scripts/connected-session-host.py" build
+  python3 "$candidate/scripts/connected-session-host.py" recover-snapshot
+)
+```
+
+Success returns `PUBLISHED`, the checkpoint, `source_modified: false` and
+`retained_directory`. An already cleared directory returns a fresh verified
+publication with `retained_directory: null`. If recovery fails, keep its
+`reason` and `stage`. A copy or verification deadline preserves the original
+pending file and prior completed display. If the last stage `RETAIN_PENDING`
+is interrupted, the new verified display may already be present. A retry
+continues moving the original files under the same publisher lock.
+
+### Install after successful recovery
+
+After `PUBLISHED`, use this block outside the PAPER session on the host with
+the daily timer enabled. It waits for any current tick to release its lock
+before switching the detached checkout. The installer preserves the daily
+record, account halt, saved review and limits. Tuesday gets its own
+date-specific preparation and launch review.
+
+```bash
+(
+  set -eu
+  cd /opt/trade-bot-dashboard
+  release=fd7ff0186690fc5192fb93f959087acbec28f74c
+  prior=$(git rev-parse HEAD)
+  git merge-base --is-ancestor "$prior" "$release"
+  changes=$(git status --porcelain)
+  test -z "$changes"
+  timer=trade-bot-paper-daily.timer
+  systemctl is-active --quiet "$timer"
+  trap 'systemctl start "$timer"' EXIT
+  systemctl stop "$timer"
+  flock -w 120 /var/lib/trade-bot-paper-daily/controller.lock true
+  state=$(systemctl show -p ActiveState --value trade-bot-paper-daily.service)
+  case "$state" in
+    inactive|failed) ;;
+    *) echo "Controller is still busy. Retry installation after it finishes."; exit 1 ;;
+  esac
+  active=$(docker ps --filter label=trade-bot.connected-session-v1 --format '{{.Names}}')
+  test -z "$active" || { echo "A PAPER worker is running."; exit 1; }
+  git switch --detach "$release"
+  if ! python3 scripts/paper-daily.py install; then
+    git switch --detach "$prior"
+    python3 scripts/paper-daily.py install
+    exit 1
+  fi
+  python3 scripts/connected-dashboard-host.py update-reader --snapshot-name connected-price-options-v1
+)
+```
+
+The expected receipts are `DAILY_SCHEDULE_INSTALLED` with release
+`fd7ff01` and `DASHBOARD_READER_UPDATED` or `DASHBOARD_READER_CURRENT`.
+Monday's run ID and retry count remain part of its finished calendar date.
+
+## Earlier November 11 installation
+
 The host runs `39d8e48`. The November 14 diagnostic capture succeeded, the
 daily schedule is enabled, and the dashboard reader is updated. For Monday,
 November 16, the scheduler requests fresh data at 9:00 a.m. ET and checks launch

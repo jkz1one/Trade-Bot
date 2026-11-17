@@ -1,6 +1,17 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.217. November 16 UTC. Offline PAPER entry and protective exits.
+Version 1.218. November 16, New York time. Monday's connected PAPER session.
+
+Monday's daily worker did not launch on `39d8e48`. Preparation succeeded.
+The first dashboard snapshot timed out at 10:00:56 a.m., and the next two
+attempts found a retained pending file. The deployed code reports the
+publication deadline without its internal stage. In an offline reproduction,
+`fd7ff01` recovered the same bound display and preserved the failed SQLite
+file. The host still requires operator recovery and installation.
+[Host procedure](PAPER_NEXT_SESSION.md#november-16-dashboard-snapshot-recovery).
+[Host and fixture evidence](PAPER_SNAPSHOT_RECOVERY_20261116.json).
+
+### November 16 offline PAPER entry and protective exits
 
 On `365791d`, three 335-second replays started from independent copies of
 the same account with 1,769 retained packets and 66 model charges. Two
