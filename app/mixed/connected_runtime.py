@@ -251,7 +251,7 @@ def dashboard_check(
         if reader_uid is not None or reader_gid is not None or snapshot_owner is not None:
             raise ValueError("Reader identity requires an enrolled snapshot directory")
         return None
-    from app.mixed.dashboard_snapshot import check as snapshot_check
+    from app.mixed.dashboard_snapshot import check as snapshot_check, has_pending_snapshot
 
     result = snapshot_check(
         dashboard_source(directory, snapshot_owner),
@@ -260,8 +260,7 @@ def dashboard_check(
         reader_gid,
         clock_source=clock_source,
     )
-    pending = Path(snapshot_directory) / ".pending.db"
-    if pending.exists() or pending.is_symlink():
+    if has_pending_snapshot(Path(snapshot_directory)):
         raise ValueError("Retained failed snapshot requires inspection")
     return result
 

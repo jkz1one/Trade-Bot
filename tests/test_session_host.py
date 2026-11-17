@@ -306,6 +306,42 @@ def test_existing_snapshot_uses_native_publish_without_recreating(host, symlink)
         assert (destination / '.pending.db').read_bytes() == b'keep failed evidence'
 
 
+def test_explicit_snapshot_recovery_excludes_workers_and_mounts_only_readonly_source(host, monkeypatch):
+    m, calls, _, _, manifest = host
+    manifest['strategy_amendment_sha256'] = '7' * 64
+    args = SimpleNamespace(operation="recover-snapshot")
+    # This host fixture emulates Docker and the root-owned mount checks.
+    result = m.run(args, RELEASE)
+    assert result["status"] == "PUBLISHED"
+    call, = [c for c in calls if 'app.mixed.dashboard_snapshot' in c]
+    assert call[call.index('app.mixed.dashboard_snapshot') + 1] == "recover"
+    assert call[call.index('--destination') + 1] == '/exports/connected-price-options-v1'
+    assert call[call.index('--network') + 1] == 'none'
+    assert [call[i+1] for i, flag in enumerate(call) if flag == '--mount'] == [
+        f'type=bind,src={m.STATE},dst=/state,readonly', f'type=bind,src={m.STATE}/owner,dst=/source,readonly',
+        f'type=bind,src={m.EXPORTS},dst=/exports',
+    ]
+    calls.clear()
+    original = m.h.docker
+    monkeypatch.setattr(m.h, "docker", lambda *a, **kw:
+                        subprocess.CompletedProcess(a, 0, "active\n", "") if a[0] == "ps" else original(*a, **kw))
+    with pytest.raises(ValueError, match="already running"):
+        m.run(args, RELEASE)
+    assert not any('app.mixed.dashboard_snapshot' in c for c in calls)
+
+
+@pytest.mark.parametrize("stage", ["COPY_SOURCE", "private raw detail"])
+def test_snapshot_deadline_exposes_only_bounded_stage_names(monkeypatch, stage):
+    m = load()
+    def failure(*args, **kwargs):
+        public = {"status": "UNAVAILABLE", "reason": "DASHBOARD_SNAPSHOT_DEADLINE", "stage": stage}
+        return subprocess.CompletedProcess(args, 2, json.dumps(public), "private stderr")
+    monkeypatch.setattr(m.h, "docker", failure)
+    with pytest.raises(RuntimeError, match="^DASHBOARD_SNAPSHOT_DEADLINE$") as error:
+        m.execute(IMAGE, "app.mixed.dashboard_snapshot", [], [])
+    assert getattr(error.value, "stage", None) == ("COPY_SOURCE" if stage == "COPY_SOURCE" else None)
+
+
 def test_saved_preopen_report_is_read_only_and_offline(host, monkeypatch):
     m, calls, _, _, _ = host
     monkeypatch.setattr(m, 'image', lambda _: IMAGE)

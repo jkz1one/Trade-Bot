@@ -26,6 +26,12 @@ PROFILE_HOME = Path("/etc/trade-bot-connected")
 MODEL_SOURCE = Path("/etc/trade-bot/openai_api_key")
 MODEL_SOURCE_UID = 10001
 
+
+class SnapshotFailure(RuntimeError):
+    def __init__(self, reason, stage):
+        super().__init__(reason)
+        self.stage = stage
+
 # Explicit operator-only login. The enclosing host lock excludes connected
 # launches; the native OAuth lease also excludes other credential readers.
 READ_LOGIN = r'''
@@ -289,8 +295,12 @@ def execute(image_id, module, args, mounts, *, copies=False):
             raise RuntimeError(reason)
         if module == "app.mixed.dashboard_snapshot" and reason in (
             "DASHBOARD_SNAPSHOT_UNAVAILABLE", "DASHBOARD_SNAPSHOT_STORAGE_FULL",
-            "DASHBOARD_SNAPSHOT_DEADLINE", "DASHBOARD_PENDING_SNAPSHOT_RETAINED",
+            "DASHBOARD_SNAPSHOT_DEADLINE", "DASHBOARD_PENDING_SNAPSHOT_RETAINED", "DASHBOARD_PENDING_SNAPSHOT_UNSAFE",
         ):
+            stage = public.get("stage")
+            if stage in ("OPEN_PUBLISHER", "INSPECT_PENDING", "VERIFY_BINDING", "COPY_SOURCE",
+                         "PROJECT_DISPLAY", "VERIFY_ACCOUNTING", "INSTALL_DISPLAY", "RETAIN_PENDING"):
+                raise SnapshotFailure(reason, stage)
             raise RuntimeError(reason)
         raise RuntimeError("Host command failed: docker run")
     return json.loads(result.stdout)
@@ -442,7 +452,7 @@ def review(image_id, phase, seconds=None, run_id=None, *, resume_flat=False, max
     return plan | {"review_sha256": h.digest(plan)}
 
 
-def snapshot(image_id):
+def snapshot(image_id, *, recover=False):
     manifest = bundle(image_id)
     name = snapshot_name(manifest)
     if manifest.get("strategy_amendment_sha256"):
@@ -452,12 +462,14 @@ def snapshot(image_id):
             "check", "--directory", "/state/owner", "--feed-directory", "/state/collector",
             "--policy", "/state/config/policy.json", "--schemas", "/state/config/schemas.json",
         ], config_mounts())
-    parent(EXPORTS)
-    # Refresh an existing bound publication. The native publisher still verifies
-    # its binding, prior receipt, permissions and absence of retained failure files.
-    # A dangling symlink is existing evidence too, never a reason to create over it.
-    destination = EXPORTS / name
-    operation = "publish" if destination.exists() or destination.is_symlink() else "create"
+    if recover:
+        private(EXPORTS, True)
+        operation = "recover"
+    else:
+        parent(EXPORTS)
+        # A dangling symlink is existing evidence too, never create over it.
+        destination = EXPORTS / name
+        operation = "publish" if destination.exists() or destination.is_symlink() else "create"
     mounts = config_mounts(source=True) + mount(EXPORTS, "/exports", False)
     return execute(
         image_id,
@@ -814,10 +826,9 @@ def run(args, release):
         return execute(image_id, "app.mixed.feed_rollover", flags,
                        config_mounts(args.operation == "enroll-session")
                        + mount(destination, "/proposal/policy.json"))
-    if args.operation == "snapshot":
-        bundle(image_id)
+    if args.operation in ("snapshot", "recover-snapshot"):
         no_active_session()
-        return snapshot(image_id)
+        return snapshot(image_id, recover=args.operation == "recover-snapshot")
     phase = "enroll" if args.operation in ("review-enroll", "enroll") else "run"
     plan = review(image_id, phase, args.seconds, args.run_id, resume_flat=getattr(args, "resume_flat", False),
                   max_feed_recoveries=getattr(args, "max_feed_recoveries", 0))
@@ -850,6 +861,7 @@ def main(argv=None):
             "review-enroll",
             "enroll",
             "snapshot",
+            "recover-snapshot",
             "preopen-inputs",
             "preopen-report",
             "prepare-session",
@@ -933,10 +945,10 @@ def main(argv=None):
         reason = (
             str(exc) if type(exc) in (ValueError, RuntimeError) else "HOST_INSPECTION_UNAVAILABLE"
         )
-        print(
-            json.dumps({"status": "UNAVAILABLE", "reason": reason, "live_enabled": False}),
-            file=sys.stderr,
-        )
+        report = {"status": "UNAVAILABLE", "reason": reason, "live_enabled": False}
+        if isinstance(exc, SnapshotFailure):
+            report.update(reason=str(exc), stage=exc.stage)
+        print(json.dumps(report), file=sys.stderr)
         return 2
     finally:
         if fd is not None:

@@ -4,6 +4,7 @@ No credential reads, execution owner, entry resume, provider or model attachment
 """
 
 import argparse
+import errno
 import fcntl
 import json
 import os
@@ -25,7 +26,7 @@ from app.mixed.observer import MixedObserver
 from app.mixed.sqlite_copy import private_backup
 from app.options.engine import clock, fingerprint
 from app.options.observer import JOURNAL_FILE_ERRORS, MAX_DATABASE_BYTES, journal_identity
-from app.options.operator_inbox import read, save, sync_directory
+from app.options.operator_inbox import private_directory, read, save, sync_directory
 from app.options.runtime_cli import load
 from app.options.venue import private_path
 
@@ -33,6 +34,51 @@ VERSION = "native-dashboard-snapshot-v1"
 BACKUP_SECONDS = 5
 # This bounds disposable diagnostic storage, never the native account journal.
 MAX_SOURCE_COPY_BYTES = 512 * 1024 * 1024
+PENDING = ".pending.db"
+PENDING_FAMILY = (PENDING + "-journal", PENDING + "-wal", PENDING + "-shm", PENDING)
+
+
+def has_pending_snapshot(directory):
+    return any(os.path.lexists(directory / name) for name in PENDING_FAMILY)
+
+
+def pending_files(directory, binding):
+    """Identify failed display files without ever opening them as a SQLite database."""
+    files = {}
+    for name in PENDING_FAMILY:
+        try:
+            info = (directory / name).lstat()
+        except FileNotFoundError:
+            continue
+        if (not stat.S_ISREG(info.st_mode) or stat.S_IMODE(info.st_mode) != 0o600
+                or info.st_nlink != 1 or info.st_uid not in (binding["publisher_uid"], binding["reader_uid"])):
+            raise ValueError("Unexpected pending snapshot files")
+        files[name] = (info.st_dev, info.st_ino, info.st_size, info.st_ctime_ns)
+    if files and PENDING not in files:
+        raise ValueError("Unexpected pending snapshot files")
+    return files
+
+
+def retain_pending(directory, files):
+    # The publisher lock excludes all other publishers. An inode stays allocated
+    # when renamed. If the process stopped between moves, the remaining marker
+    # selects the same private archive on retry.
+    device, inode, _, _ = files[PENDING]
+    archive = directory / f".retained-snapshot-{device:x}-{inode:x}"
+    archive.mkdir(mode=0o700, exist_ok=True)
+    private_directory(archive)
+    if any(path.name not in PENDING_FAMILY or path.name in files for path in archive.iterdir()):
+        raise ValueError("Unexpected pending snapshot files")
+    for name in files.keys() - {PENDING}:
+        os.rename(directory / name, archive / name)
+    sync_directory(archive)
+    sync_directory(directory)
+    # Keep normal startup blocked until every companion and the verified new
+    # display are durable. The original files retain their bytes and ownership.
+    os.rename(directory / PENDING, archive / PENDING)
+    sync_directory(archive)
+    sync_directory(directory)
+    return archive.name
 
 
 def copy_source(source, destination, deadline):
@@ -201,10 +247,15 @@ def copy_display_tables(db):
 
 class DashboardPublisher:
     def __init__(
-        self, owner, destination, reader_uid, reader_gid, *, create=False, clock_source=utc_now
+        self, owner, destination, reader_uid, reader_gid, *, create=False, clock_source=utc_now,
+        recover=False,
     ):
+        if create and recover:
+            raise ValueError("Recovery requires an existing snapshot binding")
         self.owner, self.directory = Path(owner), Path(destination)
         self.clock = clock_source
+        self.recover = recover
+        self.stage = "OPEN_PUBLISHER"
         self.binding, _ = binding_for(
             owner, destination, reader_uid, reader_gid, clock_source=self.clock
         )
@@ -224,9 +275,9 @@ class DashboardPublisher:
             fcntl.flock(self.fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
             private_path(lock)
             self.previous = published(self.directory, self.binding)
-            if (self.directory / ".pending.db").exists() or (
-                self.directory / ".pending.db"
-            ).is_symlink():
+            if recover and self.previous is None:
+                raise ValueError("Recovery requires a completed dashboard publication")
+            if not recover and has_pending_snapshot(self.directory):
                 raise ValueError("Retained failed snapshot requires inspection")
         except BaseException:
             os.close(self.fd)
@@ -236,6 +287,20 @@ class DashboardPublisher:
         os.close(self.fd)
 
     def publish(self):
+        if self.recover:
+            self.stage = "INSPECT_PENDING"
+            files = pending_files(self.directory, self.binding)
+            with tempfile.TemporaryDirectory(prefix=".recovery-", dir=self.directory) as staging:
+                result = self._publish(Path(staging) / "candidate.db")
+            self.stage = "RETAIN_PENDING"
+            if files != pending_files(self.directory, self.binding):
+                raise ValueError("Unexpected pending snapshot files")
+            result["retained_directory"] = retain_pending(self.directory, files) if files else None
+            return result
+        return self._publish(self.directory / PENDING)
+
+    def _publish(self, temporary):
+        self.stage = "VERIFY_BINDING"
         binding, _ = binding_for(
             self.owner,
             self.directory,
@@ -248,17 +313,18 @@ class DashboardPublisher:
         bound_directory(self.directory, self.binding)
         source = self.owner / "options.db"
         source_identity = journal_identity(source, native_journal=True)
-        temporary = self.directory / ".pending.db"
         fd = os.open(temporary, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
         os.close(fd)
         deadline = time.monotonic() + BACKUP_SECONDS
         # Projection and accounting can be expensive. Pin a private copy first,
         # then release every native connection before either operation begins.
+        self.stage = "COPY_SOURCE"
         with tempfile.TemporaryDirectory(prefix='.source-', dir=self.directory) as scratch, closing(
             sqlite3.connect(temporary.as_uri() + "?mode=rw", uri=True, timeout=1)
         ) as target_db:
             copied = Path(scratch) / 'source.db'
             copy_source(source, copied, deadline)
+            self.stage = "PROJECT_DISPLAY"
             target_db.execute("PRAGMA trusted_schema=OFF")
             target_db.execute("PRAGMA journal_mode=DELETE")
             page_size = target_db.execute("PRAGMA page_size").fetchone()[0]
@@ -296,6 +362,7 @@ class DashboardPublisher:
                 "INSERT INTO dashboard_snapshot VALUES(1,?)", (json.dumps(receipt, sort_keys=True),)
             )
             target_db.commit()
+        self.stage = "VERIFY_ACCOUNTING"
         view = MixedObserver(temporary, self.binding["population_id"], clock=lambda: at).report(
             limit=100
         )
@@ -303,6 +370,7 @@ class DashboardPublisher:
             raise ValueError("Native snapshot accounting unavailable")
         if time.monotonic() > deadline:
             raise TimeoutError("Snapshot verification exceeded its bound")
+        self.stage = "INSTALL_DISPLAY"
         fd = os.open(temporary, os.O_RDONLY | os.O_NOFOLLOW)
         try:
             os.fsync(fd)
@@ -313,6 +381,8 @@ class DashboardPublisher:
             os.close(fd)
         os.replace(temporary, self.directory / "options.db")
         sync_directory(self.directory)
+        if temporary.parent != self.directory:
+            sync_directory(temporary.parent)
         self.previous = receipt
         return {
             "status": "PUBLISHED",
@@ -380,7 +450,7 @@ def run(publisher, stop, *, seconds, interval=5):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("operation", choices=("create", "publish", "check", "run"))
+    parser.add_argument("operation", choices=("create", "publish", "check", "run", "recover"))
     for name in ("owner", "destination"):
         parser.add_argument("--" + name, required=True)
     for name in ("reader-uid", "reader-gid"):
@@ -392,12 +462,14 @@ def main(argv=None):
         parser.error("Only run requires an explicit --seconds")
     if args.operation == "run" and not (1 <= args.seconds <= 86400 and 5 <= args.interval <= 60):
         parser.error("Bounded duration and cadence required")
+    publisher = None
     try:
         paths = args.owner, args.destination, args.reader_uid, args.reader_gid
         if args.operation == "check":
             result = check(*paths)
         else:
-            publisher = DashboardPublisher(*paths, create=args.operation == "create")
+            publisher = DashboardPublisher(*paths, create=args.operation == "create",
+                                           recover=args.operation == "recover")
             try:
                 if args.operation == "run":
                     stop = threading.Event()
@@ -418,17 +490,21 @@ def main(argv=None):
         reason = "DASHBOARD_SNAPSHOT_UNAVAILABLE"
         if type(exc) is ValueError and str(exc) in JOURNAL_FILE_ERRORS:
             reason = str(exc)
-        elif getattr(exc, "sqlite_errorcode", None) == sqlite3.SQLITE_FULL:
+        elif getattr(exc, "sqlite_errorcode", None) == sqlite3.SQLITE_FULL or getattr(exc, "errno", None) == errno.ENOSPC:
             reason = "DASHBOARD_SNAPSHOT_STORAGE_FULL"
         elif isinstance(exc, TimeoutError) or getattr(exc, "sqlite_errorcode", None) == sqlite3.SQLITE_INTERRUPT:
             reason = "DASHBOARD_SNAPSHOT_DEADLINE"
         elif str(exc) == "Retained failed snapshot requires inspection":
             reason = "DASHBOARD_PENDING_SNAPSHOT_RETAINED"
+        elif str(exc) == "Unexpected pending snapshot files":
+            reason = "DASHBOARD_PENDING_SNAPSHOT_UNSAFE"
         print(
             json.dumps(
                 {
                     "status": "UNAVAILABLE",
                     "reason": reason,
+                    **({"stage": publisher.stage if publisher else "OPEN_PUBLISHER"}
+                       if args.operation != "check" else {}),
                     "execution_authority": False,
                     "live_enabled": False,
                 }

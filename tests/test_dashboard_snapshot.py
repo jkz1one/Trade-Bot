@@ -6,6 +6,7 @@ import os
 import sqlite3
 import stat
 import threading
+from contextlib import closing
 from datetime import timedelta
 from pathlib import Path
 
@@ -151,6 +152,116 @@ def test_host_refresh_reuses_native_snapshot_and_preserves_owner(tmp_path, monke
         host.snapshot(IMAGE)
     assert pending.read_bytes() == b'failed evidence'
     assert (pending.parent / 'options.db').read_bytes() == old
+
+
+def test_explicit_recovery_after_three_failed_snapshots_keeps_original_evidence(tmp_path, monkeypatch, capsys):
+    source, _ = owner(tmp_path, positions=True)
+    source_before = digest(source)
+    destination = tmp_path / "dashboard"
+    with closing(publisher(source, destination)) as first:
+        previous = first.publish()
+    old_display = (destination / "options.db").read_bytes()
+    flags = ["--owner", str(source), "--destination", str(destination),
+             "--reader-uid", str(os.getuid()), "--reader-gid", str(os.getgid())]
+
+    def invoke(operation):
+        code = snapshot.main([operation, *flags])
+        return code, json.loads(capsys.readouterr().out)
+
+    def expired(_db):
+        raise TimeoutError("synthetic projection deadline")
+
+    with monkeypatch.context() as fault:
+        fault.setattr(snapshot, "copy_display_tables", expired)
+        code, result = invoke("publish")
+        assert (code, result["reason"], result["stage"]) == (2, "DASHBOARD_SNAPSHOT_DEADLINE", "PROJECT_DISPLAY")
+        for _ in range(2):
+            assert invoke("publish")[1]["reason"] == "DASHBOARD_PENDING_SNAPSHOT_RETAINED"
+        # Retain a failed SQLite companion without interpreting or adopting it.
+        journal = destination / ".pending.db-journal"
+        journal.write_bytes(b"synthetic retained rollback evidence")
+        journal.chmod(0o600)
+        originals = {f.name: (f.stat().st_ino, f.read_bytes()) for f in destination.glob(".pending.db*")}
+        code, result = invoke("recover")
+        assert (code, result["reason"], result["stage"]) == (2, "DASHBOARD_SNAPSHOT_DEADLINE", "PROJECT_DISPLAY")
+        assert old_display == (destination / "options.db").read_bytes()
+        assert originals == {f.name: (f.stat().st_ino, f.read_bytes()) for f in destination.glob(".pending.db*")}
+        assert not list(destination.glob(".retained-snapshot-*"))
+    code, result = invoke("recover")
+    assert code == 0 and result["status"] == "PUBLISHED"
+    assert result["checkpoint"] == previous["checkpoint"]
+    assert result["held_plays"] == result["fills"] == 2
+    assert not any(result[k] for k in ("source_modified", "execution_authority", "provider_calls", "live_enabled"))
+    archived = destination / result["retained_directory"]
+    assert stat.S_IMODE(archived.stat().st_mode) == 0o700
+    assert originals == {f.name: (f.stat().st_ino, f.read_bytes()) for f in archived.iterdir()}
+    assert not list(destination.glob(".pending.db*"))
+    code, repeated = invoke("recover")
+    assert code == 0 and repeated["retained_directory"] is None
+    assert invoke("publish")[1]["status"] == "PUBLISHED"
+    assert digest(source) == source_before
+
+
+def test_interrupted_snapshot_evidence_move_resumes_same_archive(tmp_path, monkeypatch):
+    source, _ = owner(tmp_path)
+    destination = tmp_path / "dashboard"
+    with closing(publisher(source, destination)) as p:
+        p.publish()
+    for name in snapshot.PENDING_FAMILY:
+        path = destination / name
+        path.write_bytes(name.encode())
+        path.chmod(0o600)
+    moving = os.rename
+
+    def interrupt(src, dst):
+        if src.name == ".pending.db":
+            raise OSError("interrupted before moving marker")
+        return moving(src, dst)
+
+    def recover():
+        return snapshot.DashboardPublisher(source, destination, os.getuid(), os.getgid(),
+                                           clock_source=lambda: AT + timedelta(seconds=3), recover=True)
+
+    with monkeypatch.context() as fault, closing(recover()) as p:
+        fault.setattr(snapshot.os, "rename", interrupt)
+        with pytest.raises(OSError, match="interrupted before moving marker"):
+            p.publish()
+        with pytest.raises(BlockingIOError):
+            recover()
+    archive, = destination.glob(".retained-snapshot-*")
+    assert (destination / ".pending.db").read_bytes() == b".pending.db"
+    with pytest.raises(ValueError, match="Retained failed"):
+        publisher(source, destination, create=False)
+    with closing(recover()) as p:
+        assert p.publish()["retained_directory"] == archive.name
+    assert {f.name: f.read_bytes() for f in archive.iterdir()} == {
+        name: name.encode() for name in snapshot.PENDING_FAMILY
+    }
+
+
+@pytest.mark.parametrize("damage", ["symlink", "hardlink", "public", "orphan"])
+def test_recovery_rejects_unexpected_pending_files_before_publication(tmp_path, damage):
+    source, _ = owner(tmp_path)
+    destination = tmp_path / "dashboard"
+    with closing(publisher(source, destination)) as p:
+        p.publish()
+    pending = destination / ".pending.db"
+    if damage == "symlink":
+        pending.symlink_to(source / "options.db")
+    elif damage == "hardlink":
+        os.link(source / "options.db", pending)
+    else:
+        path = pending if damage == "public" else destination / ".pending.db-wal"
+        path.touch(mode=0o600)
+        path.chmod(0o644 if damage == "public" else 0o600)
+    before = digest(tmp_path)
+    with pytest.raises(ValueError, match="Retained failed"):
+        publisher(source, destination, create=False)
+    with closing(snapshot.DashboardPublisher(source, destination, os.getuid(), os.getgid(),
+                                            clock_source=lambda: AT, recover=True)) as p:
+        with pytest.raises(ValueError, match="Unexpected pending snapshot files"):
+            p.publish()
+    assert before == digest(tmp_path)
 
 
 def test_existing_native_owner_lease_does_not_block_stored_snapshot(tmp_path):
