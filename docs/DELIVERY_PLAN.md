@@ -268,8 +268,9 @@ next action. Do not replace missing evidence with a date estimate.
   accounting checkpoint and the failed display evidence survived recovery.
   A two-position fixture kept both positions and the original native
   account. The operator recovered the connected display at 10:30 p.m.
-  New York time on November 16. The next steps are installing that release
-  for the scheduler and reader and observing the next PAPER session.
+  New York time on November 16 and installed `fd7ff01` for the scheduler
+  and reader. The timer is active. The next connected evidence is the
+  November 17 preparation, launch review and session outcome.
   [Host observations and tests](PAPER_SNAPSHOT_RECOVERY_20261116.json).
   `aad4e08` isolated in-run publisher failure. `d35d318` adds verified-held startup
   protection for missing/partial display snapshots, read-only protection-only host

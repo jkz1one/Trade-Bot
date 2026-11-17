@@ -11,8 +11,13 @@ The original account files matched byte for byte in both fixtures. At
 10:30 p.m. New York time on November 16, the operator also recovered the
 connected display from a separate `fd7ff01` checkout. The published receipt
 reports owner revision 5453, feed sequence 1432, runtime generation 15,
-zero held plays and an unmodified source. The scheduler and reader
-installation receipts are pending.
+zero held plays and an unmodified source. The subsequent host receipts
+confirm that the daily scheduler and reader now run `fd7ff01` and the
+timer is active. All 54 daily controller tests passed. A separate offline
+check with the reported owner state carried Monday's three review attempts
+forward as history and gave Tuesday its first attempt. Changing the owner
+revision, feed sequence or runtime generation blocked preparation in each
+case. Tuesday's actual worker launch and session outcome are pending.
 [Recovery evidence](PAPER_SNAPSHOT_RECOVERY_20261116.json).
 
 November 16 UTC. The installed `365791d` application passed 604 system
@@ -29,7 +34,7 @@ with no fills and one missed slot. All three verified their accounting and
 finished with zero held positions. The stock and option protective exits
 under separate contention both filled while history and advice were
 blocked. The five-second opening goal and the full 358-minute run remain
-open. The last confirmed host release is `39d8e48`.
+open. At the time of those checks the host ran `39d8e48`.
 [Results, baselines and timing traces](PAPER_ENTRY_ACK_20261116_PROOF.json).
 
 November 16 UTC. The installed `2646944` application passed 590 system

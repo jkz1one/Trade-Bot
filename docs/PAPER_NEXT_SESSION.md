@@ -1,5 +1,26 @@
 # Daily PAPER operation
 
+## Tuesday, November 17
+
+The host runs `fd7ff01` for both the daily scheduler and the dashboard
+reader. The timer is active, the schedule is unpaused and live trading is
+disabled. Tuesday's preparation is scheduled for 9:00 a.m. New York time.
+The controller reviews launch eligibility from 10:00 a.m. for the session
+ending at 4:00 p.m.
+
+The two owner blockers in the installation output belong to the November 10
+runtime timeout. At installation, the owner matched the saved review. The
+controller checks that match again before preparation and at launch. Open
+the dashboard shortly after 10:00 a.m. and check the worker for
+`daily-20261117`. After the close, these commands show its session report.
+
+```bash
+cd /opt/trade-bot-dashboard
+python3 scripts/paper-session-report.py --run-id daily-20261117 --format text
+```
+
+[Deployment receipts](PAPER_SNAPSHOT_RECOVERY_20261116.json).
+
 ## November 16 dashboard snapshot recovery
 
 Monday's captures and preopen preparation succeeded on `39d8e48`. At
@@ -12,8 +33,7 @@ At 10:30 p.m. New York time on November 16, the operator built `fd7ff01`
 in a separate checkout and recovered the host display. It published feed
 sequence 1432 with zero held plays, retained the failed files under
 `.retained-snapshot-fd01-35ac8e` and left the account source intact.
-The scheduler and reader were last confirmed on `39d8e48`. Continue at
-[Install after successful recovery](#install-after-successful-recovery).
+The operator then installed the recovered release for the scheduler and reader.
 [Host receipts and offline recovery tests](PAPER_SNAPSHOT_RECOVERY_20261116.json).
 
 ### Recover the display
@@ -51,8 +71,8 @@ continues moving the original files under the same publisher lock.
 
 ### Install after successful recovery
 
-After `PUBLISHED`, use this block outside the PAPER session on the host with
-the daily timer enabled. It waits for any current tick to release its lock
+The operator completed this installation after `PUBLISHED`, outside the PAPER
+session with the daily timer enabled. The block waits for the controller lock
 before switching the detached checkout. The installer preserves the daily
 record, account halt, saved review and limits. Tuesday gets its own
 date-specific preparation and launch review.
@@ -88,19 +108,16 @@ date-specific preparation and launch review.
 )
 ```
 
-The expected receipts are `DAILY_SCHEDULE_INSTALLED` with release
-`fd7ff01` and `DASHBOARD_READER_UPDATED` or `DASHBOARD_READER_CURRENT`.
+The host returned `DAILY_SCHEDULE_INSTALLED` and `DASHBOARD_READER_UPDATED`
+for `fd7ff01`. The final timer check returned `active`.
 Monday's run ID and retry count remain part of its finished calendar date.
 
-## Earlier November 11 installation
+## November 14 installation history
 
-The host runs `39d8e48`. The November 14 diagnostic capture succeeded, the
-daily schedule is enabled, and the dashboard reader is updated. For Monday,
-November 16, the scheduler requests fresh data at 9:00 a.m. ET and checks launch
-eligibility from 10:00 a.m. ET. If the owner still matches the saved November 10
-timeout review, preparation can proceed. The controller checks the owner again
-at launch. Inspect the dashboard after 10:00 a.m. ET or run
-`python3 scripts/paper-daily.py status` from `/opt/trade-bot-dashboard`.
+On November 14 the host installed `39d8e48`, enabled the daily schedule and
+updated the dashboard reader. Its diagnostic catalog capture succeeded. The
+scheduler set Monday's preparation for 9:00 a.m. ET and launch review for
+10:00 a.m. ET.
 [Deployment receipt](PAPER_HOST_DEPLOYMENT_20261114.json).
 
 ## November 11 installation history

@@ -64,7 +64,65 @@
       "status": "PUBLISHED",
       "version": "native-dashboard-snapshot-v1"
     },
-    "scheduler_and_reader_installation": "PENDING"
+    "scheduler_and_reader_installation": "CONFIRMED",
+    "deployment": {
+      "daily_info": {
+        "automatic_catalog_blockers": [],
+        "close_at": "2026-11-17T21:00:00+00:00",
+        "failed_snapshot_read": true,
+        "last_runtime_started_at": "2026-11-10T15:02:03.133442+00:00",
+        "live_enabled": false,
+        "open_at": "2026-11-17T14:30:00+00:00",
+        "owner_state": {
+          "entry_halted": true,
+          "feed_sequence": 1432,
+          "halt_reason": "OPTION_RUNTIME_FAILED",
+          "owner_configuration_sha256": "1f17034e5d8e2a6e6f838950cc58621230b05206eca1d268c6273c7d6d3bbb96",
+          "owner_revision": 5453,
+          "runtime_generation": 15,
+          "runtime_status": "FAILED"
+        },
+        "prepare_at": "2026-11-17T14:00:00+00:00",
+        "provider_calls": false,
+        "receipt": null,
+        "start_at": "2026-11-17T15:00:00+00:00",
+        "start_blockers": [
+          "OWNER_NOT_NORMALLY_STOPPED",
+          "OWNER_HALT_REQUIRES_REVIEW"
+        ],
+        "state_modified": false,
+        "status": "DAILY_INFO",
+        "swing_expiration": "2026-11-27",
+        "swing_history_enrolled": true,
+        "target_session": "2026-11-17",
+        "trading_ready": false,
+        "version": "paper-daily-info-v1"
+      },
+      "scheduler": {
+        "image_id": "sha256:2a3b7021e86f43152f8ba3a0a8c4bac3f413f664f575fe0952bbb46f51435645",
+        "live_enabled": false,
+        "paused": false,
+        "release": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+        "schedule": {
+          "close_at": "2026-11-17T21:00:00+00:00",
+          "prepare_at": "2026-11-17T14:00:00+00:00",
+          "start_at": "2026-11-17T15:00:00+00:00",
+          "target_session": "2026-11-17"
+        },
+        "status": "DAILY_SCHEDULE_INSTALLED",
+        "trading_ready": false,
+        "updated": true
+      },
+      "reader": {
+        "previous": "trade-bot-dashboard-reader-ce2297726fe8",
+        "release": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+        "status": "DASHBOARD_READER_UPDATED"
+      },
+      "timer": {
+        "unit": "trade-bot-paper-daily.timer",
+        "active_state": "active"
+      }
+    }
   },
   "offline": {
     "network": "private namespace with loopback only",

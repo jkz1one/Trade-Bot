@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.219. November 16, New York time. Monday's connected PAPER session.
+Version 1.220. November 16, New York time. Tuesday's PAPER schedule is installed.
 
 Monday's daily worker did not launch on `39d8e48`. Preparation succeeded.
 The first dashboard snapshot timed out at 10:00:56 a.m., and the next two
@@ -8,10 +8,12 @@ attempts found a retained pending file. The deployed code reports the
 publication deadline without its internal stage. At 10:30 p.m. New York
 time, the operator ran `fd7ff01` from a separate host checkout. It published
 the display at feed sequence 1432, retained the failed snapshot files and
-left the native account intact. The scheduler and reader last confirmed on
-the host are still `39d8e48`. Their installation receipts for `fd7ff01`
-and the next PAPER session are pending.
-[Host procedure](PAPER_NEXT_SESSION.md#november-16-dashboard-snapshot-recovery).
+left the native account intact. The host then confirmed `fd7ff01` for the
+daily scheduler and dashboard reader. The timer is active and the schedule is unpaused.
+Tuesday's preparation is scheduled for 9:00 a.m. and its launch review for
+10:00 a.m. New York time. At installation, the owner still matched the
+saved November 10 timeout review. Tuesday's worker launch remains unverified.
+[Tuesday's schedule and report](PAPER_NEXT_SESSION.md#tuesday-november-17).
 [Host and fixture evidence](PAPER_SNAPSHOT_RECOVERY_20261116.json).
 
 ### November 16 offline PAPER entry and protective exits
@@ -31,7 +33,7 @@ With advice and history blocked and a second test suite sharing one CPU,
 the PAPER venue acknowledged the stock and option stops in 3.35 and 2.86
 seconds. Both filled on the next quote and finished flat. The installed
 application passed 604 system checks with one unmapped-reader-UID skip.
-The last operator-confirmed host installation is `39d8e48`.
+At the time of these replays the host ran `39d8e48`.
 [Replays, test results and protection timings](PAPER_ENTRY_ACK_20261116_PROOF.json).
 
 ### Earlier November 16 journal and dashboard measurements
