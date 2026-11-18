@@ -10,8 +10,13 @@ The installed application also passed 620 system checks. One cross-UID case
 requires mapped reader UID 10001. All eight deployment shell rehearsals passed,
 including a failed capture, a dirty checkout and installation rollback. The
 deployment block runs as a standalone subshell so Bash stops on failed checks.
-The host is still confirmed on `fd7ff01`. Tuesday exhausted preparation before
-creating a worker. Updated host checks and connected acceptance are pending.
+At 11:44 p.m. New York time on November 17, the operator captured Wednesday's
+catalog on `220da15`: eight provider calls, four candidates and no worker start.
+Both `daily-info` checks passed. Installation confirmed the same release and
+image for the scheduler, the updated dashboard reader and an active, unpaused
+timer. The unchanged owner matches the saved November 10 timeout review.
+Wednesday's preparation and worker launch, full-session operation and the
+cause of the earlier intermittent `daily-info` errors remain unverified.
 [Incident and verification](PAPER_SCHEMA_CONTRACT_20261117_PROOF.json).
 
 The installed `fd7ff01` application passed 613 integrated checks. One
@@ -26,8 +31,8 @@ The original account files matched byte for byte in both fixtures. At
 connected display from a separate `fd7ff01` checkout. The published receipt
 reports owner revision 5453, feed sequence 1432, runtime generation 15,
 zero held plays and an unmodified source. The subsequent host receipts
-confirm that the daily scheduler and reader now run `fd7ff01` and the
-timer is active. All 54 daily controller tests passed. A separate offline
+confirmed that the daily scheduler and reader then ran `fd7ff01` and the
+timer was active. All 54 daily controller tests passed. A separate offline
 check with the reported owner state carried Monday's three review attempts
 forward as history and gave Tuesday its first attempt. Changing the owner
 revision, feed sequence or runtime generation blocked preparation in each

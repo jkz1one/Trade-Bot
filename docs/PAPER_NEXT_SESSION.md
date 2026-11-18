@@ -1,5 +1,34 @@
 # Daily PAPER operation
 
+## Wednesday, November 18
+
+The host is confirmed on `220da15` after the completed installation below.
+At 11:44 p.m. New York time on November 17, its catalog capture completed
+eight provider calls and selected four candidates. Both `daily-info` checks
+passed. The scheduler is unpaused, the daily timer is active and the dashboard
+reader was updated. The build and installed scheduler report image
+`sha256:07236964d00d18448c531e4ca84326a4c4eec1cf3a878d95a489363a5e40ec05`.
+
+| Wednesday step | New York time | UTC |
+| --- | --- | --- |
+| Preparation | 9:00 a.m. | 14:00 |
+| Launch review | 10:00 a.m. | 15:00 |
+| Session close | 4:00 p.m. | 21:00 |
+
+The successful capture reports `all_fresh_at_capture: false`,
+`trading_ready: false` and `workers_started: false`. Wednesday still needs
+current inputs and a successful launch review. Its owner remains at the
+November 10 failure with revision 5453, feed sequence 1432 and runtime
+generation 15, matching the previously saved timeout review. The controller
+rechecks the complete owner state before preparation and launch. The two
+successful `daily-info` calls do not establish the cause of its earlier
+intermittent failures.
+
+The next acceptance check is Wednesday's day record and worker creation after
+10:00 a.m. A session report is available only after its worker exists. Keep
+the installed release; the following deployment block is completed history.
+[Operator receipts and remaining acceptance checks](PAPER_SCHEMA_CONTRACT_20261117_PROOF.json).
+
 ## November 17 capture repair
 
 Tuesday's preparation failed three times on `fd7ff01`. Every saved context
@@ -18,10 +47,11 @@ code for failed offline commands. A daily-plan exception also reports its
 class and application frames. Tuesday's separate intermittent `daily-info`
 failures still require host evidence with those diagnostics.
 
-Run the following block from the stopped host. It builds the candidate, pauses
-the timer and checks the current owner before capturing Wednesday's catalog.
-It installs the candidate after both checks succeed. The exit trap restores
-the timer and removes the temporary checkout.
+The operator completed the following block from the stopped host on November
+17, New York time. It built the candidate, paused the timer and checked the
+current owner before capturing Wednesday's catalog. Both checks passed and
+installation completed. The exit trap restored the timer and removed the
+temporary checkout.
 
 ```bash
 (
@@ -66,11 +96,11 @@ the timer and removes the temporary checkout.
 )
 ```
 
-The expected receipts are `DAILY_INFO`, `CATALOG_CAPTURED`,
-`DAILY_SCHEDULE_INSTALLED`, `DASHBOARD_READER_UPDATED` or
-`DASHBOARD_READER_CURRENT`, and a final `active`. Preparation and launch
-remain subject to the next session's current inputs and account review.
-[Incident and offline proof](PAPER_SCHEMA_CONTRACT_20261117_PROOF.json).
+The host returned two successful `DAILY_INFO` receipts, `CATALOG_CAPTURED`,
+`DAILY_SCHEDULE_INSTALLED`, `DASHBOARD_READER_UPDATED` and a final `active`.
+Preparation and launch remain subject to the next session's current inputs
+and account review.
+[Incident, offline proof and host receipts](PAPER_SCHEMA_CONTRACT_20261117_PROOF.json).
 [Previous deployment receipts](PAPER_SNAPSHOT_RECOVERY_20261116.json).
 
 ## November 16 dashboard snapshot recovery

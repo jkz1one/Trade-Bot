@@ -215,8 +215,13 @@ next action. Do not replace missing evidence with a date estimate.
   focused checks and 620 installed system checks, with one cross-UID skip.
   Eight deployment rehearsals also passed after correcting Bash error handling
   in the operator block. Separate intermittent `daily-info` errors now report their
-  module and exit code, with bounded daily-plan exception details. Their host
-  cause and connected operation on the repair remain pending.
+  module and exit code, with bounded daily-plan exception details. At 11:44 p.m.
+  New York time, the operator captured Wednesday's catalog on the repair with
+  eight provider calls and four candidates. Both `daily-info` checks passed;
+  the scheduler and reader were updated to `220da15`, with the timer active
+  and unpaused. The earlier intermittent error cause and a complete connected
+  session remain unverified. Wednesday's preparation and launch review are
+  scheduled for 9:00 and 10:00 a.m. New York time.
   [Incident and proof](PAPER_SCHEMA_CONTRACT_20261117_PROOF.json).
 - [ ] **A4 — Independent protection:** prove that model waits, history work and
   display/report failures cannot improperly stop management of an owned position.

@@ -1,6 +1,19 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.221. November 17, New York time. Schema description compatibility repair.
+Version 1.222. November 17, New York time. Host capture and deployment confirmed.
+
+At 11:44 p.m. New York time, the operator captured Wednesday's catalog on
+`220da15` with eight provider calls and four option candidates. Both offline
+`daily-info` checks passed. The subsequent receipts confirm the same release
+and image for the daily scheduler, the updated dashboard reader and an active,
+unpaused timer. Wednesday, November 18 preparation is scheduled for 9:00 a.m.,
+launch review for 10:00 a.m. and close for 4:00 p.m. New York time.
+The capture reports `all_fresh_at_capture: false`, `trading_ready: false` and
+`workers_started: false`. Current-session preparation and worker operation
+remain unverified. The owner still matches the saved November 10 timeout review
+at revision 5453, feed sequence 1432 and runtime generation 15; the controller
+must verify the full match again before preparation and launch.
+[Host receipts and remaining checks](PAPER_NEXT_SESSION.md#wednesday-november-18).
 
 Tuesday's worker never launched on `fd7ff01`. Its three context captures failed
 at `VALIDATE_PLAN` with zero market reads after a provider description edit.
@@ -13,9 +26,11 @@ edits can pass without another release. Changed data rules still require review.
 The host also reported intermittent offline `daily-info` errors. Their original
 module and inner exception were discarded. The new host reports the module and
 exit code, plus bounded daily-plan exception details when available. The cause
-of those intermittent errors and connected acceptance of the repair are pending.
-[Host checks and installation](PAPER_NEXT_SESSION.md#november-17-capture-repair).
-[Observed failure and offline proof](PAPER_SCHEMA_CONTRACT_20261117_PROOF.json).
+of those intermittent errors remains unverified despite the two successful
+checks during deployment. Capture now passes on the host; a full connected
+session is still pending.
+[Completed installation](PAPER_NEXT_SESSION.md#november-17-capture-repair).
+[Incident, offline proof and host receipts](PAPER_SCHEMA_CONTRACT_20261117_PROOF.json).
 
 ### November 16 deployment history
 

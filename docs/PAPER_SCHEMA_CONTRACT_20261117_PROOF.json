@@ -185,10 +185,127 @@
     "deployment_shell_correction": "Standalone subshell retains Bash errexit. The previous command-list conditional could continue after an intermediate failure."
   },
   "host_acceptance": {
-    "new_release_installed": "UNVERIFIED",
-    "fresh_capture_on_repair": "UNVERIFIED",
+    "new_release_installed": "CONFIRMED",
+    "fresh_capture_on_repair": "CATALOG_CAPTURED",
     "daily_info_cause": "UNVERIFIED",
     "next_worker_launch": "UNVERIFIED",
-    "full_connected_session": "UNVERIFIED"
+    "full_connected_session": "UNVERIFIED",
+    "daily_info_on_repair": "TWO_CHECKS_PASSED"
+  },
+  "host_deployment": {
+    "evidence_source": "operator supplied successful standalone deployment transcript; no direct host access",
+    "prior_release": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+    "installed_release": "220da15acec2bf0ff76cbf7354c7385992af644b",
+    "build": {
+      "image_id": "sha256:07236964d00d18448c531e4ca84326a4c4eec1cf3a878d95a489363a5e40ec05",
+      "status": "IMAGE_BUILT"
+    },
+    "daily_info": {
+      "successful_checks": 2,
+      "contexts": [
+        "candidate before installation",
+        "daily schedule installation"
+      ],
+      "identical_report": {
+        "automatic_catalog_blockers": [],
+        "close_at": "2026-11-18T21:00:00+00:00",
+        "failed_snapshot_read": true,
+        "last_runtime_started_at": "2026-11-10T15:02:03.133442+00:00",
+        "live_enabled": false,
+        "open_at": "2026-11-18T14:30:00+00:00",
+        "owner_state": {
+          "entry_halted": true,
+          "feed_sequence": 1432,
+          "halt_reason": "OPTION_RUNTIME_FAILED",
+          "owner_configuration_sha256": "1f17034e5d8e2a6e6f838950cc58621230b05206eca1d268c6273c7d6d3bbb96",
+          "owner_revision": 5453,
+          "runtime_generation": 15,
+          "runtime_status": "FAILED"
+        },
+        "prepare_at": "2026-11-18T14:00:00+00:00",
+        "provider_calls": false,
+        "receipt": null,
+        "start_at": "2026-11-18T15:00:00+00:00",
+        "start_blockers": [
+          "OWNER_NOT_NORMALLY_STOPPED",
+          "OWNER_HALT_REQUIRES_REVIEW"
+        ],
+        "state_modified": false,
+        "status": "DAILY_INFO",
+        "swing_expiration": "2026-11-27",
+        "swing_history_enrolled": true,
+        "target_session": "2026-11-18",
+        "trading_ready": false,
+        "version": "paper-daily-info-v1"
+      }
+    },
+    "capture": {
+      "all_fresh_at_capture": false,
+      "anchors": [
+        {
+          "ask": "733.650000",
+          "ask_source_at": "2026-11-18T04:44:34.707405953Z",
+          "bid": "733.570000",
+          "bid_source_at": "2026-11-18T04:44:34.707405953Z",
+          "received_at": "2026-11-18T04:44:36.374920+00:00",
+          "strike": "734",
+          "symbol": "SPY"
+        },
+        {
+          "ask": "659.790000",
+          "ask_source_at": "2026-11-18T04:44:34.94Z",
+          "bid": "659.720000",
+          "bid_source_at": "2026-11-18T04:44:34.94Z",
+          "received_at": "2026-11-18T04:44:36.374920+00:00",
+          "strike": "660",
+          "symbol": "QQQ"
+        }
+      ],
+      "capture_hashes": [
+        "fcff1aa39db2cbec40b1740c778bedc89a3334e8eecf00f59a9d43d3c63967fb",
+        "e6efc558149d15d9cc633bee92e23ebe3064b9698ab7341b1836c57f00776f42",
+        "ff8f69a75b3ef59ea84620ab2eec5287c04192e82bdfccc0fc1b0b61dd749794",
+        "916ee839336db4f557910b814f3d3dc760a0f4aeee916d6d24f92bd7e0eda357"
+      ],
+      "context_sha256": "85c2e19a2534b0f9b26dbaca282f7e0bb5c0d14292163706a9d260c15aaf44d0",
+      "entitlement": "UNKNOWN",
+      "evidence_directory": "/root/trade-bot-options-proof-rhy5hzu4",
+      "future_quote_samples": [],
+      "live_enabled": false,
+      "option_candidates": [
+        "26ad3ad5-f0c4-49f3-8f8e-8154955cca0d",
+        "a87be697-dad8-4b68-bd26-f6560a061751",
+        "df1de9fe-b1aa-4faf-a537-b85b45de39e9",
+        "f6405edc-9c4e-4d5c-8d5e-266fa2733385"
+      ],
+      "provider_tool_calls": 8,
+      "status": "CATALOG_CAPTURED",
+      "target_session": "2026-11-18",
+      "trading_ready": false,
+      "workers_started": false
+    },
+    "install": {
+      "image_id": "sha256:07236964d00d18448c531e4ca84326a4c4eec1cf3a878d95a489363a5e40ec05",
+      "live_enabled": false,
+      "paused": false,
+      "release": "220da15acec2bf0ff76cbf7354c7385992af644b",
+      "schedule": {
+        "close_at": "2026-11-18T21:00:00+00:00",
+        "prepare_at": "2026-11-18T14:00:00+00:00",
+        "start_at": "2026-11-18T15:00:00+00:00",
+        "target_session": "2026-11-18"
+      },
+      "status": "DAILY_SCHEDULE_INSTALLED",
+      "trading_ready": false,
+      "updated": true
+    },
+    "reader": {
+      "previous": "trade-bot-dashboard-reader-19354874ea53",
+      "release": "220da15acec2bf0ff76cbf7354c7385992af644b",
+      "status": "DASHBOARD_READER_UPDATED"
+    },
+    "timer": "active",
+    "owner_review": "Reported owner equals the saved November 10 timeout review supplied with the November 17 status. The controller must recheck the full match before preparation and launch.",
+    "acceptance_limit": "Catalog capture passed. The capture did not start a worker or prove fresh session inputs. Two daily-info successes do not establish the cause of its earlier intermittent failures."
   }
 }
