@@ -1,6 +1,23 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.220. November 16, New York time. Tuesday's PAPER schedule is installed.
+Version 1.221. November 17, New York time. Schema description compatibility repair.
+
+Tuesday's worker never launched on `fd7ff01`. Its three context captures failed
+at `VALIDATE_PLAN` with zero market reads after a provider description edit.
+The per-revision schema allowlist made that documentation change a preparation
+blocker. `220da15` compares a fixed fingerprint of tool names, permission
+annotations and input/output rules while excluding schema description text.
+It verifies and retains the full original metadata digest. Further description
+edits can pass without another release. Changed data rules still require review.
+
+The host also reported intermittent offline `daily-info` errors. Their original
+module and inner exception were discarded. The new host reports the module and
+exit code, plus bounded daily-plan exception details when available. The cause
+of those intermittent errors and connected acceptance of the repair are pending.
+[Host checks and installation](PAPER_NEXT_SESSION.md#november-17-capture-repair).
+[Observed failure and offline proof](PAPER_SCHEMA_CONTRACT_20261117_PROOF.json).
+
+### November 16 deployment history
 
 Monday's daily worker did not launch on `39d8e48`. Preparation succeeded.
 The first dashboard snapshot timed out at 10:00:56 a.m., and the next two
@@ -12,8 +29,8 @@ left the native account intact. The host then confirmed `fd7ff01` for the
 daily scheduler and dashboard reader. The timer is active and the schedule is unpaused.
 Tuesday's preparation is scheduled for 9:00 a.m. and its launch review for
 10:00 a.m. New York time. At installation, the owner still matched the
-saved November 10 timeout review. Tuesday's worker launch remains unverified.
-[Tuesday's schedule and report](PAPER_NEXT_SESSION.md#tuesday-november-17).
+saved November 10 timeout review. Tuesday subsequently failed during capture.
+[Host recovery procedure](PAPER_NEXT_SESSION.md#november-16-dashboard-snapshot-recovery).
 [Host and fixture evidence](PAPER_SNAPSHOT_RECOVERY_20261116.json).
 
 ### November 16 offline PAPER entry and protective exits

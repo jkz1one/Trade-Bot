@@ -203,9 +203,21 @@ next action. Do not replace missing evidence with a date estimate.
   VALIDATE_PLAN before any market reads. `aae1dff` admits the exact six reviewed
   description edits. Twelve baseline cases reproduced the rejection and 526 installed
   tests passed. The host then deployed `39d8e48` and completed eight real provider reads.
-  Monday's scheduled preparation and worker operation are pending.
+  Monday's preparation succeeded, followed by a failed dashboard publication.
   [Deployment receipt](PAPER_HOST_DEPLOYMENT_20261114.json).
   [November 14 evidence](PAPER_SCHEMA_REVISION_20261114_PROOF.json).
+  On November 17 another provider description edit stopped all three context
+  captures before market reads. `220da15` replaces the metadata-version allowlist
+  with a fixed reviewed wire-contract fingerprint that excludes descriptions.
+  It verifies original metadata hashes and accepts unseen description edits
+  while rejecting changed tool permissions, argument rules and output rules.
+  The old implementation has 30 reproduced failures. The repair passes 402
+  focused checks and 620 installed system checks, with one cross-UID skip.
+  Eight deployment rehearsals also passed after correcting Bash error handling
+  in the operator block. Separate intermittent `daily-info` errors now report their
+  module and exit code, with bounded daily-plan exception details. Their host
+  cause and connected operation on the repair remain pending.
+  [Incident and proof](PAPER_SCHEMA_CONTRACT_20261117_PROOF.json).
 - [ ] **A4 — Independent protection:** prove that model waits, history work and
   display/report failures cannot improperly stop management of an owned position.
   Stock and option quote-fill tests now hold history, paid management advice
@@ -270,7 +282,8 @@ next action. Do not replace missing evidence with a date estimate.
   account. The operator recovered the connected display at 10:30 p.m.
   New York time on November 16 and installed `fd7ff01` for the scheduler
   and reader. The timer is active. The next connected evidence is the
-  November 17 preparation, launch review and session outcome.
+  next preparation, launch review and session outcome. November 17 stopped in
+  capture before a session receipt or worker was created.
   [Host observations and tests](PAPER_SNAPSHOT_RECOVERY_20261116.json).
   `aad4e08` isolated in-run publisher failure. `d35d318` adds verified-held startup
   protection for missing/partial display snapshots, read-only protection-only host

@@ -1,5 +1,19 @@
 # Recovered offline system checkpoint
 
+November 17. `220da15` replaces metadata-version admission with a reviewed
+wire-contract fingerprint that excludes descriptions. The supplied November 17
+metadata reconstructs to its exact observed digest. It and an unseen synthetic
+description revision reproduce 30 failures against the prior implementation.
+All 402 focused checks pass with the repair, including mappings, capture,
+collector restart, host diagnostics and malformed or changed data contracts.
+The installed application also passed 620 system checks. One cross-UID case
+requires mapped reader UID 10001. All eight deployment shell rehearsals passed,
+including a failed capture, a dirty checkout and installation rollback. The
+deployment block runs as a standalone subshell so Bash stops on failed checks.
+The host is still confirmed on `fd7ff01`. Tuesday exhausted preparation before
+creating a worker. Updated host checks and connected acceptance are pending.
+[Incident and verification](PAPER_SCHEMA_CONTRACT_20261117_PROOF.json).
+
 The installed `fd7ff01` application passed 613 integrated checks. One
 cross-UID test requires a mapped reader UID 10001. Thirteen overlapping
 recovery and host cases passed. A separate replay on the deployed
@@ -17,7 +31,7 @@ timer is active. All 54 daily controller tests passed. A separate offline
 check with the reported owner state carried Monday's three review attempts
 forward as history and gave Tuesday its first attempt. Changing the owner
 revision, feed sequence or runtime generation blocked preparation in each
-case. Tuesday's actual worker launch and session outcome are pending.
+case. The subsequent Tuesday host run failed in capture before worker launch.
 [Recovery evidence](PAPER_SNAPSHOT_RECOVERY_20261116.json).
 
 November 16 UTC. The installed `365791d` application passed 604 system

@@ -1,25 +1,77 @@
 # Daily PAPER operation
 
-## Tuesday, November 17
+## November 17 capture repair
 
-The host runs `fd7ff01` for both the daily scheduler and the dashboard
-reader. The timer is active, the schedule is unpaused and live trading is
-disabled. Tuesday's preparation is scheduled for 9:00 a.m. New York time.
-The controller reviews launch eligibility from 10:00 a.m. for the session
-ending at 4:00 p.m.
+Tuesday's preparation failed three times on `fd7ff01`. Every saved context
+stopped at `VALIDATE_PLAN` with zero market reads. The provider changed one
+historical-tool description. The complete input and output structures match
+the reviewed contract. The day has no session receipt or worker container.
+Its after-hours `WAITING_NEXT_SESSION` status describes the scheduler's next
+date. The saved owner review still matches revision 5453 and feed sequence 1432.
 
-The two owner blockers in the installation output belong to the November 10
-runtime timeout. At installation, the owner matched the saved review. The
-controller checks that match again before preparation and at launch. Open
-the dashboard shortly after 10:00 a.m. and check the worker for
-`daily-20261117`. After the close, these commands show its session report.
+`220da15` compares the reviewed wire contract independently of descriptions.
+It accepts later description edits while validating the original complete
+metadata digest and every response. Fixed tool names, permission annotations,
+argument rules and response constraints remain part of the contract.
+The host reports capture failure stages and identifies the module and exit
+code for failed offline commands. A daily-plan exception also reports its
+class and application frames. Tuesday's separate intermittent `daily-info`
+failures still require host evidence with those diagnostics.
+
+Run the following block from the stopped host. It builds the candidate, pauses
+the timer and checks the current owner before capturing Wednesday's catalog.
+It installs the candidate after both checks succeed. The exit trap restores
+the timer and removes the temporary checkout.
 
 ```bash
-cd /opt/trade-bot-dashboard
-python3 scripts/paper-session-report.py --run-id daily-20261117 --format text
+(
+  set -eu
+  cd /opt/trade-bot-dashboard
+  release=220da15acec2bf0ff76cbf7354c7385992af644b
+  prior=$(git rev-parse HEAD)
+  git fetch origin slice2/robinhood-read-shadow
+  git merge-base --is-ancestor "$prior" "$release"
+  git merge-base --is-ancestor "$release" FETCH_HEAD
+  test -z "$(git status --porcelain)" || { echo "Checkout has local changes."; exit 1; }
+  candidate=$(mktemp -d)
+  git worktree add --detach "$candidate" "$release"
+  trap 'git worktree remove "$candidate"' EXIT
+  python3 "$candidate/scripts/connected-session-host.py" build
+
+  timer=trade-bot-paper-daily.timer
+  systemctl is-active --quiet "$timer" || { echo "Daily timer is inactive."; exit 1; }
+  trap 'systemctl start "$timer"; git worktree remove "$candidate"' EXIT
+  systemctl stop "$timer"
+  flock -w 120 /var/lib/trade-bot-paper-daily/controller.lock true
+  state=$(systemctl show -p ActiveState --value trade-bot-paper-daily.service)
+  case "$state" in
+    inactive|failed) ;;
+    *) echo "Controller is busy. Retry after it finishes."; exit 1 ;;
+  esac
+  active=$(docker ps --filter label=trade-bot.connected-session-v1 --format '{{.Names}}')
+  test -z "$active" || { echo "A PAPER worker is running."; exit 1; }
+
+  python3 "$candidate/scripts/connected-session-host.py" daily-info
+  python3 "$candidate/scripts/connected-session-host.py" capture-session --target-session 2026-11-18
+  test "$(git rev-parse HEAD)" = "$prior"
+  git switch --detach "$release"
+  if ! python3 scripts/paper-daily.py install; then
+    git switch --detach "$prior"
+    python3 scripts/paper-daily.py install
+    exit 1
+  fi
+  python3 scripts/connected-dashboard-host.py update-reader --snapshot-name connected-price-options-v1
+  systemctl start "$timer"
+  systemctl is-active "$timer"
+)
 ```
 
-[Deployment receipts](PAPER_SNAPSHOT_RECOVERY_20261116.json).
+The expected receipts are `DAILY_INFO`, `CATALOG_CAPTURED`,
+`DAILY_SCHEDULE_INSTALLED`, `DASHBOARD_READER_UPDATED` or
+`DASHBOARD_READER_CURRENT`, and a final `active`. Preparation and launch
+remain subject to the next session's current inputs and account review.
+[Incident and offline proof](PAPER_SCHEMA_CONTRACT_20261117_PROOF.json).
+[Previous deployment receipts](PAPER_SNAPSHOT_RECOVERY_20261116.json).
 
 ## November 16 dashboard snapshot recovery
 

@@ -1,0 +1,194 @@
+{
+  "version": "paper-schema-contract-repair-20261117-v1",
+  "code_release": "220da15acec2bf0ff76cbf7354c7385992af644b",
+  "operator_observation": {
+    "evidence_source": "operator supplied host status, Docker inspection, service log and saved capture summaries",
+    "installed_release": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+    "run_id": "daily-20261117",
+    "target_session": "2026-11-17",
+    "controller_state_updated_at": "2026-11-18T03:43:04.980160+00:00",
+    "controller_status": "WAITING_NEXT_SESSION",
+    "paused": false,
+    "day": {
+      "failures": 3,
+      "last_error": "StepFailed",
+      "receipt": null,
+      "run_id": "daily-20261117"
+    },
+    "container_present": false,
+    "saved_owner_review_present": true,
+    "checkpoint": {
+      "feed_sequence": 1432,
+      "owner_revision": 5453,
+      "runtime_generation": 15
+    },
+    "capture_failures": [
+      {
+        "directory": "/root/trade-bot-options-proof-vv1kl64e",
+        "parent_seconds": 2.975331468973309
+      },
+      {
+        "directory": "/root/trade-bot-options-proof-oelc4uxe",
+        "parent_seconds": 2.423789849039167
+      },
+      {
+        "directory": "/root/trade-bot-options-proof-i3n7cua7",
+        "parent_seconds": 2.2965367268770933
+      }
+    ],
+    "capture_status": "FAILED",
+    "capture_stage": "VALIDATE_PLAN",
+    "market_reads_per_capture": 0,
+    "capture_cause_classes": [
+      "ExceptionGroup",
+      "ExceptionGroup",
+      "ValueError"
+    ],
+    "comparison_schema_sha256": "05c635c9451e7257954ba11a111a47323a5ac2c1e743d820a0cc4ca5c2733eff",
+    "observed_schema_sha256": "0b0c7205b8aee84dd599902ef5738736c2af04a7cb25fb5511553eb8d499c51f",
+    "changed_metadata_paths": [
+      [
+        "get_equity_historicals",
+        "description"
+      ]
+    ],
+    "separate_daily_info_failures": {
+      "supplied_count": 8,
+      "reason": "Host command failed: docker run",
+      "inner_cause": "UNVERIFIED"
+    }
+  },
+  "compatibility": {
+    "contract_sha256": "4d296d9a045742c42ec8b3bfbf7886ce95e1cbb00c94d40aa8f74f3d0b60bd97",
+    "ignored_fields": "String descriptions on tools and within JSON Schema nodes",
+    "retained_fields": [
+      "tool names",
+      "tool annotations",
+      "argument schemas",
+      "output schemas",
+      "required fields",
+      "types",
+      "enums",
+      "bounds",
+      "defaults",
+      "references",
+      "unknown metadata",
+      "properties named description",
+      "literal objects"
+    ],
+    "raw_artifact_hashes": "Verified and retained in their original form",
+    "observed_revision_reconstructed_exactly": true,
+    "future_description_revisions": "Accepted without new raw metadata hash approvals",
+    "schema_drift_diagnostic": "SchemaContractChanged"
+  },
+  "offline": {
+    "synthetic": true,
+    "provider_calls": false,
+    "model_service_calls": false,
+    "baseline": {
+      "release": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+      "selector": "bar_limit_schemas or future_description_schemas",
+      "failed": 30,
+      "passed": 20,
+      "deselected": 87,
+      "log_sha256": "a187d1ab7078e71e4818131e50742a522f4769c62c4968ce2a50246956613cda",
+      "xml_sha256": "cdb0af0ea60a6b50b3fc3606fe2f2631e6794ce3fbf204720a45741c5dec606e",
+      "isolated_checkout": true,
+      "application_and_host_source_unchanged": true
+    },
+    "installed_package": {
+      "version": "paper-system-check-v1",
+      "status": "PASSED",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "market_acceptance": "UNVERIFIED",
+      "wall_clock_soak": "NOT_RUN",
+      "host_acceptance": "UNVERIFIED",
+      "application_files": 333,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "43a4cc9bbb4c6db87c9a1ec3d99f300d010411a025bae726a6c91f547a96e0d8",
+      "test_exit_code": 0
+    },
+    "focused_tests": {
+      "tests": 402,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "passed": 402,
+      "xml_sha256": "a885830334eaa52016c76d497091eac34e6f036c4b2a811a5952ff18a9d15865",
+      "skips": []
+    },
+    "system_tests": {
+      "tests": 621,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 1,
+      "passed": 620,
+      "xml_sha256": "f86e3e0987008feddbe5ac497367bcb842b38ebc73ec0ff35a161fab8d8d6b6b",
+      "skips": [
+        {
+          "test": "test_cross_uid_snapshot_is_readable_by_unprivileged_dashboard_without_auth_copy",
+          "reason": "Reader 10001 is not mapped in this environment: uid"
+        }
+      ]
+    },
+    "test_group_overlap": true,
+    "network": "Private namespace with loopback only",
+    "deployment_shell": {
+      "synthetic": true,
+      "host_calls": false,
+      "cases": {
+        "success": {
+          "exit_code": 0,
+          "checkout": "220da15acec2bf0ff76cbf7354c7385992af644b",
+          "remaining_worktrees": 1
+        },
+        "daily_info_failure": {
+          "exit_code": 2,
+          "checkout": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+          "remaining_worktrees": 1
+        },
+        "capture_failure": {
+          "exit_code": 2,
+          "checkout": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+          "remaining_worktrees": 1
+        },
+        "install_failure": {
+          "exit_code": 1,
+          "checkout": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+          "remaining_worktrees": 1
+        },
+        "service_busy": {
+          "exit_code": 1,
+          "checkout": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+          "remaining_worktrees": 1
+        },
+        "worker_busy": {
+          "exit_code": 1,
+          "checkout": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+          "remaining_worktrees": 1
+        },
+        "dirty": {
+          "exit_code": 1,
+          "checkout": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+          "remaining_worktrees": 1
+        },
+        "timer_inactive": {
+          "exit_code": 1,
+          "checkout": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+          "remaining_worktrees": 1
+        }
+      }
+    },
+    "deployment_shell_correction": "Standalone subshell retains Bash errexit. The previous command-list conditional could continue after an intermediate failure."
+  },
+  "host_acceptance": {
+    "new_release_installed": "UNVERIFIED",
+    "fresh_capture_on_repair": "UNVERIFIED",
+    "daily_info_cause": "UNVERIFIED",
+    "next_worker_launch": "UNVERIFIED",
+    "full_connected_session": "UNVERIFIED"
+  }
+}
