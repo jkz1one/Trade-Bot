@@ -683,3 +683,27 @@ def test_timeout_approval_is_single_use_and_changes_cannot_pass_daily_gate(chang
     else:
         assert state['status'] == 'RUNNING' and 'timeout_review' not in state
         assert f.calls.count('launch') == 1
+
+
+@pytest.mark.parametrize('kind', [ValueError, OSError, RuntimeError])
+def test_daily_info_cli_reports_failure_location_without_private_message(kind, monkeypatch, capsys):
+    import json
+    import sys
+    from app.mixed import daily_plan
+
+    def fail(*args):
+        raise kind('PRIVATE_ACCOUNT_DETAILS')
+
+    monkeypatch.setattr(daily_plan, 'inspect', fail)
+    monkeypatch.setattr(sys, 'argv', ['daily-info', '--directory', '/unused',
+        '--feed-directory', '/unused', '--policy', '/unused', '--schemas', '/unused'])
+    with pytest.raises(SystemExit) as stopped:
+        daily_plan.main()
+    assert stopped.value.code == 2
+    output = capsys.readouterr()
+    report = json.loads(output.out)
+    assert report['reason'] == 'DAILY_INFO_UNAVAILABLE'
+    assert report['failure']['error_class'] == kind.__name__
+    assert report['failure']['frames'][-1]['file'] == 'app/mixed/daily_plan.py'
+    assert report['provider_calls'] is report['state_modified'] is False
+    assert 'PRIVATE' not in output.out + output.err

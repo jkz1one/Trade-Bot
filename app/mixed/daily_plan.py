@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 
 from app.domain.models import utc_now
 from app.execution.economics import summary
+from app.execution.failure import failure_details
 from app.mixed.connected_runtime import check
 from app.mixed.feed_rollover import load_rollovers
 from app.options.engine import fingerprint
@@ -135,10 +136,11 @@ def main():
     a = p.parse_args()
     try:
         result = inspect(a.directory, a.feed_directory, a.policy, a.schemas)
-    except ValueError as exc:
-        if str(exc) not in JOURNAL_FILE_ERRORS:
-            raise
-        print(json.dumps({"status": "UNAVAILABLE", "reason": str(exc), "live_enabled": False}))
+    except Exception as exc:  # Report bounded diagnostic fields at the CLI boundary.
+        reason = str(exc) if type(exc) is ValueError and str(exc) in JOURNAL_FILE_ERRORS else "DAILY_INFO_UNAVAILABLE"
+        print(json.dumps({"status": "UNAVAILABLE", "reason": reason,
+                          "failure": failure_details(exc), "provider_calls": False,
+                          "state_modified": False, "live_enabled": False}))
         raise SystemExit(2) from None
     print(json.dumps(result, sort_keys=True))
 

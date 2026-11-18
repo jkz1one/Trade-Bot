@@ -5,7 +5,9 @@ from datetime import date
 import pytest
 from test_contract_catalog import captures as captures  # noqa: PLC0414
 from test_read_schema_contract import (
+    bar_limit_schemas as bar_limit_schemas,  # noqa: PLC0414
     date_and_chain_schemas as date_and_chain_schemas,  # noqa: PLC0414
+    future_description_schemas as future_description_schemas,  # noqa: PLC0414
 )
 from test_read_schema_contract import (
     description_schemas as description_schemas,  # noqa: PLC0414
@@ -85,7 +87,8 @@ def context(captures):
 
 
 @pytest.mark.parametrize("future_quote", [False, True])
-@pytest.mark.parametrize("revision", [None, "interval_description_schemas", "date_and_chain_schemas"])
+@pytest.mark.parametrize("revision", [None, "interval_description_schemas", "date_and_chain_schemas",
+                                      "bar_limit_schemas", "future_description_schemas"])
 def test_capture_sequence_produces_reviewable_symbol_catalog(
         captures, future_quote, revision, request):
     if revision:

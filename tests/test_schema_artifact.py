@@ -102,7 +102,7 @@ def test_reject_bad_or_unreviewed_discovery(tmp_path, schemas, damage):
         s = value["result"]["schemas"]
         s["sha256"] = "0" * 64
         if damage == "unreviewed":
-            next(iter(s["tools"].values()))["description"] = "changed wire metadata"
+            next(iter(s["tools"].values()))["inputSchema"]["additionalProperties"] = True
             s["sha256"] = schema_digest(s["tools"])
     path = write(tmp_path / "discovery.json", value)
     with pytest.raises(ValueError):

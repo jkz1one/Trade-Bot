@@ -27,9 +27,8 @@ ReadTool = Literal[
 READ_TOOLS = frozenset(ReadTool.__args__)
 MAX_SCHEMA_BYTES = 128 * 1024
 MAX_SAMPLE_BYTES = 128 * 1024
-# Exact reviewed metadata revisions. November 4 adds completed-bar timing
-# documentation. November 12 clarifies intervals. November 14 clarifies the
-# historical date bounds and the two option-chain output descriptions.
+# Historical receipt identities. Compatibility uses the wire contract below,
+# while each original metadata digest still verifies its complete saved evidence.
 REVIEWED_SCHEMA_SHA256 = "d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15"
 COMPLETED_BARS_DESCRIPTION_SHA256 = "77f5aaac0e67dd9fb194d35bdbfb3779a351f52db8c6594a90dadd4f3fc5e272"
 INTERVAL_DESCRIPTION_SHA256 = "dc15d335d30cd024e60910982942cf27d4c51dd83651630630c6b6e1cfa27718"
@@ -37,6 +36,18 @@ DATE_AND_CHAIN_DESCRIPTION_SHA256 = "05c635c9451e7257954ba11a111a47323a5ac2c1e74
 REVIEWED_SCHEMA_DIGESTS = frozenset({
     REVIEWED_SCHEMA_SHA256, COMPLETED_BARS_DESCRIPTION_SHA256, INTERVAL_DESCRIPTION_SHA256,
     DATE_AND_CHAIN_DESCRIPTION_SHA256,
+})
+REVIEWED_SCHEMA_CONTRACT_SHA256 = "4d296d9a045742c42ec8b3bfbf7886ce95e1cbb00c94d40aa8f74f3d0b60bd97"
+
+# Only schema-valued keywords are traversed. A property named 'description',
+# a literal default/const value and tool permission annotations are retained.
+SCHEMA_MAP_KEYWORDS = frozenset({
+    "$defs", "definitions", "properties", "patternProperties", "dependentSchemas", "dependencies",
+})
+SCHEMA_CHILD_KEYWORDS = frozenset({
+    "items", "prefixItems", "additionalItems", "unevaluatedItems", "contains",
+    "additionalProperties", "unevaluatedProperties", "propertyNames", "not",
+    "if", "then", "else", "allOf", "anyOf", "oneOf", "contentSchema",
 })
 
 
@@ -46,6 +57,43 @@ def encoded(value):
 
 def schema_digest(tools):
     return hashlib.sha256(encoded(tools)).hexdigest()
+
+
+def _schema_contract(node):
+    if isinstance(node, list):
+        return [_schema_contract(value) for value in node]
+    if not isinstance(node, dict):
+        return node
+    result = {}
+    for key, value in node.items():
+        if key == "description" and isinstance(value, str):
+            continue
+        if key in SCHEMA_MAP_KEYWORDS and isinstance(value, dict):
+            value = {name: _schema_contract(child) for name, child in value.items()}
+        elif key in SCHEMA_CHILD_KEYWORDS:
+            value = _schema_contract(value)
+        result[key] = value
+    return result
+
+
+@lru_cache(maxsize=32)
+def _contract_digest(metadata):
+    tools = json.loads(metadata)
+    for tool in tools.values():
+        if isinstance(tool.get("description"), str):
+            del tool["description"]
+        for key in ("inputSchema", "outputSchema"):
+            if key in tool:
+                tool[key] = _schema_contract(tool[key])
+    return schema_digest(tools)
+
+
+def schema_contract_digest(tools):
+    return _contract_digest(encoded(tools))
+
+
+class SchemaContractChanged(ValueError):
+    """Fixed diagnostic name for a rejected provider contract."""
 
 
 class ReadSchemas(OptionRecord):
@@ -77,32 +125,14 @@ class ReadSchemas(OptionRecord):
 
 
 def same_schema_contract(left, right):
-    """Match exact reviewed revisions without rewriting original evidence.
-
-    Only the reviewed documentation fields may differ after both complete
-    metadata digests pass the allowlist. All other nested fields still match.
-    """
+    """Accept description edits to the reviewed wire contract, retaining raw evidence."""
     if left is None or right is None:
         return False
     left = ReadSchemas.model_validate(left.model_dump(warnings=False))
     right = ReadSchemas.model_validate(right.model_dump(warnings=False))
-    a, b = (s.model_dump(exclude={"captured_at"}) for s in (left, right))
-    if a == b:
-        return True
-    if not {left.sha256, right.sha256} <= REVIEWED_SCHEMA_DIGESTS:
-        return False
-    for value in (a, b):
-        del value["sha256"]
-        value["tools"]["get_equity_historicals"].pop("description", None)
-        for name in ("get_equity_historicals", "get_option_historicals"):
-            fields = value["tools"][name]["inputSchema"]["properties"]
-            for parameter in ("interval", "start_time", "end_time"):
-                fields[parameter].pop("description", None)
-        chain_output = value["tools"]["get_option_chains"]["outputSchema"]["properties"]
-        chain_output["guide"].pop("description", None)
-        chain_fields = chain_output["data"]["properties"]["chains"]["items"]["properties"]
-        chain_fields["extended_hours_state"].pop("description", None)
-    return a == b
+    return (left.sha256 == right.sha256 or
+            schema_contract_digest(left.tools) == REVIEWED_SCHEMA_CONTRACT_SHA256 ==
+            schema_contract_digest(right.tools))
 
 
 class ReadSample(OptionRecord):
@@ -219,7 +249,7 @@ class OptionReadGateway:
 
     def _pin(self, expected):
         if not same_schema_contract(self.schemas, expected):
-            raise ValueError("Authenticated read schemas changed or were not discovered")
+            raise SchemaContractChanged("Authenticated read schemas changed or were not discovered")
 
     def _validate_call(self, call):
         metadata = self.schemas.tools.get(call.tool)

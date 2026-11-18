@@ -627,11 +627,20 @@ def test_capture_session_retains_private_evidence_without_owner_mount(tmp_path, 
             path = destination / 'report.json'
             path.write_text(json.dumps({'status':'CATALOG_CAPTURED','target_session':'2026-11-02','live_enabled':False}))
             path.chmod(0o600)
-        return subprocess.CompletedProcess(args, 2 if failed else 0, '', 'PRIVATE_RAW_ERROR')
+        summary = {'status': 'FAILED', 'schema_sha256': 'f' * 64, 'completed_reads': 0,
+                   'failure': {'stage': 'VALIDATE_PLAN',
+                               'causes': [{'error_class': 'SchemaContractChanged'}]}}
+        return subprocess.CompletedProcess(args, 2 if failed else 0,
+                                           json.dumps(summary) if failed else '', 'PRIVATE_RAW_ERROR')
     monkeypatch.setattr(m.h, 'docker', docker)
     result = m.run(SimpleNamespace(operation='capture-session', target_session='2026-11-02'), RELEASE)
     assert result['status'] == ('CAPTURE_FAILED' if failed else 'CATALOG_CAPTURED')
     assert result['evidence_directory'] == str(destination)
+    if failed:
+        assert result['failure']['stage'] == 'VALIDATE_PLAN'
+        assert result['failure']['error_classes'] == ['SchemaContractChanged']
+        assert result['failure']['schema_sha256'] == 'f' * 64
+        assert result['exit_code'] == 2
     assert 'PRIVATE' not in json.dumps(result)
     # Host fixture directories may themselves contain '/state'. Check the
     # actual container mount destinations and their exact allowed sources.
@@ -692,3 +701,56 @@ def test_host_reports_bounded_file_diagnostics(module, detail, expected, monkeyp
     with pytest.raises(RuntimeError, match=expected) as caught:
         host.execute(IMAGE, module, [], [])
     assert "private" not in str(caught.value)
+
+
+def test_daily_info_failure_survives_host_cli_without_raw_output(tmp_path, monkeypatch, capsys):
+    m = load()
+    monkeypatch.setattr(m, 'LOCK', tmp_path / 'lock')
+    monkeypatch.setattr(m.h, 'command', lambda args: subprocess.CompletedProcess(
+        args, 0, RELEASE if 'rev-parse' in args else '', ''))
+    private = 'PRIVATE_ACCOUNT_DETAILS'
+    payload = {'reason': 'DAILY_INFO_UNAVAILABLE', 'failure': {
+        'error_class': 'OperationalError', 'message': private,
+        'frames': [{'file': 'app/options/observer.py', 'line': 123, 'locals': private},
+                   {'file': '/root/' + private, 'line': 4},
+                   {'file': 'app/../private.py', 'line': 5}]}}
+    monkeypatch.setattr(m.h, 'docker', lambda *args, **kwargs: subprocess.CompletedProcess(
+        args, 2, json.dumps(payload), private))
+    monkeypatch.setattr(m, 'run', lambda args, release: m.execute(
+        IMAGE, 'app.mixed.daily_plan', [], []))
+    assert m.main(['daily-info']) == 2
+    output = capsys.readouterr()
+    report = json.loads(output.err)
+    assert report == {'status': 'UNAVAILABLE', 'reason': 'DAILY_INFO_UNAVAILABLE',
+        'module': 'app.mixed.daily_plan', 'exit_code': 2, 'live_enabled': False,
+        'failure': {'error_class': 'OperationalError',
+                    'frames': [{'file': 'app/options/observer.py', 'line': 123}]}}
+    assert private not in output.out + output.err
+
+
+@pytest.mark.parametrize('module', ['app.mixed.daily_plan', 'app.mixed.host_bundle'])
+def test_unstructured_child_failure_identifies_module_and_exit(module, monkeypatch):
+    m = load()
+    monkeypatch.setattr(m.h, 'docker', lambda *args, **kwargs:
+        subprocess.CompletedProcess(args, 137, 'PRIVATE_STDOUT', 'PRIVATE_STDERR'))
+    with pytest.raises(m.HostCommandFailure) as caught:
+        m.execute(IMAGE, module, [], [])
+    assert caught.value.module == module and caught.value.exit_code == 137
+    assert caught.value.failure is None and 'PRIVATE' not in str(caught.value)
+
+
+def test_capture_failure_retains_phase_schema_and_codes_without_raw_provider_text():
+    m = load()
+    payload = {'status': 'FAILED', 'schema_sha256': 'f' * 64, 'completed_reads': 0,
+        'failure': {'stage': 'VALIDATE_PLAN', 'message': 'PRIVATE_PROVIDER_TEXT',
+                    'causes': [{'error_class': 'ExceptionGroup'},
+                               {'error_class': 'SchemaContractChanged'},
+                               {'error_class': 'PRIVATE_TOKEN', 'http_status': 401}]}}
+    stream = json.dumps({'status': 'COMPLETE'}) + '\n' + json.dumps(payload) + '\nPRIVATE_STDOUT'
+    result = m.capture_failure(stream)
+    assert result == {'stage': 'VALIDATE_PLAN', 'schema_sha256': 'f' * 64, 'completed_reads': 0,
+                      'error_classes': ['ExceptionGroup', 'SchemaContractChanged', 'OTHER_ERROR'],
+                      'http_statuses': [401]}
+    assert 'PRIVATE' not in json.dumps(result)
+    assert m.capture_failure('x' * 65537) == {}
+    assert m.capture_failure('["PRIVATE"]') == {}

@@ -25,12 +25,80 @@ LABEL = "trade-bot.connected-session-v1"
 PROFILE_HOME = Path("/etc/trade-bot-connected")
 MODEL_SOURCE = Path("/etc/trade-bot/openai_api_key")
 MODEL_SOURCE_UID = 10001
+PUBLIC_ERROR_CLASSES = frozenset({
+    "ValueError", "TypeError", "KeyError", "RuntimeError", "TimeoutError", "OSError",
+    "PermissionError", "FileNotFoundError", "MemoryError", "FixtureProcessTimeout",
+    "FixtureProcessFailed", "FixtureProcessProtocolError", "OperationalError", "DatabaseError",
+    "IntegrityError", "ProgrammingError", "ExecutionBlocked", "OTHER_ERROR", "ExceptionGroup",
+    "SchemaContractChanged", "ReadAuthorizationRequired", "HTTPStatusError", "ConnectError",
+    "ConnectTimeout", "ReadTimeout", "ValidationError",
+})
 
 
 class SnapshotFailure(RuntimeError):
     def __init__(self, reason, stage):
         super().__init__(reason)
         self.stage = stage
+
+
+class HostCommandFailure(RuntimeError):
+    def __init__(self, reason, module, exit_code, failure=None):
+        super().__init__(reason)
+        self.module = module
+        self.exit_code = exit_code
+        self.failure = None
+        if isinstance(failure, dict):
+            kind = failure.get("error_class")
+            if not isinstance(kind, str) or kind not in PUBLIC_ERROR_CLASSES:
+                kind = "OTHER_ERROR"
+            frames = failure.get("frames")
+            self.failure = {"error_class": kind, "frames": []}
+            for frame in frames[:8] if isinstance(frames, list) else []:
+                if (isinstance(frame, dict) and isinstance(frame.get("file"), str)
+                        and len(frame["file"]) <= 256
+                        and re.fullmatch(r"app/(?:[a-zA-Z_][a-zA-Z_0-9]*/)*[a-zA-Z_][a-zA-Z_0-9]*\.py", frame["file"])
+                        and type(frame.get("line")) is int and 0 < frame["line"] < 1000000):
+                    self.failure["frames"].append({"file": frame["file"], "line": frame["line"]})
+
+
+def capture_failure(stdout):
+    """Keep fixed child diagnostics in the service journal without raw output."""
+    failure = {}
+    if len(stdout) > 65536:
+        return failure
+    for line in stdout.splitlines():
+        try:
+            report = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(report, dict) or report.get("status") != "FAILED":
+            continue
+        detail = report.get("failure")
+        if not isinstance(detail, dict):
+            continue
+        stage = detail.get("stage")
+        if stage not in ("PRIVATE_AUTH", "CONNECT", "DISCOVER", "VALIDATE_PLAN",
+                         "MARKET_READ", "CLOSE", "PARENT"):
+            continue
+        failure = {"stage": stage, "error_classes": [], "http_statuses": []}
+        causes = detail.get("causes")
+        for cause in causes[:16] if isinstance(causes, list) else []:
+            if not isinstance(cause, dict):
+                continue
+            kind = cause.get("error_class")
+            failure["error_classes"].append(kind if isinstance(kind, str) and kind in PUBLIC_ERROR_CLASSES else "OTHER_ERROR")
+            status = cause.get("http_status")
+            if type(status) is int and 100 <= status <= 599:
+                failure["http_statuses"].append(status)
+        for key in ("schema_sha256", "schema_contract_sha256"):
+            value = report.get(key)
+            if isinstance(value, str) and re.fullmatch("[a-f0-9]{64}", value):
+                failure[key] = value
+        count = report.get("completed_reads")
+        if type(count) is int and 0 <= count <= 8:
+            failure["completed_reads"] = count
+    return failure
+
 
 # Explicit operator-only login. The enclosing host lock excludes connected
 # launches; the native OAuth lease also excludes other credential readers.
@@ -288,6 +356,8 @@ def execute(image_id, module, args, mounts, *, copies=False):
             "SESSION_CLOSED", "FEED_ROLLOVER_UNAVAILABLE"
         }:
             raise RuntimeError(reason)
+        if module == "app.mixed.daily_plan" and reason == "DAILY_INFO_UNAVAILABLE":
+            raise HostCommandFailure(reason, module, result.returncode, public.get("failure"))
         if module in {"app.mixed.connected_runtime", "app.mixed.daily_plan", "app.mixed.dashboard_snapshot"} and reason in (
             "JOURNAL_NOT_REGULAR", "JOURNAL_OWNER_MISMATCH", "JOURNAL_MODE_UNSAFE",
             "JOURNAL_EMPTY", "DISPLAY_DATABASE_SIZE_LIMIT",
@@ -302,7 +372,7 @@ def execute(image_id, module, args, mounts, *, copies=False):
                          "PROJECT_DISPLAY", "VERIFY_ACCOUNTING", "INSTALL_DISPLAY", "RETAIN_PENDING"):
                 raise SnapshotFailure(reason, stage)
             raise RuntimeError(reason)
-        raise RuntimeError("Host command failed: docker run")
+        raise HostCommandFailure("Host command failed: docker run", module, result.returncode)
     return json.loads(result.stdout)
 
 
@@ -657,7 +727,9 @@ def run(args, release):
         )
         report_path = destination / "report.json"
         if result.returncode or not report_path.is_file() or report_path.stat().st_size > 65536:
-            return {"status": "CAPTURE_FAILED", "evidence_directory": str(destination), "live_enabled": False}
+            return {"status": "CAPTURE_FAILED", "evidence_directory": str(destination),
+                    "exit_code": result.returncode, "failure": capture_failure(result.stdout),
+                    "live_enabled": False}
         private(report_path)
         report = json.loads(report_path.read_text())
         if report.get("status") != "CATALOG_CAPTURED" or report.get("target_session") != target:
@@ -948,6 +1020,10 @@ def main(argv=None):
         report = {"status": "UNAVAILABLE", "reason": reason, "live_enabled": False}
         if isinstance(exc, SnapshotFailure):
             report.update(reason=str(exc), stage=exc.stage)
+        if isinstance(exc, HostCommandFailure):
+            report.update(reason=str(exc), module=exc.module, exit_code=exc.exit_code)
+            if exc.failure is not None:
+                report["failure"] = exc.failure
         print(json.dumps(report), file=sys.stderr)
         return 2
     finally:

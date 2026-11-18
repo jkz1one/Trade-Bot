@@ -1,4 +1,4 @@
-"""Exact reviewed metadata revisions preserve original evidence and wire checks."""
+"""Description edits preserve wire validation and complete original evidence."""
 import asyncio
 import copy
 import json
@@ -43,7 +43,22 @@ def date_and_chain_schemas(interval_description_schemas):
     return apply_delta(interval_description_schemas, 'robinhood_read_schema_delta_20261114.json')
 
 
-REVISIONS = ['schemas', 'description_schemas', 'interval_description_schemas', 'date_and_chain_schemas']
+@pytest.fixture
+def bar_limit_schemas(date_and_chain_schemas):
+    return apply_delta(date_and_chain_schemas, 'robinhood_read_schema_delta_20261117.json')
+
+
+@pytest.fixture
+def future_description_schemas(bar_limit_schemas):
+    value = bar_limit_schemas.model_dump()
+    value['tools']['get_option_quotes']['description'] += ' Further documentation clarification.'
+    value['tools']['get_equity_quotes']['inputSchema']['description'] = 'Quote request documentation.'
+    value['sha256'] = schema_digest(value['tools'])
+    return ReadSchemas.model_validate(value)
+
+
+REVISIONS = ['schemas', 'description_schemas', 'interval_description_schemas', 'date_and_chain_schemas',
+             'bar_limit_schemas', 'future_description_schemas']
 
 
 @pytest.fixture(params=REVISIONS[1:])
@@ -85,7 +100,7 @@ def test_discovery_time_is_retained_but_not_part_of_contract_identity(schemas):
 def test_changed_schema_with_valid_new_digest_still_rejected(schemas):
     value = schemas.model_dump()
     tool = next(iter(value['tools']))
-    value['tools'][tool]['inputSchema']['description'] = 'Changed wire metadata'
+    value['tools'][tool]['inputSchema']['additionalProperties'] = True
     value['sha256'] = schema_digest(value['tools'])
     changed = ReadSchemas.model_validate(value)
     assert not same_schema_contract(changed, schemas)
@@ -114,7 +129,8 @@ def test_supplied_revision_changes_exactly_one_top_level_description(schemas, de
     assert schemas.model_dump() == old and description_schemas.model_dump() == new
 
 
-@pytest.mark.parametrize('damage', ['description', 'input', 'output', 'annotation', 'name', 'nested_description', 'interval_description', 'chain_guide', 'required', 'argument_type'])
+@pytest.mark.parametrize('damage', ['input', 'output', 'annotation', 'name', 'required', 'argument_type',
+                                    'description_property', 'invalid_description', 'enum', 'default'])
 def test_unreviewed_metadata_cannot_use_description_exception(schemas, compatible_schemas, damage):
     from app.options.read_gateway import CapturePlan, OptionReadGateway, ReadSample
     from app.options.read_mapping import reviewed_schemas
@@ -124,16 +140,16 @@ def test_unreviewed_metadata_cannot_use_description_exception(schemas, compatibl
         tool[damage + 'Schema']['additionalProperties'] = True
     elif damage == 'annotation':
         tool['annotations']['readOnlyHint'] = False
-    elif damage == 'interval_description':
-        tool['inputSchema']['properties']['interval']['description'] += ' unreviewed'
-    elif damage == 'chain_guide':
-        value['tools']['get_option_chains']['outputSchema']['properties']['guide']['description'] += ' unreviewed'
     elif damage == 'required':
         tool['inputSchema']['required'] = []
     elif damage == 'argument_type':
         tool['inputSchema']['properties']['interval']['type'] = 'integer'
-    elif damage == 'nested_description':
-        tool['inputSchema']['description'] = 'Unreviewed nested change'
+    elif damage == 'description_property':
+        tool['inputSchema']['properties']['description'] = {'type': 'string'}
+    elif damage == 'invalid_description':
+        tool['inputSchema']['description'] = {'private': 'malformed metadata'}
+    elif damage in {'enum', 'default'}:
+        tool['inputSchema']['properties']['interval'][damage] = ['minute'] if damage == 'enum' else 'minute'
     else:
         tool[damage] += ' unreviewed'
     value['sha256'] = schema_digest(value['tools'])
@@ -148,6 +164,57 @@ def test_unreviewed_metadata_cannot_use_description_exception(schemas, compatibl
     with pytest.raises(ValueError, match='schemas changed'):
         gateway.validate_plan(CapturePlan(purpose='SCHEMA_MAPPING_EVIDENCE', symbols=('SPY',),
                                          calls=(call,)), schemas)
+
+
+@pytest.mark.parametrize('path', [
+    ('get_equity_historicals',),
+    ('get_equity_historicals', 'inputSchema'),
+    ('get_equity_historicals', 'inputSchema', 'properties', 'interval'),
+    ('get_option_chains', 'outputSchema', 'properties', 'guide'),
+])
+@pytest.mark.parametrize('description', ['A later provider documentation edit.', None])
+def test_unseen_description_edits_require_no_new_metadata_allowlist(schemas, path, description):
+    from app.options.read_gateway import REVIEWED_SCHEMA_DIGESTS
+    from app.options.read_mapping import reviewed_schemas
+    value = schemas.model_dump()
+    node = value['tools']
+    for key in path:
+        node = node[key]
+    if description is None:
+        node.pop('description', None)
+    else:
+        node['description'] = description
+    value['sha256'] = schema_digest(value['tools'])
+    current = ReadSchemas.model_validate(value)
+    before = current.model_dump_json()
+    assert current.sha256 not in REVIEWED_SCHEMA_DIGESTS or current.sha256 == schemas.sha256
+    assert same_schema_contract(schemas, current)
+    assert same_schema_contract(current, schemas)
+    assert reviewed_schemas(current) == current
+    assert current.model_dump_json() == before
+
+
+def test_contract_digest_preserves_properties_literals_and_unknown_keywords():
+    from app.options.read_gateway import schema_contract_digest
+    tools = {'read': {'description': 'Tool documentation', 'annotations': {'readOnlyHint': True},
+        'inputSchema': {'type': 'object', 'description': 'Input documentation',
+            'properties': {'description': {'type': 'string', 'description': 'Field documentation'}},
+            'default': {'description': 'literal'}, 'const': {'description': 'constant'},
+            'vendor': {'description': 'unknown keyword'},
+            '$defs': {'description': {'type': 'string', 'description': 'Definition documentation'}},
+            'anyOf': [{'description': 'Branch documentation', 'required': ['description']}]}}}
+    before = copy.deepcopy(tools)
+    digest = schema_contract_digest(tools)
+    for field in ('default', 'const', 'vendor', 'properties', '$defs'):
+        changed = copy.deepcopy(tools)
+        changed['read']['inputSchema'][field]['description'] = 'different'
+        assert schema_contract_digest(changed) != digest
+    changed = copy.deepcopy(tools)
+    changed['read']['inputSchema']['anyOf'][0]['description'] = 'Updated branch documentation'
+    changed['read']['inputSchema']['properties']['description']['description'] = 'Updated field documentation'
+    changed['read']['inputSchema']['$defs']['description']['description'] = 'Updated definition documentation'
+    assert schema_contract_digest(changed) == digest
+    assert tools == before
 
 
 @pytest.mark.anyio

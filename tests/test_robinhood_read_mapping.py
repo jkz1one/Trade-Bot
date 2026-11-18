@@ -421,7 +421,7 @@ def test_schema_drift_is_not_accepted_even_with_rehashed_metadata(schemas):
     from app.options.read_gateway import schema_digest
 
     value = schemas.model_dump()
-    value["tools"]["get_equity_quotes"]["description"] += " drift"
+    value["tools"]["get_equity_quotes"]["inputSchema"]["additionalProperties"] = True
     value["sha256"] = schema_digest(value["tools"])
     drift = ReadSchemas.model_validate(value)
     with pytest.raises(ValueError, match="Unreviewed"):
