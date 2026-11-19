@@ -1,16 +1,36 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.222. November 17, New York time. Host capture and deployment confirmed.
+Version 1.223. November 18, New York time. Connected session failed; repair published and offline tested.
+
+Wednesday's worker on `220da15` ran from 10:01:38 a.m. to 3:59:59 p.m.
+New York time with no restarts. Only two cycles completed; 75 were skipped
+and one interrupted. The one recorded publisher timeout at 10:07:14 a.m.
+latched entries off and fenced automatic feed recovery. Later publication-halt
+messages reasserted that fault; the publisher did not retry. Collection delivered
+589 packets and failed 653 times. No entries filled and model spending was zero.
+The controller requires session review before another automatic run.
+
+Published repair `c03b628` passes 623 installed-system tests (one environment
+skip), plus three additional damaged-account rejection cases. It preserves the publication halt through overlapping feed errors,
+retains feed diagnostics and protection, and verifies portfolio accounting
+without rendering dashboard history during publication. Failed accounting still
+retains the candidate and prior display; the five-second deadline is unchanged.
+Capture diagnostics now separate serialization from writing and flushing the
+response. Provider connection timeouts remain unresolved. Host deployment and
+full-session acceptance are pending.
+[Incident and repair evidence](PAPER_SESSION_REPAIR_20261118_PROOF.json).
+
+### November 17 deployment evidence
 
 At 11:44 p.m. New York time, the operator captured Wednesday's catalog on
 `220da15` with eight provider calls and four option candidates. Both offline
 `daily-info` checks passed. The subsequent receipts confirm the same release
 and image for the daily scheduler, the updated dashboard reader and an active,
-unpaused timer. Wednesday, November 18 preparation is scheduled for 9:00 a.m.,
+unpaused timer. At that point, Wednesday, November 18 preparation was scheduled for 9:00 a.m.,
 launch review for 10:00 a.m. and close for 4:00 p.m. New York time.
 The capture reports `all_fresh_at_capture: false`, `trading_ready: false` and
-`workers_started: false`. Current-session preparation and worker operation
-remain unverified. The owner still matches the saved November 10 timeout review
+`workers_started: false`. At that point, current-session preparation and worker operation
+were unverified. The owner matched the saved November 10 timeout review
 at revision 5453, feed sequence 1432 and runtime generation 15; the controller
 must verify the full match again before preparation and launch.
 [Host receipts and remaining checks](PAPER_NEXT_SESSION.md#wednesday-november-18).

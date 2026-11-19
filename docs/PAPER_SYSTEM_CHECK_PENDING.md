@@ -1,5 +1,14 @@
 # Recovered offline system checkpoint
 
+November 18. The host completed almost six hours of process uptime but only two
+strategy cycles. A publication timeout latched entries off; 653 capture attempts
+failed. The repair removes halt alternation and dashboard rendering from the
+accounting publication check. Three regressions failed before the repair and pass
+after it. Three damaged-account cases still reject publication. Published repair `c03b628` passes installed system
+verification: 623 passed, one unmapped reader-UID skip, no provider or model
+calls. Provider connection failures remain unresolved; host verification is pending.
+[Evidence and remaining limits](PAPER_SESSION_REPAIR_20261118_PROOF.json).
+
 November 17. `220da15` replaces metadata-version admission with a reviewed
 wire-contract fingerprint that excludes descriptions. The supplied November 17
 metadata reconstructs to its exact observed digest. It and an unseen synthetic

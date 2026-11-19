@@ -1,6 +1,55 @@
 # Daily PAPER operation
 
+## November 18 failed session review
+
+The deployed `220da15` worker lasted nearly six hours but completed only two
+cycles. One publisher timeout at 10:07:14 a.m. permanently fenced entries and
+feed recovery for the run. The controller is stopped for session review.
+Published repair `c03b628` passes 623 installed-system tests (one environment
+skip) and three additional damaged-account checks. It has not been deployed.
+Keep the retained display, native account and daily evidence. Deployment must
+recover the display, verify a normally stopped flat owner and preserve all limits
+before an explicit scheduler resume. Do not reuse the November 10 timeout
+approval for this different failure. Provider connection failures are unresolved.
+[Detailed evidence](PAPER_SESSION_REPAIR_20261118_PROOF.json).
+
+### Verify the repair on the stopped host
+
+This checks the candidate against the existing account and recovers the display.
+It preserves the installed release and scheduler halt. The timer cannot launch
+while its recorded session-review requirement remains in place. A running worker
+makes this preflight stop. Candidate code is checked out only
+in a separate temporary Git worktree; the original failed display is archived
+by `recover-snapshot` after a successful replacement.
+
+```bash
+(
+  set -eu
+  cd /opt/trade-bot-dashboard
+  release=c03b6282fed59e48f113b06f4bc02f53b50410d0
+  git fetch origin slice2/robinhood-read-shadow
+  git merge-base --is-ancestor HEAD "$release"
+  git merge-base --is-ancestor "$release" FETCH_HEAD
+  test -z "$(git status --porcelain)"
+  active=$(docker ps --filter label=trade-bot.connected-session-v1 --format '{{.Names}}')
+  test -z "$active" || { echo "A PAPER worker is running."; exit 1; }
+  candidate=$(mktemp -d)
+  git worktree add --detach "$candidate" "$release"
+  trap 'git worktree remove "$candidate"' EXIT
+  python3 "$candidate/scripts/connected-session-host.py" build
+  python3 "$candidate/scripts/connected-session-host.py" daily-info
+  python3 "$candidate/scripts/connected-session-host.py" recover-snapshot
+)
+```
+
+Success requires `DAILY_INFO` with the expected stopped flat owner and
+`PUBLISHED` with `source_modified: false`. A new capture is not required to
+verify accounting publication. This preflight does not fix or establish the
+cause of provider connection timeouts, authorize new entries or prove a full day.
+
 ## Wednesday, November 18
+
+Historical pre-session checkpoint; superseded by the failed-session review above.
 
 The host is confirmed on `220da15` after the completed installation below.
 At 11:44 p.m. New York time on November 17, its catalog capture completed

@@ -51,6 +51,16 @@ Keep code-tested, host-deployed, operationally accepted and economically evaluat
 distinct. A blocked item stays unchecked and names the exact missing input and
 next action. Do not replace missing evidence with a date estimate.
 
+November 18 host evidence: `daily-20261118` ran nearly six hours but completed
+only two cycles. One publisher timeout latched entries off at 10:07:14 a.m.;
+653 collection attempts failed. A2 now distinguishes response serialization,
+writing and completed flush. A4 preserves the publication halt through feed
+errors and removes dashboard-history rendering from accounting publication.
+Published repair `c03b628` passes 623 installed-system tests (one environment
+skip), plus three additional damaged-account rejection checks.
+Provider connection failures and connected acceptance remain open.
+[Repair evidence](PAPER_SESSION_REPAIR_20261118_PROOF.json).
+
 ### Established baseline
 
 - [x] **P1 — One work order:** this plan is linked from SOURCE_OF_TRUTH.md and
