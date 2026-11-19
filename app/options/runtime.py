@@ -330,8 +330,8 @@ class OptionRuntime:
             with self.c.engine.journal.write() as db:
                 self._bound(db)
                 control = self.c.engine._control(db)
-                if not control["halted"] or control["halt_reason"] != issue:
-                    self.c.engine._halt(db, issue, at)
+                if not control["halted"] or control["halt_reason"] != (self.entry_fault or issue):
+                    self.c.engine._halt(db, self.entry_fault or issue, at)
                 db.execute(
                     "UPDATE execution_option_runtime SET status='BLOCKED',reason=? WHERE id=1",
                     (issue,),
@@ -383,8 +383,8 @@ class OptionRuntime:
         self._bound(db)
         if issue:
             control = self.c.engine._control(db)
-            if not control["halted"] or control["halt_reason"] != issue:
-                self.c.engine._halt(db, issue, at)
+            if not control["halted"] or control["halt_reason"] != (self.entry_fault or issue):
+                self.c.engine._halt(db, self.entry_fault or issue, at)
         db.execute(
             "UPDATE execution_option_runtime SET status=?,heartbeat_at=?,reason=?,session_json=? WHERE id=1",
             (

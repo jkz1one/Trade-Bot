@@ -385,7 +385,8 @@ def test_native_discovery_then_pinned_sample_collection(tmp_path, monkeypatch):
     assert captured.timing.parent_phase == 'RESPONSE_VALIDATE'
     assert captured.timing.parent_seconds > 0
     trace = captured.timing.progress
-    assert trace[0].stage == 'PRIVATE_AUTH' and trace[-1].stage == 'SERIALIZE'
+    assert trace[0].stage == 'PRIVATE_AUTH' and trace[-1].stage == 'RESPONSE_SENT'
+    assert [r.stage for r in trace[-3:]] == ['SERIALIZE', 'RESPONSE_WRITE', 'RESPONSE_SENT']
     assert [r.elapsed_seconds for r in trace] == sorted(r.elapsed_seconds for r in trace)
 
 

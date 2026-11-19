@@ -635,3 +635,66 @@ def test_large_native_journal_still_requires_private_mode(tmp_path):
     with pytest.raises(ValueError, match="JOURNAL_MODE_UNSAFE"):
         publisher(source, tmp_path / "dashboard")
     assert not (tmp_path / "dashboard").exists()
+
+
+@pytest.mark.parametrize('positions', [False, True])
+def test_accounting_publication_does_not_render_slow_dashboard_history(tmp_path, monkeypatch, positions):
+    from types import SimpleNamespace
+    from app.mixed import observer
+    source, settings = owner(tmp_path, positions=positions)
+    before = digest(source)
+    destination = tmp_path / 'dashboard'
+    p = publisher(source, destination)
+    elapsed = [0.0]
+    real_clock = snapshot.time.monotonic
+    original_stream = observer.stored_stream
+
+    def slow_stream(*args, **kwargs):
+        elapsed[0] += snapshot.BACKUP_SECONDS + 1
+        return original_stream(*args, **kwargs)
+
+    try:
+        with monkeypatch.context() as patch:
+            patch.setattr(snapshot, 'time', SimpleNamespace(monotonic=lambda: real_clock() + elapsed[0]))
+            patch.setattr(observer, 'stored_stream', slow_stream)
+            result = p.publish()
+        assert result['status'] == 'PUBLISHED'
+        assert elapsed[0] == 0
+        assert result['held_plays'] == result['fills'] == (2 if positions else 0)
+        assert view(destination / 'options.db', settings) == view(source / 'options.db', settings)
+        assert digest(source) == before
+    finally:
+        p.close()
+
+
+@pytest.mark.parametrize('damage', ['cash', 'incomplete', 'unresolved'])
+def test_accounting_only_publication_still_rejects_damaged_account(tmp_path, monkeypatch, damage):
+    source, _ = owner(tmp_path)
+    destination = tmp_path / 'dashboard'
+    p = publisher(source, destination)
+    try:
+        p.publish()
+        before = digest(source)
+        published = (destination / 'options.db').read_bytes()
+        original = snapshot.copy_display_tables
+
+        def damaged_projection(db):
+            original(db)
+            if damage == 'unresolved':
+                db.execute("UPDATE main.execution_control SET issues_json='[\"UNRESOLVED\"]'")
+            else:
+                value = json.loads(db.execute('SELECT snapshot_json FROM main.execution_portfolio_control').fetchone()[0])
+                if damage == 'cash':
+                    value['cash'] = str(int(value['cash']) + 1)
+                else:
+                    value['complete'] = False
+                db.execute('UPDATE main.execution_portfolio_control SET snapshot_json=?', (json.dumps(value),))
+
+        monkeypatch.setattr(snapshot, 'copy_display_tables', damaged_projection)
+        with pytest.raises(ValueError, match='accounting unavailable'):
+            p.publish()
+        assert digest(source) == before
+        assert (destination / 'options.db').read_bytes() == published
+        assert (destination / '.pending.db').exists()
+    finally:
+        p.close()

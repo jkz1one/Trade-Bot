@@ -37,6 +37,8 @@ def rows(db, table):
 class MixedObserver(OptionObserver):
     """The legacy observer remains unchanged and rejects mixed enrollment."""
 
+    accounting_only = False
+
     def report(self, **kwargs):
         value = super().report(**kwargs)
         return value | {
@@ -68,7 +70,8 @@ class MixedObserver(OptionObserver):
             for table in ("execution_portfolio_orders", "execution_model_calls"):
                 if db.execute(f"SELECT count(*) FROM {table}").fetchone()[0] > MAX_ROWS:
                     raise ValueError("Mixed observer history capacity exceeded")
-            return snapshot(self, db, now, limit, before, family, config, policy, limits)
+            return snapshot(self, db, now, limit, before, family, config, policy, limits,
+                            accounting_only=self.accounting_only)
         # Bound the complete validation scans, including paid requests and runtime packets.
         for table in sorted(tables):
             if (
@@ -636,3 +639,9 @@ def stored_stream(db, frames, position, now):
         key=lambda row: (datetime.fromisoformat(row["at"]), row.get("sequence", 0)),
         reverse=True,
     )[:80]
+
+
+class PortfolioAccountingObserver(MixedObserver):
+    """Verify publication accounting without rendering charts or decision history."""
+
+    accounting_only = True

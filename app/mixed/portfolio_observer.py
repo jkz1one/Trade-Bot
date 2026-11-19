@@ -42,7 +42,7 @@ def verified_portfolio(owner, db, p, now):
     return stored, snap, h, projected
 
 
-def snapshot(observer, db, now, limit, before, family, config, policy, limits):
+def snapshot(observer, db, now, limit, before, family, config, policy, limits, *, accounting_only=False):
     from app.mixed.runtime import stored_company_earnings
     from app.mixed.observer import history_chart, stored_stream
     from app.mixed.portfolio_execution import policy as portfolio_policy
@@ -98,6 +98,9 @@ def snapshot(observer, db, now, limit, before, family, config, policy, limits):
         saved = guards.get(identity)
         entry = next(o for o in orders if o["intent"]["client_id"] == identity)
         positions.append(position(held, entry, saved, orders, p, now))
+    if accounting_only:
+        return {"schema": "mixed-portfolio-observer-v2", "status": "OK",
+                "accounting": "VERIFIED", "positions": positions, "fill_count": len(fills)}
     health = _health(snap.captured_at, now, limits.account_max_age_seconds)
     unresolved = sum(o["unresolved"] for o in orders)
     equity = None

@@ -27,7 +27,7 @@ class CaptureProgress(OptionRecord):
     """Diagnostic phases only: no arguments, provider text, tokens or market data."""
     request_id: str = Field(pattern=r'^[a-f0-9]{32}$')
     stage: Literal['PRIVATE_AUTH', 'CONNECT', 'DISCOVER', 'VALIDATE_PLAN',
-                   'MARKET_READ', 'CLOSE', 'SERIALIZE']
+                   'MARKET_READ', 'CLOSE', 'SERIALIZE', 'RESPONSE_WRITE', 'RESPONSE_SENT']
     completed_reads: int = Field(ge=0, le=8, strict=True)
     elapsed_seconds: float | None = Field(default=None, ge=0, le=120,
         allow_inf_nan=False, exclude_if=lambda v: v is None)

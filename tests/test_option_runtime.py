@@ -709,3 +709,31 @@ def test_repeated_publication_fault_preserves_the_verified_halt_before_reading_p
             damaged.execute("UPDATE execution_option_runtime SET reason='tampered' WHERE id=1")
         with pytest.raises(ValueError, match="RESTORED_OR_CHANGED_EXECUTION_JOURNAL"):
             asyncio.run(runtime._tick())
+
+
+def test_publication_fault_and_missing_feed_keep_one_halt_and_continue_supervision(tmp_path, monkeypatch):
+    with owned_strategy(tmp_path) as (c, _, _, times, _, _):
+        runtime = OptionRuntime(c, policy(tmp_path), create=True)
+        enable(runtime)
+        runtime.entry_fault = 'CONNECTED_PUBLICATION_FAILED'
+        supervised = []
+        original = c.supervise
+
+        async def supervise(*args, **kwargs):
+            supervised.append(True)
+            return await original(*args, **kwargs)
+
+        monkeypatch.setattr(c, 'supervise', supervise)
+        for _ in range(3):
+            asyncio.run(runtime._tick())  # Missing feed: protection must still run.
+        with c.engine.journal.read() as db:
+            control = c.engine._control(db)
+            halts = [json.loads(row[0])['reason'] for row in db.execute(
+                "SELECT payload FROM execution_events WHERE kind='MANUAL_HALT'")]
+            current = db.execute('SELECT reason FROM execution_option_runtime WHERE id=1').fetchone()[0]
+        assert supervised == [True] * 3
+        assert control['halted'] and control['halt_reason'] == runtime.entry_fault
+        assert halts.count(runtime.entry_fault) == 1
+        assert 'OPTION_RUNTIME_FEED_UNAVAILABLE' not in halts
+        assert current == 'OPTION_RUNTIME_FEED_UNAVAILABLE'
+        assert runtime.needs_cycle(times[0]) is False

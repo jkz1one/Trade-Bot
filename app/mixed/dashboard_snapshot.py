@@ -22,7 +22,7 @@ from urllib.parse import quote
 
 from app.domain.models import utc_now
 from app.mixed.connected_runtime import inspect_owner
-from app.mixed.observer import MixedObserver
+from app.mixed.observer import PortfolioAccountingObserver
 from app.mixed.sqlite_copy import private_backup
 from app.options.engine import clock, fingerprint
 from app.options.observer import JOURNAL_FILE_ERRORS, MAX_DATABASE_BYTES, journal_identity
@@ -363,7 +363,7 @@ class DashboardPublisher:
             )
             target_db.commit()
         self.stage = "VERIFY_ACCOUNTING"
-        view = MixedObserver(temporary, self.binding["population_id"], clock=lambda: at).report(
+        view = PortfolioAccountingObserver(temporary, self.binding["population_id"], clock=lambda: at).report(
             limit=100
         )
         if view.get("status") != "OK" or view.get("accounting") != "VERIFIED":

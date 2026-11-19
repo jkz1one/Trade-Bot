@@ -171,7 +171,11 @@ def main():
         data = result.model_dump_json().encode()
         if len(data) > MAX_RESPONSE_BYTES:
             return 1
+        completed = sum(r.get('completed') is True for r in (*result.observations, *result.scope_observations))
+        progress(CaptureProgress(request_id=request.request_id, stage='RESPONSE_WRITE', completed_reads=completed))
         sys.stdout.buffer.write(data)
+        sys.stdout.buffer.flush()
+        progress(CaptureProgress(request_id=request.request_id, stage='RESPONSE_SENT', completed_reads=completed))
         return 0
     except Exception:  # noqa: BLE001 -- no credential/provider errors on stderr
         return 1
