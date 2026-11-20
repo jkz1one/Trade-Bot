@@ -1,6 +1,25 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.223. November 18, New York time. Connected session failed; repair published and offline tested.
+Version 1.224. November 20, New York time. Delivery process review takes priority.
+
+The operator confirmed `c03b628` installed for scheduler and dashboard reader,
+then explicitly resumed the schedule. Its stopped-account snapshot published
+without changing the source, with zero held plays. November 20 subsequently
+failed all three preparation attempts at schema validation, before any market
+reads; `daily-20261120` was never created. The reported optional string `notice`
+addition reconstructs the exact rejected schema hash. The dashboard mixed this
+current preparation failure with November 18's retained publisher failure.
+
+The user requested that we correct how work is diagnosed, qualified and released
+before another isolated repair. The active work order is now **R1-R4** in
+[DELIVERY_PLAN.md](DELIVERY_PLAN.md#november-20-work-order-repair-the-delivery-process-first):
+consumer compatibility, one current diagnostic report, one guarded candidate
+handoff and sustained connected acceptance. This update records the process and
+evidence only; none of those new gates is marked implemented or passed. Preserve
+all account state, current limits and the deployed release while that work is done.
+[Audit evidence and confirmed host state](PAPER_PROCESS_REVIEW_20261120.json).
+
+### November 18 failure and repair history
 
 Wednesday's worker on `220da15` ran from 10:01:38 a.m. to 3:59:59 p.m.
 New York time with no restarts. Only two cycles completed; 75 were skipped
@@ -8,7 +27,8 @@ and one interrupted. The one recorded publisher timeout at 10:07:14 a.m.
 latched entries off and fenced automatic feed recovery. Later publication-halt
 messages reasserted that fault; the publisher did not retry. Collection delivered
 589 packets and failed 653 times. No entries filled and model spending was zero.
-The controller requires session review before another automatic run.
+The controller then required session review before another automatic run;
+the operator subsequently resumed it after installing the repair.
 
 Published repair `c03b628` passes 623 installed-system tests (one environment
 skip), plus three additional damaged-account rejection cases. It preserves the publication halt through overlapping feed errors,
@@ -17,7 +37,8 @@ without rendering dashboard history during publication. Failed accounting still
 retains the candidate and prior display; the five-second deadline is unchanged.
 Capture diagnostics now separate serialization from writing and flushing the
 response. Provider connection timeouts remain unresolved. Host deployment and
-full-session acceptance are pending.
+stopped-account publication were subsequently confirmed; full-session acceptance
+remains pending.
 [Incident and repair evidence](PAPER_SESSION_REPAIR_20261118_PROOF.json).
 
 ### November 17 deployment evidence

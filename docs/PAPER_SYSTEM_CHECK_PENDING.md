@@ -1,12 +1,21 @@
 # Recovered offline system checkpoint
 
+November 20. `c03b628` deployment, reader update, stopped-account publication
+and explicit schedule resume are host-confirmed. Today failed preparation three
+times on the optional `notice` schema addition, with zero market reads and no
+worker. Prior offline passes remain narrow evidence, not connected acceptance.
+The active process work order is [R1-R4](DELIVERY_PLAN.md#november-20-work-order-repair-the-delivery-process-first).
+No runtime change or new suite run was made for this process audit.
+[Incident and audit](PAPER_PROCESS_REVIEW_20261120.json).
+
 November 18. The host completed almost six hours of process uptime but only two
 strategy cycles. A publication timeout latched entries off; 653 capture attempts
 failed. The repair removes halt alternation and dashboard rendering from the
 accounting publication check. Three regressions failed before the repair and pass
 after it. Three damaged-account cases still reject publication. Published repair `c03b628` passes installed system
 verification: 623 passed, one unmapped reader-UID skip, no provider or model
-calls. Provider connection failures remain unresolved; host verification is pending.
+calls. Provider connection failures remain unresolved; subsequent host deployment
+and stopped-account publication are recorded above. Sustained operation remains open.
 [Evidence and remaining limits](PAPER_SESSION_REPAIR_20261118_PROOF.json).
 
 November 17. `220da15` replaces metadata-version admission with a reviewed

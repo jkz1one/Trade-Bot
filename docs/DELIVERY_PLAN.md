@@ -40,7 +40,98 @@ cannot be adopted as connected evidence or execution state.
 
 ## Delivery checklist
 
-This is the active checklist for the work below. Start with **A1 and A2**.
+### November 20 work order: repair the delivery process first
+
+This section takes precedence over the older execution order below. The user
+requested a process correction before another issue patch. No new runtime repair,
+host deployment, retry reset or schedule resume is authorized by this document.
+Existing user authorization still governs work; the host remains operator-managed.
+
+The operator confirmed `c03b628` installation and schedule resume. November 20
+then failed preparation three times with `SchemaContractChanged`, zero market
+reads and no worker. Adding only the optional string field
+`get_equity_historicals.outputSchema.properties.data.properties.notice` to the
+reconstructed November 18 schema produces the exact rejected metadata hash.
+`data.required` remains `["results"]`. This establishes the specific mismatch;
+it does not establish that every optional schema extension is safe.
+
+The process defects are broader than this field: whole-catalog equality is used
+as compatibility; an old worker failure can replace today's dashboard reason;
+the persisted preparation error loses the detailed capture cause; and the release
+handoff has required repeated operator commands without an operational acceptance
+record. The existing installed-system harness is useful but uses fixtures at the
+provider and Docker boundaries. Repeating its test count cannot close those gaps.
+
+Work in this order, using the existing implementations and fixtures:
+
+- [ ] **R1 — Define the consumer contract, then implement compatibility.** Preserve
+  exact raw metadata and validate each response against its discovered schema.
+  Separately specify what the adapter consumes and which additive output fields
+  it can ignore. Cover the reported `notice` with absent, present and empty-results
+  responses; empty results never become usable bars. Reject changed required data,
+  field types/units/clocks, unsafe permissions, removed capabilities and changed
+  input requirements. Test changes to unrelated fields and schema constraints too.
+  Do not solve this by adding a new accepted whole-catalog hash or ignoring all
+  output changes. Review dependency scope so a family-specific failure cannot
+  silently remove held-position data or masquerade as global readiness.
+- [ ] **R2 — One diagnostic report, current cause first.** Add one bounded,
+  read-only command that reports installed release/image, current day and stage,
+  original failure class, changed schema paths, receipt/evidence paths, worker
+  identity/start/exit/restarts, feed/decision ages and publication state. No
+  credentials, provider calls, account writes or retry-counter changes. Persist
+  the safe capture cause rather than only `StepFailed`. The dashboard must lead
+  with today's preparation failure and label older session reports as history;
+  an old publisher error cannot override today's cause. Reproduce November 20
+  using the November 18 report as retained history.
+- [ ] **R3 — One release candidate and one guarded handoff.** Build once; run the
+  relevant incident reproductions and integration checks against that exact
+  installed artifact. Include adapter/compatibility tests explicitly: the current
+  `paper-system-check.py` suite list does not include `test_read_schema_contract`.
+  Run a bounded candidate check on the actual host with real read-only provider
+  discovery/capture and snapshot verification before activating its scheduler.
+  Preserve source account state, installed release, enrollment and retry counters
+  during preflight. Retain each stage's result so one failure does not require
+  rediscovering the entire machine. Stop on a failed gate; distinguish install,
+  schedule resume and worker launch in the result. No automatic counter clearing
+  or duplicate worker launch. A rehearsal must cover a busy controller, changed
+  schema, capture failure and rollback.
+- [ ] **R4 — Operational acceptance of the exact deployed candidate.** Observe
+  the same scheduled worker at launch, after 30 minutes, after two hours and at
+  close. The first 30 minutes must show advancing feed sequences and decisions
+  across due evaluation slots, valid source clocks under the existing limits,
+  working publication and no unexplained skipped slots or fatal component errors.
+  Report attempted/completed/missed slots, feed gaps, blocked families and recovery
+  counts explicitly. A valid no-setup decision counts; an unavailable feed does
+  not. Zero fills is acceptable. The longer checks must cover the same evidence
+  plus clean closure and verified accounting. Diagnose a failed early check then,
+  rather than waiting for the end-of-day review. Installation, process uptime and
+  timer activity cannot satisfy this gate.
+
+Most of R1-R3 is independent of market hours: compatibility, empty responses,
+installed lifecycle replays, failure reporting, reader behavior and provider
+connection/capture checks. Real quote freshness, current-bar availability and a
+connected trading day need market hours. A synthetic round trip with valid quotes
+must verify position protection under collector/history/publisher failures without
+creating a connected position just to force a fill. A full-duration offline soak
+is a candidate gate for timing/recovery changes, not a substitute for R4. Reuse
+existing tests and run broader suites once for the final candidate; repeat only
+when a new change, failure or unresolved concern justifies it.
+
+Use one current checklist and evidence record. Report the next unmet gate and
+its owner (implementation here; host commands by the operator), not a growing
+count of commits or tests. Keep provider CONNECT failures, account publication
+under load, Scope readiness and Swing geometry explicitly open. A functioning
+subset must name blocked families; full product acceptance requires their closure.
+Do not add CPU or relax limits without measurements identifying the bottleneck.
+
+The immediate deliverable is this audited work order. R1-R4 are not implemented
+or accepted by recording the plan. See
+[November 20 evidence](PAPER_PROCESS_REVIEW_20261120.json).
+
+### Existing implementation checklist
+
+The following items remain the technical backlog. Work through **R1-R4** above
+before resuming feature work or treating another scheduled day as accepted.
 Existing implementation and regression tests are the starting point; an unchecked
 item means its complete acceptance condition is still open, not that all related
 code is missing. Do not repeat completed work merely to check a broader item.

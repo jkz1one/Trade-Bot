@@ -1,12 +1,29 @@
 # Daily PAPER operation
 
+## Current checkpoint: November 20
+
+`c03b628` is installed and the operator confirmed `SCHEDULE_RESUMED`. The
+November 20 worker never launched: three preparation attempts rejected the
+optional historical-output `notice` addition at `VALIDATE_PLAN`. The controller
+reports `PREPARATION_RETRY_LIMIT`; the older worker report is November 18.
+The earlier deployment and resume blocks below are historical, not the next action.
+
+The user requested a process correction before more isolated fixes. Follow
+[R1-R4](DELIVERY_PLAN.md#november-20-work-order-repair-the-delivery-process-first)
+first. The supplied schema difference is sufficient for local reconstruction;
+no further host dump or command is needed for this audit. Do not reset today's
+retry count or repeat deployment/resume to work around this rejection. Real-host
+qualification and sustained observation remain pending after the planned repair.
+[Confirmed receipts and audit](PAPER_PROCESS_REVIEW_20261120.json).
+
 ## November 18 failed session review
 
 The deployed `220da15` worker lasted nearly six hours but completed only two
 cycles. One publisher timeout at 10:07:14 a.m. permanently fenced entries and
 feed recovery for the run. The controller is stopped for session review.
 Published repair `c03b628` passes 623 installed-system tests (one environment
-skip) and three additional damaged-account checks. It has not been deployed.
+skip) and three additional damaged-account checks. It was subsequently deployed
+as recorded in the current checkpoint.
 Keep the retained display, native account and daily evidence. Deployment must
 recover the display, verify a normally stopped flat owner and preserve all limits
 before an explicit scheduler resume. Do not reuse the November 10 timeout
