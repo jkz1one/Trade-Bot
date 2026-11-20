@@ -24,6 +24,7 @@ from app.options.read_gateway import (
     REVIEWED_SCHEMA_SHA256,
     REVIEWED_SCHEMA_CONTRACT_SHA256,
     schema_contract_digest,
+    compatible_schema_contract,
     _validator,
     encoded,
 )
@@ -41,7 +42,7 @@ def instant(value):
 
 def reviewed_schemas(schemas):
     schemas = ReadSchemas.model_validate(schemas.model_dump(warnings=False))
-    if schema_contract_digest(schemas.tools) != REVIEWED_SCHEMA_CONTRACT_SHA256:
+    if not compatible_schema_contract(schemas.tools):
         raise ValueError("Unreviewed Robinhood wire contract")
     return schemas
 

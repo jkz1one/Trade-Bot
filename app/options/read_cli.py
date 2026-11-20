@@ -11,7 +11,7 @@ from uuid import uuid4
 from app.execution.market_reads import private_oauth
 from app.options.capability_inventory import summary as inventory_summary
 from app.options.read_capture import CapturePolicy, CaptureResult, collect, failure_evidence
-from app.options.read_gateway import CapturePlan, ReadSchemas, encoded, schema_contract_digest
+from app.options.read_gateway import CapturePlan, ReadSchemas, encoded, schema_contract_digest, schema_contract_changes
 
 
 def _pairs(pairs):
@@ -238,6 +238,8 @@ def main(argv=None):
                     "schema_sha256": result.schemas.sha256 if result.schemas else None,
                     "schema_contract_sha256": schema_contract_digest(result.schemas.tools)
                     if result.schemas else None,
+                    "schema_changes": schema_contract_changes(result.schemas.tools)
+                    if result.schemas and result.status == 'FAILED' else None,
                     "completed_reads": sum(o.get("completed") is True for o in result.observations),
                     "missing_tools": list(result.schemas.missing_tools) if result.schemas else [],
                     "missing_input_schemas": list(result.schemas.missing_input_schemas)

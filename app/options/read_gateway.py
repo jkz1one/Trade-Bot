@@ -2,8 +2,10 @@
 
 import hashlib
 import json
+import re
 from datetime import datetime
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 from uuid import UUID
 
@@ -92,6 +94,78 @@ def schema_contract_digest(tools):
     return _contract_digest(encoded(tools))
 
 
+@lru_cache(maxsize=1)
+def _consumer_contract():
+    tools = json.loads(Path(__file__).with_name('read_contract.json').read_text())
+    if schema_contract_digest(tools) != REVIEWED_SCHEMA_CONTRACT_SHA256:
+        raise ValueError('Packaged consumer contract identity mismatch')
+    return json.loads(_contract_metadata(encoded(tools)))
+
+
+def _contract_metadata(metadata):
+    tools = json.loads(metadata)
+    for tool in tools.values():
+        if isinstance(tool.get('description'), str):
+            del tool['description']
+        for key in ('inputSchema', 'outputSchema'):
+            if key in tool:
+                tool[key] = _schema_contract(tool[key])
+    return encoded(tools)
+
+
+@lru_cache(maxsize=32)
+def _compatible_contract(metadata):
+    """Only optional scalar metadata beside data results may be ignored.
+
+    Existing fields, required lists, constraints, input schemas and permissions
+    remain exact. New fields are still validated against the discovered schema
+    in every response. They never supply prices, clocks, subjects or readiness.
+    """
+    candidate = json.loads(_contract_metadata(metadata))
+    baseline = _consumer_contract()
+    for name, original in baseline.items():
+        try:
+            data = candidate[name]['outputSchema']['properties']['data']
+            expected = original['outputSchema']['properties']['data']
+            properties = data['properties']
+            for field in properties.keys() - expected['properties'].keys():
+                value = properties[field]
+                if (re.fullmatch(r'[A-Za-z_][A-Za-z_0-9]{0,63}', field)
+                        and isinstance(value, dict) and set(value) == {'type'}
+                        and isinstance(value['type'], str)
+                        and value['type'] in {'string', 'boolean', 'integer', 'number', 'null'}
+                        and field not in data.get('required', [])):
+                    del properties[field]
+        except (KeyError, TypeError, AttributeError):
+            return False
+    return candidate == baseline
+
+
+def compatible_schema_contract(tools):
+    return _compatible_contract(encoded(tools))
+
+
+def schema_contract_changes(tools):
+    """Bounded public paths, never arbitrary provider values or descriptions."""
+    changes = []
+    def visit(old, new, path=()):
+        if len(changes) >= 20:
+            return
+        if isinstance(old, dict) and isinstance(new, dict):
+            for key in sorted(old.keys() | new.keys()):
+                safe = key if re.fullmatch(r'[A-Za-z_$][A-Za-z_0-9$-]{0,63}', key) else 'OTHER_FIELD'
+                if key not in old or key not in new:
+                    if len(changes) < 20:
+                        changes.append({'path': list((*path, safe)), 'change': 'ADDED' if key not in old else 'REMOVED'})
+                else:
+                    visit(old[key], new[key], (*path, safe))
+        elif type(old) is not type(new) or old != new:
+            changes.append({'path': list(path), 'change': 'CHANGED'})
+    visit(_consumer_contract(), json.loads(_contract_metadata(encoded(tools))))
+    return {'compatible': compatible_schema_contract(tools), 'changes': changes,
+            'limit_reached': len(changes) >= 20}
+
+
 class SchemaContractChanged(ValueError):
     """Fixed diagnostic name for a rejected provider contract."""
 
@@ -125,14 +199,13 @@ class ReadSchemas(OptionRecord):
 
 
 def same_schema_contract(left, right):
-    """Accept description edits to the reviewed wire contract, retaining raw evidence."""
+    """Retain raw identity while admitting explicitly compatible consumer contracts."""
     if left is None or right is None:
         return False
     left = ReadSchemas.model_validate(left.model_dump(warnings=False))
     right = ReadSchemas.model_validate(right.model_dump(warnings=False))
     return (left.sha256 == right.sha256 or
-            schema_contract_digest(left.tools) == REVIEWED_SCHEMA_CONTRACT_SHA256 ==
-            schema_contract_digest(right.tools))
+            compatible_schema_contract(left.tools) and compatible_schema_contract(right.tools))
 
 
 class ReadSample(OptionRecord):

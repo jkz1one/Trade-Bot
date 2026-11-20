@@ -57,8 +57,18 @@ def future_description_schemas(bar_limit_schemas):
     return ReadSchemas.model_validate(value)
 
 
-REVISIONS = ['schemas', 'description_schemas', 'interval_description_schemas', 'date_and_chain_schemas',
-             'bar_limit_schemas', 'future_description_schemas']
+@pytest.fixture
+def notice_schemas(bar_limit_schemas):
+    value = bar_limit_schemas.model_dump()
+    data = value['tools']['get_equity_historicals']['outputSchema']['properties']['data']
+    data['properties']['notice'] = {'description': 'Why results is empty when no complete bar falls in the range. Absent otherwise.', 'type': 'string'}
+    value['sha256'] = schema_digest(value['tools'])
+    assert value['sha256'] == '26f5fd99c50998f9633917b6b0348bf23c5385b1975315cb4aec658f22702899'
+    return ReadSchemas.model_validate(value)
+
+
+REVISIONS = ['schemas' , 'description_schemas', 'interval_description_schemas', 'date_and_chain_schemas',
+             'bar_limit_schemas', 'future_description_schemas', 'notice_schemas']
 
 
 @pytest.fixture(params=REVISIONS[1:])
@@ -288,3 +298,115 @@ def test_collector_keeps_enrollment_and_raw_new_digest_across_restart(tmp_path, 
         assert packet.recorded_at == at + timedelta(seconds=2)
         assert packet.frame.underlyings[0].source_at == at
     assert [p.calls[0].tool for p in seen] == ['get_equity_quotes'] * 2
+
+
+@pytest.mark.parametrize('mode', ['absent', 'present', 'empty', 'malformed'])
+def test_optional_notice_preserves_history_validation_and_original_receipt(notice_schemas, mode):
+    from test_robinhood_read_mapping import history, AT
+    from app.options.read_mapping import equity_history
+    from jsonschema.exceptions import ValidationError
+    call, raw = history()
+    data = raw['structuredContent']['data']
+    if mode != 'absent':
+        data['notice'] = 'No complete bars' if mode != 'malformed' else {'unexpected': True}
+    if mode == 'empty':
+        data['results'] = []
+    original = copy.deepcopy(raw)
+    if mode in {'empty', 'malformed'}:
+        with pytest.raises((ValueError, ValidationError)):
+            equity_history(notice_schemas, call, raw, received_at=AT + timedelta(minutes=27))
+    else:
+        result, = equity_history(notice_schemas, call, raw, received_at=AT + timedelta(minutes=27))
+        assert len(result.bars) == 5 and result.complete
+    assert raw == original
+
+
+@pytest.mark.parametrize('damage', ['required', 'existing_type', 'constraint', 'nested', 'input', 'permission', 'reference'])
+def test_additive_output_policy_does_not_hide_other_contract_changes(schemas, notice_schemas, damage):
+    from app.options.read_mapping import reviewed_schemas
+    value = notice_schemas.model_dump()
+    tool = value['tools']['get_equity_historicals']
+    data = tool['outputSchema']['properties']['data']
+    if damage == 'required':
+        data['required'].append('notice')
+    elif damage == 'existing_type':
+        data['properties']['results'] = {'type': 'string'}
+    elif damage == 'constraint':
+        data['maxProperties'] = 1
+    elif damage == 'nested':
+        data['properties']['notice'] = {'type': 'object', 'properties': {'price': {'type': 'string'}}}
+    elif damage == 'input':
+        tool['inputSchema']['required'].append('notice')
+    elif damage == 'permission':
+        tool['annotations']['readOnlyHint'] = False
+    else:
+        data['properties']['notice'] = {'$ref': 'https://invalid.example/schema'}
+    value['sha256'] = schema_digest(value['tools'])
+    changed = ReadSchemas.model_validate(value)
+    assert not same_schema_contract(schemas, changed)
+    with pytest.raises(ValueError, match='Unreviewed'):
+        reviewed_schemas(changed)
+
+
+def test_unseen_optional_scalar_metadata_is_compatible_without_hash_enrollment(schemas):
+    from app.options.read_gateway import schema_contract_changes
+    value = schemas.model_dump()
+    value['tools']['get_option_quotes']['outputSchema']['properties']['data']['properties']['future_info'] = {'type': 'boolean'}
+    value['sha256'] = schema_digest(value['tools'])
+    changed = ReadSchemas.model_validate(value)
+    assert same_schema_contract(schemas, changed)
+    assert schema_contract_changes(changed.tools) == {'compatible': True, 'limit_reached': False,
+        'changes': [{'path': ['get_option_quotes', 'outputSchema', 'properties', 'data', 'properties', 'future_info'], 'change': 'ADDED'}]}
+
+
+def test_enrolled_feed_uses_response_schema_for_new_optional_quote_metadata(tmp_path, schemas):
+    from test_portfolio_feed import policy, reader
+    from test_robinhood_read_mapping import AT, instrument
+    from app.mixed.continuous_feed import ContinuousFeed
+    from app.options.runtime import read_packet
+    value = schemas.model_dump()
+    for name in ('get_equity_quotes', 'get_option_quotes'):
+        value['tools'][name]['outputSchema']['properties']['data']['properties']['notice'] = {'type': 'string'}
+    value['sha256'] = schema_digest(value['tools'])
+    actual = ReadSchemas.model_validate(value)
+    p = policy()
+    base = reader(AT, [])
+    async def capture(cp, **kwargs):
+        result = await base(cp, **kwargs)
+        for row in result.observations:
+            row['raw']['structuredContent']['data']['notice'] = 'Informational only'
+        return result.model_copy(update={'schemas': actual})
+    feed = ContinuousFeed(tmp_path/'feed', p, schemas, create=True)
+    try:
+        result = asyncio.run(feed.tick(now=AT, held=(p.stocks[0], instrument()), reader=capture))
+        assert result['status'] == 'DELIVERED', result
+        packet = read_packet(tmp_path/'feed/feed.json')
+        assert len(packet.frame.stocks) == 2 and packet.frame.held_quotes[0].source_at == AT
+        assert feed.schemas == schemas
+    finally:
+        feed.close()
+
+
+def test_swing_cache_replays_new_response_schema_with_original_enrollment(tmp_path, schemas, notice_schemas):
+    from test_swing_feed import policy, reader, PREOPEN
+    from datetime import date
+    from app.mixed.continuous_feed import ContinuousFeed
+    p = policy()
+    base = reader(PREOPEN, [])
+    async def capture(cp, **kwargs):
+        result = await base(cp, **kwargs)
+        for row in result.observations:
+            if row['tool'] == 'get_equity_historicals':
+                row['raw']['structuredContent']['data']['notice'] = 'Informational only'
+        return result.model_copy(update={'schemas': notice_schemas})
+    for create in (True, False):
+        feed = ContinuousFeed(tmp_path/'feed', p, schemas, create=create)
+        try:
+            if create:
+                result = asyncio.run(feed.tick(now=PREOPEN, reader=capture))
+                assert result['status'] == 'DELIVERED', result
+            snapshot = feed.swing_snapshot(date(2026, 11, 30))
+            assert snapshot is not None and len(snapshot.daily) == 2
+            assert feed.schemas == schemas
+        finally:
+            feed.close()

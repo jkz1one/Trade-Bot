@@ -333,3 +333,33 @@ def test_atomic_publication_during_account_read_reopens_and_verifies_one_generat
     assert response.status_code == (200 if replacement == "verified" else 503)
     if replacement == "verified":
         assert response.json()["accounting"] == "VERIFIED"
+
+
+def test_today_preparation_failure_cannot_be_overridden_by_old_publication(tmp_path):
+    from app.mixed.paper_health import evidence
+    from app.options.engine import fingerprint
+    _, directory, binding, secret = setup(tmp_path)
+    state = {'status': 'MISSING_INPUTS', 'reasons': ['PREPARATION_RETRY_LIMIT', 'StepFailed'],
+             'schedule': {'target_session': '2026-11-20'},
+             'days': {'2026-11-20': {'last_failure': {'step': 'capture-session',
+                 'failure': {'error_classes': ['SchemaContractChanged']}}}}}
+    report = {'run_id': 'daily-20261118', 'operation': {'state': 'FAILED'},
+              'publication_failures': [{'component': 'PUBLISHER', 'error_class': 'TimeoutError'}],
+              'session_timing': {'elapsed_seconds': 21500}}
+    record = evidence(state, report, observed_at=AT.isoformat(), binding_hash=fingerprint(binding))
+    assert record['reason'] == 'SCHEMA_CONTRACT_CHANGED'
+    path = directory / 'paper-status.json'
+    path.write_text(json.dumps(record))
+    path.chmod(0o444)
+    app = reader.create_app(directory, binding, str(secret), clock_source=lambda: AT + timedelta(seconds=3))
+    with TestClient(app) as client:
+        client.auth = ('trader', PASSWORD)
+        response = client.get('/desk/operation')
+        assert response.status_code == 200
+        assert 'No worker launched' in response.text
+        assert 'Historical · daily-20261118' in response.text
+        assert 'Account display failed' not in response.text
+        assert 'Publisher stopped with an error' in response.text  # retained, dated history
+    state['days'] = {}  # Older state files still show the current retry failure.
+    record = evidence(state, report, observed_at=AT.isoformat(), binding_hash=fingerprint(binding))
+    assert record['reason'] == 'PREPARATION_RETRY_LIMIT'

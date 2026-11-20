@@ -201,7 +201,7 @@ def snapshot(policy, symbols, schemas, captured):
         if policy.bar_mapping == "utc-day-halfhour-v1":
             from app.mixed.swing_bar_mapping import map_history as mapper
         result = mapper(
-            schemas,
+            captured.schemas,
             call,
             receipt["raw"],
             received_at=captured.collected_at,

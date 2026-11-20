@@ -122,6 +122,43 @@ def status(state, name, reasons=()):
     return state
 
 
+def step_failure(exc):
+    """Retain the same bounded diagnostics exposed by the host, never stderr."""
+    if not isinstance(exc, starter.StepFailed) or not isinstance(exc.report, dict):
+        return None
+    report = exc.report
+    detail = {'step': exc.step if isinstance(exc.step, str) and re.fullmatch('[a-z-]{1,40}', exc.step) else 'unknown'}
+    path = report.get('evidence_directory')
+    if isinstance(path, str) and re.fullmatch(r'/root/trade-bot-options-proof-[A-Za-z0-9_-]{1,80}', path):
+        detail['evidence_directory'] = path
+    code = report.get('exit_code')
+    if type(code) is int and -128 <= code <= 255:
+        detail['exit_code'] = code
+    # Reuse the public capture sanitizer, including bounded changed paths.
+    failure = report.get('failure')
+    if isinstance(failure, dict):
+        classes = failure.get('error_classes')
+        classes = classes[:16] if isinstance(classes, list) else []
+        capture = {'status': 'FAILED', 'failure': {
+            'stage': failure.get('stage'),
+            'causes': [{'error_class': kind} for kind in classes]},
+            **{k: failure.get(k) for k in ('schema_sha256', 'schema_contract_sha256', 'completed_reads', 'schema_changes')}}
+        safe = host.capture_failure(json.dumps(capture))
+        if safe:
+            statuses = failure.get('http_statuses')
+            safe['http_statuses'] = [n for n in statuses[:16] if type(n) is int and 100 <= n <= 599] if isinstance(statuses, list) else []
+            detail['failure'] = safe
+        elif failure.get('error_class'):
+            detail['failure'] = host.HostCommandFailure('diagnostic', '', 0, failure).failure
+    module = report.get('module')
+    if isinstance(module, str) and re.fullmatch(r'app(?:\.[a-z_][a-z_0-9]*){1,8}', module):
+        detail['module'] = module
+    reason = report.get('reason')
+    if isinstance(reason, str) and re.fullmatch('[A-Z_]{1,100}', reason):
+        detail['reason'] = reason
+    return detail
+
+
 class Backend:
     def __init__(self, config, home=HOME):
         self.config, self.home = config, home
@@ -349,6 +386,8 @@ def tick(state, backend, persist, now):
         else:
             backend.prepare(day, info)
         day['failures'] -= 1  # Successful stages do not consume the failure allowance.
+        day.pop('last_failure', None)
+        day.pop('last_error', None)
         return status(state, 'PREPARING')
     if info['swing_history_enrolled'] and not day.get('preopen_attempted') and now < parsed(info['open_at']):
         day['preopen_attempted'] = True
@@ -386,7 +425,7 @@ def units(root):
     return {UNIT + '.service': service, UNIT + '.timer': timer}
 
 
-def install():
+def install(*, start_timer=True):
     # Reject foreign units before building or writing configuration.
     for name in units(ROOT):
         path = UNIT_HOME / name
@@ -419,7 +458,7 @@ def install():
         os.chmod(temporary, 0o644)
         os.replace(temporary, path)
     subprocess.run(['systemctl', 'daemon-reload'], check=True, timeout=30)
-    subprocess.run(['systemctl', 'enable', '--now', UNIT + '.timer'], check=True, timeout=30)
+    subprocess.run(['systemctl', 'enable', *(['--now'] if start_timer else []), UNIT + '.timer'], check=True, timeout=30)
     return {'status': 'DAILY_SCHEDULE_INSTALLED', 'paused': not Backend(config).enabled(),
             'schedule': {k: info[k] for k in ('target_session', 'prepare_at', 'start_at', 'close_at')},
             'release': release, 'image_id': image_id, 'updated': old is not None,
@@ -430,9 +469,12 @@ def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('operation', choices=('install', 'tick', 'status', 'pause', 'resume'))
     p.add_argument('--after-read-timeout', metavar='RUN_ID')
+    p.add_argument('--keep-timer-stopped', action='store_true')
     args = p.parse_args(argv)
     if args.after_read_timeout and args.operation != 'resume':
         p.error('--after-read-timeout requires resume')
+    if args.keep_timer_stopped and args.operation != 'install':
+        p.error('--keep-timer-stopped requires install')
     if os.geteuid() != 0:
         raise ValueError('ROOT_HOST_OPERATOR_REQUIRED')
     os.chdir(ROOT)
@@ -454,7 +496,7 @@ def main(argv=None):
         except BlockingIOError:
             return {'status': 'PAUSE_REQUESTED' if args.operation == 'pause' else 'CONTROLLER_BUSY'}
         if args.operation == 'install':
-            result = install()
+            result = install(start_timer=False) if args.keep_timer_stopped else install()
             publish_status(read(HOME / 'state.json') or {'status': 'WAITING_FIRST_TICK'})
             return result
         config = read(HOME / 'config.json')
@@ -488,9 +530,12 @@ def main(argv=None):
             tick(state, backend, persist, stamp())
         except (ValueError, RuntimeError, OSError, KeyError, TypeError, subprocess.SubprocessError) as exc:
             reason = str(exc) if type(exc) is ValueError and re.fullmatch('[A-Z_]+', str(exc)) else type(exc).__name__
-            for day in state.get('days', {}).values():
-                if not day.get('done'):
-                    day['last_error'] = reason
+            day = state.get('days', {}).get(state.get('schedule', {}).get('target_session'))
+            if day is not None and not day.get('done'):
+                day['last_error'] = reason
+                detail = step_failure(exc)
+                if detail:
+                    day['last_failure'] = dict(detail, at=stamp().isoformat())
             status(state, 'FAILED', [reason])
         finally:
             state['updated_at'] = stamp().isoformat()

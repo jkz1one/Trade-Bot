@@ -24,6 +24,10 @@ CODES = {
     "CONNECTED_PUBLICATION_FAILED": "Account display failed. New entries are halted; position protection still requires valid data.",
     "OPTION_RUNTIME_FEED_UNAVAILABLE": "Waiting for valid market data.",
     "WAITING_FOR_SIX_COMPLETED_BARS": "Waiting for six completed five-minute bars.",
+    "PREPARATION_RETRY_LIMIT": "Preparation failed before worker launch. The retry limit was reached.",
+    "LAUNCH_REVIEW_RETRY_LIMIT": "Launch review failed. The retry limit was reached.",
+    "SCHEMA_CONTRACT_CHANGED": "Preparation blocked by a provider data-contract change. No worker launched.",
+    "CAPTURE_FAILED": "Market-data capture failed during preparation. No worker launched.",
 }
 
 
@@ -54,6 +58,12 @@ def evidence(state, report, *, observed_at, binding_hash):
               "state": state.get("status") if state.get("status") in STATES else "UNKNOWN",
               "reason": next((r for r in reasons if r in CODES), None)}
     schedule = state.get("schedule") or {}
+    target = schedule.get('target_session')
+    day = (state.get('days') or {}).get(target) or {}
+    failure = day.get('last_failure') or {}
+    if not day.get('launch_attempted') and failure.get('step') == 'capture-session':
+        classes = (failure.get('failure') or {}).get('error_classes', [])
+        result['reason'] = 'SCHEMA_CONTRACT_CHANGED' if 'SchemaContractChanged' in classes else 'CAPTURE_FAILED'
     for key in ("prepare_at", "start_at", "close_at"):
         if stamp(schedule.get(key)):
             result[key] = schedule[key]
@@ -61,11 +71,13 @@ def evidence(state, report, *, observed_at, binding_hash):
         return result
     operation = report.get("operation", {}).get("state")
     failures = [*report.get("worker_exit", {}).get("failures", []), *report.get("publication_failures", [])]
-    if report.get("publication_failures"):
+    current = target is None or report['run_id'] == 'daily-' + str(target).replace('-', '')
+    if report.get("publication_failures") and current:
         result["reason"] = "CONNECTED_PUBLICATION_FAILED"
     issue = next((f for f in failures if f.get("component") in ("RUNTIME", "PUBLISHER", "COLLECTOR", "TERMINAL_PUBLISHER")), {})
     clocks = report.get("runtime_evidence", {})
     result["session"] = {
+        "historical": not current,
         "run_id": report["run_id"], "state": operation if operation in STATES else "UNKNOWN",
         "at": report.get("window_end") if stamp(report.get("window_end")) else None,
         "seconds": report.get("session_timing", {}).get("elapsed_seconds"),
@@ -138,7 +150,7 @@ def display(directory, binding_hash, uid, now):
                 text += f" after {int(duration)//60}m {int(duration)%60:02d}s"
             if end:
                 text += " · " + eastern(end)
-            result["session"] = text
+            result["session"] = ('Historical · ' if session.get('historical') else '') + text
             component = session["component"]
             if component == "RUNTIME" and session["timeout"]:
                 result["failure"] = "Local simulation subprocess timed out."

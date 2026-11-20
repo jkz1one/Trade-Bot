@@ -19,7 +19,8 @@ SUITES = ('connected_system', 'feed_timing', 'runtime_timing', 'option_read_capt
           'dashboard_reader', 'paper_session_report', 'paper_daily', 'mixed_runtime',
           'option_runtime', 'portfolio_models', 'session_host', 'dashboard_snapshot',
           'protection_contention', 'swing_feed', 'swing_binding', 'portfolio_feed',
-          'combined_session_feed', 'restore_encoding', 'snapshot_copy_lock')
+          'combined_session_feed', 'restore_encoding', 'snapshot_copy_lock', 'read_schema_contract',
+          'paper_diagnose', 'paper_release')
 
 
 def run(output):
@@ -60,6 +61,9 @@ def run(output):
     health.mkdir(parents=True)
     for name in ("paper_health.py", "sqlite_copy.py"):
         shutil.copy(ROOT / "app/mixed" / name, health / name)
+    contract = output / 'stage/app/options'
+    contract.mkdir(parents=True)
+    shutil.copy(ROOT / 'app/options/read_contract.json', contract / 'read_contract.json')
     args = ['-q', '-p', 'anyio.pytest_plugin', '--tb=short', '-c', '/dev/null',
             '--basetemp='+str(output/'state'), '--junitxml='+str(output/'tests.xml'),
             *[str(output/'stage/tests'/('test_'+name+'.py')) for name in SUITES]]

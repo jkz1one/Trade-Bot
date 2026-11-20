@@ -167,6 +167,9 @@ def normalize(
         raise ValueError("Original schema-bound capture required")
     if not captured.started_at <= captured.collected_at <= now:
         raise ValueError("Original capture clocks required")
+    # Admission binds the enrolled consumer contract; payload validation must use
+    # the actual discovered schema retained with these original responses.
+    schemas = captured.schemas
     quotes, underlyings, stocks, histories, metadata = (), (), (), (), ()
     issues = list(history_issues)
     optional = tuple(

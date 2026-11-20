@@ -359,6 +359,8 @@ def test_atomic_state_retains_pause_across_install(monkeypatch, tmp_path):
     assert first['paused'] and second['paused'] and second['updated']
     assert daily.read(tmp_path / 'paused.json')['requested_at'] == 'before upgrade'
     assert commands[-1] == ['systemctl', 'enable', '--now', daily.UNIT + '.timer']
+    daily.install(start_timer=False)
+    assert commands[-1] == ['systemctl', 'enable', daily.UNIT + '.timer']
     (unit_home / (daily.UNIT + '.timer')).write_text('foreign unit')
     with pytest.raises(ValueError, match='UNMANAGED'):
         daily.install()
@@ -707,3 +709,54 @@ def test_daily_info_cli_reports_failure_location_without_private_message(kind, m
     assert report['failure']['frames'][-1]['file'] == 'app/mixed/daily_plan.py'
     assert report['provider_calls'] is report['state_modified'] is False
     assert 'PRIVATE' not in output.out + output.err
+
+
+def test_original_capture_failure_is_retained_without_provider_text():
+    report = {'status': 'CAPTURE_FAILED', 'evidence_directory': '/root/trade-bot-options-proof-example',
+              'exit_code': 1, 'failure': {'stage': 'VALIDATE_PLAN',
+              'error_classes': ['ExceptionGroup', 'SchemaContractChanged'],
+              'schema_sha256': 'a'*64, 'completed_reads': 0,
+              'schema_changes': {'compatible': False, 'limit_reached': False, 'changes': [
+                  {'path': ['get_equity_historicals', 'outputSchema', 'required'], 'change': 'CHANGED'}]},
+              'private': 'DO_NOT_EXPORT'}}
+    item = daily.step_failure(daily.starter.StepFailed('private', step='capture-session', report=report))
+    assert item['failure']['error_classes'] == ['ExceptionGroup', 'SchemaContractChanged']
+    assert item['failure']['schema_changes']['changes'][0]['path'][-1] == 'required'
+    assert item['evidence_directory'] == report['evidence_directory']
+    assert 'DO_NOT_EXPORT' not in str(item) and 'private' not in str(item)
+
+
+def test_controller_retains_original_stage_across_three_failures_and_retry_limit(tmp_path, monkeypatch):
+    tmp_path.chmod(0o700)
+    monkeypatch.setattr(daily, 'HOME', tmp_path)
+    daily.save(tmp_path/'config.json', {'release': 'a'*40})
+    daily.save(tmp_path/'state.json', {'days': {'2026-11-18': {'done': True, 'run_id': 'daily-20261118'}}})
+    fake = Fake()
+    fake.plan.update(schedule(dt('2026-11-20T14:00:00')))
+    def fail(args):
+        raise daily.starter.StepFailed('private provider text', step='capture-session', report={
+            'status': 'CAPTURE_FAILED', 'evidence_directory': '/root/trade-bot-options-proof-example',
+            'failure': {'stage': 'VALIDATE_PLAN', 'error_classes': ['SchemaContractChanged'], 'completed_reads': 0}})
+    fake.invoke = fail
+    monkeypatch.setattr(daily, 'Backend', lambda config: fake)
+    monkeypatch.setattr(daily, 'stamp', lambda: dt('2026-11-20T14:00:00'))
+    monkeypatch.setattr(daily, 'publish_status', lambda state: None)
+    for _ in range(4):
+        daily.main(['tick'])
+    state = daily.read(tmp_path/'state.json')
+    assert state['status'] == 'MISSING_INPUTS' and state['reasons'][0] == 'PREPARATION_RETRY_LIMIT'
+    today = state['days']['2026-11-20']
+    assert today['failures'] == 3 and today['last_failure']['failure']['stage'] == 'VALIDATE_PLAN'
+    assert today['last_failure']['failure']['error_classes'] == ['SchemaContractChanged']
+    assert 'private' not in str(state)
+    assert state['days']['2026-11-18'] == {'done': True, 'run_id': 'daily-20261118'}
+
+
+def test_non_capture_host_error_retains_module_class_and_frames_only():
+    report = {'module': 'app.mixed.daily_plan', 'exit_code': 2,
+              'failure': {'error_class': 'OperationalError', 'private': 'DO_NOT_EXPORT',
+                          'frames': [{'file': 'app/mixed/daily_plan.py', 'line': 123}]}}
+    result = daily.step_failure(daily.starter.StepFailed('private', step='daily-info', report=report))
+    assert result['module'] == 'app.mixed.daily_plan'
+    assert result['failure'] == {'error_class': 'OperationalError', 'frames': [{'file': 'app/mixed/daily_plan.py', 'line': 123}]}
+    assert 'DO_NOT_EXPORT' not in str(result)

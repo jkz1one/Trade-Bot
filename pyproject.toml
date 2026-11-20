@@ -30,6 +30,7 @@ namespaces = false
 
 [tool.setuptools.package-data]
 "app.web" = ["templates/*.html"]
+"app.options" = ["read_contract.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

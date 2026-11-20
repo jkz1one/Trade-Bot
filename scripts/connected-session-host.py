@@ -97,6 +97,18 @@ def capture_failure(stdout):
         count = report.get("completed_reads")
         if type(count) is int and 0 <= count <= 8:
             failure["completed_reads"] = count
+        changes = report.get('schema_changes')
+        if isinstance(changes, dict):
+            rows = changes.get('changes')
+            safe = []
+            for row in rows[:20] if isinstance(rows, list) else []:
+                path = row.get('path') if isinstance(row, dict) else None
+                if (isinstance(path, list) and 1 <= len(path) <= 24
+                        and all(isinstance(k, str) and re.fullmatch(r'[A-Za-z_$][A-Za-z_0-9$-]{0,63}', k) for k in path)
+                        and row.get('change') in ('ADDED', 'REMOVED', 'CHANGED')):
+                    safe.append({'path': path, 'change': row['change']})
+            failure['schema_changes'] = {'changes': safe, 'limit_reached': changes.get('limit_reached') is True,
+                                         'compatible': changes.get('compatible') is True}
     return failure
 
 

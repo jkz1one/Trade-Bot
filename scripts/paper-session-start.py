@@ -16,7 +16,10 @@ from zoneinfo import ZoneInfo
 
 
 class StepFailed(RuntimeError):
-    pass
+    def __init__(self, message, *, step=None, report=None):
+        super().__init__(message)
+        self.step = step
+        self.report = report
 
 
 def save(path, value):
@@ -160,7 +163,8 @@ def invoke_host(root, arguments, *, runner=subprocess.run):
     if result is not None:
         print(json.dumps({"step": arguments[0], "report": result}, sort_keys=True), flush=True)
     if output.returncode or result is None:
-        raise StepFailed("Step failed: " + arguments[0] + "; inspect its structured report above")
+        raise StepFailed("Step failed: " + arguments[0] + "; inspect its structured report above",
+                         step=arguments[0], report=result)
     return result
 
 
