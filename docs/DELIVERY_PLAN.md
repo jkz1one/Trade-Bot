@@ -43,9 +43,9 @@ cannot be adopted as connected evidence or execution state.
 ### November 20 work order: repair the delivery process first
 
 This section takes precedence over the older execution order below. The user
-requested a process correction before another issue patch. No new runtime repair,
-host deployment, retry reset or schedule resume is authorized by this document.
-Existing user authorization still governs work; the host remains operator-managed.
+requested a process correction before another issue patch and then authorized
+implementation. The host remains operator-managed. Retry resets and schedule
+resumes are separate from candidate qualification and are not part of the handoff.
 
 The operator confirmed `c03b628` installation and schedule resume. November 20
 then failed preparation three times with `SchemaContractChanged`, zero market
@@ -64,7 +64,7 @@ provider and Docker boundaries. Repeating its test count cannot close those gaps
 
 Work in this order, using the existing implementations and fixtures:
 
-- [ ] **R1 — Define the consumer contract, then implement compatibility.** Preserve
+- [x] **R1 — Define the consumer contract, then implement compatibility.** Preserve
   exact raw metadata and validate each response against its discovered schema.
   Separately specify what the adapter consumes and which additive output fields
   it can ignore. Cover the reported `notice` with absent, present and empty-results
@@ -74,7 +74,7 @@ Work in this order, using the existing implementations and fixtures:
   Do not solve this by adding a new accepted whole-catalog hash or ignoring all
   output changes. Review dependency scope so a family-specific failure cannot
   silently remove held-position data or masquerade as global readiness.
-- [ ] **R2 — One diagnostic report, current cause first.** Add one bounded,
+- [x] **R2 — One diagnostic report, current cause first.** Add one bounded,
   read-only command that reports installed release/image, current day and stage,
   original failure class, changed schema paths, receipt/evidence paths, worker
   identity/start/exit/restarts, feed/decision ages and publication state. No
@@ -124,9 +124,25 @@ under load, Scope readiness and Swing geometry explicitly open. A functioning
 subset must name blocked families; full product acceptance requires their closure.
 Do not add CPU or relax limits without measurements identifying the bottleneck.
 
-The immediate deliverable is this audited work order. R1-R4 are not implemented
-or accepted by recording the plan. See
-[November 20 evidence](PAPER_PROCESS_REVIEW_20261120.json).
+Candidate `9a140b8d8628c27f9304cd6331bbcee07af7074e` completes the offline R1-R2
+implementation and R3 release workflow. R3 stays unchecked until its real-host
+qualification receipt exists; R4 stays unchecked until connected operation is
+observed. [Implementation proof](PAPER_RELEASE_20261120_PROOF.json) distinguishes
+these results from the earlier [process audit](PAPER_PROCESS_REVIEW_20261120.json).
+
+The compatibility policy permits only new optional scalar properties directly
+inside an output `data` envelope. Existing fields, constraints and all input and
+permission contracts still compare exactly after description removal. The complete
+raw schema remains attached to its original responses, which are validated against
+that schema throughout feed delivery and Swing-cache replay. Tests cover held
+quotes and cached history under the reported metadata extension. An unknown
+breaking change still blocks admission conservatively; this is not general
+per-family schema negotiation and does not make an unavailable family ready.
+
+The next action is the single candidate command in PAPER_NEXT_SESSION.md, using
+real discovery/capture and accounting publication before activation. It writes a
+stage receipt and leaves the installed release unchanged on qualification failure.
+After success, the operator uses one diagnostic command at each R4 checkpoint.
 
 ### Existing implementation checklist
 

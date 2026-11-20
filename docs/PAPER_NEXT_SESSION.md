@@ -1,6 +1,68 @@
 # Daily PAPER operation
 
-## Current checkpoint: November 20
+## Current action: qualify and install one candidate
+
+Candidate: `9a140b8d8628c27f9304cd6331bbcee07af7074e`. Last confirmed host release:
+`c03b6282fed59e48f113b06f4bc02f53b50410d0`. The candidate is not host-confirmed.
+[Offline evidence and open gates](PAPER_RELEASE_20261120_PROOF.json).
+
+Run this standalone block on the operator-managed server. It creates a separate
+candidate checkout and uses the new release command. That command stops the timer,
+waits at most 60 seconds for an existing controller to finish, rejects a running
+PAPER worker, builds once, checks both required catalog dates with real provider
+reads, and verifies publication against the normally stopped flat account. Only
+then does it switch the installed release and update the reader. Each result is
+saved under the printed `/root/trade-bot-release-.../release.json` path. A failed
+qualification keeps the installed checkout; a failed activation rolls it back.
+
+```bash
+(
+  set -eu
+  cd /opt/trade-bot-dashboard
+  release=9a140b8d8628c27f9304cd6331bbcee07af7074e
+  git fetch origin slice2/robinhood-read-shadow
+  git merge-base --is-ancestor HEAD "$release"
+  git merge-base --is-ancestor "$release" FETCH_HEAD
+  test -z "$(git status --porcelain)" || { echo 'Checkout has local changes.'; exit 1; }
+  candidate=$(mktemp -d)
+  git worktree add --detach "$candidate" "$release"
+  trap 'git worktree remove "$candidate"' EXIT
+  python3 "$candidate/scripts/paper-release.py" deploy \
+    --checkout /opt/trade-bot-dashboard
+)
+```
+
+Paste the result before any recovery action. Success is `RELEASE_INSTALLED`;
+`connected_health` must still say `UNVERIFIED`. The command preserves account state,
+enrollment, limits, pause/review holds and retry counts. It restores a previously
+active timer after success or a completed rollback. If rollback itself fails, it
+leaves the timer stopped and retains evidence. It does not resume a hold, retry
+the exhausted November 20 preparation, start an extra worker or enable live trading.
+
+After installation, use this one read-only command for the current New York day:
+
+```bash
+cd /opt/trade-bot-dashboard
+python3 scripts/paper-diagnose.py
+```
+
+For a specific prior run, add `--target-session YYYY-MM-DD`. The report includes
+installed release/image, UTC observation time, controller target/status, original
+failure and changed schema paths, worker start/end/restarts, feed and decision
+evidence, and the immutable display's publication time. Display receipt inspection
+does not claim to reverify accounting. A missing worker is distinct from failed
+Docker inspection. No provider calls, worker changes or account-state writes occur.
+
+R4 requires the same scheduled run at launch, 30 minutes, two hours and close.
+The default profile launches at 10 a.m. New York time; use the actual target and
+start returned by qualification. Check advancing feed and decision evidence,
+original quote freshness, due/missed slots, family blockers, recovery counts and
+publication, then clean closure/accounting. Zero fills alone is not failure; a
+running container alone is not a healthy feed. Stop calling the day accepted if
+these checks fail. Provider CONNECT failures, Scope inputs and Swing geometry
+remain open until actual evidence resolves them.
+
+## November 20 incident before this candidate
 
 `c03b628` is installed and the operator confirmed `SCHEDULE_RESUMED`. The
 November 20 worker never launched: three preparation attempts rejected the
@@ -8,12 +70,12 @@ optional historical-output `notice` addition at `VALIDATE_PLAN`. The controller
 reports `PREPARATION_RETRY_LIMIT`; the older worker report is November 18.
 The earlier deployment and resume blocks below are historical, not the next action.
 
-The user requested a process correction before more isolated fixes. Follow
-[R1-R4](DELIVERY_PLAN.md#november-20-work-order-repair-the-delivery-process-first)
-first. The supplied schema difference is sufficient for local reconstruction;
-no further host dump or command is needed for this audit. Do not reset today's
-retry count or repeat deployment/resume to work around this rejection. Real-host
-qualification and sustained observation remain pending after the planned repair.
+The user requested a process correction before more isolated fixes, then
+authorized implementation. The supplied schema difference was sufficient for
+local reconstruction; no further raw schema dump is needed. The new handoff
+above implements [R1-R3](DELIVERY_PLAN.md#november-20-work-order-repair-the-delivery-process-first)
+without resetting the failed day's retry count. Real-host qualification and
+sustained observation remain pending.
 [Confirmed receipts and audit](PAPER_PROCESS_REVIEW_20261120.json).
 
 ## November 18 failed session review

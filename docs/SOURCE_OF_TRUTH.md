@@ -1,6 +1,31 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.224. November 20, New York time. Delivery process review takes priority.
+Version 1.225. November 20, New York time. Candidate qualification precedes activation.
+
+Candidate `9a140b8d8628c27f9304cd6331bbcee07af7074e` implements the November 20
+consumer-compatibility repair, current failure retention, one read-only diagnostic
+and one guarded host release command. Compatible optional scalar output metadata
+no longer requires a new whole-catalog hash. Every original response is validated
+against its actual discovered schema, including continuous-feed and Swing-cache
+consumers. Existing required fields, input rules, permission annotations and
+constraints remain strict; empty history never becomes usable data.
+
+The dashboard leads with the current session's preparation failure and dates
+older worker evidence as historical. `paper-diagnose.py` reads the selected day,
+original failure, worker identity and progress, and published display receipt.
+`paper-release.py` retains each qualification/install stage, checks real provider
+reads and stopped-account publication before activation, and rolls back a failed
+installation while the timer remains stopped. It never resumes a review hold or
+clears retry counts. See [candidate evidence](PAPER_RELEASE_20261120_PROOF.json)
+and the single current [host handoff](PAPER_NEXT_SESSION.md).
+
+The next unmet gate is real-host qualification, owned by the operator. There is
+no direct server access here. This candidate has not been installed on the host,
+and R4 connected acceptance is open. Provider CONNECT failures, publication under
+session load, Scope current inputs and Swing target geometry remain unresolved.
+The installed release is still the last operator-confirmed `c03b628` below.
+
+### November 20 incident and process review
 
 The operator confirmed `c03b628` installed for scheduler and dashboard reader,
 then explicitly resumed the schedule. Its stopped-account snapshot published
@@ -14,9 +39,9 @@ The user requested that we correct how work is diagnosed, qualified and released
 before another isolated repair. The active work order is now **R1-R4** in
 [DELIVERY_PLAN.md](DELIVERY_PLAN.md#november-20-work-order-repair-the-delivery-process-first):
 consumer compatibility, one current diagnostic report, one guarded candidate
-handoff and sustained connected acceptance. This update records the process and
-evidence only; none of those new gates is marked implemented or passed. Preserve
-all account state, current limits and the deployed release while that work is done.
+handoff and sustained connected acceptance. The audit itself did not implement
+those gates; the subsequent candidate is recorded above. Preserve all account
+state and current limits through qualification and activation.
 [Audit evidence and confirmed host state](PAPER_PROCESS_REVIEW_20261120.json).
 
 ### November 18 failure and repair history

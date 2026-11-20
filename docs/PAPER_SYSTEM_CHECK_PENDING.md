@@ -1,11 +1,28 @@
 # Recovered offline system checkpoint
 
+November 20 candidate `9a140b8d8628c27f9304cd6331bbcee07af7074e` implements R1-R2
+and the offline portion of R3. The installed suite now explicitly includes
+consumer-schema, diagnostic and release-workflow cases. Its manifest contains
+334 application files and all 60 pinned runtime packages. The final installed
+run passed 799 tests in 402.17 seconds; one cross-UID case requires reader UID
+10001 and remains skipped in this environment. Results and exact artifact hashes are recorded in
+[PAPER_RELEASE_20261120_PROOF.json](PAPER_RELEASE_20261120_PROOF.json).
+Real-host qualification and R4 remain unverified. The new operator command is in
+[PAPER_NEXT_SESSION.md](PAPER_NEXT_SESSION.md); older command blocks are history.
+
+The first integrated pass exposed an invalid clock in the new dashboard test:
+it attempted to read two seconds before the fixture snapshot was published.
+The test now observes the published fixture three seconds after its base time,
+as the existing authenticated-reader tests do. No freshness limit was changed.
+The final candidate also covers original failure reporting from stderr and
+immutable display-receipt reads without claiming accounting was reverified.
+
 November 20. `c03b628` deployment, reader update, stopped-account publication
 and explicit schedule resume are host-confirmed. Today failed preparation three
 times on the optional `notice` schema addition, with zero market reads and no
 worker. Prior offline passes remain narrow evidence, not connected acceptance.
 The active process work order is [R1-R4](DELIVERY_PLAN.md#november-20-work-order-repair-the-delivery-process-first).
-No runtime change or new suite run was made for this process audit.
+No runtime change or new suite run was made for that earlier process audit.
 [Incident and audit](PAPER_PROCESS_REVIEW_20261120.json).
 
 November 18. The host completed almost six hours of process uptime but only two
