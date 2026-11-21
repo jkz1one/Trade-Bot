@@ -2,9 +2,15 @@
 
 ## Current action: qualify and install one candidate
 
-Candidate: `9a140b8d8628c27f9304cd6331bbcee07af7074e`. Last confirmed host release:
+Candidate: `2d538b7f32afa7b6df09e7af0d3534e9e27f71e5`. Last confirmed host release:
 `c03b6282fed59e48f113b06f4bc02f53b50410d0`. The candidate is not host-confirmed.
-[Offline evidence and open gates](PAPER_RELEASE_20261120_PROOF.json).
+[Offline evidence and open gates](PAPER_CATALOG_CAPTURE_20261120_PROOF.json).
+
+The prior `9a140b8` qualification passed November 23 capture, then stopped because
+both exact-strike December 4 probes returned zero instruments. The supplied
+receipt and terminal checks confirm `c03b628` remained installed and the timer was
+restored. The new candidate uses bounded actual strike listings on that path and
+retains local validation reasons. Do not rerun the older candidate.
 
 Run this standalone block on the operator-managed server. It creates a separate
 candidate checkout and uses the new release command. That command stops the timer,
@@ -19,7 +25,7 @@ qualification keeps the installed checkout; a failed activation rolls it back.
 (
   set -eu
   cd /opt/trade-bot-dashboard
-  release=9a140b8d8628c27f9304cd6331bbcee07af7074e
+  release=2d538b7f32afa7b6df09e7af0d3534e9e27f71e5
   git fetch origin slice2/robinhood-read-shadow
   git merge-base --is-ancestor HEAD "$release"
   git merge-base --is-ancestor "$release" FETCH_HEAD

@@ -144,6 +144,17 @@ real discovery/capture and accounting publication before activation. It writes a
 stage receipt and leaves the installed release unchanged on qualification failure.
 After success, the operator uses one diagnostic command at each R4 checkpoint.
 
+The first real qualification of `9a140b8` passed the November 23 catalog but found
+two empty December 4 exact-strike responses. Both provider calls were successful.
+It stopped before activation and restored the timer; host `c03b628` was preserved.
+The local post-read error lacked a structured reason, revealing an additional R2
+gap. Candidate `2d538b7f32afa7b6df09e7af0d3534e9e27f71e5` adds bounded listed-strike
+discovery after an empty probe and carries local stage/reason evidence through the
+host/controller wrappers. The system suite now includes session-capture and
+downstream catalog consumers explicitly. R3 remains open until this candidate
+passes actual qualification; a successful first capture is not a completed gate.
+[Qualification failure and repair evidence](PAPER_CATALOG_CAPTURE_20261120_PROOF.json).
+
 ### Existing implementation checklist
 
 The following items remain the technical backlog. Work through **R1-R4** above

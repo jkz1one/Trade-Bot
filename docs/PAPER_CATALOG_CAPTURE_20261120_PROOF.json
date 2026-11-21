@@ -1,0 +1,137 @@
+{
+  "version": "paper-catalog-capture-20261120-v1",
+  "implementation_commit": "2d538b7f32afa7b6df09e7af0d3534e9e27f71e5",
+  "implementation_tree": "067311a35833e9f1e0f514e5826d53b2918c2da1",
+  "parent_commit": "a6f9877402410f7d3adf12a4171058aede719de5",
+  "host_evidence_source": "Operator-pasted structured receipt and capture summaries; no direct host access.",
+  "previous_candidate_qualification": {
+    "candidate": "9a140b8d8628c27f9304cd6331bbcee07af7074e",
+    "receipt": "/root/trade-bot-release-5983pn03/release.json",
+    "status": "FAILED",
+    "stage": "capture-2026-12-04",
+    "prior_release": "c03b6282fed59e48f113b06f4bc02f53b50410d0",
+    "checkout_after_attempt": "c03b628",
+    "timer_was_active": true,
+    "timer_restored": true,
+    "independent_timer_status": "active",
+    "target_session": "2026-11-23",
+    "daily_info_start_blockers": [],
+    "first_capture": {
+      "status": "CATALOG_CAPTURED",
+      "target_session": "2026-11-23",
+      "provider_tool_calls": 8,
+      "evidence_directory": "/root/trade-bot-options-proof-gwxtv1k2"
+    },
+    "swing_capture": {
+      "target_session": "2026-12-04",
+      "evidence_directory": "/root/trade-bot-options-proof-6lovrtgq",
+      "schema_sha256": "a87a5e0bed6b47b4021160280007baa65af116bb14743f3ed7636d13c026a3a6",
+      "files": [
+        "context-plan.json",
+        "context.json",
+        "contracts-plan.json",
+        "contracts.json"
+      ],
+      "context_status": "COMPLETE",
+      "context_completed_reads": 3,
+      "equity_results": 2,
+      "spy_chains": 1,
+      "qqq_chains": 1,
+      "contract_status": "COMPLETE",
+      "contract_completed_reads": 2,
+      "spy_instruments": 0,
+      "qqq_instruments": 0,
+      "provider_errors": false,
+      "pagination": false,
+      "diagnosis": "Local exact-strike selection rejected valid empty results after successful provider reads. The raw provider schema was admitted; no connection failure is established for this attempt."
+    },
+    "activation_reached": false,
+    "snapshot_qualification_reached": false
+  },
+  "repair": {
+    "normal_path": "Preserve the existing exact-strike probe and eight-read capture when subjects exist.",
+    "empty_probe_path": "Discover active tradable calls for the observed chain ID and expiration; complete bounded pagination; select the nearest actual strike to the original observed midpoint, with lower strike as deterministic tie break; recapture exact contracts for both symbols.",
+    "max_listing_pages_per_symbol": 4,
+    "max_rows_per_listing_page": 256,
+    "max_provider_tool_calls": 18,
+    "existing_host_deadline_seconds": 210,
+    "unchanged_limits": [
+      "per-request read limits",
+      "maximum eight-contract combined catalog",
+      "quote freshness and source clocks",
+      "position and risk limits",
+      "model budgets"
+    ],
+    "rejects": [
+      "incomplete pagination",
+      "repeated cursor",
+      "wrong chain, symbol or expiration",
+      "non-call discovery rows",
+      "inactive or untradable rows",
+      "duplicate identities",
+      "oversized pages",
+      "empty complete listing",
+      "selected strike unavailable on exact recapture"
+    ],
+    "evidence": "Retain original probe and all listing captures with hashes. Save the selected original artifact unchanged as contracts.json for existing catalog consumers. Preserve original anchors and probe strike.",
+    "failure_reporting": "Local errors retain a fixed stage/reason in failure.json and stdout; host and daily controller preserve the reason. Raw exception/provider text is excluded; existing provider diagnostics are not replaced."
+  },
+  "verification": {
+    "status": "PASSED",
+    "focused_cases": 223,
+    "focused_note": "222 passed in the first focused run; its sole failure was a missing test import, corrected and rerun successfully. The final installed run covers all of these cases.",
+    "installed_system": {
+      "version": "paper-system-check-v1",
+      "status": "PASSED",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "market_acceptance": "UNVERIFIED",
+      "wall_clock_soak": "NOT_RUN",
+      "host_acceptance": "UNVERIFIED",
+      "application_files": 334,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "8ea4b98bcb68e6c37782c3e40e1a35baa818a30b0c1b7187b575b0b4d94a3eba",
+      "test_exit_code": 0
+    },
+    "tests": 898,
+    "passed": 897,
+    "failed": 0,
+    "errors": 0,
+    "skipped": [
+      {
+        "name": "test_cross_uid_snapshot_is_readable_by_unprivileged_dashboard_without_auth_copy",
+        "reason": "Reader 10001 is not mapped in this environment: uid"
+      }
+    ],
+    "seconds": 399.888,
+    "changed_scripts_and_tests_match_staged_harness": 6,
+    "artifact_sha256": {
+      "summary.json": "71fd95ba24528f4bf1a53db18ef78c340016da6687a2b3abd1866980fd35cc9e",
+      "tests.xml": "cc2d4152ad89dabe213178469449b3fd3bc93f40036953593d9b4f75f4eaa6c6",
+      "tests.log": "2c92ae5629a5ac454c51c4cc0556d998d16c0994eeea5ebeae1b5420ef1c572a"
+    },
+    "boundary": "Noneditable installed application with all 60 pinned packages; root-mapped network namespace with local loopback only. Provider, model and Docker boundaries are fixtures. No host acceptance claim."
+  },
+  "host_acceptance": "UNVERIFIED",
+  "connected_day_acceptance": "UNVERIFIED",
+  "next_gate": "Operator runs the corrected candidate through the same guarded qualification and installation command. No retry reset or schedule resume is included.",
+  "remaining": [
+    "actual fallback capture and full host qualification",
+    "sustained feed and decision progress",
+    "provider CONNECT failures from prior sessions",
+    "publication under load",
+    "Scope current inputs",
+    "Swing original target and geometry",
+    "connected closing accounting"
+  ],
+  "preserved": [
+    "account state and enrollment",
+    "main",
+    "feat/event-awareness-baseline",
+    "draft PR 1 metadata",
+    "risk and model limits",
+    "existing host release until successful qualification"
+  ]
+}

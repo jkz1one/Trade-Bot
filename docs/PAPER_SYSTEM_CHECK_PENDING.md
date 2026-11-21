@@ -1,5 +1,19 @@
 # Recovered offline system checkpoint
 
+November 20 follow-up candidate `2d538b7f32afa7b6df09e7af0d3534e9e27f71e5`
+reproduces the two empty exact-strike probes and resolves them using complete,
+bounded provider strike listings. Native contracts are captured again at the
+selected listed strike; the final consumer artifact is an unmodified original
+capture. Tests reject incomplete/repeated pagination, incorrect chain/expiration,
+wrong option right, untradable rows, duplicate/oversized pages and a subsequently
+unavailable selected strike before quoting. Local errors now retain a fixed reason
+through host and controller sanitizers. The installed suite explicitly includes
+session-capture, contract-catalog and observed-simulation consumers.
+The final installed run passed 897 tests in 400.05 seconds; one cross-UID
+reader case remains skipped because UID 10001 is not mapped in this environment.
+[Current verification and confirmed host state](PAPER_CATALOG_CAPTURE_20261120_PROOF.json).
+Host qualification and connected acceptance remain open.
+
 November 20 candidate `9a140b8d8628c27f9304cd6331bbcee07af7074e` implements R1-R2
 and the offline portion of R3. The installed suite now explicitly includes
 consumer-schema, diagnostic and release-workflow cases. Its manifest contains

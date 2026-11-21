@@ -1,6 +1,31 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.225. November 20, New York time. Candidate qualification precedes activation.
+Version 1.226. November 20, New York time. Listed-strike discovery before activation.
+
+The operator ran `9a140b8` qualification. November 23 capture completed eight
+provider reads. The December 4 Swing context and contract reads also completed,
+but both exact-strike instrument responses were empty. This was a catalog-selection
+failure after successful reads, not a rejected schema or observed connection error.
+Qualification stopped before installation; the checkout remains `c03b628` and the
+previously active daily timer was restored and independently reported active.
+
+Candidate `2d538b7f32afa7b6df09e7af0d3534e9e27f71e5` handles empty exact-strike
+probes by looking up actual listed strikes for the observed chain and expiration.
+The fallback completes at most four pages per affected symbol, then selects the
+nearest listed call strike and explicitly captures the contracts at that strike.
+Incomplete pagination, invalid subjects and empty or inconsistent listings block
+qualification. Original probes and discovery pages remain saved; the stable
+`contracts.json` is an exact copy of the selected original capture. The ordinary
+path remains eight provider calls; the bounded fallback can use up to eighteen.
+Contract count, native admission, timestamps, account state and limits are unchanged.
+
+Local capture validation now produces a saved, bounded stage/reason report, and
+the host/controller preserve it. Provider failures keep their original diagnostics.
+The next gate is the corrected candidate's guarded host qualification, followed by
+R4; neither is confirmed. [Evidence](PAPER_CATALOG_CAPTURE_20261120_PROOF.json)
+and [single host handoff](PAPER_NEXT_SESSION.md).
+
+### Prior candidate and qualification workflow
 
 Candidate `9a140b8d8628c27f9304cd6331bbcee07af7074e` implements the November 20
 consumer-compatibility repair, current failure retention, one read-only diagnostic
@@ -19,9 +44,9 @@ installation while the timer remains stopped. It never resumes a review hold or
 clears retry counts. See [candidate evidence](PAPER_RELEASE_20261120_PROOF.json)
 and the single current [host handoff](PAPER_NEXT_SESSION.md).
 
-The next unmet gate is real-host qualification, owned by the operator. There is
-no direct server access here. This candidate has not been installed on the host,
-and R4 connected acceptance is open. Provider CONNECT failures, publication under
+There is no direct server access here. The prior candidate failed qualification
+as recorded above and was not installed. R4 connected acceptance is open.
+Provider CONNECT failures, publication under
 session load, Scope current inputs and Swing target geometry remain unresolved.
 The installed release is still the last operator-confirmed `c03b628` below.
 
