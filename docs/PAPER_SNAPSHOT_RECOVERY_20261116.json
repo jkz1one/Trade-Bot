@@ -1,0 +1,254 @@
+{
+  "version": "paper-dashboard-recovery-20261116-v1",
+  "tested_release": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+  "operator_observation": {
+    "target_session": "2026-11-16",
+    "run_id": "daily-20261116",
+    "release": "39d8e48c5f4bfefeed7d5b05682edb733ddb8e8a",
+    "preopen_status": "PREOPEN_INPUTS_PREPARED",
+    "preopen_sequence": 1438,
+    "preopen_model_calls": 0,
+    "preopen_orders_submitted": 0,
+    "operator_journal": [
+      {
+        "at": "2026-11-16T15:00:56Z",
+        "step": "snapshot",
+        "status": "UNAVAILABLE",
+        "reason": "DASHBOARD_SNAPSHOT_DEADLINE"
+      },
+      {
+        "at": "2026-11-16T15:01:48Z",
+        "step": "snapshot",
+        "status": "UNAVAILABLE",
+        "reason": "DASHBOARD_PENDING_SNAPSHOT_RETAINED"
+      },
+      {
+        "at": "2026-11-16T15:02:45Z",
+        "step": "snapshot",
+        "status": "UNAVAILABLE",
+        "reason": "DASHBOARD_PENDING_SNAPSHOT_RETAINED"
+      }
+    ],
+    "controller_reason": "LAUNCH_REVIEW_RETRY_LIMIT",
+    "review_attempts": 3,
+    "launch_attempt_recorded": false,
+    "worker_id_recorded": false,
+    "session_report_reason": "SESSION_INSPECTION_FAILED",
+    "original_timeout_substage": "UNMEASURED",
+    "host_recovery": "PUBLISHED",
+    "recovery_release": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+    "recovery_build": {
+      "image_id": "sha256:2a3b7021e86f43152f8ba3a0a8c4bac3f413f664f575fe0952bbb46f51435645",
+      "status": "IMAGE_BUILT"
+    },
+    "recovery_receipt": {
+      "binding_sha256": "5b6e64e424402a11e2ec95f3db864dea5a06c09ffd65c5d2a098c428852d037f",
+      "checkpoint": {
+        "feed_sequence": 1432,
+        "owner_revision": 5453,
+        "runtime_generation": 15
+      },
+      "credentials_opened": false,
+      "display_database_bytes": 10264576,
+      "display_history": "portfolio-snapshot-v1",
+      "execution_authority": false,
+      "fills": 0,
+      "held_plays": 0,
+      "live_enabled": false,
+      "population_id": "connected-simulation-1000-v1",
+      "provider_calls": false,
+      "published_at": "2026-11-17T03:30:16.529561+00:00",
+      "retained_directory": ".retained-snapshot-fd01-35ac8e",
+      "source_database_bytes": 70516736,
+      "source_modified": false,
+      "status": "PUBLISHED",
+      "version": "native-dashboard-snapshot-v1"
+    },
+    "scheduler_and_reader_installation": "CONFIRMED",
+    "deployment": {
+      "daily_info": {
+        "automatic_catalog_blockers": [],
+        "close_at": "2026-11-17T21:00:00+00:00",
+        "failed_snapshot_read": true,
+        "last_runtime_started_at": "2026-11-10T15:02:03.133442+00:00",
+        "live_enabled": false,
+        "open_at": "2026-11-17T14:30:00+00:00",
+        "owner_state": {
+          "entry_halted": true,
+          "feed_sequence": 1432,
+          "halt_reason": "OPTION_RUNTIME_FAILED",
+          "owner_configuration_sha256": "1f17034e5d8e2a6e6f838950cc58621230b05206eca1d268c6273c7d6d3bbb96",
+          "owner_revision": 5453,
+          "runtime_generation": 15,
+          "runtime_status": "FAILED"
+        },
+        "prepare_at": "2026-11-17T14:00:00+00:00",
+        "provider_calls": false,
+        "receipt": null,
+        "start_at": "2026-11-17T15:00:00+00:00",
+        "start_blockers": [
+          "OWNER_NOT_NORMALLY_STOPPED",
+          "OWNER_HALT_REQUIRES_REVIEW"
+        ],
+        "state_modified": false,
+        "status": "DAILY_INFO",
+        "swing_expiration": "2026-11-27",
+        "swing_history_enrolled": true,
+        "target_session": "2026-11-17",
+        "trading_ready": false,
+        "version": "paper-daily-info-v1"
+      },
+      "scheduler": {
+        "image_id": "sha256:2a3b7021e86f43152f8ba3a0a8c4bac3f413f664f575fe0952bbb46f51435645",
+        "live_enabled": false,
+        "paused": false,
+        "release": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+        "schedule": {
+          "close_at": "2026-11-17T21:00:00+00:00",
+          "prepare_at": "2026-11-17T14:00:00+00:00",
+          "start_at": "2026-11-17T15:00:00+00:00",
+          "target_session": "2026-11-17"
+        },
+        "status": "DAILY_SCHEDULE_INSTALLED",
+        "trading_ready": false,
+        "updated": true
+      },
+      "reader": {
+        "previous": "trade-bot-dashboard-reader-ce2297726fe8",
+        "release": "fd7ff0186690fc5192fb93f959087acbec28f74c",
+        "status": "DASHBOARD_READER_UPDATED"
+      },
+      "timer": {
+        "unit": "trade-bot-paper-daily.timer",
+        "active_state": "active"
+      }
+    }
+  },
+  "offline": {
+    "network": "private namespace with loopback only",
+    "external_market_calls": false,
+    "external_model_calls": false,
+    "live_enabled": false,
+    "installed": {
+      "application_files": 333,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "82df83122b3fd2b23fa3104c42666f3d2095a4b9857d83130968a3bfb344d3a3"
+    },
+    "system": {
+      "tests": 614,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 1,
+      "passed": 613,
+      "xml_sha256": "598d2d6071742b7aab7839b9fa1d35d1dc33988e3af05339659fb5976588f228",
+      "skip_reason": "Reader 10001 is not mapped in this environment: uid"
+    },
+    "targeted_overlapping": {
+      "tests": 13,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "passed": 13,
+      "xml_sha256": "30afc3be53d54acbec4e0854c222f1e44c05a54900c8d95f9a3b1fa5e399d084"
+    },
+    "deployed_release_reproduction": {
+      "baseline_release": "39d8e48c5f4bfefeed7d5b05682edb733ddb8e8a",
+      "synthetic": true,
+      "injection": "hold display projection past the existing five-second deadline",
+      "old_publisher_attempts": [
+        {
+          "reason": "DASHBOARD_SNAPSHOT_DEADLINE",
+          "seconds": 5.076538
+        },
+        {
+          "reason": "DASHBOARD_PENDING_SNAPSHOT_RETAINED",
+          "seconds": 0.003257
+        },
+        {
+          "reason": "DASHBOARD_PENDING_SNAPSHOT_RETAINED",
+          "seconds": 0.002333
+        }
+      ],
+      "source_before": {
+        "options.db.runtime.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "venue.db": "1bea299bb925a57c52b6be0572fc1eb727baa313571185508d299ee7840692e7",
+        "options.db": "686cde94b40a5f23bbf5eaf569a1346a1657fc17757412e59ada0acaad7dacd8",
+        "options.db.authority.db": "fee91d3c39056353222b59e9ba844f815214696b3c9d5532f6652e98dbaeee4a",
+        "runtime.json": "b35cb8ce667eae815ddf8fb9a6d9f120056547822dcfa613ae261ec0f9d30ad6"
+      },
+      "previous_checkpoint": {
+        "owner_revision": 7,
+        "runtime_generation": 0,
+        "feed_sequence": 0
+      },
+      "previous_display_sha256": "2403b89f5770ccb2658128e1d58daa120b316c7b351b5059cfe10a2c7d07efcc",
+      "failed_file_sha256": "342d4656fe8c04034d2c171789fe35b4948b4aaa0f4619d218d14d73f922fd0c",
+      "recovery_seconds": 0.032801,
+      "result": "PUBLISHED",
+      "original_failed_file_retained": true,
+      "source_files_unchanged": true,
+      "next_ordinary_publication": "PUBLISHED",
+      "live_enabled": false,
+      "deployed_snapshot_checker_accepted_new_publication": true
+    },
+    "large_synthetic_replay": {
+      "synthetic": true,
+      "cpu_affinity": [
+        4
+      ],
+      "deadline_seconds": 5,
+      "fixture": "two held plays, 1,025 retained inputs in each of the two runtime-input tables",
+      "injected_deadline_stage": "PROJECT_DISPLAY",
+      "end_to_end_recovery_seconds": 0.132005,
+      "status": "PUBLISHED",
+      "checkpoint": {
+        "owner_revision": 23,
+        "runtime_generation": 0,
+        "feed_sequence": 1025
+      },
+      "held_plays": 2,
+      "fills": 2,
+      "source_database_bytes": 135880704,
+      "display_database_bytes": 651264,
+      "source_modified": false,
+      "provider_calls": false,
+      "credentials_opened": false,
+      "execution_authority": false,
+      "live_enabled": false,
+      "pending_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_files_unchanged_and_native_account_report_matched": true
+    },
+    "large_replay_scope": "The native test fixture used padded input rows. A deliberate delay during display projection forced the first deadline. The timed recovery and the comparison with the original native report ran without the injected delay.",
+    "scratch_trial_detail": "An earlier attempt to set up the larger fixture used a clock preceding its two fills and failed its initial accounting check before the deadline experiment. The completed trial used the original fixture clock two seconds after entry.",
+    "operator_runbook": {
+      "method": "Both shell blocks ran using real disposable Git worktrees, simulated systemd/Docker/host commands, and a network-isolated local remote. The actual host recovery remains unverified.",
+      "cases": {
+        "success": {
+          "recovery_exit": 0,
+          "installation_exit": 0,
+          "checkout": "fd7ff01"
+        },
+        "timeout": {
+          "recovery_exit": 2,
+          "installation_exit": null,
+          "checkout": "39d8e48"
+        },
+        "failed_install": {
+          "recovery_exit": 0,
+          "installation_exit": 1,
+          "checkout": "39d8e48"
+        },
+        "service_busy": {
+          "recovery_exit": 0,
+          "installation_exit": 1,
+          "checkout": "39d8e48"
+        },
+        "worker_busy": {
+          "recovery_exit": 0,
+          "installation_exit": 1,
+          "checkout": "39d8e48"
+        }
+      }
+    }
+  }
+}

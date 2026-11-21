@@ -1,0 +1,24 @@
+{
+  "version": "publication-failure-baseline-v1",
+  "synthetic": true,
+  "application_commit": "29ef510748ea4fe0b18592d8483c7dcf836b15bb",
+  "injected": "PUBLISHER exception with two positions held",
+  "runtime": [
+    {
+      "status": "STOPPED",
+      "reason": "OPTION_RUNTIME_STOPPED",
+      "feed_sequence": 30
+    }
+  ],
+  "execution": {
+    "status": "RECORDED",
+    "entry_fills": 2,
+    "exit_fills": 0,
+    "completed_round_trips": 0,
+    "carry_in_exits": 0
+  },
+  "test_result": "FAILED: worker stopped; collector assertion also detects shared stop event; first-component ordering assertion failed",
+  "junit_sha256": "a6a3dde0d402993308e841673924992370b15d01ad57bc421eac6653542a42f9",
+  "source_journal_sha256": "20b0aab2d46b746db818a00a8e977cc8bf5a4f644773d3dedc821d33272b2bbc",
+  "live_enabled": false
+}

@@ -1,0 +1,144 @@
+{
+  "version": "mixed-dashboard-review-v1",
+  "purpose": "OFFLINE UI FIXTURE ONLY; NOT PROSPECTIVE PAPER ENROLLMENT",
+  "start_at": "2026-10-09T15:00:00+00:00",
+  "limits": {
+    "version": "long-option-admission-v1",
+    "mode": "PAPER",
+    "account_id": "ui-review-virtual-account",
+    "population_id": "ui-review-stock-20261009",
+    "allowed_underlyings": [
+      "SPY"
+    ],
+    "provider": "fixture",
+    "option_source": "fixture-opra",
+    "underlying_source": "fixture-equity",
+    "session_source": "XNYS_REGULAR_INTERSECTION_V1",
+    "max_contracts": 10,
+    "max_entry_debit": "500",
+    "max_account_exposure": "500",
+    "max_full_premium_loss": "500",
+    "entry_fee_per_contract": "0.65",
+    "exit_fee_per_contract": "0.65",
+    "entry_fee_per_order": "1",
+    "exit_fee_per_order": "1",
+    "slippage_bps": "5",
+    "max_spread_fraction": "0.10",
+    "minimum_underlying_price": "5",
+    "quote_max_age_seconds": 10,
+    "account_max_age_seconds": 10,
+    "max_receive_lag_seconds": 2,
+    "max_sync_seconds": 2,
+    "approval_lifetime_seconds": 5
+  },
+  "execution": {
+    "mixed_owner": {
+      "version": "mixed-native-owner-v1",
+      "stocks": {
+        "version": "mixed-long-shares-v1",
+        "provider": "fixture",
+        "quote_source": "stock-tape",
+        "allowed_symbols": [
+          "SPY",
+          "QQQ"
+        ],
+        "share_step": "1",
+        "max_shares": "2",
+        "max_entry_debit": "900",
+        "max_account_exposure": "950",
+        "minimum_price": "5",
+        "max_spread_fraction": "0.1",
+        "slippage_bps": "0",
+        "entry_fee_per_share": "0.01",
+        "exit_fee_per_share": "0.01",
+        "entry_fee_per_order": "0.1",
+        "exit_fee_per_order": "0.1",
+        "quote_max_age_seconds": 30,
+        "max_receive_lag_seconds": 5,
+        "approval_lifetime_seconds": 10
+      },
+      "allocation": "daily-calendar-fixture-v1",
+      "daily_data_cost": "0.5",
+      "daily_host_cost": "1",
+      "daily_operating_cost": "0.25"
+    },
+    "version": "option-paper-lifecycle-v1",
+    "capital": "1000",
+    "daily_loss_limit": "600",
+    "total_loss_limit": "800",
+    "calendar_source": "XNYS_REGULAR_INTERSECTION_V1",
+    "entry_cutoff_minutes": 30,
+    "exit_cutoff_minutes": 15,
+    "expiry_guard_seconds": 60,
+    "premium_catastrophe_fraction": "0.5",
+    "supervisor_max_age_seconds": 20,
+    "process_timeout_seconds": 5.0,
+    "cost_policy": null,
+    "loss_control": {
+      "version": "native-position-loss-v1",
+      "max_consecutive_losses": 2,
+      "cooldown_seconds": 1800,
+      "families": [
+        {
+          "family": "DEGEN",
+          "max_consecutive_losses": 2,
+          "cooldown_seconds": 1800
+        },
+        {
+          "family": "SWING",
+          "max_consecutive_losses": 2,
+          "cooldown_seconds": 1800
+        },
+        {
+          "family": "SCOPE",
+          "max_consecutive_losses": 2,
+          "cooldown_seconds": 1800
+        }
+      ]
+    }
+  },
+  "proposal": {
+    "action": "OPEN_LONG",
+    "instrument": {
+      "provider": "fixture",
+      "instrument_id": "stock-spy",
+      "symbol": "SPY",
+      "kind": "ETF",
+      "market": "US_LISTED",
+      "currency": "USD",
+      "tick": "0.01",
+      "metadata_complete": true,
+      "tradable": true
+    },
+    "source_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "family": "SWING",
+    "source_at": "2026-10-09T14:59:40Z",
+    "valid_until": "2026-10-09T15:00:10Z",
+    "exit_at": "2026-10-09T15:10:00Z",
+    "original_invalidation": "90",
+    "original_target": "120",
+    "thesis": "Offline UI fixture: original share thesis, not model advice or a market signal."
+  },
+  "quote": {
+    "source": "stock-tape",
+    "source_at": "2026-10-09T15:00:00Z",
+    "received_at": "2026-10-09T15:00:00Z",
+    "entitlement": "REALTIME",
+    "complete": true,
+    "instrument": {
+      "provider": "fixture",
+      "instrument_id": "stock-spy",
+      "symbol": "SPY",
+      "kind": "ETF",
+      "market": "US_LISTED",
+      "currency": "USD",
+      "tick": "0.01",
+      "metadata_complete": true,
+      "tradable": true
+    },
+    "bid": "99.99",
+    "ask": "100",
+    "bid_size": "10",
+    "ask_size": "10"
+  }
+}

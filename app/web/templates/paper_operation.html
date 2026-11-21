@@ -1,0 +1,10 @@
+<section id="paper-operation" class="paper-operation" data-state="{{ ops.state }}" aria-label="PAPER operations" aria-live="polite">
+  <div class="paper-operation-head"><div><small>DAILY PAPER</small><h2>{{ ops.title }}</h2></div>{% if ops.checked %}<span>Controller checked <time>{{ ops.checked }}</time></span>{% endif %}</div>
+  <p class="paper-current-detail">{{ ops.detail }}</p>
+  {% if ops.schedule %}<p>{{ ops.schedule }}</p>{% endif %}
+  {% if ops.session %}<div class="paper-session"><strong>Last worker report</strong> {{ ops.session }}</div>{% endif %}
+  {% if ops.failure %}<p class="paper-failure">{{ ops.failure }}</p>{% endif %}
+  {% if ops.confirmed is defined and ops.confirmed is not none %}<p>Last scan · {{ ops.confirmed }} confirmed setups</p>{% endif %}
+  {% if ops.checks %}<details><summary>Last entry and strategy blockers</summary><ul>{% for item in ops.checks %}<li>{{ item }}</li>{% endfor %}</ul></details>{% endif %}
+  {% if ops.feed %}<div class="paper-facts"><span>Feed at report <b>{{ ops.feed|lower }}</b></span><span>Heartbeat at report <b>{{ ops.heartbeat|lower }}</b></span>{% if ops.completed is not none %}<span>Cycles <b>{{ ops.completed }} complete · {{ ops.skipped }} skipped</b></span>{% endif %}<span>Entry fills <b>{{ ops.entry_fills if ops.entry_fills is not none else 'unknown' }}</b></span><span>Exit fills <b>{{ ops.exit_fills if ops.exit_fills is not none else 'unknown' }}</b></span></div>{% endif %}
+</section>

@@ -1,0 +1,1570 @@
+{
+  "date_utc": "2026-11-16",
+  "application_commit": "365791d81668343a16352fc601af1008ee9d1a63",
+  "synthetic": true,
+  "provider_calls": false,
+  "external_model_calls": false,
+  "live_enabled": false,
+  "host_deployment": "Last operator-confirmed release 39d8e48. These runs were offline.",
+  "installed_application": {
+    "application_files": 333,
+    "runtime_pins": 60,
+    "application_manifest_sha256": "19ccdaf91f970b2ae0e86e48319cd244a7a18c6124754788d2bd993841bb160b"
+  },
+  "tests": {
+    "installed_system": {
+      "tests": 605,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "sha256": "a327f745a198df5a5949ceddcb92c632763bdbf22d7f255b496469b056fdcfbb"
+    },
+    "related": {
+      "tests": 188,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "24280c5ca1efc61ac14649e7e53e0acca1744a8fae0dca6872c20a61157e2b14"
+    },
+    "isolated_handoff": {
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "30595b9a7f6d3ee897c1d3face91adffdc9e2d47dee4c2fcd99ae3de32fb5020"
+    },
+    "host_mounts_after_test_fix": {
+      "tests": 48,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "be85a456f8f12c9f87eff14059eb246dbcb045d38983905f46082ee0d207606e"
+    },
+    "selection": {
+      "tests": 72,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "3a0ae0e3fee0b5fc89e22b541c6e35b724ef7eecde2f7a74a817f5edae6d5eff"
+    },
+    "history_and_unsent_guard": {
+      "tests": 101,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "b7016c9101c771428ed7635c4763eedb2c48af150b57310f09be4c75ea65edb7"
+    },
+    "text_reports": {
+      "tests": 89,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "b0aaec658b3dfae6900c7d665efa18092344f063d2a7bd61fefaee200cf75ae1"
+    },
+    "previous_installed_with_mount_false_positive": {
+      "tests": 604,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 1,
+      "sha256": "93a3fe3cf79c1d6d80c5a9b8423b23ccebe2a15f4c571222d8f6bd2f6f35d07d"
+    },
+    "baseline_unsent_guard": {
+      "tests": 4,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "e5ef9c4c5fc953ca7b1ee003d6e1a41b40de2df95e16125945e153ce9f22b4ea"
+    },
+    "baseline_busy_owner": {
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "f6216091db8e29d3ae21a9591cee6e9ea36f0d7c23c20e42759695b7d84116d0"
+    },
+    "baseline_interpreter_teardown": {
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "55f8e323ea91806c5520af273daafe4f2d7d69ff6a88daec0e86a0cc9f66ee3d"
+    }
+  },
+  "system_skip": "Reader 10001 is not mapped in this environment: uid",
+  "test_scope": "The listed test groups overlap. Baseline failures are intentional reproductions. The previous system run failed one fixture assertion because its legitimate capture source had /owner in the temporary path. Test-only commit 976b303 now checks each approved read-only source and destination exactly. All 48 host tests passed with the reproducing path.",
+  "application_commits": {
+    "6cb503d": "Commit the original paid reply, charge and ordinary option selection together.",
+    "8b87749": "Reuse verified paid history on exact input matches and distinguish a proven expiry before native handoff.",
+    "7888765": "Run the existing native accept protocol on a dedicated transport thread under the original deadline, including cancellation and child reaping.",
+    "365791d": "After a successful local response is flushed and its venue transaction is closed, terminate the fixed accept child promptly so the parent can observe its exit under the same deadline."
+  },
+  "first_settled_commit_regression": "On 1897258 the first committed paid reply still had a null selected option. On 6cb503d the first committed charge included both selection receipts.",
+  "retained_model_history": {
+    "source_records": 66,
+    "ordered_records_sha256": "cfaccd33318afe2af36dec2d4511116d89ead73566c2e76937975721276d5107",
+    "records_with_entry_id": 1,
+    "warm_samples_per_build": 9,
+    "before_median_seconds": 0.056781,
+    "after_median_seconds": 0.006958,
+    "cold_seconds_before": 3.512942,
+    "cold_seconds_after": 3.310307
+  },
+  "calendar_source": {
+    "retained_packets": 1769,
+    "retained_model_calls": 66,
+    "generation": 10923,
+    "bytes": 103739392,
+    "native_sha256": "fedfa2f8ebe55796ce58b541465ddb3797763aa1d60b550238cc003d26693ea8",
+    "authority_sha256": "524aa23e9789e152143ae786d5dbf8a719219b31adbf76eb10d7a42b287bd41c",
+    "target_session": "2026-12-01",
+    "previous_session": "2026-11-30",
+    "network": "Private loopback only",
+    "default_cpu_affinity_count": 1,
+    "method": "Separate disposable copies of the stopped November 30 synthetic account were mounted at their enrolled paths in private namespaces. Each copy began with matching native and authority hashes. The normal reviewed calendar rollover, connected worker, publication and shutdown ran with synthetic market and model inputs. The saved source hashes matched after the trials.",
+    "comparability": "Each replay used the original ten-second quote limit and advancing wall time. Feed delivery and model reply timestamps can differ across runs. The earlier November 30 deadline failure remains recorded in PAPER_TIMING_20261116_PROOF.json."
+  },
+  "calendar_trials": {
+    "baseline_1897258_335s": {
+      "cpu_affinity_count": 1,
+      "entry_decisions": [
+        {
+          "reply_at": "2026-12-01T15:00:23.672126+00:00",
+          "original_deadline": "2026-12-01T15:00:26.233710Z",
+          "review_at": "2026-12-01T15:00:24.449636+00:00",
+          "status": "UNKNOWN",
+          "reason": null,
+          "reply_headroom_seconds": 2.561584,
+          "review_headroom_seconds": 1.784074,
+          "reply_to_review_seconds": 0.77751
+        }
+      ],
+      "cycle_phases_seconds": [
+        {
+          "CYCLE_OPPORTUNITY_CLAIM": 0.355403,
+          "SCAN": 0.174109,
+          "STOCK_SCAN": 0.629043,
+          "SCOPE_SCAN": 0.00137,
+          "ENTRY_MODEL_REQUEST": 0.279142,
+          "ENTRY_MODEL_ADMISSION": 0.539316,
+          "ENTRY_MODEL": 0.005856,
+          "ENTRY_MODEL_SETTLEMENT": 0.41139,
+          "ENTRY_MIXED_SELECTION": 0.001471,
+          "ENTRY_SCOPE_RECEIPT_CHECK": 0.031891,
+          "ENTRY_SCOPE_SELECTION": 0.319531,
+          "ENTRY_PROTECTION_WAIT": 0.000182,
+          "ENTRY_OPTION_MARKET_READ": 0.004836,
+          "ENTRY_REVIEW": 0.140383,
+          "ADMISSION": 0.636184,
+          "NATIVE_ACCEPT_SPAWN": 0.001254,
+          "NATIVE_ACCEPT": 0.900306,
+          "DISPATCH": 2.713992
+        }
+      ],
+      "accept_spans": [
+        {
+          "NATIVE_ACCEPT_SPAWN": {
+            "elapsed_seconds": 0.001254,
+            "remaining_at_start_seconds": -0.332973,
+            "status": "FAILED"
+          },
+          "NATIVE_ACCEPT": {
+            "elapsed_seconds": 0.900306,
+            "status": "FAILED"
+          }
+        }
+      ],
+      "dispatch_rejections": [],
+      "attempt_events": {
+        "ATTEMPT_UNCERTAIN": 1,
+        "PORTFOLIO_ATTEMPT_STARTED": 1
+      },
+      "duration_seconds": 335,
+      "new_packets": 32,
+      "model_calls": 1,
+      "ending_generation": 11501,
+      "operator_outcome": "STOPPED",
+      "published": true,
+      "native_accept_failures": 1,
+      "runtime_failures": 0,
+      "publication_failures": 0,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "coverage": {
+        "expected": 2,
+        "evaluated": 1,
+        "coverage_percent": 50.0,
+        "unmeasured_slots": [
+          {
+            "slot": 5987125,
+            "runtime_status": "MISSING"
+          }
+        ],
+        "target_met": false
+      },
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 0,
+        "exit_fills": 0,
+        "completed_round_trips": 0,
+        "carry_in_exits": 0
+      },
+      "worker_cpu_percent": 84.349,
+      "average_busy_cores": 0.843492,
+      "quote_age_at_reservation_seconds": 8.486213,
+      "raw_report_sha256": "f4f8dbd851198e37249d530881f8cda4a5e9f2a1a4f16700f730785911909882",
+      "test": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "b8a1bb2f47bef97acdce740a7cb20b6fc909cd1dc9181f89ea2c94814f687f03"
+      }
+    },
+    "selection_6cb503d_335s": {
+      "cpu_affinity_count": 1,
+      "entry_decisions": [
+        {
+          "reply_at": "2026-12-01T15:00:24.303196+00:00",
+          "original_deadline": "2026-12-01T15:00:26.704305Z",
+          "review_at": "2026-12-01T15:00:24.758476+00:00",
+          "status": "UNKNOWN",
+          "reason": null,
+          "reply_headroom_seconds": 2.401109,
+          "review_headroom_seconds": 1.945829,
+          "reply_to_review_seconds": 0.45528
+        }
+      ],
+      "cycle_phases_seconds": [
+        {
+          "CYCLE_OPPORTUNITY_CLAIM": 0.377945,
+          "SCAN": 0.14768,
+          "STOCK_SCAN": 0.774636,
+          "SCOPE_SCAN": 0.001755,
+          "ENTRY_MODEL_REQUEST": 0.335742,
+          "ENTRY_MODEL_ADMISSION": 0.501156,
+          "ENTRY_MODEL": 0.006194,
+          "ENTRY_MIXED_SELECTION": 0.000598,
+          "ENTRY_SCOPE_RECEIPT_CHECK": 0.03402,
+          "ENTRY_SCOPE_SELECTION": 0.000697,
+          "ENTRY_MODEL_SETTLEMENT": 0.390491,
+          "ENTRY_PROTECTION_WAIT": 0.000716,
+          "ENTRY_OPTION_MARKET_READ": 0.052054,
+          "ENTRY_REVIEW": 0.147652,
+          "ADMISSION": 0.618035,
+          "NATIVE_ACCEPT_SPAWN": 0.001038,
+          "NATIVE_ACCEPT": 0.992068,
+          "DISPATCH": 2.764936
+        }
+      ],
+      "accept_spans": [
+        {
+          "NATIVE_ACCEPT_SPAWN": {
+            "elapsed_seconds": 0.001038,
+            "remaining_at_start_seconds": -0.159781,
+            "status": "FAILED"
+          },
+          "NATIVE_ACCEPT": {
+            "elapsed_seconds": 0.992068,
+            "status": "FAILED"
+          }
+        }
+      ],
+      "dispatch_rejections": [],
+      "attempt_events": {
+        "ATTEMPT_UNCERTAIN": 1,
+        "PORTFOLIO_ATTEMPT_STARTED": 1
+      },
+      "duration_seconds": 335,
+      "new_packets": 32,
+      "model_calls": 1,
+      "ending_generation": 11480,
+      "operator_outcome": "STOPPED",
+      "published": true,
+      "native_accept_failures": 1,
+      "runtime_failures": 0,
+      "publication_failures": 0,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "coverage": {
+        "expected": 2,
+        "evaluated": 1,
+        "coverage_percent": 50.0,
+        "unmeasured_slots": [
+          {
+            "slot": 5987125,
+            "runtime_status": "MISSING"
+          }
+        ],
+        "target_met": false
+      },
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 0,
+        "exit_fills": 0,
+        "completed_round_trips": 0,
+        "carry_in_exits": 0
+      },
+      "worker_cpu_percent": 84.868,
+      "average_busy_cores": 0.848684,
+      "quote_age_at_reservation_seconds": 8.321429,
+      "raw_report_sha256": "225688c3de0a5dd2ecd2a603b8040be5b857b080cfdcac8a2e322b193ae7682d",
+      "test": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "ea785099d68678c2a57eddeef56cb9d9716bbcc74bf127790b1effddec5e90cc"
+      }
+    },
+    "cost_and_unsent_8b87749_335s": {
+      "cpu_affinity_count": 1,
+      "entry_decisions": [
+        {
+          "reply_at": "2026-12-01T15:00:24.247598+00:00",
+          "original_deadline": "2026-12-01T15:00:27.247621Z",
+          "review_at": "2026-12-01T15:00:24.610987+00:00",
+          "status": "UNKNOWN",
+          "reason": null,
+          "reply_headroom_seconds": 3.000023,
+          "review_headroom_seconds": 2.636634,
+          "reply_to_review_seconds": 0.363389
+        }
+      ],
+      "cycle_phases_seconds": [
+        {
+          "CYCLE_OPPORTUNITY_CLAIM": 0.487434,
+          "SCAN": 0.066249,
+          "STOCK_SCAN": 0.464312,
+          "SCOPE_SCAN": 0.001215,
+          "ENTRY_MODEL_REQUEST": 0.366628,
+          "ENTRY_MODEL_ADMISSION": 0.400882,
+          "ENTRY_MODEL": 0.005413,
+          "ENTRY_MIXED_SELECTION": 0.000464,
+          "ENTRY_SCOPE_RECEIPT_CHECK": 0.030206,
+          "ENTRY_SCOPE_SELECTION": 0.000541,
+          "ENTRY_MODEL_SETTLEMENT": 0.353712,
+          "ENTRY_PROTECTION_WAIT": 8.1e-05,
+          "ENTRY_OPTION_MARKET_READ": 0.004154,
+          "ENTRY_REVIEW": 0.098999,
+          "ADMISSION": 0.64248,
+          "NATIVE_ACCEPT_SPAWN": 1.010612,
+          "NATIVE_ACCEPT": 1.04891,
+          "DISPATCH": 2.73041
+        }
+      ],
+      "accept_spans": [
+        {
+          "NATIVE_ACCEPT_SPAWN": {
+            "elapsed_seconds": 1.010612,
+            "remaining_at_start_seconds": 0.788761,
+            "status": "FAILED"
+          },
+          "NATIVE_ACCEPT": {
+            "elapsed_seconds": 1.04891,
+            "status": "FAILED"
+          }
+        }
+      ],
+      "dispatch_rejections": [],
+      "attempt_events": {
+        "ATTEMPT_UNCERTAIN": 1,
+        "PORTFOLIO_ATTEMPT_STARTED": 1
+      },
+      "duration_seconds": 335,
+      "new_packets": 32,
+      "model_calls": 1,
+      "ending_generation": 11505,
+      "operator_outcome": "STOPPED",
+      "published": true,
+      "native_accept_failures": 1,
+      "runtime_failures": 0,
+      "publication_failures": 0,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "coverage": {
+        "expected": 2,
+        "evaluated": 1,
+        "coverage_percent": 50.0,
+        "unmeasured_slots": [
+          {
+            "slot": 5987125,
+            "runtime_status": "MISSING"
+          }
+        ],
+        "target_met": false
+      },
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 0,
+        "exit_fills": 0,
+        "completed_round_trips": 0,
+        "carry_in_exits": 0
+      },
+      "worker_cpu_percent": 83.59,
+      "average_busy_cores": 0.835896,
+      "quote_age_at_reservation_seconds": 7.605906,
+      "raw_report_sha256": "83d0e056f52017083cd966a76555b4a430f00a39a8831c78f8f018e142f4d945",
+      "test": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "14b5547cd41652e14dc2d12cadfaa3fe946a40c2ba46602eef7f9f1e1a7c5a01"
+      }
+    },
+    "intermediate_7888765_first_335s": {
+      "cpu_affinity_count": 1,
+      "entry_decisions": [],
+      "cycle_phases_seconds": [],
+      "accept_spans": [],
+      "dispatch_rejections": [],
+      "attempt_events": {},
+      "qualification": "NO_COMPLETED_FIXTURE_REPORT",
+      "test": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "f1ea792005666341e31f70689505a5b1e477b0fde71ffa24c1154a04fb9f296c"
+      },
+      "failure": "Rollover could not obtain a valid stored portfolio ownership report before the worker started. This run has no paced coverage."
+    },
+    "intermediate_7888765_90s": {
+      "cpu_affinity_count": 1,
+      "entry_decisions": [
+        {
+          "reply_at": "2026-12-01T15:00:24.592643+00:00",
+          "original_deadline": "2026-12-01T15:00:27.614953Z",
+          "review_at": "2026-12-01T15:00:25.000886+00:00",
+          "status": "UNKNOWN",
+          "reason": null,
+          "reply_headroom_seconds": 3.02231,
+          "review_headroom_seconds": 2.614067,
+          "reply_to_review_seconds": 0.408243
+        }
+      ],
+      "cycle_phases_seconds": [
+        {
+          "CYCLE_OPPORTUNITY_CLAIM": 0.618194,
+          "SCAN": 0.057052,
+          "STOCK_SCAN": 0.490651,
+          "SCOPE_SCAN": 0.001278,
+          "ENTRY_MODEL_REQUEST": 0.310977,
+          "ENTRY_MODEL_ADMISSION": 0.428881,
+          "ENTRY_MODEL": 0.007376,
+          "ENTRY_MIXED_SELECTION": 0.000588,
+          "ENTRY_SCOPE_RECEIPT_CHECK": 0.030549,
+          "ENTRY_SCOPE_SELECTION": 0.000772,
+          "ENTRY_MODEL_SETTLEMENT": 0.395306,
+          "ENTRY_PROTECTION_WAIT": 9.5e-05,
+          "ENTRY_OPTION_MARKET_READ": 0.004865,
+          "ENTRY_REVIEW": 0.084155,
+          "ADMISSION": 0.418593,
+          "NATIVE_ACCEPT_SPAWN": 0.00076,
+          "NATIVE_ACCEPT_TRANSPORT": 0.531535,
+          "NATIVE_ACCEPT": 0.944725,
+          "DISPATCH": 2.635335
+        }
+      ],
+      "accept_spans": [
+        {
+          "NATIVE_ACCEPT_SPAWN": {
+            "elapsed_seconds": 0.00076,
+            "remaining_at_start_seconds": 0.518975,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT_TRANSPORT": {
+            "elapsed_seconds": 0.531535,
+            "status": "FAILED"
+          },
+          "NATIVE_ACCEPT": {
+            "elapsed_seconds": 0.944725,
+            "status": "FAILED"
+          }
+        }
+      ],
+      "dispatch_rejections": [],
+      "attempt_events": {
+        "ATTEMPT_UNCERTAIN": 1,
+        "PORTFOLIO_ATTEMPT_STARTED": 1
+      },
+      "duration_seconds": 90,
+      "new_packets": 8,
+      "model_calls": 1,
+      "ending_generation": 11086,
+      "operator_outcome": "STOPPED",
+      "published": true,
+      "native_accept_failures": 1,
+      "runtime_failures": 0,
+      "publication_failures": 0,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "coverage": {
+        "expected": 1,
+        "evaluated": 1,
+        "coverage_percent": 100.0,
+        "unmeasured_slots": [],
+        "target_met": true
+      },
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 0,
+        "exit_fills": 0,
+        "completed_round_trips": 0,
+        "carry_in_exits": 0
+      },
+      "worker_cpu_percent": 86.443,
+      "average_busy_cores": 0.864433,
+      "quote_age_at_reservation_seconds": 7.936937,
+      "raw_report_sha256": "5a2ea08b3dadfe306eadab8af87906597f5399a02c0ec9f8920fb2e9d2865ec8",
+      "test": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "f9a82b4212da5a7a78d02d224134c49271dd9af845db6eb0f2fd13cd4c64516d"
+      }
+    },
+    "intermediate_7888765_repeat_335s": {
+      "cpu_affinity_count": 1,
+      "entry_decisions": [
+        {
+          "reply_at": "2026-12-01T15:00:24.084119+00:00",
+          "original_deadline": "2026-12-01T15:00:27.497838Z",
+          "review_at": "2026-12-01T15:00:24.465048+00:00",
+          "status": "UNKNOWN",
+          "reason": null,
+          "reply_headroom_seconds": 3.413719,
+          "review_headroom_seconds": 3.03279,
+          "reply_to_review_seconds": 0.380929
+        }
+      ],
+      "cycle_phases_seconds": [
+        {
+          "CYCLE_OPPORTUNITY_CLAIM": 0.785826,
+          "SCAN": 0.049896,
+          "STOCK_SCAN": 0.378609,
+          "SCOPE_SCAN": 0.001248,
+          "ENTRY_MODEL_REQUEST": 0.279634,
+          "ENTRY_MODEL_ADMISSION": 0.376319,
+          "ENTRY_MODEL": 0.006621,
+          "ENTRY_MIXED_SELECTION": 0.000616,
+          "ENTRY_SCOPE_RECEIPT_CHECK": 0.030189,
+          "ENTRY_SCOPE_SELECTION": 0.000689,
+          "ENTRY_MODEL_SETTLEMENT": 0.370291,
+          "ENTRY_PROTECTION_WAIT": 0.0001,
+          "ENTRY_OPTION_MARKET_READ": 0.004673,
+          "ENTRY_REVIEW": 0.081135,
+          "ADMISSION": 0.777702,
+          "NATIVE_ACCEPT_SPAWN": 0.000969,
+          "NATIVE_ACCEPT_TRANSPORT": 1.232393,
+          "NATIVE_ACCEPT": 1.310156,
+          "DISPATCH": 2.650905
+        }
+      ],
+      "accept_spans": [
+        {
+          "NATIVE_ACCEPT_SPAWN": {
+            "elapsed_seconds": 0.000969,
+            "remaining_at_start_seconds": 1.20849,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT_TRANSPORT": {
+            "elapsed_seconds": 1.232393,
+            "status": "FAILED"
+          },
+          "NATIVE_ACCEPT": {
+            "elapsed_seconds": 1.310156,
+            "status": "FAILED"
+          }
+        },
+        {
+          "NATIVE_ACCEPT_SPAWN": {
+            "elapsed_seconds": 0.001148,
+            "remaining_at_start_seconds": 1.960362,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT_TRANSPORT": {
+            "elapsed_seconds": 0.504682,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT": {
+            "elapsed_seconds": 0.506036,
+            "status": "COMPLETE"
+          }
+        }
+      ],
+      "dispatch_rejections": [],
+      "attempt_events": {
+        "ATTEMPT_UNCERTAIN": 1,
+        "PORTFOLIO_ATTEMPT_STARTED": 2
+      },
+      "qualification": "NO_COMPLETED_FIXTURE_REPORT",
+      "test": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "041aee020d3a13d46a4f3707043f08cb3fe3cab176465f255839250a5f32e0d0"
+      },
+      "independent_audit": {
+        "method": "Independent read-only inspection of stopped trial after the scratch harness failed to render its final summary",
+        "coverage": {
+          "expected": 2,
+          "evaluated": 1,
+          "coverage_percent": 50.0,
+          "unmeasured_slots": [
+            {
+              "slot": 5987125,
+              "runtime_status": "MISSING"
+            }
+          ],
+          "target_met": false
+        },
+        "execution": {
+          "status": "RECORDED",
+          "entry_fills": 1,
+          "exit_fills": 1,
+          "completed_round_trips": 1,
+          "carry_in_exits": 0
+        },
+        "operator_outcome": "STOPPED",
+        "ending_generation": 11432,
+        "new_packets": 32,
+        "accounting": "VERIFIED",
+        "held_positions": 0,
+        "native_accept_failures": 1,
+        "runtime_failures": 0,
+        "publication_failures": 0,
+        "attempt_recovery": {
+          "matched_in_run": 1,
+          "unresolved_at_last_snapshot": 0
+        },
+        "native_and_authority_hashes_preserved": true
+      },
+      "qualification_detail": "The scratch summary collector raised TypeError after the worker stopped. A separate read-only inspection verified the retained outcome. The original fixture did not pass."
+    },
+    "intermediate_7888765_separate_335s": {
+      "cpu_affinity_count": 1,
+      "entry_decisions": [
+        {
+          "reply_at": "2026-12-01T15:00:25.022660+00:00",
+          "original_deadline": "2026-12-01T15:00:28.205112Z",
+          "review_at": "2026-12-01T15:00:25.470401+00:00",
+          "status": "UNKNOWN",
+          "reason": null,
+          "reply_headroom_seconds": 3.182452,
+          "review_headroom_seconds": 2.734711,
+          "reply_to_review_seconds": 0.447741
+        }
+      ],
+      "cycle_phases_seconds": [
+        {
+          "CYCLE_OPPORTUNITY_CLAIM": 0.373338,
+          "SCAN": 0.063946,
+          "STOCK_SCAN": 0.531854,
+          "SCOPE_SCAN": 0.001236,
+          "ENTRY_MODEL_REQUEST": 0.30543,
+          "ENTRY_MODEL_ADMISSION": 0.406101,
+          "ENTRY_MODEL": 0.006321,
+          "ENTRY_MIXED_SELECTION": 0.000734,
+          "ENTRY_SCOPE_RECEIPT_CHECK": 0.044071,
+          "ENTRY_SCOPE_SELECTION": 0.000858,
+          "ENTRY_MODEL_SETTLEMENT": 0.437357,
+          "ENTRY_PROTECTION_WAIT": 9.7e-05,
+          "ENTRY_OPTION_MARKET_READ": 0.004465,
+          "ENTRY_REVIEW": 0.080203,
+          "ADMISSION": 0.924563,
+          "NATIVE_ACCEPT_SPAWN": 0.000833,
+          "NATIVE_ACCEPT_TRANSPORT": 0.777557,
+          "NATIVE_ACCEPT": 1.093866,
+          "DISPATCH": 2.520508
+        }
+      ],
+      "accept_spans": [
+        {
+          "NATIVE_ACCEPT_SPAWN": {
+            "elapsed_seconds": 0.000833,
+            "remaining_at_start_seconds": 0.761454,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT_TRANSPORT": {
+            "elapsed_seconds": 0.777557,
+            "status": "FAILED"
+          },
+          "NATIVE_ACCEPT": {
+            "elapsed_seconds": 1.093866,
+            "status": "FAILED"
+          }
+        }
+      ],
+      "dispatch_rejections": [],
+      "attempt_events": {
+        "ATTEMPT_UNCERTAIN": 1,
+        "PORTFOLIO_ATTEMPT_STARTED": 1
+      },
+      "duration_seconds": 335,
+      "new_packets": 31,
+      "model_calls": 1,
+      "ending_generation": 11518,
+      "operator_outcome": "STOPPED",
+      "published": true,
+      "native_accept_failures": 1,
+      "runtime_failures": 0,
+      "publication_failures": 0,
+      "accounting": "VERIFIED",
+      "held_positions": 1,
+      "coverage": {
+        "expected": 2,
+        "evaluated": 1,
+        "coverage_percent": 50.0,
+        "unmeasured_slots": [
+          {
+            "slot": 5987125,
+            "runtime_status": "MISSING"
+          }
+        ],
+        "target_met": false
+      },
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 0,
+        "completed_round_trips": 0,
+        "carry_in_exits": 0
+      },
+      "worker_cpu_percent": 86.055,
+      "average_busy_cores": 0.860554,
+      "quote_age_at_reservation_seconds": 7.464033,
+      "raw_report_sha256": "472bd7669612853d287024ef49e6ceaab3d8282f66a4d1940cfae697764eec5c",
+      "test": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "31258c3771cec4e8b4e5f799623b9bd7a8eeac10ce1bc8adee28ff6a7dbac5ad"
+      }
+    },
+    "final_365791d_first_335s": {
+      "cpu_affinity_count": 1,
+      "entry_decisions": [
+        {
+          "reply_at": "2026-12-01T15:00:33.066356+00:00",
+          "original_deadline": "2026-12-01T15:00:36.109452Z",
+          "review_at": "2026-12-01T15:00:33.589473+00:00",
+          "status": "UNKNOWN",
+          "reason": null,
+          "reply_headroom_seconds": 3.043096,
+          "review_headroom_seconds": 2.519979,
+          "reply_to_review_seconds": 0.523117
+        }
+      ],
+      "cycle_phases_seconds": [
+        {
+          "CYCLE_OPPORTUNITY_CLAIM": 0.32183,
+          "SCAN": 0.047815,
+          "STOCK_SCAN": 0.765061,
+          "SCOPE_SCAN": 0.002045,
+          "ENTRY_MODEL_REQUEST": 0.433689,
+          "ENTRY_MODEL_ADMISSION": 0.525826,
+          "ENTRY_MODEL": 0.008853,
+          "ENTRY_MIXED_SELECTION": 0.000634,
+          "ENTRY_SCOPE_RECEIPT_CHECK": 0.051158,
+          "ENTRY_SCOPE_SELECTION": 0.000925,
+          "ENTRY_MODEL_SETTLEMENT": 0.506489,
+          "ENTRY_PROTECTION_WAIT": 0.000101,
+          "ENTRY_OPTION_MARKET_READ": 0.006755,
+          "ENTRY_REVIEW": 0.117181,
+          "ADMISSION": 0.489704,
+          "NATIVE_ACCEPT_SPAWN": 0.001056,
+          "NATIVE_ACCEPT_TRANSPORT": 0.09673,
+          "NATIVE_ACCEPT": 0.66449,
+          "DISPATCH": 2.852595
+        }
+      ],
+      "accept_spans": [
+        {
+          "NATIVE_ACCEPT_SPAWN": {
+            "elapsed_seconds": 0.001056,
+            "remaining_at_start_seconds": 0.088641,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT_TRANSPORT": {
+            "elapsed_seconds": 0.09673,
+            "status": "FAILED"
+          },
+          "NATIVE_ACCEPT": {
+            "elapsed_seconds": 0.66449,
+            "status": "FAILED"
+          }
+        }
+      ],
+      "dispatch_rejections": [],
+      "attempt_events": {
+        "ATTEMPT_UNCERTAIN": 1,
+        "PORTFOLIO_ATTEMPT_STARTED": 1
+      },
+      "original_entry_budget": {
+        "final_order_state": "UNKNOWN",
+        "approval_expires_at": "2026-12-01T15:00:36.109452Z",
+        "prepared_at": "2026-12-01T15:00:34.033004Z",
+        "attempted_at": "2026-12-01T15:00:34.804832+00:00",
+        "review_to_prepared_at_seconds": 0.443531,
+        "prepared_at_to_attempted_at_seconds": 0.771828,
+        "headroom_at_dispatch_entry_seconds": 1.30462,
+        "headroom_at_native_spawn_seconds": 0.088641,
+        "dispatch_entry_to_native_spawn_budget_used_seconds": 1.215979
+      },
+      "duration_seconds": 335,
+      "new_packets": 31,
+      "model_calls": 1,
+      "ending_generation": 11494,
+      "operator_outcome": "STOPPED",
+      "published": true,
+      "native_accept_failures": 1,
+      "runtime_failures": 0,
+      "publication_failures": 0,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "coverage": {
+        "expected": 2,
+        "evaluated": 1,
+        "coverage_percent": 50.0,
+        "unmeasured_slots": [
+          {
+            "slot": 5987125,
+            "runtime_status": "MISSING"
+          }
+        ],
+        "target_met": false
+      },
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 0,
+        "exit_fills": 0,
+        "completed_round_trips": 0,
+        "carry_in_exits": 0
+      },
+      "worker_cpu_percent": 82.995,
+      "average_busy_cores": 0.829949,
+      "quote_age_at_reservation_seconds": 7.923552,
+      "raw_report_sha256": "6d0c8dd5bafa77485f414f247e488afbf3b375b49540e8104ae641a4a6c742df",
+      "test": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "cf29a2c911c894c4adb8e3c0359a5ae83a1848efeb63d31ef965c0fa36fa81be"
+      }
+    },
+    "final_365791d_repeat_335s": {
+      "cpu_affinity_count": 1,
+      "entry_decisions": [
+        {
+          "reply_at": "2026-12-01T15:00:23.546791+00:00",
+          "original_deadline": "2026-12-01T15:00:26.684403Z",
+          "review_at": "2026-12-01T15:00:24.138696+00:00",
+          "status": "OPEN",
+          "reason": null,
+          "reply_headroom_seconds": 3.137612,
+          "review_headroom_seconds": 2.545707,
+          "reply_to_review_seconds": 0.591905
+        }
+      ],
+      "cycle_phases_seconds": [
+        {
+          "CYCLE_OPPORTUNITY_CLAIM": 0.440428,
+          "SCAN": 0.076597,
+          "STOCK_SCAN": 0.507798,
+          "SCOPE_SCAN": 0.001141,
+          "ENTRY_MODEL_REQUEST": 0.372293,
+          "ENTRY_MODEL_ADMISSION": 0.430742,
+          "ENTRY_MODEL": 0.005456,
+          "ENTRY_MIXED_SELECTION": 0.000535,
+          "ENTRY_SCOPE_RECEIPT_CHECK": 0.02913,
+          "ENTRY_SCOPE_SELECTION": 0.000549,
+          "ENTRY_MODEL_SETTLEMENT": 0.581964,
+          "ENTRY_PROTECTION_WAIT": 9.4e-05,
+          "ENTRY_OPTION_MARKET_READ": 0.004366,
+          "ENTRY_REVIEW": 0.080235,
+          "ADMISSION": 0.310765,
+          "NATIVE_ACCEPT_SPAWN": 0.000507,
+          "NATIVE_ACCEPT_TRANSPORT": 0.813339,
+          "NATIVE_ACCEPT": 0.873806,
+          "DISPATCH": 2.720236
+        }
+      ],
+      "accept_spans": [
+        {
+          "NATIVE_ACCEPT_SPAWN": {
+            "elapsed_seconds": 0.000507,
+            "remaining_at_start_seconds": 0.944924,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT_TRANSPORT": {
+            "elapsed_seconds": 0.813339,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT": {
+            "elapsed_seconds": 0.873806,
+            "status": "COMPLETE"
+          }
+        },
+        {
+          "NATIVE_ACCEPT_SPAWN": {
+            "elapsed_seconds": 0.00229,
+            "remaining_at_start_seconds": 4.251633,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT_TRANSPORT": {
+            "elapsed_seconds": 0.27479,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT": {
+            "elapsed_seconds": 0.275824,
+            "status": "COMPLETE"
+          }
+        }
+      ],
+      "dispatch_rejections": [],
+      "attempt_events": {
+        "PORTFOLIO_ATTEMPT_STARTED": 2
+      },
+      "original_entry_budget": {
+        "final_order_state": "FILLED",
+        "approval_expires_at": "2026-12-01T15:00:26.684403Z",
+        "prepared_at": "2026-12-01T15:00:24.340744Z",
+        "attempted_at": "2026-12-01T15:00:24.855664+00:00",
+        "review_to_prepared_at_seconds": 0.202048,
+        "prepared_at_to_attempted_at_seconds": 0.51492,
+        "headroom_at_dispatch_entry_seconds": 1.828739,
+        "headroom_at_native_spawn_seconds": 0.944924,
+        "dispatch_entry_to_native_spawn_budget_used_seconds": 0.883815
+      },
+      "duration_seconds": 335,
+      "new_packets": 31,
+      "model_calls": 1,
+      "ending_generation": 11455,
+      "operator_outcome": "STOPPED",
+      "published": true,
+      "native_accept_failures": 0,
+      "runtime_failures": 0,
+      "publication_failures": 0,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "coverage": {
+        "expected": 2,
+        "evaluated": 2,
+        "coverage_percent": 100.0,
+        "unmeasured_slots": [],
+        "target_met": true
+      },
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "worker_cpu_percent": 81.963,
+      "average_busy_cores": 0.819634,
+      "quote_age_at_reservation_seconds": 7.656341,
+      "raw_report_sha256": "9cc7901f23e1431a8559ed27cdd0211de8574f9e632ae62bcf26786ad09fb46e",
+      "test": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "5e83c999b566c4342e15d8ce46cbb3647948818bfe39ee0d8fb4dde8dafd1c3e"
+      }
+    },
+    "final_365791d_two_cpus_335s": {
+      "cpu_affinity_count": 2,
+      "entry_decisions": [
+        {
+          "reply_at": "2026-12-01T15:00:23.615659+00:00",
+          "original_deadline": "2026-12-01T15:00:26.685956Z",
+          "review_at": "2026-12-01T15:00:24.121026+00:00",
+          "status": "OPEN",
+          "reason": null,
+          "reply_headroom_seconds": 3.070297,
+          "review_headroom_seconds": 2.56493,
+          "reply_to_review_seconds": 0.505367
+        }
+      ],
+      "cycle_phases_seconds": [
+        {
+          "CYCLE_OPPORTUNITY_CLAIM": 0.355046,
+          "SCAN": 0.06821,
+          "STOCK_SCAN": 0.511692,
+          "SCOPE_SCAN": 0.001679,
+          "ENTRY_MODEL_REQUEST": 0.376613,
+          "ENTRY_MODEL_ADMISSION": 0.606674,
+          "ENTRY_MODEL": 0.006405,
+          "ENTRY_MIXED_SELECTION": 0.0007,
+          "ENTRY_SCOPE_RECEIPT_CHECK": 0.042833,
+          "ENTRY_SCOPE_SELECTION": 0.000723,
+          "ENTRY_MODEL_SETTLEMENT": 0.489471,
+          "ENTRY_PROTECTION_WAIT": 0.000129,
+          "ENTRY_OPTION_MARKET_READ": 0.007568,
+          "ENTRY_REVIEW": 0.131014,
+          "ADMISSION": 0.644681,
+          "NATIVE_ACCEPT_SPAWN": 0.001809,
+          "NATIVE_ACCEPT_TRANSPORT": 0.335966,
+          "NATIVE_ACCEPT": 0.417357,
+          "DISPATCH": 1.812642
+        }
+      ],
+      "accept_spans": [
+        {
+          "NATIVE_ACCEPT_SPAWN": {
+            "elapsed_seconds": 0.001809,
+            "remaining_at_start_seconds": 0.585256,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT_TRANSPORT": {
+            "elapsed_seconds": 0.335966,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT": {
+            "elapsed_seconds": 0.417357,
+            "status": "COMPLETE"
+          }
+        },
+        {
+          "NATIVE_ACCEPT_SPAWN": {
+            "elapsed_seconds": 0.005809,
+            "remaining_at_start_seconds": 3.11673,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT_TRANSPORT": {
+            "elapsed_seconds": 0.499265,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT": {
+            "elapsed_seconds": 0.500622,
+            "status": "COMPLETE"
+          }
+        }
+      ],
+      "dispatch_rejections": [],
+      "attempt_events": {
+        "PORTFOLIO_ATTEMPT_STARTED": 2
+      },
+      "original_entry_budget": {
+        "final_order_state": "FILLED",
+        "approval_expires_at": "2026-12-01T15:00:26.685956Z",
+        "prepared_at": "2026-12-01T15:00:24.421571Z",
+        "attempted_at": "2026-12-01T15:00:25.408348+00:00",
+        "review_to_prepared_at_seconds": 0.300545,
+        "prepared_at_to_attempted_at_seconds": 0.986777,
+        "headroom_at_dispatch_entry_seconds": 1.277608,
+        "headroom_at_native_spawn_seconds": 0.585256,
+        "dispatch_entry_to_native_spawn_budget_used_seconds": 0.692352
+      },
+      "duration_seconds": 335,
+      "new_packets": 31,
+      "model_calls": 1,
+      "ending_generation": 11438,
+      "operator_outcome": "STOPPED",
+      "published": true,
+      "native_accept_failures": 0,
+      "runtime_failures": 0,
+      "publication_failures": 0,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "coverage": {
+        "expected": 2,
+        "evaluated": 2,
+        "coverage_percent": 100.0,
+        "unmeasured_slots": [],
+        "target_met": true
+      },
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "worker_cpu_percent": 42.115,
+      "average_busy_cores": 0.842296,
+      "quote_age_at_reservation_seconds": 7.735615,
+      "raw_report_sha256": "c5ded53feb8e67a867232ea32296d4d3f35ce3a80375d488c49362dd599d4be3",
+      "test": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "b1ed21173132111d4ae233be4a6dc69bef70c1a7356f4e87e89e476c421c30cb"
+      }
+    }
+  },
+  "other_trials": {
+    "partial_cost_optimization_335s": {
+      "trips": 0,
+      "coverage": 1,
+      "test": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "d8cc463ea81d89625b0a2b807a754bfbcb1c0887c2271cb638ee597153f194cb"
+      },
+      "entry": [
+        [
+          "UNKNOWN",
+          null
+        ]
+      ]
+    },
+    "profiled_90s": {
+      "trips": 0,
+      "coverage": 1,
+      "test": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "36edbbee83781a2c0b844c2b7986afc0fc5d8072d3e3da82b6260bff4e2048e5"
+      },
+      "entry": [
+        [
+          "REJECTED",
+          null
+        ]
+      ]
+    },
+    "eager_spawn_trial_90s": {
+      "trips": 0,
+      "coverage": 1,
+      "test": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "be6c214aeb106b66130aa43de1a40c60b224fe7c575ce42fd1868d0c279436b6"
+      },
+      "entry": [
+        [
+          "REJECTED",
+          null
+        ]
+      ]
+    },
+    "isolated_transport_prototype_90s": {
+      "trips": 1,
+      "coverage": 1,
+      "test": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "7d6c7c03054cbef0b61696aa8785ff34cec4dbabdd6d46ef26b46b944c518aa5"
+      },
+      "entry": [
+        [
+          "OPEN",
+          null
+        ]
+      ]
+    },
+    "shared_executor_intermediate_335s": {
+      "trips": 1,
+      "coverage": 2,
+      "test": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "f9b38c6896d0a545e21e74b232dd01f78d4f774fd35904f9b4551ce7d3d41412"
+      },
+      "entry": [
+        [
+          "OPEN",
+          null
+        ]
+      ]
+    },
+    "shared_executor_intermediate_90s": {
+      "trips": 0,
+      "coverage": 1,
+      "test": {
+        "tests": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "aac6a52599b31e08d81bad90f2bc55c4c1de5bcd6633b134d5203811314f5a5e"
+      },
+      "entry": [
+        [
+          "UNKNOWN",
+          null
+        ]
+      ]
+    }
+  },
+  "padded_one_cpu": {
+    "status": "PASSED",
+    "planned_seconds": 335,
+    "source_seed": {
+      "kind": "labeled diagnostic padding, not month-history proof",
+      "rows": 3578,
+      "initial_database_bytes": 119635968
+    },
+    "decision_coverage": {
+      "expected": 2,
+      "evaluated": 2,
+      "coverage_percent": 100.0,
+      "unmeasured_slots": [],
+      "target_met": true
+    },
+    "execution": {
+      "status": "RECORDED",
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "carry_in_exits": 0
+    },
+    "final_accounting": "VERIFIED_FLAT",
+    "dashboard_reads": 11,
+    "report_reads": 11,
+    "native_snapshot_calls": 160,
+    "native_snapshot_failures": 0,
+    "quote_age_at_reservation_seconds": 5.307921,
+    "measured_failed_accepts": 0,
+    "application_manifest_sha256": "19ccdaf91f970b2ae0e86e48319cd244a7a18c6124754788d2bd993841bb160b",
+    "raw_progress_sha256": "85bde51ff85defcb24072b4a84b710d3f0b2af5b079340d3e3fbc350c11798cb"
+  },
+  "protection": {
+    "one_cpu_shared_with_passing_peer_cases": 128,
+    "by_asset": {
+      "STOCK": {
+        "seed_mib": 68,
+        "journal_bytes_before_contention": 72826880,
+        "breach_to_native_ack_seconds": 3.352239,
+        "breach_to_tick_completion_seconds": 4.268974,
+        "breach_to_flat_observed_seconds": 6.375021,
+        "exit_seconds": 4.461809,
+        "next_quote_to_flat_observed_seconds": 1.800754,
+        "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+        "accounting": "VERIFIED",
+        "held_positions": 0,
+        "raw_report_sha256": "98f2d87c70a401113cd6d06185f047162dd7c04eb20cd98614d61ed5ffc02f93"
+      },
+      "OPTION": {
+        "seed_mib": 68,
+        "journal_bytes_before_contention": 72884224,
+        "breach_to_native_ack_seconds": 2.863976,
+        "breach_to_tick_completion_seconds": 3.998838,
+        "breach_to_flat_observed_seconds": 6.166265,
+        "exit_seconds": 4.228448,
+        "next_quote_to_flat_observed_seconds": 1.886382,
+        "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+        "accounting": "VERIFIED",
+        "held_positions": 0,
+        "raw_report_sha256": "7800a8fde922bb9a1fa35a0134ec61447bfe0e6c443bbad8f2b05bbd3442174c"
+      }
+    }
+  },
+  "open": [
+    "Full 358-minute coverage on this build",
+    "Repeatable five-second opening age on month-grown history",
+    "Connected host and market-session acceptance"
+  ],
+  "profiled_dispatch": {
+    "scenario": "Earlier instrumented 90-second intermediate trial, rejected opening. Timings include profiler overhead. The final three trials used no profiler.",
+    "scope": "Initial dispatch check of a prepared PAPER option order",
+    "total_profiled_seconds": 0.534945,
+    "restore_digest_calls": 2,
+    "restore_digest_inclusive_seconds": 0.525764,
+    "raw_profile_sha256": "22aeb78ac67f02d89b4a7f334cee891ef4e5938a2e2e6eb75f653c0d5718a9a4"
+  },
+  "eligible_dispatch_measurement": {
+    "method": "Separate unpadded, one-CPU 90-second December 1 replay from the identical checkpoint. Monotonic wall and calling-thread CPU clocks bracket the synchronous portfolio_options.begin call and each nested original restore._digest on that thread. All return values and integrity checks pass through. Timing samples are written after worker shutdown.",
+    "dispatches": [
+      {
+        "wall_seconds": 0.798665,
+        "thread_cpu_seconds": 0.761418,
+        "outcome": "BUY",
+        "journal_scans": [
+          {
+            "wall_seconds": 0.33783,
+            "thread_cpu_seconds": 0.304264
+          },
+          {
+            "wall_seconds": 0.195522,
+            "thread_cpu_seconds": 0.195501
+          }
+        ],
+        "journal_scan_wall_seconds": 0.533352,
+        "journal_scan_thread_cpu_seconds": 0.499765
+      },
+      {
+        "wall_seconds": 0.402648,
+        "thread_cpu_seconds": 0.398968,
+        "outcome": "SELL",
+        "journal_scans": [
+          {
+            "wall_seconds": 0.132238,
+            "thread_cpu_seconds": 0.132237
+          },
+          {
+            "wall_seconds": 0.204534,
+            "thread_cpu_seconds": 0.204496
+          }
+        ],
+        "journal_scan_wall_seconds": 0.336772,
+        "journal_scan_thread_cpu_seconds": 0.336733
+      }
+    ],
+    "raw_samples_sha256": "c78edf02d95f883c80a474c952a3adcfe747528c5ad0c52d6c5fb8e8e43ce13d",
+    "trial": {
+      "cpu_affinity_count": 1,
+      "entry_decisions": [
+        {
+          "reply_at": "2026-12-01T15:00:23.138695+00:00",
+          "original_deadline": "2026-12-01T15:00:26.212559Z",
+          "review_at": "2026-12-01T15:00:23.513870+00:00",
+          "status": "OPEN",
+          "reason": null,
+          "reply_headroom_seconds": 3.073864,
+          "review_headroom_seconds": 2.698689,
+          "reply_to_review_seconds": 0.375175
+        }
+      ],
+      "cycle_phases_seconds": [
+        {
+          "CYCLE_OPPORTUNITY_CLAIM": 0.349974,
+          "SCAN": 0.050762,
+          "STOCK_SCAN": 0.438567,
+          "SCOPE_SCAN": 0.001629,
+          "ENTRY_MODEL_REQUEST": 0.304788,
+          "ENTRY_MODEL_ADMISSION": 0.384269,
+          "ENTRY_MODEL": 0.006383,
+          "ENTRY_MIXED_SELECTION": 0.0007,
+          "ENTRY_SCOPE_RECEIPT_CHECK": 0.028423,
+          "ENTRY_SCOPE_SELECTION": 0.000559,
+          "ENTRY_MODEL_SETTLEMENT": 0.364612,
+          "ENTRY_PROTECTION_WAIT": 9.4e-05,
+          "ENTRY_OPTION_MARKET_READ": 0.004484,
+          "ENTRY_REVIEW": 0.082742,
+          "ADMISSION": 0.289251,
+          "NATIVE_ACCEPT_SPAWN": 0.002538,
+          "NATIVE_ACCEPT_TRANSPORT": 0.59245,
+          "NATIVE_ACCEPT": 0.627366,
+          "DISPATCH": 2.203283
+        }
+      ],
+      "accept_spans": [
+        {
+          "NATIVE_ACCEPT_SPAWN": {
+            "elapsed_seconds": 0.002538,
+            "remaining_at_start_seconds": 1.197804,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT_TRANSPORT": {
+            "elapsed_seconds": 0.59245,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT": {
+            "elapsed_seconds": 0.627366,
+            "status": "COMPLETE"
+          }
+        },
+        {
+          "NATIVE_ACCEPT_SPAWN": {
+            "elapsed_seconds": 0.000623,
+            "remaining_at_start_seconds": 3.977095,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT_TRANSPORT": {
+            "elapsed_seconds": 0.867882,
+            "status": "COMPLETE"
+          },
+          "NATIVE_ACCEPT": {
+            "elapsed_seconds": 0.872213,
+            "status": "COMPLETE"
+          }
+        }
+      ],
+      "dispatch_rejections": [],
+      "attempt_events": {
+        "PORTFOLIO_ATTEMPT_STARTED": 2
+      },
+      "duration_seconds": 90,
+      "new_packets": 8,
+      "model_calls": 1,
+      "ending_generation": 11084,
+      "operator_outcome": "STOPPED",
+      "published": true,
+      "native_accept_failures": 0,
+      "runtime_failures": 0,
+      "publication_failures": 0,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "coverage": {
+        "expected": 1,
+        "evaluated": 1,
+        "coverage_percent": 100.0,
+        "unmeasured_slots": [],
+        "target_met": true
+      },
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "worker_cpu_percent": 84.462,
+      "average_busy_cores": 0.844619,
+      "quote_age_at_reservation_seconds": 7.502197,
+      "raw_report_sha256": "5d5462ef2ad134d3d940e2f696b4871667ede3bdf38496cc5466a21cf40b9138",
+      "test": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "c75a1137e8dbe735cf98249cdafca565208448a43bc559d46833fc4b2ce15b4e"
+      }
+    }
+  },
+  "stopped_trial_journal_profile": {
+    "method": "Each stopped trial database and its independent authority were opened read-only and immutable. The installed application ran one warm-up plus nine full scans on one pinned CPU per database. Every digest matched its saved authority. SQLite trace intervals include table reading and processing through the next statement. These timings exclude active worker contention.",
+    "trials": {
+      "ack-335": {
+        "scans": 9,
+        "v1_digest": "64e9d01995e5bef0f7bf71c217500166c3c34bf5a9897b289c23d551dd21ae39",
+        "source_bytes": 106700800,
+        "median_seconds": 0.122519,
+        "largest_intervals": [
+          {
+            "name": "execution_option_scope_runtime_inputs",
+            "median_seconds": 0.032174,
+            "percent_of_median_scan": 26.3
+          },
+          {
+            "name": "execution_mixed_runtime_inputs",
+            "median_seconds": 0.031476,
+            "percent_of_median_scan": 25.7
+          },
+          {
+            "name": "execution_snapshots",
+            "median_seconds": 0.018672,
+            "percent_of_median_scan": 15.2
+          },
+          {
+            "name": "execution_events",
+            "median_seconds": 0.012512,
+            "percent_of_median_scan": 10.2
+          },
+          {
+            "name": "execution_runtime_timings",
+            "median_seconds": 0.010697,
+            "percent_of_median_scan": 8.7
+          }
+        ]
+      },
+      "ack-repeat-335": {
+        "scans": 9,
+        "v1_digest": "7e5a6605357e0909362202c421a1361507dd253628ed498b4b4077b8ed1bf33c",
+        "source_bytes": 107995136,
+        "median_seconds": 0.122363,
+        "largest_intervals": [
+          {
+            "name": "execution_option_scope_runtime_inputs",
+            "median_seconds": 0.032868,
+            "percent_of_median_scan": 26.9
+          },
+          {
+            "name": "execution_mixed_runtime_inputs",
+            "median_seconds": 0.031404,
+            "percent_of_median_scan": 25.7
+          },
+          {
+            "name": "execution_snapshots",
+            "median_seconds": 0.018918,
+            "percent_of_median_scan": 15.5
+          },
+          {
+            "name": "execution_events",
+            "median_seconds": 0.013787,
+            "percent_of_median_scan": 11.3
+          },
+          {
+            "name": "execution_runtime_timings",
+            "median_seconds": 0.010512,
+            "percent_of_median_scan": 8.6
+          }
+        ]
+      },
+      "ack-two-core-335": {
+        "scans": 9,
+        "v1_digest": "d3163c0a44827ffc5979e6ddd98d7a5f4a1164b0803656fc56a777abf400ca0c",
+        "source_bytes": 107909120,
+        "median_seconds": 0.123156,
+        "largest_intervals": [
+          {
+            "name": "execution_option_scope_runtime_inputs",
+            "median_seconds": 0.03314,
+            "percent_of_median_scan": 26.9
+          },
+          {
+            "name": "execution_mixed_runtime_inputs",
+            "median_seconds": 0.031034,
+            "percent_of_median_scan": 25.2
+          },
+          {
+            "name": "execution_snapshots",
+            "median_seconds": 0.019272,
+            "percent_of_median_scan": 15.6
+          },
+          {
+            "name": "execution_events",
+            "median_seconds": 0.013806,
+            "percent_of_median_scan": 11.2
+          },
+          {
+            "name": "execution_runtime_timings",
+            "median_seconds": 0.010726,
+            "percent_of_median_scan": 8.7
+          }
+        ]
+      },
+      "ack-scan-90": {
+        "scans": 9,
+        "v1_digest": "34399344636e5e7cc1015936f11b8dfd1c5e626a14bc431d05ba3940206644d5",
+        "source_bytes": 105279488,
+        "median_seconds": 0.11911,
+        "largest_intervals": [
+          {
+            "name": "execution_option_scope_runtime_inputs",
+            "median_seconds": 0.032732,
+            "percent_of_median_scan": 27.5
+          },
+          {
+            "name": "execution_mixed_runtime_inputs",
+            "median_seconds": 0.031758,
+            "percent_of_median_scan": 26.7
+          },
+          {
+            "name": "execution_snapshots",
+            "median_seconds": 0.018205,
+            "percent_of_median_scan": 15.3
+          },
+          {
+            "name": "execution_events",
+            "median_seconds": 0.01222,
+            "percent_of_median_scan": 10.3
+          },
+          {
+            "name": "execution_runtime_timings",
+            "median_seconds": 0.010254,
+            "percent_of_median_scan": 8.6
+          }
+        ]
+      }
+    }
+  }
+}

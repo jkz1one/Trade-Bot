@@ -1,0 +1,35 @@
+{% macro scope_evidence(w) -%}
+<details class="scope-evidence">
+  <summary>Decision evidence</summary>
+  {% for label, sample in [('At call', w.decision_evidence.called), ('Latest sample', w.decision_evidence.latest_sample)] %}
+  <p><strong>{{ label }}</strong>
+  {% if sample is none %}<small>Not recorded</small>
+  {% else %}
+    {% set q = sample.quality %}{% set c = sample.contract %}
+    {% if q %}
+      <small>{{ q.evaluated_at }} · {{ q.time_status|replace('_', ' ')|lower }}</small>
+      {% if q.selected %}
+        <small>Quality {{ q.selected.score if q.selected.score is not none else 'unscored' }} · {{ q.selected.grade|replace('_', ' ')|lower }}</small>
+        <small>{{ 'Passed at review time' if q.selected.passed else 'Blocked at review time' }}</small>
+        {% if q.selected.reasons %}<small class="warn">{{ q.selected.reasons|join(' · ') }}</small>{% endif %}
+      {% endif %}
+      {% if q.issues %}<small class="warn">{{ q.issues|join(' · ') }}</small>{% endif %}
+    {% else %}<small>Quality review not recorded</small>{% endif %}
+    {% if c %}
+      {% if c.selected %}<small>Contract profile: {{ c.selected.profile|title if c.selected.profile else 'Unavailable' }}</small>{% if c.selected.reasons %}<small class="warn">{{ c.selected.reasons|join(' · ') }}</small>{% endif %}{% endif %}
+      {% if c.issues %}<small class="warn">{{ c.issues|join(' · ') }}</small>{% endif %}
+    {% else %}<small>Contract review not recorded</small>{% endif %}
+  {% endif %}</p>
+  {% endfor %}
+  {% set current_path = w.admission.entry_path if w.admission and w.admission.entry_path is defined else none %}
+  {% set sample = w.decision_evidence.latest_sample %}
+  {% set selected = sample.quality.selected if sample and sample.quality else none %}
+  {% if current_path or selected %}
+    {% set levels = current_path.potential_obstructions if current_path else selected.potential_obstructions %}
+    <p><strong>{{ 'Admission path' if current_path else 'Latest sampled path' }}</strong>
+    {% if current_path %}<small>Reference {{ current_path.reference }} · First target {{ current_path.first_target_r }}R</small><small>{{ w.admission.evaluated_at }} · {{ w.admission.time_status|replace('_', ' ')|lower }}</small>{% endif %}
+    <small>{{ levels|length }} known obstructions · Full path unproven</small></p>
+    {% if levels %}<ul>{% for level in levels[:5] %}<li>{{ level.kind|replace('_', ' ')|title }} {{ level.level }} · {{ 'through first target' if level.at_or_before_first_target else 'after first target' }}{% if level.confirmed_at %}<small>Confirmed {{ level.confirmed_at }}</small>{% endif %}{% if level.touches is defined %}<small>{{ level.touches }} touches · {{ level.formation_started_at }} to {{ level.formation_ended_at }}</small>{% endif %}</li>{% endfor %}</ul>{% if levels|length > 5 %}<small>Showing 5 of {{ levels|length }} levels. Full evidence is available in the read-only report.</small>{% endif %}{% endif %}
+  {% endif %}
+</details>
+{%- endmacro %}

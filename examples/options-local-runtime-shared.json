@@ -1,0 +1,106 @@
+{
+  "limits": {
+    "version": "long-option-admission-v1",
+    "mode": "PAPER",
+    "account_id": "local-options-paper",
+    "population_id": "shared-paper-fixture-v1",
+    "allowed_underlyings": [
+      "SPY"
+    ],
+    "provider": "fixture",
+    "option_source": "fixture-opra",
+    "underlying_source": "fixture-equity",
+    "session_source": "XNYS_REGULAR_INTERSECTION_V1",
+    "max_contracts": 10,
+    "max_entry_debit": "500",
+    "max_account_exposure": "500",
+    "max_full_premium_loss": "500",
+    "entry_fee_per_contract": "0.65",
+    "exit_fee_per_contract": "0.65",
+    "entry_fee_per_order": "1",
+    "exit_fee_per_order": "1",
+    "slippage_bps": "5",
+    "max_spread_fraction": "0.10",
+    "minimum_underlying_price": "5",
+    "quote_max_age_seconds": 10,
+    "account_max_age_seconds": 10,
+    "max_receive_lag_seconds": 2,
+    "max_sync_seconds": 2,
+    "approval_lifetime_seconds": 5
+  },
+  "execution": {
+    "version": "option-paper-lifecycle-v1",
+    "capital": "1000",
+    "daily_loss_limit": "600",
+    "total_loss_limit": "800",
+    "calendar_source": "XNYS_REGULAR_INTERSECTION_V1",
+    "entry_cutoff_minutes": 30,
+    "exit_cutoff_minutes": 15,
+    "expiry_guard_seconds": 60,
+    "premium_catastrophe_fraction": "0.5",
+    "supervisor_max_age_seconds": 20,
+    "process_timeout_seconds": 5.0,
+    "cost_policy": null
+  },
+  "setup": {
+    "version": "degen-completed-bars-v1",
+    "symbols": [
+      "SPY"
+    ],
+    "history_source": "fixture-bars",
+    "max_bar_age_seconds": 300,
+    "max_receive_lag_seconds": 2,
+    "volume_lookback": 3,
+    "minimum_volume_ratio": "1.05",
+    "opening_range_minutes": 15,
+    "stop_buffer_fraction": "0.0001",
+    "maximum_extension_fraction": "0.0065",
+    "vwap_separation_fraction": "0.0022",
+    "vwap_touch_fraction": "0.0018",
+    "setup_priority": [
+      "ORB_CONTINUATION",
+      "VWAP_PULLBACK",
+      "FAILED_BREAK_REVERSAL"
+    ]
+  },
+  "selection": {
+    "version": "degen-contract-selection-v1",
+    "metadata_source": "fixture-chain",
+    "max_inventory_contracts": 8,
+    "max_quote_contracts": 3,
+    "max_metadata_age_seconds": 10,
+    "minimum_abs_delta": "0.25",
+    "maximum_abs_delta": "0.7",
+    "target_abs_delta": "0.45",
+    "maximum_strike_distance_fraction": "0.02",
+    "minimum_volume": 10,
+    "minimum_open_interest": 100
+  },
+  "runtime": {
+    "version": "option-local-runtime-v1",
+    "feed_file": "/absolute/private/shared-normalized-fixture.json",
+    "tick_seconds": 1.0,
+    "heartbeat_max_age_seconds": 10,
+    "feed_max_age_seconds": 10
+  },
+  "judgment_limits": null,
+  "key_file": null,
+  "entry_policy": null,
+  "position_policy": null,
+  "swing_policy": {
+    "version": "swing-next-session-v1",
+    "history_source": "fixture-daily",
+    "catalyst_source": "fixture-catalyst",
+    "daily_lookback": 3,
+    "minimum_dte": 7,
+    "maximum_dte": 45,
+    "maximum_chase_fraction": ".0065",
+    "stop_buffer_fraction": ".0001",
+    "catalyst_max_age_seconds": 10,
+    "family_priority": [
+      "DEGEN",
+      "SWING"
+    ],
+    "holding_policy": "SESSION_CLOSE"
+  }
+}

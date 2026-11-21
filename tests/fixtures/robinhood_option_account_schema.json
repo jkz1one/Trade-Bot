@@ -1,0 +1,441 @@
+{
+  "get_option_orders": {
+    "name": "get_option_orders",
+    "annotations": {
+      "readOnlyHint": true
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "account_number": {
+          "type": "string"
+        },
+        "order_id": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "created_at_gte": {
+          "type": "string"
+        },
+        "chain_ids": {
+          "type": "string"
+        },
+        "underlying_type": {
+          "type": "string"
+        },
+        "placed_agent": {
+          "type": "string"
+        },
+        "agent_initiated": {
+          "type": [
+            "null",
+            "boolean"
+          ]
+        },
+        "cursor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "account_number"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "orders": {
+              "type": [
+                "null",
+                "array"
+              ],
+              "items": {
+                "type": [
+                  "null",
+                  "object"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "chain_id": {
+                    "type": "string"
+                  },
+                  "chain_symbol": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "trigger": {
+                    "type": "string"
+                  },
+                  "direction": {
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "type": "string"
+                  },
+                  "processed_quantity": {
+                    "type": "string"
+                  },
+                  "pending_quantity": {
+                    "type": "string"
+                  },
+                  "canceled_quantity": {
+                    "type": "string"
+                  },
+                  "price": {
+                    "type": "string"
+                  },
+                  "stop_price": {
+                    "type": [
+                      "null",
+                      "string"
+                    ]
+                  },
+                  "premium": {
+                    "type": "string"
+                  },
+                  "processed_premium": {
+                    "type": "string"
+                  },
+                  "trade_value_multiplier": {
+                    "type": "string"
+                  },
+                  "time_in_force": {
+                    "type": "string"
+                  },
+                  "market_hours": {
+                    "type": "string"
+                  },
+                  "opening_strategy": {
+                    "type": [
+                      "null",
+                      "string"
+                    ]
+                  },
+                  "closing_strategy": {
+                    "type": [
+                      "null",
+                      "string"
+                    ]
+                  },
+                  "placed_agent": {
+                    "type": "string"
+                  },
+                  "agent_initiated": {
+                    "type": "boolean"
+                  },
+                  "created_at": {
+                    "type": "string"
+                  },
+                  "updated_at": {
+                    "type": "string"
+                  },
+                  "last_transaction_at": {
+                    "type": [
+                      "null",
+                      "string"
+                    ]
+                  },
+                  "reject_reason": {
+                    "type": "string"
+                  },
+                  "is_replaceable": {
+                    "type": "boolean"
+                  },
+                  "legs": {
+                    "type": [
+                      "null",
+                      "array"
+                    ],
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "option_id": {
+                          "type": "string"
+                        },
+                        "side": {
+                          "type": "string"
+                        },
+                        "position_effect": {
+                          "type": "string"
+                        },
+                        "ratio_quantity": {
+                          "type": "integer"
+                        },
+                        "expiration_date": {
+                          "type": "string"
+                        },
+                        "strike_price": {
+                          "type": "string"
+                        },
+                        "option_type": {
+                          "type": "string"
+                        },
+                        "executions": {
+                          "type": [
+                            "null",
+                            "array"
+                          ],
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "price": {
+                                "type": "string"
+                              },
+                              "quantity": {
+                                "type": "string"
+                              },
+                              "settlement_date": {
+                                "type": "string"
+                              },
+                              "trade_date": {
+                                "type": "string"
+                              },
+                              "timestamp": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "price",
+                              "quantity",
+                              "settlement_date",
+                              "trade_date",
+                              "timestamp"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "side",
+                        "position_effect",
+                        "ratio_quantity",
+                        "expiration_date",
+                        "strike_price",
+                        "option_type"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "chain_id",
+                  "chain_symbol",
+                  "state",
+                  "type",
+                  "trigger",
+                  "direction",
+                  "quantity",
+                  "processed_quantity",
+                  "pending_quantity",
+                  "canceled_quantity",
+                  "price",
+                  "stop_price",
+                  "premium",
+                  "processed_premium",
+                  "trade_value_multiplier",
+                  "time_in_force",
+                  "market_hours",
+                  "opening_strategy",
+                  "closing_strategy",
+                  "placed_agent",
+                  "agent_initiated",
+                  "created_at",
+                  "last_transaction_at",
+                  "is_replaceable",
+                  "legs"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "next": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "orders"
+          ],
+          "additionalProperties": false
+        },
+        "guide": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "data",
+        "guide"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "get_option_positions": {
+    "name": "get_option_positions",
+    "annotations": {
+      "readOnlyHint": true
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "account_number": {
+          "type": "string"
+        },
+        "nonzero": {
+          "type": "boolean"
+        },
+        "chain_ids": {
+          "type": "string"
+        },
+        "option_ids": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "option_type": {
+          "type": "string"
+        },
+        "expiration_date": {
+          "type": "string"
+        },
+        "expiration_date_lte": {
+          "type": "string"
+        },
+        "expiration_date_gte": {
+          "type": "string"
+        },
+        "cursor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "account_number"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "positions": {
+              "type": [
+                "null",
+                "array"
+              ],
+              "items": {
+                "type": [
+                  "null",
+                  "object"
+                ],
+                "properties": {
+                  "option_id": {
+                    "type": "string"
+                  },
+                  "chain_id": {
+                    "type": "string"
+                  },
+                  "chain_symbol": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "type": "string"
+                  },
+                  "average_price": {
+                    "type": "string"
+                  },
+                  "expiration_date": {
+                    "type": "string"
+                  },
+                  "trade_value_multiplier": {
+                    "type": "string"
+                  },
+                  "intraday_average_open_price": {
+                    "type": "string"
+                  },
+                  "intraday_quantity": {
+                    "type": "string"
+                  },
+                  "pending_buy_quantity": {
+                    "type": "string"
+                  },
+                  "pending_sell_quantity": {
+                    "type": "string"
+                  },
+                  "pending_exercise_quantity": {
+                    "type": "string"
+                  },
+                  "pending_assignment_quantity": {
+                    "type": "string"
+                  },
+                  "pending_expiration_quantity": {
+                    "type": "string"
+                  },
+                  "opened_at": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "option_id",
+                  "chain_id",
+                  "chain_symbol",
+                  "type",
+                  "quantity",
+                  "average_price",
+                  "expiration_date",
+                  "trade_value_multiplier",
+                  "intraday_average_open_price",
+                  "intraday_quantity",
+                  "pending_buy_quantity",
+                  "pending_sell_quantity",
+                  "pending_exercise_quantity",
+                  "pending_assignment_quantity",
+                  "pending_expiration_quantity"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "next": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "positions"
+          ],
+          "additionalProperties": false
+        },
+        "guide": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "data",
+        "guide"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

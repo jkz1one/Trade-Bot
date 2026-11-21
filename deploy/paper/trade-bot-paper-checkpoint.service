@@ -1,0 +1,40 @@
+[Unit]
+Description=Trade-Bot isolated PAPER local evidence capture
+RequiresMountsFor=/var/lib/trade-bot-paper/population /var/lib/trade-bot-paper/checkpoints
+ConditionPathExists=/var/lib/trade-bot-paper/checkpoints/policy.json
+ConditionPathExists=/var/lib/trade-bot-paper/population/execution.db
+ConditionPathExists=/var/lib/trade-bot-paper/population/execution.db.authority.db
+
+[Service]
+Type=oneshot
+User=tradebot-paper
+Group=tradebot-paper
+WorkingDirectory=/var/lib/trade-bot-paper
+ExecStart=/opt/trade-bot-paper/venv/bin/python -I -m app.execution.checkpoint_cli capture --directory /var/lib/trade-bot-paper/checkpoints
+Restart=no
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStartSec=45
+TimeoutStopSec=10
+UMask=0077
+Environment=PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+PrivateNetwork=yes
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX
+ReadWritePaths=/var/lib/trade-bot-paper/population /var/lib/trade-bot-paper/checkpoints
+TemporaryFileSystem=/etc/trade-bot-paper:ro,mode=0755,size=1M
+InaccessiblePaths=-/var/lib/trade-bot -/etc/trade-bot -/opt/trade-bot
+TasksMax=16
+MemoryMax=256M
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=trade-bot-paper-checkpoint

@@ -1,0 +1,58 @@
+{
+  "parent_commit": "b12a29c051eb9707da71a5ce897ac0f12fe181e5",
+  "expected_failures": true,
+  "groups": [
+    {
+      "group": "published-history-and-display",
+      "wheel_sha256": "eb6a57e3f1d1196ada8a9ade9cea3ab4d36f8a4434d0a0e0724727d7ed3dc45f",
+      "counts": {
+        "FAILED": 2
+      },
+      "cases": 2,
+      "seconds": 11.785,
+      "junit_sha256": "d3a51686471ab56177e215a5a4b0ea96a9b4881784507378ad9b923debbeed4f",
+      "results": [
+        {
+          "test_file": "tests/test_protection_contention.py",
+          "name": "test_history_planning_yields_and_excludes_overlapping_capture",
+          "original_name_sha256": "59387cd1a4f24f6e172f9e1bb38d53bbfa38a5d24d9365ee63b2d89fa227299c",
+          "status": "FAILED",
+          "seconds": 3.232,
+          "reason": "TimeoutError: history blocked the loop"
+        },
+        {
+          "test_file": "tests/test_protection_contention.py",
+          "name": "test_display_projection_releases_native_read_lock",
+          "original_name_sha256": "50f1d879d7ce8681495d800851b3178c75573bfc7c43ce196428de9496a2a9ce",
+          "status": "FAILED",
+          "seconds": 3.176,
+          "reason": "sqlite3.OperationalError: database is locked"
+        }
+      ],
+      "log_sha256": "8c2724107759447ff90701ee5f8ce9edcb429d00c1e736286f6f6e3f6c6dae88"
+    },
+    {
+      "group": "report-before-lock-repair",
+      "wheel_sha256": "927e6c4db784487f8f43bfacf2a5824c6e201d898cdd01359d1dadf8c5b9fa33",
+      "counts": {
+        "FAILED": 1
+      },
+      "cases": 1,
+      "seconds": 0.623,
+      "junit_sha256": "de071d3b27b1fd372d806ce560b5f53d7ac5bf952b620918eba6460afae5f53a",
+      "results": [
+        {
+          "test_file": "tests/test_paper_session_report.py",
+          "name": "test_report_snapshot_keeps_consistency_without_blocking_native_commits",
+          "original_name_sha256": "a79d395f722a3eed66cf2d0483a7d8c15d446e3ad92eefd458403b96aeeb0bf7",
+          "status": "FAILED",
+          "seconds": 0.109,
+          "reason": "sqlite3.OperationalError: database is locked"
+        }
+      ],
+      "log_sha256": "06afbd048a3ef841efba2f628f36663b0ad4ffa2033717e94d5eb6aab36b5e64"
+    }
+  ],
+  "report_baseline_script_sha256": "9e1c210ac0a2182ac3fe12be514090141525eab17ffa220731b56a5f379714fb",
+  "note": "The first group uses the published application. The independent reporter reproduction uses the pre-repair connection implementation in the candidate host script; its exact script hash is retained."
+}

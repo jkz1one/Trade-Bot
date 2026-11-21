@@ -1,0 +1,14 @@
+FROM python:3.12.15-slim-bookworm
+ARG TRADE_BOT_RELEASE=unknown
+WORKDIR /opt/trade-bot
+COPY pyproject.toml README.md requirements-runtime.lock requirements-build.lock ./
+COPY app ./app
+RUN pip install --no-deps --no-cache-dir -r requirements-build.lock -r requirements-runtime.lock \
+    && pip install --no-deps --no-build-isolation --no-cache-dir . \
+    && pip check \
+    && groupadd --gid 10001 tradebot \
+    && useradd --uid 10001 --gid tradebot --no-log-init --create-home tradebot
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 XDG_CACHE_HOME=/tmp/.cache
+ENV TRADER_RELEASE_SHA=$TRADE_BOT_RELEASE
+USER 10001:10001
+CMD ["python", "-m", "app.robinhood.cli", "shadow-service"]

@@ -1,0 +1,100 @@
+{
+  "version": "paper-scope-paid-refresh-offline-v1",
+  "base_commit": "adb453fabeb626e50a3ae6a372979e3b4e06483c",
+  "base_tree": "d9ce3997d40ffde805a88aebc8c181a04cefd630",
+  "application_files": 318,
+  "source_wheel_installed_bytes_match": true,
+  "runtime_pinned_dependencies_verified": 60,
+  "wheel_sha256": "7d1efab6114eef236cc4aebc647ba8a74ae62b21ef868962a037d579b20fea8d",
+  "changed_tests_and_script_copies_match": true,
+  "installed_testing": "Python 3.12, isolated -I, warnings as errors, explicit anyio plugin; copied tests/scripts outside checkout without app source. Native subprocesses use the installed wheel.",
+  "verification_runs": [
+    {
+      "report": "installed.xml",
+      "tests": 456,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "e1ed39017ff665f80069e5840b4cbac0ce7d7050cae9f6382a4aaf980d36e81a"
+    },
+    {
+      "report": "failure-cases.xml",
+      "tests": 2,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "1d0c6a2346e69031f08a6c657f8a355f9047cfd2ee5e5f5345128f6f68a847e5"
+    },
+    {
+      "report": "failure-corrected.xml",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "910797f72589d54afcbcaa18385dec876c14ca3496fb818f51dfc9ca303c8956"
+    },
+    {
+      "report": "cancellation.xml",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "cdc7aa573bc0458137c63db867c01c2111bf441e321dd00f46c92624bacedfd9"
+    }
+  ],
+  "unique_passed_cases": 457,
+  "unique_failed_cases": 0,
+  "suites": {
+    "tests.test_combined_session_feed": 7,
+    "tests.test_connected_check": 6,
+    "tests.test_connected_feed_recovery": 21,
+    "tests.test_connected_publisher": 13,
+    "tests.test_connected_runtime": 19,
+    "tests.test_connected_scope_refresh": 16,
+    "tests.test_continuous_strategy_delivery": 15,
+    "tests.test_feed_rollover": 34,
+    "tests.test_host_bundle": 9,
+    "tests.test_observed_profile_lifecycle": 2,
+    "tests.test_observed_scope_lifecycle": 9,
+    "tests.test_option_scope_ai": 35,
+    "tests.test_option_scope_arbitration": 20,
+    "tests.test_option_scope_arbitration_history": 3,
+    "tests.test_option_scope_position": 18,
+    "tests.test_option_scope_reapproval": 33,
+    "tests.test_option_scope_runtime": 31,
+    "tests.test_paper_session_report": 37,
+    "tests.test_paper_session_start": 25,
+    "tests.test_portfolio_feed": 7,
+    "tests.test_read_schema_contract": 13,
+    "tests.test_scope_feed": 16,
+    "tests.test_scope_price_options": 17,
+    "tests.test_session_host": 40,
+    "tests.test_simulation_profile": 5,
+    "tests.test_simulation_session": 6
+  },
+  "corrections": "An added test initially had an indentation error. Its failed-connection fixture then supplied complete usable observations despite a FAILED label; the existing collector correctly retained them. The fixture was corrected to an original failed connection with no schemas/observations, then passed against the unchanged installed application. Prior failed runs are listed; latest results supersede them by exact test identity.",
+  "source_sha256": {
+    "app/mixed/connected_check.py": "fc239a920041bd111bc1cadc6ac265e3cb74dd5c6731a939b245e611512900db",
+    "app/mixed/connected_runtime.py": "3a0faaa7c71ad41795b848362856dfa82f44f73284dbe4db10ad458bf3f71400",
+    "app/mixed/continuous_feed.py": "d057026bcaaa01b3acb0f81fffb04923f3111784c316c63b3e8b3e32b37e417b",
+    "app/mixed/scope_feed.py": "45c9f939222d55e0e69fb8e5c35897e3c6a2bb864e310f515fa569a23e4a6984",
+    "app/mixed/scope_refresh.py": "eb8b21baf6c30d7c05f8bf6307ab10bb0a691cc826b48a27709025d30926d9cf",
+    "app/options/scope_ai.py": "0e1f9977f225cf0da91b88f5d02122670058d127aed48e2d59f1e580a3787e0a",
+    "scripts/paper-session-report.py": "af2f6dfb2d5153bf5d796de4b33daa42d06b2b7d60f01f6f7ef24ca0585bcf4e",
+    "tests/test_connected_scope_refresh.py": "384c212165354a531e24cc56329b943b043352b06170756f295dce351ff19119",
+    "tests/test_observed_scope_lifecycle.py": "7d1569e21c77bb4ddd69983f541d0bf258ff56ecd7381600853cc480d95e2be6",
+    "tests/test_paper_session_report.py": "5e35a119d7956f38809ead32c94a0730902afb62ae1facb22c3ee3aeaf2c40fb"
+  },
+  "acceptance_limits": [
+    "Explicit bounded-paid-refresh-v1 Scope binding opt-in changes the reviewed play hash. Absent field retains legacy serialized hashes, polling and enrollment.",
+    "One durable request per settled timely Scope ENTER; sole collector wakeup, native delivery/protection, exact original terms, advancing source clocks and original five-second deadline are enforced.",
+    "The reviewed one-shot request may run before the normal minimum poll spacing, but it cannot increase the frozen per-minute read quota or eight-call capture ceiling. Urgent reads omit Swing backfill and publish MARKET only.",
+    "Synthetic production-profile success has spare read quota using twenty-second sampled warm-up. The actual ten-second collector sleep is separately awakened by a queued request. Saturated quota refuses; no reservation, fabricated source clock or quota increase is introduced.",
+    "Failed, expired, stale and slow evidence creates no order and retains settled model cost. Real caller timeout does not cancel independent collection; late original evidence is retained. Restart never replays interrupted requests.",
+    "No actual provider/model calls, host changes, new Scope enrollment or connected trading acceptance occurred during this offline validation.",
+    "Host has adb453f image e4171d8d03eacac853c5e7dfd1b13f8491d2eda548627ba5a072d455d8e2e66a. November 5 capture succeeded; combined retained-Swing preparation was supplied but completion is not observed.",
+    "Account/population, balances, journals, positions, halts, two-play cap, $1000 initial capital, $1/day and $5 total AI limits and LIVE-disabled policy are preserved.",
+    "Original usable SPX history, exact reviewed SPXW/session/pattern inputs, seven candidates plus one Scope slot, actual read/model latency and complete connected lifecycle remain unverified. Saved interpolated Swing bars remain rejected.",
+    "No rebuild is needed for the next DEGEN check. The optional Scope path needs a later deployment and explicit session review when its original evidence and capacity are available."
+  ]
+}

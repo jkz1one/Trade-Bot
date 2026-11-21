@@ -1,0 +1,48 @@
+[Unit]
+Description=Trade-Bot isolated fixture PAPER runtime
+Wants=network-online.target
+After=network-online.target
+RequiresMountsFor=/var/lib/trade-bot-paper/population
+ConditionPathExists=/var/lib/trade-bot-paper/population/execution.db
+ConditionPathExists=/var/lib/trade-bot-paper/population/execution.db.authority.db
+ConditionPathExists=/var/lib/trade-bot-paper/population/venue.db
+ConditionPathExists=/var/lib/trade-bot-paper/population/quotes.db
+
+[Service]
+Type=exec
+User=tradebot-paper
+Group=tradebot-paper
+WorkingDirectory=/var/lib/trade-bot-paper
+ExecStart=/opt/trade-bot-paper/venv/bin/python -I -m app.execution.runtime_cli run --directory /var/lib/trade-bot-paper/population
+Restart=no
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=240
+UMask=0077
+Environment=PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/lib/trade-bot-paper/population
+TemporaryFileSystem=/etc/trade-bot-paper:ro,mode=0755,size=1M
+BindReadOnlyPaths=-/etc/trade-bot-paper/model
+BindPaths=-/etc/trade-bot-paper/market
+ReadWritePaths=-/etc/trade-bot-paper/market
+InaccessiblePaths=-/etc/trade-bot-paper/operator -/etc/trade-bot-paper/alerts
+InaccessiblePaths=-/var/lib/trade-bot -/etc/trade-bot -/opt/trade-bot
+TasksMax=128
+MemoryMax=512M
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=trade-bot-paper-runtime
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,25 @@
+{% macro protection(p) -%}
+{% if p.health_management is defined %}{% set h = p.health_management %}
+<div class="protection-state">
+  <span class="eyebrow">Stored health assessment</span>
+  <p><strong>{{ h.condition }}</strong> · {{ h.status }} · {{ h.action }}</p>
+  <small class="{{ 'warn' if not h.observations_fresh else '' }}">{{ 'Within recorded observation window' if h.observations_fresh else 'Observations stale or incomplete' }} · {{ h.evaluated_at }}</small>
+  {% if h.action_reason %}<p>{{ h.action_reason }}</p>{% endif %}
+  {% if h.reasons %}<p class="warn">{{ h.reasons|join(' · ') }}</p>{% endif %}
+  <small>Saved assessment only. It does not prove current protection or a running worker.</small>
+</div>
+{% endif %}
+{% if p.trade_floor is defined or p.premium_trail is defined %}
+<dl class="facts">
+{% if p.trade_floor is defined %}<dt>Stored trade floor</dt><dd>{{ '$' ~ p.trade_floor.minimum_exit_fill_price if p.trade_floor.minimum_exit_fill_price is not none else 'Not established' }}<small>Minimum fill price · before data/host costs; no fill guarantee</small>{% if p.trade_floor.reasons %}<small class="warn">{{ p.trade_floor.reasons|join(' · ') }}</small>{% endif %}</dd>{% endif %}
+{% if p.premium_trail is defined %}<dt>Stored premium floor</dt><dd>{{ '$' ~ p.premium_trail.floor_original_quantity_premium if p.premium_trail.floor_original_quantity_premium is not none else 'Not established' }}<small>Original-quantity premium equivalent · before fees/model costs</small></dd>{% endif %}
+</dl>
+{% endif %}
+{% if p.progress_health is defined or p.greek_pressure is defined %}
+<details class="evidence-detail"><summary>Progress and contract diagnostics</summary>
+{% if p.progress_health is defined %}{% set h = p.progress_health %}<h3>Observed progress</h3><p>{{ h.status }} · {{ 'Within recorded observation window' if h.observations_fresh else 'Observations stale or incomplete' }}</p><small>{{ h.evaluated_at }}</small>{% if h.reasons %}<p class="warn">{{ h.reasons|join(' · ') }}</p>{% endif %}<dl class="facts">{% for name, value in h.signals.items() %}<dt>{{ name|replace('_', ' ')|capitalize }}</dt><dd>{{ 'Observed' if value is sameas true else 'Not observed' if value is sameas false else 'Unknown' }}</dd>{% endfor %}</dl>{% endif %}
+{% if p.greek_pressure is defined %}{% set g = p.greek_pressure %}<h3>Contract pressure</h3><p>{{ g.status }} · {{ g.evaluated_at }}</p><dl class="facts"><dt>IV change</dt><dd>{{ g.iv_change_pct ~ '%' if g.iv_change_pct is not none else 'Unknown' }}</dd><dt>Absolute delta change</dt><dd>{{ g.absolute_delta_change_pct ~ '%' if g.absolute_delta_change_pct is not none else 'Unknown' }}</dd><dt>Reference hourly theta</dt><dd>{{ g.reference_hourly_theta_pct ~ '%' if g.reference_hourly_theta_pct is not none else 'Unknown' }}<small>6.5-hour heuristic, not a decay forecast</small></dd></dl>{% if g.reasons %}<p class="warn">{{ g.reasons|join(' · ') }}</p>{% endif %}{% endif %}
+<p class="muted">Diagnostics are before costs and are not net returns or an order instruction.</p>
+</details>
+{% endif %}
+{%- endmacro %}

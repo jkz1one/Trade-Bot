@@ -1,0 +1,29 @@
+{
+  "version": "operator-supplied-schema-delta-v1",
+  "base_fixture": "robinhood_read_schemas_20261104.json",
+  "base_sha256": "77f5aaac0e67dd9fb194d35bdbfb3779a351f52db8c6594a90dadd4f3fc5e272",
+  "observed_sha256": "dc15d335d30cd024e60910982942cf27d4c51dd83651630630c6b6e1cfa27718",
+  "provenance": "Operator supplied November 12 failed context metadata and complete changed input schemas. Capture timestamp was not supplied; no new capture time is asserted.",
+  "changes": [
+    {
+      "path": [
+        "get_equity_historicals",
+        "inputSchema",
+        "properties",
+        "interval",
+        "description"
+      ],
+      "value": "Bar interval. Optional \u2014 when omitted, the server picks an interval that targets ~2,500 bars across the requested range. Intraday: 15second, 30second, minute, 5minute, 10minute, 30minute, hour, 4hour. Interday: day, week, month, 3month, 6month, year, 5year, 10year, 20year, 50year. Note: the 1-minute bar is named 'minute' (not '1minute'). There is no '15minute' bar. For 15-minute bars, request '5minute' and combine every three bars."
+    },
+    {
+      "path": [
+        "get_option_historicals",
+        "inputSchema",
+        "properties",
+        "interval",
+        "description"
+      ],
+      "value": "Bar interval. Optional \u2014 when omitted, the server auto-selects an interval that targets a bounded bar count across the range. Intraday: 15second, 30second, minute, 5minute, 10minute, 30minute, hour, 4hour. Interday: day, week, month, 3month, 6month, year, 5year, 10year, 20year, 50year. Note: the 1-minute bar is named 'minute' (not '1minute'). There is no '15minute' bar. For 15-minute bars, request '5minute' and combine every three bars."
+    }
+  ]
+}

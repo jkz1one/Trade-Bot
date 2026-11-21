@@ -1,0 +1,222 @@
+{
+  "version": "paper-session-repair-20261118-v1",
+  "base_commit": "9baf83dc6b3420f9b068a70c9101b26da55e75ba",
+  "deployed_release": "220da15acec2bf0ff76cbf7354c7385992af644b",
+  "operator_report_sha256": "671070577f471712de685e7f551de5b02d9338070844a71594185cfe2021aef5",
+  "run_id": "daily-20261118",
+  "host_evidence": {
+    "window_start": "2026-11-18T15:01:38.437983+00:00",
+    "window_end": "2026-11-18T20:59:59.230433+00:00",
+    "cycle_count": 78,
+    "cycle_outcomes": [
+      {
+        "status": [
+          "COMPLETE"
+        ],
+        "reason": [],
+        "count": 2
+      },
+      {
+        "status": [
+          "INTERRUPTED"
+        ],
+        "reason": [
+          "OPTION_RUNTIME_CYCLE_INTERRUPTED"
+        ],
+        "count": 1
+      },
+      {
+        "status": [
+          "SKIPPED"
+        ],
+        "reason": [
+          "OPTION_RUNTIME_FEED_UNAVAILABLE"
+        ],
+        "count": 51
+      },
+      {
+        "status": [
+          "SKIPPED"
+        ],
+        "reason": [
+          "RUNTIME_SLOT_NOT_OBSERVED"
+        ],
+        "count": 24
+      }
+    ],
+    "decision_count": 2,
+    "run_execution": {
+      "status": "RECORDED",
+      "entry_fills": 0,
+      "exit_fills": 0,
+      "completed_round_trips": 0,
+      "carry_in_exits": 0
+    },
+    "publication_failures": [
+      {
+        "at": "2026-11-18T15:07:14.636890+00:00",
+        "component": "PUBLISHER",
+        "codes": [
+          "RUNNING"
+        ],
+        "evidence_available": true,
+        "error_class": "TimeoutError",
+        "frames": [
+          {
+            "file": "app/mixed/connected_runtime.py",
+            "line": 662
+          },
+          {
+            "file": "app/mixed/connected_runtime.py",
+            "line": 283
+          },
+          {
+            "file": "app/mixed/connected_runtime.py",
+            "line": 273
+          },
+          {
+            "file": "app/mixed/dashboard_snapshot.py",
+            "line": 300
+          },
+          {
+            "file": "app/mixed/dashboard_snapshot.py",
+            "line": 372
+          }
+        ]
+      }
+    ],
+    "collection": [
+      {
+        "status": "DELIVERED",
+        "attempts": 589,
+        "first_sequence": 1440,
+        "last_sequence": 2636
+      },
+      {
+        "status": "FAILED",
+        "attempts": 653,
+        "first_sequence": 1442,
+        "last_sequence": 2681
+      }
+    ],
+    "runtime_evidence": {
+      "heartbeat": "FRESH",
+      "heartbeat_at": "2026-11-18T20:59:50.885412+00:00",
+      "heartbeat_age_seconds": 8.345021,
+      "heartbeat_max_age_seconds": 20,
+      "feed": "STALE",
+      "feed_at": "2026-11-18T20:43:50.036427+00:00",
+      "feed_age_seconds": 969.194006,
+      "feed_max_age_seconds": 30
+    },
+    "worker_exit": {
+      "exit_code": 2,
+      "oom_killed": false,
+      "failures": [
+        {
+          "component": "PUBLISHER",
+          "error_class": "TimeoutError",
+          "frames": [
+            {
+              "file": "app/mixed/connected_runtime.py",
+              "line": 662
+            },
+            {
+              "file": "app/mixed/connected_runtime.py",
+              "line": 283
+            },
+            {
+              "file": "app/mixed/connected_runtime.py",
+              "line": 273
+            },
+            {
+              "file": "app/mixed/dashboard_snapshot.py",
+              "line": 300
+            },
+            {
+              "file": "app/mixed/dashboard_snapshot.py",
+              "line": 372
+            }
+          ]
+        }
+      ]
+    },
+    "session_timing": {
+      "planned_seconds": 21475,
+      "elapsed_seconds": 21500.79245
+    },
+    "flat_feed_recoveries": 0
+  },
+  "repairs": [
+    "Keep latched publication entry halt stable while reporting feed failure separately and continuing supervision.",
+    "Verify the same portfolio accounting, receipts, orders and held positions before publication without rendering charts, streams or decision history.",
+    "Keep the original five-second publication deadline and retained failed snapshot behavior.",
+    "Flush capture responses explicitly and distinguish SERIALIZE, RESPONSE_WRITE and RESPONSE_SENT diagnostics."
+  ],
+  "offline": {
+    "new_regressions_before_repair": {
+      "failed": 3,
+      "description": "One halt-alternation case and two injected slow-dashboard-history cases (flat and held)."
+    },
+    "new_regressions_after_repair": {
+      "passed": 3
+    },
+    "damaged_account_projection_rejections": {
+      "passed": 3,
+      "cases": [
+        "cash",
+        "incomplete",
+        "unresolved"
+      ]
+    },
+    "system_check": {
+      "version": "paper-system-check-v1",
+      "status": "PASSED",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "market_acceptance": "UNVERIFIED",
+      "wall_clock_soak": "NOT_RUN",
+      "host_acceptance": "UNVERIFIED",
+      "application_files": 333,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "55a9caace073ec6fe3f5ff5421ef3735f5e62f9f8573ef15e7e56834164b4c97",
+      "test_exit_code": 0,
+      "junit": {
+        "tests": 624,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1,
+        "seconds": 407.037,
+        "sha256": "6f4035585b05e827ead2b8175fd23148d48391cc31453d817091f45cba9ecaf3",
+        "skip_details": [
+          {
+            "type": "pytest.skip",
+            "message": "Reader 10001 is not mapped in this environment: uid"
+          }
+        ]
+      },
+      "passed": 623,
+      "environment": "Installed noneditable application; root mapped user and isolated network namespace; loopback enabled only; one unmapped reader-UID test skipped."
+    },
+    "additional_checks": {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 4.198,
+      "sha256": "bf21b77b2025a641ecf3ddfe20b06b4a91ac1ef6807e34e96c2369988fb79594",
+      "skip_details": [],
+      "coverage": "Three damaged-account rejection cases plus the two slow-history cases already included in the system suite."
+    },
+    "initial_source_suite": "An initial nonstandard unprivileged source run had 109 passes, one skip and two failures (root ownership expectation and held-position fixture setup). The full installed isolated run passed those suites; no source-run failure is claimed as host evidence."
+  },
+  "limitations": [
+    "The slow-render regression reproduces the verification deadline failure class; the exact cost breakdown on the host is not available.",
+    "Provider CONNECT timeouts are not repaired or explained by these changes.",
+    "Capture response markers improve diagnosis; no timeout or quote freshness limit is relaxed.",
+    "Host deployment, halted-session review and full connected-day acceptance remain outstanding."
+  ],
+  "code_release": "c03b6282fed59e48f113b06f4bc02f53b50410d0"
+}

@@ -1,0 +1,3594 @@
+{
+  "synthetic": true,
+  "market_acceptance": false,
+  "overlapping_phases_not_summed": true,
+  "cases": [
+    {
+      "fixture_directory": "test_joint_scope_runtime_retai0",
+      "window_start": "2026-10-09T14:01:01+00:00",
+      "window_end": "2026-10-09T14:01:01+00:00",
+      "runtime_timing": {
+        "status": "OBSERVED",
+        "records": 2,
+        "measured": 2,
+        "missing_or_invalid": 0,
+        "omitted": 0,
+        "spans_omitted": 0,
+        "by_status": {
+          "CYCLE:COMPLETE": 1,
+          "NATIVE_SNAPSHOT:COMPLETE": 2,
+          "SCAN:COMPLETE": 1,
+          "STOCK_SCAN:COMPLETE": 1,
+          "SCOPE_QUALITY:COMPLETE": 2,
+          "SCOPE_SCAN:COMPLETE": 1,
+          "ENTRY_MODEL:COMPLETE": 1,
+          "STOCK_REFRESH:COMPLETE": 1,
+          "STOCK_ADMISSION:COMPLETE": 1,
+          "NATIVE_ACCEPT:COMPLETE": 1,
+          "STOCK_DISPATCH:COMPLETE": 1,
+          "TICK:COMPLETE": 1,
+          "PROTECTION:COMPLETE": 1
+        },
+        "phases": {
+          "CYCLE": {
+            "samples": 1,
+            "p50_seconds": 3.468658,
+            "p95_seconds": 3.468658,
+            "p99_seconds": 3.468658,
+            "max_seconds": 3.468658
+          },
+          "NATIVE_SNAPSHOT": {
+            "samples": 2,
+            "p50_seconds": 0.116296,
+            "p95_seconds": 0.118098,
+            "p99_seconds": 0.118098,
+            "max_seconds": 0.118098
+          },
+          "SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.011574,
+            "p95_seconds": 0.011574,
+            "p99_seconds": 0.011574,
+            "max_seconds": 0.011574
+          },
+          "STOCK_SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.072463,
+            "p95_seconds": 0.072463,
+            "p99_seconds": 0.072463,
+            "max_seconds": 0.072463
+          },
+          "SCOPE_QUALITY": {
+            "samples": 2,
+            "p50_seconds": 0.009288,
+            "p95_seconds": 0.011,
+            "p99_seconds": 0.011,
+            "max_seconds": 0.011
+          },
+          "SCOPE_SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.342996,
+            "p95_seconds": 0.342996,
+            "p99_seconds": 0.342996,
+            "max_seconds": 0.342996
+          },
+          "ENTRY_MODEL": {
+            "samples": 1,
+            "p50_seconds": 0.0036,
+            "p95_seconds": 0.0036,
+            "p99_seconds": 0.0036,
+            "max_seconds": 0.0036
+          },
+          "STOCK_REFRESH": {
+            "samples": 1,
+            "p50_seconds": 0.009079,
+            "p95_seconds": 0.009079,
+            "p99_seconds": 0.009079,
+            "max_seconds": 0.009079
+          },
+          "STOCK_ADMISSION": {
+            "samples": 1,
+            "p50_seconds": 0.174623,
+            "p95_seconds": 0.174623,
+            "p99_seconds": 0.174623,
+            "max_seconds": 0.174623
+          },
+          "NATIVE_ACCEPT": {
+            "samples": 1,
+            "p50_seconds": 1.31584,
+            "p95_seconds": 1.31584,
+            "p99_seconds": 1.31584,
+            "max_seconds": 1.31584
+          },
+          "STOCK_DISPATCH": {
+            "samples": 1,
+            "p50_seconds": 1.639659,
+            "p95_seconds": 1.639659,
+            "p99_seconds": 1.639659,
+            "max_seconds": 1.639659
+          },
+          "TICK": {
+            "samples": 1,
+            "p50_seconds": 0.741826,
+            "p95_seconds": 0.741826,
+            "p99_seconds": 0.741826,
+            "max_seconds": 0.741826
+          },
+          "PROTECTION": {
+            "samples": 1,
+            "p50_seconds": 0.256856,
+            "p95_seconds": 0.256856,
+            "p99_seconds": 0.256856,
+            "max_seconds": 0.256856
+          }
+        },
+        "recent": [
+          {
+            "id": 2,
+            "started_at": "2026-10-09T14:01:01+00:00",
+            "kind": "CYCLE",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": 5971848,
+            "packet_sequence": 1,
+            "packet_sha256": "71fa64ecd5806039e230cb0e19fc13b0160aee65e9213dd0b2ce92dced08c64e",
+            "elapsed_seconds": 3.468658,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.116,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 6e-06,
+                    "cpu_seconds": 4e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000216,
+                    "cpu_seconds": 0.000214
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000224,
+                    "cpu_seconds": 0.000221
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002473,
+                    "cpu_seconds": 0.002472
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.002608,
+                    "cpu_seconds": 0.002606
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 1.316,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "IMPORTS",
+                    "elapsed_seconds": 3.3e-05,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 0.593315,
+                    "cpu_seconds": 0.59263
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.596239,
+                    "cpu_seconds": 0.595551
+                  },
+                  {
+                    "stage": "ACCEPT",
+                    "elapsed_seconds": 0.600515,
+                    "cpu_seconds": 0.599827
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 1.07646,
+                    "cpu_seconds": 1.071185
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 1.076559,
+                    "cpu_seconds": 1.071281
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 1,
+            "started_at": "2026-10-09T14:01:01+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 1,
+            "packet_sha256": "71fa64ecd5806039e230cb0e19fc13b0160aee65e9213dd0b2ce92dced08c64e",
+            "elapsed_seconds": 0.741826,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.118,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 6e-06,
+                    "cpu_seconds": 4e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000194,
+                    "cpu_seconds": 0.000192
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000203,
+                    "cpu_seconds": 0.000199
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002779,
+                    "cpu_seconds": 0.002778
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.002904,
+                    "cpu_seconds": 0.002901
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "execution_quote_clocks": {
+          "quote_age_seconds": {
+            "samples": 2,
+            "p50_seconds": 1.0,
+            "p95_seconds": 1.0,
+            "p99_seconds": 1.0,
+            "max_seconds": 1.0
+          },
+          "receive_lag_seconds": {
+            "samples": 2,
+            "p50_seconds": 0.0,
+            "p95_seconds": 0.0,
+            "p99_seconds": 0.0,
+            "max_seconds": 0.0
+          },
+          "local_age_seconds": {
+            "samples": 2,
+            "p50_seconds": 1.0,
+            "p95_seconds": 1.0,
+            "p99_seconds": 1.0,
+            "max_seconds": 1.0
+          }
+        },
+        "native_observed_intervals": {
+          "REQUEST": {
+            "samples": 3,
+            "p50_seconds": 0.00020999999999999998,
+            "p95_seconds": 0.0029239999999999267,
+            "p99_seconds": 0.0029239999999999267,
+            "max_seconds": 0.0029239999999999267
+          },
+          "VENUE_OPEN": {
+            "samples": 3,
+            "p50_seconds": 9.000000000000002e-06,
+            "p95_seconds": 0.0042760000000000575,
+            "p99_seconds": 0.0042760000000000575,
+            "max_seconds": 0.0042760000000000575
+          },
+          "SNAPSHOT": {
+            "samples": 2,
+            "p50_seconds": 0.002249,
+            "p95_seconds": 0.0025759999999999997,
+            "p99_seconds": 0.0025759999999999997,
+            "max_seconds": 0.0025759999999999997
+          },
+          "SERIALIZE": {
+            "samples": 3,
+            "p50_seconds": 0.0001250000000000001,
+            "p95_seconds": 0.00013500000000000014,
+            "p99_seconds": 0.00013500000000000014,
+            "max_seconds": 0.00013500000000000014
+          },
+          "IMPORTS": {
+            "samples": 1,
+            "p50_seconds": 0.5932820000000001,
+            "p95_seconds": 0.5932820000000001,
+            "p99_seconds": 0.5932820000000001,
+            "max_seconds": 0.5932820000000001
+          },
+          "ACCEPT": {
+            "samples": 1,
+            "p50_seconds": 0.47594499999999995,
+            "p95_seconds": 0.47594499999999995,
+            "p99_seconds": 0.47594499999999995,
+            "max_seconds": 0.47594499999999995
+          }
+        },
+        "packet_age": {
+          "samples": 2,
+          "p50_seconds": 0.0,
+          "p95_seconds": 0.0,
+          "p99_seconds": 0.0,
+          "max_seconds": 0.0
+        }
+      }
+    },
+    {
+      "fixture_directory": "test_joint_scope_runtime_retai1",
+      "window_start": "2026-10-09T14:01:01+00:00",
+      "window_end": "2026-10-09T14:01:01+00:00",
+      "runtime_timing": {
+        "status": "OBSERVED",
+        "records": 2,
+        "measured": 2,
+        "missing_or_invalid": 0,
+        "omitted": 0,
+        "spans_omitted": 0,
+        "by_status": {
+          "CYCLE:COMPLETE": 1,
+          "NATIVE_SNAPSHOT:COMPLETE": 2,
+          "SCAN:COMPLETE": 1,
+          "STOCK_SCAN:COMPLETE": 1,
+          "SCOPE_QUALITY:COMPLETE": 2,
+          "SCOPE_SCAN:COMPLETE": 1,
+          "ENTRY_MODEL:COMPLETE": 1,
+          "ADMISSION:COMPLETE": 1,
+          "NATIVE_ACCEPT:COMPLETE": 1,
+          "DISPATCH:COMPLETE": 1,
+          "TICK:COMPLETE": 1,
+          "PROTECTION:COMPLETE": 1
+        },
+        "phases": {
+          "CYCLE": {
+            "samples": 1,
+            "p50_seconds": 3.805997,
+            "p95_seconds": 3.805997,
+            "p99_seconds": 3.805997,
+            "max_seconds": 3.805997
+          },
+          "NATIVE_SNAPSHOT": {
+            "samples": 2,
+            "p50_seconds": 0.110244,
+            "p95_seconds": 0.114615,
+            "p99_seconds": 0.114615,
+            "max_seconds": 0.114615
+          },
+          "SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.016226,
+            "p95_seconds": 0.016226,
+            "p99_seconds": 0.016226,
+            "max_seconds": 0.016226
+          },
+          "STOCK_SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.076476,
+            "p95_seconds": 0.076476,
+            "p99_seconds": 0.076476,
+            "max_seconds": 0.076476
+          },
+          "SCOPE_QUALITY": {
+            "samples": 2,
+            "p50_seconds": 0.01045,
+            "p95_seconds": 0.014089,
+            "p99_seconds": 0.014089,
+            "max_seconds": 0.014089
+          },
+          "SCOPE_SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.33885,
+            "p95_seconds": 0.33885,
+            "p99_seconds": 0.33885,
+            "max_seconds": 0.33885
+          },
+          "ENTRY_MODEL": {
+            "samples": 1,
+            "p50_seconds": 0.005274,
+            "p95_seconds": 0.005274,
+            "p99_seconds": 0.005274,
+            "max_seconds": 0.005274
+          },
+          "ADMISSION": {
+            "samples": 1,
+            "p50_seconds": 0.297103,
+            "p95_seconds": 0.297103,
+            "p99_seconds": 0.297103,
+            "max_seconds": 0.297103
+          },
+          "NATIVE_ACCEPT": {
+            "samples": 1,
+            "p50_seconds": 1.246862,
+            "p95_seconds": 1.246862,
+            "p99_seconds": 1.246862,
+            "max_seconds": 1.246862
+          },
+          "DISPATCH": {
+            "samples": 1,
+            "p50_seconds": 1.609496,
+            "p95_seconds": 1.609496,
+            "p99_seconds": 1.609496,
+            "max_seconds": 1.609496
+          },
+          "TICK": {
+            "samples": 1,
+            "p50_seconds": 0.735159,
+            "p95_seconds": 0.735159,
+            "p99_seconds": 0.735159,
+            "max_seconds": 0.735159
+          },
+          "PROTECTION": {
+            "samples": 1,
+            "p50_seconds": 0.247673,
+            "p95_seconds": 0.247673,
+            "p99_seconds": 0.247673,
+            "max_seconds": 0.247673
+          }
+        },
+        "recent": [
+          {
+            "id": 2,
+            "started_at": "2026-10-09T14:01:01+00:00",
+            "kind": "CYCLE",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": 5971848,
+            "packet_sequence": 1,
+            "packet_sha256": "71fa64ecd5806039e230cb0e19fc13b0160aee65e9213dd0b2ce92dced08c64e",
+            "elapsed_seconds": 3.805997,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.11,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 6e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000297,
+                    "cpu_seconds": 0.000297
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000307,
+                    "cpu_seconds": 0.000305
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002676,
+                    "cpu_seconds": 0.002675
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.002824,
+                    "cpu_seconds": 0.002822
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 1.247,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "IMPORTS",
+                    "elapsed_seconds": 2.4e-05,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 0.554886,
+                    "cpu_seconds": 0.552358
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.558952,
+                    "cpu_seconds": 0.55642
+                  },
+                  {
+                    "stage": "ACCEPT",
+                    "elapsed_seconds": 0.563801,
+                    "cpu_seconds": 0.56127
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 1.019946,
+                    "cpu_seconds": 1.00725
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 1.020053,
+                    "cpu_seconds": 1.007353
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 1,
+            "started_at": "2026-10-09T14:01:01+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 1,
+            "packet_sha256": "71fa64ecd5806039e230cb0e19fc13b0160aee65e9213dd0b2ce92dced08c64e",
+            "elapsed_seconds": 0.735159,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.114,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 6e-06,
+                    "cpu_seconds": 4e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000177,
+                    "cpu_seconds": 0.000176
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000184,
+                    "cpu_seconds": 0.000182
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.00251,
+                    "cpu_seconds": 0.002509
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.002648,
+                    "cpu_seconds": 0.002646
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "execution_quote_clocks": {
+          "quote_age_seconds": {
+            "samples": 2,
+            "p50_seconds": 1.0,
+            "p95_seconds": 1.0,
+            "p99_seconds": 1.0,
+            "max_seconds": 1.0
+          },
+          "receive_lag_seconds": {
+            "samples": 2,
+            "p50_seconds": 0.0,
+            "p95_seconds": 0.0,
+            "p99_seconds": 0.0,
+            "max_seconds": 0.0
+          },
+          "local_age_seconds": {
+            "samples": 2,
+            "p50_seconds": 1.0,
+            "p95_seconds": 1.0,
+            "p99_seconds": 1.0,
+            "max_seconds": 1.0
+          }
+        },
+        "native_observed_intervals": {
+          "REQUEST": {
+            "samples": 3,
+            "p50_seconds": 0.000291,
+            "p95_seconds": 0.004066000000000014,
+            "p99_seconds": 0.004066000000000014,
+            "max_seconds": 0.004066000000000014
+          },
+          "VENUE_OPEN": {
+            "samples": 3,
+            "p50_seconds": 9.999999999999972e-06,
+            "p95_seconds": 0.004848999999999992,
+            "p99_seconds": 0.004848999999999992,
+            "max_seconds": 0.004848999999999992
+          },
+          "SNAPSHOT": {
+            "samples": 2,
+            "p50_seconds": 0.002326,
+            "p95_seconds": 0.002369,
+            "p99_seconds": 0.002369,
+            "max_seconds": 0.002369
+          },
+          "SERIALIZE": {
+            "samples": 3,
+            "p50_seconds": 0.0001380000000000001,
+            "p95_seconds": 0.00014800000000000013,
+            "p99_seconds": 0.00014800000000000013,
+            "max_seconds": 0.00014800000000000013
+          },
+          "IMPORTS": {
+            "samples": 1,
+            "p50_seconds": 0.554862,
+            "p95_seconds": 0.554862,
+            "p99_seconds": 0.554862,
+            "max_seconds": 0.554862
+          },
+          "ACCEPT": {
+            "samples": 1,
+            "p50_seconds": 0.456145,
+            "p95_seconds": 0.456145,
+            "p99_seconds": 0.456145,
+            "max_seconds": 0.456145
+          }
+        },
+        "packet_age": {
+          "samples": 2,
+          "p50_seconds": 0.0,
+          "p95_seconds": 0.0,
+          "p99_seconds": 0.0,
+          "max_seconds": 0.0
+        }
+      }
+    },
+    {
+      "fixture_directory": "test_joint_scope_runtime_retai2",
+      "window_start": "2026-10-09T14:01:01+00:00",
+      "window_end": "2026-10-09T14:01:02+00:00",
+      "runtime_timing": {
+        "status": "OBSERVED",
+        "records": 3,
+        "measured": 3,
+        "missing_or_invalid": 0,
+        "omitted": 0,
+        "spans_omitted": 0,
+        "by_status": {
+          "TICK:COMPLETE": 2,
+          "NATIVE_SNAPSHOT:COMPLETE": 3,
+          "PROTECTION:COMPLETE": 2,
+          "CYCLE:COMPLETE": 1,
+          "SCAN:COMPLETE": 1,
+          "STOCK_SCAN:COMPLETE": 1,
+          "SCOPE_QUALITY:COMPLETE": 5,
+          "SCOPE_SCAN:COMPLETE": 1,
+          "ENTRY_MODEL:COMPLETE": 1,
+          "SCOPE_REFRESH:COMPLETE": 1,
+          "ADMISSION:COMPLETE": 1,
+          "NATIVE_ACCEPT:COMPLETE": 1,
+          "DISPATCH:COMPLETE": 1
+        },
+        "phases": {
+          "TICK": {
+            "samples": 2,
+            "p50_seconds": 0.80453,
+            "p95_seconds": 0.837276,
+            "p99_seconds": 0.837276,
+            "max_seconds": 0.837276
+          },
+          "NATIVE_SNAPSHOT": {
+            "samples": 3,
+            "p50_seconds": 0.125379,
+            "p95_seconds": 0.136297,
+            "p99_seconds": 0.136297,
+            "max_seconds": 0.136297
+          },
+          "PROTECTION": {
+            "samples": 2,
+            "p50_seconds": 0.292679,
+            "p95_seconds": 0.300175,
+            "p99_seconds": 0.300175,
+            "max_seconds": 0.300175
+          },
+          "CYCLE": {
+            "samples": 1,
+            "p50_seconds": 6.31486,
+            "p95_seconds": 6.31486,
+            "p99_seconds": 6.31486,
+            "max_seconds": 6.31486
+          },
+          "SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.012579,
+            "p95_seconds": 0.012579,
+            "p99_seconds": 0.012579,
+            "max_seconds": 0.012579
+          },
+          "STOCK_SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.081918,
+            "p95_seconds": 0.081918,
+            "p99_seconds": 0.081918,
+            "max_seconds": 0.081918
+          },
+          "SCOPE_QUALITY": {
+            "samples": 5,
+            "p50_seconds": 0.009456,
+            "p95_seconds": 0.010718,
+            "p99_seconds": 0.010718,
+            "max_seconds": 0.010718
+          },
+          "SCOPE_SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.34551,
+            "p95_seconds": 0.34551,
+            "p99_seconds": 0.34551,
+            "max_seconds": 0.34551
+          },
+          "ENTRY_MODEL": {
+            "samples": 1,
+            "p50_seconds": 0.936396,
+            "p95_seconds": 0.936396,
+            "p99_seconds": 0.936396,
+            "max_seconds": 0.936396
+          },
+          "SCOPE_REFRESH": {
+            "samples": 1,
+            "p50_seconds": 0.007705,
+            "p95_seconds": 0.007705,
+            "p99_seconds": 0.007705,
+            "max_seconds": 0.007705
+          },
+          "ADMISSION": {
+            "samples": 1,
+            "p50_seconds": 0.646543,
+            "p95_seconds": 0.646543,
+            "p99_seconds": 0.646543,
+            "max_seconds": 0.646543
+          },
+          "NATIVE_ACCEPT": {
+            "samples": 1,
+            "p50_seconds": 1.293475,
+            "p95_seconds": 1.293475,
+            "p99_seconds": 1.293475,
+            "max_seconds": 1.293475
+          },
+          "DISPATCH": {
+            "samples": 1,
+            "p50_seconds": 2.037164,
+            "p95_seconds": 2.037164,
+            "p99_seconds": 2.037164,
+            "max_seconds": 2.037164
+          }
+        },
+        "recent": [
+          {
+            "id": 3,
+            "started_at": "2026-10-09T14:01:02+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 2,
+            "packet_sha256": "93a842df19cc523f2490183abc1ed96e5d662554b793829cdf540a1e45c02d4c",
+            "elapsed_seconds": 0.837276,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.125,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 7e-06,
+                    "cpu_seconds": 4e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000183,
+                    "cpu_seconds": 0.000181
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.00019,
+                    "cpu_seconds": 0.000186
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002664,
+                    "cpu_seconds": 0.002663
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.002819,
+                    "cpu_seconds": 0.002816
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "started_at": "2026-10-09T14:01:01+00:00",
+            "kind": "CYCLE",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": 5971848,
+            "packet_sequence": 1,
+            "packet_sha256": "71fa64ecd5806039e230cb0e19fc13b0160aee65e9213dd0b2ce92dced08c64e",
+            "elapsed_seconds": 6.31486,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.112,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 6e-06,
+                    "cpu_seconds": 4e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000177,
+                    "cpu_seconds": 0.000175
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000184,
+                    "cpu_seconds": 0.000181
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002471,
+                    "cpu_seconds": 0.00247
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.002605,
+                    "cpu_seconds": 0.002603
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 1.293,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "IMPORTS",
+                    "elapsed_seconds": 7.8e-05,
+                    "cpu_seconds": 4.7e-05
+                  },
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 0.627346,
+                    "cpu_seconds": 0.62376
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.630281,
+                    "cpu_seconds": 0.626691
+                  },
+                  {
+                    "stage": "ACCEPT",
+                    "elapsed_seconds": 0.63478,
+                    "cpu_seconds": 0.631191
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 1.037474,
+                    "cpu_seconds": 1.030599
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 1.037561,
+                    "cpu_seconds": 1.030683
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 1,
+            "started_at": "2026-10-09T14:01:01+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 1,
+            "packet_sha256": "71fa64ecd5806039e230cb0e19fc13b0160aee65e9213dd0b2ce92dced08c64e",
+            "elapsed_seconds": 0.80453,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.136,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 7e-06,
+                    "cpu_seconds": 4e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000179,
+                    "cpu_seconds": 0.000177
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000187,
+                    "cpu_seconds": 0.000183
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002556,
+                    "cpu_seconds": 0.002555
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.002681,
+                    "cpu_seconds": 0.002678
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "execution_quote_clocks": {
+          "quote_age_seconds": {
+            "samples": 2,
+            "p50_seconds": 1.0,
+            "p95_seconds": 1.0,
+            "p99_seconds": 1.0,
+            "max_seconds": 1.0
+          },
+          "receive_lag_seconds": {
+            "samples": 2,
+            "p50_seconds": 0.0,
+            "p95_seconds": 0.0,
+            "p99_seconds": 0.0,
+            "max_seconds": 0.0
+          },
+          "local_age_seconds": {
+            "samples": 2,
+            "p50_seconds": 1.0,
+            "p95_seconds": 1.0,
+            "p99_seconds": 1.0,
+            "max_seconds": 1.0
+          }
+        },
+        "native_observed_intervals": {
+          "REQUEST": {
+            "samples": 4,
+            "p50_seconds": 0.00017199999999999998,
+            "p95_seconds": 0.002935000000000021,
+            "p99_seconds": 0.002935000000000021,
+            "max_seconds": 0.002935000000000021
+          },
+          "VENUE_OPEN": {
+            "samples": 4,
+            "p50_seconds": 7.0000000000000075e-06,
+            "p95_seconds": 0.004499000000000031,
+            "p99_seconds": 0.004499000000000031,
+            "max_seconds": 0.004499000000000031
+          },
+          "SNAPSHOT": {
+            "samples": 3,
+            "p50_seconds": 0.002369,
+            "p95_seconds": 0.002474,
+            "p99_seconds": 0.002474,
+            "max_seconds": 0.002474
+          },
+          "SERIALIZE": {
+            "samples": 4,
+            "p50_seconds": 0.00012499999999999968,
+            "p95_seconds": 0.00015499999999999976,
+            "p99_seconds": 0.00015499999999999976,
+            "max_seconds": 0.00015499999999999976
+          },
+          "IMPORTS": {
+            "samples": 1,
+            "p50_seconds": 0.6272679999999999,
+            "p95_seconds": 0.6272679999999999,
+            "p99_seconds": 0.6272679999999999,
+            "max_seconds": 0.6272679999999999
+          },
+          "ACCEPT": {
+            "samples": 1,
+            "p50_seconds": 0.402694,
+            "p95_seconds": 0.402694,
+            "p99_seconds": 0.402694,
+            "max_seconds": 0.402694
+          }
+        },
+        "packet_age": {
+          "samples": 3,
+          "p50_seconds": 0.0,
+          "p95_seconds": 0.0,
+          "p99_seconds": 0.0,
+          "max_seconds": 0.0
+        }
+      }
+    },
+    {
+      "fixture_directory": "test_joint_scope_runtime_retai3",
+      "window_start": "2026-10-09T14:01:01+00:00",
+      "window_end": "2026-10-09T14:01:01+00:00",
+      "runtime_timing": {
+        "status": "OBSERVED",
+        "records": 2,
+        "measured": 2,
+        "missing_or_invalid": 0,
+        "omitted": 0,
+        "spans_omitted": 0,
+        "by_status": {
+          "CYCLE:COMPLETE": 1,
+          "NATIVE_SNAPSHOT:COMPLETE": 2,
+          "SCAN:COMPLETE": 1,
+          "STOCK_SCAN:COMPLETE": 1,
+          "SCOPE_QUALITY:COMPLETE": 4,
+          "SCOPE_SCAN:COMPLETE": 1,
+          "ENTRY_MODEL:COMPLETE": 1,
+          "SCOPE_REFRESH:COMPLETE": 1,
+          "TICK:COMPLETE": 1,
+          "PROTECTION:COMPLETE": 1
+        },
+        "phases": {
+          "CYCLE": {
+            "samples": 1,
+            "p50_seconds": 1.947779,
+            "p95_seconds": 1.947779,
+            "p99_seconds": 1.947779,
+            "max_seconds": 1.947779
+          },
+          "NATIVE_SNAPSHOT": {
+            "samples": 2,
+            "p50_seconds": 0.114072,
+            "p95_seconds": 0.14615,
+            "p99_seconds": 0.14615,
+            "max_seconds": 0.14615
+          },
+          "SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.015985,
+            "p95_seconds": 0.015985,
+            "p99_seconds": 0.015985,
+            "max_seconds": 0.015985
+          },
+          "STOCK_SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.081928,
+            "p95_seconds": 0.081928,
+            "p99_seconds": 0.081928,
+            "max_seconds": 0.081928
+          },
+          "SCOPE_QUALITY": {
+            "samples": 4,
+            "p50_seconds": 0.011456,
+            "p95_seconds": 0.017615,
+            "p99_seconds": 0.017615,
+            "max_seconds": 0.017615
+          },
+          "SCOPE_SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.397273,
+            "p95_seconds": 0.397273,
+            "p99_seconds": 0.397273,
+            "max_seconds": 0.397273
+          },
+          "ENTRY_MODEL": {
+            "samples": 1,
+            "p50_seconds": 0.004407,
+            "p95_seconds": 0.004407,
+            "p99_seconds": 0.004407,
+            "max_seconds": 0.004407
+          },
+          "SCOPE_REFRESH": {
+            "samples": 1,
+            "p50_seconds": 0.008517,
+            "p95_seconds": 0.008517,
+            "p99_seconds": 0.008517,
+            "max_seconds": 0.008517
+          },
+          "TICK": {
+            "samples": 1,
+            "p50_seconds": 0.811619,
+            "p95_seconds": 0.811619,
+            "p99_seconds": 0.811619,
+            "max_seconds": 0.811619
+          },
+          "PROTECTION": {
+            "samples": 1,
+            "p50_seconds": 0.263115,
+            "p95_seconds": 0.263115,
+            "p99_seconds": 0.263115,
+            "max_seconds": 0.263115
+          }
+        },
+        "recent": [
+          {
+            "id": 2,
+            "started_at": "2026-10-09T14:01:01+00:00",
+            "kind": "CYCLE",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": 5971848,
+            "packet_sequence": 1,
+            "packet_sha256": "71fa64ecd5806039e230cb0e19fc13b0160aee65e9213dd0b2ce92dced08c64e",
+            "elapsed_seconds": 1.947779,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.146,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 6e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000172,
+                    "cpu_seconds": 0.00017
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000179,
+                    "cpu_seconds": 0.000176
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002452,
+                    "cpu_seconds": 0.002451
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.002575,
+                    "cpu_seconds": 0.002573
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 1,
+            "started_at": "2026-10-09T14:01:01+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 1,
+            "packet_sha256": "71fa64ecd5806039e230cb0e19fc13b0160aee65e9213dd0b2ce92dced08c64e",
+            "elapsed_seconds": 0.811619,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.114,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 7e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000205,
+                    "cpu_seconds": 0.000203
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000213,
+                    "cpu_seconds": 0.000209
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002577,
+                    "cpu_seconds": 0.002576
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.002707,
+                    "cpu_seconds": 0.002704
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "execution_quote_clocks": {},
+        "native_observed_intervals": {
+          "REQUEST": {
+            "samples": 2,
+            "p50_seconds": 0.000166,
+            "p95_seconds": 0.000198,
+            "p99_seconds": 0.000198,
+            "max_seconds": 0.000198
+          },
+          "VENUE_OPEN": {
+            "samples": 2,
+            "p50_seconds": 6.99999999999998e-06,
+            "p95_seconds": 8.000000000000005e-06,
+            "p99_seconds": 8.000000000000005e-06,
+            "max_seconds": 8.000000000000005e-06
+          },
+          "SNAPSHOT": {
+            "samples": 2,
+            "p50_seconds": 0.0022730000000000003,
+            "p95_seconds": 0.0023639999999999998,
+            "p99_seconds": 0.0023639999999999998,
+            "max_seconds": 0.0023639999999999998
+          },
+          "SERIALIZE": {
+            "samples": 2,
+            "p50_seconds": 0.00012299999999999985,
+            "p95_seconds": 0.00013000000000000034,
+            "p99_seconds": 0.00013000000000000034,
+            "max_seconds": 0.00013000000000000034
+          }
+        },
+        "packet_age": {
+          "samples": 2,
+          "p50_seconds": 0.0,
+          "p95_seconds": 0.0,
+          "p99_seconds": 0.0,
+          "max_seconds": 0.0
+        }
+      }
+    },
+    {
+      "fixture_directory": "test_mixed_management_wait_kee0",
+      "window_start": "2026-10-09T14:00:00+00:00",
+      "window_end": "2026-10-09T14:05:01+00:00",
+      "runtime_timing": {
+        "status": "OBSERVED",
+        "records": 5,
+        "measured": 5,
+        "missing_or_invalid": 0,
+        "omitted": 0,
+        "spans_omitted": 0,
+        "by_status": {
+          "TICK:COMPLETE": 3,
+          "NATIVE_SNAPSHOT:COMPLETE": 7,
+          "STOCK_ADMISSION:COMPLETE": 2,
+          "NATIVE_ACCEPT:COMPLETE": 2,
+          "STOCK_DISPATCH:COMPLETE": 2,
+          "PROTECTION:COMPLETE": 3,
+          "CYCLE:COMPLETE": 2,
+          "STOCK_MANAGEMENT_MODEL:COMPLETE": 1,
+          "SCAN:COMPLETE": 1,
+          "STOCK_SCAN:COMPLETE": 1,
+          "ENTRY_MODEL:COMPLETE": 1,
+          "STOCK_REFRESH:COMPLETE": 1
+        },
+        "phases": {
+          "TICK": {
+            "samples": 3,
+            "p50_seconds": 0.628691,
+            "p95_seconds": 2.799449,
+            "p99_seconds": 2.799449,
+            "max_seconds": 2.799449
+          },
+          "NATIVE_SNAPSHOT": {
+            "samples": 7,
+            "p50_seconds": 0.126253,
+            "p95_seconds": 0.14471,
+            "p99_seconds": 0.14471,
+            "max_seconds": 0.14471
+          },
+          "STOCK_ADMISSION": {
+            "samples": 2,
+            "p50_seconds": 0.127389,
+            "p95_seconds": 0.351723,
+            "p99_seconds": 0.351723,
+            "max_seconds": 0.351723
+          },
+          "NATIVE_ACCEPT": {
+            "samples": 2,
+            "p50_seconds": 1.34487,
+            "p95_seconds": 1.410771,
+            "p99_seconds": 1.410771,
+            "max_seconds": 1.410771
+          },
+          "STOCK_DISPATCH": {
+            "samples": 2,
+            "p50_seconds": 1.518135,
+            "p95_seconds": 1.675654,
+            "p99_seconds": 1.675654,
+            "max_seconds": 1.675654
+          },
+          "PROTECTION": {
+            "samples": 3,
+            "p50_seconds": 0.442094,
+            "p95_seconds": 2.648432,
+            "p99_seconds": 2.648432,
+            "max_seconds": 2.648432
+          },
+          "CYCLE": {
+            "samples": 2,
+            "p50_seconds": 2.258252,
+            "p95_seconds": 5.05017,
+            "p99_seconds": 5.05017,
+            "max_seconds": 5.05017
+          },
+          "STOCK_MANAGEMENT_MODEL": {
+            "samples": 1,
+            "p50_seconds": 2.824947,
+            "p95_seconds": 2.824947,
+            "p99_seconds": 2.824947,
+            "max_seconds": 2.824947
+          },
+          "SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.015231,
+            "p95_seconds": 0.015231,
+            "p99_seconds": 0.015231,
+            "max_seconds": 0.015231
+          },
+          "STOCK_SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.035706,
+            "p95_seconds": 0.035706,
+            "p99_seconds": 0.035706,
+            "max_seconds": 0.035706
+          },
+          "ENTRY_MODEL": {
+            "samples": 1,
+            "p50_seconds": 0.003362,
+            "p95_seconds": 0.003362,
+            "p99_seconds": 0.003362,
+            "max_seconds": 0.003362
+          },
+          "STOCK_REFRESH": {
+            "samples": 1,
+            "p50_seconds": 0.0155,
+            "p95_seconds": 0.0155,
+            "p99_seconds": 0.0155,
+            "max_seconds": 0.0155
+          }
+        },
+        "recent": [
+          {
+            "id": 5,
+            "started_at": "2026-10-09T14:05:01+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 3,
+            "packet_sha256": "160183c0f34c0cc610f3c02baf000b32585db50ec4ced1e2c1637e67580b1dc7",
+            "elapsed_seconds": 2.799449,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.144,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 7e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000192,
+                    "cpu_seconds": 0.000189
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.0002,
+                    "cpu_seconds": 0.000196
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002737,
+                    "cpu_seconds": 0.002736
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.002975,
+                    "cpu_seconds": 0.003044
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 1.41,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "IMPORTS",
+                    "elapsed_seconds": 2.4e-05,
+                    "cpu_seconds": 4e-06
+                  },
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 0.568578,
+                    "cpu_seconds": 0.566019
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.571044,
+                    "cpu_seconds": 0.568482
+                  },
+                  {
+                    "stage": "ACCEPT",
+                    "elapsed_seconds": 0.57706,
+                    "cpu_seconds": 0.574498
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 1.081286,
+                    "cpu_seconds": 1.074985
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 1.081457,
+                    "cpu_seconds": 1.075151
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "started_at": "2026-10-09T14:05:00+00:00",
+            "kind": "CYCLE",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": 5971849,
+            "packet_sequence": 2,
+            "packet_sha256": "3d328ebb2dfa4d358d05fc20790b926cc6ec4641f087e48863d352d698317f82",
+            "elapsed_seconds": 5.05017,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.126,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 7e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.00018,
+                    "cpu_seconds": 0.000178
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000188,
+                    "cpu_seconds": 0.000184
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002867,
+                    "cpu_seconds": 0.002865
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.00302,
+                    "cpu_seconds": 0.003017
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.127,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 6e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000217,
+                    "cpu_seconds": 0.000216
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000226,
+                    "cpu_seconds": 0.000223
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.003016,
+                    "cpu_seconds": 0.003015
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.003164,
+                    "cpu_seconds": 0.003161
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.125,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 7e-06,
+                    "cpu_seconds": 4e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000179,
+                    "cpu_seconds": 0.000176
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000186,
+                    "cpu_seconds": 0.000183
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002871,
+                    "cpu_seconds": 0.00287
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.003053,
+                    "cpu_seconds": 0.00305
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "started_at": "2026-10-09T14:05:00+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 2,
+            "packet_sha256": "3d328ebb2dfa4d358d05fc20790b926cc6ec4641f087e48863d352d698317f82",
+            "elapsed_seconds": 0.628691,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.124,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 7e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000176,
+                    "cpu_seconds": 0.000174
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000183,
+                    "cpu_seconds": 0.000179
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.003036,
+                    "cpu_seconds": 0.00301
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.003204,
+                    "cpu_seconds": 0.003177
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "started_at": "2026-10-09T14:00:00+00:00",
+            "kind": "CYCLE",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": 5971848,
+            "packet_sequence": 1,
+            "packet_sha256": "3c22a447d2d65ceafbcc3879737a2cecfb6c54c74d48e0ce63f73cc809b8c006",
+            "elapsed_seconds": 2.258252,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.12,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 9e-06,
+                    "cpu_seconds": 6e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000195,
+                    "cpu_seconds": 0.000192
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000203,
+                    "cpu_seconds": 0.000198
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002622,
+                    "cpu_seconds": 0.002621
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.002755,
+                    "cpu_seconds": 0.002752
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 1.345,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "IMPORTS",
+                    "elapsed_seconds": 2.5e-05,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 0.656913,
+                    "cpu_seconds": 0.656865
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.660942,
+                    "cpu_seconds": 0.660891
+                  },
+                  {
+                    "stage": "ACCEPT",
+                    "elapsed_seconds": 0.667855,
+                    "cpu_seconds": 0.667802
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 1.099753,
+                    "cpu_seconds": 1.093432
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 1.099875,
+                    "cpu_seconds": 1.093568
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 1,
+            "started_at": "2026-10-09T14:00:00+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 1,
+            "packet_sha256": "3c22a447d2d65ceafbcc3879737a2cecfb6c54c74d48e0ce63f73cc809b8c006",
+            "elapsed_seconds": 0.340277,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.118,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 8e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000178,
+                    "cpu_seconds": 0.000175
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000185,
+                    "cpu_seconds": 0.000181
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.00271,
+                    "cpu_seconds": 0.002708
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.002877,
+                    "cpu_seconds": 0.002873
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "execution_quote_clocks": {
+          "quote_age_seconds": {
+            "samples": 4,
+            "p50_seconds": 0.0,
+            "p95_seconds": 1.0,
+            "p99_seconds": 1.0,
+            "max_seconds": 1.0
+          },
+          "receive_lag_seconds": {
+            "samples": 4,
+            "p50_seconds": 0.0,
+            "p95_seconds": 0.0,
+            "p99_seconds": 0.0,
+            "max_seconds": 0.0
+          },
+          "local_age_seconds": {
+            "samples": 4,
+            "p50_seconds": 0.0,
+            "p95_seconds": 1.0,
+            "p99_seconds": 1.0,
+            "max_seconds": 1.0
+          }
+        },
+        "native_observed_intervals": {
+          "REQUEST": {
+            "samples": 9,
+            "p50_seconds": 0.000185,
+            "p95_seconds": 0.00402900000000006,
+            "p99_seconds": 0.00402900000000006,
+            "max_seconds": 0.00402900000000006
+          },
+          "VENUE_OPEN": {
+            "samples": 9,
+            "p50_seconds": 8.000000000000005e-06,
+            "p95_seconds": 0.006912999999999947,
+            "p99_seconds": 0.006912999999999947,
+            "max_seconds": 0.006912999999999947
+          },
+          "SNAPSHOT": {
+            "samples": 7,
+            "p50_seconds": 0.0026790000000000004,
+            "p95_seconds": 0.002853,
+            "p99_seconds": 0.002853,
+            "max_seconds": 0.002853
+          },
+          "SERIALIZE": {
+            "samples": 9,
+            "p50_seconds": 0.00016699999999999961,
+            "p95_seconds": 0.00023800000000000036,
+            "p99_seconds": 0.00023800000000000036,
+            "max_seconds": 0.00023800000000000036
+          },
+          "IMPORTS": {
+            "samples": 2,
+            "p50_seconds": 0.568554,
+            "p95_seconds": 0.6568879999999999,
+            "p99_seconds": 0.6568879999999999,
+            "max_seconds": 0.6568879999999999
+          },
+          "ACCEPT": {
+            "samples": 2,
+            "p50_seconds": 0.431898,
+            "p95_seconds": 0.504226,
+            "p99_seconds": 0.504226,
+            "max_seconds": 0.504226
+          }
+        },
+        "packet_age": {
+          "samples": 5,
+          "p50_seconds": 0.0,
+          "p95_seconds": 0.0,
+          "p99_seconds": 0.0,
+          "max_seconds": 0.0
+        }
+      }
+    },
+    {
+      "fixture_directory": "test_mixed_management_wait_kee1",
+      "window_start": "2026-10-09T14:00:00+00:00",
+      "window_end": "2026-10-09T14:05:01+00:00",
+      "runtime_timing": {
+        "status": "OBSERVED",
+        "records": 5,
+        "measured": 5,
+        "missing_or_invalid": 0,
+        "omitted": 0,
+        "spans_omitted": 0,
+        "by_status": {
+          "TICK:COMPLETE": 3,
+          "NATIVE_SNAPSHOT:COMPLETE": 7,
+          "STOCK_ADMISSION:COMPLETE": 2,
+          "NATIVE_ACCEPT:COMPLETE": 2,
+          "STOCK_DISPATCH:COMPLETE": 2,
+          "PROTECTION:COMPLETE": 3,
+          "CYCLE:COMPLETE": 2,
+          "STOCK_MANAGEMENT_MODEL:COMPLETE": 1,
+          "SCAN:COMPLETE": 1,
+          "STOCK_SCAN:COMPLETE": 1,
+          "ENTRY_MODEL:COMPLETE": 1,
+          "STOCK_REFRESH:COMPLETE": 1
+        },
+        "phases": {
+          "TICK": {
+            "samples": 3,
+            "p50_seconds": 0.624695,
+            "p95_seconds": 2.771752,
+            "p99_seconds": 2.771752,
+            "max_seconds": 2.771752
+          },
+          "NATIVE_SNAPSHOT": {
+            "samples": 7,
+            "p50_seconds": 0.134909,
+            "p95_seconds": 0.16583,
+            "p99_seconds": 0.16583,
+            "max_seconds": 0.16583
+          },
+          "STOCK_ADMISSION": {
+            "samples": 2,
+            "p50_seconds": 0.105654,
+            "p95_seconds": 0.323461,
+            "p99_seconds": 0.323461,
+            "max_seconds": 0.323461
+          },
+          "NATIVE_ACCEPT": {
+            "samples": 2,
+            "p50_seconds": 1.307344,
+            "p95_seconds": 1.334254,
+            "p99_seconds": 1.334254,
+            "max_seconds": 1.334254
+          },
+          "STOCK_DISPATCH": {
+            "samples": 2,
+            "p50_seconds": 1.50714,
+            "p95_seconds": 1.62171,
+            "p99_seconds": 1.62171,
+            "max_seconds": 1.62171
+          },
+          "PROTECTION": {
+            "samples": 3,
+            "p50_seconds": 0.42102,
+            "p95_seconds": 2.580429,
+            "p99_seconds": 2.580429,
+            "max_seconds": 2.580429
+          },
+          "CYCLE": {
+            "samples": 2,
+            "p50_seconds": 2.208825,
+            "p95_seconds": 5.01554,
+            "p99_seconds": 5.01554,
+            "max_seconds": 5.01554
+          },
+          "STOCK_MANAGEMENT_MODEL": {
+            "samples": 1,
+            "p50_seconds": 2.822668,
+            "p95_seconds": 2.822668,
+            "p99_seconds": 2.822668,
+            "max_seconds": 2.822668
+          },
+          "SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.013423,
+            "p95_seconds": 0.013423,
+            "p99_seconds": 0.013423,
+            "max_seconds": 0.013423
+          },
+          "STOCK_SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.029746,
+            "p95_seconds": 0.029746,
+            "p99_seconds": 0.029746,
+            "max_seconds": 0.029746
+          },
+          "ENTRY_MODEL": {
+            "samples": 1,
+            "p50_seconds": 0.00269,
+            "p95_seconds": 0.00269,
+            "p99_seconds": 0.00269,
+            "max_seconds": 0.00269
+          },
+          "STOCK_REFRESH": {
+            "samples": 1,
+            "p50_seconds": 0.009964,
+            "p95_seconds": 0.009964,
+            "p99_seconds": 0.009964,
+            "max_seconds": 0.009964
+          }
+        },
+        "recent": [
+          {
+            "id": 5,
+            "started_at": "2026-10-09T14:05:01+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 3,
+            "packet_sha256": "160183c0f34c0cc610f3c02baf000b32585db50ec4ced1e2c1637e67580b1dc7",
+            "elapsed_seconds": 2.771752,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.134,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 6e-06,
+                    "cpu_seconds": 4e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000182,
+                    "cpu_seconds": 0.00018
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000189,
+                    "cpu_seconds": 0.000186
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.003079,
+                    "cpu_seconds": 0.003079
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.003459,
+                    "cpu_seconds": 0.003457
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 1.334,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "IMPORTS",
+                    "elapsed_seconds": 2.6e-05,
+                    "cpu_seconds": 6e-06
+                  },
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 0.634637,
+                    "cpu_seconds": 0.634591
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.637298,
+                    "cpu_seconds": 0.637248
+                  },
+                  {
+                    "stage": "ACCEPT",
+                    "elapsed_seconds": 0.643279,
+                    "cpu_seconds": 0.643229
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 1.102995,
+                    "cpu_seconds": 1.099735
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 1.103154,
+                    "cpu_seconds": 1.099891
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "started_at": "2026-10-09T14:05:00+00:00",
+            "kind": "CYCLE",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": 5971849,
+            "packet_sequence": 2,
+            "packet_sha256": "3d328ebb2dfa4d358d05fc20790b926cc6ec4641f087e48863d352d698317f82",
+            "elapsed_seconds": 5.01554,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.127,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 7e-06,
+                    "cpu_seconds": 4e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000191,
+                    "cpu_seconds": 0.000188
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000198,
+                    "cpu_seconds": 0.000194
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002711,
+                    "cpu_seconds": 0.002709
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.002857,
+                    "cpu_seconds": 0.002854
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.142,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 8e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000261,
+                    "cpu_seconds": 0.000259
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.0003,
+                    "cpu_seconds": 0.000297
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.003357,
+                    "cpu_seconds": 0.003355
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.003516,
+                    "cpu_seconds": 0.003512
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.152,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 7e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000262,
+                    "cpu_seconds": 0.000261
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000272,
+                    "cpu_seconds": 0.000269
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.003688,
+                    "cpu_seconds": 0.003687
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.003842,
+                    "cpu_seconds": 0.003839
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "started_at": "2026-10-09T14:05:00+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 2,
+            "packet_sha256": "3d328ebb2dfa4d358d05fc20790b926cc6ec4641f087e48863d352d698317f82",
+            "elapsed_seconds": 0.624695,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.127,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 6e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.00018,
+                    "cpu_seconds": 0.000177
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000187,
+                    "cpu_seconds": 0.000183
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.003128,
+                    "cpu_seconds": 0.003128
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.003284,
+                    "cpu_seconds": 0.003281
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "started_at": "2026-10-09T14:00:00+00:00",
+            "kind": "CYCLE",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": 5971848,
+            "packet_sequence": 1,
+            "packet_sha256": "3c22a447d2d65ceafbcc3879737a2cecfb6c54c74d48e0ce63f73cc809b8c006",
+            "elapsed_seconds": 2.208825,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.165,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 6e-06,
+                    "cpu_seconds": 3.4e-05
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000367,
+                    "cpu_seconds": 0.000366
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000394,
+                    "cpu_seconds": 0.000391
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.003369,
+                    "cpu_seconds": 0.003368
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.003499,
+                    "cpu_seconds": 0.003496
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 1.307,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "IMPORTS",
+                    "elapsed_seconds": 2.6e-05,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 0.594659,
+                    "cpu_seconds": 0.591616
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.597497,
+                    "cpu_seconds": 0.594451
+                  },
+                  {
+                    "stage": "ACCEPT",
+                    "elapsed_seconds": 0.601643,
+                    "cpu_seconds": 0.598597
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 1.038261,
+                    "cpu_seconds": 1.027709
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 1.038372,
+                    "cpu_seconds": 1.027816
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 1,
+            "started_at": "2026-10-09T14:00:00+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 1,
+            "packet_sha256": "3c22a447d2d65ceafbcc3879737a2cecfb6c54c74d48e0ce63f73cc809b8c006",
+            "elapsed_seconds": 0.341328,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.124,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 7e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000191,
+                    "cpu_seconds": 0.000188
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000199,
+                    "cpu_seconds": 0.000195
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002702,
+                    "cpu_seconds": 0.002701
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.002829,
+                    "cpu_seconds": 0.002826
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "execution_quote_clocks": {
+          "quote_age_seconds": {
+            "samples": 4,
+            "p50_seconds": 0.0,
+            "p95_seconds": 1.0,
+            "p99_seconds": 1.0,
+            "max_seconds": 1.0
+          },
+          "receive_lag_seconds": {
+            "samples": 4,
+            "p50_seconds": 0.0,
+            "p95_seconds": 0.0,
+            "p99_seconds": 0.0,
+            "max_seconds": 0.0
+          },
+          "local_age_seconds": {
+            "samples": 4,
+            "p50_seconds": 0.0,
+            "p95_seconds": 1.0,
+            "p99_seconds": 1.0,
+            "max_seconds": 1.0
+          }
+        },
+        "native_observed_intervals": {
+          "REQUEST": {
+            "samples": 9,
+            "p50_seconds": 0.000253,
+            "p95_seconds": 0.002837999999999896,
+            "p99_seconds": 0.002837999999999896,
+            "max_seconds": 0.002837999999999896
+          },
+          "VENUE_OPEN": {
+            "samples": 9,
+            "p50_seconds": 9.999999999999972e-06,
+            "p95_seconds": 0.005981000000000014,
+            "p99_seconds": 0.005981000000000014,
+            "max_seconds": 0.005981000000000014
+          },
+          "SNAPSHOT": {
+            "samples": 7,
+            "p50_seconds": 0.002941,
+            "p95_seconds": 0.0034159999999999998,
+            "p99_seconds": 0.0034159999999999998,
+            "max_seconds": 0.0034159999999999998
+          },
+          "SERIALIZE": {
+            "samples": 9,
+            "p50_seconds": 0.00015400000000000006,
+            "p95_seconds": 0.0003799999999999997,
+            "p99_seconds": 0.0003799999999999997,
+            "max_seconds": 0.0003799999999999997
+          },
+          "IMPORTS": {
+            "samples": 2,
+            "p50_seconds": 0.5946330000000001,
+            "p95_seconds": 0.634611,
+            "p99_seconds": 0.634611,
+            "max_seconds": 0.634611
+          },
+          "ACCEPT": {
+            "samples": 2,
+            "p50_seconds": 0.43661800000000006,
+            "p95_seconds": 0.4597159999999999,
+            "p99_seconds": 0.4597159999999999,
+            "max_seconds": 0.4597159999999999
+          }
+        },
+        "packet_age": {
+          "samples": 5,
+          "p50_seconds": 0.0,
+          "p95_seconds": 0.0,
+          "p99_seconds": 0.0,
+          "max_seconds": 0.0
+        }
+      }
+    },
+    {
+      "fixture_directory": "test_mixed_runtime_native_fill0",
+      "window_start": "2026-10-09T14:00:00+00:00",
+      "window_end": "2026-10-09T14:00:01+00:00",
+      "runtime_timing": {
+        "status": "OBSERVED",
+        "records": 4,
+        "measured": 4,
+        "missing_or_invalid": 0,
+        "omitted": 0,
+        "spans_omitted": 0,
+        "by_status": {
+          "TICK:COMPLETE": 3,
+          "NATIVE_SNAPSHOT:COMPLETE": 4,
+          "PROTECTION:COMPLETE": 3,
+          "STOCK_ADMISSION:COMPLETE": 2,
+          "NATIVE_ACCEPT:COMPLETE": 2,
+          "STOCK_DISPATCH:COMPLETE": 2,
+          "CYCLE:COMPLETE": 1,
+          "SCAN:COMPLETE": 1,
+          "STOCK_SCAN:COMPLETE": 1
+        },
+        "phases": {
+          "TICK": {
+            "samples": 3,
+            "p50_seconds": 0.551876,
+            "p95_seconds": 2.246451,
+            "p99_seconds": 2.246451,
+            "max_seconds": 2.246451
+          },
+          "NATIVE_SNAPSHOT": {
+            "samples": 4,
+            "p50_seconds": 0.119194,
+            "p95_seconds": 0.160987,
+            "p99_seconds": 0.160987,
+            "max_seconds": 0.160987
+          },
+          "PROTECTION": {
+            "samples": 3,
+            "p50_seconds": 0.397741,
+            "p95_seconds": 2.13005,
+            "p99_seconds": 2.13005,
+            "max_seconds": 2.13005
+          },
+          "STOCK_ADMISSION": {
+            "samples": 2,
+            "p50_seconds": 0.022963,
+            "p95_seconds": 0.032746,
+            "p99_seconds": 0.032746,
+            "max_seconds": 0.032746
+          },
+          "NATIVE_ACCEPT": {
+            "samples": 2,
+            "p50_seconds": 1.450191,
+            "p95_seconds": 1.786476,
+            "p99_seconds": 1.786476,
+            "max_seconds": 1.786476
+          },
+          "STOCK_DISPATCH": {
+            "samples": 2,
+            "p50_seconds": 1.502363,
+            "p95_seconds": 1.86844,
+            "p99_seconds": 1.86844,
+            "max_seconds": 1.86844
+          },
+          "CYCLE": {
+            "samples": 1,
+            "p50_seconds": 1.785159,
+            "p95_seconds": 1.785159,
+            "p99_seconds": 1.785159,
+            "max_seconds": 1.785159
+          },
+          "SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.005645,
+            "p95_seconds": 0.005645,
+            "p99_seconds": 0.005645,
+            "max_seconds": 0.005645
+          },
+          "STOCK_SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.021663,
+            "p95_seconds": 0.021663,
+            "p99_seconds": 0.021663,
+            "max_seconds": 0.021663
+          }
+        },
+        "recent": [
+          {
+            "id": 4,
+            "started_at": "2026-10-09T14:00:01+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 2,
+            "packet_sha256": "78b7e9e900793043995f8d0647ba6e1dd3aaecc7925b9147d00de691b4e48699",
+            "elapsed_seconds": 0.551876,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.161,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 9e-06,
+                    "cpu_seconds": 6e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000286,
+                    "cpu_seconds": 0.000284
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000297,
+                    "cpu_seconds": 0.000293
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.004051,
+                    "cpu_seconds": 0.00405
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.004306,
+                    "cpu_seconds": 0.004302
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "started_at": "2026-10-09T14:00:01+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 2,
+            "packet_sha256": "78b7e9e900793043995f8d0647ba6e1dd3aaecc7925b9147d00de691b4e48699",
+            "elapsed_seconds": 2.246451,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.118,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 6e-06,
+                    "cpu_seconds": 4e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000305,
+                    "cpu_seconds": 0.000304
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000316,
+                    "cpu_seconds": 0.000314
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.003012,
+                    "cpu_seconds": 0.003012
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.003237,
+                    "cpu_seconds": 0.003236
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 1.786,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "IMPORTS",
+                    "elapsed_seconds": 2.5e-05,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 0.801529,
+                    "cpu_seconds": 0.798153
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.805101,
+                    "cpu_seconds": 0.801722
+                  },
+                  {
+                    "stage": "ACCEPT",
+                    "elapsed_seconds": 0.817248,
+                    "cpu_seconds": 0.813869
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 1.469208,
+                    "cpu_seconds": 1.459663
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 1.46933,
+                    "cpu_seconds": 1.459781
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "started_at": "2026-10-09T14:00:00+00:00",
+            "kind": "CYCLE",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": 5971848,
+            "packet_sequence": 1,
+            "packet_sha256": "3c22a447d2d65ceafbcc3879737a2cecfb6c54c74d48e0ce63f73cc809b8c006",
+            "elapsed_seconds": 1.785159,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.119,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 7e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000185,
+                    "cpu_seconds": 0.000182
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000193,
+                    "cpu_seconds": 0.000189
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002514,
+                    "cpu_seconds": 0.002513
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.002641,
+                    "cpu_seconds": 0.002638
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 1.45,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "IMPORTS",
+                    "elapsed_seconds": 2.5e-05,
+                    "cpu_seconds": 4e-06
+                  },
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 0.641484,
+                    "cpu_seconds": 0.636448
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.6452,
+                    "cpu_seconds": 0.640161
+                  },
+                  {
+                    "stage": "ACCEPT",
+                    "elapsed_seconds": 0.650725,
+                    "cpu_seconds": 0.645686
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 1.191744,
+                    "cpu_seconds": 1.181725
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 1.191848,
+                    "cpu_seconds": 1.181825
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 1,
+            "started_at": "2026-10-09T14:00:00+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 1,
+            "packet_sha256": "3c22a447d2d65ceafbcc3879737a2cecfb6c54c74d48e0ce63f73cc809b8c006",
+            "elapsed_seconds": 0.249039,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.124,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 7e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.0002,
+                    "cpu_seconds": 0.000197
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000207,
+                    "cpu_seconds": 0.000204
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.003312,
+                    "cpu_seconds": 0.00331
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.003437,
+                    "cpu_seconds": 0.003433
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "execution_quote_clocks": {
+          "quote_age_seconds": {
+            "samples": 4,
+            "p50_seconds": 0.0,
+            "p95_seconds": 0.0,
+            "p99_seconds": 0.0,
+            "max_seconds": 0.0
+          },
+          "receive_lag_seconds": {
+            "samples": 4,
+            "p50_seconds": 0.0,
+            "p95_seconds": 0.0,
+            "p99_seconds": 0.0,
+            "max_seconds": 0.0
+          },
+          "local_age_seconds": {
+            "samples": 4,
+            "p50_seconds": 0.0,
+            "p95_seconds": 0.0,
+            "p99_seconds": 0.0,
+            "max_seconds": 0.0
+          }
+        },
+        "native_observed_intervals": {
+          "REQUEST": {
+            "samples": 6,
+            "p50_seconds": 0.000277,
+            "p95_seconds": 0.0037159999999999416,
+            "p99_seconds": 0.0037159999999999416,
+            "max_seconds": 0.0037159999999999416
+          },
+          "VENUE_OPEN": {
+            "samples": 6,
+            "p50_seconds": 1.0999999999999996e-05,
+            "p95_seconds": 0.012147000000000019,
+            "p99_seconds": 0.012147000000000019,
+            "max_seconds": 0.012147000000000019
+          },
+          "SNAPSHOT": {
+            "samples": 4,
+            "p50_seconds": 0.002696,
+            "p95_seconds": 0.003754,
+            "p99_seconds": 0.003754,
+            "max_seconds": 0.003754
+          },
+          "SERIALIZE": {
+            "samples": 6,
+            "p50_seconds": 0.0001250000000000001,
+            "p95_seconds": 0.000255,
+            "p99_seconds": 0.000255,
+            "max_seconds": 0.000255
+          },
+          "IMPORTS": {
+            "samples": 2,
+            "p50_seconds": 0.641459,
+            "p95_seconds": 0.801504,
+            "p99_seconds": 0.801504,
+            "max_seconds": 0.801504
+          },
+          "ACCEPT": {
+            "samples": 2,
+            "p50_seconds": 0.5410189999999999,
+            "p95_seconds": 0.6519600000000001,
+            "p99_seconds": 0.6519600000000001,
+            "max_seconds": 0.6519600000000001
+          }
+        },
+        "packet_age": {
+          "samples": 4,
+          "p50_seconds": 0.0,
+          "p95_seconds": 0.0,
+          "p99_seconds": 0.0,
+          "max_seconds": 0.0
+        }
+      }
+    },
+    {
+      "fixture_directory": "test_mixed_runtime_native_fill1",
+      "window_start": "2026-10-09T14:00:00+00:00",
+      "window_end": "2026-10-09T14:00:02+00:00",
+      "runtime_timing": {
+        "status": "OBSERVED",
+        "records": 4,
+        "measured": 4,
+        "missing_or_invalid": 0,
+        "omitted": 0,
+        "spans_omitted": 0,
+        "by_status": {
+          "TICK:COMPLETE": 3,
+          "NATIVE_SNAPSHOT:COMPLETE": 4,
+          "PROTECTION:COMPLETE": 3,
+          "STOCK_ADMISSION:COMPLETE": 2,
+          "NATIVE_ACCEPT:COMPLETE": 2,
+          "STOCK_DISPATCH:COMPLETE": 2,
+          "CYCLE:COMPLETE": 1,
+          "SCAN:COMPLETE": 1,
+          "STOCK_SCAN:COMPLETE": 1,
+          "ENTRY_MODEL:COMPLETE": 1,
+          "STOCK_REFRESH:COMPLETE": 1
+        },
+        "phases": {
+          "TICK": {
+            "samples": 3,
+            "p50_seconds": 0.793717,
+            "p95_seconds": 2.753939,
+            "p99_seconds": 2.753939,
+            "max_seconds": 2.753939
+          },
+          "NATIVE_SNAPSHOT": {
+            "samples": 4,
+            "p50_seconds": 0.120842,
+            "p95_seconds": 0.192465,
+            "p99_seconds": 0.192465,
+            "max_seconds": 0.192465
+          },
+          "PROTECTION": {
+            "samples": 3,
+            "p50_seconds": 0.607932,
+            "p95_seconds": 2.539768,
+            "p99_seconds": 2.539768,
+            "max_seconds": 2.539768
+          },
+          "STOCK_ADMISSION": {
+            "samples": 2,
+            "p50_seconds": 0.12515,
+            "p95_seconds": 0.159233,
+            "p99_seconds": 0.159233,
+            "max_seconds": 0.159233
+          },
+          "NATIVE_ACCEPT": {
+            "samples": 2,
+            "p50_seconds": 1.626593,
+            "p95_seconds": 1.63629,
+            "p99_seconds": 1.63629,
+            "max_seconds": 1.63629
+          },
+          "STOCK_DISPATCH": {
+            "samples": 2,
+            "p50_seconds": 1.785476,
+            "p95_seconds": 1.814591,
+            "p99_seconds": 1.814591,
+            "max_seconds": 1.814591
+          },
+          "CYCLE": {
+            "samples": 1,
+            "p50_seconds": 2.645597,
+            "p95_seconds": 2.645597,
+            "p99_seconds": 2.645597,
+            "max_seconds": 2.645597
+          },
+          "SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.0124,
+            "p95_seconds": 0.0124,
+            "p99_seconds": 0.0124,
+            "max_seconds": 0.0124
+          },
+          "STOCK_SCAN": {
+            "samples": 1,
+            "p50_seconds": 0.031392,
+            "p95_seconds": 0.031392,
+            "p99_seconds": 0.031392,
+            "max_seconds": 0.031392
+          },
+          "ENTRY_MODEL": {
+            "samples": 1,
+            "p50_seconds": 0.004107,
+            "p95_seconds": 0.004107,
+            "p99_seconds": 0.004107,
+            "max_seconds": 0.004107
+          },
+          "STOCK_REFRESH": {
+            "samples": 1,
+            "p50_seconds": 0.011191,
+            "p95_seconds": 0.011191,
+            "p99_seconds": 0.011191,
+            "max_seconds": 0.011191
+          }
+        },
+        "recent": [
+          {
+            "id": 4,
+            "started_at": "2026-10-09T14:00:02+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 2,
+            "packet_sha256": "1ec82550c775d8ddc3ccc2dd1c5177d4a77ea3ce5d06b1790d5ce63b5d1fdcd5",
+            "elapsed_seconds": 0.793717,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.121,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 8e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000191,
+                    "cpu_seconds": 0.000188
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.0002,
+                    "cpu_seconds": 0.000195
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.003006,
+                    "cpu_seconds": 0.003004
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.003162,
+                    "cpu_seconds": 0.003158
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "started_at": "2026-10-09T14:00:02+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 2,
+            "packet_sha256": "1ec82550c775d8ddc3ccc2dd1c5177d4a77ea3ce5d06b1790d5ce63b5d1fdcd5",
+            "elapsed_seconds": 2.753939,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.189,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 9e-06,
+                    "cpu_seconds": 6e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.00029,
+                    "cpu_seconds": 0.000288
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000301,
+                    "cpu_seconds": 0.000296
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.005384,
+                    "cpu_seconds": 0.005383
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.005625,
+                    "cpu_seconds": 0.005622
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 1.636,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "IMPORTS",
+                    "elapsed_seconds": 2.6e-05,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 0.765877,
+                    "cpu_seconds": 0.765696
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.770572,
+                    "cpu_seconds": 0.770387
+                  },
+                  {
+                    "stage": "ACCEPT",
+                    "elapsed_seconds": 0.780872,
+                    "cpu_seconds": 0.780689
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 1.326512,
+                    "cpu_seconds": 1.318548
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 1.326651,
+                    "cpu_seconds": 1.318682
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "started_at": "2026-10-09T14:00:00+00:00",
+            "kind": "CYCLE",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": 5971848,
+            "packet_sequence": 1,
+            "packet_sha256": "3c22a447d2d65ceafbcc3879737a2cecfb6c54c74d48e0ce63f73cc809b8c006",
+            "elapsed_seconds": 2.645597,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.116,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 7e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000231,
+                    "cpu_seconds": 0.00023
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000241,
+                    "cpu_seconds": 0.000238
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002553,
+                    "cpu_seconds": 0.002552
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.002677,
+                    "cpu_seconds": 0.002675
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 1.626,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "IMPORTS",
+                    "elapsed_seconds": 2.6e-05,
+                    "cpu_seconds": 6e-06
+                  },
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 0.750024,
+                    "cpu_seconds": 0.749269
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.754741,
+                    "cpu_seconds": 0.753981
+                  },
+                  {
+                    "stage": "ACCEPT",
+                    "elapsed_seconds": 0.759934,
+                    "cpu_seconds": 0.759175
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 1.263428,
+                    "cpu_seconds": 1.258715
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 1.263573,
+                    "cpu_seconds": 1.258856
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 1,
+            "started_at": "2026-10-09T14:00:00+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 1,
+            "packet_sha256": "3c22a447d2d65ceafbcc3879737a2cecfb6c54c74d48e0ce63f73cc809b8c006",
+            "elapsed_seconds": 0.43358,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.167,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 9e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000224,
+                    "cpu_seconds": 0.00022
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000232,
+                    "cpu_seconds": 0.000226
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.004466,
+                    "cpu_seconds": 0.004464
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.004669,
+                    "cpu_seconds": 0.004665
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "execution_quote_clocks": {
+          "quote_age_seconds": {
+            "samples": 4,
+            "p50_seconds": 0.0,
+            "p95_seconds": 1.0,
+            "p99_seconds": 1.0,
+            "max_seconds": 1.0
+          },
+          "receive_lag_seconds": {
+            "samples": 4,
+            "p50_seconds": 0.0,
+            "p95_seconds": 0.0,
+            "p99_seconds": 0.0,
+            "max_seconds": 0.0
+          },
+          "local_age_seconds": {
+            "samples": 4,
+            "p50_seconds": 0.0,
+            "p95_seconds": 1.0,
+            "p99_seconds": 1.0,
+            "max_seconds": 1.0
+          }
+        },
+        "native_observed_intervals": {
+          "REQUEST": {
+            "samples": 6,
+            "p50_seconds": 0.000224,
+            "p95_seconds": 0.004716999999999971,
+            "p99_seconds": 0.004716999999999971,
+            "max_seconds": 0.004716999999999971
+          },
+          "VENUE_OPEN": {
+            "samples": 6,
+            "p50_seconds": 9.999999999999999e-06,
+            "p95_seconds": 0.010299999999999976,
+            "p99_seconds": 0.010299999999999976,
+            "max_seconds": 0.010299999999999976
+          },
+          "SNAPSHOT": {
+            "samples": 4,
+            "p50_seconds": 0.002806,
+            "p95_seconds": 0.005083,
+            "p99_seconds": 0.005083,
+            "max_seconds": 0.005083
+          },
+          "SERIALIZE": {
+            "samples": 6,
+            "p50_seconds": 0.00014500000000006175,
+            "p95_seconds": 0.0002409999999999999,
+            "p99_seconds": 0.0002409999999999999,
+            "max_seconds": 0.0002409999999999999
+          },
+          "IMPORTS": {
+            "samples": 2,
+            "p50_seconds": 0.749998,
+            "p95_seconds": 0.7658510000000001,
+            "p99_seconds": 0.7658510000000001,
+            "max_seconds": 0.7658510000000001
+          },
+          "ACCEPT": {
+            "samples": 2,
+            "p50_seconds": 0.503494,
+            "p95_seconds": 0.5456399999999999,
+            "p99_seconds": 0.5456399999999999,
+            "max_seconds": 0.5456399999999999
+          }
+        },
+        "packet_age": {
+          "samples": 4,
+          "p50_seconds": 0.0,
+          "p95_seconds": 0.0,
+          "p99_seconds": 0.0,
+          "max_seconds": 0.0
+        }
+      }
+    },
+    {
+      "fixture_directory": "test_protection_runs_during_pa0",
+      "window_start": "2026-10-09T14:05:00+00:00",
+      "window_end": "2026-10-09T14:05:01+00:00",
+      "runtime_timing": {
+        "status": "OBSERVED",
+        "records": 3,
+        "measured": 3,
+        "missing_or_invalid": 0,
+        "omitted": 0,
+        "spans_omitted": 0,
+        "by_status": {
+          "TICK:COMPLETE": 2,
+          "NATIVE_SNAPSHOT:COMPLETE": 5,
+          "ADMISSION:COMPLETE": 1,
+          "NATIVE_ACCEPT:COMPLETE": 1,
+          "DISPATCH:COMPLETE": 1,
+          "PROTECTION:COMPLETE": 4,
+          "CYCLE:COMPLETE": 1,
+          "OPTION_MANAGEMENT_MODEL:COMPLETE": 1
+        },
+        "phases": {
+          "TICK": {
+            "samples": 2,
+            "p50_seconds": 0.302624,
+            "p95_seconds": 1.269093,
+            "p99_seconds": 1.269093,
+            "max_seconds": 1.269093
+          },
+          "NATIVE_SNAPSHOT": {
+            "samples": 5,
+            "p50_seconds": 0.130007,
+            "p95_seconds": 0.139581,
+            "p99_seconds": 0.139581,
+            "max_seconds": 0.139581
+          },
+          "ADMISSION": {
+            "samples": 1,
+            "p50_seconds": 0.019927,
+            "p95_seconds": 0.019927,
+            "p99_seconds": 0.019927,
+            "max_seconds": 0.019927
+          },
+          "NATIVE_ACCEPT": {
+            "samples": 1,
+            "p50_seconds": 0.900819,
+            "p95_seconds": 0.900819,
+            "p99_seconds": 0.900819,
+            "max_seconds": 0.900819
+          },
+          "DISPATCH": {
+            "samples": 1,
+            "p50_seconds": 0.936905,
+            "p95_seconds": 0.936905,
+            "p99_seconds": 0.936905,
+            "max_seconds": 0.936905
+          },
+          "PROTECTION": {
+            "samples": 4,
+            "p50_seconds": 0.172901,
+            "p95_seconds": 1.147351,
+            "p99_seconds": 1.147351,
+            "max_seconds": 1.147351
+          },
+          "CYCLE": {
+            "samples": 1,
+            "p50_seconds": 2.18378,
+            "p95_seconds": 2.18378,
+            "p99_seconds": 2.18378,
+            "max_seconds": 2.18378
+          },
+          "OPTION_MANAGEMENT_MODEL": {
+            "samples": 1,
+            "p50_seconds": 1.295705,
+            "p95_seconds": 1.295705,
+            "p99_seconds": 1.295705,
+            "max_seconds": 1.295705
+          }
+        },
+        "recent": [
+          {
+            "id": 3,
+            "started_at": "2026-10-09T14:05:01+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 2,
+            "packet_sha256": "f1e12f0c1fe233c31f84db8d8c1cb133ebcbc4fb4837a515baba8ac77201bcb7",
+            "elapsed_seconds": 1.269093,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.13,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 7e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000192,
+                    "cpu_seconds": 0.000189
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.0002,
+                    "cpu_seconds": 0.000196
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.00272,
+                    "cpu_seconds": 0.002718
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.002894,
+                    "cpu_seconds": 0.002891
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.901,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "IMPORTS",
+                    "elapsed_seconds": 2.5e-05,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 0.696365,
+                    "cpu_seconds": 0.691455
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.701573,
+                    "cpu_seconds": 0.69666
+                  },
+                  {
+                    "stage": "ACCEPT",
+                    "elapsed_seconds": 0.707241,
+                    "cpu_seconds": 0.702327
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.719774,
+                    "cpu_seconds": 0.707359
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.719879,
+                    "cpu_seconds": 0.70746
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "started_at": "2026-10-09T14:05:00+00:00",
+            "kind": "CYCLE",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": 5971849,
+            "packet_sequence": 1,
+            "packet_sha256": "456ddb96fe79ab18ea3874bc5ac413394e65082d88d8c0f146b22eb94486685d",
+            "elapsed_seconds": 2.18378,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.139,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 7e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000229,
+                    "cpu_seconds": 0.000228
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.00024,
+                    "cpu_seconds": 0.000237
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002808,
+                    "cpu_seconds": 0.002807
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.003,
+                    "cpu_seconds": 0.002998
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.114,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 7e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000192,
+                    "cpu_seconds": 0.00019
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000199,
+                    "cpu_seconds": 0.000196
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.00533,
+                    "cpu_seconds": 0.005329
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.005538,
+                    "cpu_seconds": 0.005535
+                  }
+                ]
+              },
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.13,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 7e-06,
+                    "cpu_seconds": 5e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.00022,
+                    "cpu_seconds": 0.000218
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000232,
+                    "cpu_seconds": 0.000228
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.003031,
+                    "cpu_seconds": 0.003029
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.00322,
+                    "cpu_seconds": 0.003218
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 1,
+            "started_at": "2026-10-09T14:05:00+00:00",
+            "kind": "TICK",
+            "status": "COMPLETE",
+            "generation": 0,
+            "slot": null,
+            "packet_sequence": 1,
+            "packet_sha256": "456ddb96fe79ab18ea3874bc5ac413394e65082d88d8c0f146b22eb94486685d",
+            "elapsed_seconds": 0.302624,
+            "native": [
+              {
+                "parent_phase": "RESPONSE_VALIDATE",
+                "elapsed_seconds": 0.129,
+                "child_trace_status": "OBSERVED",
+                "child_stages": [
+                  {
+                    "stage": "REQUEST",
+                    "elapsed_seconds": 6e-06,
+                    "cpu_seconds": 4e-06
+                  },
+                  {
+                    "stage": "VENUE_OPEN",
+                    "elapsed_seconds": 0.000205,
+                    "cpu_seconds": 0.000204
+                  },
+                  {
+                    "stage": "SNAPSHOT",
+                    "elapsed_seconds": 0.000213,
+                    "cpu_seconds": 0.00021
+                  },
+                  {
+                    "stage": "SERIALIZE",
+                    "elapsed_seconds": 0.002711,
+                    "cpu_seconds": 0.00271
+                  },
+                  {
+                    "stage": "COMPLETE",
+                    "elapsed_seconds": 0.00291,
+                    "cpu_seconds": 0.002907
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "execution_quote_clocks": {
+          "quote_age_seconds": {
+            "samples": 2,
+            "p50_seconds": 0.0,
+            "p95_seconds": 0.0,
+            "p99_seconds": 0.0,
+            "max_seconds": 0.0
+          },
+          "receive_lag_seconds": {
+            "samples": 2,
+            "p50_seconds": 0.0,
+            "p95_seconds": 0.0,
+            "p99_seconds": 0.0,
+            "max_seconds": 0.0
+          },
+          "local_age_seconds": {
+            "samples": 2,
+            "p50_seconds": 0.0,
+            "p95_seconds": 0.0,
+            "p99_seconds": 0.0,
+            "max_seconds": 0.0
+          }
+        },
+        "native_observed_intervals": {
+          "REQUEST": {
+            "samples": 6,
+            "p50_seconds": 0.00019899999999999999,
+            "p95_seconds": 0.00520799999999999,
+            "p99_seconds": 0.00520799999999999,
+            "max_seconds": 0.00520799999999999
+          },
+          "VENUE_OPEN": {
+            "samples": 6,
+            "p50_seconds": 8.000000000000005e-06,
+            "p95_seconds": 0.005668000000000006,
+            "p99_seconds": 0.005668000000000006,
+            "max_seconds": 0.005668000000000006
+          },
+          "SNAPSHOT": {
+            "samples": 5,
+            "p50_seconds": 0.002568,
+            "p95_seconds": 0.005130999999999999,
+            "p99_seconds": 0.005130999999999999,
+            "max_seconds": 0.005130999999999999
+          },
+          "SERIALIZE": {
+            "samples": 6,
+            "p50_seconds": 0.00018900000000000037,
+            "p95_seconds": 0.00020800000000000072,
+            "p99_seconds": 0.00020800000000000072,
+            "max_seconds": 0.00020800000000000072
+          },
+          "IMPORTS": {
+            "samples": 1,
+            "p50_seconds": 0.69634,
+            "p95_seconds": 0.69634,
+            "p99_seconds": 0.69634,
+            "max_seconds": 0.69634
+          },
+          "ACCEPT": {
+            "samples": 1,
+            "p50_seconds": 0.012533000000000016,
+            "p95_seconds": 0.012533000000000016,
+            "p99_seconds": 0.012533000000000016,
+            "max_seconds": 0.012533000000000016
+          }
+        },
+        "packet_age": {
+          "samples": 3,
+          "p50_seconds": 0.0,
+          "p95_seconds": 0.0,
+          "p99_seconds": 0.0,
+          "max_seconds": 0.0
+        }
+      }
+    }
+  ]
+}

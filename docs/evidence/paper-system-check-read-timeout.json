@@ -1,0 +1,1245 @@
+{
+  "synthetic": true,
+  "market_acceptance": false,
+  "native_process_calls": 37,
+  "native_process_max_seconds": 0.3641170089999832,
+  "dashboard_reads": 90,
+  "capture_attempts": 35,
+  "report": {
+    "window_start": "2026-10-28T14:00:26+00:00",
+    "window_end": "2026-10-28T14:06:16+00:00",
+    "live_enabled": false,
+    "provider_calls": false,
+    "state_modified": false,
+    "cycles": [
+      {
+        "slot": 5977320,
+        "status": "COMPLETE",
+        "reason": null,
+        "started_at": "2026-10-28T14:00:26+00:00",
+        "completed_at": "2026-10-28T14:01:06+00:00"
+      },
+      {
+        "slot": 5977321,
+        "status": "COMPLETE",
+        "reason": null,
+        "started_at": "2026-10-28T14:05:16+00:00",
+        "completed_at": "2026-10-28T14:05:16+00:00"
+      }
+    ],
+    "decisions": [
+      {
+        "cycle_key": "degen:5977320:portfolio:0",
+        "started_at": "2026-10-28T14:01:06+00:00",
+        "stored_status": "COMPLETE",
+        "evidence_available": true,
+        "evidence_bytes": 35809,
+        "omitted_summary_fields": [],
+        "status": [
+          "OPEN"
+        ],
+        "reason": [],
+        "unavailable_families": [
+          "SWING"
+        ],
+        "stock_rejections": [
+          "MIXED_STOCK_INSTRUMENT_UNSUPPORTED",
+          "SWING_INPUT_UNAVAILABLE"
+        ],
+        "option_market_sequence": 4,
+        "option_market_review_reasons": [
+          "OFFLINE_PLAN_VALIDATED"
+        ],
+        "entry_timely": true,
+        "scope_admission_reasons": [],
+        "option_candidates": 2,
+        "stock_candidates": 0,
+        "scans": [
+          {
+            "strategy": "DEGEN",
+            "symbol": [
+              "SPY"
+            ],
+            "issues": [],
+            "setups": [
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "CONFIRMED"
+                ],
+                "reasons": []
+              },
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "OPENING_BREAK_AND_HOLD_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "EMA_TREND_ALIGNMENT_REQUIRED",
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "OBSERVED_FAILED_BREAK_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              }
+            ]
+          },
+          {
+            "strategy": "DEGEN",
+            "symbol": [
+              "QQQ"
+            ],
+            "issues": [],
+            "setups": [
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "CONFIRMED"
+                ],
+                "reasons": []
+              },
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "OPENING_BREAK_AND_HOLD_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "EMA_TREND_ALIGNMENT_REQUIRED",
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "OBSERVED_FAILED_BREAK_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              }
+            ]
+          }
+        ],
+        "contract_exclusions": [
+          "INSTRUMENT_OR_ZERO_DTE_IDENTITY_INELIGIBLE"
+        ],
+        "total_scans": 2,
+        "scans_omitted": 0,
+        "inventory_timing": [
+          {
+            "symbol": "SPY",
+            "source_at": "2026-10-28T14:01:05Z",
+            "received_at": "2026-10-28T14:01:06Z",
+            "evaluated_at": "2026-10-28T14:01:06Z",
+            "source_age_seconds": 1.0,
+            "receive_lag_seconds": 1.0,
+            "clock_order_valid": true,
+            "max_metadata_age_seconds": 10
+          },
+          {
+            "symbol": "QQQ",
+            "source_at": "2026-10-28T14:01:05Z",
+            "received_at": "2026-10-28T14:01:06Z",
+            "evaluated_at": "2026-10-28T14:01:06Z",
+            "source_age_seconds": 1.0,
+            "receive_lag_seconds": 1.0,
+            "clock_order_valid": true,
+            "max_metadata_age_seconds": 10
+          }
+        ]
+      },
+      {
+        "cycle_key": "degen:5977321:portfolio:0",
+        "started_at": "2026-10-28T14:05:16+00:00",
+        "stored_status": "COMPLETE",
+        "evidence_available": true,
+        "evidence_bytes": 33964,
+        "omitted_summary_fields": [],
+        "status": [
+          "OPEN"
+        ],
+        "reason": [],
+        "unavailable_families": [
+          "SWING"
+        ],
+        "rejections": [
+          "DUPLICATE_EXPOSURE"
+        ],
+        "stock_rejections": [
+          "DUPLICATE_EXPOSURE",
+          "MIXED_STOCK_INSTRUMENT_UNSUPPORTED",
+          "SWING_INPUT_UNAVAILABLE"
+        ],
+        "option_market_sequence": 29,
+        "option_market_review_reasons": [
+          "OFFLINE_PLAN_VALIDATED"
+        ],
+        "entry_timely": true,
+        "scope_admission_reasons": [],
+        "option_candidates": 1,
+        "stock_candidates": 0,
+        "scans": [
+          {
+            "strategy": "DEGEN",
+            "symbol": [
+              "SPY"
+            ],
+            "issues": [],
+            "setups": [
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "CONFIRMED"
+                ],
+                "reasons": []
+              },
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "OPENING_BREAK_AND_HOLD_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "EMA_TREND_ALIGNMENT_REQUIRED",
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "OBSERVED_FAILED_BREAK_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              }
+            ]
+          },
+          {
+            "strategy": "DEGEN",
+            "symbol": [
+              "QQQ"
+            ],
+            "issues": [],
+            "setups": [
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "CONFIRMED"
+                ],
+                "reasons": []
+              },
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "OPENING_BREAK_AND_HOLD_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "EMA_TREND_ALIGNMENT_REQUIRED",
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "OBSERVED_FAILED_BREAK_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              }
+            ]
+          }
+        ],
+        "contract_exclusions": [
+          "INSTRUMENT_OR_ZERO_DTE_IDENTITY_INELIGIBLE"
+        ],
+        "total_scans": 2,
+        "scans_omitted": 0,
+        "inventory_timing": [
+          {
+            "symbol": "SPY",
+            "source_at": "2026-10-28T14:05:15Z",
+            "received_at": "2026-10-28T14:05:16Z",
+            "evaluated_at": "2026-10-28T14:05:16Z",
+            "source_age_seconds": 1.0,
+            "receive_lag_seconds": 1.0,
+            "clock_order_valid": true,
+            "max_metadata_age_seconds": 10
+          },
+          {
+            "symbol": "QQQ",
+            "source_at": "2026-10-28T14:05:15Z",
+            "received_at": "2026-10-28T14:05:16Z",
+            "evaluated_at": "2026-10-28T14:05:16Z",
+            "source_age_seconds": 1.0,
+            "receive_lag_seconds": 1.0,
+            "clock_order_valid": true,
+            "max_metadata_age_seconds": 10
+          }
+        ]
+      }
+    ],
+    "cycle_count": 2,
+    "cycle_outcomes": [
+      {
+        "status": [
+          "COMPLETE"
+        ],
+        "reason": [],
+        "count": 2
+      }
+    ],
+    "decision_count": 2,
+    "cycles_omitted": 0,
+    "decisions_omitted": 0,
+    "runtime_evidence": {
+      "heartbeat": "FRESH",
+      "heartbeat_at": "2026-10-28T14:06:06+00:00",
+      "heartbeat_age_seconds": 10.0,
+      "heartbeat_max_age_seconds": 20,
+      "feed": "FRESH",
+      "feed_at": "2026-10-28T14:06:06+00:00",
+      "feed_age_seconds": 10.0,
+      "feed_max_age_seconds": 30
+    },
+    "reviewed_entry_resumes": 1,
+    "current_runtime": [
+      {
+        "status": "STOPPED",
+        "reason": "OPTION_RUNTIME_STOPPED",
+        "feed_sequence": 34
+      }
+    ],
+    "accepted_packet": {
+      "sequence": 34,
+      "accepted_at": "2026-10-28T14:06:06+00:00",
+      "kind": [
+        "MARKET"
+      ],
+      "coverage_issues": [
+        "SCOPE_CURRENT_INPUT_UNAVAILABLE",
+        "SWING_ORIGINAL_SOURCES_UNAVAILABLE"
+      ]
+    },
+    "current_control": [
+      {
+        "halted": 1,
+        "halt_reason": "OPTION_RUNTIME_STOPPED"
+      }
+    ],
+    "account_total_fills": 4,
+    "fill_count_source": "PORTFOLIO_ORDER_OBSERVATIONS",
+    "run_execution": {
+      "status": "RECORDED",
+      "entry_fills": 2,
+      "exit_fills": 2,
+      "completed_round_trips": 2,
+      "carry_in_exits": 0
+    },
+    "model_spending": {
+      "status": "COMPLETE",
+      "day": "2026-10-28",
+      "timezone": "America/New_York",
+      "budgets": {
+        "daily_budget": "1",
+        "total_budget": "5"
+      },
+      "costs": {
+        "run": {
+          "settled_cost": "0.00004",
+          "unknown_calls": 0
+        },
+        "day": {
+          "settled_cost": "0.00004",
+          "unknown_calls": 0
+        },
+        "account_total": {
+          "settled_cost": "0.00004",
+          "unknown_calls": 0
+        }
+      }
+    },
+    "runtime_failures": [],
+    "first_decisions": [
+      {
+        "cycle_key": "degen:5977320:portfolio:0",
+        "started_at": "2026-10-28T14:01:06+00:00",
+        "stored_status": "COMPLETE",
+        "evidence_available": true,
+        "evidence_bytes": 35809,
+        "omitted_summary_fields": [],
+        "status": [
+          "OPEN"
+        ],
+        "reason": [],
+        "unavailable_families": [
+          "SWING"
+        ],
+        "stock_rejections": [
+          "MIXED_STOCK_INSTRUMENT_UNSUPPORTED",
+          "SWING_INPUT_UNAVAILABLE"
+        ],
+        "option_market_sequence": 4,
+        "option_market_review_reasons": [
+          "OFFLINE_PLAN_VALIDATED"
+        ],
+        "entry_timely": true,
+        "scope_admission_reasons": [],
+        "option_candidates": 2,
+        "stock_candidates": 0,
+        "scans": [
+          {
+            "strategy": "DEGEN",
+            "symbol": [
+              "SPY"
+            ],
+            "issues": [],
+            "setups": [
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "CONFIRMED"
+                ],
+                "reasons": []
+              },
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "OPENING_BREAK_AND_HOLD_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "EMA_TREND_ALIGNMENT_REQUIRED",
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "OBSERVED_FAILED_BREAK_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              }
+            ]
+          },
+          {
+            "strategy": "DEGEN",
+            "symbol": [
+              "QQQ"
+            ],
+            "issues": [],
+            "setups": [
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "CONFIRMED"
+                ],
+                "reasons": []
+              },
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "OPENING_BREAK_AND_HOLD_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "EMA_TREND_ALIGNMENT_REQUIRED",
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "OBSERVED_FAILED_BREAK_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              }
+            ]
+          }
+        ],
+        "contract_exclusions": [
+          "INSTRUMENT_OR_ZERO_DTE_IDENTITY_INELIGIBLE"
+        ],
+        "total_scans": 2,
+        "scans_omitted": 0,
+        "inventory_timing": [
+          {
+            "symbol": "SPY",
+            "source_at": "2026-10-28T14:01:05Z",
+            "received_at": "2026-10-28T14:01:06Z",
+            "evaluated_at": "2026-10-28T14:01:06Z",
+            "source_age_seconds": 1.0,
+            "receive_lag_seconds": 1.0,
+            "clock_order_valid": true,
+            "max_metadata_age_seconds": 10
+          },
+          {
+            "symbol": "QQQ",
+            "source_at": "2026-10-28T14:01:05Z",
+            "received_at": "2026-10-28T14:01:06Z",
+            "evaluated_at": "2026-10-28T14:01:06Z",
+            "source_age_seconds": 1.0,
+            "receive_lag_seconds": 1.0,
+            "clock_order_valid": true,
+            "max_metadata_age_seconds": 10
+          }
+        ]
+      },
+      {
+        "cycle_key": "degen:5977321:portfolio:0",
+        "started_at": "2026-10-28T14:05:16+00:00",
+        "stored_status": "COMPLETE",
+        "evidence_available": true,
+        "evidence_bytes": 33964,
+        "omitted_summary_fields": [],
+        "status": [
+          "OPEN"
+        ],
+        "reason": [],
+        "unavailable_families": [
+          "SWING"
+        ],
+        "rejections": [
+          "DUPLICATE_EXPOSURE"
+        ],
+        "stock_rejections": [
+          "DUPLICATE_EXPOSURE",
+          "MIXED_STOCK_INSTRUMENT_UNSUPPORTED",
+          "SWING_INPUT_UNAVAILABLE"
+        ],
+        "option_market_sequence": 29,
+        "option_market_review_reasons": [
+          "OFFLINE_PLAN_VALIDATED"
+        ],
+        "entry_timely": true,
+        "scope_admission_reasons": [],
+        "option_candidates": 1,
+        "stock_candidates": 0,
+        "scans": [
+          {
+            "strategy": "DEGEN",
+            "symbol": [
+              "SPY"
+            ],
+            "issues": [],
+            "setups": [
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "CONFIRMED"
+                ],
+                "reasons": []
+              },
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "OPENING_BREAK_AND_HOLD_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "EMA_TREND_ALIGNMENT_REQUIRED",
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "OBSERVED_FAILED_BREAK_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              }
+            ]
+          },
+          {
+            "strategy": "DEGEN",
+            "symbol": [
+              "QQQ"
+            ],
+            "issues": [],
+            "setups": [
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "CONFIRMED"
+                ],
+                "reasons": []
+              },
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "OPENING_BREAK_AND_HOLD_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "EMA_TREND_ALIGNMENT_REQUIRED",
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "OBSERVED_FAILED_BREAK_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              }
+            ]
+          }
+        ],
+        "contract_exclusions": [
+          "INSTRUMENT_OR_ZERO_DTE_IDENTITY_INELIGIBLE"
+        ],
+        "total_scans": 2,
+        "scans_omitted": 0,
+        "inventory_timing": [
+          {
+            "symbol": "SPY",
+            "source_at": "2026-10-28T14:05:15Z",
+            "received_at": "2026-10-28T14:05:16Z",
+            "evaluated_at": "2026-10-28T14:05:16Z",
+            "source_age_seconds": 1.0,
+            "receive_lag_seconds": 1.0,
+            "clock_order_valid": true,
+            "max_metadata_age_seconds": 10
+          },
+          {
+            "symbol": "QQQ",
+            "source_at": "2026-10-28T14:05:15Z",
+            "received_at": "2026-10-28T14:05:16Z",
+            "evaluated_at": "2026-10-28T14:05:16Z",
+            "source_age_seconds": 1.0,
+            "receive_lag_seconds": 1.0,
+            "clock_order_valid": true,
+            "max_metadata_age_seconds": 10
+          }
+        ]
+      }
+    ],
+    "decision_reason_counts": [
+      {
+        "reason": [],
+        "decisions": 2,
+        "first_at": "2026-10-28T14:01:06+00:00",
+        "last_at": "2026-10-28T14:05:16+00:00"
+      }
+    ],
+    "halt_history": [
+      {
+        "occurred_at": "2026-10-28T14:00:26+00:00",
+        "reason": [
+          "OPTION_RUNTIME_FEED_UNAVAILABLE"
+        ]
+      },
+      {
+        "occurred_at": "2026-10-28T14:05:46+00:00",
+        "reason": [
+          "OPTION_RUNTIME_STOPPED"
+        ]
+      },
+      {
+        "occurred_at": "2026-10-28T14:06:16+00:00",
+        "reason": [
+          "OPTION_RUNTIME_STOPPED"
+        ]
+      }
+    ],
+    "attempt_recovery": {
+      "matched_in_run": 0,
+      "unresolved_at_last_snapshot": 0
+    },
+    "flat_feed_recoveries": 0,
+    "model_calls": {
+      "run": {
+        "attempts": 2,
+        "unsettled": 0
+      },
+      "account_total": {
+        "attempts": 2,
+        "unsettled": 0
+      }
+    },
+    "collection": [
+      {
+        "status": "DELIVERED",
+        "attempts": 34,
+        "first_sequence": 1,
+        "last_sequence": 35
+      },
+      {
+        "status": "FAILED",
+        "attempts": 1,
+        "first_sequence": 3,
+        "last_sequence": 3
+      }
+    ],
+    "latest_packet": {
+      "sequence": 35,
+      "started_at": "2026-10-28T14:06:06+00:00",
+      "kind": [
+        "MARKET"
+      ],
+      "coverage_issues": [
+        "SCOPE_CURRENT_INPUT_UNAVAILABLE",
+        "SWING_ORIGINAL_SOURCES_UNAVAILABLE"
+      ]
+    },
+    "packet_summary": [
+      {
+        "kind": [
+          "MARKET"
+        ],
+        "coverage_issues": [
+          "SCOPE_CURRENT_INPUT_UNAVAILABLE",
+          "SWING_ORIGINAL_SOURCES_UNAVAILABLE"
+        ],
+        "packets": 30,
+        "first_sequence": 1,
+        "last_sequence": 35
+      },
+      {
+        "kind": [
+          "CYCLE"
+        ],
+        "coverage_issues": [
+          "SCOPE_CURRENT_INPUT_UNAVAILABLE",
+          "SWING_ORIGINAL_SOURCES_UNAVAILABLE"
+        ],
+        "packets": 4,
+        "first_sequence": 4,
+        "last_sequence": 30
+      }
+    ],
+    "collection_timing": {
+      "status": "OBSERVED",
+      "attempts": 35,
+      "measured": 35,
+      "missing_or_invalid": 0,
+      "omitted": 0,
+      "by_status": {
+        "DELIVERED": {
+          "samples": 34,
+          "p50_seconds": 0.803568,
+          "p95_seconds": 5.295198,
+          "p99_seconds": 6.477864,
+          "max_seconds": 6.477864
+        },
+        "FAILED": {
+          "samples": 1,
+          "p50_seconds": 0.187902,
+          "p95_seconds": 0.187902,
+          "p99_seconds": 0.187902,
+          "max_seconds": 0.187902
+        }
+      },
+      "phases": {
+        "PREPARE": {
+          "samples": 35,
+          "p50_seconds": 0.030774,
+          "p95_seconds": 0.070539,
+          "p99_seconds": 0.099781,
+          "max_seconds": 0.099781
+        },
+        "CAPTURE": {
+          "samples": 35,
+          "p50_seconds": 0.561209,
+          "p95_seconds": 4.976528,
+          "p99_seconds": 5.682099,
+          "max_seconds": 5.682099
+        },
+        "PERSIST_CAPTURE": {
+          "samples": 34,
+          "p50_seconds": 0.00416,
+          "p95_seconds": 0.01127,
+          "p99_seconds": 0.013823,
+          "max_seconds": 0.013823
+        },
+        "SOURCE_BINDING": {
+          "samples": 34,
+          "p50_seconds": 0.006146,
+          "p95_seconds": 0.009355,
+          "p99_seconds": 0.014296,
+          "max_seconds": 0.014296
+        },
+        "NORMALIZE": {
+          "samples": 34,
+          "p50_seconds": 0.141141,
+          "p95_seconds": 0.267335,
+          "p99_seconds": 0.647027,
+          "max_seconds": 0.647027
+        },
+        "SOURCE_CLOCK_CHECK": {
+          "samples": 34,
+          "p50_seconds": 0.002699,
+          "p95_seconds": 0.006007,
+          "p99_seconds": 0.006706,
+          "max_seconds": 0.006706
+        },
+        "PUBLISH": {
+          "samples": 34,
+          "p50_seconds": 0.058312,
+          "p95_seconds": 0.07754,
+          "p99_seconds": 0.12535,
+          "max_seconds": 0.12535
+        }
+      },
+      "child_observed_intervals": {},
+      "attempt_total": {
+        "samples": 35,
+        "p50_seconds": 0.803568,
+        "p95_seconds": 5.295198,
+        "p99_seconds": 6.477864,
+        "max_seconds": 6.477864
+      }
+    },
+    "collector_failures": [
+      {
+        "sequence": 3,
+        "started_at": "2026-10-28T14:00:46+00:00",
+        "codes": [
+          "CAPTURE"
+        ],
+        "evidence_available": true,
+        "error_class": "TimeoutError",
+        "frames": [
+          {
+            "file": "app/mixed/continuous_feed.py",
+            "line": 761
+          }
+        ],
+        "source_capture": {
+          "evidence_available": false
+        }
+      }
+    ],
+    "run_issues": [
+      "COLLECTOR_FAILURES_RECORDED"
+    ],
+    "run_id": "daily-20261028",
+    "session_timing": {
+      "planned_seconds": 3600,
+      "elapsed_seconds": 350.0
+    },
+    "operation": {
+      "state": "STOPPED",
+      "reasons": [
+        "SESSION_ENDED_EARLY"
+      ],
+      "family_input_issues": {
+        "SCOPE": [
+          "SCOPE_CURRENT_INPUT_UNAVAILABLE"
+        ],
+        "SWING": [
+          "SWING_ORIGINAL_SOURCES_UNAVAILABLE"
+        ]
+      },
+      "last_decision_at": "2026-10-28T14:05:16+00:00",
+      "last_decision_reasons": [
+        "DUPLICATE_EXPOSURE",
+        "INSTRUMENT_OR_ZERO_DTE_IDENTITY_INELIGIBLE"
+      ],
+      "container_running": false,
+      "trading_ready": false
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "version": "operator-supplied-schema-delta-v1",
+  "base_fixture": "robinhood_read_schema_delta_20261114.json",
+  "base_sha256": "05c635c9451e7257954ba11a111a47323a5ac2c1e743d820a0cc4ca5c2733eff",
+  "observed_sha256": "0b0c7205b8aee84dd599902ef5738736c2af04a7cb25fb5511553eb8d499c51f",
+  "provenance": "Operator supplied the complete November 17 comparison with the November 14 context metadata. All three captures failed before any market reads. Reconstructed test metadata retains the base fixture clock.",
+  "changes": [
+    {
+      "path": ["get_equity_historicals", "description"],
+      "value": "Get OHLCV bars for one or more equity symbols across an explicit time range. Use this for charting, \"recent activity\" questions, and backtesting. The server auto-selects an interval when one is not provided. If the bar's interpolated field is true, bar was synthesized to fill a gap and carry no new information.\n\nParameter rules:\n- interval is optional; when omitted, the server auto-selects an interval that targets ~2,500 bars across the requested range. Provide an explicit interval only when you need a specific granularity.\n- interval values are fixed; the server does NOT aggregate intermediate bars. For a custom interval (e.g. 3-minute), request the next-finer fixed interval and aggregate client-side.\n- bounds defaults to 'regular' (RTH only). Use 'extended' or '24_5' only when the user explicitly asks about extended-hours activity.\n- adjustment_type defaults to 'split' (split-adjusted, the right default for backtesting). Use 'none' for raw prices, 'all' for split + dividend adjustment.\n- With an explicit interval, the range can span at most 5,000 bars. Bars are counted only in the hours inside bounds on weekdays, or every day for '24_7'. With bounds 'regular' that allows about 2 weeks of minute bars, 12 weeks of 5minute, 17 months of 30minute, 2.5 years of hour, or 19 years of day. Bounds with longer hours, such as 'extended', allow shorter ranges. The cap does not apply when interval is auto-selected.\n- Only completed bars are returned. end_time (default now) is rounded down to the start of its interval in UTC (day: 00:00Z, week: Monday 00:00Z, month: the 1st, year: Jan 1), and start_time must be before the rounded end_time. To include a bar, end at the next bar's start. For example, one day's bar is <date>T00:00:00Z to <next date>T00:00:00Z.\n- The current day, week, month or year bar is not returned until it closes. For the period so far, use an intraday interval or omit interval.\n- start_time must not be in the future."
+    }
+  ]
+}

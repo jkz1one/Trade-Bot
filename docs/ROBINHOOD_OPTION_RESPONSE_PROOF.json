@@ -1,0 +1,90 @@
+{
+  "version": "robinhood-option-response-acceptance-v1",
+  "parent": "a0b7592d7722cec8df1342cd26864c3093103b1d",
+  "capture_id": "778715467a4a4b3ea503ceff1b5b285a",
+  "collected_at": "2026-10-25T05:16:47.632049+00:00",
+  "schema_sha256": "d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15",
+  "completed_reads": 2,
+  "exact_plan_schema_policy_and_clocks_verified": true,
+  "supplied_artifacts": {
+    "summary(7).json": {
+      "bytes": 325,
+      "sha256": "b775664e8b1f84bd4827eabd6218a0a5be903f112f6aa764bc6e29c04b882ac3"
+    },
+    "samples(5).json": {
+      "bytes": 47381,
+      "sha256": "667f3c4561e0c05fcec53b4e59f62cd6bafbc8d2fec446df35c717539eb812a4"
+    }
+  },
+  "quotes": [
+    {
+      "symbol": "SPY",
+      "instrument_id": "0eb7725e-bf00-4817-8e47-0092d1910f75",
+      "source_at_wire": "2026-10-23T20:14:59.961015075Z",
+      "received_at": "2026-10-25T05:16:47.365209+00:00",
+      "age_seconds": 118907.404194,
+      "bid": "3.340000",
+      "ask": "3.350000",
+      "bid_size": 29,
+      "ask_size": 10,
+      "delta": "0.541653",
+      "theta": "-0.955075",
+      "implied_volatility": "0.146553",
+      "volume": 46010,
+      "open_interest": 276,
+      "native_instrument_bound": false,
+      "entitlement": "UNKNOWN"
+    },
+    {
+      "symbol": "QQQ",
+      "instrument_id": "6058511b-ce40-4dd6-8ef9-8f5a3736ed90",
+      "source_at_wire": "2026-10-23T20:14:59.958762984Z",
+      "received_at": "2026-10-25T05:16:47.365209+00:00",
+      "age_seconds": 118907.406447,
+      "bid": "5.030000",
+      "ask": "5.100000",
+      "bid_size": 8,
+      "ask_size": 4,
+      "delta": "0.519612",
+      "theta": "-1.524721",
+      "implied_volatility": "0.256971",
+      "volume": 47893,
+      "open_interest": 693,
+      "native_instrument_bound": false,
+      "entitlement": "UNKNOWN"
+    }
+  ],
+  "history": [
+    {
+      "symbol": "SPY",
+      "instrument_id": "0eb7725e-bf00-4817-8e47-0092d1910f75",
+      "occ_symbol": "SPY   261026C00760000",
+      "bars": 6,
+      "volume": "NOT_SUPPLIED_BY_TOOL",
+      "interpolation": "UNKNOWN_OMITTED",
+      "synthetic_volume_or_flags_added": false,
+      "used_as_execution_quotes": false
+    },
+    {
+      "symbol": "QQQ",
+      "instrument_id": "6058511b-ce40-4dd6-8ef9-8f5a3736ed90",
+      "occ_symbol": "QQQ   261026C00705000",
+      "bars": 6,
+      "volume": "NOT_SUPPLIED_BY_TOOL",
+      "interpolation": "UNKNOWN_OMITTED",
+      "synthetic_volume_or_flags_added": false,
+      "used_as_execution_quotes": false
+    }
+  ],
+  "six_read_tools_have_successful_response_samples": true,
+  "native_normalized_option_quotes_verified": false,
+  "execution_authority": false,
+  "normalized_data_verified": false,
+  "no_contract_metadata_invented": true,
+  "workspace_provider_calls": 0,
+  "application_file_count_unchanged": 256,
+  "prior_installed_test_count": 119,
+  "prior_installed_proof": "ROBINHOOD_SAMPLE_ACCEPTANCE_PROOF.json",
+  "connected_paper_ready": false,
+  "further_sample_capture_required_now": false
+}

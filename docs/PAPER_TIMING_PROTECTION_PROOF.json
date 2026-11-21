@@ -1,0 +1,191 @@
+{
+  "version": "paper-timing-protection-proof-v1",
+  "date_utc": "2026-11-11",
+  "base_commit": "9cdb0a184b0578249242c66ab35e65750e546ad5",
+  "recovered_implementation": "29ef510748ea4fe0b18592d8483c7dcf836b15bb",
+  "synthetic": true,
+  "provider_calls": false,
+  "model_service_calls": false,
+  "host_changed": false,
+  "account_changed": false,
+  "live_enabled": false,
+  "identity": {
+    "application_files": 330,
+    "source_wheel_installed_bytes_match": true,
+    "wheel_sha256": "6e3084fcd169526fe766cca87514479136ec82c01f144c0463822f50d6785d2d",
+    "application_manifest_sha256": "45af4dcacacb8bd243baacbf51a290b350e449f7f43e39333738e90ac1885191",
+    "python_version": "3.12.14",
+    "runtime_pins_verified": 60,
+    "dependency_check": "PASSED",
+    "syntax_checked_files": 14
+  },
+  "verification": [
+    {
+      "group": "candidate-2-integrated",
+      "cases": 284,
+      "counts": {
+        "PASSED": 281,
+        "FAILED": 3
+      },
+      "seconds": 397.638,
+      "junit_sha256": "23a582e88c9a8903d8ad396508b482a06a8c3687e3948bf19e0eeef3776401a4"
+    },
+    {
+      "group": "final-followup",
+      "cases": 102,
+      "counts": {
+        "PASSED": 102
+      },
+      "seconds": 111.035,
+      "junit_sha256": "6c6305adf06f129e2ad5440b67ea989c2d25f2cc80dc9a18cef7937c3ca77271"
+    },
+    {
+      "group": "native-regressions",
+      "cases": 206,
+      "counts": {
+        "PASSED": 205,
+        "SKIPPED": 1
+      },
+      "seconds": 238.026,
+      "junit_sha256": "0815e5cf33bdc4500c34fcb7014576d1e79c2667f713930782390d408be60f98"
+    }
+  ],
+  "final_unique_status_counts": {
+    "PASSED": 490,
+    "SKIPPED": 1
+  },
+  "skips": [
+    {
+      "test_file": "tests/test_dashboard_snapshot.py",
+      "name": "test_cross_uid_snapshot_is_readable_by_unprivileged_dashboard_without_auth_copy",
+      "original_name_sha256": "b94963b92ae24d5f63a176d875772155ead64a128d0de674d88060e62e16e7b4",
+      "status": "SKIPPED",
+      "seconds": 0.001,
+      "reason": "Reader 10001 is not mapped in this environment: uid"
+    }
+  ],
+  "scenarios": [
+    {
+      "artifact": "evidence/paper-timing-protection-normal.json",
+      "sha256": "8ba4b84db75d6fd22f788a2e87b9c37acb190949d083b5dc1badc9edf0d54ef0",
+      "capture_attempts": 35,
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "runtime_timing_records": 40,
+      "runtime_timing_measured": 40,
+      "native_snapshot_seconds": {
+        "samples": 35,
+        "p50_seconds": 0.203692,
+        "p95_seconds": 0.417568,
+        "p99_seconds": 0.454344,
+        "max_seconds": 0.454344
+      },
+      "publication_incidents": 0
+    },
+    {
+      "artifact": "evidence/paper-timing-protection-read-timeout.json",
+      "sha256": "3f3e9657be06a151f4fa67f83b1c38d7aebdc53dc4bde2ec0afd407055fc88c4",
+      "capture_attempts": 35,
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "runtime_timing_records": 41,
+      "runtime_timing_measured": 41,
+      "native_snapshot_seconds": {
+        "samples": 36,
+        "p50_seconds": 0.21072,
+        "p95_seconds": 0.280371,
+        "p99_seconds": 0.304937,
+        "max_seconds": 0.304937
+      },
+      "publication_incidents": 0
+    },
+    {
+      "artifact": "evidence/paper-timing-protection-publisher-failure.json",
+      "sha256": "0f04583ca4bc6c05b3af9f5201883471beea0e425206ae02089b59c87a1a98a6",
+      "capture_attempts": 35,
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "runtime_timing_records": 42,
+      "runtime_timing_measured": 42,
+      "native_snapshot_seconds": {
+        "samples": 37,
+        "p50_seconds": 0.196997,
+        "p95_seconds": 0.278925,
+        "p99_seconds": 0.525738,
+        "max_seconds": 0.525738
+      },
+      "publication_incidents": 1
+    }
+  ],
+  "test_results": {
+    "artifact": "evidence/paper-timing-protection-tests.json",
+    "sha256": "4e79049159214be8518b18d4b74c0b78a5a710c9efd40033e44a861c2aabb533",
+    "bytes": 196986
+  },
+  "source_sha256": {
+    "app/mixed/connected_runtime.py": "965ce3a8b342ce6d7d7008b569f78f767a68f826c36c9d4ce5af6f0b13552d20",
+    "app/mixed/dashboard_snapshot.py": "1eae4b4b67b57a8239f6b5d5485d3cd2e8dc8fd0e49b3a233f7fdf2e3159858f",
+    "app/mixed/paper_health.py": "05695af626408131d40e3251d80d345033effa72762e0aaaa11444590ce2904e",
+    "app/options/coordinator.py": "db109687c1ed1f1a65da65643597b5ad43e968937ecc452f57c94ef08fe980d7",
+    "app/options/engine.py": "16218ef6cde0728fdebaba34f8a9a24b282c2a72e2e746930c931fe69553e7a9",
+    "app/options/entry_coordination.py": "b3ca6687b69daad23d24d27f2d193fe354d5091338c36ecab55d1bdfc8ca057b",
+    "app/options/process.py": "da066d0e8afddad0bbdcfe4224b3f4f8eaf944f1def5ed56340a55ebff704d20",
+    "app/options/runtime.py": "6d652d35660fa6e2e6a0ba24fead31d2c43e5dcecbf04314cd61311804a3e8e0",
+    "scripts/paper-session-report.py": "b8a64745a9c1401ed3c96333116339b0f9e148638abf8b052cf6d31f2232bf93",
+    "scripts/paper-system-check.py": "4eefb11fea1f3af1c9846544edee4a7248dfab634eb615de49d350c7b95cdab0",
+    "tests/test_connected_system.py": "3c9cbc224e6c3291549b8baa77697c038811e7e65be9b95af6bbeb1105619b97",
+    "tests/test_dashboard_reader.py": "b3d3c963f2f848592399eaf1ce31dcb7dfaaa1a4fdaf570774204e53d0c7b5d4",
+    "app/options/runtime_timing.py": "9ba4607ba6ab032ed7168c94d9b41d0192ed5fe99a12bf1944f2e68559ba7688",
+    "tests/test_runtime_timing.py": "808734e9bd8c014d26c605c2999232369f556944a3f9696533df4ce07e849d87"
+  },
+  "development_failures": [
+    {
+      "run": "initial installed candidate",
+      "passed": 270,
+      "failed": 14,
+      "corrections": "Add diagnostic table to native reopen allowlist and bound its display rows; tolerate older report event schemas. Initial run evidence is retained locally.",
+      "junit_sha256": "6b3a2a9bf3d84e2da20a8abc3a79f37069ae13bb7c8b303e9f596ef9d3240ad5"
+    },
+    {
+      "run": "candidate-2 integrated",
+      "passed": 281,
+      "failed": 3,
+      "corrections": "Report older journals without event payload as unavailable; update publisher scenario to expect the publication-failure message. All failures are replaced by the final 102-case pass without changing application/wheel bytes."
+    },
+    {
+      "run": "source-only new dashboard test",
+      "failed": 1,
+      "reason": "Reader requires installed application identity; final isolated installed run passed the same new case."
+    }
+  ],
+  "checklist": {
+    "A1": "RECOVERED_AND_PUBLISHED",
+    "A2": "PARTIAL_RUNTIME_CORRELATION_ADDED",
+    "A4": "PARTIAL_IN_RUN_PUBLICATION_ISOLATED"
+  },
+  "limitations": [
+    "Synthetic provider/model responses and accelerated fixture clock; no connected lifecycle or Robinhood latency evidence.",
+    "No full-duration host resource-profile soak or complete combined failure matrix.",
+    "Cross-UID case skipped because this user namespace cannot map UID/GID 10001. Docker/systemd and browser visual acceptance remain open.",
+    "Stock/Scope/management phase coverage and killed-before-start measurement denominators remain incomplete.",
+    "In-run publisher failure is isolated; startup dashboard failures still prevent launch.",
+    "Older releases with a strict journal table allowlist need a reviewed rollback compatibility path before any upgrade.",
+    "Ruff module exists but its executable is unavailable; changed files passed syntax and whitespace checks."
+  ],
+  "implementation_commit": "aad4e0885cac8928c790bd717a3128a30c0c05a9"
+}

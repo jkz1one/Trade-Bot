@@ -1,0 +1,74 @@
+{
+  "version": "operator-supplied-schema-delta-v1",
+  "base_fixture": "robinhood_read_schema_delta_20261112.json",
+  "base_sha256": "dc15d335d30cd024e60910982942cf27d4c51dd83651630630c6b6e1cfa27718",
+  "observed_sha256": "05c635c9451e7257954ba11a111a47323a5ac2c1e743d820a0cc4ca5c2733eff",
+  "provenance": "Six leaf replacements from the host's November 14 comparison against the November 12 capture. Reconstructed test metadata uses the base fixture clock.",
+  "changes": [
+    {
+      "path": [
+        "get_equity_historicals",
+        "inputSchema",
+        "properties",
+        "end_time",
+        "description"
+      ],
+      "value": "End of the range: an RFC3339 timestamp, or a date ('2026-01-01' covers that whole UTC day). Optional \u2014 when omitted, defaults to the current time."
+    },
+    {
+      "path": [
+        "get_equity_historicals",
+        "inputSchema",
+        "properties",
+        "start_time",
+        "description"
+      ],
+      "value": "Start of the range: an RFC3339 timestamp (e.g. '2026-01-01T00:00:00Z'; an offset such as -05:00 is converted to UTC), or a date ('2026-01-01', read as 00:00Z). Required."
+    },
+    {
+      "path": [
+        "get_option_historicals",
+        "inputSchema",
+        "properties",
+        "end_time",
+        "description"
+      ],
+      "value": "End of the range: an RFC3339 timestamp, or a date ('2026-01-01' covers that whole UTC day). Optional \u2014 when omitted, defaults to the current time."
+    },
+    {
+      "path": [
+        "get_option_historicals",
+        "inputSchema",
+        "properties",
+        "start_time",
+        "description"
+      ],
+      "value": "Start of the range: an RFC3339 timestamp (e.g. '2026-01-01T00:00:00Z'; an offset such as -05:00 is converted to UTC), or a date ('2026-01-01', read as 00:00Z). Required."
+    },
+    {
+      "path": [
+        "get_option_chains",
+        "outputSchema",
+        "properties",
+        "data",
+        "properties",
+        "chains",
+        "items",
+        "properties",
+        "extended_hours_state",
+        "description"
+      ],
+      "value": "'enabled' or 'disabled'. market_hours='regular_curb_overnight_hours' requires 'enabled' AND an index chain."
+    },
+    {
+      "path": [
+        "get_option_chains",
+        "outputSchema",
+        "properties",
+        "guide",
+        "description"
+      ],
+      "value": "Pass id to get_option_instruments as chain_id to list contracts. market_hours='regular_curb_overnight_hours' on place_option_order requires extended_hours_state='enabled' AND an index chain (underlying_instruments empty). When the user mentions AM/PM/morning/evening expiration, check settle_on_open per chain \u2014 same underlying can have multiple chains, so do not assume they split cleanly by settlement. Present id, symbol, expiration_dates (annotate AM when settle_on_open is true), and trade_value_multiplier."
+    }
+  ]
+}
