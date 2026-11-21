@@ -139,7 +139,7 @@ def step_failure(exc):
     if isinstance(failure, dict):
         classes = failure.get('error_classes')
         classes = classes[:16] if isinstance(classes, list) else []
-        capture = {'status': 'FAILED', 'failure': {
+        capture = {'status': 'FAILED', 'reason': failure.get('reason'), 'failure': {
             'stage': failure.get('stage'),
             'causes': [{'error_class': kind} for kind in classes]},
             **{k: failure.get(k) for k in ('schema_sha256', 'schema_contract_sha256', 'completed_reads', 'schema_changes')}}

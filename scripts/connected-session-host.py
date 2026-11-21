@@ -78,9 +78,16 @@ def capture_failure(stdout):
             continue
         stage = detail.get("stage")
         if stage not in ("PRIVATE_AUTH", "CONNECT", "DISCOVER", "VALIDATE_PLAN",
-                         "MARKET_READ", "CLOSE", "PARENT"):
+                         "MARKET_READ", "CLOSE", "PARENT", "SESSION_SETUP", "CONTEXT_REVIEW",
+                         "CONTRACT_PROBE", "STRIKE_DISCOVERY", "CONTRACT_REVIEW", "QUOTE_REVIEW",
+                         "CAPTURE_ARTIFACT_WRITE"):
             continue
         failure = {"stage": stage, "error_classes": [], "http_statuses": []}
+        if report.get('reason') in {
+                'CONTRACT_PROBE_INVALID', 'STRIKE_LISTING_INVALID', 'STRIKE_LISTING_EMPTY',
+                'STRIKE_LISTING_PAGE_LIMIT', 'STRIKE_LISTING_CURSOR_REPEATED',
+                'SELECTED_CONTRACT_UNAVAILABLE', 'CATALOG_VALIDATION_FAILED'}:
+            failure['reason'] = report['reason']
         causes = detail.get("causes")
         for cause in causes[:16] if isinstance(causes, list) else []:
             if not isinstance(cause, dict):

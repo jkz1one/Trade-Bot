@@ -57,8 +57,10 @@ def setup(tmp_path, monkeypatch, failure=None):
                     'owner_state': owner, 'automatic_catalog_blockers': [], 'live_enabled': False, 'target_session': '2026-11-23',
                     'swing_history_enrolled': True, 'swing_expiration': '2026-11-27'}
         if args[0] == 'capture-session':
-            if failure == 'capture':
-                raise m.ReleaseStageFailed({'step': 'capture-session', 'failure': {'stage': 'VALIDATE_PLAN'}})
+            if failure == 'capture' or (failure == 'swing' and args[-1] == '2026-11-27'):
+                raise m.ReleaseStageFailed({'step': 'capture-session', 'failure': {
+                    'stage': 'STRIKE_DISCOVERY' if failure == 'swing' else 'VALIDATE_PLAN',
+                    'reason': 'STRIKE_LISTING_EMPTY' if failure == 'swing' else 'SCHEMA_CONTRACT_CHANGED'}})
             return {'status': 'CATALOG_CAPTURED', 'provider_tool_calls': 8}
         if args[0] == 'recover-snapshot':
             return {'status': 'PUBLISHED', 'source_modified': False, 'held_plays': 0}
@@ -91,7 +93,7 @@ def test_candidate_qualifies_before_install_and_never_resumes_or_changes_daily_s
         assert heads[str(checkout)] == 'a'*40
 
 
-@pytest.mark.parametrize('failure', ['capture', 'owner', 'busy', 'reader', 'rollback'])
+@pytest.mark.parametrize('failure', ['capture', 'swing', 'owner', 'busy', 'reader', 'rollback'])
 def test_failed_handoff_stops_before_install_or_rolls_back_before_timer_restart(tmp_path, monkeypatch, failure):
     checkout, home, calls, heads, config = setup(tmp_path, monkeypatch, failure)
     before = (home/'state.json').read_bytes()
@@ -107,7 +109,10 @@ def test_failed_handoff_stops_before_install_or_rolls_back_before_timer_restart(
         assert calls[-1] == ('systemctl', 'start', m.TIMER)
     if failure == 'capture':
         assert result['last_failure']['failure']['stage'] == 'VALIDATE_PLAN'
-    if failure in {'capture', 'owner', 'busy'}:
+    if failure == 'swing':
+        assert result['last_failure']['failure']['reason'] == 'STRIKE_LISTING_EMPTY'
+        assert len([c for c in calls if c[:2] == ('connected-session-host.py', 'capture-session')]) == 2
+    if failure in {'capture', 'swing', 'owner', 'busy'}:
         assert not any(c[:2] == ('git', 'switch') for c in calls)
 
 

@@ -760,3 +760,19 @@ def test_non_capture_host_error_retains_module_class_and_frames_only():
     assert result['module'] == 'app.mixed.daily_plan'
     assert result['failure'] == {'error_class': 'OperationalError', 'frames': [{'file': 'app/mixed/daily_plan.py', 'line': 123}]}
     assert 'DO_NOT_EXPORT' not in str(result)
+
+
+def test_local_capture_reason_survives_host_controller_and_release_sanitizers():
+    import json
+    raw = {'status': 'FAILED', 'reason': 'STRIKE_LISTING_EMPTY',
+           'failure': {'stage': 'STRIKE_DISCOVERY', 'causes': [{'error_class': 'ValueError'}]},
+           'private': 'DO_NOT_EXPORT'}
+    safe = daily.host.capture_failure(json.dumps(raw))
+    item = daily.step_failure(daily.starter.StepFailed('private', step='capture-session',
+        report={'status': 'CAPTURE_FAILED', 'failure': safe, 'exit_code': 1}))
+    assert item['failure']['reason'] == 'STRIKE_LISTING_EMPTY'
+    assert item['failure']['stage'] == 'STRIKE_DISCOVERY'
+    assert item['failure']['error_classes'] == ['ValueError']
+    assert 'DO_NOT_EXPORT' not in str(item)
+    raw['reason'] = 'PRIVATE_VALUE'
+    assert 'reason' not in daily.host.capture_failure(json.dumps(raw))
