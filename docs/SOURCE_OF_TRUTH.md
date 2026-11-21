@@ -1,13 +1,29 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.226. November 20, New York time. Listed-strike discovery before activation.
+Version 1.227. November 20, New York time. Guarded host installation confirmed.
+
+The operator supplied `RELEASE_INSTALLED` for
+`2d538b7f32afa7b6df09e7af0d3534e9e27f71e5`, ending at stage `reader` with no
+reported failed stage or last failure. Receipt directory:
+`/root/trade-bot-release-zk5617xi`. The release workflow requires successful
+catalog captures, stopped-account snapshot verification, unchanged-owner recheck,
+matching installed release/image and reader update before this result. R3 is
+complete on that evidence; R4 connected operation remains unverified.
+
+The supplied summary does not include individual capture counts, selected strikes,
+fallback usage, target date or current timer state. `scheduler_resumed: false`
+records that deployment did not resume a hold; it does not establish whether the
+scheduler is paused. Next: one read-only timer and diagnostic check for the
+expected November 23 session, then observe that same worker through R4.
+No additional deployment or retry reset is implied.
 
 The operator ran `9a140b8` qualification. November 23 capture completed eight
 provider reads. The December 4 Swing context and contract reads also completed,
 but both exact-strike instrument responses were empty. This was a catalog-selection
 failure after successful reads, not a rejected schema or observed connection error.
-Qualification stopped before installation; the checkout remains `c03b628` and the
-previously active daily timer was restored and independently reported active.
+That earlier qualification stopped before installation; the checkout then remained
+`c03b628` and the previously active daily timer was restored and independently
+reported active.
 
 Candidate `2d538b7f32afa7b6df09e7af0d3534e9e27f71e5` handles empty exact-strike
 probes by looking up actual listed strikes for the observed chain and expiration.
@@ -21,8 +37,8 @@ Contract count, native admission, timestamps, account state and limits are uncha
 
 Local capture validation now produces a saved, bounded stage/reason report, and
 the host/controller preserve it. Provider failures keep their original diagnostics.
-The next gate is the corrected candidate's guarded host qualification, followed by
-R4; neither is confirmed. [Evidence](PAPER_CATALOG_CAPTURE_20261120_PROOF.json)
+Guarded qualification and installation are now confirmed by the receipt above.
+The next gate is R4 sustained connected operation. [Evidence](PAPER_CATALOG_CAPTURE_20261120_PROOF.json)
 and [single host handoff](PAPER_NEXT_SESSION.md).
 
 ### Prior candidate and qualification workflow
@@ -48,7 +64,8 @@ There is no direct server access here. The prior candidate failed qualification
 as recorded above and was not installed. R4 connected acceptance is open.
 Provider CONNECT failures, publication under
 session load, Scope current inputs and Swing target geometry remain unresolved.
-The installed release is still the last operator-confirmed `c03b628` below.
+The current operator-confirmed installed release is `2d538b7`; the `c03b628`
+receipts below describe earlier checkpoints.
 
 ### November 20 incident and process review
 

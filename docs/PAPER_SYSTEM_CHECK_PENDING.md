@@ -12,7 +12,11 @@ session-capture, contract-catalog and observed-simulation consumers.
 The final installed run passed 897 tests in 400.05 seconds; one cross-UID
 reader case remains skipped because UID 10001 is not mapped in this environment.
 [Current verification and confirmed host state](PAPER_CATALOG_CAPTURE_20261120_PROOF.json).
-Host qualification and connected acceptance remain open.
+The operator subsequently supplied `RELEASE_INSTALLED`, stage `reader`, for this
+exact candidate, with no reported failure and receipt directory
+`/root/trade-bot-release-zk5617xi`. Guarded host qualification and installation
+are confirmed; connected acceptance remains open. This receipt update changes
+only documentation and evidence; the installed test result above is unchanged.
 
 November 20 candidate `9a140b8d8628c27f9304cd6331bbcee07af7074e` implements R1-R2
 and the offline portion of R3. The installed suite now explicitly includes
@@ -21,7 +25,8 @@ consumer-schema, diagnostic and release-workflow cases. Its manifest contains
 run passed 799 tests in 402.17 seconds; one cross-UID case requires reader UID
 10001 and remains skipped in this environment. Results and exact artifact hashes are recorded in
 [PAPER_RELEASE_20261120_PROOF.json](PAPER_RELEASE_20261120_PROOF.json).
-Real-host qualification and R4 remain unverified. The new operator command is in
+That candidate failed real-host qualification; the corrected follow-up is recorded
+above. R4 remains unverified. The current read-only operator check is in
 [PAPER_NEXT_SESSION.md](PAPER_NEXT_SESSION.md); older command blocks are history.
 
 The first integrated pass exposed an invalid clock in the new dashboard test:

@@ -83,10 +83,10 @@ Work in this order, using the existing implementations and fixtures:
   with today's preparation failure and label older session reports as history;
   an old publisher error cannot override today's cause. Reproduce November 20
   using the November 18 report as retained history.
-- [ ] **R3 — One release candidate and one guarded handoff.** Build once; run the
+- [x] **R3 — One release candidate and one guarded handoff.** Build once; run the
   relevant incident reproductions and integration checks against that exact
-  installed artifact. Include adapter/compatibility tests explicitly: the current
-  `paper-system-check.py` suite list does not include `test_read_schema_contract`.
+  installed artifact. Include adapter/compatibility tests explicitly: the incident
+  suite list omitted `test_read_schema_contract`; the corrected candidate includes it.
   Run a bounded candidate check on the actual host with real read-only provider
   discovery/capture and snapshot verification before activating its scheduler.
   Preserve source account state, installed release, enrollment and retry counters
@@ -125,10 +125,10 @@ subset must name blocked families; full product acceptance requires their closur
 Do not add CPU or relax limits without measurements identifying the bottleneck.
 
 Candidate `9a140b8d8628c27f9304cd6331bbcee07af7074e` completes the offline R1-R2
-implementation and R3 release workflow. R3 stays unchecked until its real-host
-qualification receipt exists; R4 stays unchecked until connected operation is
-observed. [Implementation proof](PAPER_RELEASE_20261120_PROOF.json) distinguishes
-these results from the earlier [process audit](PAPER_PROCESS_REVIEW_20261120.json).
+implementation and R3 release workflow. The corrected `2d538b7` subsequently
+passed guarded host qualification and installation, closing R3 as recorded below.
+R4 stays unchecked until connected operation is observed.
+[Implementation proof](PAPER_RELEASE_20261120_PROOF.json) distinguishes these results from the earlier [process audit](PAPER_PROCESS_REVIEW_20261120.json).
 
 The compatibility policy permits only new optional scalar properties directly
 inside an output `data` envelope. Existing fields, constraints and all input and
@@ -139,10 +139,10 @@ quotes and cached history under the reported metadata extension. An unknown
 breaking change still blocks admission conservatively; this is not general
 per-family schema negotiation and does not make an unavailable family ready.
 
-The next action is the single candidate command in PAPER_NEXT_SESSION.md, using
-real discovery/capture and accounting publication before activation. It writes a
-stage receipt and leaves the installed release unchanged on qualification failure.
-After success, the operator uses one diagnostic command at each R4 checkpoint.
+The next action is the read-only schedule check in PAPER_NEXT_SESSION.md, then
+one diagnostic command at each R4 checkpoint. The completed guarded release
+command retains every stage and leaves the installed release unchanged on a
+qualification failure; no further deployment or resume is implied.
 
 The first real qualification of `9a140b8` passed the November 23 catalog but found
 two empty December 4 exact-strike responses. Both provider calls were successful.
@@ -151,8 +151,13 @@ The local post-read error lacked a structured reason, revealing an additional R2
 gap. Candidate `2d538b7f32afa7b6df09e7af0d3534e9e27f71e5` adds bounded listed-strike
 discovery after an empty probe and carries local stage/reason evidence through the
 host/controller wrappers. The system suite now includes session-capture and
-downstream catalog consumers explicitly. R3 remains open until this candidate
-passes actual qualification; a successful first capture is not a completed gate.
+downstream catalog consumers explicitly. The operator subsequently supplied
+`RELEASE_INSTALLED` for `2d538b7`, stage `reader`, with no reported failure and
+receipt directory `/root/trade-bot-release-zk5617xi`. The inspected workflow
+requires all capture/publication/owner gates before installation, so this closes
+R3. Individual capture counts and fallback usage are not supplied by the summary.
+Timer/schedule state still needs a read-only check; `scheduler_resumed: false`
+is an action record, not a pause-state report. R4 remains open.
 [Qualification failure and repair evidence](PAPER_CATALOG_CAPTURE_20261120_PROOF.json).
 
 ### Existing implementation checklist

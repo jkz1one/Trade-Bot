@@ -116,9 +116,9 @@
   },
   "host_acceptance": "UNVERIFIED",
   "connected_day_acceptance": "UNVERIFIED",
-  "next_gate": "Operator runs the corrected candidate through the same guarded qualification and installation command. No retry reset or schedule resume is included.",
+  "next_gate": "Operator checks current timer and installed schedule read-only, then observes the same scheduled worker at launch, 30 minutes, two hours and close (R4). No resume or retry reset is implied.",
   "remaining": [
-    "actual fallback capture and full host qualification",
+    "independent current timer and schedule check",
     "sustained feed and decision progress",
     "provider CONNECT failures from prior sessions",
     "publication under load",
@@ -133,5 +133,28 @@
     "draft PR 1 metadata",
     "risk and model limits",
     "existing host release until successful qualification"
-  ]
+  ],
+  "deployment_receipt": {
+    "source": "Operator-pasted paper-release.py deploy summary; no direct host access.",
+    "status": "RELEASE_INSTALLED",
+    "release": "2d538b7f32afa7b6df09e7af0d3534e9e27f71e5",
+    "evidence_directory": "/root/trade-bot-release-zk5617xi",
+    "stage": "reader",
+    "failed_stage": null,
+    "last_failure": null,
+    "connected_health": "UNVERIFIED",
+    "scheduler_resumed": false,
+    "live_enabled": false,
+    "qualification_inference": "The inspected release workflow reaches RELEASE_INSTALLED only after catalog captures, stopped-account snapshot verification, unchanged-owner recheck, matching installed release/image and successful reader update.",
+    "not_supplied": [
+      "individual capture results and call counts",
+      "whether strike fallback was exercised",
+      "selected strikes",
+      "target session",
+      "current timer and scheduler pause/hold state"
+    ],
+    "scheduler_flag_meaning": "No resume action was performed. This is not an observation of the scheduler pause state."
+  },
+  "host_qualification": "PASSED",
+  "deployment": "CONFIRMED"
 }

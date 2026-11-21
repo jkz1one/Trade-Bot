@@ -1,76 +1,57 @@
 # Daily PAPER operation
 
-## Current action: qualify and install one candidate
+## Current action: verify the installed schedule
 
-Candidate: `2d538b7f32afa7b6df09e7af0d3534e9e27f71e5`. Last confirmed host release:
-`c03b6282fed59e48f113b06f4bc02f53b50410d0`. The candidate is not host-confirmed.
-[Offline evidence and open gates](PAPER_CATALOG_CAPTURE_20261120_PROOF.json).
+Installed release: `2d538b7f32afa7b6df09e7af0d3534e9e27f71e5`.
+The operator supplied `RELEASE_INSTALLED`, stage `reader`, with no reported failure.
+Evidence: `/root/trade-bot-release-zk5617xi/release.json`.
+[Qualification, deployment and open gates](PAPER_CATALOG_CAPTURE_20261120_PROOF.json).
 
-The prior `9a140b8` qualification passed November 23 capture, then stopped because
-both exact-strike December 4 probes returned zero instruments. The supplied
-receipt and terminal checks confirm `c03b628` remained installed and the timer was
-restored. The new candidate uses bounded actual strike listings on that path and
-retains local validation reasons. Do not rerun the older candidate.
+The release workflow reached installation only after its real provider capture and
+stopped-account publication gates passed, with an unchanged owner and matching
+installed release/image. The summary does not expose individual capture counts,
+selected strikes, fallback usage or the current timer state. These are not inferred.
+The prior `9a140b8` attempt stopped on two empty December 4 exact-strike probes;
+that failed attempt is preserved in the evidence record.
 
-Run this standalone block on the operator-managed server. It creates a separate
-candidate checkout and uses the new release command. That command stops the timer,
-waits at most 60 seconds for an existing controller to finish, rejects a running
-PAPER worker, builds once, checks both required catalog dates with real provider
-reads, and verifies publication against the normally stopped flat account. Only
-then does it switch the installed release and update the reader. Each result is
-saved under the printed `/root/trade-bot-release-.../release.json` path. A failed
-qualification keeps the installed checkout; a failed activation rolls it back.
+`scheduler_resumed: false` means this deployment did not clear a pause or review
+hold. It does not mean the scheduler is necessarily paused. The command preserves
+account state, enrollment, limits and retry counts. It restores a previously
+active timer after success; the timer's current state needs the check below.
+Do not repeat deployment or issue a resume based only on this flag.
 
-```bash
-(
-  set -eu
-  cd /opt/trade-bot-dashboard
-  release=2d538b7f32afa7b6df09e7af0d3534e9e27f71e5
-  git fetch origin slice2/robinhood-read-shadow
-  git merge-base --is-ancestor HEAD "$release"
-  git merge-base --is-ancestor "$release" FETCH_HEAD
-  test -z "$(git status --porcelain)" || { echo 'Checkout has local changes.'; exit 1; }
-  candidate=$(mktemp -d)
-  git worktree add --detach "$candidate" "$release"
-  trap 'git worktree remove "$candidate"' EXIT
-  python3 "$candidate/scripts/paper-release.py" deploy \
-    --checkout /opt/trade-bot-dashboard
-)
-```
-
-Paste the result before any recovery action. Success is `RELEASE_INSTALLED`;
-`connected_health` must still say `UNVERIFIED`. The command preserves account state,
-enrollment, limits, pause/review holds and retry counts. It restores a previously
-active timer after success or a completed rollback. If rollback itself fails, it
-leaves the timer stopped and retains evidence. It does not resume a hold, retry
-the exhausted November 20 preparation, start an extra worker or enable live trading.
-
-After installation, use this one read-only command for the current New York day:
+Run this read-only block on the operator-managed server and paste the output:
 
 ```bash
 cd /opt/trade-bot-dashboard
-python3 scripts/paper-diagnose.py
+date -u '+UTC: %Y-%m-%d %H:%M:%S'
+systemctl is-active trade-bot-paper-daily.timer
+python3 scripts/paper-diagnose.py --target-session 2026-11-23
 ```
 
-For a specific prior run, add `--target-session YYYY-MM-DD`. The report includes
-installed release/image, UTC observation time, controller target/status, original
-failure and changed schema paths, worker start/end/restarts, feed and decision
-evidence, and the immutable display's publication time. Display receipt inspection
-does not claim to reverify accounting. A missing worker is distinct from failed
-Docker inspection. No provider calls, worker changes or account-state writes occur.
+November 23 is the expected next session from the earlier qualification. Confirm
+it against `controller_target_session`; the latest summary does not state a date.
+A missing November 23 worker before its scheduled launch is expected. The report
+includes installed release/image, UTC observation time, controller target/status,
+pause state, original failure, worker start/end/restarts, feed/decision evidence
+and immutable display publication time. A missing worker differs from a failed
+Docker inspection. The command makes no provider calls or account/worker changes;
+display receipt inspection does not claim to reverify accounting.
 
 R4 requires the same scheduled run at launch, 30 minutes, two hours and close.
-The default profile launches at 10 a.m. New York time; use the actual target and
-start returned by qualification. Check advancing feed and decision evidence,
-original quote freshness, due/missed slots, family blockers, recovery counts and
-publication, then clean closure/accounting. Zero fills alone is not failure; a
-running container alone is not a healthy feed. Stop calling the day accepted if
-these checks fail. Provider CONNECT failures, Scope inputs and Swing geometry
+The default profile launches at 10 a.m. New York time: expected Monday checks are
+10 a.m., 10:30 a.m., noon and 4 p.m., subject to the confirmed schedule. Check
+advancing feed and decision evidence, original quote freshness, due/missed slots,
+family blockers, recovery counts and publication, then clean closure/accounting.
+Zero fills alone is not failure; a running container alone is not a healthy feed.
+Diagnose a failed early check then, rather than waiting until close.
+Provider CONNECT failures, publication under load, Scope inputs and Swing geometry
 remain open until actual evidence resolves them.
 
 ## November 20 incident before this candidate
 
-`c03b628` is installed and the operator confirmed `SCHEDULE_RESUMED`. The
+At this earlier checkpoint, `c03b628` was installed and the operator confirmed
+`SCHEDULE_RESUMED`. The
 November 20 worker never launched: three preparation attempts rejected the
 optional historical-output `notice` addition at `VALIDATE_PLAN`. The controller
 reports `PREPARATION_RETRY_LIMIT`; the older worker report is November 18.
@@ -81,7 +62,7 @@ authorized implementation. The supplied schema difference was sufficient for
 local reconstruction; no further raw schema dump is needed. The new handoff
 above implements [R1-R3](DELIVERY_PLAN.md#november-20-work-order-repair-the-delivery-process-first)
 without resetting the failed day's retry count. Real-host qualification and
-sustained observation remain pending.
+installation are now confirmed above; sustained observation remains pending.
 [Confirmed receipts and audit](PAPER_PROCESS_REVIEW_20261120.json).
 
 ## November 18 failed session review
