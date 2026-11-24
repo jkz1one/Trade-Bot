@@ -719,14 +719,62 @@
     }
   ],
   "full_duration": {
-    "status": "RUNNING",
+    "status": "INCOMPLETE",
     "requested_seconds": 21480,
     "evidence_directory": "/workspace/scratch/b29c7148e65c/row-batches-full-1123",
     "application_manifest_sha256": "f9f8035603dcb429a9fa589a878653a33b579c7fbc2458e1712d7d0378f53138",
     "worker_cpu_affinity": [
       0
     ],
-    "result": "PENDING \u2014 started only after the short lifecycle, extended protection and final installed suite passed."
+    "result": "No final report or live launcher/worker was found on November 24. Raw RUNNING receipts are retained unchanged; this is not a full-duration pass or an established application failure.",
+    "observed_at": "2026-11-24T15:09:52.315462+00:00",
+    "last_progress_modified_at": "2026-11-24T03:13:54.770706+00:00",
+    "last_progress": {
+      "version": "paper-soak-result-v1",
+      "status": "RUNNING",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "planned_seconds": 21480,
+      "nominal_worker_seconds": 21480,
+      "wall_clock_full_duration": "PENDING",
+      "nominal_cpu_profile": true,
+      "source_seed": {
+        "kind": "labeled diagnostic padding, not month-history proof",
+        "rows": 30006,
+        "initial_database_bytes": 124760064
+      },
+      "memory_enforcement": "sampled aggregate RSS ceiling; not a kernel cgroup",
+      "memory_limit_bytes": 1073741824,
+      "logical_cpus": 1,
+      "max_feed_recoveries": 0,
+      "native_snapshot_calls": 254,
+      "native_snapshot_failures": 0,
+      "native_snapshot_max_seconds": 0.30843187800019223,
+      "capture_attempts": 59,
+      "entry_model_calls": 1,
+      "management_model_calls": 0,
+      "dashboard_reads": 20,
+      "report_reads": 20,
+      "peak_tree_rss_bytes": 694136832,
+      "peak_processes": 2,
+      "children_reaped_count": 256,
+      "elapsed_seconds": 599.7687803940007,
+      "source_database_bytes": 130510848
+    },
+    "process_observed": false,
+    "final_report_present": false,
+    "raw_receipts": {
+      "summary.json": {
+        "sha256": "568f021546473911291a8d12ac316b78143d1ee381087880a0a8e276720a1b50",
+        "status": "RUNNING"
+      },
+      "progress.json": {
+        "sha256": "07f920f01998fb2c790213a3d04a7d4351e0458844128e17671e06faaee77180",
+        "status": "RUNNING"
+      }
+    }
   },
   "confirmed_host": {
     "release": "2d538b7f32afa7b6df09e7af0d3534e9e27f71e5",

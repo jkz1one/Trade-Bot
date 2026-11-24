@@ -1,6 +1,6 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.230. November 23, New York time. Loaded owner-path gates passed.
+Version 1.231. November 24, New York time. Persistent offline duration gate.
 
 The current offline candidate passes the previously failing 112-MiB varied-history
 fixture on one logical CPU: one simulated entry and exit, one completed round trip,
@@ -20,11 +20,23 @@ pruning, relaxed deadline or change to account authority or trading/model limits
 Buffered timing records are not durable evidence until committed; missing or
 unfinished traces remain explicit in reports.
 
-The 21,480-second full-duration offline gate has started with matching installed
-bytes and a fresh synthetic account. Its result is pending. Short-run success is
-not full-day or month-growth acceptance. The host remains on `2d538b7` with its
-session-review hold; collector CONNECT failures and connected R4 remain unresolved.
-Do not deploy or resume while these gates are open.
+The workspace duration attempt is incomplete. Its last progress is 599.77 seconds;
+on November 24 its process was absent and no final report existed. The unchanged
+raw receipts still say RUNNING, which is not evidence that it continued. This
+establishes neither a full-day pass nor a bot failure. Short-run results above stand.
+
+`scripts/paper-soak-host.py` now prepares a detached, credential-free Docker test
+of the same application. It uses one CPU, 1 GiB without swap, 128 PIDs, no network,
+and only a new synthetic output mount. It refuses an active PAPER/offline worker
+or a scheduler without an existing pause/review hold. It never changes that hold,
+the installed checkout, daily timer, account or reader. Detached completion and
+retained final receipts are required for a pass. Docker execution of this new
+runner is unverified here; see [runner proof](PAPER_SOAK_HOST_20261124_PROOF.json)
+and [current operator action](PAPER_NEXT_SESSION.md).
+
+Full-duration, month-growth and connected R4 gates remain open. The last confirmed
+host release is `2d538b7` with its review hold; collector CONNECT failures remain
+unresolved. Do not deploy or resume on the strength of an offline test alone.
 
 ### Previous November 23 varied-history checkpoint
 

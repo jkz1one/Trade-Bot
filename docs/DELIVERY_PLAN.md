@@ -64,9 +64,15 @@ the canonical v1 hash while reading every current cell. No original clock, limit
 or authority has changed. The final installed suite passed 925 tests with one
 unmapped-reader-UID skip. [Complete proof](PAPER_OWNER_LATENCY_20261123_PROOF.json).
 
-The full 21,480-second offline gate is running on one CPU with a fresh synthetic
-account; it is not passed yet. Its duration, memory, growth, decision coverage,
-publication and final accounting results are the next required evidence. Connected
+The workspace 21,480-second attempt stopped producing progress after 599.77 seconds;
+its process is absent and it has no final report. It is incomplete, despite stale
+RUNNING receipts. Use the detached credential-free host harness in
+`scripts/paper-soak-host.py` for the residual Docker and sustained-duration gate.
+The new test uses one CPU, kernel-enforced 1-GiB memory, no swap, 128 PIDs and no
+network; it mounts only a newly created synthetic evidence directory and preserves
+every attempt. Host execution is still unverified. Its duration, memory, growth,
+decision coverage, publication and final accounting results are the next required
+evidence. [Runner verification](PAPER_SOAK_HOST_20261124_PROOF.json). Connected
 R4 remains open. Do not resume or redeploy based on a short fixture or benchmark.
 Collector CONNECT samples still need the finer diagnostics to distinguish
 SDK/OAuth/MCP phases. Keep the installed host account, worker and review hold.

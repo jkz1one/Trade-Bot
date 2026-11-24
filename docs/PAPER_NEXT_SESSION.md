@@ -1,6 +1,6 @@
 # Daily PAPER operation
 
-## Current action: review the failed November 23 worker
+## Current action: isolated offline duration qualification
 
 The installed `2d538b7` worker launched, then exited at 12:59 p.m. New York time
 with zero decisions, 341 failed collections and a native snapshot timeout.
@@ -21,14 +21,46 @@ restore hash, independent authority, freshness limits and total cache budget rem
 unchanged. [Verification](PAPER_OWNER_LATENCY_20261123_PROOF.json). These results do
 not resolve the deployed collector's broad CONNECT failure.
 
-No additional host command is needed now. The stronger short fixture completed a
-simulated round trip on one CPU; both extended protection cases met five seconds.
-The final installed suite passed 925 tests with one reader-UID mapping skip. The
-full 21,480-second offline gate is running, with its result still pending. Review
-that run's duration, growth, memory, decisions, publication and final accounting
-before proposing another release. Keep the session-review hold; qualification is
-not permission to resume the failed owner. Earlier deployment and pre-session
-commands below are historical, not current instructions.
+The stronger short fixture completed a simulated round trip on one CPU; both
+extended protection cases met five seconds. The final installed suite passed 925
+tests with one reader-UID mapping skip. However, the workspace duration run lost
+its process after recording about ten minutes. It has no final result and cannot
+qualify the candidate.
+
+From a clean, detached checkout of the explicitly reviewed runner commit, run:
+
+```bash
+python3 "$candidate/scripts/paper-soak-host.py" start --checkout /opt/trade-bot-dashboard
+```
+
+The command builds a separate test image from committed source, then starts a
+detached 21,480-second test (5h 58m plus initialization/final checks). It refuses
+active PAPER/offline workers and requires an existing scheduler pause or session
+review hold. It never creates that pause/hold, switches the installed checkout,
+updates the reader, changes limits, clears a halt or alters the timer. Keep the
+existing review hold throughout the test.
+
+The test is synthetic: no connected account or credentials are mounted and its
+container has no network. CPU is limited to one, memory and memory-plus-swap to
+1 GiB, and PIDs to 128. Only a new private evidence directory is writable outside
+the container. No automatic restart or removal is enabled. A separate label keeps
+this test out of the daily controller's worker selection. The candidate worktree
+may be removed after startup; closing SSH does not stop Docker's detached worker.
+
+Paste the startup output. It prints an exact `check_command` using a retained
+`check.py`; that read-only command works after the candidate checkout is removed.
+Run it after initialization and after the expected completion. It reports actual
+container state, restarts/OOM, last progress age, elapsed time, native deadlines,
+decisions and final accounting. A running container with no or stale progress is
+explicitly labeled. Exit zero with missing/stale RUNNING receipts is INCOMPLETE,
+not PASSED. Build errors and interrupted attempts retain their evidence directories.
+
+Docker is not available in the development workspace, so the new host image and
+run are unverified until operator output is supplied. A passing synthetic test
+still does not resolve the provider CONNECT failures or authorize deployment or
+schedule resume. Review duration, memory, growth, coverage, publication and final
+accounting before proceeding to connected qualification. Earlier deployment and
+pre-session commands below are historical, not current instructions.
 
 ## Prior November 20 installation and schedule check
 

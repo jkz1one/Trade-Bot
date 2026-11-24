@@ -20,7 +20,8 @@ SUITES = ('connected_system', 'feed_timing', 'runtime_timing', 'timing_journal',
           'option_runtime', 'portfolio_models', 'session_host', 'dashboard_snapshot',
           'protection_contention', 'swing_feed', 'swing_binding', 'portfolio_feed',
           'combined_session_feed', 'restore_encoding', 'snapshot_copy_lock', 'read_schema_contract',
-          'paper_diagnose', 'paper_release', 'session_capture', 'contract_catalog', 'observed_simulation')
+          'paper_diagnose', 'paper_release', 'session_capture', 'contract_catalog', 'observed_simulation',
+          'paper_soak_host')
 
 
 def run(output):

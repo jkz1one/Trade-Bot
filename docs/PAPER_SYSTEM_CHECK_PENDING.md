@@ -10,8 +10,18 @@ The final matching installed package contains 336 application files and all 60
 runtime pins. Its suite passed 925 tests, with one reader-UID mapping skip. The
 80 restore/queue/harness checks, 94 admission/execution checks and nine extended
 protection cases also passed; these groups overlap and are not an additive total.
-The 21,480-second offline gate has started and remains pending. No host deployment
-or resume is proposed. [Exact proof and open gates](PAPER_OWNER_LATENCY_20261123_PROOF.json).
+The workspace 21,480-second attempt is incomplete: its last progress is 599.77
+seconds, its process is absent and there is no final report. Original raw RUNNING
+receipts are preserved, not promoted to completion. No host deployment or resume
+is proposed. [Exact proof and open gates](PAPER_OWNER_LATENCY_20261123_PROOF.json).
+
+November 24 adds a detached Docker harness for that residual gate, using the same
+application and a new synthetic account with no credentials/network. Tests cover
+guarded startup, retained failures, resource and identity checks, and refusal to
+report success from stale or incomplete evidence. Docker is unavailable in this
+workspace; the host image build and container run remain unverified. The existing
+925-test installed result belongs to the preceding application checkpoint, not a
+new Docker test. [Runner results and limitations](PAPER_SOAK_HOST_20261124_PROOF.json).
 
 ### Earlier November 23 cache-only checkpoint
 

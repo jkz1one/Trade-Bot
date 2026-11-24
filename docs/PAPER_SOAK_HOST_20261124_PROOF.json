@@ -1,0 +1,45 @@
+{
+  "version": "paper-soak-host-20261124-v1",
+  "base_commit": "028bdf317621f1499296ab0ebf46d3dd003846a5",
+  "status": "OFFLINE_RUNNER_CHECKS_PASSED_HOST_EXECUTION_UNVERIFIED",
+  "application_changed": false,
+  "application_manifest_sha256": "f9f8035603dcb429a9fa589a878653a33b579c7fbc2458e1712d7d0378f53138",
+  "regression": {
+    "tests": 71,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 5.297,
+    "junit_sha256": "3ba6a424f1b9915c779dd2e65339e8eceed97b8685bc61cb5995b9c951578d2a",
+    "environment": "Root-mapped, network-isolated namespace; matching pinned Python environment. Docker calls are mocked.",
+    "suites": [
+      "test_paper_soak_host.py",
+      "test_paper_soak.py"
+    ]
+  },
+  "checks": [
+    "Startup refuses a running connected/offline worker or scheduler without a pause/review hold. Rechecks after build.",
+    "Build uses only selected committed files from a clean candidate. No host credentials or account path enters the image or run mounts.",
+    "One immutable image ID, one synthetic data mount, no network, read-only root, no extra capabilities, no-new-privileges, one CPU, 1 GiB memory and memory-plus-swap, 128 PIDs, no restart or automatic removal.",
+    "Each attempt retains a new private directory and independent host receipt, including build/start failures. A copied read-only status helper survives candidate worktree removal.",
+    "Container identity, isolation, duration, final child/runner receipts, decision coverage, native-read headroom and verified flat lifecycle are required for PASSED. Missing, stale RUNNING and incomplete receipts cannot pass.",
+    "Status distinguishes no progress, stale progress, nonzero exit, OOM and restarts; it does not mutate evidence, account or schedule."
+  ],
+  "unverified": [
+    "No Docker executable, daemon, image build or Docker run is available in this development workspace.",
+    "Full 21,480-second duration remains incomplete; prior workspace attempt recorded 599.768780394 seconds before its process disappeared.",
+    "Projected month growth, real provider connection health and sustained connected R4 remain open.",
+    "Prior 925-pass installed application suite is unchanged historical evidence; this turn did not rerun it."
+  ],
+  "host_access": false,
+  "deployment_performed": false,
+  "protected": {
+    "installed_release": "2d538b7f32afa7b6df09e7af0d3534e9e27f71e5",
+    "review_hold": "SESSION_STOPPED_REVIEW_REQUIRED",
+    "account_state": true,
+    "risk_and_model_limits": true,
+    "main": true,
+    "draft_pr_1": true
+  },
+  "next_action": "Operator starts the detached credential-free host soak from a reviewed candidate checkout, then returns its startup and retained status results. Do not deploy or resume the connected owner."
+}
