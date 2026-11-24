@@ -36,6 +36,8 @@ def validate(output, seconds, seed_mib):
     ]
     if any(name != "lo" for name in interfaces):
         raise ValueError("NETWORK_NAMESPACE_WITH_LOOPBACK_ONLY_REQUIRED")
+    if int(Path('/proc/self/stat').read_text().split(' ', 1)[0]) != os.getpid():
+        raise ValueError("PID_NAMESPACE_REQUIRES_MATCHING_PROC_MOUNT")
     import app
 
     installed = Path(app.__file__).resolve().parent
@@ -156,6 +158,8 @@ def run(output, seconds, seed_mib, *, cpus=1, max_feed_recoveries=0, profile_ope
         result["wall_clock_soak"] = progress.get("wall_clock_full_duration", "NOT_COMPLETED")
     except (subprocess.TimeoutExpired, KeyboardInterrupt):
         result.update(status="FAILED", reason="SOAK_RUNNER_INTERRUPTED_OR_TIMED_OUT")
+    except (OSError, ValueError) as exc:
+        result.update(status="FAILED", reason="SOAK_RUNNER_FAILURE", error_class=type(exc).__name__)
     finally:
         if child is not None and child.poll() is None:
             os.killpg(child.pid, signal.SIGTERM)

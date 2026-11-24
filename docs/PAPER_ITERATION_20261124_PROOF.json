@@ -1,0 +1,848 @@
+{
+  "version": "paper-iteration-20261124-v1",
+  "base_commit": "a2105b1f791bd4333e2696a2bb316bbc37a5330f",
+  "status": "LOCAL_QUICK_REGRESSION_AND_LOADED_GATES_PASSED",
+  "application_manifest_sha256": "6f2b3d274a215f9f86a436f0f7f60d9806a0f3c8d458496cf45d266addbb034b",
+  "workflow": {
+    "order": [
+      "112-MiB one-CPU stock and option protection",
+      "90-second loaded lifecycle",
+      "installed regression suite, changed transaction boundaries first",
+      "335-second loaded lifecycle, two scheduled slots",
+      "separate Docker duration/memory gate",
+      "separate connected provider/day gate"
+    ],
+    "quick_elapsed_seconds": 157.609,
+    "fail_fast": "Both profiles stop pytest at the first failure; soak stops on recorded native acceptance, runtime or publication failure at the next report.",
+    "no_weakened_gates": "Five-second whole-case protection target, original quote/plan clocks, native deadlines and one-CPU workload remain unchanged."
+  },
+  "runtime_changes": [
+    "Reconciliation and mandatory position assessments share a fenced commit, before reservation or native handoff. Per-play savepoints isolate rejected assessments.",
+    "Ordinary protective reservations and fresh dispatch admission share a fenced commit. Superseded partial retirement retains its prior separate durability boundary.",
+    "Verified-flat supervision or held-position heartbeat shares its commit with runtime delivery. Scope action transitions retain their existing path.",
+    "Paid portfolio option review, reservation and fresh dispatch admission share a commit before native handoff; settled model cost remains separately durable."
+  ],
+  "safety_checks": [
+    "Native entry and protective exit handoffs observe a committed SUBMITTING attempt from an independent journal reader.",
+    "Failed attempt commit causes no native submission and preserves the previously durable protective latch or settled model charge.",
+    "Failed delivery rolls back its own supervision/delivery, preserving already acknowledged exits without resubmission.",
+    "An invalid position assessment rolls back only that play; protection of another position continues.",
+    "Original deadline expiry, uncertain submission, partial-close supersession, pending/superseded reconciliation and legacy entry paths are covered by the installed suite."
+  ],
+  "quick": {
+    "version": "paper-system-check-v1",
+    "status": "PASSED",
+    "check_profile": "QUICK",
+    "synthetic": true,
+    "provider_calls": false,
+    "model_service_calls": false,
+    "live_enabled": false,
+    "market_acceptance": "UNVERIFIED",
+    "wall_clock_soak": "NOT_RUN",
+    "host_acceptance": "UNVERIFIED",
+    "application_files": 336,
+    "runtime_pins": 60,
+    "application_manifest_sha256": "6f2b3d274a215f9f86a436f0f7f60d9806a0f3c8d458496cf45d266addbb034b",
+    "stage": "SHORT_LIFECYCLE",
+    "test_exit_code": 0,
+    "lifecycle_exit_code": 0,
+    "elapsed_seconds": 157.609
+  },
+  "protection": [
+    {
+      "asset": "STOCK",
+      "seed_mib": 112,
+      "journal_bytes_before_contention": 124764160,
+      "exit_seconds": 4.346507214999974,
+      "breach_to_native_ack_seconds": 2.593368226000166,
+      "native_ack_to_tick_completion_seconds": 1.3179684269998688,
+      "exit_submitted_while_all_waiting": true,
+      "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+      "report_snapshot_open_during_exit": true,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "receipt": {
+        "path": "/workspace/scratch/b29c7148e65c/quick-entry-1124/combined-contention-loaded.json",
+        "sha256": "b14c2d4c837aee95f961b9ca0f16b77edfeb9a3c88c7587b1f371ff7937dc6b5"
+      }
+    },
+    {
+      "asset": "OPTION",
+      "seed_mib": 112,
+      "journal_bytes_before_contention": 124817408,
+      "exit_seconds": 4.37651774699998,
+      "breach_to_native_ack_seconds": 2.651656127000024,
+      "native_ack_to_tick_completion_seconds": 1.258342386999857,
+      "exit_submitted_while_all_waiting": true,
+      "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+      "report_snapshot_open_during_exit": true,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "receipt": {
+        "path": "/workspace/scratch/b29c7148e65c/quick-entry-1124/combined-option-contention-loaded.json",
+        "sha256": "44ff1cdb0ea3269f28c0358f0d67d60bccbc46661e3587f61f2849fdbd50b7b1"
+      }
+    }
+  ],
+  "short_lifecycle": {
+    "status": "PASSED",
+    "planned_seconds": 90,
+    "elapsed_seconds": 92.55183469500003,
+    "seed_mib": null,
+    "logical_cpus": 1,
+    "native_snapshot_calls": 37,
+    "native_snapshot_failures": 0,
+    "native_snapshot_max_seconds": 0.19841141000006246,
+    "native_snapshot_p99_seconds": 0.19841141000006246,
+    "native_headroom_target_met": true,
+    "capture_attempts": 9,
+    "peak_tree_rss_bytes": 434348032,
+    "source_database_bytes": 125784064,
+    "source_growth_bytes": 1105920,
+    "decision_coverage": {
+      "expected": 1,
+      "evaluated": 1,
+      "coverage_percent": 100.0,
+      "unmeasured_slots": [],
+      "target_met": true
+    },
+    "execution": {
+      "status": "RECORDED",
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "carry_in_exits": 0
+    },
+    "final_accounting": "VERIFIED_FLAT",
+    "failure_class": null,
+    "failure": null,
+    "children_reaped": true,
+    "cgroup_memory": {
+      "status": "UNAVAILABLE"
+    },
+    "opening_restore_profile": {
+      "status": "OBSERVED",
+      "reservation_at": "2026-10-28T14:00:23.768257+00:00",
+      "source_at": "2026-10-28T14:00:17.227293Z",
+      "received_at": "2026-10-28T14:00:18.227293Z",
+      "source_to_reservation": {
+        "window_seconds": 6.540964,
+        "wall_seconds_with_digest_running": 4.836048,
+        "wholly_contained_calls": 16,
+        "owner_thread_cpu_seconds": 4.298108,
+        "background_cpu_seconds": 0.230884,
+        "owner_thread_calls": {
+          "app.mixed.portfolio_execution.reconcile": 4,
+          "app.options.runtime._tick": 2,
+          "app.options.coordinator._cycle_once": 2,
+          "app.mixed.selection.collect": 2,
+          "app.options.entry_coordination._admit_request": 2,
+          "app.options.entry_coordination._settle_reply": 2,
+          "app.options.entry_coordination.run_entry_cycle": 1
+        }
+      },
+      "receipt_to_reservation": {
+        "window_seconds": 5.540964,
+        "wall_seconds_with_digest_running": 4.807805,
+        "wholly_contained_calls": 15,
+        "owner_thread_cpu_seconds": 4.298108,
+        "background_cpu_seconds": 0.0,
+        "owner_thread_calls": {
+          "app.mixed.portfolio_execution.reconcile": 4,
+          "app.options.runtime._tick": 2,
+          "app.options.coordinator._cycle_once": 2,
+          "app.mixed.selection.collect": 2,
+          "app.options.entry_coordination._admit_request": 2,
+          "app.options.entry_coordination._settle_reply": 2,
+          "app.options.entry_coordination.run_entry_cycle": 1
+        }
+      }
+    },
+    "progress_receipt": {
+      "path": "/workspace/scratch/b29c7148e65c/quick-entry-1124/lifecycle/progress.json",
+      "sha256": "49f32a82e84283456cd6acda93848261f076509e64722bf9775be4522ec36d63"
+    },
+    "launcher": {
+      "version": "paper-soak-launch-v1",
+      "status": "PASSED",
+      "application_files": 336,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "6f2b3d274a215f9f86a436f0f7f60d9806a0f3c8d458496cf45d266addbb034b",
+      "seconds": 90,
+      "seed_mib": 112,
+      "max_feed_recoveries": 0,
+      "worker_cpu_affinity": [
+        0
+      ],
+      "network": "ISOLATED",
+      "host_acceptance": "UNVERIFIED",
+      "wall_clock_soak": "NOT_RUN",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "worker_pid": 39,
+      "worker_start_ticks": "134169",
+      "child_exit_code": 0,
+      "cgroup_memory": {
+        "status": "UNAVAILABLE"
+      }
+    },
+    "report_receipt": {
+      "path": "/workspace/scratch/b29c7148e65c/quick-entry-1124/lifecycle/report.json",
+      "sha256": "83139f2af01f3b1b4097fc69bbfd761b10373e6cd3b2411d28d383903bec381d"
+    },
+    "entry_freshness": {
+      "status": "OBSERVED",
+      "reservations": 1,
+      "measured": 1,
+      "missing_or_invalid": 0,
+      "omitted": 0,
+      "clocks": {
+        "quote_age": {
+          "samples": 1,
+          "p50_seconds": 6.540964,
+          "p95_seconds": 6.540964,
+          "p99_seconds": 6.540964,
+          "max_seconds": 6.540964
+        },
+        "receive_lag": {
+          "samples": 1,
+          "p50_seconds": 1.0,
+          "p95_seconds": 1.0,
+          "p99_seconds": 1.0,
+          "max_seconds": 1.0
+        },
+        "local_age": {
+          "samples": 1,
+          "p50_seconds": 5.540964,
+          "p95_seconds": 5.540964,
+          "p99_seconds": 5.540964,
+          "max_seconds": 5.540964
+        }
+      }
+    },
+    "runtime_failures": [],
+    "publication_failures": [],
+    "native_spawn_budget": {
+      "NATIVE_SNAPSHOT_SPAWN": {
+        "samples": 37,
+        "p50_seconds": 4.99987,
+        "p95_seconds": 4.999889,
+        "p99_seconds": 4.999895,
+        "max_seconds": 4.999895,
+        "min_seconds": 4.999584
+      },
+      "NATIVE_ACCEPT_SPAWN": {
+        "samples": 2,
+        "p50_seconds": 2.050083,
+        "p95_seconds": 4.583125,
+        "p99_seconds": 4.583125,
+        "max_seconds": 4.583125,
+        "min_seconds": 2.050083
+      }
+    }
+  },
+  "installed_suite": {
+    "version": "paper-system-check-v1",
+    "status": "PASSED",
+    "check_profile": "FULL",
+    "synthetic": true,
+    "provider_calls": false,
+    "model_service_calls": false,
+    "live_enabled": false,
+    "market_acceptance": "UNVERIFIED",
+    "wall_clock_soak": "NOT_RUN",
+    "host_acceptance": "UNVERIFIED",
+    "application_files": 336,
+    "runtime_pins": 60,
+    "application_manifest_sha256": "6f2b3d274a215f9f86a436f0f7f60d9806a0f3c8d458496cf45d266addbb034b",
+    "stage": "INSTALLED_SYSTEM",
+    "test_exit_code": 0,
+    "elapsed_seconds": 549.88,
+    "junit": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "1",
+      "tests": "1066",
+      "time": "547.154",
+      "timestamp": "2026-11-24T16:12:21.940616-05:00",
+      "hostname": "ca5a6977b106"
+    },
+    "receipts": [
+      {
+        "path": "/workspace/scratch/b29c7148e65c/full-iteration-1124/summary.json",
+        "sha256": "57817f9b666ef6e705c6b18dc496f95df68dbe7dc8f58e294225e20781be51b7"
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/full-iteration-1124/tests.xml",
+        "sha256": "2de00ea114e852a8accfcc422dd37fa8b756ad11fec4eefe302c26b88ef49e48"
+      }
+    ]
+  },
+  "loaded_lifecycle": {
+    "status": "PASSED",
+    "planned_seconds": 335,
+    "elapsed_seconds": 336.4374764019999,
+    "seed_mib": null,
+    "logical_cpus": 1,
+    "native_snapshot_calls": 153,
+    "native_snapshot_failures": 0,
+    "native_snapshot_max_seconds": 0.2725571480000326,
+    "native_snapshot_p99_seconds": 0.2596124050000981,
+    "native_headroom_target_met": true,
+    "capture_attempts": 33,
+    "peak_tree_rss_bytes": 461508608,
+    "source_database_bytes": 128323584,
+    "source_growth_bytes": 3596288,
+    "decision_coverage": {
+      "expected": 2,
+      "evaluated": 2,
+      "coverage_percent": 100.0,
+      "unmeasured_slots": [],
+      "target_met": true
+    },
+    "execution": {
+      "status": "RECORDED",
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "carry_in_exits": 0
+    },
+    "final_accounting": "VERIFIED_FLAT",
+    "failure_class": null,
+    "failure": null,
+    "children_reaped": true,
+    "cgroup_memory": {
+      "status": "UNAVAILABLE"
+    },
+    "opening_restore_profile": {
+      "status": "OBSERVED",
+      "reservation_at": "2026-10-28T14:00:21.868234+00:00",
+      "source_at": "2026-10-28T14:00:16.131796Z",
+      "received_at": "2026-10-28T14:00:17.131796Z",
+      "source_to_reservation": {
+        "window_seconds": 5.736438,
+        "wall_seconds_with_digest_running": 4.55269,
+        "wholly_contained_calls": 16,
+        "owner_thread_cpu_seconds": 4.081068,
+        "background_cpu_seconds": 0.234518,
+        "owner_thread_calls": {
+          "app.mixed.portfolio_execution.reconcile": 4,
+          "app.options.runtime._tick": 2,
+          "app.options.coordinator._cycle_once": 2,
+          "app.mixed.selection.collect": 2,
+          "app.options.entry_coordination._admit_request": 2,
+          "app.options.entry_coordination._settle_reply": 2,
+          "app.options.entry_coordination.run_entry_cycle": 1
+        }
+      },
+      "receipt_to_reservation": {
+        "window_seconds": 4.736438,
+        "wall_seconds_with_digest_running": 4.069552,
+        "wholly_contained_calls": 13,
+        "owner_thread_cpu_seconds": 3.527754,
+        "background_cpu_seconds": 0.0,
+        "owner_thread_calls": {
+          "app.options.runtime._tick": 2,
+          "app.mixed.portfolio_execution.reconcile": 2,
+          "app.options.coordinator._cycle_once": 2,
+          "app.mixed.selection.collect": 2,
+          "app.options.entry_coordination._admit_request": 2,
+          "app.options.entry_coordination._settle_reply": 2,
+          "app.options.entry_coordination.run_entry_cycle": 1
+        }
+      }
+    },
+    "progress_receipt": {
+      "path": "/workspace/scratch/b29c7148e65c/loaded-iteration-335-1124/progress.json",
+      "sha256": "8dadd8da04d485ebd30a7245462998adb5ed1ac4992e723c6fb12691dfb9ed0b"
+    },
+    "launcher": {
+      "version": "paper-soak-launch-v1",
+      "status": "PASSED",
+      "application_files": 336,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "6f2b3d274a215f9f86a436f0f7f60d9806a0f3c8d458496cf45d266addbb034b",
+      "seconds": 335,
+      "seed_mib": 112,
+      "max_feed_recoveries": 0,
+      "worker_cpu_affinity": [
+        0
+      ],
+      "network": "ISOLATED",
+      "host_acceptance": "UNVERIFIED",
+      "wall_clock_soak": "NOT_RUN",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "worker_pid": 2,
+      "worker_start_ticks": "209773",
+      "child_exit_code": 0,
+      "cgroup_memory": {
+        "status": "UNAVAILABLE"
+      }
+    },
+    "report_receipt": {
+      "path": "/workspace/scratch/b29c7148e65c/loaded-iteration-335-1124/report.json",
+      "sha256": "44f37095e11e4711d76ae22beb86738dd8c2d991ea53bd61a2df76be6aa264c5"
+    },
+    "entry_freshness": {
+      "status": "OBSERVED",
+      "reservations": 1,
+      "measured": 1,
+      "missing_or_invalid": 0,
+      "omitted": 0,
+      "clocks": {
+        "quote_age": {
+          "samples": 1,
+          "p50_seconds": 5.736438,
+          "p95_seconds": 5.736438,
+          "p99_seconds": 5.736438,
+          "max_seconds": 5.736438
+        },
+        "receive_lag": {
+          "samples": 1,
+          "p50_seconds": 1.0,
+          "p95_seconds": 1.0,
+          "p99_seconds": 1.0,
+          "max_seconds": 1.0
+        },
+        "local_age": {
+          "samples": 1,
+          "p50_seconds": 4.736438,
+          "p95_seconds": 4.736438,
+          "p99_seconds": 4.736438,
+          "max_seconds": 4.736438
+        }
+      }
+    },
+    "runtime_failures": [],
+    "publication_failures": [],
+    "native_spawn_budget": {
+      "NATIVE_SNAPSHOT_SPAWN": {
+        "samples": 153,
+        "p50_seconds": 4.999864,
+        "p95_seconds": 4.99988,
+        "p99_seconds": 4.999884,
+        "max_seconds": 4.999884,
+        "min_seconds": 4.998176
+      },
+      "NATIVE_ACCEPT_SPAWN": {
+        "samples": 2,
+        "p50_seconds": 2.40909,
+        "p95_seconds": 4.565833,
+        "p99_seconds": 4.565833,
+        "max_seconds": 4.565833,
+        "min_seconds": 2.40909
+      }
+    }
+  },
+  "failed_intermediate_checks_retained": [
+    {
+      "experiment": "quick-baseline-1124",
+      "summary": {
+        "version": "paper-system-check-v1",
+        "status": "FAILED",
+        "check_profile": "QUICK",
+        "synthetic": true,
+        "provider_calls": false,
+        "model_service_calls": false,
+        "live_enabled": false,
+        "market_acceptance": "UNVERIFIED",
+        "wall_clock_soak": "NOT_RUN",
+        "host_acceptance": "UNVERIFIED",
+        "application_files": 336,
+        "runtime_pins": 60,
+        "application_manifest_sha256": "ef60bd93dce10b592ef4ea3a4754d5913c4b45b7e660daad772f0cb4d8bd5684",
+        "stage": "PROTECTION",
+        "test_exit_code": 1
+      },
+      "note": "Pre-change application: stock exceeded five seconds; stopped before the option case or lifecycle.",
+      "protection": [
+        {
+          "asset": "STOCK",
+          "exit_seconds": 6.9928411109999615,
+          "accounting": "VERIFIED",
+          "held_positions": 0
+        }
+      ],
+      "receipts": [
+        {
+          "path": "/workspace/scratch/b29c7148e65c/quick-baseline-1124/summary.json",
+          "sha256": "4f91fe590107b4446ff383dca582abf1af1e03c3daaaf95cb8aee86fb4b26303"
+        },
+        {
+          "path": "/workspace/scratch/b29c7148e65c/quick-baseline-1124/tests.log",
+          "sha256": "cdb6b31fce7cfc018d424fe6afcd94bc30d523b91c7fe0f99fc8b360ff41bcaa"
+        }
+      ]
+    },
+    {
+      "experiment": "quick-reservation-1124",
+      "summary": {
+        "version": "paper-system-check-v1",
+        "status": "FAILED",
+        "check_profile": "QUICK",
+        "synthetic": true,
+        "provider_calls": false,
+        "model_service_calls": false,
+        "live_enabled": false,
+        "market_acceptance": "UNVERIFIED",
+        "wall_clock_soak": "NOT_RUN",
+        "host_acceptance": "UNVERIFIED",
+        "application_files": 336,
+        "runtime_pins": 60,
+        "application_manifest_sha256": "6f29cb894e9d8ef6f39dfc92e80060ef00c0c02a682815ae8262ea29fe952be4",
+        "stage": "PROTECTION",
+        "test_exit_code": 1
+      },
+      "note": "Combined reservation/admission alone still exceeded five seconds.",
+      "protection": [
+        {
+          "asset": "STOCK",
+          "exit_seconds": 5.187941723999984,
+          "accounting": "VERIFIED",
+          "held_positions": 0
+        }
+      ],
+      "receipts": [
+        {
+          "path": "/workspace/scratch/b29c7148e65c/quick-reservation-1124/summary.json",
+          "sha256": "31df7a65929614a6d5d94a2c099a3a017f06ea854fc87cbb07b9186899e5155e"
+        },
+        {
+          "path": "/workspace/scratch/b29c7148e65c/quick-reservation-1124/tests.log",
+          "sha256": "5133d561c2ac6f92009cf274bff9c8564c2646040057659d2c2dfeb7c3a98aa7"
+        }
+      ]
+    },
+    {
+      "experiment": "quick-heartbeat-1124",
+      "summary": {
+        "version": "paper-system-check-v1",
+        "status": "FAILED",
+        "check_profile": "QUICK",
+        "synthetic": true,
+        "provider_calls": false,
+        "model_service_calls": false,
+        "live_enabled": false,
+        "market_acceptance": "UNVERIFIED",
+        "wall_clock_soak": "NOT_RUN",
+        "host_acceptance": "UNVERIFIED",
+        "application_files": 336,
+        "runtime_pins": 60,
+        "application_manifest_sha256": "48207c3b6fc33ed519d4c88ae8da4d44d6e32ceaae28abeb24d5d4e0156d177f",
+        "stage": "SHORT_LIFECYCLE",
+        "test_exit_code": 0,
+        "lifecycle_exit_code": 1,
+        "elapsed_seconds": 50.661
+      },
+      "note": "Protection passed, but the nested lifecycle launcher failed numeric PID lookup because /proc belonged to a different namespace; not a lifecycle pass.",
+      "protection": [
+        {
+          "asset": "STOCK",
+          "exit_seconds": 4.598571299000014,
+          "accounting": "VERIFIED",
+          "held_positions": 0
+        },
+        {
+          "asset": "OPTION",
+          "exit_seconds": 4.781065865000073,
+          "accounting": "VERIFIED",
+          "held_positions": 0
+        }
+      ],
+      "receipts": [
+        {
+          "path": "/workspace/scratch/b29c7148e65c/quick-heartbeat-1124/summary.json",
+          "sha256": "465a1f8efcd90cc70f31472c41c78379da8b9d169320f4392cebf447893dbe00"
+        },
+        {
+          "path": "/workspace/scratch/b29c7148e65c/quick-heartbeat-1124/tests.log",
+          "sha256": "b1325dc54bbf844657e425692240d9e6ce21f55942c5e0eb7e35e94540db4bd1"
+        }
+      ]
+    },
+    {
+      "experiment": "quick-proc-1124",
+      "summary": {
+        "version": "paper-system-check-v1",
+        "status": "FAILED",
+        "check_profile": "QUICK",
+        "synthetic": true,
+        "provider_calls": false,
+        "model_service_calls": false,
+        "live_enabled": false,
+        "market_acceptance": "UNVERIFIED",
+        "wall_clock_soak": "NOT_RUN",
+        "host_acceptance": "UNVERIFIED",
+        "application_files": 336,
+        "runtime_pins": 60,
+        "application_manifest_sha256": "48207c3b6fc33ed519d4c88ae8da4d44d6e32ceaae28abeb24d5d4e0156d177f",
+        "stage": "PROTECTION",
+        "test_exit_code": 1,
+        "elapsed_seconds": 53.736
+      },
+      "note": "Correct process namespace exposed another over-five-second option protection sample. The preceding one-off protection pass did not override this failure.",
+      "protection": [
+        {
+          "asset": "STOCK",
+          "exit_seconds": 4.762167563000048,
+          "accounting": "VERIFIED",
+          "held_positions": 0
+        },
+        {
+          "asset": "OPTION",
+          "exit_seconds": 5.533757137999942,
+          "accounting": "VERIFIED",
+          "held_positions": 0
+        }
+      ],
+      "receipts": [
+        {
+          "path": "/workspace/scratch/b29c7148e65c/quick-proc-1124/summary.json",
+          "sha256": "9d91aef0c965c22ffa948401a62a478d508f41053ff1b1f2680b8a7a62e2d62f"
+        },
+        {
+          "path": "/workspace/scratch/b29c7148e65c/quick-proc-1124/tests.log",
+          "sha256": "f3774706e8e454fe78dd74ab7aff320589feb4bfd7ae539461b8785d4b0144ff"
+        }
+      ]
+    },
+    {
+      "experiment": "quick-assess-1124",
+      "summary": {
+        "version": "paper-system-check-v1",
+        "status": "FAILED",
+        "check_profile": "QUICK",
+        "synthetic": true,
+        "provider_calls": false,
+        "model_service_calls": false,
+        "live_enabled": false,
+        "market_acceptance": "UNVERIFIED",
+        "wall_clock_soak": "NOT_RUN",
+        "host_acceptance": "UNVERIFIED",
+        "application_files": 336,
+        "runtime_pins": 60,
+        "application_manifest_sha256": "dfc41b19b492c7aec0bd12a54fbf85efd88798e481ccca1c201b495dc8a23a49",
+        "stage": "PROTECTION",
+        "test_exit_code": 1,
+        "elapsed_seconds": 30.836
+      },
+      "note": "The assessment optimization omitted an existing timing phase; the diagnostic contract test rejected it. Phase restored before further qualification.",
+      "protection": [],
+      "receipts": [
+        {
+          "path": "/workspace/scratch/b29c7148e65c/quick-assess-1124/summary.json",
+          "sha256": "8e5f0a6b3c125fef8a1820f69cea1a87617ff055000384ac9de6c16804ba4bdd"
+        },
+        {
+          "path": "/workspace/scratch/b29c7148e65c/quick-assess-1124/tests.log",
+          "sha256": "af72541a957bfd39da29aa9e3d73e52f0e8c857678bd0b01f7f9d1175c161e8c"
+        }
+      ]
+    },
+    {
+      "experiment": "quick-assess-trace-1124",
+      "summary": {
+        "version": "paper-system-check-v1",
+        "status": "FAILED",
+        "check_profile": "QUICK",
+        "synthetic": true,
+        "provider_calls": false,
+        "model_service_calls": false,
+        "live_enabled": false,
+        "market_acceptance": "UNVERIFIED",
+        "wall_clock_soak": "NOT_RUN",
+        "host_acceptance": "UNVERIFIED",
+        "application_files": 336,
+        "runtime_pins": 60,
+        "application_manifest_sha256": "e399c1633512bac7dc6ea37fb42603bd4a1be945151618c2c7223c21a4e472eb",
+        "stage": "SHORT_LIFECYCLE",
+        "test_exit_code": 0,
+        "lifecycle_exit_code": 1,
+        "elapsed_seconds": 105.349
+      },
+      "note": "Both protection cases passed; native entry acceptance timed out. The new early stop reported failure after 105.349 seconds for the entire quick gate.",
+      "protection": [
+        {
+          "asset": "STOCK",
+          "exit_seconds": 4.178631078999842,
+          "accounting": "VERIFIED",
+          "held_positions": 0
+        },
+        {
+          "asset": "OPTION",
+          "exit_seconds": 4.324925522000058,
+          "accounting": "VERIFIED",
+          "held_positions": 0
+        }
+      ],
+      "lifecycle": {
+        "status": "FAILED",
+        "planned_seconds": 90,
+        "elapsed_seconds": 35.14099773299995,
+        "seed_mib": null,
+        "logical_cpus": 1,
+        "native_snapshot_calls": 10,
+        "native_snapshot_failures": 0,
+        "native_snapshot_max_seconds": 0.3104992260000472,
+        "native_snapshot_p99_seconds": null,
+        "native_headroom_target_met": null,
+        "capture_attempts": 3,
+        "peak_tree_rss_bytes": 429088768,
+        "source_database_bytes": 125169664,
+        "source_growth_bytes": null,
+        "decision_coverage": null,
+        "execution": null,
+        "final_accounting": null,
+        "failure_class": "AssertionError",
+        "failure": "Native acceptance failure",
+        "children_reaped": true,
+        "cgroup_memory": {
+          "status": "UNAVAILABLE"
+        },
+        "opening_restore_profile": null,
+        "progress_receipt": {
+          "path": "/workspace/scratch/b29c7148e65c/quick-assess-trace-1124/lifecycle/progress.json",
+          "sha256": "de3690525dc9e126782f776819ea6dd16025d560fa0ce5d9daefb5a8d09d4638"
+        },
+        "launcher": {
+          "version": "paper-soak-launch-v1",
+          "status": "FAILED",
+          "application_files": 336,
+          "runtime_pins": 60,
+          "application_manifest_sha256": "e399c1633512bac7dc6ea37fb42603bd4a1be945151618c2c7223c21a4e472eb",
+          "seconds": 90,
+          "seed_mib": 112,
+          "max_feed_recoveries": 0,
+          "worker_cpu_affinity": [
+            0
+          ],
+          "network": "ISOLATED",
+          "host_acceptance": "UNVERIFIED",
+          "wall_clock_soak": "NOT_REQUESTED",
+          "synthetic": true,
+          "provider_calls": false,
+          "model_service_calls": false,
+          "live_enabled": false,
+          "worker_pid": 38,
+          "worker_start_ticks": "114198",
+          "child_exit_code": 1,
+          "cgroup_memory": {
+            "status": "UNAVAILABLE"
+          }
+        },
+        "report_receipt": {
+          "path": "/workspace/scratch/b29c7148e65c/quick-assess-trace-1124/lifecycle/latest-report.json",
+          "sha256": "2e84e012daf430aec803b7d968ce123ea7f645fb5e3dd3d8954752ef6c493b89"
+        },
+        "entry_freshness": {
+          "status": "OBSERVED",
+          "reservations": 1,
+          "measured": 1,
+          "missing_or_invalid": 0,
+          "omitted": 0,
+          "clocks": {
+            "quote_age": {
+              "samples": 1,
+              "p50_seconds": 8.27491,
+              "p95_seconds": 8.27491,
+              "p99_seconds": 8.27491,
+              "max_seconds": 8.27491
+            },
+            "receive_lag": {
+              "samples": 1,
+              "p50_seconds": 1.0,
+              "p95_seconds": 1.0,
+              "p99_seconds": 1.0,
+              "max_seconds": 1.0
+            },
+            "local_age": {
+              "samples": 1,
+              "p50_seconds": 7.27491,
+              "p95_seconds": 7.27491,
+              "p99_seconds": 7.27491,
+              "max_seconds": 7.27491
+            }
+          }
+        },
+        "runtime_failures": [],
+        "publication_failures": [],
+        "native_spawn_budget": {
+          "NATIVE_SNAPSHOT_SPAWN": {
+            "samples": 9,
+            "p50_seconds": 4.999857,
+            "p95_seconds": 4.99987,
+            "p99_seconds": 4.99987,
+            "max_seconds": 4.99987,
+            "min_seconds": 4.999699
+          },
+          "NATIVE_ACCEPT_SPAWN": {
+            "samples": 1,
+            "p50_seconds": 0.57679,
+            "p95_seconds": 0.57679,
+            "p99_seconds": 0.57679,
+            "max_seconds": 0.57679,
+            "min_seconds": 0.57679
+          }
+        }
+      },
+      "receipts": [
+        {
+          "path": "/workspace/scratch/b29c7148e65c/quick-assess-trace-1124/summary.json",
+          "sha256": "49530401d009a67b2d14b37a77be2df3f843ef04f256a5f13815a009e5437091"
+        },
+        {
+          "path": "/workspace/scratch/b29c7148e65c/quick-assess-trace-1124/tests.log",
+          "sha256": "4750fe45aadea42a8e0b3d63a92ba27c250989e887dbf852e8db36ea4046bc13"
+        }
+      ]
+    }
+  ],
+  "namespace_correction": {
+    "issue": "A new PID namespace without a matching proc mount can address the wrong numeric child PID. The first nested quick runner failed reading /proc/38/stat.",
+    "repair": "Both launchers reject PID/proc disagreement before creating state. Qualified local runs use unshare --mount-proc; runner I/O failures retain FAILED rather than RUNNING summaries.",
+    "prior_evidence_limit": "Earlier local aggregate process-tree RSS did not record PID/proc coherence and is not accepted as a resource qualification. Direct self-RSS cache benchmarks and operator-reported Docker OOM are not invalidated."
+  },
+  "limits": [
+    "Local aggregate RSS is sampled process memory, not a cgroup memory limit or measurement of all file/tmpfs charges.",
+    "Docker and cgroup counters are unavailable locally. The 20923e2 host OOM remains a failed duration result; these short runs do not replace it.",
+    "Full duration, sustained month growth, real provider CONNECT health and connected R4 remain unverified.",
+    "Zero fills alone do not establish a connected failure; a running container alone does not establish a healthy feed."
+  ],
+  "protected": {
+    "last_operator_confirmed_installed_release": "2d538b7f32afa7b6df09e7af0d3534e9e27f71e5",
+    "review_hold": "SESSION_STOPPED_REVIEW_REQUIRED",
+    "host_access": false,
+    "host_changes": false,
+    "account_state_changed": false,
+    "risk_or_model_limits_changed": false,
+    "main_changed": false,
+    "draft_pr_1_metadata_changed": false,
+    "provider_calls": false,
+    "model_service_calls": false,
+    "live_enabled": false
+  },
+  "source_sha256": {
+    "app/mixed/portfolio_execution.py": "3982311e2daebe7c8c32b7a1264d695f964815948572686dc12fb67bde4d465e",
+    "app/mixed/portfolio_options.py": "8c13b146ba70fd4f83cf60d5983d26caefe55a2944eddc0df3608e4c0a00e42c",
+    "app/mixed/portfolio_protection.py": "495cff1ab25368612e130bdd7a4c76bca18fdc6525d1d26995eafe6511cf93d2",
+    "app/options/coordinator.py": "c3c2851c2e7371c66809bb3aea43bb810bae52794f4f45aad948edfec1f13d50",
+    "app/options/engine.py": "c430def1b40708444a8273ead609b10fc25e4723c3e0877776ea339ce3eee787",
+    "app/options/entry_coordination.py": "0f9b0ff9e6757e15cf8c35bd07fb63d8327fed2bba3466343eada7daeb59dfc4",
+    "app/options/runtime.py": "35f282fc07fbd26ee92839c631b9e4b9c440091e0dcbda868a09304f55f8ab85",
+    "scripts/paper-soak.py": "bf0c0a174e6660ade1ecbf75a3239639e05921bbcdcbb6780aeb981837e223d0",
+    "scripts/paper-system-check.py": "83bfb48a6d6cde1e72fd33b3e4dc858b86237c54b0b128106850759420ac32c0",
+    "tests/soak_worker.py": "07244e7641e98bc6fa8125833ad3c2a6fce52e92853af144be1274a6010caf22",
+    "tests/test_paper_soak.py": "eb60d041fb9be155b9242334bf09e1dcad72137e33e299a9ca0e1f41ab8a43ac",
+    "tests/test_portfolio_controls.py": "182d2a8bd083ef92a30e4bd745b45be59671ac38e32aee0e9614601568ca0042",
+    "tests/test_portfolio_models.py": "4456a1b48c01e51e2ee217651119701abfdf08e365d6733f80200b7ea85f77ca",
+    "tests/test_protection_contention.py": "c97bd43fafb54a5162623ba374f48de62ad4d090e92d70fb7a684fe501f1cf91"
+  }
+}

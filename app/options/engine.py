@@ -42,7 +42,6 @@ from app.options.models import (
     OptionProposal,
     OptionQuote,
     SessionWindow,
-    UnderlyingObservation,
 )
 from app.options.process import run_option_process
 from app.options.protection import (
@@ -1282,7 +1281,8 @@ class OptionExecution:
             + [dict(self._control(db))]
         )
 
-    async def reconcile_fixture(self, *, now, supervise_flat=False):
+    async def reconcile_fixture(self, *, now, supervise_flat=False, _on_supervision=None,
+                                _on_positions=None):
         now = clock(now)
         with self.journal.read() as db:
             self._control(db)
@@ -1312,14 +1312,17 @@ class OptionExecution:
                 )
             raise
         with phase("RECONCILE_COMMIT"):
-            return self.reconcile(result.snapshot, now=now, _epoch=epoch, _supervise_flat=supervise_flat)
+            return self.reconcile(result.snapshot, now=now, _epoch=epoch, _supervise_flat=supervise_flat,
+                                  _on_supervision=_on_supervision, _on_positions=_on_positions)
 
     @exact
-    def reconcile(self, snapshot, *, now, _epoch=None, _supervise_flat=False):
+    def reconcile(self, snapshot, *, now, _epoch=None, _supervise_flat=False, _on_supervision=None,
+                  _on_positions=None):
         if self.portfolio_policy is not None:
             from app.mixed.portfolio_execution import reconcile
 
-            return reconcile(self, snapshot, now=now, epoch=_epoch, supervise_flat=_supervise_flat)
+            return reconcile(self, snapshot, now=now, epoch=_epoch, supervise_flat=_supervise_flat,
+                             on_supervision=_on_supervision, on_positions=_on_positions)
         now = clock(now)
         with self.journal.write() as db:
             c = self._control(db)
@@ -1823,7 +1826,7 @@ class OptionExecution:
 
     async def protective_tick(
         self, quote=None, underlying=None, *, now, stock_quotes=(), option_quotes=(),
-        underlyings=(), clock_source=None,
+        underlyings=(), clock_source=None, _on_supervision=None,
     ):
         if self.portfolio_policy is not None:
             from app.mixed.portfolio_protection import tick
@@ -1835,6 +1838,7 @@ class OptionExecution:
                 option_quotes=(*option_quotes, *((quote,) if quote else ())),
                 underlyings=(*underlyings, *((underlying,) if underlying else ())),
                 clock_source=clock_source,
+                on_supervision=_on_supervision,
             )
         if option_quotes or underlyings:
             raise ValueError("Portfolio quote collections require explicit enrollment")

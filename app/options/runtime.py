@@ -342,9 +342,26 @@ class OptionRuntime:
         # Feed failure never skips reconciliation/protection or invents market quotes.
         from app.mixed.portfolio_selection import stock_inputs
 
+        window = self.c.engine.calendar.current_window(at)
+        scope_action = self.scope is not None and packet is not None and packet.action is not None
+        delivered = []
+
+        def complete_protection(db, result):
+            # The held-position heartbeat (or verified-flat reconciliation) and
+            # delivery share a commit. The callback never crosses an await, and
+            # no cycle starts until the surrounding owner transaction commits.
+            with timing.phase("DELIVERY_COMMIT"):
+                current = self.c.engine.calendar.current_window(self.c.now())
+                self._record_heartbeat(db, packet, issue, at, current)
+                if self.mixed is not None and packet is not None:
+                    self.mixed.complete(packet, issue, _db=db)
+                delivered.append(self._claim_slot(db, packet, issue, at, window, current))
+
         result = await self.c.supervise(
             *protection(frame),
             **({"stocks": stock_inputs(frame)} if self.mixed is not None else {}),
+            **({"_on_supervision": complete_protection}
+               if self.c.engine.portfolio_policy is not None and not scope_action else {}),
         )
         if result.get("reconciled") is False and result.get("issues") not in (
             ["OPTION_READ_SUPERSEDED"],
@@ -353,24 +370,27 @@ class OptionRuntime:
             ["PORTFOLIO_SUBMISSION_IN_PROGRESS"],
         ):
             issue = issue or "OPTION_RUNTIME_RECONCILIATION_BLOCKED"
-        window = self.c.engine.calendar.current_window(at)
-        current = self.c.engine.calendar.current_window(self.c.now())
-        # Scope actions perform their own durable transition after the heartbeat.
-        # Other packets can finish delivery and decide the slot in the same commit.
-        scope_action = self.scope is not None and packet is not None and packet.action is not None
-        with timing.phase("DELIVERY_COMMIT"):
-            if scope_action:
+        if delivered:
+            slot, = delivered
+        else:
+            window = self.c.engine.calendar.current_window(at)
+            current = self.c.engine.calendar.current_window(self.c.now())
+            # Scope actions perform their own durable transition after the heartbeat.
+            # Other packets can finish delivery and decide the slot in the same commit.
+            scope_action = self.scope is not None and packet is not None and packet.action is not None
+            with timing.phase("DELIVERY_COMMIT"):
+                if scope_action:
+                    with self.c.engine.journal.write() as db:
+                        self._record_heartbeat(db, packet, issue, at, current)
+                    self.scope.apply(packet, issue)
                 with self.c.engine.journal.write() as db:
-                    self._record_heartbeat(db, packet, issue, at, current)
-                self.scope.apply(packet, issue)
-            with self.c.engine.journal.write() as db:
-                if not scope_action:
-                    self._record_heartbeat(db, packet, issue, at, current)
-                else:
-                    self._bound(db)
-                if self.mixed is not None and packet is not None:
-                    self.mixed.complete(packet, issue, _db=db)
-                slot = self._claim_slot(db, packet, issue, at, window, current)
+                    if not scope_action:
+                        self._record_heartbeat(db, packet, issue, at, current)
+                    else:
+                        self._bound(db)
+                    if self.mixed is not None and packet is not None:
+                        self.mixed.complete(packet, issue, _db=db)
+                    slot = self._claim_slot(db, packet, issue, at, window, current)
         if slot is not None:
             protected_epoch = None
             if self.c.engine.portfolio_policy is not None and result.get("reconciled"):

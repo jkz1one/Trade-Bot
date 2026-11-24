@@ -1,6 +1,7 @@
 """Independently bound stock supervision in the native portfolio journal."""
 
 import json
+import time
 from contextlib import nullcontext
 from datetime import timedelta
 
@@ -188,7 +189,8 @@ def tighten(engine, play_id, price, quote, underlying, *, now, stock=False, _db=
         return {"status": "TIGHTENED", "play_id": play_id, "price": str(price)}
 
 
-async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=(), clock_source=None):
+async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=(), clock_source=None,
+               on_supervision=None):
     """Visit every held play even when another instrument cannot be managed."""
     from decimal import Decimal
 
@@ -206,7 +208,6 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
             now = observed
         return now
 
-    p = policy(engine)
     quotes = {
         q.instrument.instrument_id: StockQuote.model_validate(q.model_dump()) for q in stock_quotes
     }
@@ -223,14 +224,41 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
         or len(underlying_quotes) != len(underlyings)
     ):
         raise ValueError("Unique portfolio quotes required")
-    reconciliation = await engine.reconcile_fixture(now=now, supervise_flat=True)
+    held, results = {}, {}
+
+    def assess_reconciled(db, positions):
+        # The freshly reconciled ledger and each mandatory guard become durable
+        # together, before any reservation or native handoff. An invalid play
+        # rolls back only its own assessment, so other held plays still run.
+        with phase("PROTECTION_POSITIONS"):
+            held.update(positions)  # Reuse the ledger reconstructed in this transaction.
+        for identity, position in positions.items():
+            stock = isinstance(position, StockPosition)
+            quote = (quotes.get(position.instrument.instrument_id) if stock
+                     else options.get(position.contract.contract_id))
+            underlying = None if stock else underlying_quotes.get(position.contract.underlying)
+            db.execute("SAVEPOINT protection_assessment")
+            try:
+                current_time()
+                with phase("PROTECTION_ASSESS"):
+                    results[identity] = (
+                        assess_stock(engine, identity, quote, now=now, _db=db) if stock
+                        else assess_option(engine, identity, quote, underlying, now=now, _db=db)
+                    )
+            except (ValueError, ExecutionBlocked) as exc:
+                db.execute("ROLLBACK TO protection_assessment")
+                results[identity] = {"status": "BLOCKED", "reason": str(exc)}
+            finally:
+                db.execute("RELEASE protection_assessment")
+
+    reconciliation = await engine.reconcile_fixture(
+        now=now, supervise_flat=True, _on_supervision=on_supervision,
+        _on_positions=assess_reconciled,
+    )
     if not reconciliation["reconciled"]:
         return reconciliation
     if "supervision" in reconciliation:
         return reconciliation["supervision"]
-    with phase("PROTECTION_POSITIONS"), engine.journal.read() as db:
-        held = reconstruct(history(engine, db, p, current_time())).ledger.positions
-    results = {}
     for identity, position in held.items():
         stock = isinstance(position, StockPosition)
         quote = (
@@ -241,13 +269,7 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
         underlying = None if stock else underlying_quotes.get(position.contract.underlying)
         try:
             current_time()
-            with phase("PROTECTION_ASSESS"):
-                result = (
-                    assess_stock(engine, identity, quote, now=now)
-                    if stock
-                    else assess_option(engine, identity, quote, underlying, now=now)
-                )
-            results[identity] = result
+            result = results[identity]
             if not stock and result["status"] == "HEALTHY" and result["target_exit_stage"]:
                 from app.mixed.portfolio_targets import tick as target_tick
 
@@ -313,10 +335,30 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
                 superseded_partial = active is not None
                 if not superseded_partial:
                     prepared = reserve_exit(engine, db, identity, position, filled, quote, underlying, current_time())
+                    if prepared["status"] == "PREPARED":
+                        # Reservation and fresh dispatch admission share one
+                        # checked commit. No native child can start until this
+                        # writer closes successfully; its commit consumes the
+                        # original acceptance budget below.
+                        from app.mixed.portfolio_execution import begin_stock
+                        from app.mixed.portfolio_options import begin
+
+                        dispatch_started = time.monotonic()
+                        dispatch_at = current_time()
+                        admitted = (begin_stock(engine, prepared["client_id"], quote, dispatch_at, _db=db)
+                                    if stock else begin(engine, prepared["client_id"], quote, underlying,
+                                                        dispatch_at, _db=db))
             if superseded_partial:
                 prepared = reserve_exit(engine, None, identity, position, filled, quote, underlying, current_time())
             if prepared["status"] != "PREPARED":
                 results[identity] = prepared
+                continue
+            if not superseded_partial:
+                from app.mixed.portfolio_execution import submit
+                with phase("STOCK_DISPATCH" if stock else "DISPATCH", quote=quote, now=dispatch_at):
+                    status = (admitted if isinstance(admitted, str)
+                              else await submit(engine, admitted, dispatch_at, dispatch_started))
+                results[identity] = {**result, "status": status, "client_id": prepared["client_id"]}
                 continue
             dispatch_at = current_time()
             results[identity] = {
@@ -330,7 +372,10 @@ async def tick(engine, *, now, stock_quotes=(), option_quotes=(), underlyings=()
             results[identity] = {"status": "BLOCKED", "reason": str(exc)}
     with phase("PROTECTION_HEARTBEAT"), engine.journal.write() as db:
         engine._control(db)
-        return record_supervision(engine, db, current_time(), results)
+        result = record_supervision(engine, db, current_time(), results)
+        if on_supervision is not None:
+            on_supervision(db, result)
+        return result
 
 
 def reserve_exit(engine, db, identity, position, filled, quote, underlying, now):

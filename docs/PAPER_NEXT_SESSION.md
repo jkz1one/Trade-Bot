@@ -1,45 +1,20 @@
 # Daily PAPER operation
 
-## Current action: offline protection-latency repair; no host changes
+## Current action: resource qualification before deployment
 
-The operator's detached `20923e2` test was OOM-killed after 37m 19s, exit 1 with
-zero restarts. It recorded 445 native snapshots without timeout, but its stale
-RUNNING progress has no final coverage, execution or accounting. The duration
-gate FAILED. Retain its evidence at
-`/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-20923e2e823d-iftsm6k7`.
-[Incident and candidate proof](PAPER_MEMORY_20261124_PROOF.json).
+The new fast gate passed in 2m 38s: 112-MiB stock and option protection completed in 4.35 and 4.38 seconds against the unchanged five-second target, followed by a 90-second simulated round trip and verified flat accounting. The matching installed suite passed 1,065 tests with one unmapped-reader-UID skip.
 
-The cache repair replaces obsolete encodings for each changing table/batch. Its
-300-update reproduction ended at 368 MiB versus 528 MiB with the preceding policy,
-while preserving the canonical authority hash. The installed-system suite passed
-976 tests with one unmapped-reader-UID skip. The new offline runner also records
-cgroup memory counters, including file/tmpfs charges and OOM events.
+The longer loaded check also passed after 336.44 seconds: 153 native snapshots, zero native snapshot failures, both scheduled decision slots evaluated, one entry/exit round trip and verified flat accounting. Peak sampled process-tree RSS was 461,508,608 bytes; cgroup counters remain unavailable locally. [Exact verification, failed intermediate checks and limits](PAPER_ITERATION_20261124_PROOF.json).
 
-The larger protection test blocks qualification: stock took 6.13 seconds and
-options 7.95 seconds against the unchanged five-second whole-case target. Both
-positions exited and accounting verified flat. The preceding cache policy also
-misses the target in the same environment; full-journal verification dominates
-repeated owner commits. Preserve these failed results. Finish the offline latency
-gate before asking the operator to spend another session on a duration test.
+Keep the installed `2d538b7` checkout, account, retained connected workers, timer, risk/model limits and `SESSION_STOPPED_REVIEW_REQUIRED` hold unchanged. No deploy, resume, restart, halt clearing or resource-limit increase follows from these local checks. The server remains operator-managed; no direct host inspection was performed.
 
-Keep the installed `2d538b7` checkout, account, retained connected worker, timer,
-risk/model limits and `SESSION_STOPPED_REVIEW_REQUIRED` hold unchanged. No deploy,
-resume, restart, halt clearing or memory increase is proposed. The server is
-operator-managed; local checks do not establish its current state.
+The next host gate is a fresh detached synthetic soak of the published candidate, with one CPU, 1 GiB without swap, 128 PIDs, no network or credentials and a new evidence directory. Review early progress and the 45-minute checkpoint to test beyond the previous OOM at 37m 19s; keep that same run through its full duration if healthy. A final PASSED receipt, complete lifecycle/accounting, decision coverage and no OOM/restart are required. The runner now exits on a recorded acceptance/runtime/publication failure instead of waiting out a duration that can no longer pass.
 
-When local qualification passes, the next host gate is a fresh isolated Docker
-soak using one CPU, 1 GiB with no swap, 128 PIDs, no network/credentials and a new
-synthetic evidence directory. Review its actual progress after 45 minutes and its
-final receipts after the full duration. No new start command is recommended yet.
-A passing synthetic run would still leave real-provider connection health and
-connected R4 unverified. Earlier host commands below are historical.
+Retain the failed `20923e2` evidence at `/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-20923e2e823d-iftsm6k7`. Do not restart that container or overwrite its receipts. A passing synthetic duration still leaves original Robinhood connection health, sustained month growth and connected R4 unverified.
 
-The final 335-second loaded fixture also FAILED: 101 native snapshots completed
-without failure (maximum 0.303 seconds), but native acceptance exhausted its
-remaining 1.240-second transport budget. No round trip completed, and only one
-of two scheduled decision slots was measured. Sampled process-tree peak was
-489,492,480 bytes; cgroup counters are unavailable locally. Reduced memory and
-successful snapshot reads do not override the failed lifecycle gate.
+The local launchers now reject a PID namespace whose `/proc` view does not match. Use `unshare --mount-proc` with the documented developer command. Earlier local aggregate process-tree RSS did not record this coherence and is not accepted as resource qualification; direct self-RSS cache benchmarks and the operator-reported Docker OOM remain separate evidence.
+
+[Developer iteration loop](PAPER_SYSTEM_CHECK.md). Earlier operator commands below are historical.
 
 ## Prior November 20 installation and schedule check
 

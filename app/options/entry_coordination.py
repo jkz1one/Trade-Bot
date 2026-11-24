@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import time
 from datetime import datetime, timedelta
 from uuid import uuid4
 from app.options.runtime_timing import phase
@@ -322,7 +323,8 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
     if review.outcome != "ELIGIBLE":
         return c._finish(key, {**evidence, "status": "HOLD", "reason": ";".join(review.reasons)})
     # Native admission rechecks the original review inside this fenced write.
-    # Commit the evidence and its reservation before starting any dispatch.
+    # Commit evidence, reservation and (for the portfolio owner) fresh dispatch
+    # admission together. Native handoff remains after this durable boundary.
     try:
         with c.engine.journal.write() as db:
             c._store_pending_evidence(db, key, evidence)
@@ -330,6 +332,12 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
                 key, review.proposal, quote, underlying, now=c.now(),
                 origin="MODEL", entry_request=request, entry_result=result, _db=db,
             )
+            if c.engine.portfolio_policy is not None and prepared["status"] == "PREPARED":
+                from app.mixed.portfolio_options import begin
+
+                dispatch_started = time.monotonic()
+                dispatch_at = c.now()
+                admitted = begin(c.engine, prepared["client_id"], quote, underlying, dispatch_at, _db=db)
     except Exception:
         # The reservation rolled back. Keep the review with the settled model reply.
         c._pending_evidence(key, evidence)
@@ -339,7 +347,14 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
         return c._finish(
             key, {**evidence, "status": "HOLD", "reason": "FRESH_ENTRY_ADMISSION_REJECTED"}
         )
-    status = await c.engine.dispatch(prepared["client_id"], quote, underlying, now=c.now())
+    if c.engine.portfolio_policy is not None:
+        from app.mixed.portfolio_execution import submit
+
+        with phase("DISPATCH", quote=quote, now=dispatch_at):
+            status = (admitted if isinstance(admitted, str)
+                      else await submit(c.engine, admitted, dispatch_at, dispatch_started))
+    else:
+        status = await c.engine.dispatch(prepared["client_id"], quote, underlying, now=c.now())
     return c._finish(
         key,
         {

@@ -14,7 +14,7 @@ from app.mixed.portfolio_protection import entry_guard
 from app.mixed.portfolio_store import history, reserve
 from app.options.engine import clock, exact, fingerprint
 from app.options.lifecycle import OptionIntent
-from app.options.models import OptionProposal, OptionQuote, UnderlyingObservation
+from app.options.models import OptionProposal, OptionQuote
 
 
 @exact
@@ -437,11 +437,11 @@ def prepare(
 
 
 @exact
-def begin(engine, client_id, quote, underlying, now):
+def begin(engine, client_id, quote, underlying, now, *, _db=None):
     from app.mixed.portfolio_store import intent as stored_intent
 
     p = policy(engine)
-    with engine.journal.write() as db:
+    with nullcontext(_db) if _db is not None else engine.journal.write() as db:
         engine._control(db)
         row = db.execute(
             "SELECT * FROM execution_portfolio_orders WHERE client_id=?", (client_id,)

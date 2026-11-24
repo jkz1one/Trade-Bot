@@ -34,6 +34,13 @@ NOMINAL_SECONDS = 21480  # 10:00 to 16:00, less the daily launcher's 120s cushio
 BASE = datetime(2026, 10, 28, 14, tzinfo=UTC)
 
 
+def reject_recorded_failure(report):
+    """Stop on evidence that already makes the final soak gate fail."""
+    assert not report["runtime_timing"]["by_status"].get("NATIVE_ACCEPT:FAILED"), "Native acceptance failure"
+    assert not report["runtime_failures"], "Runtime failure"
+    assert not report["publication_failures"], "Publication failure"
+
+
 def save(path, value):
     temporary = path.with_suffix(".pending")
     with temporary.open("w") as stream:
@@ -414,6 +421,7 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
                     metrics["dashboard_reads"] += 1
                     metrics["report_reads"] += 1
                     save(output / "latest-report.json", report)
+                    reject_recorded_failure(report)
                     next_report = elapsed + 30
                 save(output / "progress.json", metrics)
                 await asyncio.sleep(min(1, max(0, seconds - (time.monotonic() - started[0]))))
@@ -436,11 +444,7 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
                 metrics["opening_restore_profile"] = profile.report(db, final["entry_freshness"])
         assert not any(child.returncode is None for child in children), "Unreaped native child"
         assert not metrics["native_snapshot_failures"], "Native snapshot deadline/read failure"
-        assert not final["runtime_timing"]["by_status"].get("NATIVE_ACCEPT:FAILED"), (
-            "Native acceptance failure"
-        )
-        assert not final["runtime_failures"], "Runtime failure"
-        assert not final["publication_failures"], "Publication failure"
+        reject_recorded_failure(final)
         assert final["run_execution"]["completed_round_trips"] >= 1, (
             "Known fixture lifecycle did not complete"
         )

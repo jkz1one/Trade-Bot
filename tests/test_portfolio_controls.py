@@ -354,3 +354,97 @@ def test_failed_full_exit_reservation_keeps_partial_close_superseded(tmp_path, m
         quotes = (q(first, at, bid="89", ask="89.01"), q(other, at))
         retried = asyncio.run(engine.protective_tick(now=at, stock_quotes=quotes))
         assert retried["plays"][first.client_id]["status"] == "OPEN" and venue.submit_count == 3
+
+
+def test_protective_attempt_commit_failure_never_hands_an_order_to_native_process(tmp_path, monkeypatch):
+    with owned(tmp_path) as (engine, venue):
+        entries, at = open_pair(engine, venue)
+        original = engine.journal.write
+
+        @contextmanager
+        def failed_commit():
+            with original() as db:
+                yield db
+                if db.execute("SELECT 1 FROM execution_portfolio_orders WHERE status='SUBMITTING'").fetchone():
+                    raise OSError('INJECTED_ATTEMPT_COMMIT_FAILURE')
+
+        monkeypatch.setattr(engine.journal, 'write', failed_commit)
+        at += timedelta(seconds=1)
+        quotes = tuple(q(i, at, bid='89', ask='89.01') for i in entries)
+        with pytest.raises(OSError, match='INJECTED_ATTEMPT_COMMIT_FAILURE'):
+            asyncio.run(engine.protective_tick(now=at, stock_quotes=quotes))
+        assert venue.submit_count == 2  # Only the two entries created before injection.
+        with engine.journal.read() as db:
+            assert not db.execute("SELECT 1 FROM execution_portfolio_orders "
+                                  "WHERE json_extract(intent_json,'$.side')='SELL'").fetchone()
+            guards = json.loads(db.execute('SELECT protection_json FROM execution_portfolio_control').fetchone()[0])
+            assert guards[entries[0].client_id]['guard']['exit_reason']
+
+
+def test_failed_flat_delivery_rolls_back_supervision_and_delivery_together(tmp_path):
+    with owned(tmp_path) as (engine, venue):
+        seen = []
+
+        def fail_delivery(db, result):
+            assert db.in_transaction and result == {'reconciled': True, 'plays': {}}
+            seen.append(True)
+            engine.journal.event(db, NOW, 'TEST_DELIVERY', {})
+            raise ValueError('INJECTED_DELIVERY_FAILURE')
+
+        result = asyncio.run(engine.protective_tick(now=NOW, _on_supervision=fail_delivery))
+        assert seen == [True] and not result['reconciled']
+        assert venue.submit_count == 0
+        with engine.journal.read() as db:
+            assert not db.execute("SELECT 1 FROM execution_events WHERE kind='TEST_DELIVERY'").fetchone()
+            assert not db.execute('SELECT 1 FROM execution_supervisor').fetchone()
+
+
+def test_failed_held_delivery_keeps_acknowledged_exits_and_never_resubmits(tmp_path):
+    with owned(tmp_path) as (engine, venue):
+        entries, at = open_pair(engine, venue)
+        at += timedelta(seconds=1)
+        quotes = tuple(q(i, at, bid='89', ask='89.01') for i in entries)
+
+        def fail_delivery(db, result):
+            assert db.in_transaction and all(v['status'] == 'OPEN' for v in result['plays'].values())
+            engine.journal.event(db, at, 'TEST_DELIVERY', {})
+            raise OSError('INJECTED_DELIVERY_FAILURE')
+
+        with pytest.raises(OSError, match='INJECTED_DELIVERY_FAILURE'):
+            asyncio.run(engine.protective_tick(now=at, stock_quotes=quotes, _on_supervision=fail_delivery))
+        assert venue.submit_count == 4
+        with engine.journal.read() as db:
+            assert not db.execute("SELECT 1 FROM execution_events WHERE kind='TEST_DELIVERY'").fetchone()
+            exits = db.execute("SELECT status,order_id FROM execution_portfolio_orders "
+                               "WHERE json_extract(intent_json,'$.side')='SELL'").fetchall()
+            assert len(exits) == 2 and all(r['status'] == 'OPEN' and r['order_id'] for r in exits)
+        asyncio.run(engine.protective_tick(now=at, stock_quotes=quotes))
+        assert venue.submit_count == 4
+
+
+def test_invalid_assessment_rolls_back_only_that_play_and_other_exit_proceeds(tmp_path, monkeypatch):
+    from app.mixed import portfolio_protection
+
+    with owned(tmp_path) as (engine, venue):
+        (first, other), at = open_pair(engine, venue)
+        assess = portfolio_protection.assess_stock
+
+        def fail_one(engine, play_id, quote, *, now, _db=None):
+            result = assess(engine, play_id, quote, now=now, _db=_db)
+            if play_id == first.client_id:
+                raise ValueError('INJECTED_BAD_ASSESSMENT')
+            return result
+
+        monkeypatch.setattr(portfolio_protection, 'assess_stock', fail_one)
+        at += timedelta(seconds=1)
+        quotes = tuple(q(i, at, bid='89', ask='89.01') for i in (first, other))
+        result = asyncio.run(engine.protective_tick(now=at, stock_quotes=quotes))
+        assert result['plays'][first.client_id] == {'status': 'BLOCKED', 'reason': 'INJECTED_BAD_ASSESSMENT'}
+        assert result['plays'][other.client_id]['status'] == 'OPEN'
+        assert venue.submit_count == 3
+        with engine.journal.read() as db:
+            guards = json.loads(db.execute('SELECT protection_json FROM execution_portfolio_control').fetchone()[0])
+            assert first.client_id not in guards
+            assert guards[other.client_id]['guard']['exit_reason']
+            assert not db.execute("SELECT 1 FROM execution_events WHERE kind='POSITION_SUPERVISED' AND client_id=?",
+                                  (first.client_id,)).fetchone()

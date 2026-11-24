@@ -14,6 +14,22 @@ soak = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(soak)
 
 
+@pytest.mark.parametrize('field,message', [('native', 'Native acceptance failure'),
+                                         ('runtime', 'Runtime failure'),
+                                         ('publication', 'Publication failure')])
+def test_soak_stops_on_recorded_failure_without_waiting_for_duration(field, message):
+    from soak_worker import reject_recorded_failure
+    report = {'runtime_timing': {'by_status': {}}, 'runtime_failures': [],
+              'publication_failures': []}
+    reject_recorded_failure(report)  # Missing fills alone are not a terminal failure.
+    if field == 'native':
+        report['runtime_timing']['by_status']['NATIVE_ACCEPT:FAILED'] = 1
+    else:
+        report[field + '_failures'] = [{'error_class': 'TimeoutError'}]
+    with pytest.raises(AssertionError, match=message):
+        reject_recorded_failure(report)
+
+
 @pytest.fixture
 def isolated(monkeypatch):
     monkeypatch.setattr(soak, "sys", SimpleNamespace(flags=SimpleNamespace(isolated=True)))
@@ -56,6 +72,23 @@ def test_reject_network_before_import_or_state_creation(isolated, tmp_path, monk
     monkeypatch.setattr(Path, "read_text", read)
     output = tmp_path / "new"
     with pytest.raises(ValueError, match="NETWORK_NAMESPACE"):
+        soak.run(output, 75, 68)
+    assert not output.exists()
+
+
+def test_reject_mismatched_proc_before_import_or_state_creation(isolated, tmp_path, monkeypatch):
+    original = Path.read_text
+
+    def read(path, *args, **kwargs):
+        if str(path) == "/proc/net/dev":
+            return "header\nheader\n lo: 0\n"
+        if str(path) == "/proc/self/stat":
+            return str(soak.os.getpid() + 1) + " (python) R 0"
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", read)
+    output = tmp_path / "new"
+    with pytest.raises(ValueError, match="PID_NAMESPACE_REQUIRES_MATCHING_PROC_MOUNT"):
         soak.run(output, 75, 68)
     assert not output.exists()
 

@@ -40,7 +40,26 @@ cannot be adopted as connected evidence or execution state.
 
 ## Delivery checklist
 
-### November 24 duration failure and memory qualification
+### November 24 fast iteration and local qualification
+
+The new fast gate passed in 2m 38s: 112-MiB stock and option protection completed in 4.35 and 4.38 seconds against the unchanged five-second target, followed by a 90-second simulated round trip and verified flat accounting. The matching installed suite passed 1,065 tests with one unmapped-reader-UID skip.
+
+The longer loaded check also passed after 336.44 seconds: 153 native snapshots, zero native snapshot failures, both scheduled decision slots evaluated, one entry/exit round trip and verified flat accounting. Peak sampled process-tree RSS was 461,508,608 bytes; cgroup counters remain unavailable locally. [Exact verification, failed intermediate checks and limits](PAPER_ITERATION_20261124_PROOF.json).
+
+The development order is now:
+
+1. Install the changed application noneditably and run the quick loaded protection/lifecycle gate.
+2. Fix the first recorded failure before running broader checks. Native acceptance, runtime and publication failures stop a soak at the next report.
+3. Run the installed regressions once on the passing application, then verify both due slots in the longer loaded fixture.
+4. Qualify that exact candidate under host resource limits and full duration, preserving the current connected owner. A source publication or short pass is not a deployment or connected-health pass.
+
+Fewer fenced journal commits reduce delay without skipping current-row verification. Reconciliation and per-play assessment commit together; reservation and fresh dispatch admission commit before native handoff; supervision and runtime delivery share a commit. Paid portfolio option entry uses the same reservation/admission boundary. Failed commits, per-play assessment isolation, retained model charges, durable protective latches, partial-close supersession and no duplicate native submission have regression coverage. Original clocks, deadlines, authority hashes, the 192-MiB encoding budget and account limits stay unchanged.
+
+These are local synthetic results. The earlier host OOM remains a failed duration result; full Docker duration under one CPU/1 GiB, sustained month growth, real-provider CONNECT health and connected R4 remain open. The installed `2d538b7` owner and existing `SESSION_STOPPED_REVIEW_REQUIRED` hold remain unchanged. These local results alone do not qualify deployment or resume.
+
+[Reproducible developer commands](PAPER_SYSTEM_CHECK.md).
+
+### Earlier November 24 duration failure and memory qualification
 
 The host detached test of `20923e2` failed with OOM after 37m 19s, exit 1 and
 zero restarts. Full duration is FAILED, not merely unobserved. No final synthetic

@@ -851,5 +851,9 @@
   },
   "groups_overlap": true,
   "host_access": false,
-  "deployment_performed": false
+  "deployment_performed": false,
+  "follow_up_resource_qualification": {
+    "proof": "PAPER_ITERATION_20261124_PROOF.json",
+    "note": "Earlier local aggregate process-tree RSS did not record PID/proc coherence and must not qualify a memory limit. New local runs reject a mismatched proc mount. Direct self-RSS benchmarks and the operator-supplied Docker OOM are unaffected; original raw results are retained."
+  }
 }

@@ -250,8 +250,15 @@ def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, m
                 native_process = portfolio_execution.run_option_process
                 acknowledgements = []
                 async def observe_native(*args, **kwargs):
-                    response = await native_process(*args, **kwargs)
                     order = kwargs.get('stock_intent') or kwargs.get('intent')
+                    if order is not None and order.side == 'SELL':
+                        # An independent reader must see the exact attempt
+                        # committed before a native process receives it.
+                        with c.engine.journal.read() as db:
+                            row = db.execute('SELECT status,attempted_at FROM execution_portfolio_orders '
+                                             'WHERE client_id=?', (order.client_id,)).fetchone()
+                            assert row['status'] == 'SUBMITTING' and row['attempted_at']
+                    response = await native_process(*args, **kwargs)
                     if order is not None and order.side == 'SELL' and response.order_id:
                         acknowledgements.append(time.monotonic())
                     return response

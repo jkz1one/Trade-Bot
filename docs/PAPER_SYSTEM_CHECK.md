@@ -17,7 +17,38 @@ directory. It never adopts the connected account or its enrollment, opens host
 credentials, schedules a worker, calls Robinhood or enables LIVE. This checkpoint
 requires no operator build, new capture, account reset or market-hours test.
 
-## Reproduce
+## Fast development loop
+
+Run the known loaded blockers first after each application change. Install the
+candidate noneditably, then run `--quick` before the broad suite:
+
+```bash
+unshare --user --map-root-user --net --pid --fork --mount-proc \
+  /absolute/path/to/installed-python -I -W error scripts/paper-system-check.py \
+  --quick --output /absolute/path/to/new-quick-proof
+```
+
+This runs the 112-MiB stock and option protection cases on one logical CPU, stopping
+at the first failure. Both must meet the unchanged five-second whole-case target
+before a 90-second loaded lifecycle starts. The lifecycle must enter, fill later,
+protect, exit and finish with verified flat accounting. A recorded native acceptance,
+runtime or publication failure ends the soak at the next report, rather than waiting
+out its remaining duration. Zero fills alone do not trigger that early stop.
+
+The summary records QUICK/FULL, the failed stage and total elapsed time; individual
+test and lifecycle evidence remains in the same new directory. A passing quick
+check is development feedback, not full-suite, full-duration, Docker memory or
+connected-provider acceptance. Proceed to the full installed suite only after
+the blocking quick checks pass, then run the longer loaded fixture and resource
+qualification on the same application. A failure goes back to the matching short
+reproduction. Keep failed receipts; do not repeat an unchanged failing gate hoping
+for a favorable timing sample.
+
+`--mount-proc` is required when entering a new PID namespace. Both launchers reject
+a mismatched process view before creating state. Without it, numeric child PIDs
+can address the outer namespace and invalidate process-tree memory measurements.
+
+## Full installed check
 
 Use Python 3.12 with the candidate wheel installed noneditably, the exact
 `requirements-runtime.lock` dependencies, pytest and anyio. Source application
@@ -25,12 +56,13 @@ files must match that installation. The script refuses a source-only import or
 an existing output directory. Run from the candidate checkout:
 
 ```bash
-/absolute/path/to/installed-python -I -W error scripts/paper-system-check.py \
+unshare --user --map-root-user --net --pid --fork --mount-proc \
+  /absolute/path/to/installed-python -I -W error scripts/paper-system-check.py \
   --output /absolute/path/to/new-offline-proof
 ```
 
 Host-script tests expect root-owned fixture files. Our verification used Linux
-`unshare --user --map-root-user` before the command, mapping only the current user
+`unshare --user --map-root-user` as above, mapping only the current user
 to root in an isolated namespace. This does not reproduce Docker restrictions or
 map the separate dashboard UID 10001. A system that cannot provide the required
 test environment must report that gap; it must not skip it and claim host acceptance.
@@ -38,7 +70,7 @@ test environment must report that gap; it must not skip it and claim host accept
 The runner copies tests, scripts and examples outside the source checkout, clears
 the inherited environment except locale/PATH, explicitly loads the anyio pytest
 plugin and runs the installed application with isolated Python and warnings as
-errors. Its overall limit is thirty minutes; each integrated scenario has bounded
+errors. The full suite has a thirty-minute limit; each integrated scenario has bounded
 progress and subprocess deadlines. Timeout or interruption drains the test process
 group and records failure. The accelerated scenarios run in minutes; they are not a full-session soak.
 

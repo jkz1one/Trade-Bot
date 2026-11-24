@@ -15,6 +15,19 @@ def test_portfolio_entry_uses_one_original_paid_receipt_and_native_dispatch(
     tmp_path, monkeypatch, choice
 ):
     with owner(tmp_path, monkeypatch, choice=choice, portfolio=True) as (c, v, _times, state):
+        from app.mixed import portfolio_execution
+
+        native = portfolio_execution.run_option_process
+
+        async def check_attempt(*args, **kwargs):
+            intent = kwargs.get('intent') or kwargs.get('stock_intent')
+            with c.engine.journal.read() as db:
+                row = db.execute('SELECT status,attempted_at FROM execution_portfolio_orders WHERE client_id=?',
+                                 (intent.client_id,)).fetchone()
+                assert row['status'] == 'SUBMITTING' and row['attempted_at']
+            return await native(*args, **kwargs)
+
+        monkeypatch.setattr(portfolio_execution, 'run_option_process', check_attempt)
         out = asyncio.run(c.cycle(stock_frame()))
         assert out["status"] == "COMPLETE", out
         assert len(out["entries"]) == 1
@@ -74,6 +87,28 @@ def test_portfolio_timeout_distinguishes_proven_unsent_from_uncertain(
             assert c.engine.reconcile(venue.snapshot(times[0]), now=times[0])["reconciled"]
         asyncio.run(c.cycle(stock_frame()))
         assert len(handoffs) == int(not before_send)
+
+
+def test_paid_entry_attempt_commit_failure_preserves_charge_without_native_handoff(tmp_path, monkeypatch):
+    with owner(tmp_path, monkeypatch, choice="OPTION", portfolio=True) as (c, venue, _, _):
+        write = c.engine.journal.write
+
+        @contextmanager
+        def fail_attempt():
+            with write() as db:
+                yield db
+                if db.execute("SELECT 1 FROM execution_portfolio_orders WHERE status='SUBMITTING'").fetchone():
+                    raise OSError('INJECTED_ATTEMPT_COMMIT_FAILURE')
+
+        monkeypatch.setattr(c.engine.journal, 'write', fail_attempt)
+        result = asyncio.run(c.cycle(stock_frame()))
+        assert venue.submit_count == 0, result
+        with c.engine.journal.read() as db:
+            assert not db.execute('SELECT 1 FROM execution_portfolio_orders').fetchone()
+            assert db.execute('SELECT COUNT(*) FROM execution_model_calls WHERE cost IS NOT NULL').fetchone()[0] == 1
+            evidence = json.loads(db.execute('SELECT result_json FROM execution_option_opportunities '
+                                             'WHERE result_json LIKE ?', ('%entry_review%',)).fetchone()[0])
+            assert evidence['entry_review'] and evidence['entry_result']
 
 
 @pytest.mark.parametrize("portfolio", [False, True])

@@ -889,7 +889,7 @@ class DegenCoordinator:
         return selected, proposal, completed
 
     @measured("PROTECTION")
-    async def supervise(self, quotes=(), underlyings=(), *, stocks=()):
+    async def supervise(self, quotes=(), underlyings=(), *, stocks=(), _on_supervision=None):
         if self.engine.portfolio_policy is not None:
             return await self.engine.protective_tick(
                 now=self.now(),
@@ -897,6 +897,7 @@ class DegenCoordinator:
                 underlyings=underlyings,
                 stock_quotes=tuple(x.quote for x in stocks),
                 clock_source=self.now,
+                _on_supervision=_on_supervision,
             )
         """Fast owned-position management, independent of the five-minute entry claim."""
         scope_underlying = ()

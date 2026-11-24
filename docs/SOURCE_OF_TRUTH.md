@@ -1,5 +1,21 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.233. November 24, New York time. Fast iteration and transaction latency.
+
+The new fast gate passed in 2m 38s: 112-MiB stock and option protection completed in 4.35 and 4.38 seconds against the unchanged five-second target, followed by a 90-second simulated round trip and verified flat accounting. The matching installed suite passed 1,065 tests with one unmapped-reader-UID skip.
+
+The longer loaded check also passed after 336.44 seconds: 153 native snapshots, zero native snapshot failures, both scheduled decision slots evaluated, one entry/exit round trip and verified flat accounting. Peak sampled process-tree RSS was 461,508,608 bytes; cgroup counters remain unavailable locally. [Exact verification, failed intermediate checks and limits](PAPER_ITERATION_20261124_PROOF.json).
+
+Fewer fenced journal commits reduce delay without skipping current-row verification. Reconciliation and per-play assessment commit together; reservation and fresh dispatch admission commit before native handoff; supervision and runtime delivery share a commit. Paid portfolio option entry uses the same reservation/admission boundary. Failed commits, per-play assessment isolation, retained model charges, durable protective latches, partial-close supersession and no duplicate native submission have regression coverage. Original clocks, deadlines, authority hashes, the 192-MiB encoding budget and account limits stay unchanged.
+
+The local launchers now reject a PID namespace whose `/proc` view does not match. Use `unshare --mount-proc` with the documented developer command. Earlier local aggregate process-tree RSS did not record this coherence and is not accepted as resource qualification; direct self-RSS cache benchmarks and the operator-reported Docker OOM remain separate evidence.
+
+These are local synthetic results. The earlier host OOM remains a failed duration result; full Docker duration under one CPU/1 GiB, sustained month growth, real-provider CONNECT health and connected R4 remain open. The installed `2d538b7` owner and existing `SESSION_STOPPED_REVIEW_REQUIRED` hold remain unchanged. These local results alone do not qualify deployment or resume.
+
+[Developer loop](PAPER_SYSTEM_CHECK.md) · [Operator action](PAPER_NEXT_SESSION.md).
+
+### Earlier November 24 cache and duration checkpoint
+
 Version 1.232. November 24, New York time. Offline host OOM and cache retention repair.
 
 The detached host test of `20923e2` failed after 37m 19s: Docker reports an OOM

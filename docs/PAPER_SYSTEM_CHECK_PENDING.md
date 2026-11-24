@@ -1,5 +1,19 @@
 # Recovered offline system checkpoint
 
+November 24 current checkpoint: the blocking local protection and lifecycle gates pass.
+
+The new fast gate passed in 2m 38s: 112-MiB stock and option protection completed in 4.35 and 4.38 seconds against the unchanged five-second target, followed by a 90-second simulated round trip and verified flat accounting. The matching installed suite passed 1,065 tests with one unmapped-reader-UID skip.
+
+The longer loaded check also passed after 336.44 seconds: 153 native snapshots, zero native snapshot failures, both scheduled decision slots evaluated, one entry/exit round trip and verified flat accounting. Peak sampled process-tree RSS was 461,508,608 bytes; cgroup counters remain unavailable locally. [Exact verification, failed intermediate checks and limits](PAPER_ITERATION_20261124_PROOF.json).
+
+Run `scripts/paper-system-check.py --quick` after each application edit. Only a passing quick gate proceeds to broad regressions, longer loaded coverage and resource qualification. The first unchanged application failure was reported in 32.58 seconds; the later native acceptance failure ended the entire quick gate in 105.35 seconds. Both failed receipts remain in the proof. A favorable protection sample does not override a later failure.
+
+The local launchers now reject a PID namespace whose `/proc` view does not match. Use `unshare --mount-proc` with the documented developer command. Earlier local aggregate process-tree RSS did not record this coherence and is not accepted as resource qualification; direct self-RSS cache benchmarks and the operator-reported Docker OOM remain separate evidence.
+
+These are local synthetic results. The earlier host OOM remains a failed duration result; full Docker duration under one CPU/1 GiB, sustained month growth, real-provider CONNECT health and connected R4 remain open. The installed `2d538b7` owner and existing `SESSION_STOPPED_REVIEW_REQUIRED` hold remain unchanged. These local results alone do not qualify deployment or resume.
+
+### Earlier memory-repair qualification
+
 November 24 host follow-up: the detached 20923e2 soak was OOM-killed after
 37m 19s, with zero restarts. The duration gate FAILED. Its 445 successful native
 snapshots are partial evidence, not final lifecycle/accounting acceptance.

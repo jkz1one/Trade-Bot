@@ -271,9 +271,9 @@ def prepare_stock(
 
 
 @exact
-def begin_stock(engine, client_id, quote, now):
+def begin_stock(engine, client_id, quote, now, *, _db=None):
     p = policy(engine)
-    with engine.journal.write() as db:
+    with nullcontext(_db) if _db is not None else engine.journal.write() as db:
         engine._control(db)
         row = db.execute(
             "SELECT * FROM execution_portfolio_orders WHERE client_id=?", (client_id,)
@@ -452,7 +452,8 @@ async def submit(engine, i, now, started):
 
 
 @exact
-def reconcile(engine, snapshot, *, now, epoch=None, supervise_flat=False):
+def reconcile(engine, snapshot, *, now, epoch=None, supervise_flat=False, on_supervision=None,
+              on_positions=None):
     from app.mixed.portfolio_store import control
     from app.mixed.portfolio_venue import PortfolioVenueSnapshot
 
@@ -580,6 +581,8 @@ def reconcile(engine, snapshot, *, now, epoch=None, supervise_flat=False):
                 "attempt_recovery": recovery,
                 "snapshot_id": snap.snapshot_id,
             }
+            if on_positions is not None:
+                on_positions(db, result.ledger.positions)
             if (
                 supervise_flat
                 and not result.ledger.positions
@@ -589,6 +592,8 @@ def reconcile(engine, snapshot, *, now, epoch=None, supervise_flat=False):
                 from app.mixed.portfolio_protection import record_supervision
 
                 outcome["supervision"] = record_supervision(engine, db, now, {})
+                if on_supervision is not None:
+                    on_supervision(db, outcome["supervision"])
             db.execute("RELEASE portfolio_reconciliation")
             return outcome
         except (ValueError, ExecutionBlocked) as exc:
