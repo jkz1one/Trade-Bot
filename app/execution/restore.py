@@ -27,7 +27,12 @@ _handles = count(1)
 
 
 class _TextEncodingCache:
-    """Reuse exact JSON string tokens across audit rows with different IDs."""
+    """Reuse exact JSON tokens during repeated full-journal scans.
+
+    Evict the most recently used entry: a scan longer than the cache otherwise
+    evicts every old row just before it is needed again. Entries remain bounded
+    and every hit still compares the entire original string and delimiter.
+    """
 
     def __init__(self, max_bytes=192 * 1024 * 1024, max_entries=32768):
         self.max_bytes = max_bytes
@@ -36,6 +41,18 @@ class _TextEncodingCache:
         self.values = OrderedDict()
         self.lock = Lock()
         self.recent_long = [None] * 16
+        self.scope = None
+
+    def select_authority(self, authority_id):
+        # MRU must not pin an unrelated account's history. Display copies with
+        # the same restore binding can reuse encodings; another account starts
+        # cold. The identifier only selects a cache, never grants trust.
+        with self.lock:
+            if self.scope != authority_id:
+                self.values.clear()
+                self.recent_long = [None] * 16
+                self.size = 0
+                self.scope = authority_id
 
     def encode(self, value, delimiter):
         return self.tokens(value, delimiter)[0]
@@ -71,7 +88,9 @@ class _TextEncodingCache:
                 while self.values and (
                     self.size + weight > self.max_bytes or len(self.values) >= self.max_entries
                 ):
-                    evicted, (_, old_weight) = self.values.popitem(last=False)
+                    # MRU preserves most of an overflowing sequential scan;
+                    # LRU turns the next scan into an all-miss encoding pass.
+                    evicted, (_, old_weight) = self.values.popitem(last=True)
                     if len(evicted[0]) > 4096:
                         old_slot = len(evicted[0]) % len(self.recent_long)
                         if self.recent_long[old_slot] is evicted:
@@ -212,6 +231,7 @@ def _check(db):
         or row["authority_id"] != binding["authority_id"]
     ):
         raise ValueError("RESTORE_AUTHORITY_BINDING_MISMATCH")
+    _TEXT_ENCODINGS.select_authority(binding["authority_id"])
     if row["generation"] != binding["generation"] or row["state_hash"] != _digest(db):
         raise ValueError("RESTORED_OR_CHANGED_EXECUTION_JOURNAL")
     return binding
@@ -238,7 +258,9 @@ def begin_fenced_write(db, path):
 
 def advance(db):
     db.execute("UPDATE main.execution_restore_binding SET generation=generation+1 WHERE id=1")
-    generation = _binding(db)["generation"]
+    binding = _binding(db)
+    generation = binding["generation"]
+    _TEXT_ENCODINGS.select_authority(binding["authority_id"])
     db.execute(
         "UPDATE authority.restore_authority SET generation=?,state_hash=? WHERE id=1",
         (generation, _digest(db)),
@@ -305,6 +327,7 @@ def enable(journal, *, now):
             "CREATE TABLE authority.restore_authority (id INTEGER PRIMARY KEY CHECK(id=1), schema TEXT NOT NULL, authority_id TEXT NOT NULL, generation INTEGER NOT NULL, state_hash TEXT NOT NULL)"
         )
         journal.event(db, now, "RESTORE_FENCE_ENABLED", {"authority_id": identifier})
+        _TEXT_ENCODINGS.select_authority(identifier)
         db.execute(
             "INSERT INTO authority.restore_authority VALUES(1,?,?,0,?)",
             (AUTHORITY_SCHEMA, identifier, _digest(db)),

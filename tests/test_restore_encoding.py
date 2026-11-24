@@ -93,6 +93,51 @@ def test_zero_capacity_does_not_change_encoding():
     assert not cache.values and cache.size == 0
 
 
+def test_another_authority_releases_pinned_history_without_reusing_handles():
+    cache = restore._TextEncodingCache(max_entries=2)
+    cache.select_authority("first")
+    token, handle = cache.tokens("original" * 1024, b"]")
+    cache.select_authority("first")
+    assert cache.tokens("original" * 1024, b"]") == (token, handle)
+    cache.select_authority("second")
+    assert not cache.values and cache.size == 0
+    assert all(hint is None for hint in cache.recent_long)
+    new_token, new_handle = cache.tokens("original" * 1024, b"]")
+    assert new_token == token and new_handle != handle
+    cache.select_authority("first")
+    assert cache.tokens("original" * 1024, b"]")[1] not in (handle, new_handle)
+
+
+@pytest.mark.parametrize("bounded_by", ["entries", "bytes"])
+def test_over_capacity_scans_reuse_encodings_without_skipping_tampered_text(monkeypatch, bounded_by):
+    encoded = []
+    original = restore.encode_basestring_ascii
+
+    def measured(value):
+        encoded.append(value)
+        return original(value)
+
+    monkeypatch.setattr(restore, "encode_basestring_ascii", measured)
+    values = [f"{i:04d}" * 1024 for i in range(100)]
+    probe = restore._TextEncodingCache()
+    probe.encode(values[0], b"]")
+    cache = restore._TextEncodingCache(
+        max_bytes=probe.size * 80 if bounded_by == "bytes" else 192 * 1024 * 1024,
+        max_entries=80 if bounded_by == "entries" else 32768,
+    )
+    for _ in range(3):
+        encoded.clear()
+        actual = [cache.encode(value, b"]") for value in values]
+        assert actual == [json.dumps(value).encode() + b"]" for value in values]
+        assert cache.size <= cache.max_bytes
+        assert len(cache.values) <= cache.max_entries
+    # A sequential LRU cache would encode all 100 values again on every scan.
+    assert len(encoded) <= 22
+    changed = values[0][:2000] + "different" + values[0][2009:]
+    assert cache.encode(changed, b"]") == json.dumps(changed).encode() + b"]"
+    assert cache.encode(values[0], b",") == json.dumps(values[0]).encode() + b","
+
+
 def test_order_includes_delimiters_and_repeated_history_text_is_shared(monkeypatch):
     cache = restore._TextEncodingCache()
     monkeypatch.setattr(restore, "_TEXT_ENCODINGS", cache)

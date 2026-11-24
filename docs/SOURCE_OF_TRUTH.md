@@ -1,5 +1,30 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.229. November 23, New York time. Varied-history restore scan repair.
+
+The operator supplied 637 runtime traces and the worker's one-CPU/1-GiB limits.
+Median diagnostic insertion took 3.13 seconds, reconciliation commit 2.82 seconds
+and delivery commit 2.18 seconds. The native child read itself took about one
+millisecond. This directs investigation toward synchronous local journal work;
+it does not establish that buying more CPU will resolve the connected failures.
+
+A disposable varied-history reproduction found repeated cache eviction during
+full restore scans. The bounded encoding cache now evicts the most recently used
+entry during overflow, retaining most prior encodings across sequential scans.
+Every current row and schema is still checked, exact text/delimiter equality is
+still required, and the original canonical v1 hash and independent authority
+remain unchanged. No migration, journal pruning, timeout or freshness adjustment
+is involved. Capacity fixtures now contain distinct small records instead of one
+repeated large payload. [Measured verification](PAPER_RESTORE_SCAN_20261123_PROOF.json).
+
+This is a local performance candidate, not a qualified host release. The stronger
+loaded fixture still misses its required entry/exit lifecycle, and extended
+protection exceeds the five-second whole-case goal. The provider CONNECT failures
+remain unresolved; full-duration and connected gates remain open. Keep the session-review hold and installed `2d538b7` owner untouched.
+The next work is candidate qualification, not another blind deployment.
+
+### Previous November 23 diagnostic checkpoint
+
 Version 1.228. November 23, New York time. Connected operation failed after launch.
 
 The November 23 worker on `2d538b7` started at 10:01:41 a.m. and exited at

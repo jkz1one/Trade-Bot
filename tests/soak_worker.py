@@ -137,14 +137,18 @@ def seed_capacity(journal, mib):
     """Labeled diagnostic padding, not fabricated measured or accounting history."""
     if not mib:
         return 0
-    payload = json.dumps({"version": "synthetic-capacity-padding-v1", "padding": "x" * 32768})
+    def payload(index):
+        # Distinct small records exercise the encoding-cache capacity. Repeating
+        # one large string gives unrealistically cheap scans of a grown journal.
+        return json.dumps({"version": "synthetic-capacity-padding-v2", "sequence": index,
+                           "padding": f"{index:08x}" * 480})
     # Even disposable diagnostic writes must advance the original restore fence.
     with journal.write() as db:
         before = db.execute("SELECT COUNT(*) FROM execution_runtime_timings").fetchone()[0]
-        for _ in range((mib * 1024 * 1024) // len(payload.encode()) + 1):
+        for index in range((mib * 1024 * 1024) // len(payload(0).encode()) + 1):
             db.execute(
                 "INSERT INTO execution_runtime_timings(started_at,payload_json) VALUES(?,?)",
-                ((BASE - timedelta(days=1)).isoformat(), payload),
+                ((BASE - timedelta(days=1)).isoformat(), payload(index)),
             )
         return db.execute("SELECT COUNT(*) FROM execution_runtime_timings").fetchone()[0] - before
 

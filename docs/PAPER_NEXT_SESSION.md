@@ -8,27 +8,24 @@ The controller requires session review. Keep that hold and the existing account,
 limits, release and retained worker. Do not run an old resume/deployment block.
 [Confirmed evidence and diagnosis limits](PAPER_SESSION_20261123_PROOF.json).
 
-The collector samples all stop at `CONNECT`, which includes local SDK loading
-and authenticated session initialization. The snapshot timeout's missing trace
-can also result from a delayed parent loop. The saved runtime timings and resource
-configuration are needed before choosing a repair; no extra trading day is needed
-to read them. The following read-only check has been requested from the operator:
+The operator supplied the requested resource configuration and all 637 saved timing
+records. The worker has a one-CPU limit and 1 GiB. Median timing-record insertion
+cost 3.13 seconds, reconciliation commit 2.82 seconds, and delivery commit 2.18
+seconds. The child's native snapshot itself took roughly one millisecond. The
+five-second spawn budget was still available when the call started.
 
-```bash
-cd /opt/trade-bot-dashboard
-docker inspect --format 'CPUs={{.HostConfig.NanoCpus}} Quota={{.HostConfig.CpuQuota}} Period={{.HostConfig.CpuPeriod}} Memory={{.HostConfig.Memory}} Pids={{.HostConfig.PidsLimit}}' trade-bot-connected-daily-20261123
-python3 scripts/paper-session-report.py --run-id daily-20261123 --format json | python3 -c '
-import json, sys
-r = json.load(sys.stdin)
-t = r.get("runtime_timing") or {}
-print(json.dumps({k: t.get(k) for k in ("status", "measured", "phases", "scheduler_delay", "trace_start_write", "native_spawn_budget", "native_observed_intervals")}, indent=2))
-'
-```
+The local varied-history reproduction exposed cache churn during full restore
+checks. The candidate preserves every-row verification and the original canonical
+restore hash while retaining useful encodings across overflowing scans. Capacity
+fixtures now use distinct records. [Verification](PAPER_RESTORE_SCAN_20261123_PROOF.json).
+These results do not resolve the deployed collector's broad CONNECT failure.
 
-The diagnostic patch includes the missing collector and runtime evidence in
-`paper-diagnose.py` and distinguishes SDK/OAuth/MCP initialization stages.
-It does not change timeouts, authorize resumption or establish a fixed worker.
-The earlier successful deployment and pre-session checks below are historical.
+No additional host command is needed for this diagnosis. The stronger short fixture
+still fails its entry/exit lifecycle and extended protection exceeds five seconds.
+Reduce the remaining owner-path verification cost, then pass the varied-history
+checks and full configured-duration offline gate before proposing another release. Keep the session-review hold; qualification is not
+permission to resume the failed owner. The earlier deployment and pre-session
+commands below are historical, not current instructions.
 
 ## Prior November 20 installation and schedule check
 

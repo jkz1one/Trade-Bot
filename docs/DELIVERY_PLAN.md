@@ -48,12 +48,21 @@ all 13 supplied failure samples timed out at the broad `CONNECT` stage. The
 terminal native snapshot timeout is separate. No publication failures were recorded.
 [Evidence and next diagnostic gate](PAPER_SESSION_20261123_PROOF.json).
 
-Keep the session-review hold. Read the saved runtime timings/resource configuration
-before selecting a runtime or capacity change. The diagnostic patch closes the
-report's missing collector/timing evidence and separates SDK loading from MCP
-initialization. It does not resolve the connected failure or close R4. No limits,
-worker lifecycle, freshness policy or account state changes are authorized by
-this evidence alone.
+Keep the session-review hold. The requested 637 runtime traces and one-CPU/1-GiB
+configuration are now supplied: journal commits are expensive while native child
+reads take milliseconds. A varied-history reproduction identified encoding-cache
+churn. The candidate reduces repeated encoding without changing the canonical
+restore hash, row verification, deadlines or account authority. Capacity fixtures
+now use varied records. [Candidate proof](PAPER_RESTORE_SCAN_20261123_PROOF.json).
+
+The distinct-history short fixture currently fails its required entry/exit lifecycle;
+extended protection also exceeds five seconds. The cache improvement alone is not
+sufficient. Reduce remaining owner-path verification cost while preserving original
+quote/plan clocks and restore authority before starting the full-duration gate.
+Connected R4 remains open. Do not resume or redeploy based on the benchmark. Collector CONNECT samples still
+need the already-published finer diagnostics to distinguish SDK/OAuth/MCP phases;
+no CPU purchase or provider fault is established. No limits, worker lifecycle,
+freshness policy or host account state change follows from these measurements.
 
 ### November 20 work order: repair the delivery process first
 

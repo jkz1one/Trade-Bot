@@ -1,5 +1,20 @@
 # Recovered offline system checkpoint
 
+November 23 varied-history checkpoint: the requested 637 host timing records locate
+expensive local writes. The bounded encoding-cache candidate reduces synthetic
+journal-update CPU time by about 48%, preserves canonical v1 hashes and resets its
+cache across independent restore authorities. Capacity fixtures now use distinct
+records. The old repeated-payload fixture concealed encoding-cache churn.
+
+The final installed suite passed 904 checks with one unmapped-reader-UID skip.
+Both varied 68-MiB held-position exits met five seconds (3.67 and 3.91 seconds).
+The stronger 112-MiB fixture rejects the candidate: intended entry plans expire
+or contract inventory ages out before admission. The separate extended protection
+cases also miss the five-second whole-case target. These are failed offline gates,
+not a deployment recommendation. Keep the existing host release and review hold.
+[Complete measurements and regression results](PAPER_RESTORE_SCAN_20261123_PROOF.json).
+
+
 November 23 host acceptance failed on the installed `2d538b7`: zero decisions,
 341 failed collections and a native snapshot timeout. The published test counts
 below remain offline evidence. They do not establish a healthy connected day.

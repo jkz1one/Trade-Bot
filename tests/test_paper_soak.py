@@ -82,6 +82,24 @@ def test_cpu_window_includes_reaped_child_and_excludes_setup(cpus, percent):
     }
 
 
+def test_capacity_seed_uses_distinct_history_and_preserves_restore_verification(tmp_path):
+    from soak_worker import seed_capacity
+    from test_option_execution import NOW, owned
+
+    with owned(tmp_path) as (engine, _, _):
+        engine.journal.enable_restore_fence(now=NOW)
+        with engine.journal.write() as db:
+            db.execute("CREATE TABLE execution_runtime_timings("
+                       "id INTEGER PRIMARY KEY,started_at TEXT,payload_json TEXT)")
+        count = seed_capacity(engine.journal, 1)
+        with engine.journal.read(verify_restore=True) as db:
+            rows = db.execute("SELECT payload_json FROM execution_runtime_timings").fetchall()
+        assert len(rows) == count > 200
+        assert len({row[0] for row in rows}) == count
+        assert sum(len(row[0].encode()) for row in rows) >= 1024**2
+        assert all(json.loads(row[0])["version"] == "synthetic-capacity-padding-v2" for row in rows)
+
+
 @pytest.mark.parametrize("allowance", [-1, 4, True, 1.5])
 def test_invalid_recovery_allowance_leaves_output_absent(tmp_path, monkeypatch, allowance):
     monkeypatch.setattr(soak, "validate", lambda *_: {})

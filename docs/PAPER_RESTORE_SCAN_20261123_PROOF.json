@@ -1,0 +1,616 @@
+{
+  "version": "paper-restore-scan-20261123-v1",
+  "base_commit": "70555dcd3e11dd888933aafb71719a6cc1cd4720",
+  "status": "CAPACITY_ACCEPTANCE_FAILED",
+  "incident": "PAPER_SESSION_20261123_PROOF.json",
+  "scope": "Offline varied-history restore-cache improvement. No host access, deployment or account mutation.",
+  "cause_reproduced": "Sequential LRU eviction discards every prior encoding when distinct retained history exceeds the byte/entry cache bound. Repeated-payload capacity fixtures concealed this cost.",
+  "change": "Use MRU eviction within the same exact-string/delimiter encoding cache and unchanged byte/entry bounds. Still scan all current rows and schema, preserve canonical v1 SHA256, and check independent restore authority. Switching to a different restore authority clears prior encodings; the identifier selects cache storage only and never grants trust.",
+  "regression": {
+    "old_policy": "2 new overflow cases failed for byte and entry capacity",
+    "new_policy": "61 focused restore, concurrency, rollback and soak-harness checks passed on final source; 15 native-process checks passed with the matching installed child package. Installed-system and loaded lifecycle results are recorded separately; test groups overlap."
+  },
+  "benchmark": {
+    "version": "restore-scan-benchmark-v1",
+    "synthetic": true,
+    "provider_calls": false,
+    "live_enabled": false,
+    "cpu_affinity": [
+      1
+    ],
+    "seed_mib": 112,
+    "trials": [
+      {
+        "policy": "original_lru",
+        "samples": [
+          {
+            "wall_seconds": 1.0666931380001188,
+            "cpu_seconds": 1.0618414630000004
+          },
+          {
+            "wall_seconds": 1.0514403990000574,
+            "cpu_seconds": 1.0463295180000003
+          },
+          {
+            "wall_seconds": 1.1089776369999527,
+            "cpu_seconds": 1.1037225609999997
+          },
+          {
+            "wall_seconds": 1.2255935670000326,
+            "cpu_seconds": 1.2213022149999997
+          },
+          {
+            "wall_seconds": 1.1660816069997963,
+            "cpu_seconds": 1.1612759399999995
+          }
+        ],
+        "warm_median_seconds": 1.1375296219998745,
+        "canonical_v1_hash_matches": true,
+        "restore_status": "VERIFIED",
+        "cache_entries": 24936,
+        "cache_bytes": 201320334
+      },
+      {
+        "policy": "scan_mru",
+        "samples": [
+          {
+            "wall_seconds": 0.8647013360005076,
+            "cpu_seconds": 0.8599483819999989
+          },
+          {
+            "wall_seconds": 0.6208732570003122,
+            "cpu_seconds": 0.6164101300000002
+          },
+          {
+            "wall_seconds": 0.6454248059999372,
+            "cpu_seconds": 0.6402111319999992
+          },
+          {
+            "wall_seconds": 0.6255606419999822,
+            "cpu_seconds": 0.6208740079999995
+          },
+          {
+            "wall_seconds": 0.6288158160004969,
+            "cpu_seconds": 0.6243092730000015
+          }
+        ],
+        "warm_median_seconds": 0.6271882290002395,
+        "canonical_v1_hash_matches": true,
+        "restore_status": "VERIFIED",
+        "cache_entries": 24954,
+        "cache_bytes": 201324634
+      },
+      {
+        "policy": "original_lru",
+        "samples": [
+          {
+            "wall_seconds": 1.0261578720001125,
+            "cpu_seconds": 1.022131740999999
+          },
+          {
+            "wall_seconds": 1.2911024810000526,
+            "cpu_seconds": 1.2853156879999972
+          },
+          {
+            "wall_seconds": 1.2520184340000924,
+            "cpu_seconds": 1.2471431819999985
+          },
+          {
+            "wall_seconds": 1.256233758000235,
+            "cpu_seconds": 1.244954239000002
+          },
+          {
+            "wall_seconds": 1.2740244149999853,
+            "cpu_seconds": 1.2673060169999992
+          }
+        ],
+        "warm_median_seconds": 1.2651290865001101,
+        "canonical_v1_hash_matches": true,
+        "restore_status": "VERIFIED",
+        "cache_entries": 24936,
+        "cache_bytes": 201320334
+      },
+      {
+        "policy": "scan_mru",
+        "samples": [
+          {
+            "wall_seconds": 0.8487594730004275,
+            "cpu_seconds": 0.8435939179999998
+          },
+          {
+            "wall_seconds": 0.6883602110001448,
+            "cpu_seconds": 0.6835526409999986
+          },
+          {
+            "wall_seconds": 0.7295782959999997,
+            "cpu_seconds": 0.7177727430000012
+          },
+          {
+            "wall_seconds": 0.6713283469998714,
+            "cpu_seconds": 0.6470003060000025
+          },
+          {
+            "wall_seconds": 0.7311346380001851,
+            "cpu_seconds": 0.7182516630000002
+          }
+        ],
+        "warm_median_seconds": 0.7089692535000722,
+        "canonical_v1_hash_matches": true,
+        "restore_status": "VERIFIED",
+        "cache_entries": 24954,
+        "cache_bytes": 201324634
+      }
+    ],
+    "seed_rows": 30006,
+    "database_bytes": 123351040,
+    "peak_process_rss_bytes": 819322880,
+    "status": "RECORDED"
+  },
+  "benchmark_warm_medians": {
+    "original_lru": {
+      "wall_seconds": 1.2388060005000625,
+      "cpu_seconds": 1.2331282270000008
+    },
+    "scan_mru": {
+      "wall_seconds": 0.6583765764999043,
+      "cpu_seconds": 0.6436057190000009
+    }
+  },
+  "benchmark_cpu_reduction_percent": 47.81,
+  "benchmark_limits": [
+    "Same fresh synthetic account; alternating LRU/MRU policies, five transactions each; exclude each first transaction from warm medians.",
+    "One CPU affinity, not a kernel CPU quota. Final comparison used CPU 1 while the duration worker used CPU 0; integrated tests were also active. Process CPU times separate CPU work from scheduling waits.",
+    "Synthetic labeled diagnostic records, not original host history or connected market proof."
+  ],
+  "preserved": [
+    "all original rows and restore-fence hash format",
+    "independent authority and rollback/tamper checks",
+    "192-MiB and 32768-entry encoding-cache bounds",
+    "source freshness, deadlines, risk/model limits",
+    "host release 2d538b7, retained worker and session-review hold",
+    "main, newer branch work, draft PR 1 metadata"
+  ],
+  "full_duration_offline": "NOT_STARTED_BECAUSE_SHORT_LIFECYCLE_GATE_FAILED",
+  "connected_acceptance": "UNRESOLVED",
+  "deployment_recommendation": "DO_NOT_DEPLOY_OR_RESUME_FROM_THIS_CHECKPOINT",
+  "artifact_sha256": {
+    "restore-scan-1123/result.json": "643c429c6ada90b75df3eba91506868d5a0cf9d7e01a1342e0b0e2f06ea65e0b",
+    "restore-1123-tests.xml": "603aad2700354d1da3e090d750cb74eb2c8a0c450ddc86d247394a511882b7ec",
+    "restore-1123-tests.log": "d36acec2069740cea191eaad6ebceca2129076e964fc9c51088bd79a89c49b58",
+    "restore-1123-baseline-regression.log": "c5437de60bb1e78695d1dad10b2c43491a23ba250498517d4c6828a34abba534",
+    "restore-1123-contention-tests.xml": "d0bb74361db5759647eac500420e009e427bbccafe7cdd0df0439cda5bef60c7",
+    "restore-1123-contention-tests.log": "9263aa2f6b81fb634298b2ab9df5dde5b4e947064554f48acbd4e281ddb70c75",
+    "restore-scan-1123-scoped/result.json": "e9924f8465fdf88851a2ab847ec88aa5423e669934bdb4cc51b0aa75d25828c3",
+    "restore-1123-scoped-tests.xml": "1a045d8b328add66c44fe45752bb144b0dbb8620e4afbe73aead36794e5b1268",
+    "restore-1123-scoped-tests.log": "092d27775a525be05f5130cdd6c400af169633af4339b471881ab9bf5cf0f090",
+    "restore-1123-scoped-process-tests.xml": "79c67263558d50b8d3402bdf8d3bd984258450125dc44bf3e18bbdec7f28af28",
+    "restore-1123-scoped-process-tests.log": "be556d332beb828f7677faf2ce6190c764927f36c9785af76de455f4ae7ac156",
+    "restore-1123-extended-tests.xml": "97a4093cc75469a81de826e42228c2345f97f355ae3a6903161f1f6cc85d7ece",
+    "restore-1123-extended-tests.log": "1d0fe939d4a8529d46f53de620bc810571abf7a74d4a79c8f9788de0d6c10834",
+    "varied-soak-1123/progress.json": "c2343a580b05199d1a117f24c98bf5669bbca77cd867fc39675552be0a144a99",
+    "varied-soak-1123/report.json": "75a4b956d302cb09fc0bfe4c04b8b0a72e56b6171478e7ce2cbe5ccde331f684",
+    "varied-soak-1123/summary.json": "c8931150c0fd3f0a0055a0ab3700bfceebba7aa12efa533d3a669af6faafe30c",
+    "varied-soak-1123/worker.log": "2401a5a8016bd03db9efd6d8a4c9a44cbc438a2ed65f169d3d4180935ba9a444",
+    "varied-soak-1123-repeat/progress.json": "a5587b8c75b2060b5f36764c59e52b57cd145650aa10562872b6795c94230232",
+    "varied-soak-1123-repeat/report.json": "67b2562141bb0b0d4c17bcadde823d97045a55dfdcb09eb3a9f5f5f560f628aa",
+    "varied-soak-1123-repeat/summary.json": "f1613bfb4553445bd031cb7a1e389dcf703b9b48d7174e7dce9ed4dcc7b157ca",
+    "varied-soak-1123-repeat/worker.log": "b0e5b9cc41376cd00d483453f250ebbce79e34f5ab99905f49aae2206cc27a3a",
+    "varied-soak-1123-scoped/progress.json": "f41e7331332ca64b38bc5b3783140a7205d0620e9effff668129b7212553b911",
+    "varied-soak-1123-scoped/report.json": "4058119368492eae6f074f457b420fb3f7714e998002d54cda0c2860fcc14618",
+    "varied-soak-1123-scoped/summary.json": "ab9f7195cc03dc2e5c875cff19b77a6d79c20bbf8e4fba8e14ac0bd8a196cd74",
+    "varied-soak-1123-scoped/worker.log": "b9880de6d2771e9282d03a46ea49a662efc5f626fbb81ce488dc6f7f8da69c5e",
+    "system-restore-1123-scoped/tests.xml": "e2d997ce8f4ea9da7e72fef38e6636cdca1c119c8429f8b398705ba0b86f2d5c",
+    "system-restore-1123-scoped/tests.log": "f7c20c4d79bba48309000292188015b49152d6b3fae6ba08e0d62176a1373aaf",
+    "system-restore-1123-scoped/summary.json": "be3b4a2f9aa212c29076c2cc175caad67d77f67233bdc6f62aba858240f14ae0",
+    "system-restore-1123-scoped/combined-contention-loaded.json": "5f5bb29fd862532998994a74cc62621ca93837e942bd3902567f06fc770738b1",
+    "system-restore-1123-scoped/combined-option-contention-loaded.json": "0c1eff09fa70061567279aee3eb1fee70682b7d10accfb5705b2527bc0c676a2"
+  },
+  "source_sha256": {
+    "app/execution/restore.py": "4119d31f2ddfa3471ad58b0271081fcb3b769e68c5b0408d3a27e240ef3ee5d4",
+    "tests/soak_worker.py": "56c6148f96725dcb5787020186bcc52e86df40e0237cde6e9da8b10bbdc6951e",
+    "tests/test_restore_encoding.py": "0b76af3d17f8e8b1e8b2dcab30d60fd6b40b7ed9b1c90bc2c63ec71e4292d6b5",
+    "tests/test_paper_soak.py": "19b1e041786578a4a01e7ad46b59fce5a8576d6283dd9ec633685256302de136",
+    "tests/restore_scan_benchmark.py": "a8d28e1e2b8cb2d8530937e6f3fa9bcacdac22be39b1607bc240f66c14ed148c"
+  },
+  "first_candidate_system_check": {
+    "passed": 901,
+    "failed": 2,
+    "skipped": 1,
+    "seconds": 478.76,
+    "failures": [
+      "STOCK-loaded protection: 5.621604s whole case, native acknowledgement 3.467507s",
+      "OPTION-loaded protection: 5.851272s whole case, native acknowledgement 3.648077s"
+    ],
+    "followup": "Reset encoding cache when independent restore authority changes so unrelated account history is not pinned. Exact text comparison and unique never-recycled handles remain required."
+  },
+  "first_candidate_extended_protection": {
+    "passed": 7,
+    "failed": 2,
+    "seconds": 66.6,
+    "scope": "Final source-side cache scoping, varied 112-MiB padding, old installed child modules otherwise unchanged. Five-second whole-case target failed; retained synthetic cases only."
+  },
+  "short_trials": [
+    {
+      "directory": "/workspace/scratch/b29c7148e65c/varied-soak-1123",
+      "status": "FAILED",
+      "failure": "Known fixture lifecycle did not complete",
+      "planned_seconds": 335,
+      "elapsed_seconds": 338.2750877520002,
+      "source_seed": {
+        "kind": "labeled diagnostic padding, not month-history proof",
+        "rows": 30006,
+        "initial_database_bytes": 124760064
+      },
+      "native_snapshot_calls": 68,
+      "native_snapshot_failures": 0,
+      "native_snapshot_max_seconds": 0.4413904299999558,
+      "peak_tree_rss_bytes": 617406464,
+      "decision_coverage": {
+        "expected": 2,
+        "evaluated": 2,
+        "coverage_percent": 100.0,
+        "unmeasured_slots": [],
+        "target_met": true
+      },
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 0,
+        "exit_fills": 0,
+        "completed_round_trips": 0,
+        "carry_in_exits": 0
+      },
+      "decision_reasons": [
+        [
+          "ORIGINAL_PLAN_DEADLINE_EXPIRED"
+        ],
+        [
+          "NO_ADMITTED_CONTRACT"
+        ]
+      ]
+    },
+    {
+      "directory": "/workspace/scratch/b29c7148e65c/varied-soak-1123-repeat",
+      "status": "FAILED",
+      "failure": "Known fixture lifecycle did not complete",
+      "planned_seconds": 335,
+      "elapsed_seconds": 336.6673030460006,
+      "source_seed": {
+        "kind": "labeled diagnostic padding, not month-history proof",
+        "rows": 30006,
+        "initial_database_bytes": 124760064
+      },
+      "native_snapshot_calls": 76,
+      "native_snapshot_failures": 0,
+      "native_snapshot_max_seconds": 0.14623995199963247,
+      "peak_tree_rss_bytes": 633487360,
+      "decision_coverage": {
+        "expected": 2,
+        "evaluated": 2,
+        "coverage_percent": 100.0,
+        "unmeasured_slots": [],
+        "target_met": true
+      },
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 0,
+        "exit_fills": 0,
+        "completed_round_trips": 0,
+        "carry_in_exits": 0
+      },
+      "decision_reasons": [
+        [
+          "ENTRY_PLAN_EXPIRED_BEFORE_MODEL"
+        ],
+        [
+          "ENTRY_PLAN_EXPIRED_BEFORE_MODEL"
+        ]
+      ]
+    }
+  ],
+  "next_work": "Reduce remaining full-history verification cost in the owner path while preserving the original canonical restore hash, independent rollback authority and original quote/plan clocks. Require the varied-history entry/exit fixture and protection deadline before a full-duration or host release proposal.",
+  "earlier_benchmark_medians": {
+    "original_lru": {
+      "wall_seconds": 2.463499173000173,
+      "cpu_seconds": 1.253837476500001
+    },
+    "scan_mru": {
+      "wall_seconds": 1.3752023439999448,
+      "cpu_seconds": 0.6752784590000003
+    }
+  },
+  "focused_tests": {
+    "tests": "61",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "4.846"
+  },
+  "process_tests": {
+    "tests": "15",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "11.374"
+  },
+  "final_short_trial": {
+    "status": "FAILED",
+    "failure": "Known fixture lifecycle did not complete",
+    "elapsed_seconds": 340.2088093579996,
+    "source_seed": {
+      "kind": "labeled diagnostic padding, not month-history proof",
+      "rows": 30006,
+      "initial_database_bytes": 124760064
+    },
+    "native_snapshot_calls": 75,
+    "native_snapshot_failures": 0,
+    "native_snapshot_max_seconds": 0.17641637199994875,
+    "peak_tree_rss_bytes": 586702848,
+    "decision_coverage": {
+      "expected": 2,
+      "evaluated": 2,
+      "coverage_percent": 100.0,
+      "unmeasured_slots": [],
+      "target_met": true
+    },
+    "worker_window_cpu": {
+      "elapsed_seconds": 340.20879,
+      "worker_user_seconds": 261.712879,
+      "worker_system_seconds": 36.906324,
+      "reaped_child_user_seconds": 2.31402,
+      "reaped_child_system_seconds": 0.822877,
+      "average_busy_cores": 0.886973,
+      "average_allocated_cpu_percent": 88.697
+    },
+    "children_reaped": true,
+    "run_execution": {
+      "status": "RECORDED",
+      "entry_fills": 0,
+      "exit_fills": 0,
+      "completed_round_trips": 0,
+      "carry_in_exits": 0
+    },
+    "runtime_failures": [],
+    "publication_failures": [],
+    "decision_reasons": [
+      [
+        "ORIGINAL_PLAN_DEADLINE_EXPIRED"
+      ],
+      [
+        "ENTRY_MODEL_HOLD_OR_REJECTED"
+      ]
+    ],
+    "runtime_phases": {
+      "TICK": {
+        "samples": 75,
+        "p50_seconds": 2.860686,
+        "p95_seconds": 3.780755,
+        "p99_seconds": 3.985027,
+        "max_seconds": 3.985027
+      },
+      "TICK_PACKET_VALIDATION": {
+        "samples": 75,
+        "p50_seconds": 0.017589,
+        "p95_seconds": 0.023177,
+        "p99_seconds": 0.167888,
+        "max_seconds": 0.167888
+      },
+      "TICK_REPEAT_RECEIPT": {
+        "samples": 43,
+        "p50_seconds": 0.398405,
+        "p95_seconds": 0.48765,
+        "p99_seconds": 0.507366,
+        "max_seconds": 0.507366
+      },
+      "TICK_QUOTE_FILLS": {
+        "samples": 73,
+        "p50_seconds": 0.005079,
+        "p95_seconds": 0.007662,
+        "p99_seconds": 0.008876,
+        "max_seconds": 0.008876
+      },
+      "NATIVE_SNAPSHOT_SPAWN": {
+        "samples": 75,
+        "p50_seconds": 0.00101,
+        "p95_seconds": 0.013908,
+        "p99_seconds": 0.033912,
+        "max_seconds": 0.033912
+      },
+      "NATIVE_SNAPSHOT": {
+        "samples": 75,
+        "p50_seconds": 0.041733,
+        "p95_seconds": 0.126637,
+        "p99_seconds": 0.176283,
+        "max_seconds": 0.176283
+      },
+      "RECONCILE_COMMIT": {
+        "samples": 75,
+        "p50_seconds": 0.736754,
+        "p95_seconds": 1.238784,
+        "p99_seconds": 1.440373,
+        "max_seconds": 1.440373
+      },
+      "PROTECTION": {
+        "samples": 75,
+        "p50_seconds": 0.789074,
+        "p95_seconds": 1.345109,
+        "p99_seconds": 1.606177,
+        "max_seconds": 1.606177
+      },
+      "DELIVERY_COMMIT": {
+        "samples": 75,
+        "p50_seconds": 0.713958,
+        "p95_seconds": 0.859517,
+        "p99_seconds": 0.903488,
+        "max_seconds": 0.903488
+      },
+      "TICK_NEW_RECEIPT": {
+        "samples": 30,
+        "p50_seconds": 0.704026,
+        "p95_seconds": 0.82607,
+        "p99_seconds": 0.848403,
+        "max_seconds": 0.848403
+      },
+      "CYCLE": {
+        "samples": 2,
+        "p50_seconds": 5.648089,
+        "p95_seconds": 6.039098,
+        "p99_seconds": 6.039098,
+        "max_seconds": 6.039098
+      },
+      "CYCLE_OPPORTUNITY_CLAIM": {
+        "samples": 2,
+        "p50_seconds": 0.699911,
+        "p95_seconds": 0.749639,
+        "p99_seconds": 0.749639,
+        "max_seconds": 0.749639
+      },
+      "SCAN": {
+        "samples": 2,
+        "p50_seconds": 0.009672,
+        "p95_seconds": 0.011958,
+        "p99_seconds": 0.011958,
+        "max_seconds": 0.011958
+      },
+      "STOCK_SCAN": {
+        "samples": 2,
+        "p50_seconds": 0.686966,
+        "p95_seconds": 0.713346,
+        "p99_seconds": 0.713346,
+        "max_seconds": 0.713346
+      },
+      "SCOPE_SCAN": {
+        "samples": 2,
+        "p50_seconds": 0.001201,
+        "p95_seconds": 0.001271,
+        "p99_seconds": 0.001271,
+        "max_seconds": 0.001271
+      },
+      "ENTRY_MODEL_REQUEST": {
+        "samples": 2,
+        "p50_seconds": 0.689755,
+        "p95_seconds": 0.790302,
+        "p99_seconds": 0.790302,
+        "max_seconds": 0.790302
+      },
+      "ENTRY_MODEL_ADMISSION": {
+        "samples": 2,
+        "p50_seconds": 0.704837,
+        "p95_seconds": 0.739892,
+        "p99_seconds": 0.739892,
+        "max_seconds": 0.739892
+      },
+      "ENTRY_MODEL": {
+        "samples": 2,
+        "p50_seconds": 0.001821,
+        "p95_seconds": 0.002845,
+        "p99_seconds": 0.002845,
+        "max_seconds": 0.002845
+      },
+      "ENTRY_MODEL_SETTLEMENT": {
+        "samples": 2,
+        "p50_seconds": 0.646251,
+        "p95_seconds": 0.776856,
+        "p99_seconds": 0.776856,
+        "max_seconds": 0.776856
+      },
+      "ENTRY_MIXED_SELECTION": {
+        "samples": 1,
+        "p50_seconds": 0.000527,
+        "p95_seconds": 0.000527,
+        "p99_seconds": 0.000527,
+        "max_seconds": 0.000527
+      },
+      "ENTRY_SCOPE_RECEIPT_CHECK": {
+        "samples": 1,
+        "p50_seconds": 0.009971,
+        "p95_seconds": 0.009971,
+        "p99_seconds": 0.009971,
+        "max_seconds": 0.009971
+      },
+      "ENTRY_SCOPE_SELECTION": {
+        "samples": 1,
+        "p50_seconds": 0.000495,
+        "p95_seconds": 0.000495,
+        "p99_seconds": 0.000495,
+        "max_seconds": 0.000495
+      },
+      "ENTRY_PROTECTION_WAIT": {
+        "samples": 1,
+        "p50_seconds": 8e-05,
+        "p95_seconds": 8e-05,
+        "p99_seconds": 8e-05,
+        "max_seconds": 8e-05
+      },
+      "ENTRY_OPTION_MARKET_READ": {
+        "samples": 1,
+        "p50_seconds": 0.005217,
+        "p95_seconds": 0.005217,
+        "p99_seconds": 0.005217,
+        "max_seconds": 0.005217
+      },
+      "ENTRY_REVIEW": {
+        "samples": 1,
+        "p50_seconds": 0.027321,
+        "p95_seconds": 0.027321,
+        "p99_seconds": 0.027321,
+        "max_seconds": 0.027321
+      }
+    },
+    "trace_start_write": {
+      "samples": 77,
+      "p50_seconds": 0.745815,
+      "p95_seconds": 1.037335,
+      "p99_seconds": 1.274942,
+      "max_seconds": 1.274942
+    }
+  },
+  "installed_system": {
+    "summary": {
+      "version": "paper-system-check-v1",
+      "status": "PASSED",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "market_acceptance": "UNVERIFIED",
+      "wall_clock_soak": "NOT_RUN",
+      "host_acceptance": "UNVERIFIED",
+      "application_files": 334,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "28a7b6b65b77f7055f6edf988159a3d01e1942c083d2e34cda2bb0ac8b63be49",
+      "test_exit_code": 0
+    },
+    "tests": {
+      "tests": "905",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "1",
+      "time": "450.908"
+    },
+    "skip_reason": "Reader UID 10001 is not mapped in the isolated test environment.",
+    "scope": "Final noneditable application, all 334 app files and 60 runtime pins verified. Root-mapped isolated network namespace. No external provider/model calls."
+  },
+  "final_standard_protection": {
+    "STOCK": {
+      "seed_mib": 68,
+      "journal_bytes_before_contention": 75907072,
+      "exit_seconds": 3.6743133139998463,
+      "breach_to_native_ack_seconds": 2.3145826199997828,
+      "breach_to_tick_completion_seconds": 3.447724845999801,
+      "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+      "held_positions": 0,
+      "accounting": "VERIFIED"
+    },
+    "OPTION": {
+      "seed_mib": 68,
+      "journal_bytes_before_contention": 75964416,
+      "exit_seconds": 3.905271449999418,
+      "breach_to_native_ack_seconds": 2.4140823230000024,
+      "breach_to_tick_completion_seconds": 3.629145363999669,
+      "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+      "held_positions": 0,
+      "accounting": "VERIFIED"
+    }
+  },
+  "verification_summary": "Final installed system: 904 passed, one unmapped-reader-UID skip. Focused source: 61 passed. Native process: 15 passed. Groups overlap. Final 112-MiB short lifecycle and extended protection gates failed; no full-duration run or host deployment."
+}
