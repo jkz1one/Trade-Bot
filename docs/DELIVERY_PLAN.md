@@ -40,6 +40,34 @@ cannot be adopted as connected evidence or execution state.
 
 ## Delivery checklist
 
+### November 24 duration failure and memory qualification
+
+The host detached test of `20923e2` failed with OOM after 37m 19s, exit 1 and
+zero restarts. Full duration is FAILED, not merely unobserved. No final synthetic
+coverage or accounting report was supplied. The connected owner remains on
+`2d538b7` under its existing review hold.
+
+Replace obsolete cached encodings for changing row batches while preserving all
+current-cell checks and canonical authority. The reproducible 300-update workload
+ends at 528 MiB with the preceding retention policy and 368 MiB with replacement;
+both canonical hashes match. Add cgroup counters to distinguish process memory
+from file/tmpfs charges in the next host result. The matching installed suite
+passed 976 tests with one reader-UID skip, but 112-MiB protection FAILED its
+five-second whole-case target (stock 6.13 seconds, option 7.95 seconds). The
+preceding cache policy also fails in the same environment. Both policies completed
+protective exits and verified flat accounting; timing remains a blocking gate.
+Continue offline work on repeated fenced protection commits. Do not raise limits,
+deploy, resume or ask for another host soak until local qualification passes.
+Full duration, projected-month growth and connected provider health remain open.
+[Measurements and limits](PAPER_MEMORY_20261124_PROOF.json).
+
+The final 335-second loaded fixture also FAILED: 101 native snapshots completed
+without failure (maximum 0.303 seconds), but native acceptance exhausted its
+remaining 1.240-second transport budget. No round trip completed, and only one
+of two scheduled decision slots was measured. Sampled process-tree peak was
+489,492,480 bytes; cgroup counters are unavailable locally. Reduced memory and
+successful snapshot reads do not override the failed lifecycle gate.
+
 ### November 23 acceptance result
 
 R3 guarded installation succeeded for `2d538b7`; R4 failed. The worker ran for
@@ -70,9 +98,9 @@ RUNNING receipts. Use the detached credential-free host harness in
 `scripts/paper-soak-host.py` for the residual Docker and sustained-duration gate.
 The new test uses one CPU, kernel-enforced 1-GiB memory, no swap, 128 PIDs and no
 network; it mounts only a newly created synthetic evidence directory and preserves
-every attempt. Host execution is still unverified. Its duration, memory, growth,
-decision coverage, publication and final accounting results are the next required
-evidence. [Runner verification](PAPER_SOAK_HOST_20261124_PROOF.json). Connected
+every attempt. The subsequent November 24 host launch and OOM failure are recorded
+above. A new repaired-candidate duration, memory, growth, decision coverage,
+publication and final accounting result is still required. [Runner verification](PAPER_SOAK_HOST_20261124_PROOF.json). Connected
 R4 remains open. Do not resume or redeploy based on a short fixture or benchmark.
 Collector CONNECT samples still need the finer diagnostics to distinguish
 SDK/OAuth/MCP phases. Keep the installed host account, worker and review hold.

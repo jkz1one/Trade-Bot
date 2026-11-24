@@ -4,6 +4,7 @@
 import argparse
 import hashlib
 import importlib.metadata
+import importlib.util
 import json
 import os
 import shutil
@@ -14,6 +15,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 NOMINAL_SECONDS = 21480
+_memory_spec = importlib.util.spec_from_file_location('paper_soak_memory', ROOT / 'tests/soak_memory.py')
+_memory = importlib.util.module_from_spec(_memory_spec)
+_memory_spec.loader.exec_module(_memory)
 
 
 def validate(output, seconds, seed_mib):
@@ -161,6 +165,7 @@ def run(output, seconds, seed_mib, *, cpus=1, max_feed_recoveries=0, profile_ope
                 os.killpg(child.pid, signal.SIGKILL)
                 child.wait(timeout=5)
         signal.signal(signal.SIGTERM, previous_sigterm)
+        result['cgroup_memory'] = _memory.cgroup_memory()
         summary.write_text(json.dumps(result, indent=2) + "\n")
     return result
 

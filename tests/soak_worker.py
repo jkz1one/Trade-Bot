@@ -11,6 +11,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+from soak_memory import cgroup_memory
 from fastapi.testclient import TestClient
 from test_combined_session_feed import combined
 from test_contract_catalog import captures
@@ -406,6 +407,7 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
                     raise ValueError("SOAK_MEMORY_CEILING_EXCEEDED")
                 elapsed = time.monotonic() - started[0]
                 metrics["elapsed_seconds"] = elapsed
+                metrics["cgroup_memory"] = cgroup_memory()
                 metrics["source_database_bytes"] = (owner / "options.db").stat().st_size
                 if elapsed >= next_report:
                     report = await asyncio.to_thread(inspect)
@@ -495,6 +497,7 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
         metrics.update(status="FAILED", failure_class=type(exc).__name__, failure=str(exc)[:200])
         raise
     finally:
+        metrics["cgroup_memory"] = cgroup_memory()
         metrics["cpu_user_seconds"] = resource.getrusage(resource.RUSAGE_SELF).ru_utime
         metrics["cpu_system_seconds"] = resource.getrusage(resource.RUSAGE_SELF).ru_stime
         metrics["children_reaped"] = all(child.returncode is not None for child in children)

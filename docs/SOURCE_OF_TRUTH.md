@@ -1,5 +1,46 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.232. November 24, New York time. Offline host OOM and cache retention repair.
+
+The detached host test of `20923e2` failed after 37m 19s: Docker reports an OOM
+kill, exit 1 and zero restarts. Its last progress recorded 445 native snapshots
+without a timeout (maximum 0.625 seconds), but no final decision, execution or
+accounting result. This is a failed duration gate. It is separate from the installed
+connected `2d538b7` owner, whose review hold remains in place.
+
+A changing-journal reproduction identifies obsolete row-batch cache versions as
+a memory-growth contributor. After 300 identical synthetic updates, resident memory
+was 528 MiB with content-only retention and 368 MiB with replacement by table and
+batch position. Both began near 364 MiB and verified the canonical v1 hash. These
+are separate processes using 112 MiB of varied history; they are not Docker memory
+qualification or proof that this was the server's only allocation problem.
+
+The repair replaces obsolete batch encodings. Every hit still hashes all current
+typed cells; every current row and schema remains checked. The 192-MiB encoding
+budget, original clocks, authority hash, deadlines and account limits are unchanged.
+Offline receipts now retain cgroup v2 memory usage, file/tmpfs charges and OOM
+counters when available, and distinguish OOM from restarts.
+[Incident, reproducible comparison and verification](PAPER_MEMORY_20261124_PROOF.json).
+
+The matching installed suite passed 976 tests with one unmapped-reader-UID skip.
+However, the 112-MiB loaded protection cases FAILED the unchanged five-second
+whole-case target: stock 6.13 seconds and option 7.95 seconds. Both exits completed
+and accounting verified flat. The preceding cache policy also fails under the
+same conditions (6.40 seconds for both cases); the issue is not unique to this
+repair. These failures remain blocking evidence. Full host duration, projected-month
+growth and connected R4 remain open. Continue offline protection-latency work;
+do not deploy, resume or ask the operator to repeat the host duration test yet.
+[Operator action](PAPER_NEXT_SESSION.md).
+
+The final 335-second loaded fixture also FAILED: 101 native snapshots completed
+without failure (maximum 0.303 seconds), but native acceptance exhausted its
+remaining 1.240-second transport budget. No round trip completed, and only one
+of two scheduled decision slots was measured. Sampled process-tree peak was
+489,492,480 bytes; cgroup counters are unavailable locally. Reduced memory and
+successful snapshot reads do not override the failed lifecycle gate.
+
+### Earlier November 24 detached-runner checkpoint
+
 Version 1.231. November 24, New York time. Persistent offline duration gate.
 
 The current offline candidate passes the previously failing 112-MiB varied-history

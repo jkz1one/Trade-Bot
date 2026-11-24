@@ -170,8 +170,10 @@ def classify(item, receipt, summary, progress):
     if not isolation_matches(item, receipt):
         return 'UNVERIFIED', 'CONTAINER_IDENTITY_OR_ISOLATION_MISMATCH'
     state = item['State']
-    if item['RestartCount'] or state['OOMKilled']:
-        return 'FAILED', 'CONTAINER_RESTART_OR_OOM'
+    if state['OOMKilled']:
+        return 'FAILED', 'CONTAINER_OOM'
+    if item['RestartCount']:
+        return 'FAILED', 'CONTAINER_RESTARTED'
     if state['Running']:
         return 'RUNNING', None
     if state['Status'] != 'exited':
@@ -217,6 +219,7 @@ def status(output):
             'worker': {k: item['State'].get(k) for k in
                        ('Status', 'Running', 'StartedAt', 'FinishedAt', 'ExitCode', 'OOMKilled', 'Error')},
             'restart_count': item['RestartCount'], 'progress_age_seconds': age,
+            'last_cgroup_memory': summary.get('cgroup_memory') or progress.get('cgroup_memory'),
             'progress': {k: progress.get(k) for k in
                          ('status', 'elapsed_seconds', 'native_snapshot_calls', 'native_snapshot_failures',
                           'native_snapshot_max_seconds', 'capture_attempts', 'peak_tree_rss_bytes',

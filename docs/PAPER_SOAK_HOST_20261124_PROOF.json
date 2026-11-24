@@ -1,7 +1,7 @@
 {
   "version": "paper-soak-host-20261124-v1",
   "base_commit": "028bdf317621f1499296ab0ebf46d3dd003846a5",
-  "status": "OFFLINE_RUNNER_CHECKS_PASSED_HOST_EXECUTION_UNVERIFIED",
+  "status": "HOST_RUN_CONFIRMED_OOM_FAILURE",
   "application_changed": false,
   "application_manifest_sha256": "f9f8035603dcb429a9fa589a878653a33b579c7fbc2458e1712d7d0378f53138",
   "regression": {
@@ -26,8 +26,8 @@
     "Status distinguishes no progress, stale progress, nonzero exit, OOM and restarts; it does not mutate evidence, account or schedule."
   ],
   "unverified": [
-    "No Docker executable, daemon, image build or Docker run is available in this development workspace.",
-    "Full 21,480-second duration remains incomplete; prior workspace attempt recorded 599.768780394 seconds before its process disappeared.",
+    "No Docker executable or daemon is available in the development workspace. The operator supplied host build, launch and OOM status for 20923e2.",
+    "Full 21,480-second duration gate FAILED with host OOM; the older workspace attempt remains incomplete at 599.77 seconds.",
     "Projected month growth, real provider connection health and sustained connected R4 remain open.",
     "Prior 925-pass installed application suite is unchanged historical evidence; this turn did not rerun it."
   ],
@@ -41,5 +41,17 @@
     "main": true,
     "draft_pr_1": true
   },
-  "next_action": "Operator starts the detached credential-free host soak from a reviewed candidate checkout, then returns its startup and retained status results. Do not deploy or resume the connected owner."
+  "next_action": "Repair the failing local 112-MiB protection timing gate before another host soak. Memory repair is recorded in PAPER_MEMORY_20261124_PROOF.json. Keep connected deployment, account, timer and review hold unchanged.",
+  "operator_followup": {
+    "release": "20923e2e823d2ed01ad2575c1e78f5f4232ee409",
+    "started_at": "2026-11-24T15:47:12.976147186Z",
+    "finished_at": "2026-11-24T16:24:32.416716106Z",
+    "oom_killed": true,
+    "restart_count": 0,
+    "exit_code": 1,
+    "container_elapsed_seconds": 2239.440569,
+    "evidence_directory": "/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-20923e2e823d-iftsm6k7",
+    "proof": "PAPER_MEMORY_20261124_PROOF.json",
+    "interpretation": "Image build and detached launch confirmed by operator output; the 21,480-second gate FAILED after 37m19s. Last progress is not final coverage/accounting."
+  }
 }

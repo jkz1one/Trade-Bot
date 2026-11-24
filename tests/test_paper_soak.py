@@ -60,6 +60,25 @@ def test_reject_network_before_import_or_state_creation(isolated, tmp_path, monk
     assert not output.exists()
 
 
+def test_cgroup_memory_distinguishes_process_memory_from_file_and_tmpfs_charges(tmp_path):
+    from soak_memory import cgroup_memory
+
+    for name, value in {'current': '900', 'peak': '1024', 'max': '1073741824',
+                        'events': 'oom 1\noom_kill 1\nunknown 99\n',
+                        'stat': 'anon 600\nfile 250\nshmem 200\nslab 50\nunknown 0\n'}.items():
+        (tmp_path / ('memory.' + name)).write_text(value)
+    result = cgroup_memory(tmp_path)
+    assert result['current_bytes'] == 900 and result['peak_bytes'] == 1024
+    assert result['max_bytes'] == 1073741824
+    assert result['events'] == {'oom': 1, 'oom_kill': 1}
+    assert result['stat'] == {'anon': 600, 'file': 250, 'shmem': 200, 'slab': 50}
+    (tmp_path / 'memory.max').write_text('max')
+    assert cgroup_memory(tmp_path)['max_bytes'] is None
+    (tmp_path / 'memory.events').write_text('oom_kill -1')
+    assert cgroup_memory(tmp_path) == {'status': 'UNAVAILABLE'}
+    assert cgroup_memory(tmp_path / 'absent') == {'status': 'UNAVAILABLE'}
+
+
 @pytest.mark.parametrize("cpus", [0, 2, 3, True])
 def test_cpu_comparison_cannot_expand_available_affinity(cpus, tmp_path, monkeypatch):
     monkeypatch.setattr(soak, "validate", lambda *_: {})

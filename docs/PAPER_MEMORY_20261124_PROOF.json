@@ -1,0 +1,855 @@
+{
+  "version": "paper-memory-20261124-v1",
+  "base_commit": "20923e2e823d2ed01ad2575c1e78f5f4232ee409",
+  "status": "MEMORY_REPAIR_VERIFIED_LOADED_ACCEPTANCE_FAILED",
+  "host_evidence": {
+    "source": "Operator-supplied read-only offline-soak status; no direct host access",
+    "observed_at": "2026-11-24T17:10:12.969780+00:00",
+    "release": "20923e2e823d2ed01ad2575c1e78f5f4232ee409",
+    "image_id": "sha256:bc223f3a6d4efef38fdd8dd8b0ca9c07aa7a45bcd6ffac0f553dfdad5385d2c4",
+    "evidence_directory": "/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-20923e2e823d-iftsm6k7",
+    "started_at": "2026-11-24T15:47:12.976147+00:00",
+    "finished_at": "2026-11-24T16:24:32.416716+00:00",
+    "container_elapsed_seconds": 2239.440569,
+    "exit_code": 1,
+    "oom_killed": true,
+    "restart_count": 0,
+    "last_progress": {
+      "status": "RUNNING",
+      "elapsed_seconds": 2206.909038159065,
+      "native_snapshot_calls": 445,
+      "native_snapshot_failures": 0,
+      "native_snapshot_max_seconds": 0.6252190163359046,
+      "capture_attempts": 193,
+      "peak_tree_rss_bytes": 963268608,
+      "source_database_bytes": 135405568,
+      "decision_coverage": null,
+      "execution": null,
+      "final_accounting": null
+    },
+    "accepted_as_full_duration_pass": false
+  },
+  "changes": [
+    "Replace obsolete row-batch encodings at the same table and batch position. Each cache hit still requires the SHA256 fingerprint of all current typed cells. Every row is read and the canonical sorted v1 authority hash is unchanged.",
+    "The total encoding budget remains 192 MiB. No pruning, risk/model limit, clock, execution deadline or account authority changes.",
+    "Offline soak receipts now include cgroup v2 memory counters where available, including file/tmpfs charges and OOM events. The parent records final counters even if its child is killed. Host status distinguishes OOM from restarts."
+  ],
+  "limits": [
+    "Local process RSS evidence is not kernel-enforced Docker memory qualification.",
+    "The server OOM is confirmed, but its allocation breakdown was not recorded. Local version-churn reproduction identifies a contributor, not proof that it was the only cause.",
+    "Full-duration, projected-month and connected-provider acceptance remain open."
+  ],
+  "protected": {
+    "installed_release": "2d538b7f32afa7b6df09e7af0d3534e9e27f71e5",
+    "review_hold": "SESSION_STOPPED_REVIEW_REQUIRED",
+    "account_state": true,
+    "limits": true,
+    "main": true,
+    "draft_pr_1": true
+  },
+  "diagnostic_experiments": {
+    "unchanged_journal": {
+      "combined_restore_scans_and_reports": 150,
+      "rss_bytes_at_iteration_10": 345505792,
+      "rss_bytes_at_iteration_150": 346566656,
+      "result": "Stable after warm-up; this workload did not reproduce active growth."
+    },
+    "packet_validation": {
+      "reads": 500,
+      "rss_initial_bytes": 165228544,
+      "rss_final_bytes": 170156032,
+      "result": "Stable after warm-up; this workload did not reproduce active growth."
+    },
+    "instrumented_prior_application": {
+      "seconds": 711.8096159400001,
+      "native_snapshot_calls": 121,
+      "result": "FAILED",
+      "reason": "Native acceptance failure",
+      "qualification": false,
+      "note": "Diagnostic run with object census and concurrent memory experiments, not an uncontended acceptance run. It did not establish a local OOM."
+    },
+    "early_mutation_probes": {
+      "status": "INTENTIONALLY_INTERRUPTED",
+      "reason": "Superseded by the reproducible committed benchmark with independent processes and final canonical verification."
+    },
+    "latency_profile": {
+      "cpu_affinity_comparison": "One logical CPU at a time; CPUs 0 and 8 both approximately 0.54 seconds per warm 112-MiB journal write. No evidence here of affinity selection resolving the failure.",
+      "four_writes_eight_scans_profile_seconds": 2.534,
+      "batch_sha256_seconds": 0.812,
+      "canonical_sha256_updates_seconds": 0.459,
+      "raw_scan_seconds_excluding_called_functions": 0.678,
+      "experimental_fast_path": "Hoisting scalar type constants and omitting temporary named-row wrappers did not materially reduce unprofiled write latency; discarded, not included in the candidate.",
+      "hash_comparison": "SHA512 and BLAKE2 variants were slower in a synthetic microbenchmark. No fingerprint algorithm was changed."
+    }
+  },
+  "memory_comparison": {
+    "method": "Two fresh network-isolated processes, each pinned to one logical CPU; independent 112-MiB varied synthetic journals and 300 appended diagnostic records. They overlap on the same logical CPU; elapsed times are not a latency comparison.",
+    "baseline": "Previous content-key-only retention policy reconstructed with the current encoding implementation; not a literal build of the preceding commit.",
+    "interpretation": "Numeric workload samples precede the independent canonical reference hash. peak_process_rss_bytes also includes reference-hash allocation and is not the end-workload RSS.",
+    "results": {
+      "versions": {
+        "result_sha256": "e951c68c877c7f86e2b4c5583ff0b68e56d91fdc9a38b5669d2f624d270aff1e",
+        "version": "restore-memory-benchmark-v1",
+        "policy": "versions",
+        "seed_mib": 112,
+        "synthetic": true,
+        "provider_calls": false,
+        "live_enabled": false,
+        "iterations": 300,
+        "samples": [
+          {
+            "iteration": 0,
+            "seconds": 3.3248518479999802,
+            "resident": {
+              "VmRSS": 381521920,
+              "RssAnon": 345493504,
+              "RssFile": 36028416
+            },
+            "row_cache_bytes": 120291038,
+            "row_cache_entries": 118,
+            "text_cache_bytes": 10409
+          },
+          {
+            "iteration": 25,
+            "seconds": 17.262962549000008,
+            "resident": {
+              "VmRSS": 388513792,
+              "RssAnon": 352444416,
+              "RssFile": 36069376
+            },
+            "row_cache_bytes": 127145124,
+            "row_cache_entries": 143,
+            "text_cache_bytes": 10409
+          },
+          {
+            "iteration": 50,
+            "seconds": 31.832145073000106,
+            "resident": {
+              "VmRSS": 399405056,
+              "RssAnon": 363335680,
+              "RssFile": 36069376
+            },
+            "row_cache_bytes": 137737424,
+            "row_cache_entries": 168,
+            "text_cache_bytes": 10409
+          },
+          {
+            "iteration": 75,
+            "seconds": 46.33844582800009,
+            "resident": {
+              "VmRSS": 414187520,
+              "RssAnon": 378118144,
+              "RssFile": 36069376
+            },
+            "row_cache_bytes": 152175974,
+            "row_cache_entries": 193,
+            "text_cache_bytes": 10409
+          },
+          {
+            "iteration": 100,
+            "seconds": 60.94828703399992,
+            "resident": {
+              "VmRSS": 432865280,
+              "RssAnon": 396795904,
+              "RssFile": 36069376
+            },
+            "row_cache_bytes": 167384380,
+            "row_cache_entries": 215,
+            "text_cache_bytes": 10409
+          },
+          {
+            "iteration": 125,
+            "seconds": 79.89910331800013,
+            "resident": {
+              "VmRSS": 457428992,
+              "RssAnon": 421359616,
+              "RssFile": 36069376
+            },
+            "row_cache_bytes": 166957085,
+            "row_cache_entries": 217,
+            "text_cache_bytes": 10409
+          },
+          {
+            "iteration": 150,
+            "seconds": 104.16821659899995,
+            "resident": {
+              "VmRSS": 486641664,
+              "RssAnon": 450580480,
+              "RssFile": 36061184
+            },
+            "row_cache_bytes": 167125484,
+            "row_cache_entries": 214,
+            "text_cache_bytes": 10409
+          },
+          {
+            "iteration": 175,
+            "seconds": 136.422766799,
+            "resident": {
+              "VmRSS": 522506240,
+              "RssAnon": 486445056,
+              "RssFile": 36061184
+            },
+            "row_cache_bytes": 166856193,
+            "row_cache_entries": 205,
+            "text_cache_bytes": 10409
+          },
+          {
+            "iteration": 200,
+            "seconds": 207.551529793,
+            "resident": {
+              "VmRSS": 553275392,
+              "RssAnon": 517214208,
+              "RssFile": 36061184
+            },
+            "row_cache_bytes": 167296245,
+            "row_cache_entries": 195,
+            "text_cache_bytes": 10409
+          },
+          {
+            "iteration": 225,
+            "seconds": 281.3332762609999,
+            "resident": {
+              "VmRSS": 552890368,
+              "RssAnon": 517308416,
+              "RssFile": 35581952
+            },
+            "row_cache_bytes": 167525537,
+            "row_cache_entries": 196,
+            "text_cache_bytes": 10409
+          },
+          {
+            "iteration": 250,
+            "seconds": 352.19679479700005,
+            "resident": {
+              "VmRSS": 552964096,
+              "RssAnon": 517382144,
+              "RssFile": 35581952
+            },
+            "row_cache_bytes": 167754412,
+            "row_cache_entries": 196,
+            "text_cache_bytes": 10409
+          },
+          {
+            "iteration": 275,
+            "seconds": 428.15035086399996,
+            "resident": {
+              "VmRSS": 553385984,
+              "RssAnon": 517804032,
+              "RssFile": 35581952
+            },
+            "row_cache_bytes": 166241236,
+            "row_cache_entries": 195,
+            "text_cache_bytes": 10409
+          },
+          {
+            "iteration": 300,
+            "seconds": 490.3721703289999,
+            "resident": {
+              "VmRSS": 553652224,
+              "RssAnon": 518148096,
+              "RssFile": 35504128
+            },
+            "row_cache_bytes": 166470111,
+            "row_cache_entries": 195,
+            "text_cache_bytes": 10409
+          },
+          {
+            "iteration": "after_gc",
+            "seconds": 493.17523947100005,
+            "resident": {
+              "VmRSS": 553721856,
+              "RssAnon": 518148096,
+              "RssFile": 35573760
+            },
+            "row_cache_bytes": 166470111,
+            "row_cache_entries": 195,
+            "text_cache_bytes": 10409
+          }
+        ],
+        "status": "RECORDED",
+        "cpu_affinity": [
+          8
+        ],
+        "seed_rows": 30006,
+        "initial_database_bytes": 123351040,
+        "canonical_v1_hash_matches": true,
+        "final_database_bytes": 125796352,
+        "peak_process_rss_bytes": 553480192
+      },
+      "replace": {
+        "result_sha256": "0e2c41814d63e87dde62899c574f165d0a1c9a8383edda20545487cae2dbd88b",
+        "version": "restore-memory-benchmark-v1",
+        "policy": "replace",
+        "seed_mib": 112,
+        "synthetic": true,
+        "provider_calls": false,
+        "live_enabled": false,
+        "iterations": 300,
+        "samples": [
+          {
+            "iteration": 0,
+            "seconds": 6.287833063000107,
+            "resident": {
+              "VmRSS": 381362176,
+              "RssAnon": 345391104,
+              "RssFile": 35971072
+            },
+            "row_cache_bytes": 120308738,
+            "row_cache_entries": 118,
+            "text_cache_bytes": 10407
+          },
+          {
+            "iteration": 25,
+            "seconds": 34.146675119000065,
+            "resident": {
+              "VmRSS": 381898752,
+              "RssAnon": 345886720,
+              "RssFile": 36012032
+            },
+            "row_cache_bytes": 120435579,
+            "row_cache_entries": 118,
+            "text_cache_bytes": 10407
+          },
+          {
+            "iteration": 50,
+            "seconds": 62.5464986070001,
+            "resident": {
+              "VmRSS": 382115840,
+              "RssAnon": 346103808,
+              "RssFile": 36012032
+            },
+            "row_cache_bytes": 120589429,
+            "row_cache_entries": 118,
+            "text_cache_bytes": 10407
+          },
+          {
+            "iteration": 75,
+            "seconds": 89.91423129300006,
+            "resident": {
+              "VmRSS": 382296064,
+              "RssAnon": 346284032,
+              "RssFile": 36012032
+            },
+            "row_cache_bytes": 120743279,
+            "row_cache_entries": 118,
+            "text_cache_bytes": 10407
+          },
+          {
+            "iteration": 100,
+            "seconds": 116.90259292199994,
+            "resident": {
+              "VmRSS": 382476288,
+              "RssAnon": 346464256,
+              "RssFile": 36012032
+            },
+            "row_cache_bytes": 120900130,
+            "row_cache_entries": 118,
+            "text_cache_bytes": 10407
+          },
+          {
+            "iteration": 125,
+            "seconds": 145.51292281700012,
+            "resident": {
+              "VmRSS": 382660608,
+              "RssAnon": 347127808,
+              "RssFile": 35532800
+            },
+            "row_cache_bytes": 121129005,
+            "row_cache_entries": 118,
+            "text_cache_bytes": 10407
+          },
+          {
+            "iteration": 150,
+            "seconds": 173.7333708609999,
+            "resident": {
+              "VmRSS": 383393792,
+              "RssAnon": 347860992,
+              "RssFile": 35532800
+            },
+            "row_cache_bytes": 121357880,
+            "row_cache_entries": 118,
+            "text_cache_bytes": 10407
+          },
+          {
+            "iteration": 175,
+            "seconds": 201.33207452600004,
+            "resident": {
+              "VmRSS": 384339968,
+              "RssAnon": 348807168,
+              "RssFile": 35532800
+            },
+            "row_cache_bytes": 121586755,
+            "row_cache_entries": 118,
+            "text_cache_bytes": 10407
+          },
+          {
+            "iteration": 200,
+            "seconds": 229.54748598600008,
+            "resident": {
+              "VmRSS": 385232896,
+              "RssAnon": 349700096,
+              "RssFile": 35532800
+            },
+            "row_cache_bytes": 121815630,
+            "row_cache_entries": 118,
+            "text_cache_bytes": 10407
+          },
+          {
+            "iteration": 225,
+            "seconds": 257.7233972050001,
+            "resident": {
+              "VmRSS": 385388544,
+              "RssAnon": 349855744,
+              "RssFile": 35532800
+            },
+            "row_cache_bytes": 122045072,
+            "row_cache_entries": 119,
+            "text_cache_bytes": 10407
+          },
+          {
+            "iteration": 250,
+            "seconds": 289.4009132660001,
+            "resident": {
+              "VmRSS": 385388544,
+              "RssAnon": 349855744,
+              "RssFile": 35532800
+            },
+            "row_cache_bytes": 122273947,
+            "row_cache_entries": 119,
+            "text_cache_bytes": 10407
+          },
+          {
+            "iteration": 275,
+            "seconds": 318.1580257820001,
+            "resident": {
+              "VmRSS": 385511424,
+              "RssAnon": 349978624,
+              "RssFile": 35532800
+            },
+            "row_cache_bytes": 122502822,
+            "row_cache_entries": 119,
+            "text_cache_bytes": 10407
+          },
+          {
+            "iteration": 300,
+            "seconds": 345.59268569799997,
+            "resident": {
+              "VmRSS": 385691648,
+              "RssAnon": 350236672,
+              "RssFile": 35454976
+            },
+            "row_cache_bytes": 122731697,
+            "row_cache_entries": 119,
+            "text_cache_bytes": 10407
+          },
+          {
+            "iteration": "after_gc",
+            "seconds": 350.303035441,
+            "resident": {
+              "VmRSS": 383741952,
+              "RssAnon": 348225536,
+              "RssFile": 35516416
+            },
+            "row_cache_bytes": 122731697,
+            "row_cache_entries": 119,
+            "text_cache_bytes": 10407
+          }
+        ],
+        "status": "RECORDED",
+        "cpu_affinity": [
+          8
+        ],
+        "seed_rows": 30006,
+        "initial_database_bytes": 123351040,
+        "canonical_v1_hash_matches": true,
+        "final_database_bytes": 125796352,
+        "peak_process_rss_bytes": 504213504
+      }
+    }
+  },
+  "focused_regression": {
+    "suites": [
+      "test_restore_encoding.py",
+      "test_paper_soak.py",
+      "test_paper_soak_host.py"
+    ],
+    "result": [
+      {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "90",
+        "time": "6.719",
+        "timestamp": "2026-11-24T12:26:04.102516-05:00",
+        "hostname": "b5d117ec1bcc"
+      }
+    ],
+    "junit_sha256": "e9580d2bce9513c16ad879f82ee99cabb4c6427829ffdfb488931cbb016ddd82",
+    "environment": "Root-mapped network-isolated namespace; matching pinned interpreter. Host Docker calls are mocked."
+  },
+  "installed_system": {
+    "version": "paper-system-check-v1",
+    "status": "PASSED",
+    "synthetic": true,
+    "provider_calls": false,
+    "model_service_calls": false,
+    "live_enabled": false,
+    "market_acceptance": "UNVERIFIED",
+    "wall_clock_soak": "NOT_RUN",
+    "host_acceptance": "UNVERIFIED",
+    "application_files": 336,
+    "runtime_pins": 60,
+    "application_manifest_sha256": "ef60bd93dce10b592ef4ea3a4754d5913c4b45b7e660daad772f0cb4d8bd5684",
+    "test_exit_code": 0,
+    "junit": [
+      {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "1",
+        "tests": "977",
+        "time": "546.963",
+        "timestamp": "2026-11-24T12:32:46.361878-05:00",
+        "hostname": "b5d117ec1bcc"
+      }
+    ],
+    "junit_sha256": "f586ebf47e61f3d75261141e3151f53725415c75f7e8f027c288069f342ce45c",
+    "skip_reason": "Reader UID 10001 is not mapped in this root-mapped namespace."
+  },
+  "protection_investigation": {
+    "memory": {
+      "junit": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "2",
+          "skipped": "0",
+          "tests": "9",
+          "time": "70.504",
+          "timestamp": "2026-11-24T12:42:10.582523-05:00",
+          "hostname": "b5d117ec1bcc"
+        }
+      ],
+      "junit_sha256": "b6ed43a1f776f5d45f798b24f7ca1f43ad31a09d2ee6211e25a127ffe4cd80d5",
+      "cpu_affinity": [
+        0
+      ],
+      "cases": [
+        {
+          "synthetic": true,
+          "asset": "STOCK",
+          "provider_calls": false,
+          "model_service_calls": false,
+          "seed_mib": 112,
+          "journal_bytes_before_contention": 124760064,
+          "exit_submitted_while_all_waiting": true,
+          "exit_seconds": 6.132320621999952,
+          "contention_setup_seconds": 0.6058048540003256,
+          "breach_to_native_ack_seconds": 3.7775723509998897,
+          "native_ack_to_tick_completion_seconds": 1.7489434169997367,
+          "breach_to_tick_completion_seconds": 5.526515767999626,
+          "breach_to_flat_observed_seconds": 8.402257976999863,
+          "next_quote_to_flat_observed_seconds": 2.280701006000072,
+          "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+          "report_snapshot_open_during_exit": true,
+          "native_submissions": 2,
+          "accounting": "VERIFIED",
+          "held_positions": 0
+        },
+        {
+          "synthetic": true,
+          "asset": "OPTION",
+          "provider_calls": false,
+          "model_service_calls": false,
+          "seed_mib": 112,
+          "journal_bytes_before_contention": 124817408,
+          "exit_submitted_while_all_waiting": true,
+          "exit_seconds": 7.953641835999861,
+          "contention_setup_seconds": 1.095854098000018,
+          "breach_to_native_ack_seconds": 4.924578372999804,
+          "native_ack_to_tick_completion_seconds": 1.9332093650000388,
+          "breach_to_tick_completion_seconds": 6.857787737999843,
+          "breach_to_flat_observed_seconds": 10.507791077000093,
+          "next_quote_to_flat_observed_seconds": 2.982529619000161,
+          "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+          "report_snapshot_open_during_exit": true,
+          "native_submissions": 2,
+          "accounting": "VERIFIED",
+          "held_positions": 0
+        }
+      ]
+    },
+    "versions": {
+      "junit": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "2",
+          "skipped": "0",
+          "tests": "2",
+          "time": "54.489",
+          "timestamp": "2026-11-24T12:44:35.379755-05:00",
+          "hostname": "b5d117ec1bcc"
+        }
+      ],
+      "junit_sha256": "c046010ecbbe1a71131a0365a1f637bc9b335c5e0c89b56391a606f4a61fe229",
+      "cpu_affinity": [
+        0
+      ],
+      "cases": [
+        {
+          "synthetic": true,
+          "asset": "STOCK",
+          "provider_calls": false,
+          "model_service_calls": false,
+          "seed_mib": 112,
+          "journal_bytes_before_contention": 124760064,
+          "exit_submitted_while_all_waiting": true,
+          "exit_seconds": 6.396288618000199,
+          "contention_setup_seconds": 0.6288814539998384,
+          "breach_to_native_ack_seconds": 3.963249339000413,
+          "native_ack_to_tick_completion_seconds": 1.8041578249999475,
+          "breach_to_tick_completion_seconds": 5.76740716400036,
+          "breach_to_flat_observed_seconds": 8.541119162000086,
+          "next_quote_to_flat_observed_seconds": 2.170071418999669,
+          "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+          "report_snapshot_open_during_exit": true,
+          "native_submissions": 2,
+          "accounting": "VERIFIED",
+          "held_positions": 0
+        },
+        {
+          "synthetic": true,
+          "asset": "OPTION",
+          "provider_calls": false,
+          "model_service_calls": false,
+          "seed_mib": 112,
+          "journal_bytes_before_contention": 124817408,
+          "exit_submitted_while_all_waiting": true,
+          "exit_seconds": 6.406665387999965,
+          "contention_setup_seconds": 0.6036830469997767,
+          "breach_to_native_ack_seconds": 3.830146055000114,
+          "native_ack_to_tick_completion_seconds": 1.9728362860000743,
+          "breach_to_tick_completion_seconds": 5.802982341000188,
+          "breach_to_flat_observed_seconds": 8.865068907000023,
+          "next_quote_to_flat_observed_seconds": 2.444268404000013,
+          "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+          "report_snapshot_open_during_exit": true,
+          "native_submissions": 2,
+          "accounting": "VERIFIED",
+          "held_positions": 0
+        }
+      ]
+    },
+    "interpretation": "Both the replacement policy and reconstructed preceding policy missed the unchanged five-second whole-case target in this environment. Both completed protective exits and verified flat accounting. These failed runs are retained; final qualification is pending."
+  },
+  "next_action": "Reduce repeated fenced journal work that consumes entry and protective-exit time. Preserve canonical authority, durable reservation/submission boundaries and original deadlines. Both loaded protection and lifecycle gates must pass before another isolated host soak; no deployment or resume.",
+  "short_soak": {
+    "summary": {
+      "version": "paper-soak-launch-v1",
+      "status": "FAILED",
+      "application_files": 336,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "ef60bd93dce10b592ef4ea3a4754d5913c4b45b7e660daad772f0cb4d8bd5684",
+      "seconds": 335,
+      "seed_mib": 112,
+      "max_feed_recoveries": 0,
+      "worker_cpu_affinity": [
+        0
+      ],
+      "network": "ISOLATED",
+      "host_acceptance": "UNVERIFIED",
+      "wall_clock_soak": "NOT_REQUESTED",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "worker_pid": 2,
+      "worker_start_ticks": "259460",
+      "child_exit_code": 1,
+      "cgroup_memory": {
+        "status": "UNAVAILABLE"
+      }
+    },
+    "progress": {
+      "version": "paper-soak-result-v1",
+      "status": "FAILED",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "planned_seconds": 335,
+      "nominal_worker_seconds": 21480,
+      "wall_clock_full_duration": "NOT_REQUESTED",
+      "nominal_cpu_profile": true,
+      "source_seed": {
+        "kind": "labeled diagnostic padding, not month-history proof",
+        "rows": 30006,
+        "initial_database_bytes": 124760064
+      },
+      "memory_enforcement": "sampled aggregate RSS ceiling; not a kernel cgroup",
+      "memory_limit_bytes": 1073741824,
+      "logical_cpus": 1,
+      "max_feed_recoveries": 0,
+      "native_snapshot_calls": 101,
+      "native_snapshot_failures": 0,
+      "native_snapshot_max_seconds": 0.30304581400014285,
+      "capture_attempts": 32,
+      "entry_model_calls": 1,
+      "management_model_calls": 0,
+      "dashboard_reads": 11,
+      "report_reads": 11,
+      "peak_tree_rss_bytes": 489492480,
+      "peak_processes": 4,
+      "children_reaped_count": 101,
+      "elapsed_seconds": 338.94566884000005,
+      "cgroup_memory": {
+        "status": "UNAVAILABLE"
+      },
+      "source_database_bytes": 126824448,
+      "feed_recoveries": 0,
+      "worker_window_cpu": {
+        "elapsed_seconds": 338.945601,
+        "worker_user_seconds": 227.576858,
+        "worker_system_seconds": 48.852584,
+        "reaped_child_user_seconds": 5.115422,
+        "reaped_child_system_seconds": 1.422514,
+        "average_busy_cores": 0.834846,
+        "average_allocated_cpu_percent": 83.485
+      },
+      "decision_coverage": {
+        "expected": 2,
+        "evaluated": 1,
+        "coverage_percent": 50.0,
+        "unmeasured_slots": [
+          {
+            "slot": 5977321,
+            "runtime_status": "MISSING"
+          }
+        ],
+        "target_met": false
+      },
+      "opening_restore_profile": {
+        "status": "OBSERVED",
+        "reservation_at": "2026-10-28T14:00:24.359247+00:00",
+        "source_at": "2026-10-28T14:00:16.747114Z",
+        "received_at": "2026-10-28T14:00:17.747114Z",
+        "source_to_reservation": {
+          "window_seconds": 7.612133,
+          "wall_seconds_with_digest_running": 5.911413,
+          "wholly_contained_calls": 20,
+          "owner_thread_cpu_seconds": 5.31788,
+          "background_cpu_seconds": 0.221012,
+          "owner_thread_calls": {
+            "app.mixed.portfolio_execution.reconcile": 4,
+            "app.options.runtime._tick": 6,
+            "app.options.coordinator._cycle_once": 2,
+            "app.mixed.selection.collect": 2,
+            "app.options.entry_coordination._admit_request": 2,
+            "app.options.entry_coordination._settle_reply": 2,
+            "app.options.entry_coordination.run_entry_cycle": 1
+          }
+        },
+        "receipt_to_reservation": {
+          "window_seconds": 6.612133,
+          "wall_seconds_with_digest_running": 5.884189,
+          "wholly_contained_calls": 19,
+          "owner_thread_cpu_seconds": 5.31788,
+          "background_cpu_seconds": 0.0,
+          "owner_thread_calls": {
+            "app.mixed.portfolio_execution.reconcile": 4,
+            "app.options.runtime._tick": 6,
+            "app.options.coordinator._cycle_once": 2,
+            "app.mixed.selection.collect": 2,
+            "app.options.entry_coordination._admit_request": 2,
+            "app.options.entry_coordination._settle_reply": 2,
+            "app.options.entry_coordination.run_entry_cycle": 1
+          }
+        }
+      },
+      "failure_class": "AssertionError",
+      "failure": "Native acceptance failure",
+      "cpu_user_seconds": 233.645384,
+      "cpu_system_seconds": 51.842945,
+      "children_reaped": true
+    },
+    "final_report_sha256": "0caf83d17253bfc93b53e9c16eeea33ecb325b58d3bdaa09a1bb80ad5e8a8155",
+    "summary_sha256": "b1591201f20a8c169580e64841b52a01ee8fc9d66185bdde19f1773c51731185",
+    "progress_sha256": "15a42883b48ca4a48a458bc265a05c827d92d50a11dce44ec95bb0cad17674ef",
+    "run_execution": {
+      "status": "RECORDED",
+      "entry_fills": 0,
+      "exit_fills": 0,
+      "completed_round_trips": 0,
+      "carry_in_exits": 0
+    },
+    "runtime_failures": [],
+    "publication_failures": [],
+    "timing": {
+      "by_status": {
+        "TICK:COMPLETE": 102,
+        "TICK_PACKET_VALIDATION:COMPLETE": 100,
+        "TICK_NEW_RECEIPT:COMPLETE": 32,
+        "TICK_QUOTE_FILLS:COMPLETE": 100,
+        "NATIVE_SNAPSHOT_SPAWN:COMPLETE": 101,
+        "NATIVE_SNAPSHOT:COMPLETE": 101,
+        "RECONCILE_COMMIT:COMPLETE": 101,
+        "PROTECTION_POSITIONS:COMPLETE": 94,
+        "PROTECTION_HEARTBEAT:COMPLETE": 94,
+        "PROTECTION:COMPLETE": 102,
+        "DELIVERY_COMMIT:COMPLETE": 102,
+        "TICK_REPEAT_RECEIPT:COMPLETE": 68,
+        "CYCLE:COMPLETE": 1,
+        "CYCLE_OPPORTUNITY_CLAIM:COMPLETE": 1,
+        "SCAN:COMPLETE": 1,
+        "STOCK_SCAN:COMPLETE": 1,
+        "SCOPE_SCAN:COMPLETE": 1,
+        "ENTRY_MODEL_ADMISSION:COMPLETE": 1,
+        "ENTRY_MODEL_REQUEST:COMPLETE": 1,
+        "ENTRY_MODEL:COMPLETE": 1,
+        "ENTRY_MIXED_SELECTION:COMPLETE": 1,
+        "ENTRY_SCOPE_RECEIPT_CHECK:COMPLETE": 1,
+        "ENTRY_SCOPE_SELECTION:COMPLETE": 1,
+        "ENTRY_MODEL_SETTLEMENT:COMPLETE": 1,
+        "ENTRY_PROTECTION_WAIT:COMPLETE": 1,
+        "ENTRY_OPTION_MARKET_READ:COMPLETE": 1,
+        "ENTRY_REVIEW:COMPLETE": 1,
+        "ADMISSION:COMPLETE": 1,
+        "NATIVE_ACCEPT_SPAWN:COMPLETE": 1,
+        "NATIVE_ACCEPT_TRANSPORT:FAILED": 1,
+        "NATIVE_ACCEPT:FAILED": 1,
+        "DISPATCH:COMPLETE": 1,
+        "TICK_PACKET_VALIDATION:FAILED": 2
+      },
+      "native_spawn_budget": {
+        "NATIVE_SNAPSHOT_SPAWN": {
+          "samples": 101,
+          "p50_seconds": 4.999854,
+          "p95_seconds": 4.999882,
+          "p99_seconds": 4.999884,
+          "max_seconds": 4.99989,
+          "min_seconds": 4.998438
+        },
+        "NATIVE_ACCEPT_SPAWN": {
+          "samples": 1,
+          "p50_seconds": 1.240003,
+          "p95_seconds": 1.240003,
+          "p99_seconds": 1.240003,
+          "max_seconds": 1.240003,
+          "min_seconds": 1.240003
+        }
+      }
+    },
+    "interpretation": "FAILED on NATIVE_ACCEPT:FAILED, with zero completed round trips and only one of two expected decision slots measured. Native snapshots had zero failures; these facts do not establish a passing lifecycle or full-duration memory result.",
+    "native_attempt_failure": {
+      "kind": "ATTEMPT_UNCERTAIN",
+      "error_class": "FixtureProcessTimeout",
+      "unresolved_at_last_snapshot": 1,
+      "remaining_transport_budget_seconds": 1.240003
+    }
+  },
+  "groups_overlap": true,
+  "host_access": false,
+  "deployment_performed": false
+}

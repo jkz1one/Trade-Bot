@@ -1,5 +1,27 @@
 # Recovered offline system checkpoint
 
+November 24 host follow-up: the detached 20923e2 soak was OOM-killed after
+37m 19s, with zero restarts. The duration gate FAILED. Its 445 successful native
+snapshots are partial evidence, not final lifecycle/accounting acceptance.
+The replacement cache avoids retaining obsolete versions of each changing batch.
+The reproducible 300-update comparison ended at 528 MiB with the preceding policy
+and 368 MiB with the repair, with correct canonical hashes in both cases.
+The matching installed suite passed 976 tests with one unmapped-reader-UID skip.
+The 112-MiB protection gate FAILED: stock 6.13 seconds, option 7.95 seconds against
+the unchanged five-second whole-case target. Both exits completed with verified
+flat accounting. The preceding cache policy also failed on this machine. Keep
+the installed owner and review hold; another host soak is not yet recommended.
+[Exact current proof](PAPER_MEMORY_20261124_PROOF.json).
+
+The final 335-second loaded fixture also FAILED: 101 native snapshots completed
+without failure (maximum 0.303 seconds), but native acceptance exhausted its
+remaining 1.240-second transport budget. No round trip completed, and only one
+of two scheduled decision slots was measured. Sampled process-tree peak was
+489,492,480 bytes; cgroup counters are unavailable locally. Reduced memory and
+successful snapshot reads do not override the failed lifecycle gate.
+
+### Prior short-lifecycle and detached-runner checkpoints
+
 November 23 follow-up: the 112-MiB varied-history lifecycle now passes on one CPU.
 It completed one simulated round trip, evaluated both due slots, ended verified
 flat and recorded 152 native snapshot calls without a timeout. Both extended
@@ -19,9 +41,9 @@ November 24 adds a detached Docker harness for that residual gate, using the sam
 application and a new synthetic account with no credentials/network. Tests cover
 guarded startup, retained failures, resource and identity checks, and refusal to
 report success from stale or incomplete evidence. Docker is unavailable in this
-workspace; the host image build and container run remain unverified. The existing
-925-test installed result belongs to the preceding application checkpoint, not a
-new Docker test. [Runner results and limitations](PAPER_SOAK_HOST_20261124_PROOF.json).
+workspace. The operator later confirmed its image build and launch, followed by
+the OOM failure recorded above. The earlier 925-test installed result belongs to
+the preceding application checkpoint, not a successful Docker duration test. [Runner results and limitations](PAPER_SOAK_HOST_20261124_PROOF.json).
 
 ### Earlier November 23 cache-only checkpoint
 

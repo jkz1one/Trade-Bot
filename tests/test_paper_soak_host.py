@@ -151,7 +151,10 @@ def test_status_survives_candidate_removal_and_marks_stale_progress(evidence, tm
     os.utime(path, (1, 1))
     assert host.status(tmp_path)['status'] == 'RUNNING_STALE_PROGRESS'
     item['State'].update(Running=False, ExitCode=137, OOMKilled=True)
-    assert host.status(tmp_path)['status'] == 'FAILED'
+    assert host.status(tmp_path)['reason'] == 'CONTAINER_OOM'
+    item['State']['OOMKilled'] = False
+    item['RestartCount'] = 1
+    assert host.status(tmp_path)['reason'] == 'CONTAINER_RESTARTED'
     assert (tmp_path / 'host.json').read_bytes() == before
 
 

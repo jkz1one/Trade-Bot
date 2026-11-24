@@ -1,66 +1,45 @@
 # Daily PAPER operation
 
-## Current action: isolated offline duration qualification
+## Current action: offline protection-latency repair; no host changes
 
-The installed `2d538b7` worker launched, then exited at 12:59 p.m. New York time
-with zero decisions, 341 failed collections and a native snapshot timeout.
-The controller requires session review. Keep that hold and the existing account,
-limits, release and retained worker. Do not run an old resume/deployment block.
-[Confirmed evidence and diagnosis limits](PAPER_SESSION_20261123_PROOF.json).
+The operator's detached `20923e2` test was OOM-killed after 37m 19s, exit 1 with
+zero restarts. It recorded 445 native snapshots without timeout, but its stale
+RUNNING progress has no final coverage, execution or accounting. The duration
+gate FAILED. Retain its evidence at
+`/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-20923e2e823d-iftsm6k7`.
+[Incident and candidate proof](PAPER_MEMORY_20261124_PROOF.json).
 
-The operator supplied the requested resource configuration and all 637 saved timing
-records. The worker has a one-CPU limit and 1 GiB. Median timing-record insertion
-cost 3.13 seconds, reconciliation commit 2.82 seconds, and delivery commit 2.18
-seconds. The child's native snapshot itself took roughly one millisecond. The
-five-second spawn budget was still available when the call started.
+The cache repair replaces obsolete encodings for each changing table/batch. Its
+300-update reproduction ended at 368 MiB versus 528 MiB with the preceding policy,
+while preserving the canonical authority hash. The installed-system suite passed
+976 tests with one unmapped-reader-UID skip. The new offline runner also records
+cgroup memory counters, including file/tmpfs charges and OOM events.
 
-The local candidate now combines timing records with ordinary owner commits and
-commits each model request with its budget reservation. It reads every current row
-and uses bounded batch fingerprints to reuse canonical encoding. The original
-restore hash, independent authority, freshness limits and total cache budget remain
-unchanged. [Verification](PAPER_OWNER_LATENCY_20261123_PROOF.json). These results do
-not resolve the deployed collector's broad CONNECT failure.
+The larger protection test blocks qualification: stock took 6.13 seconds and
+options 7.95 seconds against the unchanged five-second whole-case target. Both
+positions exited and accounting verified flat. The preceding cache policy also
+misses the target in the same environment; full-journal verification dominates
+repeated owner commits. Preserve these failed results. Finish the offline latency
+gate before asking the operator to spend another session on a duration test.
 
-The stronger short fixture completed a simulated round trip on one CPU; both
-extended protection cases met five seconds. The final installed suite passed 925
-tests with one reader-UID mapping skip. However, the workspace duration run lost
-its process after recording about ten minutes. It has no final result and cannot
-qualify the candidate.
+Keep the installed `2d538b7` checkout, account, retained connected worker, timer,
+risk/model limits and `SESSION_STOPPED_REVIEW_REQUIRED` hold unchanged. No deploy,
+resume, restart, halt clearing or memory increase is proposed. The server is
+operator-managed; local checks do not establish its current state.
 
-From a clean, detached checkout of the explicitly reviewed runner commit, run:
+When local qualification passes, the next host gate is a fresh isolated Docker
+soak using one CPU, 1 GiB with no swap, 128 PIDs, no network/credentials and a new
+synthetic evidence directory. Review its actual progress after 45 minutes and its
+final receipts after the full duration. No new start command is recommended yet.
+A passing synthetic run would still leave real-provider connection health and
+connected R4 unverified. Earlier host commands below are historical.
 
-```bash
-python3 "$candidate/scripts/paper-soak-host.py" start --checkout /opt/trade-bot-dashboard
-```
-
-The command builds a separate test image from committed source, then starts a
-detached 21,480-second test (5h 58m plus initialization/final checks). It refuses
-active PAPER/offline workers and requires an existing scheduler pause or session
-review hold. It never creates that pause/hold, switches the installed checkout,
-updates the reader, changes limits, clears a halt or alters the timer. Keep the
-existing review hold throughout the test.
-
-The test is synthetic: no connected account or credentials are mounted and its
-container has no network. CPU is limited to one, memory and memory-plus-swap to
-1 GiB, and PIDs to 128. Only a new private evidence directory is writable outside
-the container. No automatic restart or removal is enabled. A separate label keeps
-this test out of the daily controller's worker selection. The candidate worktree
-may be removed after startup; closing SSH does not stop Docker's detached worker.
-
-Paste the startup output. It prints an exact `check_command` using a retained
-`check.py`; that read-only command works after the candidate checkout is removed.
-Run it after initialization and after the expected completion. It reports actual
-container state, restarts/OOM, last progress age, elapsed time, native deadlines,
-decisions and final accounting. A running container with no or stale progress is
-explicitly labeled. Exit zero with missing/stale RUNNING receipts is INCOMPLETE,
-not PASSED. Build errors and interrupted attempts retain their evidence directories.
-
-Docker is not available in the development workspace, so the new host image and
-run are unverified until operator output is supplied. A passing synthetic test
-still does not resolve the provider CONNECT failures or authorize deployment or
-schedule resume. Review duration, memory, growth, coverage, publication and final
-accounting before proceeding to connected qualification. Earlier deployment and
-pre-session commands below are historical, not current instructions.
+The final 335-second loaded fixture also FAILED: 101 native snapshots completed
+without failure (maximum 0.303 seconds), but native acceptance exhausted its
+remaining 1.240-second transport budget. No round trip completed, and only one
+of two scheduled decision slots was measured. Sampled process-tree peak was
+489,492,480 bytes; cgroup counters are unavailable locally. Reduced memory and
+successful snapshot reads do not override the failed lifecycle gate.
 
 ## Prior November 20 installation and schedule check
 

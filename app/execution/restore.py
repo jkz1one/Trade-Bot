@@ -205,8 +205,9 @@ def _scan(db, previous, budget, *, retain=True):
                 if comparison is not None:
                     comparison.extend(b'ROW-BATCH-SHA256:')
                 batch = first
+                batch_index = 0
                 while batch:
-                    key, encoded = _ROW_ENCODINGS.encode(batch)
+                    key, encoded = _ROW_ENCODINGS.encode(batch, slot=(row[1], batch_index))
                     rows.extend(encoded)
                     if comparison is not None:
                         comparison.extend(key)
@@ -214,6 +215,7 @@ def _scan(db, previous, budget, *, retain=True):
                             comparison = None
                             budget = 0
                     batch = tuple(islice(cursor, 256))
+                    batch_index += 1
             else:
                 for item in chain(first, cursor):
                     rows.append(_row_tokens(item, comparison))

@@ -59,13 +59,42 @@ def test_batch_cache_type_identity_authority_reset_and_concurrent_bounds():
         actual = list(pool.map(cache.encode, values))
     for rows, (_, encoded) in zip(values, actual):
         assert encoded == tuple(json.dumps(list(row), separators=(',', ':')).encode() + b'\n' for row in rows)
-    assert cache.size == sum(weight for _, weight in cache.values.values()) <= 8192
+    assert cache.size == sum(weight for _, _, weight in cache.values.values()) <= 8192
     assert len(cache.values) <= 4
     assert len({cache.encode(((value,),))[0] for value in (1, '1', 1.0, None)}) == 4
     with pytest.raises(TypeError):
         cache.encode(((b'unsupported',),))
     cache.select_authority('second')
     assert cache.size == 0 and not cache.values
+
+
+def test_batch_slot_replaces_obsolete_versions_without_reusing_changed_cells():
+    cache = restore.RowEncodings(max_bytes=1024 * 1024)
+    held = []
+    for index in range(200):
+        rows = ((index, 'original' * 100), (None, str(index)))
+        digest, encoded = cache.encode(rows, slot=('execution_events', 0))
+        assert encoded == tuple(json.dumps(list(r), separators=(',', ':')).encode() + b'\n' for r in rows)
+        held.append((digest, encoded))
+        assert len(cache.values) == 1
+        assert cache.size == next(iter(cache.values.values()))[2]
+    assert len({digest for digest, _ in held}) == 200
+    assert held[0][1][0].startswith(b'[0,')  # Replacement never mutates an earlier reader's bytes.
+    _, first = cache.encode(((1,),), slot=('execution_events', 0))
+    _, other = cache.encode(((2,),), slot=('execution_events', 1))
+    assert len(cache.values) == 2 and first != other
+
+
+def test_concurrent_slot_replacement_returns_each_callers_exact_encoding():
+    cache = restore.RowEncodings(max_bytes=32768, max_entries=4)
+    def encode(i):
+        rows = ((i, str(i) * 40),)
+        _, actual = cache.encode(rows, slot=('execution_events', i % 2))
+        return actual == (json.dumps(list(rows[0]), separators=(',', ':')).encode() + b'\n',)
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        assert all(pool.map(encode, range(300)))
+    assert len(cache.values) == 2
+    assert cache.size == sum(v[2] for v in cache.values.values()) <= cache.max_bytes
 
 
 def test_v1_hash_unchanged_with_warm_cache_schema_changes_and_tampering(monkeypatch):
