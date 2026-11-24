@@ -1,5 +1,20 @@
 # Recovered offline system checkpoint
 
+November 23 follow-up: the 112-MiB varied-history lifecycle now passes on one CPU.
+It completed one simulated round trip, evaluated both due slots, ended verified
+flat and recorded 152 native snapshot calls without a timeout. Both extended
+protection cases now meet five seconds (stock 3.89, option 4.37 seconds), while
+history, model advice and a failing display remain independent.
+
+The final matching installed package contains 336 application files and all 60
+runtime pins. Its suite passed 925 tests, with one reader-UID mapping skip. The
+80 restore/queue/harness checks, 94 admission/execution checks and nine extended
+protection cases also passed; these groups overlap and are not an additive total.
+The 21,480-second offline gate has started and remains pending. No host deployment
+or resume is proposed. [Exact proof and open gates](PAPER_OWNER_LATENCY_20261123_PROOF.json).
+
+### Earlier November 23 cache-only checkpoint
+
 November 23 varied-history checkpoint: the requested 637 host timing records locate
 expensive local writes. The bounded encoding-cache candidate reduces synthetic
 journal-update CPU time by about 48%, preserves canonical v1 hashes and resets its

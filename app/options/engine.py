@@ -210,6 +210,7 @@ class OptionExecution:
             try:
                 yield engine
             finally:
+                engine.journal.flush_timings()
                 engine._closed = True
 
     def __init__(self, path, limits, policy, venue, *, now, create=False, _owner=None):
@@ -2001,7 +2002,7 @@ class OptionExecution:
         )
 
     @exact
-    def begin_model_attempt(self, source_key, input_hash, *, now, position_request=None):
+    def begin_model_attempt(self, source_key, input_hash, *, now, position_request=None, _db=None):
         if self.policy.mixed_owner is not None and (self.policy.mixed_owner.reasoning is None):
             raise ExecutionBlocked("MIXED_PAID_CONTRACT_NOT_ENROLLED")
         now = clock(now)
@@ -2017,7 +2018,7 @@ class OptionExecution:
         ):
             raise ValueError("Explicit frozen model policy and input hash required")
         blocked = None
-        with self.journal.write() as db:
+        with nullcontext(_db) if _db is not None else self.journal.write() as db:
             if position_request is None and self.policy.loss_control is not None:
                 from app.options.loss_control import model_family_reasons, refresh
 

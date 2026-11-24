@@ -55,14 +55,21 @@ churn. The candidate reduces repeated encoding without changing the canonical
 restore hash, row verification, deadlines or account authority. Capacity fixtures
 now use varied records. [Candidate proof](PAPER_RESTORE_SCAN_20261123_PROOF.json).
 
-The distinct-history short fixture currently fails its required entry/exit lifecycle;
-extended protection also exceeds five seconds. The cache improvement alone is not
-sufficient. Reduce remaining owner-path verification cost while preserving original
-quote/plan clocks and restore authority before starting the full-duration gate.
-Connected R4 remains open. Do not resume or redeploy based on the benchmark. Collector CONNECT samples still
-need the already-published finer diagnostics to distinguish SDK/OAuth/MCP phases;
-no CPU purchase or provider fault is established. No limits, worker lifecycle,
-freshness policy or host account state change follows from these measurements.
+The follow-up candidate now passes the 112-MiB distinct-history short lifecycle:
+one simulated entry and exit, both scheduled evaluations and verified flat accounting.
+Both extended held-position cases meet the five-second target (3.89 seconds for
+stock and 4.37 for options). Timing writes share existing owner commits; model
+requests and cost admission commit together. Bounded row-batch encoding retains
+the canonical v1 hash while reading every current cell. No original clock, limit
+or authority has changed. The final installed suite passed 925 tests with one
+unmapped-reader-UID skip. [Complete proof](PAPER_OWNER_LATENCY_20261123_PROOF.json).
+
+The full 21,480-second offline gate is running on one CPU with a fresh synthetic
+account; it is not passed yet. Its duration, memory, growth, decision coverage,
+publication and final accounting results are the next required evidence. Connected
+R4 remains open. Do not resume or redeploy based on a short fixture or benchmark.
+Collector CONNECT samples still need the finer diagnostics to distinguish
+SDK/OAuth/MCP phases. Keep the installed host account, worker and review hold.
 
 ### November 20 work order: repair the delivery process first
 

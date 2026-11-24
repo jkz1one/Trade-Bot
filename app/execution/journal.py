@@ -39,6 +39,9 @@ class ExecutionJournal:
     extra_tables = frozenset()
 
     def __init__(self, path: str | Path, config: dict | None = None):
+        from app.execution.timing_journal import RuntimeTimings
+
+        self.runtime_timings = RuntimeTimings()
         self.path = Path(path).expanduser().resolve()
         self.writable = config is not None
         if config is None:
@@ -148,18 +151,32 @@ class ExecutionJournal:
             "file:" + quote(str(self.path)) + "?mode=rw", uri=True, timeout=10, isolation_level=None
         )
         db.row_factory = sqlite3.Row
+        timings = ()
         try:
             db.execute("PRAGMA foreign_keys=ON")
             fenced = restore.begin_fenced_write(db, restore.authority_path(self.path))
+            timings = self.runtime_timings.flush(db)
             yield db
             if fenced:
                 restore.advance(db)
             db.commit()
+            self.runtime_timings.committed(timings)
         except BaseException:
             db.rollback()
+            self.runtime_timings.rolled_back(timings)
             raise
         finally:
             db.close()
+
+    def flush_timings(self):
+        """Owner-close flush; read-only/report callers never flush buffered state."""
+        if not self.writable or not self.runtime_timings.pending:
+            return
+        try:
+            with self.write():
+                pass
+        except (OSError, ValueError, sqlite3.Error):
+            pass  # No false completion if the final diagnostic commit is unavailable.
 
     @contextmanager
     def read(self, *, verify_restore=False):

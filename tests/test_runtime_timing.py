@@ -43,10 +43,13 @@ def test_paid_entry_local_phases_and_child_have_independent_counts(tmp_path, mon
         path.chmod(0o600)
         asyncio.run(step(r))
         asyncio.run(r.tick())
+        c.engine.journal.flush_timings()  # Explicit owner boundary before inspecting final trace.
         with c.engine.journal.read() as db:
             trace = reports.runtime_timing_evidence(db, AT.isoformat(), times[0].isoformat())
         statuses = trace["by_status"]
-        assert trace['trace_start_write']['samples'] == trace['measured']
+        assert trace['trace_start_prepare']['samples'] == trace['measured']
+        assert trace['trace_start_write'] is None
+        assert trace['trace_storage'] == {'COALESCED': trace['measured']}
         for name in ("TICK_PACKET_VALIDATION", "TICK_NEW_RECEIPT", "TICK_REPEAT_RECEIPT",
                      "CYCLE_OPPORTUNITY_CLAIM"):
             assert statuses[name + ":COMPLETE"] >= 1
@@ -114,6 +117,68 @@ def test_regular_option_first_settled_commit_already_contains_both_choices(tmp_p
         assert receipt["mixed_selection"]["selected"]["candidate_id"] == candidate
         assert receipt["scope_arbitration"]["selected"]["candidate_id"] == candidate
         assert receipt["entry_request"]["packet"]["cycle_key"] == receipt["scope_arbitration"]["cycle_key"]
+
+
+def test_entry_request_and_cost_reservation_are_durable_together_before_model(tmp_path, monkeypatch):
+    from test_mixed_entry import owner
+    from test_mixed_selection import stock_frame
+
+    with owner(tmp_path, monkeypatch, choice='OPTION', portfolio=True) as (c, venue, _, _):
+        journal, observations = c.engine.journal, []
+        writer, model = journal.write, c._model_run
+
+        def admitted():
+            with journal.read() as db:
+                for row in db.execute('SELECT cycle_key,result_json FROM execution_option_opportunities'):
+                    evidence = json.loads(row['result_json'] or '{}')
+                    if 'entry_request' in evidence:
+                        call = db.execute('SELECT packet_hash FROM execution_model_calls WHERE source_key=?',
+                                          (row['cycle_key'],)).fetchone()
+                        return bool(call and call[0] == evidence['model_input_hash'])
+            return None
+
+        @contextmanager
+        def observe():
+            with writer() as db:
+                yield db
+            if not observations and (value := admitted()) is not None:
+                observations.append(value)
+
+        async def checked(*args, **kwargs):
+            assert admitted() is True
+            return await model(*args, **kwargs)
+
+        monkeypatch.setattr(journal, 'write', observe)
+        monkeypatch.setattr(c, '_model_run', checked)
+        result = asyncio.run(c.cycle(stock_frame()))
+        assert observations == [True] and venue.submit_count == 1, result
+
+
+def test_failed_cost_reservation_retains_request_but_never_calls_model(tmp_path, monkeypatch):
+    from app.execution.engine import ExecutionBlocked
+    from test_mixed_entry import owner
+    from test_mixed_selection import stock_frame
+
+    with owner(tmp_path, monkeypatch, choice='OPTION', portfolio=True) as (c, venue, _, _):
+        admitted = c.engine._admit_model_attempt
+
+        def failed(*args):
+            admitted(*args)
+            raise ExecutionBlocked('synthetic admission rollback')
+
+        async def forbidden(*args, **kwargs):
+            pytest.fail('Model ran without a committed budget reservation')
+
+        monkeypatch.setattr(c.engine, '_admit_model_attempt', failed)
+        monkeypatch.setattr(c, '_model_run', forbidden)
+        result = asyncio.run(c.cycle(stock_frame()))
+        assert result['entries'][0]['status'] == 'HOLD', result
+        assert venue.submit_count == 0
+        with c.engine.journal.read(verify_restore=True) as db:
+            evidence = json.loads(db.execute('SELECT result_json FROM execution_option_opportunities').fetchone()[0])
+            assert evidence['entry_request'] and evidence['blocker'] == 'synthetic admission rollback'
+            assert db.execute('SELECT COUNT(*) FROM execution_model_calls').fetchone()[0] == 0
+            assert db.execute("SELECT COUNT(*) FROM execution_events WHERE kind='OPTION_MODEL_ATTEMPT_ADMITTED'").fetchone()[0] == 0
 
 
 @pytest.mark.parametrize("failure", ["receipt", "write"])

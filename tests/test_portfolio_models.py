@@ -343,12 +343,12 @@ def test_entry_lease_expiring_during_persistence_skips_model_without_cost_or_hal
     from datetime import datetime
 
     with owner(tmp_path, monkeypatch, choice='OPTION', portfolio=True) as (c, venue, times, _):
-        persist = c._pending_evidence
-        def slow_write(key, evidence):
-            persist(key, evidence)
+        persist = c._store_pending_evidence
+        def slow_write(db, key, evidence):
+            persist(db, key, evidence)
             if evidence.get('status') == 'MODEL_PENDING':
                 times[0] = datetime.fromisoformat(evidence['entry_request']['packet']['valid_until'])
-        monkeypatch.setattr(c, '_pending_evidence', slow_write)
+        monkeypatch.setattr(c, '_store_pending_evidence', slow_write)
         monkeypatch.setattr(c, '_model_run', lambda *a, **kw: pytest.fail('expired model call'))
         result = asyncio.run(c.cycle(stock_frame()))
         assert result['entries'][0]['reason'] == 'ENTRY_PLAN_EXPIRED_BEFORE_MODEL'

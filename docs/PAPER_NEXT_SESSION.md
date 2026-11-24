@@ -14,17 +14,20 @@ cost 3.13 seconds, reconciliation commit 2.82 seconds, and delivery commit 2.18
 seconds. The child's native snapshot itself took roughly one millisecond. The
 five-second spawn budget was still available when the call started.
 
-The local varied-history reproduction exposed cache churn during full restore
-checks. The candidate preserves every-row verification and the original canonical
-restore hash while retaining useful encodings across overflowing scans. Capacity
-fixtures now use distinct records. [Verification](PAPER_RESTORE_SCAN_20261123_PROOF.json).
-These results do not resolve the deployed collector's broad CONNECT failure.
+The local candidate now combines timing records with ordinary owner commits and
+commits each model request with its budget reservation. It reads every current row
+and uses bounded batch fingerprints to reuse canonical encoding. The original
+restore hash, independent authority, freshness limits and total cache budget remain
+unchanged. [Verification](PAPER_OWNER_LATENCY_20261123_PROOF.json). These results do
+not resolve the deployed collector's broad CONNECT failure.
 
-No additional host command is needed for this diagnosis. The stronger short fixture
-still fails its entry/exit lifecycle and extended protection exceeds five seconds.
-Reduce the remaining owner-path verification cost, then pass the varied-history
-checks and full configured-duration offline gate before proposing another release. Keep the session-review hold; qualification is not
-permission to resume the failed owner. The earlier deployment and pre-session
+No additional host command is needed now. The stronger short fixture completed a
+simulated round trip on one CPU; both extended protection cases met five seconds.
+The final installed suite passed 925 tests with one reader-UID mapping skip. The
+full 21,480-second offline gate is running, with its result still pending. Review
+that run's duration, growth, memory, decisions, publication and final accounting
+before proposing another release. Keep the session-review hold; qualification is
+not permission to resume the failed owner. Earlier deployment and pre-session
 commands below are historical, not current instructions.
 
 ## Prior November 20 installation and schedule check

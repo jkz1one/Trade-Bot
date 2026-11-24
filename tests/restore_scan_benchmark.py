@@ -33,6 +33,7 @@ def run(output, mib=112):
     affinity = {min(os.sched_getaffinity(0))}
     os.sched_setaffinity(0, affinity)
     original_cache, original_prefixes = restore._TEXT_ENCODINGS, restore._prefixes
+    original_rows = restore._ROW_ENCODINGS
     result = {"version": "restore-scan-benchmark-v1", "synthetic": True,
               "provider_calls": False, "live_enabled": False,
               "cpu_affinity": sorted(affinity), "seed_mib": mib, "trials": []}
@@ -45,10 +46,11 @@ def run(output, mib=112):
             result["database_bytes"] = engine.journal.path.stat().st_size
             engine.journal.enable_restore_fence(now=NOW)
             # Alternate policies so a one-off load difference cannot select the winner.
-            for policy in ("original_lru", "scan_mru", "original_lru", "scan_mru"):
-                cache = restore._TextEncodingCache()
+            for policy in ("scan_mru", "row_batches", "scan_mru", "row_batches"):
+                cache = restore._TextEncodingCache(max_bytes=(32 if policy == 'row_batches' else 192) * 1024 * 1024)
                 if policy == "original_lru":
                     cache.values = OriginalLRU()
+                restore._ROW_ENCODINGS = restore.RowEncodings() if policy == 'row_batches' else None
                 restore._TEXT_ENCODINGS, restore._prefixes = cache, ()
                 samples = []
                 for index in range(5):
@@ -66,9 +68,11 @@ def run(output, mib=112):
                 result["trials"].append({"policy": policy, "samples": samples,
                     "warm_median_seconds": statistics.median(s["wall_seconds"] for s in samples[1:]),
                     "canonical_v1_hash_matches": matches, "restore_status": "VERIFIED",
-                    "cache_entries": len(cache.values), "cache_bytes": cache.size})
+                    "cache_entries": len(cache.values), "cache_bytes": cache.size,
+                    "row_cache_bytes": restore._ROW_ENCODINGS.size if restore._ROW_ENCODINGS else 0})
     finally:
         restore._TEXT_ENCODINGS, restore._prefixes = original_cache, original_prefixes
+        restore._ROW_ENCODINGS = original_rows
     result["peak_process_rss_bytes"] = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024
     result["status"] = "RECORDED"
     (output / "result.json").write_text(json.dumps(result, indent=2) + "\n")

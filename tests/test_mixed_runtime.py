@@ -80,6 +80,7 @@ def test_mixed_runtime_native_fill_and_fast_stock_exit(tmp_path, monkeypatch, pa
         )
         asyncio.run(step(r))
         assert v.submit_count == 2
+        c.engine.journal.flush_timings()
         with c.engine.journal.read() as db:
             traces = [json.loads(row[0]) for row in db.execute(
                 'SELECT payload_json FROM execution_runtime_timings')]
@@ -219,6 +220,7 @@ def test_mixed_management_wait_keeps_independent_protection(tmp_path, monkeypatc
             finish.set()
             await r.task
             assert v.submit_count == 2
+            c.engine.journal.flush_timings()
             with c.engine.journal.read() as db:
                 assert db.execute('SELECT count(*) FROM execution_model_calls WHERE cost IS NULL').fetchone()[0] == 0
                 assert db.execute('SELECT count(*) FROM execution_model_calls').fetchone()[0] == 2
@@ -276,6 +278,7 @@ def test_joint_scope_runtime_retains_actual_native_choice(tmp_path, monkeypatch,
             assert scope_inputs(db, times[0])["statuses"] == {"OBSERVED": count}
         assert out["status"] == ("HOLD" if choice == "SCOPE_STALE" else "OPEN"), out
         assert v.submit_count == int(choice != "SCOPE_STALE")
+        c.engine.journal.flush_timings()
         with c.engine.journal.read() as db:
             from test_paper_session_report import module as reports
             timing = reports.runtime_timing_evidence(db, AT.isoformat(), times[0].isoformat())

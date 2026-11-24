@@ -284,6 +284,7 @@ def test_protection_runs_during_paid_management_wait_and_cost_is_retained(tmp_pa
             assert intent_for(c.engine, sells[0][0]).side == "SELL"
             release.set()
             await r.task
+            c.engine.journal.flush_timings()
             with c.engine.journal.read() as db:
                 assert (
                     db.execute(

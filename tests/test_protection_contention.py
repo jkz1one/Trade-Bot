@@ -301,6 +301,7 @@ def test_owned_exit_during_history_model_and_failed_display(tmp_path, schemas, m
                     report_db.close()
                     p.close()
                 assert venue.submit_count == 2
+                c.engine.journal.flush_timings()  # Observe completed advice after the measured exit.
                 with c.engine.journal.read() as db:
                     assert db.execute('SELECT COUNT(*) FROM execution_model_calls WHERE cost IS NULL').fetchone()[0] == 0
                     assert db.execute('SELECT COUNT(*) FROM execution_model_calls').fetchone()[0] == 2

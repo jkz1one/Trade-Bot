@@ -1,5 +1,33 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.230. November 23, New York time. Loaded owner-path gates passed.
+
+The current offline candidate passes the previously failing 112-MiB varied-history
+fixture on one logical CPU: one simulated entry and exit, one completed round trip,
+both scheduled evaluations, verified flat accounting and 152 native snapshots with
+zero timeouts. Original quote age at reservation was 5.43 seconds, within the
+unchanged ten-second limit. Stock and option protection under concurrent blocked
+history, model advice and failed display completed in 3.89 and 4.37 seconds.
+The final installed suite passed 925 tests; one unmapped-reader-UID test is skipped.
+[Measurements, intermediate failures and limitations](PAPER_OWNER_LATENCY_20261123_PROOF.json).
+
+Timing records now commit with existing fenced owner transactions. The full model
+request and its budget reservation also share one durable commit before a model
+call. Large-table encoding uses SHA256 fingerprints of every current typed row
+batch to reuse canonical JSON; the sorted v1 authority hash remains unchanged.
+The combined encoding budget stays at 192 MiB. There is no journal migration,
+pruning, relaxed deadline or change to account authority or trading/model limits.
+Buffered timing records are not durable evidence until committed; missing or
+unfinished traces remain explicit in reports.
+
+The 21,480-second full-duration offline gate has started with matching installed
+bytes and a fresh synthetic account. Its result is pending. Short-run success is
+not full-day or month-growth acceptance. The host remains on `2d538b7` with its
+session-review hold; collector CONNECT failures and connected R4 remain unresolved.
+Do not deploy or resume while these gates are open.
+
+### Previous November 23 varied-history checkpoint
+
 Version 1.229. November 23, New York time. Varied-history restore scan repair.
 
 The operator supplied 637 runtime traces and the worker's one-CPU/1-GiB limits.

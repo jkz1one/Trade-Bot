@@ -108,19 +108,25 @@ def root(runtime, kind, *, slot=None, packet=None):
     if kind == 'TICK' and getattr(runtime, '_scheduler_delay', None) is not None:
         value['scheduler_delay_seconds'] = runtime._scheduler_delay
     row_id = None
+    queued = getattr(journal, "runtime_timings", None)
     try:
-        with journal.write() as db:
+        with (journal.read() if queued is not None else journal.write()) as db:
             row = runtime._bound(db)
             value["generation"] = row["generation"]
-            db.execute("CREATE TABLE IF NOT EXISTS execution_runtime_timings("
-                       "id INTEGER PRIMARY KEY,started_at TEXT NOT NULL,payload_json TEXT NOT NULL)")
-            db.execute("CREATE INDEX IF NOT EXISTS runtime_timings_started ON execution_runtime_timings(started_at)")
-            row_id = db.execute("INSERT INTO execution_runtime_timings(started_at,payload_json) VALUES(?,?)",
-                                (at.isoformat(), json.dumps(value))).lastrowid
+            if queued is not None:
+                value["trace_storage"] = "COALESCED"
+                row_id = queued.start(at.isoformat(), value)
+            else:
+                db.execute("CREATE TABLE IF NOT EXISTS execution_runtime_timings("
+                           "id INTEGER PRIMARY KEY,started_at TEXT NOT NULL,payload_json TEXT NOT NULL)")
+                db.execute("CREATE INDEX IF NOT EXISTS runtime_timings_started ON execution_runtime_timings(started_at)")
+                row_id = db.execute("INSERT INTO execution_runtime_timings(started_at,payload_json) VALUES(?,?)",
+                                    (at.isoformat(), json.dumps(value))).lastrowid
     except (OSError, sqlite3.Error):
         # Diagnostics must not stop valid protection. Missing rows remain unmeasured.
         pass
-    value["trace_start_write_seconds"] = round(time.monotonic() - started, 6)
+    value["trace_start_prepare_seconds" if queued is not None else "trace_start_write_seconds"] = round(
+        time.monotonic() - started, 6)
     token = CURRENT.set(value)
     if packet is not None:
         bind_packet(packet, at)
@@ -133,7 +139,9 @@ def root(runtime, kind, *, slot=None, packet=None):
     finally:
         CURRENT.reset(token)
         value["elapsed_seconds"] = round(time.monotonic() - started, 6)
-        if row_id is not None:
+        if queued is not None:
+            queued.finish(row_id, value)
+        elif row_id is not None:
             try:
                 with journal.write() as db:
                     db.execute("UPDATE execution_runtime_timings SET payload_json=? WHERE id=?",

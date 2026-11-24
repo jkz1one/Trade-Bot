@@ -523,6 +523,10 @@ def short_report(result):
         if trace_write:
             lines.append(f"Timing record start: n={trace_write['samples']}, "
                          f"p95 {trace_write['p95_seconds']:.3f}s, max {trace_write['max_seconds']:.3f}s")
+        trace_prepare = runtime_timing.get('trace_start_prepare')
+        if trace_prepare:
+            lines.append(f"Timing record preparation: n={trace_prepare['samples']}, "
+                         f"p95 {trace_prepare['p95_seconds']:.3f}s; persisted with owner commits")
         for name in RUNTIME_PHASES:
             values = runtime_timing.get('phases', {}).get(name)
             if values:
@@ -1238,6 +1242,7 @@ def runtime_timing_evidence(db, start, end):
     result.update(status='OBSERVED', records=total, omitted=max(0, total-20000))
     values, ages, natives, packet_ages = {}, {}, {}, []
     cycle_slots, model_keys, scheduler_delays, start_writes = [], [], [], []
+    start_prepares, storage = [], {}
     spawn_budgets, quote_age_by_phase = {}, {}
 
     def number(value, signed=False):
@@ -1266,6 +1271,11 @@ def runtime_timing_evidence(db, start, end):
                     or ('scheduler_delay_seconds' in item and not number(item['scheduler_delay_seconds']))):
                 raise ValueError
             if 'trace_start_write_seconds' in item and not number(item['trace_start_write_seconds']):
+                raise ValueError
+            if ('trace_storage' in item or 'trace_start_prepare_seconds' in item) and (
+                    item.get('trace_storage') != 'COALESCED'
+                    or not number(item.get('trace_start_prepare_seconds'))
+                    or 'trace_start_write_seconds' in item):
                 raise ValueError
             for span in item['spans']:
                 if (not isinstance(span, dict) or span.get('phase') not in phases
@@ -1303,6 +1313,10 @@ def runtime_timing_evidence(db, start, end):
             scheduler_delays.append(item['scheduler_delay_seconds'])
         if 'trace_start_write_seconds' in item:
             start_writes.append(item['trace_start_write_seconds'])
+        if 'trace_start_prepare_seconds' in item:
+            start_prepares.append(item['trace_start_prepare_seconds'])
+        storage_kind = item.get('trace_storage', 'DIRECT')
+        storage[storage_kind] = storage.get(storage_kind, 0) + 1
         label = item['kind'] + ':' + item['status']
         result['by_status'][label] = result['by_status'].get(label, 0) + 1
         values.setdefault(item['kind'], []).append(item['elapsed_seconds'])
@@ -1342,6 +1356,8 @@ def runtime_timing_evidence(db, start, end):
     result['inspected_bytes'] = inspected_bytes
     result['scheduler_delay'] = timing_summary(scheduler_delays) if scheduler_delays else None
     result['trace_start_write'] = timing_summary(start_writes) if start_writes else None
+    result['trace_start_prepare'] = timing_summary(start_prepares) if start_prepares else None
+    result['trace_storage'] = storage
     result['coverage'] = runtime_timing_coverage(db, start, end, cycle_slots, model_keys)
     return result
 

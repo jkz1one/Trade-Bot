@@ -29,6 +29,45 @@ def legacy_digest(db):
     return digest.hexdigest()
 
 
+@pytest.mark.parametrize('capacity', [0, 8192, 2 * 1024 * 1024])
+def test_batched_encoding_keeps_v1_hash_across_mutations_and_chunk_boundaries(monkeypatch, capacity):
+    monkeypatch.setattr(restore, '_ROW_ENCODINGS', restore.RowEncodings(max_bytes=capacity))
+    monkeypatch.setattr(restore, '_prefixes', ())
+    with sqlite3.connect(':memory:') as db:
+        db.execute('CREATE TABLE execution_values(a,b,c)')
+        values = [None, '', 1, 1.0, -0.0, float('inf'), '\x00é🙂"\\', 2**63 - 1]
+        db.executemany('INSERT INTO execution_values VALUES(?,?,?)',
+                       [(i, values[i % len(values)], 'payload' * i) for i in range(769)])
+        original = legacy_digest(db)
+        for _ in range(3):
+            assert restore._digest(db) == original
+        for sql in ("UPDATE execution_values SET c='changed' WHERE a=256",
+                    'DELETE FROM execution_values WHERE a=0',
+                    "INSERT INTO execution_values VALUES(999,1,'appended')",
+                    'CREATE INDEX execution_index ON execution_values(c)',
+                    'DELETE FROM execution_values WHERE a>254'):
+            db.execute(sql)
+            assert restore._digest(db) == legacy_digest(db) != original
+        assert restore._ROW_ENCODINGS.size <= capacity
+
+
+def test_batch_cache_type_identity_authority_reset_and_concurrent_bounds():
+    cache = restore.RowEncodings(max_bytes=8192, max_entries=4)
+    cache.select_authority('first')
+    values = [((i, str(i) * 30),) for i in range(20)] * 20
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        actual = list(pool.map(cache.encode, values))
+    for rows, (_, encoded) in zip(values, actual):
+        assert encoded == tuple(json.dumps(list(row), separators=(',', ':')).encode() + b'\n' for row in rows)
+    assert cache.size == sum(weight for _, weight in cache.values.values()) <= 8192
+    assert len(cache.values) <= 4
+    assert len({cache.encode(((value,),))[0] for value in (1, '1', 1.0, None)}) == 4
+    with pytest.raises(TypeError):
+        cache.encode(((b'unsupported',),))
+    cache.select_authority('second')
+    assert cache.size == 0 and not cache.values
+
+
 def test_v1_hash_unchanged_with_warm_cache_schema_changes_and_tampering(monkeypatch):
     monkeypatch.setattr(restore, "_TEXT_ENCODINGS", restore._TextEncodingCache())
     with sqlite3.connect(":memory:") as db:

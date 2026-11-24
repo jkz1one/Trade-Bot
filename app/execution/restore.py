@@ -12,11 +12,13 @@ import sqlite3
 import sys
 import uuid
 from collections import OrderedDict
-from itertools import count
+from itertools import chain, count, islice
 from json.encoder import encode_basestring_ascii
 from pathlib import Path
 from threading import Lock
 from urllib.parse import quote
+
+from app.execution.restore_rows import RowEncodings
 
 AUTHORITY_SCHEMA = "execution-restore-authority-v1"
 
@@ -103,7 +105,16 @@ class _TextEncodingCache:
         return pair
 
 
-_TEXT_ENCODINGS = _TextEncodingCache()
+# Keep the combined encoding budget at 192 MiB. Large tables retain canonical
+# row batches without a second full copy of each original string.
+_TEXT_ENCODINGS = _TextEncodingCache(max_bytes=32 * 1024 * 1024)
+_ROW_ENCODINGS = RowEncodings()
+
+
+def _select_authority(authority_id):
+    _TEXT_ENCODINGS.select_authority(authority_id)
+    if _ROW_ENCODINGS is not None:
+        _ROW_ENCODINGS.select_authority(authority_id)
 
 
 def _row_tokens(row, comparison=None):
@@ -184,13 +195,31 @@ def _scan(db, previous, budget, *, retain=True):
         may_compare = retain or (matching and index < len(previous))
         comparison = bytearray() if may_compare and budget > 0 and index < _PREFIX_ITEMS else None
         rows = []
+        batched = False
         if row[0] == "table":
             name = row[1].replace('"', '""')
-            for item in db.execute(f'SELECT * FROM main."{name}"'):
-                rows.append(_row_tokens(item, comparison))
-                if comparison is not None and len(comparison) > budget:
-                    comparison = None
-                    budget = 0
+            cursor = iter(db.execute(f'SELECT * FROM main."{name}"'))
+            first = tuple(islice(cursor, 256))
+            batched = len(first) == 256 and _ROW_ENCODINGS is not None
+            if batched:
+                if comparison is not None:
+                    comparison.extend(b'ROW-BATCH-SHA256:')
+                batch = first
+                while batch:
+                    key, encoded = _ROW_ENCODINGS.encode(batch)
+                    rows.extend(encoded)
+                    if comparison is not None:
+                        comparison.extend(key)
+                        if len(comparison) > budget:
+                            comparison = None
+                            budget = 0
+                    batch = tuple(islice(cursor, 256))
+            else:
+                for item in chain(first, cursor):
+                    rows.append(_row_tokens(item, comparison))
+                    if comparison is not None and len(comparison) > budget:
+                        comparison = None
+                        budget = 0
         if (matching and comparison is not None and index < len(previous)
                 and previous[index][:2] == (definition, comparison)):
             digest = previous[index][2].copy()
@@ -199,10 +228,13 @@ def _scan(db, previous, budget, *, retain=True):
             digest.update(definition)
             rows.sort()
             for tokens in rows:
-                digest.update(b"[")
-                for token in tokens:
-                    digest.update(token)
-                digest.update(b"\n")
+                if batched:
+                    digest.update(tokens)
+                else:
+                    digest.update(b"[")
+                    for token in tokens:
+                        digest.update(token)
+                    digest.update(b"\n")
         if comparison is not None:
             budget -= len(comparison)
             if retain:
@@ -231,7 +263,7 @@ def _check(db):
         or row["authority_id"] != binding["authority_id"]
     ):
         raise ValueError("RESTORE_AUTHORITY_BINDING_MISMATCH")
-    _TEXT_ENCODINGS.select_authority(binding["authority_id"])
+    _select_authority(binding["authority_id"])
     if row["generation"] != binding["generation"] or row["state_hash"] != _digest(db):
         raise ValueError("RESTORED_OR_CHANGED_EXECUTION_JOURNAL")
     return binding
@@ -260,7 +292,7 @@ def advance(db):
     db.execute("UPDATE main.execution_restore_binding SET generation=generation+1 WHERE id=1")
     binding = _binding(db)
     generation = binding["generation"]
-    _TEXT_ENCODINGS.select_authority(binding["authority_id"])
+    _select_authority(binding["authority_id"])
     db.execute(
         "UPDATE authority.restore_authority SET generation=?,state_hash=? WHERE id=1",
         (generation, _digest(db)),
@@ -327,7 +359,7 @@ def enable(journal, *, now):
             "CREATE TABLE authority.restore_authority (id INTEGER PRIMARY KEY CHECK(id=1), schema TEXT NOT NULL, authority_id TEXT NOT NULL, generation INTEGER NOT NULL, state_hash TEXT NOT NULL)"
         )
         journal.event(db, now, "RESTORE_FENCE_ENABLED", {"authority_id": identifier})
-        _TEXT_ENCODINGS.select_authority(identifier)
+        _select_authority(identifier)
         db.execute(
             "INSERT INTO authority.restore_authority VALUES(1,?,?,0,?)",
             (AUTHORITY_SCHEMA, identifier, _digest(db)),

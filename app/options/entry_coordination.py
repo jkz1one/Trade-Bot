@@ -8,7 +8,7 @@ from app.options.runtime_timing import phase
 
 from app.execution.engine import ExecutionBlocked
 from app.options import entry_judgment as judgment
-from app.options.engine import fingerprint
+from app.options.engine import EntryModelBlocked, fingerprint
 from app.options.entry_reasoning import EntryOpportunity, EntryPacket, review_entry_plan
 
 
@@ -115,6 +115,35 @@ def _settle_reply(c, key, evidence, result, completed, *, select_option):
     evidence.update(pending)
 
 
+def _admit_request(c, key, evidence, request, at):
+    """Commit the full request and its budget reservation before any model call."""
+    failure = None
+    with phase("ENTRY_MODEL_REQUEST"), c.engine.journal.write() as db:
+        c._store_pending_evidence(db, key, {**evidence, "status": "MODEL_PENDING"})
+        # Checking after the restore fence counts its elapsed time against the
+        # original request. No clock or approval is renewed by this transaction.
+        before_model = c.now()
+        timely = at <= before_model < request.packet.valid_until
+        if timely:
+            db.execute("SAVEPOINT entry_model_admission")
+            try:
+                with phase("ENTRY_MODEL_ADMISSION"):
+                    c.engine.begin_model_attempt(key, evidence["model_input_hash"],
+                                                 now=before_model, _db=db)
+            except EntryModelBlocked as exc:
+                # Preserve recognition/cooldown and its pause receipt, as the
+                # standalone admission writer does. No unknown-cost row exists.
+                failure = exc
+            except Exception as exc:
+                db.execute("ROLLBACK TO entry_model_admission")
+                failure = exc
+            finally:
+                db.execute("RELEASE entry_model_admission")
+    if failure is not None:
+        raise failure
+    return timely
+
+
 async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlyings, evidence):
     """One durable slot, one bounded child, no replay after interruption or uncertainty."""
     at = c.now()
@@ -184,15 +213,10 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
         )
     evidence["entry_request"] = request.model_dump(mode="json")
     evidence["model_input_hash"] = fingerprint(judgment.request_content(request))
-    # Full request precedes cost admission. A crash at either boundary leaves a
-    # retained STARTED slot; reopening interrupts it and never retries the call.
-    with phase("ENTRY_MODEL_REQUEST"):
-        c._pending_evidence(key, {**evidence, "status": "MODEL_PENDING"})
-    before_model = c.now()
-    if not at <= before_model < packet.valid_until:
+    # The request and cost admission share one durable boundary. A crash before
+    # or after it leaves the existing STARTED slot, never a replayable model call.
+    if not _admit_request(c, key, evidence, request, at):
         return c._finish(key, {**evidence, "status": "HOLD", "reason": "ENTRY_PLAN_EXPIRED_BEFORE_MODEL"})
-    with phase("ENTRY_MODEL_ADMISSION"):
-        c.engine.begin_model_attempt(key, evidence["model_input_hash"], now=before_model)
     try:
         with phase("ENTRY_MODEL", model_source_key=key):
             result = await c._model_run(request, secret, broad=True)
