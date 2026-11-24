@@ -26,7 +26,7 @@ PROGRESS_PREFIX = b'TRADE_BOT_READ_PROGRESS '
 class CaptureProgress(OptionRecord):
     """Diagnostic phases only: no arguments, provider text, tokens or market data."""
     request_id: str = Field(pattern=r'^[a-f0-9]{32}$')
-    stage: Literal['PRIVATE_AUTH', 'CONNECT', 'DISCOVER', 'VALIDATE_PLAN',
+    stage: Literal['PRIVATE_AUTH', 'CONNECT', 'SDK_IMPORTS', 'OAUTH_SETUP', 'MCP_INITIALIZE', 'DISCOVER', 'VALIDATE_PLAN',
                    'MARKET_READ', 'CLOSE', 'SERIALIZE', 'RESPONSE_WRITE', 'RESPONSE_SENT']
     completed_reads: int = Field(ge=0, le=8, strict=True)
     elapsed_seconds: float | None = Field(default=None, ge=0, le=120,
@@ -86,7 +86,7 @@ class FailureCause(OptionRecord):
 
 class CaptureFailure(OptionRecord):
     stage: Literal[
-        "PRIVATE_AUTH", "CONNECT", "DISCOVER", "VALIDATE_PLAN", "MARKET_READ", "CLOSE", "PARENT"
+        "PRIVATE_AUTH", "CONNECT", "SDK_IMPORTS", "OAUTH_SETUP", "MCP_INITIALIZE", "DISCOVER", "VALIDATE_PLAN", "MARKET_READ", "CLOSE", "PARENT"
     ]
     causes: tuple[FailureCause, ...] = Field(min_length=1, max_length=16)
     truncated: bool = Field(default=False, strict=True)

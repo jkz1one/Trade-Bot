@@ -64,3 +64,36 @@ async def test_partial_inventory_never_silently_looks_complete(problem):
     with pytest.raises(ValueError):
         await McpSdkToolClient(Paged()).list_tools()
     assert len(calls) <= 8
+
+
+@pytest.mark.anyio
+async def test_connection_progress_distinguishes_imports_from_session_initialization(tmp_path, monkeypatch):
+    import mcp
+    from app.robinhood.client import RobinhoodMcpConnection
+
+    # No network is used; unrelated executor proxy configuration must not
+    # instantiate an optional proxy transport before the fake MCP context.
+    for name in ('HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY', 'http_proxy', 'https_proxy', 'all_proxy'):
+        monkeypatch.delenv(name, raising=False)
+
+    stages = []
+    class OfflineClient:
+        def __init__(self, transport):
+            self.transport = transport
+        async def __aenter__(self):
+            assert stages == ['SDK_IMPORTS', 'OAUTH_SETUP', 'MCP_INITIALIZE']
+            raise RuntimeError('PRIVATE_SESSION_DETAIL')
+        async def __aexit__(self, *args):
+            pass
+    monkeypatch.setattr(mcp, 'Client', OfflineClient)
+    async def no_login(*args):
+        pytest.fail('unexpected authorization')
+    connection = RobinhoodMcpConnection(url='https://example.invalid/mcp',
+        redirect_uri='http://127.0.0.1:8765/callback', oauth_storage_path=tmp_path/'unused.json',
+        redirect_handler=no_login, callback_handler=no_login)
+    connection.connection_progress = stages.append
+    with pytest.raises(RuntimeError, match='PRIVATE_SESSION_DETAIL'):
+        async with connection.client():
+            pytest.fail('failed session yielded a client')
+    assert stages == ['SDK_IMPORTS', 'OAUTH_SETUP', 'MCP_INITIALIZE']
+    assert not (tmp_path/'unused.json').exists()

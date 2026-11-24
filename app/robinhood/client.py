@@ -132,9 +132,17 @@ class RobinhoodMcpConnection:
         self.storage = JsonOAuthStorage(oauth_storage_path)
         self.redirect_handler = redirect_handler
         self.callback_handler = callback_handler
+        self.connection_progress: Callable[[str], None] | None = None
 
     @asynccontextmanager
     async def client(self) -> AsyncIterator[ToolClient]:
+        def note(stage):
+            if self.connection_progress is not None:
+                self.connection_progress(stage)
+
+        # Keep local SDK loading distinct from opening the authenticated MCP
+        # session. Fixed labels only; no URLs, tokens, headers or provider text.
+        note("SDK_IMPORTS")
         try:
             import httpx2
             from mcp import Client
@@ -148,6 +156,7 @@ class RobinhoodMcpConnection:
                 "Install the project dependencies before running schema discovery."
             ) from exc
 
+        note("OAUTH_SETUP")
         oauth = RestartRefreshOAuthClientProvider(
             server_url=self.url,
             client_metadata=OAuthClientMetadata(
@@ -166,5 +175,6 @@ class RobinhoodMcpConnection:
                 # HTTP client is sufficient; avoid a noisy non-fatal termination warning.
                 terminate_on_close=False,
             )
+            note("MCP_INITIALIZE")
             async with Client(transport) as client:
                 yield McpSdkToolClient(client)

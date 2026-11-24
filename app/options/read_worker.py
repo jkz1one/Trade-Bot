@@ -54,7 +54,9 @@ async def collect(request, *, progress=None):
         note('PRIVATE_AUTH')
         private_oauth(request.policy.oauth_file)
         note('CONNECT')
-        async with connection(request.policy).client() as client:
+        session = connection(request.policy)
+        session.connection_progress = note
+        async with session.client() as client:
             gateway = OptionReadGateway(client)
             note('DISCOVER')
             if request.include_inventory or request.scope_requested or request.operation in {"INPUT_PROBE", "SCOPE_INPUT"}:

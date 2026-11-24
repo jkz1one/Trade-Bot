@@ -97,3 +97,36 @@ def test_legacy_capture_compares_actual_packaged_contract_without_provider_value
         'get_equity_historicals', 'outputSchema', 'properties', 'data', 'properties', 'notice']}]
     assert 'PRIVATE PROVIDER TEXT' not in str(result)
     assert module.evidence_changes('/etc/private') is None
+
+
+def test_failed_worker_keeps_feed_causes_and_native_timing_not_just_old_controller_error(tmp_path, monkeypatch):
+    setup(tmp_path, monkeypatch, launched=True)
+    monkeypatch.setattr(module.daily.Backend, 'container', lambda *a, **k: {
+        'Id': 'worker', 'Image': 'image', 'RestartCount': 0,
+        'State': {'Status': 'exited', 'Running': False, 'ExitCode': 2,
+                  'StartedAt': '2026-11-20T15:00:00Z', 'FinishedAt': '2026-11-20T18:00:00Z'}})
+    fields = {
+        'collector_failures': [{'sequence': 8, 'error_class': 'TimeoutError',
+                                'read_progress': {'stage': 'CONNECT', 'completed_reads': 0}}],
+        'collection_timing': {'status': 'OBSERVED', 'attempts': 344, 'measured': 344},
+        'runtime_failures': [{'error_class': 'FixtureProcessTimeout', 'operation': 'snapshot',
+                              'option_process': {'parent_phase': 'SPAWN'}}],
+        'runtime_timing': {'scheduler_delay': {'max_seconds': 5.5},
+                           'native_spawn_budget': {'NATIVE_SNAPSHOT_SPAWN': {'min_seconds': 4.99}}},
+    }
+    calls = []
+    def runner(args):
+        calls.append(args[0])
+        if args[0] == 'journalctl':
+            return SimpleNamespace(returncode=0, stdout=json.dumps({
+                'step': 'daily-info', 'report': {'status': 'UNAVAILABLE', 'reason': 'DAILY_INFO_UNAVAILABLE'}}))
+        return SimpleNamespace(returncode=0, stdout=json.dumps({'run_id': 'daily-20261120', **fields}))
+    before = {p.name: p.read_bytes() for p in tmp_path.iterdir()}
+    result = module.diagnose('2026-11-20', runner=runner)
+    assert result['status'] == 'DIAGNOSTIC_RECORDED'
+    assert result['worker']['elapsed_seconds'] == 10800
+    assert result['last_failure']['step'] == 'daily-info'
+    for name, evidence in fields.items():
+        assert result['session'][name] == evidence
+    assert calls == ['journalctl', 'python3']
+    assert before == {p.name: p.read_bytes() for p in tmp_path.iterdir()}

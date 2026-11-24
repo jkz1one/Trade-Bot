@@ -152,7 +152,8 @@ def diagnose(target=None, *, runner=run_command, now=None):
                 result['issues'].append('SESSION_REPORT_UNAVAILABLE')
             else:
                 result['session'] = {k: report.get(k) for k in ('operation', 'runtime_evidence', 'cycle_count', 'cycle_outcomes',
-                    'decision_count', 'run_execution', 'collection', 'publication_failures', 'worker_exit')}
+                    'decision_count', 'run_execution', 'collection', 'publication_failures', 'worker_exit',
+                    'collector_failures', 'collection_timing', 'runtime_failures', 'runtime_timing')}
     except (OSError, ValueError, TypeError, KeyError, RuntimeError, subprocess.SubprocessError):
         result['issues'].append('WORKER_INSPECTION_UNAVAILABLE')
     result['status'] = 'DIAGNOSTIC_RECORDED' if not result['issues'] else 'DIAGNOSTIC_PARTIAL'

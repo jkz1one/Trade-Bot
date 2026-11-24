@@ -40,6 +40,21 @@ cannot be adopted as connected evidence or execution state.
 
 ## Delivery checklist
 
+### November 23 acceptance result
+
+R3 guarded installation succeeded for `2d538b7`; R4 failed. The worker ran for
+2h 57m 40s but made zero decisions. Three collections delivered and 341 failed;
+all 13 supplied failure samples timed out at the broad `CONNECT` stage. The
+terminal native snapshot timeout is separate. No publication failures were recorded.
+[Evidence and next diagnostic gate](PAPER_SESSION_20261123_PROOF.json).
+
+Keep the session-review hold. Read the saved runtime timings/resource configuration
+before selecting a runtime or capacity change. The diagnostic patch closes the
+report's missing collector/timing evidence and separates SDK loading from MCP
+initialization. It does not resolve the connected failure or close R4. No limits,
+worker lifecycle, freshness policy or account state changes are authorized by
+this evidence alone.
+
 ### November 20 work order: repair the delivery process first
 
 This section takes precedence over the older execution order below. The user

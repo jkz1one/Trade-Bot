@@ -1,5 +1,18 @@
 # Recovered offline system checkpoint
 
+November 23 host acceptance failed on the installed `2d538b7`: zero decisions,
+341 failed collections and a native snapshot timeout. The published test counts
+below remain offline evidence. They do not establish a healthy connected day.
+The diagnostic patch exposes the omitted saved failure/timing fields and labels
+SDK loading, OAuth setup and MCP initialization separately; runtime behavior and
+deadlines are unchanged. A native-process regression reproduces SPAWN/NOT_OBSERVED
+with a successfully completed child while the parent loop is delayed, establishing
+why that signature alone cannot identify the host root cause.
+All 268 focused checks passed in the root-mapped, network-isolated test environment;
+the matching noneditable application was rebuilt for real child-process tests.
+This is diagnostic verification, not a full installed-system run or runtime repair.
+[Current incident, verification and remaining gate](PAPER_SESSION_20261123_PROOF.json).
+
 November 20 follow-up candidate `2d538b7f32afa7b6df09e7af0d3534e9e27f71e5`
 reproduces the two empty exact-strike probes and resolves them using complete,
 bounded provider strike listings. Native contracts are captured again at the

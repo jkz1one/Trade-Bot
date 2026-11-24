@@ -53,7 +53,8 @@ def test_collector_times_success_failure_and_interruption_without_changing_packe
         feed.close()
 
 
-def test_summary_keeps_missing_corrupt_and_failed_denominators():
+@pytest.mark.parametrize('connection_phase', ['CONNECT', 'SDK_IMPORTS', 'OAUTH_SETUP', 'MCP_INITIALIZE'])
+def test_summary_keeps_missing_corrupt_and_failed_denominators(connection_phase):
     db = sqlite3.connect(':memory:')
     db.row_factory = sqlite3.Row
     db.executescript('CREATE TABLE attempts(sequence INTEGER,started_at TEXT,status TEXT);'
@@ -66,7 +67,7 @@ def test_summary_keeps_missing_corrupt_and_failed_denominators():
         row = {'version':'collector-attempt-timing-v1', 'status':status,
                'elapsed_seconds': n/10, 'phases':{'CAPTURE':n/10},
                'read_process':{'parent_seconds':n/10, 'private':'SECRET', 'progress':[
-                   {'stage':'CONNECT', 'elapsed_seconds':0},
+                   {'stage':connection_phase, 'elapsed_seconds':0},
                    {'stage':'DISCOVER', 'elapsed_seconds':.4}]}}
         if n == 102:
             row['elapsed_seconds'] = float('nan')
@@ -77,7 +78,7 @@ def test_summary_keeps_missing_corrupt_and_failed_denominators():
     assert result['attempt_total'] == dict(samples=100,p50_seconds=5,p95_seconds=9.5,
                                          p99_seconds=9.9,max_seconds=10)
     assert result['by_status']['FAILED']['samples'] == 1
-    assert result['child_observed_intervals']['CONNECT']['max_seconds'] == .4
+    assert result['child_observed_intervals'][connection_phase]['max_seconds'] == .4
     assert 'SECRET' not in json.dumps(result)
     db.execute('DROP TABLE attempt_timings')
     old = reports.timing_evidence(db, AT.isoformat(), AT.isoformat())

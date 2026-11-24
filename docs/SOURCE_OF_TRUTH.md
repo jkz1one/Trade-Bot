@@ -1,6 +1,27 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.227. November 20, New York time. Guarded host installation confirmed.
+Version 1.228. November 23, New York time. Connected operation failed after launch.
+
+The November 23 worker on `2d538b7` started at 10:01:41 a.m. and exited at
+12:59:21 p.m. New York time (2h 57m 40s), exit code 2, no restarts and no OOM kill.
+It recorded zero decisions: 35 cycles skipped for unavailable feed, six for an
+unobserved slot and one interrupted. Only three of 344 collections delivered;
+341 failed. All 13 supplied failure samples timed out in `CONNECT` with zero
+completed reads. The terminal failure was a five-second native snapshot deadline,
+reported at parent phase `SPAWN` with no observed child trace. No publication
+failure was recorded. R4 failed; successful guarded installation did not establish
+operational acceptance. [Session evidence](PAPER_SESSION_20261123_PROOF.json).
+
+The existing `CONNECT` label includes SDK import and authenticated MCP initialization.
+It does not locate the delay within that work. A deterministic reproduction also
+shows `SPAWN / NOT_OBSERVED` after a read-only child already completed, when the
+parent loop is delayed. Neither observation establishes CPU shortage or a provider
+fault. Preserve `SESSION_STOPPED_REVIEW_REQUIRED` while inspecting saved runtime
+timings and resource configuration. No restart, resume or new deployment is proposed.
+The diagnostic patch retains the omitted collector/runtime details in the single
+report and separates fixed connection stages; it is not a runtime repair.
+
+### Prior guarded installation checkpoint
 
 The operator supplied `RELEASE_INSTALLED` for
 `2d538b7f32afa7b6df09e7af0d3534e9e27f71e5`, ending at stage `reader` with no

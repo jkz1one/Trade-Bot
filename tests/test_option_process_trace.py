@@ -143,3 +143,26 @@ def test_child_receives_one_complete_request_and_is_reaped(tmp_path, monkeypatch
         assert result.snapshot == expected
     assert len(children) == 1 and children[0].returncode == 0
     assert (children[0].stdin is None) == (pipe_result == "buffered")
+
+
+def test_spawn_timeout_without_observed_trace_can_follow_a_completed_read(tmp_path, monkeypatch):
+    import time
+    original = asyncio.create_subprocess_exec
+    children = []
+    async def delayed_parent(*args, **kwargs):
+        child = await original(*args, **kwargs)
+        children.append(child)
+        # The independent child can finish while the owner loop cannot receive
+        # the spawn result or attach its trace reader. This does not relax its lease.
+        time.sleep(1.2)
+        return child
+    monkeypatch.setattr(asyncio, 'create_subprocess_exec', delayed_parent)
+    with owned(tmp_path) as (_, venue, _):
+        before = venue.path.read_bytes()
+        with pytest.raises(FixtureProcessTimeout) as caught:
+            asyncio.run(run_option_process(venue, now=NOW, timeout_seconds=1))
+        assert venue.path.read_bytes() == before
+    evidence = failure_details(caught.value)['option_process']
+    assert evidence['parent_phase'] == 'SPAWN'
+    assert evidence['child_trace_status'] == 'NOT_OBSERVED'
+    assert len(children) == 1 and children[0].returncode == 0

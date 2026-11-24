@@ -1,6 +1,36 @@
 # Daily PAPER operation
 
-## Current action: verify the installed schedule
+## Current action: review the failed November 23 worker
+
+The installed `2d538b7` worker launched, then exited at 12:59 p.m. New York time
+with zero decisions, 341 failed collections and a native snapshot timeout.
+The controller requires session review. Keep that hold and the existing account,
+limits, release and retained worker. Do not run an old resume/deployment block.
+[Confirmed evidence and diagnosis limits](PAPER_SESSION_20261123_PROOF.json).
+
+The collector samples all stop at `CONNECT`, which includes local SDK loading
+and authenticated session initialization. The snapshot timeout's missing trace
+can also result from a delayed parent loop. The saved runtime timings and resource
+configuration are needed before choosing a repair; no extra trading day is needed
+to read them. The following read-only check has been requested from the operator:
+
+```bash
+cd /opt/trade-bot-dashboard
+docker inspect --format 'CPUs={{.HostConfig.NanoCpus}} Quota={{.HostConfig.CpuQuota}} Period={{.HostConfig.CpuPeriod}} Memory={{.HostConfig.Memory}} Pids={{.HostConfig.PidsLimit}}' trade-bot-connected-daily-20261123
+python3 scripts/paper-session-report.py --run-id daily-20261123 --format json | python3 -c '
+import json, sys
+r = json.load(sys.stdin)
+t = r.get("runtime_timing") or {}
+print(json.dumps({k: t.get(k) for k in ("status", "measured", "phases", "scheduler_delay", "trace_start_write", "native_spawn_budget", "native_observed_intervals")}, indent=2))
+'
+```
+
+The diagnostic patch includes the missing collector and runtime evidence in
+`paper-diagnose.py` and distinguishes SDK/OAuth/MCP initialization stages.
+It does not change timeouts, authorize resumption or establish a fixed worker.
+The earlier successful deployment and pre-session checks below are historical.
+
+## Prior November 20 installation and schedule check
 
 Installed release: `2d538b7f32afa7b6df09e7af0d3534e9e27f71e5`.
 The operator supplied `RELEASE_INSTALLED`, stage `reader`, with no reported failure.

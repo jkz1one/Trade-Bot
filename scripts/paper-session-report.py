@@ -749,7 +749,7 @@ def failure_evidence(raw):
     result['frames'] = []
     progress = value.get('read_progress')
     if (isinstance(progress, dict) and progress.get('stage') in {
-            'PRIVATE_AUTH', 'CONNECT', 'DISCOVER', 'VALIDATE_PLAN', 'MARKET_READ', 'CLOSE', 'SERIALIZE'}
+            'PRIVATE_AUTH', 'CONNECT', 'SDK_IMPORTS', 'OAUTH_SETUP', 'MCP_INITIALIZE', 'DISCOVER', 'VALIDATE_PLAN', 'MARKET_READ', 'CLOSE', 'SERIALIZE'}
             and type(progress.get('completed_reads')) is int and 0 <= progress['completed_reads'] <= 8):
         result['read_progress'] = {k: progress[k] for k in ('stage', 'completed_reads')}
     frames = value.get('frames')
@@ -848,7 +848,7 @@ def source_capture(db, sequence):
         return result
     stage = failure.get('stage')
     if isinstance(stage, str) and stage in {
-        'PRIVATE_AUTH', 'CONNECT', 'DISCOVER', 'VALIDATE_PLAN', 'MARKET_READ', 'CLOSE', 'PARENT'}:
+        'PRIVATE_AUTH', 'CONNECT', 'SDK_IMPORTS', 'OAUTH_SETUP', 'MCP_INITIALIZE', 'DISCOVER', 'VALIDATE_PLAN', 'MARKET_READ', 'CLOSE', 'PARENT'}:
         result['stage'] = stage
     result['causes'] = []
     for cause in failure.get('causes', [])[:16] if isinstance(failure.get('causes'), list) else []:
@@ -1031,7 +1031,7 @@ def timing_evidence(db, start, end):
     phases = {'PREPARE', 'HISTORY_PLAN', 'HISTORY_VALIDATE', 'HISTORY_BINDING',
               'CAPTURE', 'PERSIST_CAPTURE', 'SOURCE_BINDING', 'NORMALIZE',
               'SOURCE_CLOCK_CHECK', 'PUBLISH'}
-    child_phases = {'PRIVATE_AUTH', 'CONNECT', 'DISCOVER', 'VALIDATE_PLAN',
+    child_phases = {'PRIVATE_AUTH', 'CONNECT', 'SDK_IMPORTS', 'OAUTH_SETUP', 'MCP_INITIALIZE', 'DISCOVER', 'VALIDATE_PLAN',
                     'MARKET_READ', 'CLOSE', 'SERIALIZE'}
     values, grouped, child_values, parent = [], {}, {}, []
 

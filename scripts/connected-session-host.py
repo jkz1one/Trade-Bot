@@ -77,7 +77,7 @@ def capture_failure(stdout):
         if not isinstance(detail, dict):
             continue
         stage = detail.get("stage")
-        if stage not in ("PRIVATE_AUTH", "CONNECT", "DISCOVER", "VALIDATE_PLAN",
+        if stage not in ("PRIVATE_AUTH", "CONNECT", "SDK_IMPORTS", "OAUTH_SETUP", "MCP_INITIALIZE", "DISCOVER", "VALIDATE_PLAN",
                          "MARKET_READ", "CLOSE", "PARENT", "SESSION_SETUP", "CONTEXT_REVIEW",
                          "CONTRACT_PROBE", "STRIKE_DISCOVERY", "CONTRACT_REVIEW", "QUOTE_REVIEW",
                          "CAPTURE_ARTIFACT_WRITE"):

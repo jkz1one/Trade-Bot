@@ -187,3 +187,35 @@ def test_cli_emits_safe_failure_and_preserves_old_result_compatibility(
             legacy
             | {"failure": CaptureFailure(stage="CONNECT", causes=({"error_class": "OtherError"},))}
         )
+
+
+@pytest.mark.parametrize('stage', ['SDK_IMPORTS', 'OAUTH_SETUP', 'MCP_INITIALIZE'])
+def test_connection_subphase_survives_child_and_host_sanitizers(tmp_path, monkeypatch, stage):
+    import importlib.util
+    from pathlib import Path
+    from app.options.read_capture import CaptureProgress
+    from test_paper_session_report import module as reports
+
+    class Connection:
+        @asynccontextmanager
+        async def client(self):
+            self.connection_progress(stage)
+            raise TimeoutError('PRIVATE_CONNECTION_DETAIL')
+            yield
+    monkeypatch.setattr(read_worker, 'connection', lambda policy: Connection())
+    progress = []
+    result = asyncio.run(read_worker.collect(request(tmp_path), progress=progress.append))
+    assert result.status == 'FAILED' and result.failure.stage == stage
+    assert result.observations == []
+    assert progress[-1].stage == stage and progress[-1].completed_reads == 0
+    assert CaptureProgress.model_validate_json(progress[-1].model_dump_json()) == progress[-1]
+    assert 'PRIVATE_CONNECTION_DETAIL' not in result.model_dump_json()
+
+    spec = importlib.util.spec_from_file_location('subphase_host', Path(__file__).parents[1]/'scripts/connected-session-host.py')
+    host = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(host)
+    captured = host.capture_failure(result.model_dump_json())
+    assert captured['stage'] == stage and captured['error_classes'] == ['TimeoutError']
+    evidence = reports.failure_evidence(json.dumps({'read_progress': progress[-1].model_dump(),
+                                                    'error_class': 'TimeoutError'}))
+    assert evidence['read_progress'] == {'stage': stage, 'completed_reads': 0}
