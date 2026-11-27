@@ -40,19 +40,35 @@ cannot be adopted as connected evidence or execution state.
 
 ## Delivery checklist
 
-### November 27 offline status and outstanding capacity gate
+### November 27 host first-entry failure and next repair
 
-The read-only soak checker now exposes the saved interim session report instead
-of leaving all decision/fill evidence until shutdown. It dates the receipt
-separately from synthetic feed clocks, retains blockers and component failures,
-and does not turn a running container or zero fills into a health conclusion.
-All 91 focused host/soak checks pass; application bytes remain those of `d2e78bf`.
-[Verification](PAPER_PROGRESS_20261127_PROOF.json).
+The isolated host soak launched successfully but its first required entry expired
+before reservation, despite a timely model reply. This controlled fixture emits
+ENTER once and HOLD thereafter: its lifecycle gate has failed. Continuing resource
+measurements cannot change that result. [Operator evidence](PAPER_SOAK_20261127_HOST.json).
 
-Request the already-qualified candidate's detached host duration test while
-continuing the denser calendar replay independently. The host launch/result is
-not yet supplied. Preserve the installed owner and review hold; the new reporting
-code does not close duration, month-growth, provider health or R4.
+The harness now detects terminal loss of that exact fixture entry at the next
+saved report. It preserves legitimate HOLDs, pending entries and zero-fill market
+sessions. The bot and its original timing/risk/account limits are unchanged.
+
+The 100 focused checks pass. An injected original-deadline rejection stops in
+37.16 seconds and preserves its settled model charge and failed receipt; the
+112-MiB short control still completes a round trip with verified flat accounting.
+[Guard verification](PAPER_ENTRY_GATE_20261127_PROOF.json).
+
+1. First-cycle evidence is supplied: settlement took 0.935 seconds with 0.336
+   seconds remaining; protection wait was 0.000120 seconds. The original plan
+   was valid for only 2.385 seconds at assembly.
+2. Reproduce and repair that path under the unchanged original plan deadline.
+3. Pass the short loaded lifecycle and relevant boundary regressions before
+   requesting another host duration attempt. Preserve the current test evidence.
+
+The denser local calendar check passed: 22 sampled sessions retaining 1,738 packets
+and 64 model calls, then a paced 335-second round trip with two due evaluations
+and verified flat accounting. It does not qualify a full-cadence month or resolve
+the host deadline failure. [Local proof](PAPER_CALENDAR_20261127_PROOF.json).
+Keep installed `2d538b7`, the account, timer, limits and review hold unchanged.
+Full host duration, provider health and connected R4 remain open.
 
 ### November 24 fast iteration and local qualification
 

@@ -1,15 +1,35 @@
 # Recovered offline system checkpoint
 
-November 27: the host status reader now includes retained interim feed, decision,
-fill and failure evidence, dated separately from its synthetic market window.
-All 91 focused host/soak checks pass. Existing receipt bytes and worker state are
-unchanged by inspection. The application manifest still matches `d2e78bf`; no
-application rebuild or broad-suite repeat was needed for this script-only change.
-[Focused proof](PAPER_PROGRESS_20261127_PROOF.json).
+November 27: the operator's running `d2e78bf` soak has failed its lifecycle gate.
+The one-shot fixture ENTER received a timely model reply but expired before
+reservation (`ORIGINAL_PLAN_DEADLINE_EXPIRED`). Its later model calls return HOLD;
+this run cannot complete the required round trip. Fresh synthetic feed, completed
+decisions and resource measurements remain useful but do not override failure.
+The saved phase trace shows settlement using 0.935 seconds after a reply with
+only 0.336 seconds left. Protection wait was 0.000120 seconds. Review was 0.623
+seconds past the original deadline; the entry path remains unrepaired.
+[Host observations](PAPER_SOAK_20261127_HOST.json).
 
-The pinned `d2e78bf` host soak has been requested; no operator result has been
-supplied. The denser 22-session replay and paced follow-up are still running at
-this checkpoint. Neither is promoted to a completed acceptance result.
+The harness now fails on a completed rejection of its exact required fixture
+entry, preserving the original decision and failure evidence. It permits pending
+entries, unrelated HOLDs and zero fills without a known terminal fixture failure.
+Application bytes, deadlines, account authority and limits are unchanged.
+
+The 100 focused checks pass. An injected original-deadline rejection stops in
+37.16 seconds and preserves its settled model charge and failed receipt; the
+112-MiB short control still completes a round trip with verified flat accounting.
+[Guard verification](PAPER_ENTRY_GATE_20261127_PROOF.json).
+
+The local 22-session sampled replay and 335-second paced follow-up completed:
+1,738 prior packets, 64 prior model calls, both due paced decisions evaluated,
+one simulated round trip, no runtime/publication failure and verified flat
+accounting. This local result is not full-cadence month or Docker qualification
+and does not override the host rejection. [Proof](PAPER_CALENDAR_20261127_PROOF.json).
+
+Preserve the installed connected owner and review hold. Repair and briefly
+reproduce the first entry delay before a new host run; do not redeploy or resume.
+The read-only interim reporting patch's earlier 91 checks remain documented in
+[PAPER_PROGRESS_20261127_PROOF.json].
 
 November 24 current checkpoint: the blocking local protection and lifecycle gates pass.
 

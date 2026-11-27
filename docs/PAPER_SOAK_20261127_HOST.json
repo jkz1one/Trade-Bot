@@ -1,0 +1,300 @@
+{
+  "version": "paper-soak-host-observations-20261127-v1",
+  "source": "Operator-supplied terminal output; no direct server access",
+  "release": "d2e78bf88e0fa78a0940bb3f3881564027f70442",
+  "image_id": "sha256:401df4323742aef1a30e62f79be7608036f6111dde449fefaf25da1db7c8b4bd",
+  "evidence_directory": "/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-d2e78bf88e0f-foxg0rjo",
+  "started_at": "2026-11-27T19:05:39.328144636Z",
+  "launch": {
+    "observed_at": "2026-11-27T19:05:39.793174+00:00",
+    "launch_status": "STARTED",
+    "status": "RUNNING_AWAITING_PROGRESS",
+    "reason": "NO_PROGRESS_RECEIPT_YET",
+    "restart_count": 0,
+    "oom_killed": false
+  },
+  "progress_observations": [
+    {
+      "observed_at": "2026-11-27T19:23:12.163860+00:00",
+      "status": "RUNNING",
+      "restart_count": 0,
+      "oom_killed": false,
+      "progress_age_seconds": 1.1664116382598877,
+      "elapsed_seconds": 1028.8391778413206,
+      "native_snapshot_calls": 384,
+      "native_snapshot_failures": 0,
+      "native_snapshot_max_seconds": 0.7922091959044337,
+      "capture_attempts": 100,
+      "peak_tree_rss_bytes": 473833472,
+      "source_database_bytes": 131371008,
+      "decision_coverage": null,
+      "execution": null,
+      "final_accounting": null,
+      "cgroup_memory": {
+        "status": "OBSERVED",
+        "current_bytes": 607027200,
+        "peak_bytes": 866164736,
+        "max_bytes": 1073741824,
+        "events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "stat": {
+          "anon": 443994112,
+          "file": 152805376,
+          "kernel": 9965568,
+          "pagetables": 1228800,
+          "sock": 0,
+          "shmem": 0,
+          "slab": 8561848
+        }
+      }
+    }
+  ],
+  "acceptance": "FAILED_FIXTURE_ENTRY_DEADLINE",
+  "next_checkpoint": "Reduce time consumed before native entry under original market and account deadlines; first-cycle evidence locates settlement overrun and excludes protection wait for this occurrence. No new full host attempt yet.",
+  "final_duration": "NOT_SUPPLIED",
+  "interim_feed_decision_lifecycle_report": {
+    "source": "Operator-supplied selected fields from retained latest-report.json",
+    "window_end": "2026-10-28T14:24:41.803548+00:00",
+    "runtime_evidence": {
+      "heartbeat": "FRESH",
+      "heartbeat_at": "2026-10-28T14:24:39.909870+00:00",
+      "heartbeat_age_seconds": 1.893678,
+      "heartbeat_max_age_seconds": 20,
+      "feed": "FRESH",
+      "feed_at": "2026-10-28T14:24:31.681649+00:00",
+      "feed_age_seconds": 10.121899,
+      "feed_max_age_seconds": 30
+    },
+    "current_runtime": [
+      {
+        "status": "RUNNING",
+        "reason": null,
+        "feed_sequence": 144
+      }
+    ],
+    "cycle_count": 5,
+    "cycle_outcomes": [
+      {
+        "status": [
+          "COMPLETE"
+        ],
+        "reason": [],
+        "count": 5
+      }
+    ],
+    "decision_count": 5,
+    "run_execution": {
+      "status": "RECORDED",
+      "entry_fills": 0,
+      "exit_fills": 0,
+      "completed_round_trips": 0,
+      "carry_in_exits": 0
+    },
+    "collection": [
+      {
+        "status": "DELIVERED",
+        "attempts": 145,
+        "first_sequence": 1,
+        "last_sequence": 145
+      }
+    ],
+    "runtime_failures": [],
+    "publication_failures": [],
+    "run_issues": []
+  },
+  "connected_health": "UNVERIFIED",
+  "live_enabled": false,
+  "preserved": [
+    "installed connected release",
+    "account",
+    "risk and model limits",
+    "timer",
+    "SESSION_STOPPED_REVIEW_REQUIRED",
+    "prior failed soak evidence"
+  ],
+  "later_decision_extraction": {
+    "window_end": "NOT_SUPPLIED",
+    "decision_reason_counts": [
+      {
+        "reason": [
+          "ORIGINAL_PLAN_DEADLINE_EXPIRED"
+        ],
+        "decisions": 1,
+        "first_at": "2026-10-28T14:00:25.541753+00:00",
+        "last_at": "2026-10-28T14:00:25.541753+00:00"
+      },
+      {
+        "reason": [
+          "ENTRY_MODEL_HOLD_OR_REJECTED"
+        ],
+        "decisions": 2,
+        "first_at": "2026-10-28T14:05:11.240079+00:00",
+        "last_at": "2026-10-28T14:10:10.019832+00:00"
+      },
+      {
+        "reason": [
+          "NO_ADMITTED_CONTRACT"
+        ],
+        "decisions": 3,
+        "first_at": "2026-10-28T14:15:15.652473+00:00",
+        "last_at": "2026-10-28T14:25:05.612787+00:00"
+      }
+    ],
+    "entry_freshness": {
+      "status": "NO_ENTRIES",
+      "reservations": 0,
+      "measured": 0,
+      "missing_or_invalid": 0,
+      "omitted": 0,
+      "clocks": {}
+    },
+    "expired_before_native_submission": 0,
+    "attempt_recovery": {
+      "matched_in_run": 0,
+      "unresolved_at_last_snapshot": 0
+    },
+    "model_calls": {
+      "run": {
+        "attempts": 3,
+        "unsettled": 0
+      },
+      "account_total": {
+        "attempts": 3,
+        "unsettled": 0
+      }
+    },
+    "first_decisions": [
+      {
+        "started_at": "2026-10-28T14:00:25.541753+00:00",
+        "stored_status": "COMPLETE",
+        "status": [
+          "HOLD"
+        ],
+        "reason": [
+          "ORIGINAL_PLAN_DEADLINE_EXPIRED"
+        ],
+        "entry_timely": true,
+        "option_market_sequence": 2,
+        "option_market_review_reasons": [
+          "ORIGINAL_PLAN_DEADLINE_EXPIRED"
+        ]
+      },
+      {
+        "started_at": "2026-10-28T14:05:11.240079+00:00",
+        "stored_status": "COMPLETE",
+        "status": [
+          "HOLD"
+        ],
+        "reason": [
+          "ENTRY_MODEL_HOLD_OR_REJECTED"
+        ],
+        "entry_timely": true,
+        "option_market_sequence": null,
+        "option_market_review_reasons": null
+      }
+    ]
+  },
+  "interpretation": [
+    "The controlled fixture emits ENTER once then HOLD for all later model calls. Its first intended entry was rejected before reservation. That run cannot meet its required round trip.",
+    "The model reply was timely with 0.335549 seconds remaining. Settlement consumed 0.934584 seconds; protection wait was 0.000120 seconds. Review occurred 0.622810 seconds after the unchanged deadline. The plan had 2.384675 seconds of validity at assembly; the exact limiting input clock is not included in the supplied fields.",
+    "Fresh feed, completed decisions and native snapshot speed do not override this lifecycle failure. Zero fills alone in an ordinary market session are not failure.",
+    "Remaining uptime can supply resource evidence only. No final worker result or post-37-minute memory receipt has been supplied."
+  ],
+  "first_entry_clocks": {
+    "as_of": "2026-10-28T14:00:27.463707Z",
+    "valid_until": "2026-10-28T14:00:29.848382Z",
+    "model_completed_at": "2026-10-28T14:00:29.512833+00:00",
+    "review_at": "2026-10-28T14:00:30.471192+00:00",
+    "reason": "ORIGINAL_PLAN_DEADLINE_EXPIRED"
+  },
+  "first_cycle": {
+    "started_at": "2026-10-28T14:00:25.461144+00:00",
+    "elapsed_seconds": 6.825801,
+    "status": "COMPLETE",
+    "spans": [
+      {
+        "phase": "CYCLE_OPPORTUNITY_CLAIM",
+        "elapsed_seconds": 1.868856,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "SCAN",
+        "elapsed_seconds": 0.057212,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "STOCK_SCAN",
+        "elapsed_seconds": 0.997314,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "SCOPE_SCAN",
+        "elapsed_seconds": 0.003324,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_MODEL_ADMISSION",
+        "elapsed_seconds": 0.018703,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_MODEL_REQUEST",
+        "elapsed_seconds": 0.889438,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_MODEL",
+        "elapsed_seconds": 0.003779,
+        "status": "COMPLETE",
+        "model_source_key": "degen:5977320:portfolio:0"
+      },
+      {
+        "phase": "ENTRY_MIXED_SELECTION",
+        "elapsed_seconds": 0.001043,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_SCOPE_RECEIPT_CHECK",
+        "elapsed_seconds": 0.028941,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_SCOPE_SELECTION",
+        "elapsed_seconds": 0.00151,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_MODEL_SETTLEMENT",
+        "elapsed_seconds": 0.934584,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_PROTECTION_WAIT",
+        "elapsed_seconds": 0.00012,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_OPTION_MARKET_READ",
+        "elapsed_seconds": 0.012765,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_REVIEW",
+        "elapsed_seconds": 0.079084,
+        "status": "COMPLETE"
+      }
+    ]
+  },
+  "derived_timing": {
+    "plan_validity_seconds": 2.384675,
+    "seconds_remaining_at_model_reply": 0.335549,
+    "review_seconds_past_deadline": 0.62281,
+    "reply_to_review_seconds": 0.958359
+  }
+}

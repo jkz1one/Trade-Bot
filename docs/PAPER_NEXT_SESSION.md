@@ -1,46 +1,52 @@
 # Daily PAPER operation
 
-## Current action: resource qualification before deployment
+## Current action: inspect the failed fixture entry; preserve deployment
 
-The new fast gate passed in 2m 38s: 112-MiB stock and option protection completed in 4.35 and 4.38 seconds against the unchanged five-second target, followed by a 90-second simulated round trip and verified flat accounting. The matching installed suite passed 1,065 tests with one unmapped-reader-UID skip.
+The isolated `d2e78bf` run started November 27 at 2:05:39 p.m. ET and uses:
 
-The longer loaded check also passed after 336.44 seconds: 153 native snapshots, zero native snapshot failures, both scheduled decision slots evaluated, one entry/exit round trip and verified flat accounting. Peak sampled process-tree RSS was 461,508,608 bytes; cgroup counters remain unavailable locally. [Exact verification, failed intermediate checks and limits](PAPER_ITERATION_20261124_PROOF.json).
+`/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-d2e78bf88e0f-foxg0rjo`
 
-Keep the installed `2d538b7` checkout, account, retained connected workers, timer, risk/model limits and `SESSION_STOPPED_REVIEW_REQUIRED` hold unchanged. No deploy, resume, restart, halt clearing or resource-limit increase follows from these local checks. The server remains operator-managed; no direct host inspection was performed.
+Its only intended entry was rejected with `ORIGINAL_PLAN_DEADLINE_EXPIRED` before
+reservation, despite a timely model response. This fixture returns HOLD for later
+calls, so its required lifecycle gate has failed. Healthy synthetic feed and native
+snapshots do not override that failure. A final worker/resource result has not
+been supplied. [Exact observations](PAPER_SOAK_20261127_HOST.json).
 
-The next host gate is a fresh detached synthetic soak of the published candidate, with one CPU, 1 GiB without swap, 128 PIDs, no network or credentials and a new evidence directory. Review early progress and the 45-minute checkpoint to test beyond the previous OOM at 37m 19s; keep that same run through its full duration if healthy. A final PASSED receipt, complete lifecycle/accounting, decision coverage and no OOM/restart are required. The runner now exits on a recorded acceptance/runtime/publication failure instead of waiting out a duration that can no longer pass.
+The saved clocks and first CYCLE spans are supplied: settlement took 0.935
+seconds after the model replied with 0.336 seconds left. Protection wait was
+0.000120 seconds; review was 0.623 seconds late. Use this evidence to reduce entry
+latency before another candidate run. Do not rerun the former launch block, redeploy, resume the schedule, change
+limits, clear halts or overwrite retained evidence. Keep the connected `2d538b7`
+checkout, account, daily timer, existing workers and session-review hold intact.
+The server remains operator-managed; no direct host inspection was performed.
 
-The November 27 operator request pins the previously tested application:
+The existing test can be inspected without changing it:
 
 ```bash
-(
-  set -eu
-  cd /opt/trade-bot-dashboard
-  release=d2e78bf88e0fa78a0940bb3f3881564027f70442
-  git fetch origin slice2/robinhood-read-shadow
-  git merge-base --is-ancestor HEAD "$release"
-  git merge-base --is-ancestor "$release" FETCH_HEAD
-  candidate=$(mktemp -d)
-  git worktree add --detach "$candidate" "$release"
-  trap 'git worktree remove "$candidate"' EXIT
-  python3 "$candidate/scripts/paper-soak-host.py" start \
-    --checkout /opt/trade-bot-dashboard
-)
+proof=/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-d2e78bf88e0f-foxg0rjo
+python3 "$proof/check.py" status --evidence "$proof"
 ```
 
-If this run has already started, keep it and use its returned `check_command`;
-do not launch another test. No launch output has yet been supplied. The new source
-checker can also read that same evidence directory with `status --evidence PATH`
-without stopping or restarting the test. It adds the saved session report and
-its real age; the saved `check.py` from `d2e78bf` retains its earlier output format.
-Feed/heartbeat labels describe the synthetic report cutoff, not present connected
-health. Final decision coverage and accounting still require completed evidence.
+The saved `d2e78bf` checker may still say RUNNING because it does not stop on this
+fixture rejection. That label describes its process, not successful qualification.
+New source reporting reads the same interim report without restarting the test.
+The new harness also stops on completed rejection of its exact one-shot entry;
+this does not alter the running older worker.
 
-Retain the failed `20923e2` evidence at `/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-20923e2e823d-iftsm6k7`. Do not restart that container or overwrite its receipts. A passing synthetic duration still leaves original Robinhood connection health, sustained month growth and connected R4 unverified.
+The 100 focused checks pass. An injected original-deadline rejection stops in
+37.16 seconds and preserves its settled model charge and failed receipt; the
+112-MiB short control still completes a round trip with verified flat accounting.
+[Guard verification](PAPER_ENTRY_GATE_20261127_PROOF.json).
 
-The local launchers now reject a PID namespace whose `/proc` view does not match. Use `unshare --mount-proc` with the documented developer command. Earlier local aggregate process-tree RSS did not record this coherence and is not accepted as resource qualification; direct self-RSS cache benchmarks and the operator-reported Docker OOM remain separate evidence.
+The separate local 22-session sampled replay and paced follow-up passed, with one
+round trip and verified flat accounting in the paced window. That is narrow
+local evidence; Docker duration, sustained full-cadence month growth, provider
+CONNECT health and connected R4 remain open.
+[Calendar proof](PAPER_CALENDAR_20261127_PROOF.json).
 
-[Developer iteration loop](PAPER_SYSTEM_CHECK.md). Earlier operator commands below are historical.
+Retain the prior OOM evidence at
+`/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-20923e2e823d-iftsm6k7`.
+[Developer iteration loop](PAPER_SYSTEM_CHECK.md). Earlier commands below are history.
 
 ## Prior November 20 installation and schedule check
 

@@ -1,0 +1,377 @@
+{
+  "version": "paper-calendar-20261127-v1",
+  "status": "PASSED_SAMPLED_CALENDAR_AND_PACED_FOLLOWUP",
+  "application_release": "d2e78bf88e0fa78a0940bb3f3881564027f70442",
+  "application_manifest_sha256": "6f2b3d274a215f9f86a436f0f7f60d9806a0f3c8d458496cf45d266addbb034b",
+  "application_files": 336,
+  "runtime_pins": 60,
+  "synthetic": true,
+  "provider_calls": false,
+  "external_model_calls": false,
+  "live_enabled": false,
+  "duration_seconds": 1982.65,
+  "tests": {
+    "passed": 1
+  },
+  "environment": {
+    "noneditable_installed_app": true,
+    "network_isolated": true,
+    "pid_namespace_with_matching_proc": true,
+    "logical_cpus": 1,
+    "docker_cgroup_qualification": false
+  },
+  "artifacts": {
+    "calendar-growth.json": "65bf8bdd5830bcb61cfbc24fd6e75224c70dc29f8d5a5c419cf747e0dbbc4c3f",
+    "calendar-paced.json": "a034d6576a5ff8e6aba024534040f9e673fa9f8f86c57b44c961b5a375a7b0bb",
+    "tests.xml": "4cd761b0d45e699e9973d821cf2e024ea6792f07b87ab99ec55b9e7190121a4d",
+    "tests.log": "b0d71aa9784f6904b56f2165afed7478daa82608984da496c852cca38ee8b269"
+  },
+  "sampled_calendar": {
+    "synthetic": true,
+    "full_cadence": false,
+    "model_calls": 64,
+    "samples_per_session": 79,
+    "sessions": [
+      {
+        "session": "2026-10-28",
+        "open": "2026-10-28T13:30:00+00:00",
+        "close": "2026-10-28T20:00:00+00:00",
+        "last_sequence": 79,
+        "round_trips": 1,
+        "native_bytes": 5107712,
+        "collector_bytes": 4980736,
+        "display_bytes": 2269184,
+        "restore_generation": 225
+      },
+      {
+        "session": "2026-10-29",
+        "open": "2026-10-29T13:30:00+00:00",
+        "close": "2026-10-29T20:00:00+00:00",
+        "last_sequence": 158,
+        "round_trips": 0,
+        "native_bytes": 9572352,
+        "collector_bytes": 9826304,
+        "display_bytes": 3047424,
+        "restore_generation": 426
+      },
+      {
+        "session": "2026-10-30",
+        "open": "2026-10-30T13:30:00+00:00",
+        "close": "2026-10-30T20:00:00+00:00",
+        "last_sequence": 237,
+        "round_trips": 0,
+        "native_bytes": 14032896,
+        "collector_bytes": 14659584,
+        "display_bytes": 3538944,
+        "restore_generation": 627
+      },
+      {
+        "session": "2026-11-02",
+        "open": "2026-11-02T14:30:00+00:00",
+        "close": "2026-11-02T21:00:00+00:00",
+        "last_sequence": 316,
+        "round_trips": 0,
+        "native_bytes": 18505728,
+        "collector_bytes": 19492864,
+        "display_bytes": 4046848,
+        "restore_generation": 828
+      },
+      {
+        "session": "2026-11-03",
+        "open": "2026-11-03T14:30:00+00:00",
+        "close": "2026-11-03T21:00:00+00:00",
+        "last_sequence": 395,
+        "round_trips": 0,
+        "native_bytes": 22990848,
+        "collector_bytes": 24326144,
+        "display_bytes": 4567040,
+        "restore_generation": 1030
+      },
+      {
+        "session": "2026-11-04",
+        "open": "2026-11-04T14:30:00+00:00",
+        "close": "2026-11-04T21:00:00+00:00",
+        "last_sequence": 474,
+        "round_trips": 0,
+        "native_bytes": 27504640,
+        "collector_bytes": 29155328,
+        "display_bytes": 5107712,
+        "restore_generation": 1234
+      },
+      {
+        "session": "2026-11-05",
+        "open": "2026-11-05T14:30:00+00:00",
+        "close": "2026-11-05T21:00:00+00:00",
+        "last_sequence": 553,
+        "round_trips": 0,
+        "native_bytes": 32026624,
+        "collector_bytes": 34000896,
+        "display_bytes": 5656576,
+        "restore_generation": 1439
+      },
+      {
+        "session": "2026-11-06",
+        "open": "2026-11-06T14:30:00+00:00",
+        "close": "2026-11-06T21:00:00+00:00",
+        "last_sequence": 632,
+        "round_trips": 0,
+        "native_bytes": 36540416,
+        "collector_bytes": 38834176,
+        "display_bytes": 6197248,
+        "restore_generation": 1644
+      },
+      {
+        "session": "2026-11-09",
+        "open": "2026-11-09T14:30:00+00:00",
+        "close": "2026-11-09T21:00:00+00:00",
+        "last_sequence": 711,
+        "round_trips": 0,
+        "native_bytes": 41074688,
+        "collector_bytes": 43667456,
+        "display_bytes": 6746112,
+        "restore_generation": 1849
+      },
+      {
+        "session": "2026-11-10",
+        "open": "2026-11-10T14:30:00+00:00",
+        "close": "2026-11-10T21:00:00+00:00",
+        "last_sequence": 790,
+        "round_trips": 0,
+        "native_bytes": 45621248,
+        "collector_bytes": 48496640,
+        "display_bytes": 7319552,
+        "restore_generation": 2054
+      },
+      {
+        "session": "2026-11-11",
+        "open": "2026-11-11T14:30:00+00:00",
+        "close": "2026-11-11T21:00:00+00:00",
+        "last_sequence": 869,
+        "round_trips": 0,
+        "native_bytes": 50184192,
+        "collector_bytes": 53329920,
+        "display_bytes": 7913472,
+        "restore_generation": 2261
+      },
+      {
+        "session": "2026-11-12",
+        "open": "2026-11-12T14:30:00+00:00",
+        "close": "2026-11-12T21:00:00+00:00",
+        "last_sequence": 948,
+        "round_trips": 0,
+        "native_bytes": 54755328,
+        "collector_bytes": 58167296,
+        "display_bytes": 8503296,
+        "restore_generation": 2468
+      },
+      {
+        "session": "2026-11-13",
+        "open": "2026-11-13T14:30:00+00:00",
+        "close": "2026-11-13T21:00:00+00:00",
+        "last_sequence": 1027,
+        "round_trips": 0,
+        "native_bytes": 59338752,
+        "collector_bytes": 63004672,
+        "display_bytes": 9093120,
+        "restore_generation": 2673
+      },
+      {
+        "session": "2026-11-16",
+        "open": "2026-11-16T14:30:00+00:00",
+        "close": "2026-11-16T21:00:00+00:00",
+        "last_sequence": 1106,
+        "round_trips": 0,
+        "native_bytes": 63930368,
+        "collector_bytes": 67842048,
+        "display_bytes": 9711616,
+        "restore_generation": 2880
+      },
+      {
+        "session": "2026-11-17",
+        "open": "2026-11-17T14:30:00+00:00",
+        "close": "2026-11-17T21:00:00+00:00",
+        "last_sequence": 1185,
+        "round_trips": 0,
+        "native_bytes": 68526080,
+        "collector_bytes": 72675328,
+        "display_bytes": 10330112,
+        "restore_generation": 3087
+      },
+      {
+        "session": "2026-11-18",
+        "open": "2026-11-18T14:30:00+00:00",
+        "close": "2026-11-18T21:00:00+00:00",
+        "last_sequence": 1264,
+        "round_trips": 0,
+        "native_bytes": 73121792,
+        "collector_bytes": 77508608,
+        "display_bytes": 10960896,
+        "restore_generation": 3292
+      },
+      {
+        "session": "2026-11-19",
+        "open": "2026-11-19T14:30:00+00:00",
+        "close": "2026-11-19T21:00:00+00:00",
+        "last_sequence": 1343,
+        "round_trips": 0,
+        "native_bytes": 77754368,
+        "collector_bytes": 82337792,
+        "display_bytes": 11599872,
+        "restore_generation": 3499
+      },
+      {
+        "session": "2026-11-20",
+        "open": "2026-11-20T14:30:00+00:00",
+        "close": "2026-11-20T21:00:00+00:00",
+        "last_sequence": 1422,
+        "round_trips": 0,
+        "native_bytes": 82362368,
+        "collector_bytes": 87175168,
+        "display_bytes": 12238848,
+        "restore_generation": 3704
+      },
+      {
+        "session": "2026-11-23",
+        "open": "2026-11-23T14:30:00+00:00",
+        "close": "2026-11-23T21:00:00+00:00",
+        "last_sequence": 1501,
+        "round_trips": 0,
+        "native_bytes": 86999040,
+        "collector_bytes": 92008448,
+        "display_bytes": 12902400,
+        "restore_generation": 3911
+      },
+      {
+        "session": "2026-11-24",
+        "open": "2026-11-24T14:30:00+00:00",
+        "close": "2026-11-24T21:00:00+00:00",
+        "last_sequence": 1580,
+        "round_trips": 0,
+        "native_bytes": 91664384,
+        "collector_bytes": 96845824,
+        "display_bytes": 13574144,
+        "restore_generation": 4118
+      },
+      {
+        "session": "2026-11-25",
+        "open": "2026-11-25T14:30:00+00:00",
+        "close": "2026-11-25T21:00:00+00:00",
+        "last_sequence": 1659,
+        "round_trips": 0,
+        "native_bytes": 96309248,
+        "collector_bytes": 101675008,
+        "display_bytes": 14249984,
+        "restore_generation": 4325
+      },
+      {
+        "session": "2026-11-27",
+        "open": "2026-11-27T14:30:00+00:00",
+        "close": "2026-11-27T18:00:00+00:00",
+        "last_sequence": 1738,
+        "round_trips": 0,
+        "native_bytes": 100917248,
+        "collector_bytes": 106459136,
+        "display_bytes": 14917632,
+        "restore_generation": 4532
+      }
+    ]
+  },
+  "paced_followup": {
+    "synthetic": true,
+    "provider_calls": false,
+    "external_model_calls": false,
+    "history_sessions": 22,
+    "retained_prior_packets": 1738,
+    "retained_prior_model_calls": 64,
+    "next_calendar_session": "2026-11-30",
+    "duration_seconds": 335,
+    "new_packets": 33,
+    "model_calls": 1,
+    "start_native_bytes": 100917248,
+    "final_native_bytes": 106328064,
+    "cpu": {
+      "elapsed_seconds": 336.925156,
+      "worker_user_seconds": 176.362987,
+      "worker_system_seconds": 29.516793,
+      "reaped_child_user_seconds": 4.99182,
+      "reaped_child_system_seconds": 1.376532,
+      "average_busy_cores": 0.629956,
+      "average_allocated_cpu_percent": 62.996
+    },
+    "coverage": {
+      "expected": 2,
+      "evaluated": 2,
+      "coverage_percent": 100.0,
+      "unmeasured_slots": [],
+      "target_met": true
+    },
+    "decision_reason_counts": [
+      {
+        "reason": [],
+        "decisions": 1,
+        "first_at": "2026-11-30T15:00:19.243115+00:00",
+        "last_at": "2026-11-30T15:00:19.243115+00:00"
+      },
+      {
+        "reason": [
+          "ENTRY_MODEL_RISK_PAUSE"
+        ],
+        "decisions": 1,
+        "first_at": "2026-11-30T15:05:03.885365+00:00",
+        "last_at": "2026-11-30T15:05:03.885365+00:00"
+      }
+    ],
+    "prior_generation": 4532,
+    "ending_generation": 4776,
+    "operator_outcome": "STOPPED",
+    "published": true,
+    "execution": {
+      "status": "RECORDED",
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "carry_in_exits": 0
+    },
+    "entry_freshness": {
+      "status": "OBSERVED",
+      "reservations": 1,
+      "measured": 1,
+      "missing_or_invalid": 0,
+      "omitted": 0,
+      "clocks": {
+        "quote_age": {
+          "samples": 1,
+          "p50_seconds": 6.360399,
+          "p95_seconds": 6.360399,
+          "p99_seconds": 6.360399,
+          "max_seconds": 6.360399
+        },
+        "receive_lag": {
+          "samples": 1,
+          "p50_seconds": 1.0,
+          "p95_seconds": 1.0,
+          "p99_seconds": 1.0,
+          "max_seconds": 1.0
+        },
+        "local_age": {
+          "samples": 1,
+          "p50_seconds": 5.360399,
+          "p95_seconds": 5.360399,
+          "p99_seconds": 5.360399,
+          "max_seconds": 5.360399
+        }
+      }
+    },
+    "native_accept_failures": 0,
+    "runtime_failures": 0,
+    "publication_failures": 0,
+    "accounting": "VERIFIED",
+    "held_positions": 0
+  },
+  "limits": [
+    "Calendar advances between 79 samples per exchange session; not full-cadence month duration.",
+    "Paced follow-up uses real elapsed time for 335 seconds; not six-hour host duration.",
+    "This local pass does not override the operator-reported first-entry deadline failure under Docker on d2e78bf.",
+    "Provider CONNECT health and connected R4 remain unverified; installed connected account and review hold unchanged."
+  ]
+}

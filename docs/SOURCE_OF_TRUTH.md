@@ -1,25 +1,43 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.234. November 27, New York time. Read-only offline progress reporting.
+Version 1.235. November 27, New York time. Host fixture entry deadline failed.
 
-The offline host checker now includes the already-saved session report while a
-test is running: accepted sequence, feed/heartbeat evidence at the synthetic
-cutoff, decisions, cycle outcomes, fills, family blockers and component failures.
-The report's real file age is separate from its synthetic market clocks. A stale
-report can retain a formerly fresh feed without claiming present health. Missing
-or damaged reports remain unavailable; zero fills do not establish failure.
+The operator's isolated `d2e78bf` test launched at 2:05:39 p.m. ET. At 17 minutes
+it had no restart/OOM and 384 successful native snapshots; its later interim
+report recorded fresh synthetic feed, 145 delivered packets and five completed
+decisions. Those observations do not qualify the candidate: its only intended
+entry was rejected with `ORIGINAL_PLAN_DEADLINE_EXPIRED`, before any reservation.
+The model reply was timely. This fixture returns HOLD after its first ENTER,
+so further duration cannot satisfy its required round trip. The saved first-cycle trace now locates the overrun: the reply had 0.336 seconds
+left, settlement took 0.935 seconds and protection wait took 0.000120 seconds.
+Review was 0.623 seconds late. The plan had only 2.385 seconds of original validity
+when assembled; its exact limiting input clock is not in the supplied fields.
+[Supplied host evidence](PAPER_SOAK_20261127_HOST.json).
 
-All 91 focused host/soak checks pass, including receipt replacement during a read
-and preservation of existing files. The application is unchanged from `d2e78bf`;
-its previously qualified manifest still matches the installed package. This
-checker can inspect retained older soak evidence without restarting its worker.
-[Verification](PAPER_PROGRESS_20261127_PROOF.json).
+The soak harness now tracks that exact fixture entry cycle and fails at the next
+report if its completed outcome is not OPEN. Pending entries, unrelated HOLDs
+and zero fills alone do not trigger this check. It does not change the bot,
+original deadlines, model charges, account limits or position protection.
+The 100 focused checks pass. An injected original-deadline rejection stops in
+37.16 seconds and preserves its settled model charge and failed receipt; the
+112-MiB short control still completes a round trip with verified flat accounting.
+[Guard verification](PAPER_ENTRY_GATE_20261127_PROOF.json).
 
-The next host action remains the isolated full-duration test of `d2e78bf`, under
-the original one-CPU/1-GiB limits. No new host output has been supplied. Keep the
-installed `2d538b7`, account, timer and session-review hold unchanged. A denser
-22-session replay and paced follow-up are being checked independently; no new
-calendar, duration, provider or connected acceptance is claimed here.
+The prior read-only status improvements and their 91 checks remain recorded in
+[PAPER_PROGRESS_20261127_PROOF.json]. The new guard has separate verification.
+
+The independent local sampled-calendar check passed in 33m 03s: 22 exchange
+sessions, 1,738 retained packets and 64 retained model calls on one account,
+then a real-time 335-second follow-up with both scheduled decisions evaluated,
+one simulated round trip and verified flat accounting. This is sampled history,
+not full-cadence month qualification or a remedy for the host failure.
+[Calendar proof and limits](PAPER_CALENDAR_20261127_PROOF.json).
+
+Next: reproduce the observed short remaining lease and settlement cost, then
+reduce entry-path latency before another host qualification attempt. Keep the installed `2d538b7`,
+connected account, timer, retained workers, limits and session-review hold intact.
+Full host duration, sustained full-cadence month growth, provider CONNECT health
+and connected R4 remain open. No deployment or resume follows from local passes.
 
 ### Earlier November 24 iteration checkpoint
 

@@ -34,11 +34,21 @@ NOMINAL_SECONDS = 21480  # 10:00 to 16:00, less the daily launcher's 120s cushio
 BASE = datetime(2026, 10, 28, 14, tzinfo=UTC)
 
 
-def reject_recorded_failure(report):
+def reject_recorded_failure(report, *, fixture_entry_cycle=None):
     """Stop on evidence that already makes the final soak gate fail."""
     assert not report["runtime_timing"]["by_status"].get("NATIVE_ACCEPT:FAILED"), "Native acceptance failure"
     assert not report["runtime_failures"], "Runtime failure"
     assert not report["publication_failures"], "Publication failure"
+    if fixture_entry_cycle is not None:
+        # This fixture emits ENTER once, then HOLD forever. A completed rejection
+        # of that exact decision makes its required round trip impossible. Zero
+        # fills, a pending decision or unrelated HOLDs are not this evidence.
+        for decision in (*report.get("first_decisions", []), *report.get("decisions", [])):
+            if (decision.get("cycle_key") == fixture_entry_cycle
+                    and decision.get("stored_status") == "COMPLETE"
+                    and decision.get("status") != ["OPEN"]):
+                reason = ";".join(decision.get("reason") or ["OUTCOME_UNAVAILABLE"])
+                raise AssertionError("Known fixture entry failed: " + reason)
 
 
 def save(path, value):
@@ -237,6 +247,7 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
         "native_snapshot_max_seconds": 0,
         "capture_attempts": 0,
         "entry_model_calls": 0,
+        "fixture_entry_cycle": None,
         "management_model_calls": 0,
         "dashboard_reads": 0,
         "report_reads": 0,
@@ -290,6 +301,7 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
         if metrics["entry_model_calls"] > 1:
             plan = entry_judgment.hold(request.packet)
         else:
+            metrics["fixture_entry_cycle"] = request.packet.cycle_key
             item = request.packet.opportunities[0]
             stop = item.candidate.proposal.underlying_invalidation
             anchor = item.underlying.ask
@@ -421,7 +433,7 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
                     metrics["dashboard_reads"] += 1
                     metrics["report_reads"] += 1
                     save(output / "latest-report.json", report)
-                    reject_recorded_failure(report)
+                    reject_recorded_failure(report, fixture_entry_cycle=metrics["fixture_entry_cycle"])
                     next_report = elapsed + 30
                 save(output / "progress.json", metrics)
                 await asyncio.sleep(min(1, max(0, seconds - (time.monotonic() - started[0]))))
@@ -444,7 +456,7 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
                 metrics["opening_restore_profile"] = profile.report(db, final["entry_freshness"])
         assert not any(child.returncode is None for child in children), "Unreaped native child"
         assert not metrics["native_snapshot_failures"], "Native snapshot deadline/read failure"
-        reject_recorded_failure(final)
+        reject_recorded_failure(final, fixture_entry_cycle=metrics["fixture_entry_cycle"])
         assert final["run_execution"]["completed_round_trips"] >= 1, (
             "Known fixture lifecycle did not complete"
         )

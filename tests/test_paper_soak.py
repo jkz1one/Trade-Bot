@@ -30,6 +30,53 @@ def test_soak_stops_on_recorded_failure_without_waiting_for_duration(field, mess
         reject_recorded_failure(report)
 
 
+@pytest.mark.parametrize('reason', ['ORIGINAL_PLAN_DEADLINE_EXPIRED',
+                                  'NATIVE_DEADLINE_EXPIRED_BEFORE_SUBMISSION'])
+def test_soak_rejects_terminal_loss_of_its_only_fixture_entry(reason):
+    from soak_worker import reject_recorded_failure
+
+    report = {'runtime_timing': {'by_status': {}}, 'runtime_failures': [],
+              'publication_failures': [],
+              'first_decisions': [{'cycle_key': 'fixture-entry', 'stored_status': 'COMPLETE',
+                                   'status': ['HOLD'], 'reason': [reason],
+                                   'entry_timely': True}],
+              'run_execution': {'entry_fills': 0, 'completed_round_trips': 0}}
+    # Without this exact fixture expectation, a timely HOLD is legitimate.
+    reject_recorded_failure(report)
+    with pytest.raises(AssertionError, match='Known fixture entry failed: ' + reason):
+        reject_recorded_failure(report, fixture_entry_cycle='fixture-entry')
+
+
+@pytest.mark.parametrize('where', ['first_decisions', 'decisions'])
+@pytest.mark.parametrize('key,stored,status', [
+    ('another-entry', 'COMPLETE', ['HOLD']),
+    ('fixture-entry', 'STARTED', ['HOLD']),
+    ('fixture-entry', 'COMPLETE', ['OPEN']),
+])
+def test_soak_does_not_confuse_unrelated_pending_or_open_decisions_with_failure(
+    where, key, stored, status
+):
+    from soak_worker import reject_recorded_failure
+
+    report = {'runtime_timing': {'by_status': {}}, 'runtime_failures': [],
+              'publication_failures': [], where: [
+                  {'cycle_key': key, 'stored_status': stored, 'status': status,
+                   'reason': ['ENTRY_MODEL_HOLD_OR_REJECTED']}],
+              'run_execution': {'entry_fills': 0, 'completed_round_trips': 0}}
+    reject_recorded_failure(report, fixture_entry_cycle='fixture-entry')
+
+
+def test_soak_finds_fixture_failure_after_first_decision_summary():
+    from soak_worker import reject_recorded_failure
+
+    report = {'runtime_timing': {'by_status': {}}, 'runtime_failures': [],
+              'publication_failures': [], 'first_decisions': [], 'decisions': [
+                  {'cycle_key': 'fixture-entry', 'stored_status': 'COMPLETE',
+                   'status': ['HOLD'], 'reason': ['ORIGINAL_PLAN_DEADLINE_EXPIRED']}]}
+    with pytest.raises(AssertionError, match='Known fixture entry failed'):
+        reject_recorded_failure(report, fixture_entry_cycle='fixture-entry')
+
+
 @pytest.fixture
 def isolated(monkeypatch):
     monkeypatch.setattr(soak, "sys", SimpleNamespace(flags=SimpleNamespace(isolated=True)))
