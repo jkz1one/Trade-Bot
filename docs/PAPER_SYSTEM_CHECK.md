@@ -48,6 +48,38 @@ for a favorable timing sample.
 a mismatched process view before creating state. Without it, numeric child PIDs
 can address the outer namespace and invalidate process-tree memory measurements.
 
+## Short host qualification profile
+
+After a measured application repair passes the local gate, the detached host
+runner supports `start --checkout /opt/trade-bot-dashboard --profile entry` from
+the reviewed candidate. This is a developer reference, not the current operator
+action; follow [PAPER_NEXT_SESSION.md](PAPER_NEXT_SESSION.md). It refuses an active
+connected or offline worker and requires the existing pause/review hold. It never
+changes the installed checkout, account, scheduler, reader or limits.
+
+The entry profile runs 335 seconds with the same one-CPU/1-GiB/no-swap/128-PID
+Docker settings, no network or credentials and 112 MiB of varied synthetic
+history. Both scheduled evaluations, an actual synthetic entry/exit round trip,
+flat verified accounting and reaped subprocesses are required. Successful status
+is `ENTRY_GATE_PASSED`; the existing default `duration` profile still requires
+21,480 seconds and reports `PASSED` only on its complete duration evidence.
+
+`data/run/entry-diagnostic.json` automatically retains original account/quote/
+plan clocks, the matching cycle timing and digest work from quote source through
+review, including rejection before reservation. Its first completed decision
+window is preserved. CPU quota and throttling counters, per-device disk-I/O
+counters and cgroup memory accompany that bundle. Counters cover worker start
+through the diagnostic read, not individual phase attribution. Missing counters,
+counter resets and new devices remain explicit; no CPU or I/O bottleneck is
+inferred from absent observations. Whole-run counters are retained separately.
+The copied `check.py status` returns the bundle alongside Docker and report
+evidence, including after its candidate worktree has been removed.
+
+This fixture still offers one ENTER then HOLD. A short pass does not establish
+repeated active lifecycles, full-session memory, provider health or a connected
+trading day. The underlying application has not been changed by this tooling
+checkpoint. [Verification](PAPER_SHORT_HOST_GATE_20261127_PROOF.json).
+
 ## Full installed check
 
 Use Python 3.12 with the candidate wheel installed noneditably, the exact

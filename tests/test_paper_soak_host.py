@@ -46,6 +46,43 @@ def test_requires_duration_lifecycle_and_container_completion(evidence):
     assert host.classify(*evidence) == ('PASSED', None)
 
 
+def entry_evidence(evidence):
+    item, receipt, summary, progress = evidence
+    receipt.update(profile='entry', seconds=335)
+    item['Config']['Cmd'] = host.run_args('entry')
+    summary.update(seconds=335, wall_clock_soak='NOT_RUN')
+    progress.update(planned_seconds=335, elapsed_seconds=337, wall_clock_full_duration='NOT_RUN')
+    return evidence
+
+
+def test_short_host_gate_is_never_a_full_duration_pass(evidence):
+    assert host.classify(*entry_evidence(evidence)) == ('ENTRY_GATE_PASSED', None)
+    evidence[1]['profile'] = 'duration'
+    assert host.classify(*evidence)[0] == 'UNVERIFIED'
+
+
+@pytest.mark.parametrize('which,key,value', [
+    (2, 'seconds', 90), (3, 'elapsed_seconds', 334.9),
+    (3, 'decision_coverage', {'target_met': False}),
+    (3, 'execution', {'completed_round_trips': 0}),
+    (3, 'final_accounting', None), (3, 'wall_clock_full_duration', 'OBSERVED'),
+])
+def test_short_gate_still_requires_complete_lifecycle_and_coverage(evidence, which, key, value):
+    entry_evidence(evidence)[which][key] = value
+    assert host.classify(*evidence) == ('INCOMPLETE', 'COMPLETE_ENTRY_GATE_EVIDENCE_REQUIRED')
+
+
+def test_short_profile_only_changes_duration_not_container_limits():
+    args = ('offline', 'a' * 40, 'sha256:' + 'b' * 64, Path('/fresh/data'))
+    short, full = host.create_args(*args, profile='entry'), host.create_args(*args)
+    index = full.index('--seconds') + 1
+    assert short[index] == '335'
+    short[index] = full[index]
+    assert short == full
+    with pytest.raises(ValueError, match='KNOWN_QUALIFICATION_PROFILE'):
+        host.start(Path('/absent'), profile='arbitrary')
+
+
 @pytest.mark.parametrize('which,key,value', [
     (2, 'status', 'RUNNING'), (2, 'status', None), (2, 'child_exit_code', 2),
     (2, 'application_manifest_sha256', 'other'), (2, 'seconds', 335), (2, 'seed_mib', 68),
@@ -143,7 +180,11 @@ def test_status_survives_candidate_removal_and_marks_stale_progress(evidence, tm
     monkeypatch.setattr(host, 'ROOT', tmp_path / 'removed-candidate')
     monkeypatch.setattr(host, 'command', lambda _: json.dumps([item]))
     before = (tmp_path / 'host.json').read_bytes()
+    diagnostic = {'status': 'RECORDED', 'reason': None, 'decision_status': 'OPEN',
+                  'clocks': {'deadline': '2026-10-28T14:00:29.848382Z'}}
+    (run / 'entry-diagnostic.json').write_text(json.dumps(diagnostic))
     assert host.status(tmp_path)['status'] == 'PASSED'
+    assert host.status(tmp_path)['entry_diagnostic'] == diagnostic
     item['State']['Running'] = True
     original = path.read_text()
     path.unlink()
@@ -285,8 +326,9 @@ def test_report_reads_the_open_receipt_when_writer_replaces_path(tmp_path, monke
     assert json.loads(path.read_text())['decision_count'] == 99
 
 
+@pytest.mark.parametrize('profile', ['entry', 'duration'])
 @pytest.mark.parametrize('interruption', [None, 'build', 'second-idle', 'start'])
-def test_detached_launch_preserves_installed_checkout_and_evidence(tmp_path, monkeypatch, interruption):
+def test_detached_launch_preserves_installed_checkout_and_evidence(tmp_path, monkeypatch, interruption, profile):
     root = tmp_path / 'candidate'
     (root / 'app').mkdir(parents=True)
     (root / 'app/__init__.py').write_text('')
@@ -324,11 +366,12 @@ def test_detached_launch_preserves_installed_checkout_and_evidence(tmp_path, mon
     monkeypatch.setattr(host, 'status', lambda _: {'status': 'RUNNING'})
     if interruption:
         with pytest.raises(ValueError):
-            host.start(installed)
+            host.start(installed, profile=profile)
     else:
-        assert host.start(installed)['status'] == 'RUNNING'
+        assert host.start(installed, profile=profile)['status'] == 'RUNNING'
     output, = host.EVIDENCE.iterdir()
     receipt = json.loads((output / 'host.json').read_text())
+    assert receipt['profile'] == profile and receipt['seconds'] == host.PROFILES[profile]
     assert receipt['status'] == ('START_FAILED' if interruption else 'STARTED')
     assert (output / 'check.py').is_file()
     assert (installed / 'account').read_bytes() == b'original account'
@@ -340,7 +383,9 @@ def test_detached_launch_preserves_installed_checkout_and_evidence(tmp_path, mon
         assert not any(c[:2] == ['docker', 'create'] for c in commands)
     if not interruption:
         original = (output / 'host.json').read_bytes()
-        host.start(installed)
+        create = next(c for c in commands if c[:2] == ['docker', 'create'])
+        assert create[-len(host.RUN_ARGS):] == host.run_args(profile)
+        host.start(installed, profile=profile)
         assert len(list(host.EVIDENCE.iterdir())) == 2
         assert (output / 'host.json').read_bytes() == original
 
@@ -349,3 +394,24 @@ def test_missing_final_summary_is_incomplete_not_pass(evidence):
     item, receipt, _, progress = evidence
     assert host.classify(item, receipt, {}, progress)[0] == 'INCOMPLETE'
     assert host.load_optional(Path('/absent/offline-proof')) == {}
+
+
+def test_short_status_requires_original_decision_diagnostic(evidence, tmp_path, monkeypatch):
+    item, receipt, summary, progress = entry_evidence(evidence)
+    receipt['data'] = str(tmp_path / 'data')
+    item['Mounts'][0]['Source'] = receipt['data']
+    run = Path(receipt['data']) / 'run'
+    run.mkdir(parents=True)
+    for path, value in ((tmp_path / 'host.json', receipt), (run / 'summary.json', summary),
+                        (run / 'progress.json', progress)):
+        path.write_text(json.dumps(value))
+    monkeypatch.setattr(host, 'command', lambda _: json.dumps([item]))
+    assert host.status(tmp_path)['reason'] == 'ORIGINAL_ENTRY_DIAGNOSTIC_REQUIRED'
+    diagnostic = {'status': 'RECORDED', 'decision_status': 'OPEN', 'stored_status': 'COMPLETE',
+                  'cycle_timing': {'status': 'COMPLETE'}, 'clocks': {'deadline': 'original'}}
+    path = run / 'entry-diagnostic.json'
+    path.write_text(json.dumps(diagnostic))
+    assert host.status(tmp_path)['status'] == 'ENTRY_GATE_PASSED'
+    diagnostic['decision_status'] = 'HOLD'
+    path.write_text(json.dumps(diagnostic))
+    assert host.status(tmp_path)['reason'] == 'ORIGINAL_ENTRY_DIAGNOSTIC_REQUIRED'

@@ -20,12 +20,21 @@ EVIDENCE = Path('/var/lib/trade-bot-paper-soak')
 LOCK = Path('/run/lock/trade-bot-paper-soak.lock')
 LABEL = 'trade-bot.offline-soak-v1'
 SECONDS = 21480
+PROFILES = {'entry': 335, 'duration': SECONDS}
 MEMORY = 1024**3
 BUILD_INPUTS = ('Dockerfile.paper-soak', 'Dockerfile.paper-soak.dockerignore',
                 'requirements-runtime.lock', 'requirements-build.lock', 'requirements-dev.lock',
                 'pyproject.toml', 'README.md', 'app', 'tests', 'scripts', 'examples')
 RUN_ARGS = ['--output', '/evidence/run', '--seconds', str(SECONDS), '--seed-mib', '112',
             '--cpus', '1', '--profile-opening-restore']
+
+
+def run_args(profile):
+    if profile not in PROFILES:
+        raise ValueError('KNOWN_QUALIFICATION_PROFILE_REQUIRED')
+    args = list(RUN_ARGS)
+    args[args.index('--seconds') + 1] = str(PROFILES[profile])
+    return args
 
 
 def command(args, **kwargs):
@@ -59,7 +68,7 @@ def idle(checkout):
         raise ValueError('SCHEDULER_NOT_PAUSED_OR_REVIEW_HELD')
 
 
-def create_args(name, release, image, data):
+def create_args(name, release, image, data, *, profile='duration'):
     return ['docker', 'create', '--name', name, '--label', LABEL + '=true',
             '--label', 'trade-bot.offline-soak.release=' + release,
             '--network', 'none', '--read-only', '--cap-drop', 'ALL',
@@ -68,10 +77,11 @@ def create_args(name, release, image, data):
             '--pids-limit', '128', '--restart', 'no',
             '--log-driver', 'local', '--log-opt', 'max-size=10m', '--log-opt', 'max-file=2',
             '--tmpfs', '/tmp:rw,nosuid,nodev,noexec,size=268435456',
-            '--mount', f'type=bind,src={data},dst=/evidence', image, *RUN_ARGS]
+            '--mount', f'type=bind,src={data},dst=/evidence', image, *run_args(profile)]
 
 
-def start(checkout):
+def start(checkout, *, profile='duration'):
+    run_args(profile)  # Reject unknown profiles before creating evidence or a container.
     if os.geteuid() != 0:
         raise ValueError('ROOT_HOST_OPERATOR_REQUIRED')
     checkout = checkout.resolve(strict=True)
@@ -97,7 +107,7 @@ def start(checkout):
                     if p.is_file() and '__pycache__' not in p.parts}
         receipt = {'version': 'paper-soak-host-v1', 'release': release, 'name': name,
                    'status': 'BUILDING', 'created_at': datetime.now(UTC).isoformat(),
-                   'seconds': SECONDS, 'seed_mib': 112, 'data': str(data),
+                   'profile': profile, 'seconds': PROFILES[profile], 'seed_mib': 112, 'data': str(data),
                    'application_manifest_sha256': hashlib.sha256(
                        json.dumps(manifest, sort_keys=True).encode()).hexdigest(),
                    'connected_health': 'UNVERIFIED', 'synthetic': True,
@@ -120,7 +130,7 @@ def start(checkout):
                 raise ValueError('IMMUTABLE_IMAGE_REQUIRED')
             receipt['image_id'] = image
             idle(checkout)  # Building must not conceal a newly launched worker.
-            container = command(create_args(name, release, image, data))
+            container = command(create_args(name, release, image, data, profile=profile))
             if not re.fullmatch(r'[0-9a-f]{64}', container):
                 raise ValueError('CONTAINER_ID_REQUIRED')
             receipt.update(status='CREATED', container_id=container)
@@ -186,12 +196,15 @@ def session_report(directory, observed_at=None, *, finished):
 
 
 def isolation_matches(item, receipt):
+    profile = receipt.get('profile', 'duration')  # Older retained receipts were duration only.
+    if profile not in PROFILES or receipt.get('seconds', PROFILES[profile]) != PROFILES[profile]:
+        return False
     host, config = item['HostConfig'], item['Config']
     binds = [m for m in item['Mounts'] if m['Type'] != 'tmpfs']
     labels = config.get('Labels') or {}
     return (item['Id'] == receipt['container_id'] and item['Name'] == '/' + receipt['name']
             and item['Image'] == receipt['image_id'] and config['Image'] == receipt['image_id']
-            and config['User'] == '0:0' and config['Cmd'] == RUN_ARGS
+            and config['User'] == '0:0' and config['Cmd'] == run_args(profile)
             and config['Entrypoint'] == ['python', '-I', '-W', 'error', '/opt/trade-bot/scripts/paper-soak.py']
             and labels.get(LABEL) == 'true'
             and labels.get('trade-bot.offline-soak.release') == receipt['release']
@@ -221,20 +234,25 @@ def classify(item, receipt, summary, progress):
     if state['ExitCode'] != 0 or 'FAILED' in (summary.get('status'), progress.get('status')):
         return 'FAILED', 'SOAK_EXIT_OR_ASSERTION_FAILURE'
     elapsed = progress.get('elapsed_seconds')
+    profile = receipt.get('profile', 'duration')
+    seconds = PROFILES[profile]
+    duration = 'OBSERVED' if profile == 'duration' else 'NOT_RUN'
     valid = (summary.get('status') == progress.get('status') == 'PASSED'
-             and summary.get('child_exit_code') == 0 and summary.get('seconds') == SECONDS
+             and summary.get('child_exit_code') == 0 and summary.get('seconds') == seconds
              and summary.get('seed_mib') == 112
              and summary.get('application_manifest_sha256') == receipt['application_manifest_sha256']
-             and summary.get('wall_clock_soak') == progress.get('wall_clock_full_duration') == 'OBSERVED'
-             and type(elapsed) in (int, float) and math.isfinite(elapsed) and elapsed >= SECONDS
-             and progress.get('planned_seconds') == SECONDS and progress.get('logical_cpus') == 1
+             and summary.get('wall_clock_soak') == progress.get('wall_clock_full_duration') == duration
+             and type(elapsed) in (int, float) and math.isfinite(elapsed) and elapsed >= seconds
+             and progress.get('planned_seconds') == seconds and progress.get('logical_cpus') == 1
              and progress.get('final_accounting') == 'VERIFIED_FLAT'
              and progress.get('children_reaped') is True
              and progress.get('native_snapshot_failures') == 0
              and progress.get('native_headroom_target_met') is True
              and (progress.get('decision_coverage') or {}).get('target_met') is True
              and (progress.get('execution') or {}).get('completed_round_trips', 0) >= 1)
-    return ('PASSED', None) if valid else ('INCOMPLETE', 'COMPLETE_DURATION_EVIDENCE_REQUIRED')
+    return (('PASSED' if profile == 'duration' else 'ENTRY_GATE_PASSED'), None) if valid else (
+        'INCOMPLETE', 'COMPLETE_DURATION_EVIDENCE_REQUIRED' if profile == 'duration'
+        else 'COMPLETE_ENTRY_GATE_EVIDENCE_REQUIRED')
 
 
 def status(output):
@@ -248,7 +266,15 @@ def status(output):
     progress_path = Path(receipt['data']) / 'run/progress.json'
     summary = load_optional(progress_path.with_name('summary.json'))
     progress = load_optional(progress_path)
+    diagnostic = load_optional(progress_path.with_name('entry-diagnostic.json'))
     outcome, reason = classify(item, receipt, summary, progress)
+    if outcome == 'ENTRY_GATE_PASSED' and not (
+        diagnostic.get('status') == 'RECORDED' and diagnostic.get('decision_status') == 'OPEN'
+        and diagnostic.get('stored_status') == 'COMPLETE'
+        and (diagnostic.get('cycle_timing') or {}).get('status') == 'COMPLETE'
+        and diagnostic.get('clocks')
+    ):
+        outcome, reason = 'INCOMPLETE', 'ORIGINAL_ENTRY_DIAGNOSTIC_REQUIRED'
     observed_at = datetime.now(UTC)
     age = max(0, observed_at.timestamp() - progress_path.stat().st_mtime) if progress_path.exists() else None
     if outcome == 'RUNNING' and age is not None and age > 90:
@@ -256,11 +282,15 @@ def status(output):
     elif outcome == 'RUNNING' and not progress:
         outcome, reason = 'RUNNING_AWAITING_PROGRESS', 'NO_PROGRESS_RECEIPT_YET'
     return {'status': outcome, 'reason': reason, 'observed_at': observed_at.isoformat(),
+            'qualification_profile': receipt.get('profile', 'duration'),
+            'planned_seconds': receipt.get('seconds', SECONDS),
             'evidence_directory': str(output), 'release': receipt['release'], 'image_id': receipt['image_id'],
             'worker': {k: item['State'].get(k) for k in
                        ('Status', 'Running', 'StartedAt', 'FinishedAt', 'ExitCode', 'OOMKilled', 'Error')},
             'restart_count': item['RestartCount'], 'progress_age_seconds': age,
             'last_cgroup_memory': summary.get('cgroup_memory') or progress.get('cgroup_memory'),
+            'entry_diagnostic': diagnostic,
+            'worker_resource_window': progress.get('worker_resource_window'),
             'session_report': session_report(progress_path.parent,
                                              finished=item['State']['Status'] == 'exited'),
             'progress': {k: progress.get(k) for k in
@@ -274,14 +304,17 @@ def status(output):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest='operation', required=True)
-    sub.add_parser('start').add_argument('--checkout', type=Path, required=True)
+    launch = sub.add_parser('start')
+    launch.add_argument('--checkout', type=Path, required=True)
+    launch.add_argument('--profile', choices=tuple(PROFILES), default='duration',
+                        help='entry: 335-second lifecycle gate; duration: full worker window')
     sub.add_parser('status').add_argument('--evidence', type=Path, required=True)
     args = parser.parse_args()
     try:
-        result = start(args.checkout) if args.operation == 'start' else status(args.evidence)
+        result = start(args.checkout, profile=args.profile) if args.operation == 'start' else status(args.evidence)
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
         result = {'status': 'UNAVAILABLE', 'error_class': type(exc).__name__,
                   'reason': str(exc)[:160], 'live_enabled': False}
     print(json.dumps(result, indent=2))
     raise SystemExit(0 if result['status'] in (
-        'RUNNING', 'RUNNING_STALE_PROGRESS', 'RUNNING_AWAITING_PROGRESS', 'PASSED') else 1)
+        'RUNNING', 'RUNNING_STALE_PROGRESS', 'RUNNING_AWAITING_PROGRESS', 'PASSED', 'ENTRY_GATE_PASSED') else 1)

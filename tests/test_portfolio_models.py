@@ -1,13 +1,50 @@
 """Scripted full receipts only: no credentials, model service or paid calls."""
 
 import asyncio
-from contextlib import contextmanager
 import json
+from contextlib import contextmanager
+from datetime import timedelta
 from decimal import Decimal
 
 import pytest
 from test_mixed_entry import owner
 from test_mixed_selection import stock_frame
+
+
+def test_timely_reply_cannot_renew_original_plan_that_expires_during_settlement(tmp_path, monkeypatch):
+    """Deterministic reproduction of the Nov 27 host lease margins, without sleeping."""
+    from app.options import entry_coordination
+
+    with owner(tmp_path, monkeypatch, choice='OPTION', portfolio=True) as (c, venue, times, state):
+        model, settle = c._model_run, entry_coordination._settle_reply
+
+        async def near_deadline(request, *args, **kwargs):
+            result = await model(request, *args, **kwargs)
+            times[0] = request.packet.valid_until - timedelta(seconds=.335549)
+            return result
+
+        def delayed_settlement(*args, **kwargs):
+            result = settle(*args, **kwargs)
+            # Measured host reply-to-review interval; only the disposable clock advances.
+            times[0] += timedelta(seconds=.958359)
+            return result
+
+        monkeypatch.setattr(c, '_model_run', near_deadline)
+        monkeypatch.setattr(entry_coordination, '_settle_reply', delayed_settlement)
+        outcome = asyncio.run(c.cycle(stock_frame()))
+        entry, = outcome['entries']
+        assert entry['reason'] == 'ORIGINAL_PLAN_DEADLINE_EXPIRED'
+        assert entry['entry_timely'] is True and venue.submit_count == 0
+        deadline = state['request'].packet.valid_until
+        assert times[0] - deadline == timedelta(seconds=.622810)
+        with c.engine.journal.read(verify_restore=True) as db:
+            assert not db.execute('SELECT 1 FROM execution_portfolio_orders').fetchone()
+            call, = db.execute('SELECT cost,usage_json FROM execution_model_calls')
+            assert Decimal(call['cost']) > 0 and json.loads(call['usage_json'])['request_id']
+            stored = json.loads(db.execute('SELECT result_json FROM execution_option_opportunities').fetchone()[0])
+            assert stored['entry_request'] == state['request'].model_dump(mode='json')
+        asyncio.run(c.cycle(stock_frame()))
+        assert venue.submit_count == 0
 
 
 @pytest.mark.parametrize("choice", ["STOCK", "OPTION"])
@@ -48,7 +85,9 @@ def test_portfolio_entry_uses_one_original_paid_receipt_and_native_dispatch(
 def test_portfolio_timeout_distinguishes_proven_unsent_from_uncertain(
     tmp_path, monkeypatch, choice, before_send
 ):
-    from test_paper_session_report import live_result, module as reports
+    from test_paper_session_report import live_result
+    from test_paper_session_report import module as reports
+
     from app.execution.process import FixtureProcessTimeout
     from app.mixed import portfolio_execution
 
@@ -313,6 +352,7 @@ def test_better_option_book_cannot_increase_original_paid_quantity(tmp_path, mon
 
     from test_mixed_native_owner import changed
     from test_option_runtime import enable, policy, step
+
     from app.options.coordinator import DegenFrame
     from app.options.runtime import OptionRuntime
     from app.options.runtime_models import PortfolioRuntimePacket
@@ -472,8 +512,9 @@ def test_paid_entry_admission_reads_original_charge_history_once_in_its_transact
 
 
 def test_option_shortlist_reads_charge_history_once_per_selection_snapshot(tmp_path, monkeypatch):
-    from app.mixed import paid_costs
     from collections import Counter
+
+    from app.mixed import paid_costs
 
     with owner(tmp_path, monkeypatch, mode="HOLD", portfolio=True) as (c, venue, _, _):
         original = paid_costs.records

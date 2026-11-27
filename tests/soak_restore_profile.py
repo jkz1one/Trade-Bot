@@ -85,3 +85,12 @@ class OpeningRestoreProfile:
                 "wall_seconds_with_digest_running": round(sum(end - start for start, end in merged), 6),
                 "wholly_contained_calls": contained, "owner_thread_cpu_seconds": round(owner_cpu, 6),
                 "background_cpu_seconds": round(other_cpu, 6), "owner_thread_calls": dict(callers)}
+
+    def original_window(self, low, high):
+        """A rejected plan still has original quote and review clocks to profile."""
+        start = self.started[0]
+        low, high = (start + (x - self.base).total_seconds() for x in (low, high))
+        if low < start or high < low or (self.first_omitted is not None and self.first_omitted < high):
+            return {'status': 'UNMEASURED', 'reason': 'DECISION_OUTSIDE_PROFILE'}
+        with self.lock:
+            return {'status': 'OBSERVED', **self.window(low, high)}

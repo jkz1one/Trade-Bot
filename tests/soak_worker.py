@@ -11,8 +11,9 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-from soak_memory import cgroup_memory
 from fastapi.testclient import TestClient
+from soak_diagnostics import entry_diagnostic, resource_window, resources
+from soak_memory import cgroup_memory
 from test_combined_session_feed import combined
 from test_contract_catalog import captures
 from test_observed_profile_lifecycle import market_reader
@@ -192,7 +193,8 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
         policy.model_dump() | {"population_id": settings.limits.population_id}
     )
     now = [BASE - timedelta(minutes=5)]
-    clock = lambda: now[0]
+    def clock():
+        return now[0]
     initialize(owner, settings, clock=clock)
     ContinuousFeed(collector, policy, schema, create=True).close()
     policy_file, schema_file = output / "policy.json", output / "schemas.json"
@@ -373,6 +375,7 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
         ]
         cpu_start = cpu_sample()
         started[0] = cpu_start[0]
+        resource_start = resources()
         task = asyncio.create_task(
             connected.run(
                 *args,
@@ -408,6 +411,17 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
             return reports.report(output, BASE.isoformat(), live_clock().isoformat())
 
         next_report = 5
+        diagnostic_complete = False
+        def diagnostic():
+            nonlocal diagnostic_complete
+            if diagnostic_complete:
+                return  # Retain the first completed decision's resource window.
+            value = entry_diagnostic(owner / 'options.db', metrics['fixture_entry_cycle'], profile)
+            value['resources'] = resource_window(resource_start, resources())
+            save(output / 'entry-diagnostic.json', value)
+            diagnostic_complete = (value.get('stored_status') == 'COMPLETE'
+                                   and (value.get('cycle_timing') or {}).get('status') == 'COMPLETE')
+
         try:
             while time.monotonic() - started[0] < seconds:
                 if task.done():
@@ -433,6 +447,7 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
                     metrics["dashboard_reads"] += 1
                     metrics["report_reads"] += 1
                     save(output / "latest-report.json", report)
+                    diagnostic()  # Save the failed original clocks before the guard raises.
                     reject_recorded_failure(report, fixture_entry_cycle=metrics["fixture_entry_cycle"])
                     next_report = elapsed + 30
                 save(output / "progress.json", metrics)
@@ -444,6 +459,8 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
                 metrics["feed_recoveries"] = outcome["feed_recoveries"]
             finally:
                 metrics["worker_window_cpu"] = cpu_window(cpu_start, cpu_sample(), cpu_count)
+                metrics['worker_resource_window'] = resource_window(resource_start, resources())
+                diagnostic()
         metrics["elapsed_seconds"] = time.monotonic() - started[0]
         final = await asyncio.to_thread(
             reports.report, output, BASE.isoformat(), live_clock().isoformat()
@@ -489,7 +506,7 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
         metrics["native_headroom_target_met"] = (
             metrics["native_snapshot_p99_seconds"] < settings.execution.process_timeout_seconds / 2
         )
-        if seconds >= NOMINAL_SECONDS and not metrics["decision_coverage"]["target_met"]:
+        if not metrics["decision_coverage"]["target_met"]:
             raise AssertionError("Insufficient scheduled decision coverage")
 
     try:

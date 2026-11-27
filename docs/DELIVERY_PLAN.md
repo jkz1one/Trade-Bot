@@ -40,6 +40,22 @@ cannot be adopted as connected evidence or execution state.
 
 ## Delivery checklist
 
+### November 27 short qualification implementation
+
+The short host profile and consolidated failure bundle are implemented. The
+335-second entry gate uses the existing Docker constraints and a new disposable
+population. It cannot report full-duration acceptance, omit the second scheduled
+evaluation or qualify from zero fills/process uptime. Original clocks and digest
+spans are saved on rejected entries as well as successful reservations; the first
+completed bundle retains its resource observation window. A deterministic
+paid-reply regression covers the exact reported deadline margins.
+[Proof](PAPER_SHORT_HOST_GATE_20261127_PROOF.json).
+
+The application remains unchanged. Next work is the measured transaction/storage
+repair, followed by this short profile, repeated active lifecycles and duration.
+This tooling checkpoint does not qualify deployment, resume, a resource change
+or another unchanged host trial.
+
 ### November 27 engineering review — current priority
 
 The user requested an expert review of architecture, resource sizing and the

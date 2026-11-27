@@ -1,5 +1,17 @@
 # Recovered offline system checkpoint
 
+November 27 continuation: the short deployment-profile test and failure bundle
+are implemented, with a deterministic reproduction of the reported deadline
+margins. `--profile entry` retains the original constraints and requires a full
+335-second lifecycle/decision window; `ENTRY_GATE_PASSED` is distinct from full
+duration. The bundle includes failed pre-reservation clocks, cycle timing,
+digest cost and CPU/I/O/memory observations with explicit coverage limits.
+[Exact verification](PAPER_SHORT_HOST_GATE_20261127_PROOF.json).
+
+Application bytes are unchanged. The measured entry latency repair is still the
+next application task. No new host command or full-duration trial follows from
+this harness checkpoint; preserve installed state and the existing test.
+
 Current priority: [engineering review](PAPER_ENGINEERING_REVIEW_20261127.md).
 The original ten-second quote deadline is confirmed; the account's twenty-second
 limit was not limiting. At 66 minutes the host test still had no restart/OOM but

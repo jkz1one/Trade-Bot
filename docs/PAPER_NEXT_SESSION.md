@@ -2,6 +2,12 @@
 
 ## Current action: engineering review; preserve deployment
 
+The short host gate and automatic failure bundle are now implemented and checked
+locally. This is tooling for the next latency repair, not a repaired application
+release. No operator launch is requested at this checkpoint. In particular, do
+not start a second offline worker alongside the retained test or change its
+limits. [Developer verification](PAPER_SHORT_HOST_GATE_20261127_PROOF.json).
+
 The requested clock and resource outputs have been supplied. No additional
 operator command is required for this review. The failed deadline is the original
 ten-second option quote limit; the quote was 7.615 seconds old at plan assembly.

@@ -1,6 +1,29 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.236. November 27, New York time. Engineering review and constrained entry latency.
+Version 1.237. November 27, New York time. Short qualification and original-deadline evidence.
+
+The first implementation step from the engineering review is now available:
+`paper-soak-host.py start --profile entry` prepares a detached 335-second test
+with the same one-CPU/1-GiB/no-swap/128-PID constraints and isolated synthetic
+account. It requires both scheduled evaluations, an entry/exit round trip,
+verified flat accounting, reaped children and the original decision diagnostic.
+Its success is `ENTRY_GATE_PASSED`, never full-day or connected acceptance.
+
+The test saves original plan/account/quote clocks, the matching cycle spans and
+journal-digest cost even when the entry is rejected before reservation. CPU
+quota/throttling, disk-I/O counters and cgroup memory are retained in the same
+bundle, with explicit unavailable/reset states and worker-window scope. The
+first completed decision bundle stays fixed; whole-run resource counters are
+separate. A deterministic regression reproduces the host's 0.336-second remaining
+lease and 0.623-second late review, retaining the paid charge without an order.
+[Verification and limits](PAPER_SHORT_HOST_GATE_20261127_PROOF.json).
+
+This changes qualification tooling, not application latency. The original host
+deadline failure remains open. Do not launch another host test until a measured
+critical-path repair passes locally; keep the running retained test and installed
+connected account, limits, timer and review hold unchanged.
+
+### Earlier November 27 engineering review
 
 The user requested an architectural and iteration review before another issue
 patch. [PAPER_ENGINEERING_REVIEW_20261127.md](PAPER_ENGINEERING_REVIEW_20261127.md)
