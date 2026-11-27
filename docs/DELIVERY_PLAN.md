@@ -40,6 +40,28 @@ cannot be adopted as connected evidence or execution state.
 
 ## Delivery checklist
 
+### November 27 engineering review — current priority
+
+The user requested an expert review of architecture, resource sizing and the
+iteration process before further issue patches. Follow
+[PAPER_ENGINEERING_REVIEW_20261127.md](PAPER_ENGINEERING_REVIEW_20261127.md).
+
+The entry failure is original quote expiry, not OOM or account expiry. The quote
+was already 5.613 seconds old at cycle start; repeated journal/selection work
+consumed the rest. Each fenced write verifies the full growing journal before
+mutation and before commit. Reduce the measured critical-path cost while proving
+unchanged rollback detection, durable charges, protection and native boundaries.
+
+The new ordering is a short deterministic regression, short qualification under
+the exact deployment resource profile, representative repeated active lifecycles,
+then duration and connected acceptance. Capture original clocks and CPU/memory/I/O
+with the failure automatically. Local CPU affinity is not Docker quota parity.
+Avoid another narrow pass followed by an unqualified full-day operator trial.
+
+The 66-minute host receipt shows no OOM/restart but a 949-MiB peak against 1 GiB.
+That leaves capacity open; more RAM alone would not repair this quote deadline.
+No resize, redeploy or resume follows from this analysis.
+
 ### November 27 host first-entry failure and next repair
 
 The isolated host soak launched successfully but its first required entry expired

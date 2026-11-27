@@ -1,6 +1,27 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.235. November 27, New York time. Host fixture entry deadline failed.
+Version 1.236. November 27, New York time. Engineering review and constrained entry latency.
+
+The user requested an architectural and iteration review before another issue
+patch. [PAPER_ENGINEERING_REVIEW_20261127.md](PAPER_ENGINEERING_REVIEW_20261127.md)
+is the current work order. The exact failed deadline is now known: original
+quote source plus ten seconds. The quote was 5.613 seconds old when the cycle
+started and 7.615 seconds old when the plan was assembled. It expired during
+settlement; the twenty-second account limit was not responsible.
+
+At 3:11:52 p.m. ET the isolated test was still running after about 66 minutes,
+with zero restart/OOM and 1,435 native snapshots without failure. Peak cgroup
+memory was 949 MiB of 1,024 MiB, leaving about 75 MiB headroom. This clears the
+previous OOM time only as partial evidence; it does not close memory capacity,
+full duration or the already-failed lifecycle gate.
+
+Repeated full-journal verification in the critical path is an architectural
+scaling cost. A short test under the actual deployment resource profile must
+precede another long qualification run, and active lifecycle load must be
+measured beyond the fixture's one opening. No application or host mutation is
+part of this review. Preserve the installed owner, limits, timer and review hold.
+
+### Earlier November 27 failure-detection checkpoint
 
 The operator's isolated `d2e78bf` test launched at 2:05:39 p.m. ET. At 17 minutes
 it had no restart/OOM and 384 successful native snapshots; its later interim
@@ -11,7 +32,8 @@ The model reply was timely. This fixture returns HOLD after its first ENTER,
 so further duration cannot satisfy its required round trip. The saved first-cycle trace now locates the overrun: the reply had 0.336 seconds
 left, settlement took 0.935 seconds and protection wait took 0.000120 seconds.
 Review was 0.623 seconds late. The plan had only 2.385 seconds of original validity
-when assembled; its exact limiting input clock is not in the supplied fields.
+when assembled. The later supplied original clocks confirm the ten-second
+option quote limit as the constraint.
 [Supplied host evidence](PAPER_SOAK_20261127_HOST.json).
 
 The soak harness now tracks that exact fixture entry cycle and fails at the next

@@ -1,5 +1,13 @@
 # Recovered offline system checkpoint
 
+Current priority: [engineering review](PAPER_ENGINEERING_REVIEW_20261127.md).
+The original ten-second quote deadline is confirmed; the account's twenty-second
+limit was not limiting. At 66 minutes the host test still had no restart/OOM but
+its cgroup peak was 949 MiB of 1 GiB. Retain the lifecycle failure and keep full
+resource qualification open. No new application patch was made for this review.
+The next implementation must address the complete source-to-native-entry path
+and prove it in a short test under the deployment constraints before a long run.
+
 November 27: the operator's running `d2e78bf` soak has failed its lifecycle gate.
 The one-shot fixture ENTER received a timely model reply but expired before
 reservation (`ORIGINAL_PLAN_DEADLINE_EXPIRED`). Its later model calls return HOLD;

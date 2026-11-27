@@ -1,6 +1,16 @@
 # Daily PAPER operation
 
-## Current action: inspect the failed fixture entry; preserve deployment
+## Current action: engineering review; preserve deployment
+
+The requested clock and resource outputs have been supplied. No additional
+operator command is required for this review. The failed deadline is the original
+ten-second option quote limit; the quote was 7.615 seconds old at plan assembly.
+At about 66 minutes the retained test had no OOM/restart, with a 949-MiB cgroup
+peak under its 1-GiB cap. This is not a full resource pass or a lifecycle repair.
+Follow [the revised work order](PAPER_ENGINEERING_REVIEW_20261127.md) before a new
+host test or deployment. Existing test, owner, limits and review hold stay intact.
+
+### Retained November 27 test
 
 The isolated `d2e78bf` run started November 27 at 2:05:39 p.m. ET and uses:
 
@@ -9,7 +19,7 @@ The isolated `d2e78bf` run started November 27 at 2:05:39 p.m. ET and uses:
 Its only intended entry was rejected with `ORIGINAL_PLAN_DEADLINE_EXPIRED` before
 reservation, despite a timely model response. This fixture returns HOLD for later
 calls, so its required lifecycle gate has failed. Healthy synthetic feed and native
-snapshots do not override that failure. A final worker/resource result has not
+snapshots do not override that failure. A 66-minute resource observation is supplied; no final result has
 been supplied. [Exact observations](PAPER_SOAK_20261127_HOST.json).
 
 The saved clocks and first CYCLE spans are supplied: settlement took 0.935

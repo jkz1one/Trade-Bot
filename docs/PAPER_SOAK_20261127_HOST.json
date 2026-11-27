@@ -53,10 +53,50 @@
           "slab": 8561848
         }
       }
+    },
+    {
+      "observed_at": "2026-11-27T20:11:52.064219+00:00",
+      "status": "RUNNING",
+      "restart_count": 0,
+      "oom_killed": false,
+      "progress_age_seconds": 1.0787723064422607,
+      "elapsed_seconds": 3948.827487545088,
+      "native_snapshot_calls": 1435,
+      "native_snapshot_failures": 0,
+      "native_snapshot_max_seconds": 0.7922091959044337,
+      "capture_attempts": 386,
+      "peak_tree_rss_bytes": 549855232,
+      "source_database_bytes": 149356544,
+      "decision_coverage": null,
+      "execution": null,
+      "final_accounting": null,
+      "cgroup_memory": {
+        "status": "OBSERVED",
+        "current_bytes": 737419264,
+        "peak_bytes": 995057664,
+        "max_bytes": 1073741824,
+        "events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "stat": {
+          "anon": 543342592,
+          "file": 185589760,
+          "kernel": 8318976,
+          "pagetables": 1511424,
+          "sock": 0,
+          "shmem": 0,
+          "slab": 6596176
+        }
+      }
     }
   ],
   "acceptance": "FAILED_FIXTURE_ENTRY_DEADLINE",
-  "next_checkpoint": "Reduce time consumed before native entry under original market and account deadlines; first-cycle evidence locates settlement overrun and excludes protection wait for this occurrence. No new full host attempt yet.",
+  "next_checkpoint": "Follow PAPER_ENGINEERING_REVIEW_20261127.md: reproduce and reduce source-to-native-acceptance latency under the deployed resource profile before another long run; preserve current host and original clocks.",
   "final_duration": "NOT_SUPPLIED",
   "interim_feed_decision_lifecycle_report": {
     "source": "Operator-supplied selected fields from retained latest-report.json",
@@ -202,9 +242,9 @@
   },
   "interpretation": [
     "The controlled fixture emits ENTER once then HOLD for all later model calls. Its first intended entry was rejected before reservation. That run cannot meet its required round trip.",
-    "The model reply was timely with 0.335549 seconds remaining. Settlement consumed 0.934584 seconds; protection wait was 0.000120 seconds. Review occurred 0.622810 seconds after the unchanged deadline. The plan had 2.384675 seconds of validity at assembly; the exact limiting input clock is not included in the supplied fields.",
+    "The original ten-second option quote source-age deadline is limiting. The account has a twenty-second freshness bound and does not set this deadline. The model reply was timely with 0.335549 seconds remaining. Settlement consumed 0.934584 seconds; protection wait was 0.000120 seconds. Review occurred 0.622810 seconds after the unchanged deadline.",
     "Fresh feed, completed decisions and native snapshot speed do not override this lifecycle failure. Zero fills alone in an ordinary market session are not failure.",
-    "Remaining uptime can supply resource evidence only. No final worker result or post-37-minute memory receipt has been supplied."
+    "The 66-minute observation is beyond the prior 37m19s OOM, with no restart/OOM, but peak cgroup memory is 995057664 of 1073741824 bytes. This is partial resource evidence, not full-duration or lifecycle acceptance; no final result supplied."
   ],
   "first_entry_clocks": {
     "as_of": "2026-10-28T14:00:27.463707Z",
@@ -295,6 +335,32 @@
     "plan_validity_seconds": 2.384675,
     "seconds_remaining_at_model_reply": 0.335549,
     "review_seconds_past_deadline": 0.62281,
-    "reply_to_review_seconds": 0.958359
+    "reply_to_review_seconds": 0.958359,
+    "quote_age_at_cycle_start_seconds": 5.612762,
+    "quote_age_at_plan_seconds": 7.615325,
+    "quote_age_at_model_reply_seconds": 9.664451,
+    "quote_age_at_review_seconds": 10.62281,
+    "source_to_receipt_seconds": 1.0,
+    "receipt_to_cycle_start_seconds": 4.612762,
+    "limiting_clock": "ORIGINAL_OPTION_QUOTE_SOURCE_PLUS_10_SECONDS"
+  },
+  "original_deadline_inputs": {
+    "as_of": "2026-10-28T14:00:27.463707Z",
+    "deadline": "2026-10-28T14:00:29.848382Z",
+    "account_captured_at": "2026-10-28T14:00:24.014596Z",
+    "account_max_age": 20,
+    "quote_max_age": 10,
+    "options": [
+      {
+        "source_at": "2026-10-28T14:00:19.848382Z",
+        "received_at": "2026-10-28T14:00:20.848382Z",
+        "admission_deadline": "2026-10-28T14:00:29.848382Z"
+      },
+      {
+        "source_at": "2026-10-28T14:00:19.848382Z",
+        "received_at": "2026-10-28T14:00:20.848382Z",
+        "admission_deadline": "2026-10-28T14:00:29.848382Z"
+      }
+    ]
   }
 }
