@@ -1,6 +1,7 @@
 import importlib.util
 import json
 import os
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -156,6 +157,132 @@ def test_status_survives_candidate_removal_and_marks_stale_progress(evidence, tm
     item['RestartCount'] = 1
     assert host.status(tmp_path)['reason'] == 'CONTAINER_RESTARTED'
     assert (tmp_path / 'host.json').read_bytes() == before
+
+
+def saved_report():
+    return {'window_start': '2026-10-28T14:00:00+00:00',
+            'window_end': '2026-10-28T14:01:00+00:00',
+            'runtime_evidence': {'feed': 'FRESH', 'heartbeat': 'FRESH'},
+            'current_runtime': [{'status': 'RUNNING', 'feed_sequence': 6}],
+            'accepted_packet': {'sequence': 6, 'coverage_issues': ['SCOPE_CURRENT_INPUT_UNAVAILABLE']},
+            'cycle_count': 1, 'decision_count': 1,
+            'cycle_outcomes': [{'status': ['COMPLETE'], 'reason': [], 'count': 1}],
+            'run_execution': {'entry_fills': 1, 'exit_fills': 1, 'completed_round_trips': 1},
+            'collection': [{'status': 'DELIVERED', 'attempts': 6}],
+            'decision_reason_counts': [], 'run_issues': [], 'runtime_failures': [],
+            'publication_failures': [],
+            'runtime_timing': {'coverage': {'before_first_commit': 'UNOBSERVABLE'}},
+            'unrelated_payload': 'not part of the compact report'}
+
+
+def test_running_soak_exposes_saved_feed_decisions_and_fills_without_mutation(evidence, tmp_path, monkeypatch):
+    item, receipt, summary, progress = evidence
+    item['State'].update(Running=True, Status='running')
+    summary['status'] = progress['status'] = 'RUNNING'
+    progress.pop('execution')
+    progress.pop('decision_coverage')
+    receipt['data'] = str(tmp_path / 'data')
+    item['Mounts'][0]['Source'] = receipt['data']
+    run = Path(receipt['data']) / 'run'
+    run.mkdir(parents=True)
+    files = {tmp_path / 'host.json': receipt, run / 'summary.json': summary,
+             run / 'progress.json': progress, run / 'latest-report.json': saved_report()}
+    for path, value in files.items():
+        path.write_text(json.dumps(value))
+    originals = {p: p.read_bytes() for p in files}
+    calls = []
+    def command(args):
+        calls.append(args)
+        return json.dumps([item])
+    monkeypatch.setattr(host, 'command', command)
+    value = host.status(tmp_path)
+    assert value['status'] == 'RUNNING'
+    report = value['session_report']
+    assert report['status'] == 'RECORDED' and report['receipt_freshness'] == 'CURRENT'
+    assert report['evidence_clock'] == 'SYNTHETIC_REPORT_WINDOW'
+    assert report['runtime_evidence_at_cutoff']['feed'] == 'FRESH'
+    assert report['accepted_packet']['sequence'] == 6 and report['decision_count'] == 1
+    assert report['run_execution']['completed_round_trips'] == 1
+    assert report['timing_coverage']['before_first_commit'] == 'UNOBSERVABLE'
+    assert 'unrelated_payload' not in report
+    assert value['progress']['decision_coverage'] is None  # No invented due-slot coverage.
+    assert value['connected_health'] == 'UNVERIFIED'
+    assert calls == [['docker', 'container', 'inspect', receipt['container_id']]]
+    assert {p: p.read_bytes() for p in files} == originals
+
+
+@pytest.mark.parametrize('age,freshness', [(0, 'CURRENT'), (90, 'CURRENT'),
+                                        (91, 'STALE'), (-1, 'FUTURE')])
+def test_report_receipt_age_is_separate_from_synthetic_feed_age(tmp_path, age, freshness):
+    now = datetime(2026, 11, 27, tzinfo=UTC)
+    path = tmp_path / 'latest-report.json'
+    report = saved_report()
+    report['run_execution'] = {'entry_fills': 0, 'exit_fills': 0, 'completed_round_trips': 0}
+    path.write_text(json.dumps(report))
+    stamp = now.timestamp() - age
+    os.utime(path, (stamp, stamp))
+    result = host.session_report(tmp_path, now, finished=False)
+    assert result['receipt_freshness'] == freshness
+    assert result['receipt_age_seconds'] == age
+    assert result['runtime_evidence_at_cutoff']['feed'] == 'FRESH'
+    assert result['run_execution']['entry_fills'] == 0
+    assert result['status'] == 'RECORDED'  # Zero fills does not assert a failure.
+
+
+def test_final_report_preferred_only_after_exit_and_failures_retained(tmp_path):
+    report = saved_report()
+    (tmp_path / 'latest-report.json').write_text(json.dumps(report))
+    report['runtime_failures'] = [{'error_class': 'FixtureProcessTimeout'}]
+    report['run_issues'] = ['FEED_STALE']
+    (tmp_path / 'report.json').write_text(json.dumps(report))
+    now = datetime.now(UTC)
+    assert host.session_report(tmp_path, now, finished=False)['runtime_failures'] == []
+    result = host.session_report(tmp_path, now, finished=True)
+    assert result['source'] == 'report.json'
+    assert result['runtime_failures'] == report['runtime_failures']
+    assert result['run_issues'] == ['FEED_STALE']
+    (tmp_path / 'report.json').unlink()
+    assert host.session_report(tmp_path, now, finished=True)['source'] == 'latest-report.json'
+
+
+@pytest.mark.parametrize('content', [None, '{', '[]', '{}', '{"window_start": 7}'])
+def test_missing_or_malformed_report_remains_unavailable(tmp_path, content):
+    if content is not None:
+        (tmp_path / 'latest-report.json').write_text(content)
+    result = host.session_report(tmp_path, datetime.now(UTC), finished=False)
+    assert result['status'] == 'UNAVAILABLE'
+    assert 'runtime_evidence_at_cutoff' not in result
+
+
+@pytest.mark.parametrize('field,value', [('window_start', '2026-10-28T14:00:00'),
+                                        ('window_end', '2026-10-27T14:00:00+00:00'),
+                                        ('runtime_timing', 'malformed')])
+def test_invalid_saved_report_does_not_hide_docker_evidence(tmp_path, field, value):
+    report = saved_report()
+    report[field] = value
+    (tmp_path / 'latest-report.json').write_text(json.dumps(report))
+    assert host.session_report(tmp_path, datetime.now(UTC), finished=False)['status'] == 'UNAVAILABLE'
+
+
+def test_report_reads_the_open_receipt_when_writer_replaces_path(tmp_path, monkeypatch):
+    path = tmp_path / 'latest-report.json'
+    path.write_text(json.dumps(saved_report()))
+    now = datetime(2026, 11, 27, tzinfo=UTC)
+    os.utime(path, (now.timestamp() - 100, now.timestamp() - 100))
+    original = host.os.fstat
+    def replace_after_open(fd):
+        stat = original(fd)
+        pending = tmp_path / 'latest-report.pending'
+        changed = saved_report()
+        changed['decision_count'] = 99
+        pending.write_text(json.dumps(changed))
+        os.utime(pending, (now.timestamp(), now.timestamp()))
+        pending.replace(path)
+        return stat
+    monkeypatch.setattr(host.os, 'fstat', replace_after_open)
+    result = host.session_report(tmp_path, now, finished=False)
+    assert result['decision_count'] == 1 and result['receipt_freshness'] == 'STALE'
+    assert json.loads(path.read_text())['decision_count'] == 99
 
 
 @pytest.mark.parametrize('interruption', [None, 'build', 'second-idle', 'start'])

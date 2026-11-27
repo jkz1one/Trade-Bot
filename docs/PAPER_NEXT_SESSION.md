@@ -10,6 +10,32 @@ Keep the installed `2d538b7` checkout, account, retained connected workers, time
 
 The next host gate is a fresh detached synthetic soak of the published candidate, with one CPU, 1 GiB without swap, 128 PIDs, no network or credentials and a new evidence directory. Review early progress and the 45-minute checkpoint to test beyond the previous OOM at 37m 19s; keep that same run through its full duration if healthy. A final PASSED receipt, complete lifecycle/accounting, decision coverage and no OOM/restart are required. The runner now exits on a recorded acceptance/runtime/publication failure instead of waiting out a duration that can no longer pass.
 
+The November 27 operator request pins the previously tested application:
+
+```bash
+(
+  set -eu
+  cd /opt/trade-bot-dashboard
+  release=d2e78bf88e0fa78a0940bb3f3881564027f70442
+  git fetch origin slice2/robinhood-read-shadow
+  git merge-base --is-ancestor HEAD "$release"
+  git merge-base --is-ancestor "$release" FETCH_HEAD
+  candidate=$(mktemp -d)
+  git worktree add --detach "$candidate" "$release"
+  trap 'git worktree remove "$candidate"' EXIT
+  python3 "$candidate/scripts/paper-soak-host.py" start \
+    --checkout /opt/trade-bot-dashboard
+)
+```
+
+If this run has already started, keep it and use its returned `check_command`;
+do not launch another test. No launch output has yet been supplied. The new source
+checker can also read that same evidence directory with `status --evidence PATH`
+without stopping or restarting the test. It adds the saved session report and
+its real age; the saved `check.py` from `d2e78bf` retains its earlier output format.
+Feed/heartbeat labels describe the synthetic report cutoff, not present connected
+health. Final decision coverage and accounting still require completed evidence.
+
 Retain the failed `20923e2` evidence at `/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-20923e2e823d-iftsm6k7`. Do not restart that container or overwrite its receipts. A passing synthetic duration still leaves original Robinhood connection health, sustained month growth and connected R4 unverified.
 
 The local launchers now reject a PID namespace whose `/proc` view does not match. Use `unshare --mount-proc` with the documented developer command. Earlier local aggregate process-tree RSS did not record this coherence and is not accepted as resource qualification; direct self-RSS cache benchmarks and the operator-reported Docker OOM remain separate evidence.

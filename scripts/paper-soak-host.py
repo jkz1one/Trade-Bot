@@ -145,6 +145,46 @@ def load_optional(path):
         return {}
 
 
+def session_report(directory, observed_at=None, *, finished):
+    """Read retained test evidence; its synthetic clocks never imply current host health."""
+    path = directory / 'report.json'
+    if not finished or not path.exists():
+        path = directory / 'latest-report.json'
+    try:
+        with path.open() as stream:
+            # The atomic file's own mtime belongs to these exact bytes, even if
+            # the running worker replaces the path during this read.
+            saved_at = os.fstat(stream.fileno()).st_mtime
+            raw = stream.read(16 * 1024 * 1024 + 1)
+        if len(raw) > 16 * 1024 * 1024:
+            raise ValueError('REPORT_TOO_LARGE')
+        report = json.loads(raw)
+        start = datetime.fromisoformat(report['window_start'])
+        end = datetime.fromisoformat(report['window_end'])
+        if start.utcoffset() is None or end.utcoffset() is None or end < start:
+            raise ValueError('REPORT_WINDOW_REQUIRED')
+        timing = report.get('runtime_timing') or {}
+        if not isinstance(timing, dict):
+            raise ValueError('REPORT_TIMING_OBJECT_REQUIRED')
+    except (OSError, ValueError, KeyError, TypeError):
+        return {'status': 'UNAVAILABLE', 'source': path.name}
+    observed_at = observed_at or datetime.now(UTC)
+    age = observed_at.timestamp() - saved_at
+    return {'status': 'RECORDED', 'source': path.name,
+            'observed_at': observed_at.isoformat(),
+            'saved_at': datetime.fromtimestamp(saved_at, UTC).isoformat(),
+            'receipt_age_seconds': age,
+            'receipt_freshness': 'FUTURE' if age < 0 else 'STALE' if age > 90 else 'CURRENT',
+            'evidence_clock': 'SYNTHETIC_REPORT_WINDOW',
+            'runtime_evidence_at_cutoff': report.get('runtime_evidence'),
+            'timing_coverage': timing.get('coverage'),
+            **{k: report.get(k) for k in (
+                'window_start', 'window_end', 'current_runtime', 'accepted_packet',
+                'cycle_count', 'cycle_outcomes', 'decision_count', 'decision_reason_counts',
+                'run_execution', 'collection', 'run_issues', 'runtime_failures',
+                'publication_failures')}}
+
+
 def isolation_matches(item, receipt):
     host, config = item['HostConfig'], item['Config']
     binds = [m for m in item['Mounts'] if m['Type'] != 'tmpfs']
@@ -209,17 +249,20 @@ def status(output):
     summary = load_optional(progress_path.with_name('summary.json'))
     progress = load_optional(progress_path)
     outcome, reason = classify(item, receipt, summary, progress)
-    age = max(0, datetime.now(UTC).timestamp() - progress_path.stat().st_mtime) if progress_path.exists() else None
+    observed_at = datetime.now(UTC)
+    age = max(0, observed_at.timestamp() - progress_path.stat().st_mtime) if progress_path.exists() else None
     if outcome == 'RUNNING' and age is not None and age > 90:
         outcome, reason = 'RUNNING_STALE_PROGRESS', 'LAST_PROGRESS_OVER_90_SECONDS_OLD'
     elif outcome == 'RUNNING' and not progress:
         outcome, reason = 'RUNNING_AWAITING_PROGRESS', 'NO_PROGRESS_RECEIPT_YET'
-    return {'status': outcome, 'reason': reason, 'observed_at': datetime.now(UTC).isoformat(),
+    return {'status': outcome, 'reason': reason, 'observed_at': observed_at.isoformat(),
             'evidence_directory': str(output), 'release': receipt['release'], 'image_id': receipt['image_id'],
             'worker': {k: item['State'].get(k) for k in
                        ('Status', 'Running', 'StartedAt', 'FinishedAt', 'ExitCode', 'OOMKilled', 'Error')},
             'restart_count': item['RestartCount'], 'progress_age_seconds': age,
             'last_cgroup_memory': summary.get('cgroup_memory') or progress.get('cgroup_memory'),
+            'session_report': session_report(progress_path.parent,
+                                             finished=item['State']['Status'] == 'exited'),
             'progress': {k: progress.get(k) for k in
                          ('status', 'elapsed_seconds', 'native_snapshot_calls', 'native_snapshot_failures',
                           'native_snapshot_max_seconds', 'capture_attempts', 'peak_tree_rss_bytes',

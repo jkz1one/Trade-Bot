@@ -40,6 +40,20 @@ cannot be adopted as connected evidence or execution state.
 
 ## Delivery checklist
 
+### November 27 offline status and outstanding capacity gate
+
+The read-only soak checker now exposes the saved interim session report instead
+of leaving all decision/fill evidence until shutdown. It dates the receipt
+separately from synthetic feed clocks, retains blockers and component failures,
+and does not turn a running container or zero fills into a health conclusion.
+All 91 focused host/soak checks pass; application bytes remain those of `d2e78bf`.
+[Verification](PAPER_PROGRESS_20261127_PROOF.json).
+
+Request the already-qualified candidate's detached host duration test while
+continuing the denser calendar replay independently. The host launch/result is
+not yet supplied. Preserve the installed owner and review hold; the new reporting
+code does not close duration, month-growth, provider health or R4.
+
 ### November 24 fast iteration and local qualification
 
 The new fast gate passed in 2m 38s: 112-MiB stock and option protection completed in 4.35 and 4.38 seconds against the unchanged five-second target, followed by a 90-second simulated round trip and verified flat accounting. The matching installed suite passed 1,065 tests with one unmapped-reader-UID skip.

@@ -1,5 +1,16 @@
 # Recovered offline system checkpoint
 
+November 27: the host status reader now includes retained interim feed, decision,
+fill and failure evidence, dated separately from its synthetic market window.
+All 91 focused host/soak checks pass. Existing receipt bytes and worker state are
+unchanged by inspection. The application manifest still matches `d2e78bf`; no
+application rebuild or broad-suite repeat was needed for this script-only change.
+[Focused proof](PAPER_PROGRESS_20261127_PROOF.json).
+
+The pinned `d2e78bf` host soak has been requested; no operator result has been
+supplied. The denser 22-session replay and paced follow-up are still running at
+this checkpoint. Neither is promoted to a completed acceptance result.
+
 November 24 current checkpoint: the blocking local protection and lifecycle gates pass.
 
 The new fast gate passed in 2m 38s: 112-MiB stock and option protection completed in 4.35 and 4.38 seconds against the unchanged five-second target, followed by a 90-second simulated round trip and verified flat accounting. The matching installed suite passed 1,065 tests with one unmapped-reader-UID skip.

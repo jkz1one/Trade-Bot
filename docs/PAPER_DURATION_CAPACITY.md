@@ -279,7 +279,7 @@ Run the installed noneditable package with isolated Python, in a network namespa
 containing only loopback, against a **new disposable output directory**:
 
 ```sh
-unshare --user --map-root-user --net /path/to/venv/bin/python -I -W error \
+unshare --user --map-root-user --net --pid --fork --mount-proc /path/to/venv/bin/python -I -W error \
   scripts/paper-soak.py --output /absolute/new/disposable-soak \
   --seconds 21480 --seed-mib 68
 ```
@@ -305,7 +305,7 @@ directory. Select one available logical CPU for `taskset`.
 proof=$(mktemp -d)
 TRADE_BOT_CALENDAR_DENSITY=extended TRADE_BOT_CALENDAR_PACED=1 \
 TRADE_BOT_OFFLINE_PROOF="$proof" PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 \
-taskset -c 0 unshare --user --map-root-user --net /path/to/venv/bin/python -I -W error \
+taskset -c 0 unshare --user --map-root-user --net --pid --fork --mount-proc /path/to/venv/bin/python -I -W error \
   -c 'import app,os,sys,pytest; sys.path.extend([os.getcwd(),os.getcwd()+"/tests"]); raise SystemExit(pytest.main(sys.argv[1:]))' \
   -q -c /dev/null -p anyio.pytest_plugin --basetemp="$proof/state" tests/test_paper_calendar_growth.py
 ```

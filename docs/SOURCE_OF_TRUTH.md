@@ -1,5 +1,28 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.234. November 27, New York time. Read-only offline progress reporting.
+
+The offline host checker now includes the already-saved session report while a
+test is running: accepted sequence, feed/heartbeat evidence at the synthetic
+cutoff, decisions, cycle outcomes, fills, family blockers and component failures.
+The report's real file age is separate from its synthetic market clocks. A stale
+report can retain a formerly fresh feed without claiming present health. Missing
+or damaged reports remain unavailable; zero fills do not establish failure.
+
+All 91 focused host/soak checks pass, including receipt replacement during a read
+and preservation of existing files. The application is unchanged from `d2e78bf`;
+its previously qualified manifest still matches the installed package. This
+checker can inspect retained older soak evidence without restarting its worker.
+[Verification](PAPER_PROGRESS_20261127_PROOF.json).
+
+The next host action remains the isolated full-duration test of `d2e78bf`, under
+the original one-CPU/1-GiB limits. No new host output has been supplied. Keep the
+installed `2d538b7`, account, timer and session-review hold unchanged. A denser
+22-session replay and paced follow-up are being checked independently; no new
+calendar, duration, provider or connected acceptance is claimed here.
+
+### Earlier November 24 iteration checkpoint
+
 Version 1.233. November 24, New York time. Fast iteration and transaction latency.
 
 The new fast gate passed in 2m 38s: 112-MiB stock and option protection completed in 4.35 and 4.38 seconds against the unchanged five-second target, followed by a 90-second simulated round trip and verified flat accounting. The matching installed suite passed 1,065 tests with one unmapped-reader-UID skip.
