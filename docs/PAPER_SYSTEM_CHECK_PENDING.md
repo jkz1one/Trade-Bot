@@ -1,5 +1,37 @@
 # Recovered offline system checkpoint
 
+November 27: the combined entry transaction has local verification.
+
+The local quick gate passed in 130.77 seconds: the 112-MiB stock and option
+protection cases took 2.72 and 2.67 seconds against the unchanged five-second
+target, followed by an entry/exit round trip and verified flat accounting.
+The installed suite and supplemental boundary checks cover all 1,165
+cases in the expanded gate: 1,164 distinct passes and 1 existing reader-UID
+environment skip. The 335-second loaded check finished in
+335.95 seconds with both scheduled evaluations, one round trip, no native
+snapshot failure, verified flat accounting and reaped children.
+
+In sequential local 90-second comparisons with the same 112-MiB synthetic
+history, original quote age at reservation fell from 4.029 to 3.392 seconds.
+Quote source through completed entry cycle fell from 6.416 to 5.764 seconds;
+this includes acknowledged native entry and durable owner completion and is an
+upper bound for native acceptance, not the exact child commit timestamp.
+Reply-to-review time fell from 0.387 to 0.166 seconds. These are single samples,
+not a percentile or Docker/server qualification. The eligible path removes one
+fenced transaction and two full-journal digests.
+
+[Exact comparison, failed intermediate check and limits](PAPER_ENTRY_TRANSACTION_20261127_PROOF.json).
+
+This is a measured application improvement, not closure of the host incident.
+It does not prove that the host's previously observed 0.335-second remaining lease
+can reach native acceptance. Same-server short qualification, repeated active
+lifecycles, stable full-duration memory, provider CONNECT health and connected
+PAPER operation remain open. Preserve installed `2d538b7`, the connected account,
+limits, timer, review hold and retained test; no deploy, resume or resize follows
+from local results.
+
+### Earlier short qualification checkpoint
+
 November 27 continuation: the short deployment-profile test and failure bundle
 are implemented, with a deterministic reproduction of the reported deadline
 margins. `--profile entry` retains the original constraints and requires a full

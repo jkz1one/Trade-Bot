@@ -38,12 +38,17 @@ def test_held_stops_use_fresh_books_across_waits(tmp_path, monkeypatch, wait_for
             venue.fill_stock(entry, entry.quantity, changed(book, source_at=at, received_at=at),
                              at, fill_id=entry.client_id)
         assert engine.reconcile(venue.snapshot(at), now=at)["reconciled"]
-        reconcile = engine.reconcile_fixture
+        from app.options import engine as engine_module
+
+        snapshot = engine_module.run_option_process
         waits = []
 
-        async def delayed(*, now, **kwargs):
-            result = await reconcile(now=now, **kwargs)
+        async def delayed(*args, **kwargs):
+            result = await snapshot(*args, **kwargs)
             if not waits:
+                # Delay the actual native read, before reconciliation performs
+                # its coalesced assessments. A delay after reconcile_fixture
+                # now occurs after those assessments and tests a later boundary.
                 times[0] += timedelta(seconds=engine.limits.account_max_age_seconds)
                 waits.append(times[0])
             return result
@@ -54,7 +59,7 @@ def test_held_stops_use_fresh_books_across_waits(tmp_path, monkeypatch, wait_for
                          for entry in entries)
 
         if wait_for == "snapshot":
-            monkeypatch.setattr(engine, "reconcile_fixture", delayed)
+            monkeypatch.setattr(engine_module, "run_option_process", delayed)
         else:
             prepare = engine.prepare_stock
 
@@ -69,7 +74,14 @@ def test_held_stops_use_fresh_books_across_waits(tmp_path, monkeypatch, wait_for
         first = asyncio.run(c.supervise(stocks=books(at)))
         assert set(first["plays"]) == {entry.client_id for entry in entries}
         statuses = {play["status"] for play in first["plays"].values()}
-        assert statuses == ({"BLOCKED"} if wait_for == "snapshot" else {"BLOCKED", "REJECTED"})
+        # Both plays were assessed before the first reservation. If time passes
+        # there, each original quote is rejected at reservation/dispatch instead.
+        assert statuses == ({"BLOCKED"} if wait_for == "snapshot" else {"REJECTED"})
+        assert waits == [at + timedelta(seconds=engine.limits.account_max_age_seconds)]
+        with engine.journal.read() as db:
+            attempts = db.execute("SELECT attempted_at FROM execution_portfolio_orders "
+                                  "WHERE json_extract(intent_json,'$.side')='SELL'").fetchall()
+            assert all(row[0] is None for row in attempts)
         assert venue.submit_count == 2 and len(venue.snapshot(times[0]).positions) == 2
         second = asyncio.run(c.supervise(stocks=books(times[0])))
         assert all(play["status"] == "OPEN" for play in second["plays"].values()), second

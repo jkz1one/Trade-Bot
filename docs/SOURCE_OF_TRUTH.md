@@ -1,5 +1,49 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.238. November 27, New York time. Measured entry transaction repair.
+
+Regular portfolio option entry now commits the exact paid reply and usage,
+selection, current-market review, reservation and attempted-order marker together
+when protection has already completed successfully. Native handoff happens only
+after commit. No await occurs inside the writer. Pending protection, stock and
+Scope paths still settle the reply before waiting or refreshing.
+
+Selection/reservation/commit failures submit nothing and settle the known reply
+alone. Abrupt process death inside the uncommitted writer leaves the earlier
+budget reservation unknown, with no order or retry. Original quote/account/plan
+deadlines, quantity/debit ceilings, full canonical-v1 current-row/schema hashing,
+independent rollback authority and resource limits are unchanged.
+
+In sequential local 90-second comparisons with the same 112-MiB synthetic
+history, original quote age at reservation fell from 4.029 to 3.392 seconds.
+Quote source through completed entry cycle fell from 6.416 to 5.764 seconds;
+this includes acknowledged native entry and durable owner completion and is an
+upper bound for native acceptance, not the exact child commit timestamp.
+Reply-to-review time fell from 0.387 to 0.166 seconds. These are single samples,
+not a percentile or Docker/server qualification. The eligible path removes one
+fenced transaction and two full-journal digests.
+
+The local quick gate passed in 130.77 seconds: the 112-MiB stock and option
+protection cases took 2.72 and 2.67 seconds against the unchanged five-second
+target, followed by an entry/exit round trip and verified flat accounting.
+The installed suite and supplemental boundary checks cover all 1,165
+cases in the expanded gate: 1,164 distinct passes and 1 existing reader-UID
+environment skip. The 335-second loaded check finished in
+335.95 seconds with both scheduled evaluations, one round trip, no native
+snapshot failure, verified flat accounting and reaped children.
+
+[Exact comparison, failed intermediate check and limits](PAPER_ENTRY_TRANSACTION_20261127_PROOF.json).
+
+This is a measured application improvement, not closure of the host incident.
+It does not prove that the host's previously observed 0.335-second remaining lease
+can reach native acceptance. Same-server short qualification, repeated active
+lifecycles, stable full-duration memory, provider CONNECT health and connected
+PAPER operation remain open. Preserve installed `2d538b7`, the connected account,
+limits, timer, review hold and retained test; no deploy, resume or resize follows
+from local results.
+
+### Earlier November 27 short qualification checkpoint
+
 Version 1.237. November 27, New York time. Short qualification and original-deadline evidence.
 
 The first implementation step from the engineering review is now available:

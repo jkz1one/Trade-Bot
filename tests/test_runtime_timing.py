@@ -56,9 +56,10 @@ def test_paid_entry_local_phases_and_child_have_independent_counts(tmp_path, mon
         for name in ("ENTRY_MODEL_REQUEST", "ENTRY_MODEL_ADMISSION", "ENTRY_MODEL"):
             assert statuses[name + ":COMPLETE"] == 1
         state = "FAILED" if outcome == "FAILED_SETTLEMENT" else "COMPLETE"
-        assert statuses["ENTRY_MODEL_SETTLEMENT:" + state] == 1
-        for name in ("ENTRY_MIXED_SELECTION", "ENTRY_OPTION_MARKET_READ",
-                     "ENTRY_PROTECTION_WAIT", "ENTRY_REVIEW"):
+        settlement = "ENTRY_SETTLEMENT_AND_RESERVATION" if outcome == "OPEN" else "ENTRY_MODEL_SETTLEMENT"
+        assert statuses[settlement + ":" + state] == 1
+        assert statuses.get("ENTRY_PROTECTION_WAIT:COMPLETE", 0) == 0
+        for name in ("ENTRY_MIXED_SELECTION", "ENTRY_OPTION_MARKET_READ", "ENTRY_REVIEW"):
             assert statuses.get(name + ":COMPLETE", 0) == int(outcome == "OPEN")
         assert trace["coverage"]["models"]["matched"] == 1
         assert trace["coverage"]["models"]["unsettled"] == int(outcome == "FAILED_SETTLEMENT")

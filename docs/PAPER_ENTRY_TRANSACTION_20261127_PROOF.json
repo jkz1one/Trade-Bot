@@ -1,0 +1,1549 @@
+{
+  "version": "paper-entry-transaction-20261127-v1",
+  "base_commit": "fe02e7daf56018034bcc54d319aadfc70a6092d0",
+  "status": "LOCAL_TRANSACTION_REPAIR_VERIFIED_HOST_UNVERIFIED",
+  "application_manifest_sha256": "cdaa7376445bcad20f46d88878df17b130957d591d8e14be593c70b7b566b884",
+  "application_files": 336,
+  "runtime_pins": 60,
+  "change": [
+    "Only a coherent regular portfolio option ENTER with already completed successful protection uses the combined writer.",
+    "Known model usage, exact full reply, choice, current delivered-market review, reservation and SUBMITTING attempt commit atomically before native handoff.",
+    "No await occurs inside this writer. Pending protection, stock, Scope and legacy paths still durably settle usage before waiting or refreshing.",
+    "Failed selection, reservation or commit rolls back order state and settles the known reply alone. An unrecordable charge retains full reply and unknown-cost halt.",
+    "Abrupt process death after an uncommitted SUBMITTING marker leaves only the prior admitted unknown-cost row, a verified restore pair and no order; the same slot cannot replay.",
+    "ENTRY_SETTLEMENT_AND_RESERVATION names the larger combined phase; it is not compared directly to the older settlement-only span."
+  ],
+  "preserved": [
+    "Original quote/account/plan clocks, validity, quantity and debit ceilings",
+    "Full current-row/schema canonical-v1 digests and independent rollback authority",
+    "192-MiB encoding budget, CPU/memory/PID limits and native deadline including commit time",
+    "Installed connected owner, timer, account, limits, review hold and retained host worker",
+    "Main and draft PR #1 metadata; no subagents or operator-host access"
+  ],
+  "comparison_scope": "One local 90-second run per version, sequentially on logical CPU 0 with the same 112-MiB labeled synthetic history and exact pinned runtime. The candidate quick lifecycle ran before the baseline comparison. Timing differences include scheduling variation; they are not percentiles, Docker parity or proof the host incident is fixed.",
+  "transaction_evidence": "The mixed-runtime native callback independently reads committed exact reply, settled charge and SUBMITTING attempt. Traced SQL proves charge and attempt now share one commit; forced prior path uses two. This removes two whole-journal digests on the eligible path.",
+  "before": {
+    "launcher": {
+      "version": "paper-soak-launch-v1",
+      "status": "PASSED",
+      "application_files": 336,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "6f2b3d274a215f9f86a436f0f7f60d9806a0f3c8d458496cf45d266addbb034b",
+      "seconds": 90,
+      "seed_mib": 112,
+      "max_feed_recoveries": 0,
+      "worker_cpu_affinity": [
+        0
+      ],
+      "network": "ISOLATED",
+      "host_acceptance": "UNVERIFIED",
+      "wall_clock_soak": "NOT_RUN",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "worker_pid": 2,
+      "worker_start_ticks": "1381414",
+      "child_exit_code": 0,
+      "cgroup_memory": {
+        "status": "UNAVAILABLE"
+      }
+    },
+    "worker": {
+      "status": "PASSED",
+      "elapsed_seconds": 90.95044007800061,
+      "planned_seconds": 90,
+      "source_seed": {
+        "kind": "labeled diagnostic padding, not month-history proof",
+        "rows": 30006,
+        "initial_database_bytes": 124760064
+      },
+      "source_database_bytes": 125960192,
+      "native_snapshot_calls": 48,
+      "native_snapshot_failures": 0,
+      "native_snapshot_max_seconds": 0.1433561979993101,
+      "peak_tree_rss_bytes": 434147328,
+      "children_reaped": true,
+      "children_reaped_count": 50,
+      "decision_coverage": {
+        "expected": 1,
+        "evaluated": 1,
+        "coverage_percent": 100.0,
+        "unmeasured_slots": [],
+        "target_met": true
+      },
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "final_accounting": "VERIFIED_FLAT",
+      "opening_restore_profile": {
+        "status": "OBSERVED",
+        "reservation_at": "2026-10-28T14:00:17.961192+00:00",
+        "source_at": "2026-10-28T14:00:13.931724Z",
+        "received_at": "2026-10-28T14:00:14.931724Z",
+        "source_to_reservation": {
+          "window_seconds": 4.029468,
+          "wall_seconds_with_digest_running": 3.021526,
+          "wholly_contained_calls": 16,
+          "owner_thread_cpu_seconds": 2.71741,
+          "background_cpu_seconds": 0.149916,
+          "owner_thread_calls": {
+            "app.mixed.portfolio_execution.reconcile": 4,
+            "app.options.runtime._tick": 2,
+            "app.options.coordinator._cycle_once": 2,
+            "app.mixed.selection.collect": 2,
+            "app.options.entry_coordination._admit_request": 2,
+            "app.options.entry_coordination._settle_reply": 2,
+            "app.options.entry_coordination.run_entry_cycle": 1
+          }
+        },
+        "receipt_to_reservation": {
+          "window_seconds": 3.029468,
+          "wall_seconds_with_digest_running": 2.580886,
+          "wholly_contained_calls": 13,
+          "owner_thread_cpu_seconds": 2.335702,
+          "background_cpu_seconds": 0.0,
+          "owner_thread_calls": {
+            "app.options.runtime._tick": 2,
+            "app.mixed.portfolio_execution.reconcile": 2,
+            "app.options.coordinator._cycle_once": 2,
+            "app.mixed.selection.collect": 2,
+            "app.options.entry_coordination._admit_request": 2,
+            "app.options.entry_coordination._settle_reply": 2,
+            "app.options.entry_coordination.run_entry_cycle": 1
+          }
+        }
+      },
+      "worker_window_cpu": {
+        "elapsed_seconds": 90.950282,
+        "worker_user_seconds": 43.600486,
+        "worker_system_seconds": 9.333946,
+        "reaped_child_user_seconds": 1.780093,
+        "reaped_child_system_seconds": 0.50687,
+        "average_busy_cores": 0.60716,
+        "average_allocated_cpu_percent": 60.716
+      },
+      "worker_resource_window": {
+        "scope": "worker start to diagnostic read; not isolated entry-phase CPU or I/O",
+        "elapsed_seconds": 90.95029956600047,
+        "cpu": {
+          "status": "UNAVAILABLE"
+        },
+        "io": {
+          "status": "UNAVAILABLE"
+        },
+        "start": {
+          "monotonic_seconds": 13820.014345628,
+          "observed_at": "2026-11-27T21:22:33.650495+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        },
+        "end": {
+          "monotonic_seconds": 13910.964645194,
+          "observed_at": "2026-11-27T21:24:04.600795+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        }
+      },
+      "cgroup_memory": {
+        "status": "UNAVAILABLE"
+      }
+    },
+    "entry": {
+      "status": "RECORDED",
+      "evidence_clock": "ORIGINAL_SYNTHETIC_CLOCKS",
+      "cycle_key": "degen:5977320:portfolio:0",
+      "started_at": "2026-10-28T14:00:16.199652+00:00",
+      "stored_status": "COMPLETE",
+      "decision_status": "OPEN",
+      "reason": null,
+      "clocks": {
+        "as_of": "2026-10-28T14:00:16.603474Z",
+        "deadline": "2026-10-28T14:00:21.603474Z",
+        "account_captured_at": "2026-10-28T14:00:15.775423Z",
+        "account_max_age_seconds": 20,
+        "quote_max_age_seconds": 10,
+        "model_completed_at": "2026-10-28T14:00:17.401894+00:00",
+        "review_at": "2026-10-28T14:00:17.789353+00:00",
+        "options": [
+          {
+            "source_at": "2026-10-28T14:00:13.931724Z",
+            "received_at": "2026-10-28T14:00:14.931724Z",
+            "admission_deadline": "2026-10-28T14:00:21.603474Z"
+          },
+          {
+            "source_at": "2026-10-28T14:00:13.931724Z",
+            "received_at": "2026-10-28T14:00:14.931724Z",
+            "admission_deadline": "2026-10-28T14:00:21.603474Z"
+          }
+        ]
+      },
+      "cycle_timing": {
+        "started_at": "2026-10-28T14:00:16.186374+00:00",
+        "elapsed_seconds": 4.161794,
+        "generation": 2,
+        "kind": "CYCLE",
+        "native": [
+          {
+            "child_stages": [
+              {
+                "cpu_seconds": 2e-06,
+                "elapsed_seconds": 6e-06,
+                "stage": "IMPORTS"
+              },
+              {
+                "cpu_seconds": 0.242753,
+                "elapsed_seconds": 0.491101,
+                "stage": "REQUEST"
+              },
+              {
+                "cpu_seconds": 0.243619,
+                "elapsed_seconds": 0.491972,
+                "stage": "VENUE_OPEN"
+              },
+              {
+                "cpu_seconds": 0.24531,
+                "elapsed_seconds": 0.493662,
+                "stage": "ACCEPT"
+              },
+              {
+                "cpu_seconds": 0.248145,
+                "elapsed_seconds": 0.508934,
+                "stage": "SERIALIZE"
+              },
+              {
+                "cpu_seconds": 0.248178,
+                "elapsed_seconds": 0.508969,
+                "stage": "COMPLETE"
+              }
+            ],
+            "child_trace_status": "OBSERVED",
+            "elapsed_seconds": 0.567,
+            "parent_phase": "RESPONSE_VALIDATE"
+          }
+        ],
+        "native_omitted": 0,
+        "packet_age_seconds": 1.25465,
+        "packet_sequence": 2,
+        "packet_sha256": "fb124d57cc144a8b0d122aefaaccaab57575e9528510b92e9df3367d37fd1d33",
+        "slot": 5977320,
+        "spans": [
+          {
+            "elapsed_seconds": 0.393876,
+            "phase": "CYCLE_OPPORTUNITY_CLAIM",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.008305,
+            "phase": "SCAN",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.377555,
+            "phase": "STOCK_SCAN",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.001232,
+            "phase": "SCOPE_SCAN",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.00892,
+            "phase": "ENTRY_MODEL_ADMISSION",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.387267,
+            "phase": "ENTRY_MODEL_REQUEST",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.001995,
+            "model_source_key": "degen:5977320:portfolio:0",
+            "phase": "ENTRY_MODEL",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.00059,
+            "phase": "ENTRY_MIXED_SELECTION",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.009967,
+            "phase": "ENTRY_SCOPE_RECEIPT_CHECK",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.000461,
+            "phase": "ENTRY_SCOPE_SELECTION",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.379235,
+            "phase": "ENTRY_MODEL_SETTLEMENT",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.000137,
+            "phase": "ENTRY_PROTECTION_WAIT",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.004533,
+            "phase": "ENTRY_OPTION_MARKET_READ",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.026946,
+            "phase": "ENTRY_REVIEW",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.068138,
+            "local_age_seconds": 3.029468,
+            "phase": "ADMISSION",
+            "quote_age_seconds": 4.029468,
+            "receive_lag_seconds": 1.0,
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.006574,
+            "phase": "NATIVE_ACCEPT_SPAWN",
+            "remaining_at_start_seconds": 3.231721,
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.566916,
+            "phase": "NATIVE_ACCEPT_TRANSPORT",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.87991,
+            "phase": "NATIVE_ACCEPT",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 1.25486,
+            "local_age_seconds": 3.097646,
+            "phase": "DISPATCH",
+            "quote_age_seconds": 4.097646,
+            "receive_lag_seconds": 1.0,
+            "status": "COMPLETE"
+          }
+        ],
+        "spans_omitted": 0,
+        "status": "COMPLETE",
+        "trace_start_prepare_seconds": 0.003068,
+        "trace_storage": "COALESCED",
+        "version": "runtime-timing-v1"
+      },
+      "restore_to_review": {
+        "status": "OBSERVED",
+        "window_seconds": 3.857629,
+        "wall_seconds_with_digest_running": 2.878067,
+        "wholly_contained_calls": 15,
+        "owner_thread_cpu_seconds": 2.57396,
+        "background_cpu_seconds": 0.149916,
+        "owner_thread_calls": {
+          "app.mixed.portfolio_execution.reconcile": 4,
+          "app.options.runtime._tick": 2,
+          "app.options.coordinator._cycle_once": 2,
+          "app.mixed.selection.collect": 2,
+          "app.options.entry_coordination._admit_request": 2,
+          "app.options.entry_coordination._settle_reply": 2
+        }
+      },
+      "resources": {
+        "scope": "worker start to diagnostic read; not isolated entry-phase CPU or I/O",
+        "elapsed_seconds": 37.418236350998995,
+        "cpu": {
+          "status": "UNAVAILABLE"
+        },
+        "io": {
+          "status": "UNAVAILABLE"
+        },
+        "start": {
+          "monotonic_seconds": 13820.014345628,
+          "observed_at": "2026-11-27T21:22:33.650495+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        },
+        "end": {
+          "monotonic_seconds": 13857.432581979,
+          "observed_at": "2026-11-27T21:23:11.068732+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        }
+      }
+    },
+    "source_to_completed_entry_cycle_seconds": 6.416444,
+    "model_reply_to_review_seconds": 0.387459,
+    "native_acceptance_measurement": "OPEN with a validated native acknowledgement and committed owner completion. Source-to-cycle-completion is a conservative upper bound for native acceptance, not an exact child commit timestamp. Reservation clocks alone are not acceptance clocks.",
+    "entry_freshness": {
+      "status": "OBSERVED",
+      "reservations": 1,
+      "measured": 1,
+      "missing_or_invalid": 0,
+      "omitted": 0,
+      "clocks": {
+        "quote_age": {
+          "samples": 1,
+          "p50_seconds": 4.029468,
+          "p95_seconds": 4.029468,
+          "p99_seconds": 4.029468,
+          "max_seconds": 4.029468
+        },
+        "receive_lag": {
+          "samples": 1,
+          "p50_seconds": 1.0,
+          "p95_seconds": 1.0,
+          "p99_seconds": 1.0,
+          "max_seconds": 1.0
+        },
+        "local_age": {
+          "samples": 1,
+          "p50_seconds": 3.029468,
+          "p95_seconds": 3.029468,
+          "p99_seconds": 3.029468,
+          "max_seconds": 3.029468
+        }
+      }
+    },
+    "receipts": [
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-before-1127/summary.json",
+        "sha256": "54f61903d0862a8082441066f632602d012930c11bc8883a057844c77711c7b3",
+        "bytes": 644
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-before-1127/progress.json",
+        "sha256": "a67e21762a263bed8763e087ad2ebeaf0cda6e423ed93b895f901396854e01de",
+        "bytes": 52886
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-before-1127/entry-diagnostic.json",
+        "sha256": "f5c9f799995d86136263f9c0a126253b88e01144cc80c3eb17b3d5f86e8687c0",
+        "bytes": 6674
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-before-1127/report.json",
+        "sha256": "9d2afdaf74c393b4e987e6a3f9080ff6a1dd3887bc393dac112dd104dca2ceb0",
+        "bytes": 68289
+      }
+    ]
+  },
+  "after": {
+    "launcher": {
+      "version": "paper-soak-launch-v1",
+      "status": "PASSED",
+      "application_files": 336,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "cdaa7376445bcad20f46d88878df17b130957d591d8e14be593c70b7b566b884",
+      "seconds": 90,
+      "seed_mib": 112,
+      "max_feed_recoveries": 0,
+      "worker_cpu_affinity": [
+        0
+      ],
+      "network": "ISOLATED",
+      "host_acceptance": "UNVERIFIED",
+      "wall_clock_soak": "NOT_RUN",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "worker_pid": 38,
+      "worker_start_ticks": "1370964",
+      "child_exit_code": 0,
+      "cgroup_memory": {
+        "status": "UNAVAILABLE"
+      }
+    },
+    "worker": {
+      "status": "PASSED",
+      "elapsed_seconds": 91.05981826199968,
+      "planned_seconds": 90,
+      "source_seed": {
+        "kind": "labeled diagnostic padding, not month-history proof",
+        "rows": 30006,
+        "initial_database_bytes": 124760064
+      },
+      "source_database_bytes": 125972480,
+      "native_snapshot_calls": 49,
+      "native_snapshot_failures": 0,
+      "native_snapshot_max_seconds": 0.11964084100145556,
+      "peak_tree_rss_bytes": 435478528,
+      "children_reaped": true,
+      "children_reaped_count": 50,
+      "decision_coverage": {
+        "expected": 1,
+        "evaluated": 1,
+        "coverage_percent": 100.0,
+        "unmeasured_slots": [],
+        "target_met": true
+      },
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "final_accounting": "VERIFIED_FLAT",
+      "opening_restore_profile": {
+        "status": "OBSERVED",
+        "reservation_at": "2026-10-28T14:00:17.121569+00:00",
+        "source_at": "2026-10-28T14:00:13.729272Z",
+        "received_at": "2026-10-28T14:00:14.729272Z",
+        "source_to_reservation": {
+          "window_seconds": 3.392297,
+          "wall_seconds_with_digest_running": 2.461997,
+          "wholly_contained_calls": 14,
+          "owner_thread_cpu_seconds": 2.288528,
+          "background_cpu_seconds": 0.13707,
+          "owner_thread_calls": {
+            "app.mixed.portfolio_execution.reconcile": 4,
+            "app.options.runtime._tick": 2,
+            "app.options.coordinator._cycle_once": 2,
+            "app.mixed.selection.collect": 2,
+            "app.options.entry_coordination._admit_request": 2,
+            "app.options.entry_coordination._settle_and_reserve": 1
+          }
+        },
+        "receipt_to_reservation": {
+          "window_seconds": 2.392297,
+          "wall_seconds_with_digest_running": 1.97292,
+          "wholly_contained_calls": 11,
+          "owner_thread_cpu_seconds": 1.936673,
+          "background_cpu_seconds": 0.0,
+          "owner_thread_calls": {
+            "app.options.runtime._tick": 2,
+            "app.mixed.portfolio_execution.reconcile": 2,
+            "app.options.coordinator._cycle_once": 2,
+            "app.mixed.selection.collect": 2,
+            "app.options.entry_coordination._admit_request": 2,
+            "app.options.entry_coordination._settle_and_reserve": 1
+          }
+        }
+      },
+      "worker_window_cpu": {
+        "elapsed_seconds": 91.059724,
+        "worker_user_seconds": 42.848521,
+        "worker_system_seconds": 9.978109,
+        "reaped_child_user_seconds": 1.742185,
+        "reaped_child_system_seconds": 0.472911,
+        "average_busy_cores": 0.604457,
+        "average_allocated_cpu_percent": 60.446
+      },
+      "worker_resource_window": {
+        "scope": "worker start to diagnostic read; not isolated entry-phase CPU or I/O",
+        "elapsed_seconds": 91.0597395320001,
+        "cpu": {
+          "status": "UNAVAILABLE"
+        },
+        "io": {
+          "status": "UNAVAILABLE"
+        },
+        "start": {
+          "monotonic_seconds": 13715.107628377,
+          "observed_at": "2026-11-27T21:20:48.743778+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        },
+        "end": {
+          "monotonic_seconds": 13806.167367909,
+          "observed_at": "2026-11-27T21:22:19.803517+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        }
+      },
+      "cgroup_memory": {
+        "status": "UNAVAILABLE"
+      }
+    },
+    "entry": {
+      "status": "RECORDED",
+      "evidence_clock": "ORIGINAL_SYNTHETIC_CLOCKS",
+      "cycle_key": "degen:5977320:portfolio:0",
+      "started_at": "2026-10-28T14:00:15.760638+00:00",
+      "stored_status": "COMPLETE",
+      "decision_status": "OPEN",
+      "reason": null,
+      "clocks": {
+        "as_of": "2026-10-28T14:00:16.149543Z",
+        "deadline": "2026-10-28T14:00:21.149543Z",
+        "account_captured_at": "2026-10-28T14:00:15.338034Z",
+        "account_max_age_seconds": 20,
+        "quote_max_age_seconds": 10,
+        "model_completed_at": "2026-10-28T14:00:16.929650+00:00",
+        "review_at": "2026-10-28T14:00:17.096076+00:00",
+        "options": [
+          {
+            "source_at": "2026-10-28T14:00:13.729272Z",
+            "received_at": "2026-10-28T14:00:14.729272Z",
+            "admission_deadline": "2026-10-28T14:00:21.149543Z"
+          },
+          {
+            "source_at": "2026-10-28T14:00:13.729272Z",
+            "received_at": "2026-10-28T14:00:14.729272Z",
+            "admission_deadline": "2026-10-28T14:00:21.149543Z"
+          }
+        ]
+      },
+      "cycle_timing": {
+        "started_at": "2026-10-28T14:00:15.748230+00:00",
+        "elapsed_seconds": 3.745385,
+        "generation": 2,
+        "kind": "CYCLE",
+        "native": [
+          {
+            "child_stages": [
+              {
+                "cpu_seconds": 8e-06,
+                "elapsed_seconds": 0.002151,
+                "stage": "IMPORTS"
+              },
+              {
+                "cpu_seconds": 0.2331,
+                "elapsed_seconds": 0.467986,
+                "stage": "REQUEST"
+              },
+              {
+                "cpu_seconds": 0.233969,
+                "elapsed_seconds": 0.473007,
+                "stage": "VENUE_OPEN"
+              },
+              {
+                "cpu_seconds": 0.235586,
+                "elapsed_seconds": 0.474624,
+                "stage": "ACCEPT"
+              },
+              {
+                "cpu_seconds": 0.238399,
+                "elapsed_seconds": 0.483434,
+                "stage": "SERIALIZE"
+              },
+              {
+                "cpu_seconds": 0.238433,
+                "elapsed_seconds": 0.48348,
+                "stage": "COMPLETE"
+              }
+            ],
+            "child_trace_status": "OBSERVED",
+            "elapsed_seconds": 0.527,
+            "parent_phase": "RESPONSE_VALIDATE"
+          }
+        ],
+        "native_omitted": 0,
+        "packet_age_seconds": 1.018958,
+        "packet_sequence": 2,
+        "packet_sha256": "1a8fd753715215d58e06865cd0aa40673dd1afed147ca68754507f8a80e702bf",
+        "slot": 5977320,
+        "spans": [
+          {
+            "elapsed_seconds": 0.370778,
+            "phase": "CYCLE_OPPORTUNITY_CLAIM",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.012121,
+            "phase": "SCAN",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.373018,
+            "phase": "STOCK_SCAN",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.001191,
+            "phase": "SCOPE_SCAN",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.009352,
+            "phase": "ENTRY_MODEL_ADMISSION",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.370335,
+            "phase": "ENTRY_MODEL_REQUEST",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.00169,
+            "model_source_key": "degen:5977320:portfolio:0",
+            "phase": "ENTRY_MODEL",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.000497,
+            "phase": "ENTRY_MIXED_SELECTION",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.010077,
+            "phase": "ENTRY_SCOPE_RECEIPT_CHECK",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.00052,
+            "phase": "ENTRY_SCOPE_SELECTION",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.002878,
+            "phase": "ENTRY_OPTION_MARKET_READ",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.025018,
+            "phase": "ENTRY_REVIEW",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.058959,
+            "local_age_seconds": 2.392297,
+            "phase": "ADMISSION",
+            "quote_age_seconds": 3.392297,
+            "receive_lag_seconds": 1.0,
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.525819,
+            "phase": "ENTRY_SETTLEMENT_AND_RESERVATION",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.002137,
+            "phase": "NATIVE_ACCEPT_SPAWN",
+            "remaining_at_start_seconds": 3.691094,
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.527354,
+            "phase": "NATIVE_ACCEPT_TRANSPORT",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.902306,
+            "phase": "NATIVE_ACCEPT",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 1.295175,
+            "local_age_seconds": 2.451287,
+            "phase": "DISPATCH",
+            "quote_age_seconds": 3.451287,
+            "receive_lag_seconds": 1.0,
+            "status": "COMPLETE"
+          }
+        ],
+        "spans_omitted": 0,
+        "status": "COMPLETE",
+        "trace_start_prepare_seconds": 0.003039,
+        "trace_storage": "COALESCED",
+        "version": "runtime-timing-v1"
+      },
+      "restore_to_review": {
+        "status": "OBSERVED",
+        "window_seconds": 3.366804,
+        "wall_seconds_with_digest_running": 2.461997,
+        "wholly_contained_calls": 14,
+        "owner_thread_cpu_seconds": 2.288528,
+        "background_cpu_seconds": 0.13707,
+        "owner_thread_calls": {
+          "app.mixed.portfolio_execution.reconcile": 4,
+          "app.options.runtime._tick": 2,
+          "app.options.coordinator._cycle_once": 2,
+          "app.mixed.selection.collect": 2,
+          "app.options.entry_coordination._admit_request": 2,
+          "app.options.entry_coordination._settle_and_reserve": 1
+        }
+      },
+      "resources": {
+        "scope": "worker start to diagnostic read; not isolated entry-phase CPU or I/O",
+        "elapsed_seconds": 37.87185642199984,
+        "cpu": {
+          "status": "UNAVAILABLE"
+        },
+        "io": {
+          "status": "UNAVAILABLE"
+        },
+        "start": {
+          "monotonic_seconds": 13715.107628377,
+          "observed_at": "2026-11-27T21:20:48.743778+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        },
+        "end": {
+          "monotonic_seconds": 13752.979484799,
+          "observed_at": "2026-11-27T21:21:26.615635+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        }
+      }
+    },
+    "source_to_completed_entry_cycle_seconds": 5.764343,
+    "model_reply_to_review_seconds": 0.166426,
+    "native_acceptance_measurement": "OPEN with a validated native acknowledgement and committed owner completion. Source-to-cycle-completion is a conservative upper bound for native acceptance, not an exact child commit timestamp. Reservation clocks alone are not acceptance clocks.",
+    "entry_freshness": {
+      "status": "OBSERVED",
+      "reservations": 1,
+      "measured": 1,
+      "missing_or_invalid": 0,
+      "omitted": 0,
+      "clocks": {
+        "quote_age": {
+          "samples": 1,
+          "p50_seconds": 3.392297,
+          "p95_seconds": 3.392297,
+          "p99_seconds": 3.392297,
+          "max_seconds": 3.392297
+        },
+        "receive_lag": {
+          "samples": 1,
+          "p50_seconds": 1.0,
+          "p95_seconds": 1.0,
+          "p99_seconds": 1.0,
+          "max_seconds": 1.0
+        },
+        "local_age": {
+          "samples": 1,
+          "p50_seconds": 2.392297,
+          "p95_seconds": 2.392297,
+          "p99_seconds": 2.392297,
+          "max_seconds": 2.392297
+        }
+      }
+    },
+    "receipts": [
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-quick-final-1127/lifecycle/summary.json",
+        "sha256": "2d3e1473c644e417529648a27dce988dd881892f6f28191f5beaff4a42654434",
+        "bytes": 645
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-quick-final-1127/lifecycle/progress.json",
+        "sha256": "af22b8f55dc36a37fef28b649ec5cb6ce33844ce8e8934dfda6ca4f45d905d4f",
+        "bytes": 52546
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-quick-final-1127/lifecycle/entry-diagnostic.json",
+        "sha256": "379a5711bc7e57216395da5a037c003a5593bf114b58d9d001ea49eb7fc2ebec",
+        "bytes": 6568
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-quick-final-1127/lifecycle/report.json",
+        "sha256": "4cd18f5543154f74f182d1e652239dc8831155153c5e9067191e134ed64d1df0",
+        "bytes": 68068
+      }
+    ]
+  },
+  "quick": {
+    "version": "paper-system-check-v1",
+    "status": "PASSED",
+    "check_profile": "QUICK",
+    "synthetic": true,
+    "provider_calls": false,
+    "model_service_calls": false,
+    "live_enabled": false,
+    "market_acceptance": "UNVERIFIED",
+    "wall_clock_soak": "NOT_RUN",
+    "host_acceptance": "UNVERIFIED",
+    "application_files": 336,
+    "runtime_pins": 60,
+    "application_manifest_sha256": "cdaa7376445bcad20f46d88878df17b130957d591d8e14be593c70b7b566b884",
+    "stage": "SHORT_LIFECYCLE",
+    "test_exit_code": 0,
+    "lifecycle_exit_code": 0,
+    "elapsed_seconds": 130.77
+  },
+  "protection": [
+    {
+      "asset": "STOCK",
+      "seed_mib": 112,
+      "journal_bytes_before_contention": 124764160,
+      "exit_seconds": 2.7225816669997585,
+      "breach_to_native_ack_seconds": 1.587110460999611,
+      "breach_to_flat_observed_seconds": 3.921938143999796,
+      "exit_submitted_while_all_waiting": true,
+      "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+      "report_snapshot_open_during_exit": true,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "native_submissions": 2,
+      "receipt": {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-quick-final-1127/combined-contention-loaded.json",
+        "sha256": "bd68c9f5fa89ddd15dbf3430b01372987114e4f786ba672a19fa19da02b456c7",
+        "bytes": 22738
+      }
+    },
+    {
+      "asset": "OPTION",
+      "seed_mib": 112,
+      "journal_bytes_before_contention": 124817408,
+      "exit_seconds": 2.6697004310008197,
+      "breach_to_native_ack_seconds": 1.596529341999485,
+      "breach_to_flat_observed_seconds": 3.7943801670007815,
+      "exit_submitted_while_all_waiting": true,
+      "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+      "report_snapshot_open_during_exit": true,
+      "accounting": "VERIFIED",
+      "held_positions": 0,
+      "native_submissions": 2,
+      "receipt": {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-quick-final-1127/combined-option-contention-loaded.json",
+        "sha256": "b50c06d8e9e1972ac0a571183454577029956da71cffcf52bdb2d27e90a14be2",
+        "bytes": 22852
+      }
+    }
+  ],
+  "installed_regressions": {
+    "summary": {
+      "version": "paper-system-check-v1",
+      "status": "PASSED",
+      "check_profile": "FULL",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "market_acceptance": "UNVERIFIED",
+      "wall_clock_soak": "NOT_RUN",
+      "host_acceptance": "UNVERIFIED",
+      "application_files": 336,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "cdaa7376445bcad20f46d88878df17b130957d591d8e14be593c70b7b566b884",
+      "stage": "INSTALLED_SYSTEM",
+      "test_exit_code": 0,
+      "elapsed_seconds": 425.773
+    },
+    "junit": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "1",
+      "tests": "1114",
+      "time": "423.498",
+      "timestamp": "2026-11-27T16:24:27.922609-05:00",
+      "hostname": "6db620b2e0c6"
+    },
+    "final_required_coverage": {
+      "final_required_cases": 1165,
+      "observed_unique_cases": 1165,
+      "repeated_cases": 10,
+      "passed_unique": 1164,
+      "skipped_unique": 1,
+      "missing": 0,
+      "identity": "unique SHA256 of exact collected pytest case name; JUnit has empty module names under isolated /dev/null root",
+      "note": "Full run plus supplemental run cover the final expanded gate without repeating the entire unchanged application suite."
+    },
+    "receipts": [
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-full-1127/summary.json",
+        "sha256": "8069a7d0b8c13d04494eee3ee1843c55167166e869649db703fabca3e248f723",
+        "bytes": 534
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-full-1127/tests.log",
+        "sha256": "02cd96285234ec778d72587edbe096e55784a475a20d7e88cc825be64a93f321",
+        "bytes": 1324
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-full-1127/tests.xml",
+        "sha256": "77ab3de05fbfb66fb768afda2641bffa93cb38a0fd5a6403bf7c709f4b23f30d",
+        "bytes": 16908664
+      }
+    ]
+  },
+  "supplemental_regressions": {
+    "passed": 61,
+    "skipped": 0,
+    "seconds": 18.43,
+    "scope": "Full new boundary module including nine changed-delivery cases; existing rollback-authority and original entry-latency suites.",
+    "receipts": [
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-supplemental-tests.log",
+        "sha256": "fdaf7b1997706261de67f374fb1ed3e09d0b0104f33a67a94e3f617ef36aca9d",
+        "bytes": 100
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-supplemental-tests.xml",
+        "sha256": "ca514a658f97227f288ad22846bafdbe5b5a38f7260568849f3be068f2c536e8",
+        "bytes": 7212
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-suite-coverage.json",
+        "sha256": "24a1970dec8bbda508260095dec423468a1c8292031df8f84ca8ed3f0b8aed01",
+        "bytes": 415
+      }
+    ]
+  },
+  "loaded_335_seconds": {
+    "launcher": {
+      "version": "paper-soak-launch-v1",
+      "status": "PASSED",
+      "application_files": 336,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "cdaa7376445bcad20f46d88878df17b130957d591d8e14be593c70b7b566b884",
+      "seconds": 335,
+      "seed_mib": 112,
+      "max_feed_recoveries": 0,
+      "worker_cpu_affinity": [
+        0
+      ],
+      "network": "ISOLATED",
+      "host_acceptance": "UNVERIFIED",
+      "wall_clock_soak": "NOT_RUN",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "worker_pid": 2,
+      "worker_start_ticks": "1457217",
+      "child_exit_code": 0,
+      "cgroup_memory": {
+        "status": "UNAVAILABLE"
+      }
+    },
+    "worker": {
+      "status": "PASSED",
+      "elapsed_seconds": 335.95185205300004,
+      "planned_seconds": 335,
+      "source_seed": {
+        "kind": "labeled diagnostic padding, not month-history proof",
+        "rows": 30006,
+        "initial_database_bytes": 124760064
+      },
+      "source_database_bytes": 128856064,
+      "native_snapshot_calls": 197,
+      "native_snapshot_failures": 0,
+      "native_snapshot_max_seconds": 0.21480428600079904,
+      "peak_tree_rss_bytes": 446226432,
+      "children_reaped": true,
+      "children_reaped_count": 198,
+      "decision_coverage": {
+        "expected": 2,
+        "evaluated": 2,
+        "coverage_percent": 100.0,
+        "unmeasured_slots": [],
+        "target_met": true
+      },
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "final_accounting": "VERIFIED_FLAT",
+      "opening_restore_profile": {
+        "status": "OBSERVED",
+        "reservation_at": "2026-10-28T14:00:17.692988+00:00",
+        "source_at": "2026-10-28T14:00:13.831929Z",
+        "received_at": "2026-10-28T14:00:14.831929Z",
+        "source_to_reservation": {
+          "window_seconds": 3.861059,
+          "wall_seconds_with_digest_running": 2.900239,
+          "wholly_contained_calls": 14,
+          "owner_thread_cpu_seconds": 2.49904,
+          "background_cpu_seconds": 0.188007,
+          "owner_thread_calls": {
+            "app.mixed.portfolio_execution.reconcile": 4,
+            "app.options.runtime._tick": 2,
+            "app.options.coordinator._cycle_once": 2,
+            "app.mixed.selection.collect": 2,
+            "app.options.entry_coordination._admit_request": 2,
+            "app.options.entry_coordination._settle_and_reserve": 1
+          }
+        },
+        "receipt_to_reservation": {
+          "window_seconds": 2.861059,
+          "wall_seconds_with_digest_running": 2.494862,
+          "wholly_contained_calls": 12,
+          "owner_thread_cpu_seconds": 2.33667,
+          "background_cpu_seconds": 0.0,
+          "owner_thread_calls": {
+            "app.mixed.portfolio_execution.reconcile": 3,
+            "app.options.runtime._tick": 2,
+            "app.options.coordinator._cycle_once": 2,
+            "app.mixed.selection.collect": 2,
+            "app.options.entry_coordination._admit_request": 2,
+            "app.options.entry_coordination._settle_and_reserve": 1
+          }
+        }
+      },
+      "worker_window_cpu": {
+        "elapsed_seconds": 335.95176,
+        "worker_user_seconds": 142.305244,
+        "worker_system_seconds": 29.146001,
+        "reaped_child_user_seconds": 5.950701,
+        "reaped_child_system_seconds": 1.433722,
+        "average_busy_cores": 0.532325,
+        "average_allocated_cpu_percent": 53.233
+      },
+      "worker_resource_window": {
+        "scope": "worker start to diagnostic read; not isolated entry-phase CPU or I/O",
+        "elapsed_seconds": 335.9517751660005,
+        "cpu": {
+          "status": "UNAVAILABLE"
+        },
+        "io": {
+          "status": "UNAVAILABLE"
+        },
+        "start": {
+          "monotonic_seconds": 14578.137381002,
+          "observed_at": "2026-11-27T21:35:11.773531+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        },
+        "end": {
+          "monotonic_seconds": 14914.089156168,
+          "observed_at": "2026-11-27T21:40:47.725306+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        }
+      },
+      "cgroup_memory": {
+        "status": "UNAVAILABLE"
+      }
+    },
+    "entry": {
+      "status": "RECORDED",
+      "evidence_clock": "ORIGINAL_SYNTHETIC_CLOCKS",
+      "cycle_key": "degen:5977320:portfolio:0",
+      "started_at": "2026-10-28T14:00:16.219198+00:00",
+      "stored_status": "COMPLETE",
+      "decision_status": "OPEN",
+      "reason": null,
+      "clocks": {
+        "as_of": "2026-10-28T14:00:16.661583Z",
+        "deadline": "2026-10-28T14:00:21.661583Z",
+        "account_captured_at": "2026-10-28T14:00:15.772245Z",
+        "account_max_age_seconds": 20,
+        "quote_max_age_seconds": 10,
+        "model_completed_at": "2026-10-28T14:00:17.480382+00:00",
+        "review_at": "2026-10-28T14:00:17.665938+00:00",
+        "options": [
+          {
+            "source_at": "2026-10-28T14:00:13.831929Z",
+            "received_at": "2026-10-28T14:00:14.831929Z",
+            "admission_deadline": "2026-10-28T14:00:21.661583Z"
+          },
+          {
+            "source_at": "2026-10-28T14:00:13.831929Z",
+            "received_at": "2026-10-28T14:00:14.831929Z",
+            "admission_deadline": "2026-10-28T14:00:21.661583Z"
+          }
+        ]
+      },
+      "cycle_timing": {
+        "started_at": "2026-10-28T14:00:16.203044+00:00",
+        "elapsed_seconds": 4.082693,
+        "generation": 2,
+        "kind": "CYCLE",
+        "native": [
+          {
+            "child_stages": [
+              {
+                "cpu_seconds": 2e-06,
+                "elapsed_seconds": 6e-06,
+                "stage": "IMPORTS"
+              },
+              {
+                "cpu_seconds": 0.356942,
+                "elapsed_seconds": 0.726285,
+                "stage": "REQUEST"
+              },
+              {
+                "cpu_seconds": 0.358005,
+                "elapsed_seconds": 0.727556,
+                "stage": "VENUE_OPEN"
+              },
+              {
+                "cpu_seconds": 0.360227,
+                "elapsed_seconds": 0.733454,
+                "stage": "ACCEPT"
+              },
+              {
+                "cpu_seconds": 0.364591,
+                "elapsed_seconds": 0.746464,
+                "stage": "SERIALIZE"
+              },
+              {
+                "cpu_seconds": 0.364629,
+                "elapsed_seconds": 0.746505,
+                "stage": "COMPLETE"
+              }
+            ],
+            "child_trace_status": "OBSERVED",
+            "elapsed_seconds": 0.797,
+            "parent_phase": "RESPONSE_VALIDATE"
+          }
+        ],
+        "native_omitted": 0,
+        "packet_age_seconds": 1.371115,
+        "packet_sequence": 2,
+        "packet_sha256": "2616ff7bc81742b6322c41cc1c0a03db15e7f0661bb7d1cf7134d3d9a7a2704a",
+        "slot": 5977320,
+        "spans": [
+          {
+            "elapsed_seconds": 0.433811,
+            "phase": "CYCLE_OPPORTUNITY_CLAIM",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.008113,
+            "phase": "SCAN",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.375853,
+            "phase": "STOCK_SCAN",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.001219,
+            "phase": "SCOPE_SCAN",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.009003,
+            "phase": "ENTRY_MODEL_ADMISSION",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.408746,
+            "phase": "ENTRY_MODEL_REQUEST",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.001959,
+            "model_source_key": "degen:5977320:portfolio:0",
+            "phase": "ENTRY_MODEL",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.000586,
+            "phase": "ENTRY_MIXED_SELECTION",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.01227,
+            "phase": "ENTRY_SCOPE_RECEIPT_CHECK",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.000553,
+            "phase": "ENTRY_SCOPE_SELECTION",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.004181,
+            "phase": "ENTRY_OPTION_MARKET_READ",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.025731,
+            "phase": "ENTRY_REVIEW",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.06897,
+            "local_age_seconds": 2.861059,
+            "phase": "ADMISSION",
+            "quote_age_seconds": 3.861059,
+            "receive_lag_seconds": 1.0,
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.572653,
+            "phase": "ENTRY_SETTLEMENT_AND_RESERVATION",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.000621,
+            "phase": "NATIVE_ACCEPT_SPAWN",
+            "remaining_at_start_seconds": 3.605419,
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.796917,
+            "phase": "NATIVE_ACCEPT_TRANSPORT",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 1.09272,
+            "phase": "NATIVE_ACCEPT",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 1.463491,
+            "local_age_seconds": 2.93006,
+            "phase": "DISPATCH",
+            "quote_age_seconds": 3.93006,
+            "receive_lag_seconds": 1.0,
+            "status": "COMPLETE"
+          }
+        ],
+        "spans_omitted": 0,
+        "status": "COMPLETE",
+        "trace_start_prepare_seconds": 0.004578,
+        "trace_storage": "COALESCED",
+        "version": "runtime-timing-v1"
+      },
+      "restore_to_review": {
+        "status": "OBSERVED",
+        "window_seconds": 3.834009,
+        "wall_seconds_with_digest_running": 2.900239,
+        "wholly_contained_calls": 14,
+        "owner_thread_cpu_seconds": 2.49904,
+        "background_cpu_seconds": 0.188007,
+        "owner_thread_calls": {
+          "app.mixed.portfolio_execution.reconcile": 4,
+          "app.options.runtime._tick": 2,
+          "app.options.coordinator._cycle_once": 2,
+          "app.mixed.selection.collect": 2,
+          "app.options.entry_coordination._admit_request": 2,
+          "app.options.entry_coordination._settle_and_reserve": 1
+        }
+      },
+      "resources": {
+        "scope": "worker start to diagnostic read; not isolated entry-phase CPU or I/O",
+        "elapsed_seconds": 37.76742683300108,
+        "cpu": {
+          "status": "UNAVAILABLE"
+        },
+        "io": {
+          "status": "UNAVAILABLE"
+        },
+        "start": {
+          "monotonic_seconds": 14578.137381002,
+          "observed_at": "2026-11-27T21:35:11.773531+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        },
+        "end": {
+          "monotonic_seconds": 14615.904807835,
+          "observed_at": "2026-11-27T21:35:49.540958+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        }
+      }
+    },
+    "source_to_completed_entry_cycle_seconds": 6.453808,
+    "model_reply_to_review_seconds": 0.185556,
+    "native_acceptance_measurement": "OPEN with a validated native acknowledgement and committed owner completion. Source-to-cycle-completion is a conservative upper bound for native acceptance, not an exact child commit timestamp. Reservation clocks alone are not acceptance clocks.",
+    "entry_freshness": {
+      "status": "OBSERVED",
+      "reservations": 1,
+      "measured": 1,
+      "missing_or_invalid": 0,
+      "omitted": 0,
+      "clocks": {
+        "quote_age": {
+          "samples": 1,
+          "p50_seconds": 3.861059,
+          "p95_seconds": 3.861059,
+          "p99_seconds": 3.861059,
+          "max_seconds": 3.861059
+        },
+        "receive_lag": {
+          "samples": 1,
+          "p50_seconds": 1.0,
+          "p95_seconds": 1.0,
+          "p99_seconds": 1.0,
+          "max_seconds": 1.0
+        },
+        "local_age": {
+          "samples": 1,
+          "p50_seconds": 2.861059,
+          "p95_seconds": 2.861059,
+          "p99_seconds": 2.861059,
+          "max_seconds": 2.861059
+        }
+      }
+    },
+    "receipts": [
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-loaded-1127/summary.json",
+        "sha256": "7a01256c8b7bae31ba4ed5e6fc94600379fe33d8f8818de250305551d3d35140",
+        "bytes": 645
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-loaded-1127/progress.json",
+        "sha256": "2ce54227541ab65525b0383686f061825ff914d3dfe62b461ffb7d810308d288",
+        "bytes": 51709
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-loaded-1127/entry-diagnostic.json",
+        "sha256": "7d81ea529c553ebcaf0df6e9e19c7813591e702c4504d3e77b5d1860f1994a14",
+        "bytes": 6565
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-loaded-1127/report.json",
+        "sha256": "dbe7fc0b9508b3cdaa699fef8a1c740b9d1f35011193c078d8cb3d24fde17cc0",
+        "bytes": 80265
+      }
+    ]
+  },
+  "retained_failed_quick": {
+    "summary": {
+      "version": "paper-system-check-v1",
+      "status": "FAILED",
+      "check_profile": "QUICK",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "market_acceptance": "UNVERIFIED",
+      "wall_clock_soak": "NOT_RUN",
+      "host_acceptance": "UNVERIFIED",
+      "application_files": 336,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "f8771148fc4984eb1db86caa96a6fa6fcb3b20c34a2f206fed95ef5eb714a1cc",
+      "stage": "PROTECTION",
+      "test_exit_code": 1,
+      "elapsed_seconds": 33.486
+    },
+    "cause": "Report phase allowlist rejected the new combined span, so model trace coverage was 1/2. Both native exits had completed. Fixed the report allowlist and runtime timing regression before rerunning.",
+    "receipts": [
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-quick-1127/summary.json",
+        "sha256": "58020fb28da20e1ff5c45856842c10348b900ae59532cbe54c91d2ac897434ed",
+        "bytes": 528
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-quick-1127/tests.log",
+        "sha256": "bb924c2b3b464a8697192fbd0b5179a226dbfcbf65def1c0381d35b8fc70e3ef",
+        "bytes": 1265
+      }
+    ]
+  },
+  "retained_prior_latency_fixture_failures": {
+    "candidate_initial": "47 passed, 1 failed before correcting the first old delay hook; no new entry/restore boundary check failed.",
+    "baseline_control": "The unchanged baseline independently reproduced both old fixture failures: 12 passed, 2 failed.",
+    "repair": "Inject snapshot delay at the native read before coalesced assessment, not after reconcile_fixture. A delayed reservation is correctly REJECTED for both previously assessed plays; assert no attempted native exit, both positions retained, fresh later books exit once.",
+    "gate_gap": "The final standard gate now includes paper_entry_latency and execution_restore. Their complete updated cases passed in the supplemental run on the same installed app; exact collected-case union is verified.",
+    "receipts": [
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-supplemental-initial-1127.log",
+        "sha256": "c0accfbf8529bae3431db4b452bdf73129dd10b5ef8cba9040a7e04929d4f956",
+        "bytes": 3659
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/entry-atomic-baseline-latency-tests.log",
+        "sha256": "d76f88101bf8239fefeb5de327d08cf07ed7ca235de085c74a137d206a4bb074",
+        "bytes": 1315
+      }
+    ]
+  },
+  "open_gates": [
+    "Same-server short entry qualification under actual one-CPU/1-GiB/no-swap Docker limits",
+    "Repeated active lifecycles and stable memory headroom across full duration and growing history",
+    "Real-provider CONNECT health and connected PAPER day",
+    "Exact child-commit quote age and multi-entry percentile evidence"
+  ],
+  "operator_action": "No deploy, resume, resize, halt clearing, test cancellation or restart. Inspect the existing retained test before any new isolated host qualification."
+}

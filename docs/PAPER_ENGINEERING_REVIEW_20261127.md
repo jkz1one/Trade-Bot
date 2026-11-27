@@ -96,11 +96,18 @@ compatibility path are requirements for any eventual storage change.
 
 ## Revised work order
 
-Implementation checkpoint: the deterministic original-deadline regression,
+Current application checkpoint: settlement and reservation now share a fenced
+commit when protection is complete. One redundant transaction/two digests are
+removed; local original quote age at reservation changed from 4.029 to 3.392
+seconds, and the complete entry cycle from 6.416 to 5.764 seconds. These are
+single local observations, not closure of the host incident.
+[Application proof](PAPER_ENTRY_TRANSACTION_20261127_PROOF.json).
+
+Earlier tooling checkpoint: the deterministic original-deadline regression,
 335-second host profile and consolidated original-clock/CPU/I/O/memory bundle
 are implemented in [this proof](PAPER_SHORT_HOST_GATE_20261127_PROOF.json).
-The application latency and repeated-active-lifecycle items below remain open;
-the tooling does not qualify another unchanged host trial.
+The remaining application latency and repeated-active-lifecycle items below stay
+open; local proof does not qualify deployment or a full-duration host trial.
 
 1. **One regression target:** original quote source to committed native acceptance
    under the unchanged ten-second ceiling, followed by protective exit and

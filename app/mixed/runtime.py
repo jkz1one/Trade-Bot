@@ -216,6 +216,12 @@ class MixedRuntimeInputs:
                 break
             pending = self.r._scope_tick
 
+    def protection_complete(self):
+        """Only a completed successful tick permits synchronous entry review."""
+        pending = self.r._scope_tick
+        return (pending is None or (pending.done() and not pending.cancelled()
+                and pending.exception() is None and bool(pending.result())))
+
     def delivered(self, db, asset, now):
         pending = self.r._scope_tick
         if pending is not None and (not pending.done() or pending.cancelled() or not pending.result()):

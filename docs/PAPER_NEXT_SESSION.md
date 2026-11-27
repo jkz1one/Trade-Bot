@@ -1,20 +1,23 @@
 # Daily PAPER operation
 
-## Current action: engineering review; preserve deployment
+## Current action: preserve deployment; inspect the retained test
 
-The short host gate and automatic failure bundle are now implemented and checked
-locally. This is tooling for the next latency repair, not a repaired application
-release. No operator launch is requested at this checkpoint. In particular, do
-not start a second offline worker alongside the retained test or change its
-limits. [Developer verification](PAPER_SHORT_HOST_GATE_20261127_PROOF.json).
+The new entry transaction has a measured local improvement and passes the loaded
+protection, entry/exit and installed regression checks. It combines settlement
+and reservation after completed protection without changing original deadlines
+or limits. [Proof](PAPER_ENTRY_TRANSACTION_20261127_PROOF.json).
 
-The requested clock and resource outputs have been supplied. No additional
-operator command is required for this review. The failed deadline is the original
-ten-second option quote limit; the quote was 7.615 seconds old at plan assembly.
-At about 66 minutes the retained test had no OOM/restart, with a 949-MiB cgroup
-peak under its 1-GiB cap. This is not a full resource pass or a lifecycle repair.
-Follow [the revised work order](PAPER_ENGINEERING_REVIEW_20261127.md) before a new
-host test or deployment. Existing test, owner, limits and review hold stay intact.
+It has not been run on the server and does not close the reported host deadline
+failure. The next operator qualification is the isolated 335-second `entry`
+profile, after the existing retained worker has ended and its final evidence has
+been collected. Do not launch another worker alongside it or stop it for this
+candidate. The read-only status command below is the only current operator step.
+Paste its output before a new launch is chosen.
+
+No deployment, schedule resume, resize, halt clearing or account change is part
+of this checkpoint. Keep the installed connected release and review hold.
+Repeated active lifecycle and full-duration memory qualification also remain
+open; a short host pass would not qualify a connected trading day.
 
 ### Retained November 27 test
 

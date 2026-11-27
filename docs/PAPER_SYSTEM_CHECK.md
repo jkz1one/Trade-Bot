@@ -77,8 +77,9 @@ evidence, including after its candidate worktree has been removed.
 
 This fixture still offers one ENTER then HOLD. A short pass does not establish
 repeated active lifecycles, full-session memory, provider health or a connected
-trading day. The underlying application has not been changed by this tooling
-checkpoint. [Verification](PAPER_SHORT_HOST_GATE_20261127_PROOF.json).
+trading day. The profile itself preserves application settings.
+[Tooling verification](PAPER_SHORT_HOST_GATE_20261127_PROOF.json) and
+[current application comparison](PAPER_ENTRY_TRANSACTION_20261127_PROOF.json).
 
 ## Full installed check
 

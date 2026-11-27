@@ -15,7 +15,8 @@ import time
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SUITES = ('portfolio_controls', 'portfolio_models', 'portfolio_native', 'portfolio_recovery',
+SUITES = ('portfolio_controls', 'portfolio_models', 'entry_settlement_boundary', 'paper_entry_latency',
+          'execution_restore', 'portfolio_native', 'portfolio_recovery',
           'portfolio_runtime', 'paper_soak', 'option_entry_coordination', 'execution_market_deadline',
           'connected_system', 'feed_timing', 'runtime_timing', 'timing_journal', 'option_read_capture', 'connected_runtime',
           'connected_feed_recovery', 'connected_cycle_handoff', 'connected_publisher',

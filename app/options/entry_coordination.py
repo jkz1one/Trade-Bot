@@ -14,7 +14,7 @@ from app.options.entry_reasoning import EntryOpportunity, EntryPacket, review_en
 
 
 def review_for_execution(engine, db, key, request, result, quote, underlying, now, *, exclude=None):
-    """Require the full durable receipt, settled cost and fresh admission, never a projection."""
+    """Require the full receipt and settled cost; commit them before native handoff."""
     result = judgment.validate_result(request, result)
     strategy = db.execute("SELECT policy_json FROM execution_option_strategy WHERE id=1").fetchone()
     row = db.execute(
@@ -145,6 +145,73 @@ def _admit_request(c, key, evidence, request, at):
     return timely
 
 
+async def _settle_and_reserve(c, key, selected, original, evidence, request, result, completed, mixed):
+    """Commit known usage and the native attempt together, without awaiting in the writer.
+
+    Only the portfolio option path with already completed protection uses this
+    boundary. On any failed write, reserve nothing and settle the reply alone.
+    The existing slow path handles pending protection, stocks and Scope refresh.
+    """
+    from app.mixed.portfolio_options import begin
+    from app.mixed.portfolio_execution import submit
+
+    hold = None
+    try:
+        with phase('ENTRY_SETTLEMENT_AND_RESERVATION'), c.engine.journal.write() as db:
+            c.engine.record_entry_usage(key, result.usage, result.plan, now=completed, _db=db)
+            chosen = _regular_option_choice(c, db, key, evidence, result)
+            evidence.update(chosen)
+            c._store_pending_evidence(db, key, evidence)
+            try:
+                with phase('ENTRY_OPTION_MARKET_READ'):
+                    sequence, quote, underlying = mixed.option_market(db, selected.instrument, c.now())
+                evidence['option_market_sequence'] = sequence
+                if (quote.source_at == original.source_at and quote.source == original.source
+                        and any(getattr(quote, k) != getattr(original, k)
+                                for k in ('bid', 'ask', 'bid_size', 'ask_size'))):
+                    raise ExecutionBlocked('CONFLICTING_OPTION_SOURCE_BOOK')
+            except ExecutionBlocked as exc:
+                hold = {'reason': 'OPTION_EXECUTION_MARKET_UNAVAILABLE', 'blocker': str(exc)}
+            if hold is None:
+                # Review sees this transaction's exact settled receipt. The
+                # original account/quote/plan deadlines are rechecked after the fence.
+                c._store_pending_evidence(db, key, evidence)
+                with phase('ENTRY_REVIEW'):
+                    c._bound(db)
+                    review_at = c.now()
+                    review = review_for_execution(
+                        c.engine, db, key, request, result, quote, underlying, review_at)
+                evidence['entry_review_at'] = review_at.isoformat()
+                evidence['entry_review'] = review.model_dump(mode='json')
+                if review.outcome != 'ELIGIBLE':
+                    hold = {'reason': ';'.join(review.reasons)}
+            c._store_pending_evidence(db, key, evidence)
+            if hold is None:
+                prepared = c.engine.prepare(
+                    key, review.proposal, quote, underlying, now=c.now(), origin='MODEL',
+                    entry_request=request, entry_result=result, _db=db)
+                if prepared['status'] == 'PREPARED':
+                    dispatch_started, dispatch_at = time.monotonic(), c.now()
+                    admitted = begin(c.engine, prepared['client_id'], quote, underlying, dispatch_at, _db=db)
+    except Exception:
+        # This also covers commit/restore verification failure: the reservation
+        # and attempted marker rolled back. Persist only the known reply/charge.
+        _settle_reply(c, key, evidence, result, completed, select_option=False)
+        raise
+    if hold is not None:
+        return c._finish(key, {**evidence, 'status': 'HOLD', **hold})
+    evidence['prepared'] = prepared
+    if prepared['status'] != 'PREPARED':
+        return c._finish(key, {**evidence, 'status': 'HOLD', 'reason': 'FRESH_ENTRY_ADMISSION_REJECTED'})
+    # The writer has exited successfully. Handoff cannot precede durable usage,
+    # reservation and attempt, and its transport budget includes commit time.
+    with phase('DISPATCH', quote=quote, now=dispatch_at):
+        status = (admitted if isinstance(admitted, str)
+                  else await submit(c.engine, admitted, dispatch_at, dispatch_started))
+    return c._finish(key, {**evidence, 'status': status, 'client_id': prepared['client_id'],
+                           'candidate_id': selected.candidate_id})
+
+
 async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlyings, evidence):
     """One durable slot, one bounded child, no replay after interruption or uncertainty."""
     at = c.now()
@@ -259,6 +326,15 @@ async def run_entry_cycle(c, key, candidates, scans, account, quotes, underlying
     usable = coherent and evidence["entry_timely"] and result.error is None and result.plan.action == "ENTER"
     stock = getattr(result.plan, "stock", False)
     scope = getattr(result.plan, "scope", False)
+    mixed = getattr(getattr(c.engine, '_option_runtime', None), 'mixed', None)
+    selected = (next((x for x in candidates if x.candidate_id == result.plan.candidate_id), None)
+                if usable and not stock and not scope else None)
+    if (usable and not stock and not scope and selected is not None
+            and c.engine.portfolio_policy is not None and mixed is not None
+            and mixed.protection_complete()):
+        return await _settle_and_reserve(
+            c, key, selected, quotes[selected.instrument.instrument_id], evidence,
+            request, result, completed, mixed)
     with phase("ENTRY_MODEL_SETTLEMENT"):
         _settle_reply(c, key, evidence, result, completed, select_option=(
             usable and not stock and not scope
