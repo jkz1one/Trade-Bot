@@ -1,0 +1,46 @@
+{
+  "version": "captured-option-catalog-proof-v1",
+  "archive_sha256": "f34fc5062638e143866cfe044bc40300b6dcbbb575462d6fd8e756a87cee1a98",
+  "archive_files": {
+    "contracts.json": "73d4be3b8093e0c442320f3d0ed7dd2500caa19fb49bafb1d579cfec3c8e4e40",
+    "contracts-plan.json": "df6019382f67db42544704e6e8eca9e1536780a271067ccc0e551db358f7d9dc",
+    "quotes-1.json": "2c2de176072fbf9fc2b97e21c482bcd9f6dfa773c8ded7fd8d18b0a38fbbbf21",
+    "quotes-1-plan.json": "191058803276372792b0c0beccabbaf1a4a00263d997fef803b37b9590bea757",
+    "quotes-2.json": "91c68b2e7cbd1eeb1bd91c8ef5e859129de5b8061b08634b777e64edbb8811f9",
+    "quotes-2-plan.json": "191058803276372792b0c0beccabbaf1a4a00263d997fef803b37b9590bea757",
+    "quotes-3.json": "ae1043bdf9bf8abb0dbb62bae2259b51e1bc61921eef91aa6e3f880d7df230dc",
+    "quotes-3-plan.json": "191058803276372792b0c0beccabbaf1a4a00263d997fef803b37b9590bea757"
+  },
+  "archive_plan_bindings_verified": 4,
+  "contracts_verified": 4,
+  "quote_samples_per_contract": 3,
+  "all_books_fresh_at_capture": true,
+  "all_source_clocks_advanced": true,
+  "maximum_age_seconds_at_capture": 7.189331,
+  "historical_capture_window": "2026-10-27T20:10:23.535428Z/2026-10-27T20:10:47.216726Z",
+  "status": "REVIEWED_TERMS_REQUIRED",
+  "entitlement": "UNKNOWN",
+  "trading_ready": false,
+  "wheel_sha256": "2a9da3e7e766be060571f069a8fd12ceab9b60f27a631fe35a2058e746b88f63",
+  "matching_application_files": 298,
+  "application_sha256": "dab80db24bdc9a7587d2436b3fee76ce925a8350e50c32523c856760b703a41a",
+  "installed_identity": "VERIFIED_FILES",
+  "provider_calls": false,
+  "model_calls": false,
+  "live_enabled": false,
+  "host_account_modified": false,
+  "limitations": [
+    "Supplemental native contract terms in tests are synthetic, not approved host terms.",
+    "Thirty-second diagnostic freshness is historical, not current quote eligibility or entitlement.",
+    "No automatic discovery, host enrollment, halt clearing or strategy feed completion.",
+    "Initial source-tree test run: 137 passed, 2 failed installed-identity checks before rebuilding the changed package; installed verification follows."
+  ],
+  "installed_tests": {
+    "passed": 139,
+    "failed": 0,
+    "skipped": 0,
+    "files": [
+      ""
+    ]
+  }
+}

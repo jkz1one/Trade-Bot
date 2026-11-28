@@ -1,0 +1,77 @@
+{
+  "version": "paper-progress-20261127-v1",
+  "base_commit": "d2e78bf88e0fa78a0940bb3f3881564027f70442",
+  "status": "READ_ONLY_SOAK_STATUS_VERIFIED",
+  "application_changed": false,
+  "application_manifest_sha256": "6f2b3d274a215f9f86a436f0f7f60d9806a0f3c8d458496cf45d266addbb034b",
+  "changes": [
+    "Read retained interim or final offline session report while inspecting the exact Docker worker.",
+    "Expose accepted packet, synthetic feed/heartbeat cutoff, decisions, cycle outcomes, fills, blockers, collection and component failures.",
+    "Report real receipt age independently; preserve unavailable and stale evidence without inferring connected health.",
+    "Read the file and its mtime through the same descriptor across atomic publisher replacement.",
+    "Preserve duration, lifecycle, accounting, resource, identity and worker-state acceptance requirements."
+  ],
+  "verification": {
+    "focused_passed": 91,
+    "focused_seconds": 3.27,
+    "tests": [
+      "tests/test_paper_soak_host.py",
+      "tests/test_paper_soak.py"
+    ],
+    "regression_before": "New running-progress case failed with missing session_report, proving the omission.",
+    "environment": "Installed matching application, isolated Python, warnings as errors, root-mapped network/PID namespaces with matching /proc; no Docker daemon or provider calls.",
+    "intermediate_invocation_failures": [
+      "First combined invocation omitted explicit anyio plugin; 64 host tests passed before fixture-import warning.",
+      "Next invocation omitted parent test package path; 64 host tests passed before fixture-import ModuleNotFoundError.",
+      "Corrected invocation passed all 91, followed by 91 passes after final read-observation-clock adjustment."
+    ],
+    "receipts": [
+      {
+        "path": "/workspace/scratch/b29c7148e65c/soak-status-before-1127.log",
+        "sha256": "44c39fb0098998bc64025c61b69d4302a5397f2da8b9212cd125c5e6e55b7924"
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/soak-status-after-1127.log",
+        "sha256": "f5d3b5e292fbeb07aa8c06478b43e36c942a232cf0ef0f298fb0243b9dadb701"
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/soak-status-final-1127.log",
+        "sha256": "183b17278529f7e56b91a543f520e26e1688753dc231e91859e58711b86a260e"
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/soak-status-verified-1127.log",
+        "sha256": "423af0aa31528f1e9183495a37b1a214bdafc072a8c0f7c6687eb487ef35220e"
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/soak-status-final-pass-1127.log",
+        "sha256": "f49195ce24e693d9f27b627628d43b38f4956d7aee7f75dcbe83ce6438126912"
+      },
+      {
+        "path": "/workspace/scratch/b29c7148e65c/soak-status-final-pass-1127.xml",
+        "sha256": "635a7c7c27503dd361d8f08ab748a4603d3927af202ab156a3dec66925d820a8"
+      }
+    ],
+    "source_files": [
+      {
+        "path": "/workspace/scratch/dd628cda3621/trade-bot/scripts/paper-soak-host.py",
+        "sha256": "103233daa244850ff27b8cf4fd1e7cd62134ae74f42074d8adb9eca05795cc8c"
+      },
+      {
+        "path": "/workspace/scratch/dd628cda3621/trade-bot/tests/test_paper_soak_host.py",
+        "sha256": "db011ae3e77e3c332e51af7f2e6d1ddc65b36b0d8c94ae4a3d6a43f4100163ef"
+      }
+    ]
+  },
+  "host": {
+    "requested_candidate": "d2e78bf88e0fa78a0940bb3f3881564027f70442",
+    "new_result": "NOT_SUPPLIED",
+    "last_confirmed_install": "2d538b7f32afa7b6df09e7af0d3534e9e27f71e5",
+    "hold": "SESSION_STOPPED_REVIEW_REQUIRED",
+    "direct_access": false
+  },
+  "calendar_followup": "IN_PROGRESS_NO_NEW_ACCEPTANCE_CLAIM",
+  "connected_health": "UNVERIFIED",
+  "full_host_duration": "OPEN",
+  "sustained_month_growth": "OPEN",
+  "live_enabled": false
+}

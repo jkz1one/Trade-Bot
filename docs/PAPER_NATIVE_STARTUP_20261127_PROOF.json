@@ -1,0 +1,1042 @@
+{
+  "version": "paper-native-startup-20261127-v1",
+  "parent_release": "e977465e0cb50d7469dd74cd3a148649dff05019",
+  "application_before": "91b69b65be3215bee5d6c1cc31dda8668ed8fb82",
+  "host_evidence": "PAPER_ENTRY_HOST_20261127.json",
+  "problem": "Original five-second plan left 1.228111 seconds at native spawn. Parent timed out while the child had reported IMPORTS only. Request validation and native outcome had not been observed.",
+  "change": "Move identical fixed-child protocol, base contract and cost policy definitions out of parent transport, legacy domain models and economics queries. Keep old import-path aliases. No execution algorithm, wire schema, timestamp, lease, policy, journal integrity check or resource limit changes.",
+  "moved_definitions": [
+    {
+      "name": "Contract",
+      "from": "app/execution/models.py",
+      "to": "app/execution/contracts.py",
+      "ast_unchanged": true,
+      "ast_sha256": "b3720111308a00ea217dcaa0801c1b54cdef84ef6ff5722fd5cf78da49a8ce8c"
+    },
+    {
+      "name": "CostPolicy",
+      "from": "app/execution/economics.py",
+      "to": "app/execution/cost_models.py",
+      "ast_unchanged": true,
+      "ast_sha256": "2429d159e39123c47f8c011e77e3a31c858dc3c84842bf597b8a68fd90e0c4b8"
+    },
+    {
+      "name": "FixtureFault",
+      "from": "app/execution/durable_fixture.py",
+      "to": "app/execution/process_protocol.py",
+      "ast_unchanged": true,
+      "ast_sha256": "c7818b8f03f06255c0445dc7d9841d6b2f75b1076df8275e8bc29ead1dbc922a"
+    },
+    {
+      "name": "MAX_REQUEST_BYTES",
+      "from": "app/execution/process.py",
+      "to": "app/execution/process_protocol.py",
+      "ast_unchanged": true,
+      "ast_sha256": "5a3c9ba5e307dc9e768aad30a594a7328640ea1f21a8ab0b6e90b1e8ebd8b4a3"
+    },
+    {
+      "name": "MAX_RESPONSE_BYTES",
+      "from": "app/execution/process.py",
+      "to": "app/execution/process_protocol.py",
+      "ast_unchanged": true,
+      "ast_sha256": "65e5d526e753e7666fdee148ed6d3859d81b1a7ffebc1bb0b7ceb7b6de085e57"
+    },
+    {
+      "name": "_stall",
+      "from": "app/execution/worker.py",
+      "to": "app/execution/process_protocol.py",
+      "ast_unchanged": true,
+      "ast_sha256": "12d629d3b0c20837c85320abcc8765903e896e32186d8b3a60fa958a1b3c7400"
+    },
+    {
+      "name": "OptionRequest",
+      "from": "app/options/process.py",
+      "to": "app/options/process_models.py",
+      "ast_unchanged": true,
+      "ast_sha256": "372ad220abbab7f58daa2649d3d66fe17a55bb5d4e73b6a956f1e2e293eddc25"
+    },
+    {
+      "name": "OptionProcessResult",
+      "from": "app/options/process.py",
+      "to": "app/options/process_models.py",
+      "ast_unchanged": true,
+      "ast_sha256": "16d8773036ee2f5da96a9b1c1069e5ab54113b64c5effdd51381a791c1c281a3"
+    }
+  ],
+  "existing_module_ast_checks": [
+    {
+      "module": "app/execution/durable_fixture.py",
+      "only_imports_and_verified_definition_moves": true
+    },
+    {
+      "module": "app/execution/economics.py",
+      "only_imports_and_verified_definition_moves": true
+    },
+    {
+      "module": "app/execution/models.py",
+      "only_imports_and_verified_definition_moves": true
+    },
+    {
+      "module": "app/execution/process.py",
+      "only_imports_and_verified_definition_moves": true
+    },
+    {
+      "module": "app/execution/worker.py",
+      "only_imports_and_verified_definition_moves": true
+    },
+    {
+      "module": "app/options/lifecycle.py",
+      "only_imports_and_verified_definition_moves": true
+    },
+    {
+      "module": "app/options/models.py",
+      "only_imports_and_verified_definition_moves": true
+    },
+    {
+      "module": "app/options/process.py",
+      "only_imports_and_verified_definition_moves": true
+    },
+    {
+      "module": "app/options/worker.py",
+      "only_imports_and_verified_definition_moves": true
+    }
+  ],
+  "verification": {
+    "test_runs": [
+      {
+        "name": "focused",
+        "passed": 205,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "supplemental",
+        "passed": 247,
+        "failed": 1,
+        "skipped": 0
+      },
+      {
+        "name": "loaded_protection",
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "corrected_support",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      }
+    ],
+    "distinct_tests_passed": 450,
+    "note": "Five child-import/contract cases overlap the focused and final supplemental runs. Import ordering/comments were cleaned after the focused run; the supplemental and integrated run use final installed bytes. The initial supplemental run had one missing copied host-report script, not an application failure. A first correction used the wrong working directory and reproduced the same missing file. The final targeted case passed after copying the unchanged report script and its support files using absolute source paths. No application edits or deadline changes followed the measured run.",
+    "wire_schema_sha256": {
+      "Contract": "a61879e856f9fc86c37bca6eed9eeebdee363ae390e1c097b73aa4ab77aa7fb2",
+      "CostPolicy": "302ccb861c1f6495cc7de1730ac7bf5299134513c5c3b604ef85502e49aac67a",
+      "OptionProcessResult": "86b6bfdf7eea64d6511260693dc4d69091a54cb7787e1b23c9ddc89ac4a06a44",
+      "OptionRequest": "8f2ec715d7da3ae94dd6ac76ee940919705964cddbca5f575bfc2c4465feb9e0"
+    },
+    "isolated_python": true,
+    "network": "ISOLATED",
+    "cpu_affinity": [
+      0
+    ],
+    "system_check": {
+      "version": "paper-system-check-v1",
+      "status": "PASSED",
+      "check_profile": "QUICK",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "market_acceptance": "UNVERIFIED",
+      "wall_clock_soak": "NOT_RUN",
+      "host_acceptance": "UNVERIFIED",
+      "application_files": 340,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "49899c75a694709ce463288c4c39d40ee42075625199aea1a82de0824362034d",
+      "stage": "SHORT_LIFECYCLE",
+      "test_exit_code": 0,
+      "lifecycle_exit_code": 0,
+      "elapsed_seconds": 128.803
+    },
+    "logs": {
+      "native-startup-focused.log": "745b35581f9215f956ae9d577e304c10c5ea370d1658d6ff46e4ae703cd10c57",
+      "native-startup-focused.xml": "924bc0c24dff154f29d0aeca153de35e1529e97200cfd96b0e86f613ae48996f",
+      "native-startup-supplemental.log": "3ef7e232ce98872e042335dcb8e6011201f3b9a33153258b745bb4ef595ae455",
+      "native-startup-supplemental.xml": "70d480fd145e0ee8a5ab060d6f708daa17d1f4b3549ad1593b71c6341df51243",
+      "native-startup-corrected-support.log": "c6e4d8eff1761ce67ee7156cf640f693bfd2d751d217974e990df2c6d9204560",
+      "native-startup-corrected-support-final.log": "13bca62673148710b531a24ec87c2103ff741d3bd74fed53ae70dac529468609",
+      "native-startup-corrected-support-final.xml": "1bdaca86871ddda26a3671f974900622eb8a4e0f593a62e757ef18cbefa9111f",
+      "native-startup-quick/tests.xml": "ef2dc1306371732890a06234a394bf93a7d09918cf48c026db4c63b715b5abf7",
+      "native-startup-quick/lifecycle/summary.json": "b848b6c8b6468c274d54948b51e7428f42a41d816ca968edf11446295dc8aab8",
+      "native-startup-comparison/result.json": "58af4fbe1fd679fddcb11330d2d6dc745a2be82885edba97b3ea70e32adac465",
+      "compare-native-startup.py": "3997c48bcdc4312c6082e7cc1a98863cb92ff1026d56487fb6e910f7d23a0be8"
+    },
+    "lint": "Changed modules and test have no new findings; pre-existing BLE001 cleanup catch in app/options/process.py is unchanged."
+  },
+  "paired_startup_measurement": {
+    "scope": "Fresh installed fixed-child option/stock acceptance, alternating order, single pinned CPU and no network; not a host capacity or full-owner qualification",
+    "affinity": [
+      0
+    ],
+    "cgroup_limit_verified": false,
+    "provider_calls": false,
+    "live_enabled": false,
+    "summary": {
+      "before": {
+        "samples": 16,
+        "acknowledged": 16,
+        "wall_seconds": {
+          "median": 0.26461296399975254,
+          "max": 0.3684681589984393,
+          "min": 0.23760796699934872
+        },
+        "import_wall_seconds": {
+          "median": 0.2328915,
+          "max": 0.317438,
+          "min": 0.207185
+        },
+        "import_cpu_seconds": {
+          "median": 0.232842,
+          "max": 0.309649,
+          "min": 0.207158
+        }
+      },
+      "after": {
+        "samples": 16,
+        "acknowledged": 16,
+        "wall_seconds": {
+          "median": 0.2263455320007779,
+          "max": 0.2437314740018337,
+          "min": 0.2100518209990696
+        },
+        "import_wall_seconds": {
+          "median": 0.194652,
+          "max": 0.212875,
+          "min": 0.179646
+        },
+        "import_cpu_seconds": {
+          "median": 0.19458999999999999,
+          "max": 0.212787,
+          "min": 0.17956
+        }
+      }
+    },
+    "trials": [
+      {
+        "operation": "accept",
+        "trial": 0,
+        "build": "before",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.3684681589984393,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.317438,
+        "import_cpu_seconds": 0.309649,
+        "stages": {
+          "IMPORTS": 6e-06,
+          "REQUEST": 0.317444,
+          "VENUE_OPEN": 0.319428,
+          "ACCEPT": 0.322702,
+          "SERIALIZE": 0.328782,
+          "COMPLETE": 0.328848
+        }
+      },
+      {
+        "operation": "accept",
+        "trial": 0,
+        "build": "after",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.2100518209990696,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.179646,
+        "import_cpu_seconds": 0.17956,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.179651,
+          "VENUE_OPEN": 0.180429,
+          "ACCEPT": 0.1819,
+          "SERIALIZE": 0.186112,
+          "COMPLETE": 0.186166
+        }
+      },
+      {
+        "operation": "accept",
+        "trial": 1,
+        "build": "after",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.21724150600130088,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.187944,
+        "import_cpu_seconds": 0.187822,
+        "stages": {
+          "IMPORTS": 4e-06,
+          "REQUEST": 0.187948,
+          "VENUE_OPEN": 0.188764,
+          "ACCEPT": 0.190221,
+          "SERIALIZE": 0.194532,
+          "COMPLETE": 0.194592
+        }
+      },
+      {
+        "operation": "accept",
+        "trial": 1,
+        "build": "before",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.23981739100054256,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.209749,
+        "import_cpu_seconds": 0.209697,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.209754,
+          "VENUE_OPEN": 0.210535,
+          "ACCEPT": 0.211964,
+          "SERIALIZE": 0.21676,
+          "COMPLETE": 0.216815
+        }
+      },
+      {
+        "operation": "accept",
+        "trial": 2,
+        "build": "before",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.2616813410022587,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.22706099999999999,
+        "import_cpu_seconds": 0.223524,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.227066,
+          "VENUE_OPEN": 0.22981,
+          "ACCEPT": 0.23169,
+          "SERIALIZE": 0.237303,
+          "COMPLETE": 0.237445
+        }
+      },
+      {
+        "operation": "accept",
+        "trial": 2,
+        "build": "after",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.2225238340033684,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.192404,
+        "import_cpu_seconds": 0.192278,
+        "stages": {
+          "IMPORTS": 6e-06,
+          "REQUEST": 0.19241,
+          "VENUE_OPEN": 0.193191,
+          "ACCEPT": 0.194625,
+          "SERIALIZE": 0.198801,
+          "COMPLETE": 0.198857
+        }
+      },
+      {
+        "operation": "accept",
+        "trial": 3,
+        "build": "after",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.22270509699956165,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.193497,
+        "import_cpu_seconds": 0.193415,
+        "stages": {
+          "IMPORTS": 6e-06,
+          "REQUEST": 0.193503,
+          "VENUE_OPEN": 0.194309,
+          "ACCEPT": 0.195838,
+          "SERIALIZE": 0.199806,
+          "COMPLETE": 0.199866
+        }
+      },
+      {
+        "operation": "accept",
+        "trial": 3,
+        "build": "before",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.2656991830008337,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.234399,
+        "import_cpu_seconds": 0.23433,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.234404,
+          "VENUE_OPEN": 0.235199,
+          "ACCEPT": 0.237062,
+          "SERIALIZE": 0.241185,
+          "COMPLETE": 0.241242
+        }
+      },
+      {
+        "operation": "accept",
+        "trial": 4,
+        "build": "before",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.2647221279985388,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.232993,
+        "import_cpu_seconds": 0.232931,
+        "stages": {
+          "IMPORTS": 6e-06,
+          "REQUEST": 0.232999,
+          "VENUE_OPEN": 0.23387,
+          "ACCEPT": 0.235627,
+          "SERIALIZE": 0.239827,
+          "COMPLETE": 0.239882
+        }
+      },
+      {
+        "operation": "accept",
+        "trial": 4,
+        "build": "after",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.24102604900326696,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.208529,
+        "import_cpu_seconds": 0.208472,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.208534,
+          "VENUE_OPEN": 0.209352,
+          "ACCEPT": 0.211139,
+          "SERIALIZE": 0.215461,
+          "COMPLETE": 0.21552
+        }
+      },
+      {
+        "operation": "accept",
+        "trial": 5,
+        "build": "after",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.23563322400150355,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.199135,
+        "import_cpu_seconds": 0.199077,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.19914,
+          "VENUE_OPEN": 0.199953,
+          "ACCEPT": 0.201604,
+          "SERIALIZE": 0.205647,
+          "COMPLETE": 0.205705
+        }
+      },
+      {
+        "operation": "accept",
+        "trial": 5,
+        "build": "before",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.2703047879986116,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.237589,
+        "import_cpu_seconds": 0.237456,
+        "stages": {
+          "IMPORTS": 4e-06,
+          "REQUEST": 0.237593,
+          "VENUE_OPEN": 0.238396,
+          "ACCEPT": 0.239908,
+          "SERIALIZE": 0.244096,
+          "COMPLETE": 0.244154
+        }
+      },
+      {
+        "operation": "accept",
+        "trial": 6,
+        "build": "before",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.2873617609984649,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.2513,
+        "import_cpu_seconds": 0.247805,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.251305,
+          "VENUE_OPEN": 0.254417,
+          "ACCEPT": 0.256354,
+          "SERIALIZE": 0.261187,
+          "COMPLETE": 0.261252
+        }
+      },
+      {
+        "operation": "accept",
+        "trial": 6,
+        "build": "after",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.22490186700088088,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.192738,
+        "import_cpu_seconds": 0.192684,
+        "stages": {
+          "IMPORTS": 4e-06,
+          "REQUEST": 0.192742,
+          "VENUE_OPEN": 0.193536,
+          "ACCEPT": 0.19504,
+          "SERIALIZE": 0.198956,
+          "COMPLETE": 0.199075
+        }
+      },
+      {
+        "operation": "accept",
+        "trial": 7,
+        "build": "after",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.23606847900009598,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.204045,
+        "import_cpu_seconds": 0.203992,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.20405,
+          "VENUE_OPEN": 0.204866,
+          "ACCEPT": 0.206433,
+          "SERIALIZE": 0.210402,
+          "COMPLETE": 0.210457
+        }
+      },
+      {
+        "operation": "accept",
+        "trial": 7,
+        "build": "before",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.2645038000009663,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.23279,
+        "import_cpu_seconds": 0.232753,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.232795,
+          "VENUE_OPEN": 0.233601,
+          "ACCEPT": 0.235053,
+          "SERIALIZE": 0.239352,
+          "COMPLETE": 0.239409
+        }
+      },
+      {
+        "operation": "stock_accept",
+        "trial": 0,
+        "build": "before",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.26123042100152816,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.229985,
+        "import_cpu_seconds": 0.229943,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.22999,
+          "VENUE_OPEN": 0.230613,
+          "ACCEPT": 0.23229,
+          "SERIALIZE": 0.23627,
+          "COMPLETE": 0.23633
+        }
+      },
+      {
+        "operation": "stock_accept",
+        "trial": 0,
+        "build": "after",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.2277891970006749,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.19508999999999999,
+        "import_cpu_seconds": 0.195037,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.195095,
+          "VENUE_OPEN": 0.195708,
+          "ACCEPT": 0.197303,
+          "SERIALIZE": 0.20116,
+          "COMPLETE": 0.201218
+        }
+      },
+      {
+        "operation": "stock_accept",
+        "trial": 1,
+        "build": "after",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.23077448199910577,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.198746,
+        "import_cpu_seconds": 0.198694,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.198751,
+          "VENUE_OPEN": 0.199345,
+          "ACCEPT": 0.200814,
+          "SERIALIZE": 0.205352,
+          "COMPLETE": 0.205465
+        }
+      },
+      {
+        "operation": "stock_accept",
+        "trial": 1,
+        "build": "before",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.2735417519979819,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.24313099999999999,
+        "import_cpu_seconds": 0.243027,
+        "stages": {
+          "IMPORTS": 4e-06,
+          "REQUEST": 0.243135,
+          "VENUE_OPEN": 0.243762,
+          "ACCEPT": 0.245615,
+          "SERIALIZE": 0.249955,
+          "COMPLETE": 0.250015
+        }
+      },
+      {
+        "operation": "stock_accept",
+        "trial": 2,
+        "build": "before",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.29362696599855553,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.25623,
+        "import_cpu_seconds": 0.25277499999999997,
+        "stages": {
+          "IMPORTS": 4e-06,
+          "REQUEST": 0.256234,
+          "VENUE_OPEN": 0.259492,
+          "ACCEPT": 0.261981,
+          "SERIALIZE": 0.266716,
+          "COMPLETE": 0.266775
+        }
+      },
+      {
+        "operation": "stock_accept",
+        "trial": 2,
+        "build": "after",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.23604485300165834,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.203173,
+        "import_cpu_seconds": 0.201927,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.203178,
+          "VENUE_OPEN": 0.20382,
+          "ACCEPT": 0.205361,
+          "SERIALIZE": 0.209828,
+          "COMPLETE": 0.209887
+        }
+      },
+      {
+        "operation": "stock_accept",
+        "trial": 3,
+        "build": "after",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.2437314740018337,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.212875,
+        "import_cpu_seconds": 0.212787,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.21288,
+          "VENUE_OPEN": 0.21348,
+          "ACCEPT": 0.214991,
+          "SERIALIZE": 0.218815,
+          "COMPLETE": 0.218872
+        }
+      },
+      {
+        "operation": "stock_accept",
+        "trial": 3,
+        "build": "before",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.26283218800017494,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.23089099999999999,
+        "import_cpu_seconds": 0.227374,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.230896,
+          "VENUE_OPEN": 0.231607,
+          "ACCEPT": 0.233138,
+          "SERIALIZE": 0.238072,
+          "COMPLETE": 0.238147
+        }
+      },
+      {
+        "operation": "stock_accept",
+        "trial": 4,
+        "build": "before",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.25529798599745845,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.221773,
+        "import_cpu_seconds": 0.221721,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.221778,
+          "VENUE_OPEN": 0.222393,
+          "ACCEPT": 0.223925,
+          "SERIALIZE": 0.227833,
+          "COMPLETE": 0.227892
+        }
+      },
+      {
+        "operation": "stock_accept",
+        "trial": 4,
+        "build": "after",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.23935316499773762,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.20854799999999998,
+        "import_cpu_seconds": 0.208487,
+        "stages": {
+          "IMPORTS": 6e-06,
+          "REQUEST": 0.208554,
+          "VENUE_OPEN": 0.209212,
+          "ACCEPT": 0.210746,
+          "SERIALIZE": 0.214591,
+          "COMPLETE": 0.214657
+        }
+      },
+      {
+        "operation": "stock_accept",
+        "trial": 5,
+        "build": "after",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.22366169300221372,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.194214,
+        "import_cpu_seconds": 0.194143,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.194219,
+          "VENUE_OPEN": 0.194811,
+          "ACCEPT": 0.196242,
+          "SERIALIZE": 0.199995,
+          "COMPLETE": 0.200053
+        }
+      },
+      {
+        "operation": "stock_accept",
+        "trial": 5,
+        "build": "before",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.23760796699934872,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.207185,
+        "import_cpu_seconds": 0.207158,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.20719,
+          "VENUE_OPEN": 0.207782,
+          "ACCEPT": 0.20935,
+          "SERIALIZE": 0.213405,
+          "COMPLETE": 0.213463
+        }
+      },
+      {
+        "operation": "stock_accept",
+        "trial": 6,
+        "build": "before",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.3237778160000744,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.283569,
+        "import_cpu_seconds": 0.274397,
+        "stages": {
+          "IMPORTS": 6e-06,
+          "REQUEST": 0.283575,
+          "VENUE_OPEN": 0.288491,
+          "ACCEPT": 0.292664,
+          "SERIALIZE": 0.2975,
+          "COMPLETE": 0.297553
+        }
+      },
+      {
+        "operation": "stock_accept",
+        "trial": 6,
+        "build": "after",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.2176959780008474,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.184272,
+        "import_cpu_seconds": 0.184224,
+        "stages": {
+          "IMPORTS": 5e-06,
+          "REQUEST": 0.184277,
+          "VENUE_OPEN": 0.184986,
+          "ACCEPT": 0.18646,
+          "SERIALIZE": 0.190852,
+          "COMPLETE": 0.190905
+        }
+      },
+      {
+        "operation": "stock_accept",
+        "trial": 7,
+        "build": "after",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.22304009000072256,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.191826,
+        "import_cpu_seconds": 0.191767,
+        "stages": {
+          "IMPORTS": 6e-06,
+          "REQUEST": 0.191832,
+          "VENUE_OPEN": 0.192409,
+          "ACCEPT": 0.194011,
+          "SERIALIZE": 0.198556,
+          "COMPLETE": 0.198658
+        }
+      },
+      {
+        "operation": "stock_accept",
+        "trial": 7,
+        "build": "before",
+        "deadline_seconds": 1.228111,
+        "wall_seconds": 0.25292262099901563,
+        "exit_code": 0,
+        "timed_out": false,
+        "acknowledged": true,
+        "submit_count": 1,
+        "import_wall_seconds": 0.222389,
+        "import_cpu_seconds": 0.22235,
+        "stages": {
+          "IMPORTS": 4e-06,
+          "REQUEST": 0.222393,
+          "VENUE_OPEN": 0.223125,
+          "ACCEPT": 0.224856,
+          "SERIALIZE": 0.229147,
+          "COMPLETE": 0.22921
+        }
+      }
+    ],
+    "median_wall_reduction_percent": 14.461661825083684,
+    "limits": "Both builds passed all local trials. Warm filesystem cache, fresh interpreters, separate synthetic venues, 1.228111-second monotonic deadline. Not a reproduction of server failure, host capacity qualification, or full owner-path latency comparison."
+  },
+  "loaded_lifecycle": {
+    "status": "PASSED",
+    "elapsed_seconds": 91.05250800700014,
+    "native_snapshot_calls": 50,
+    "native_snapshot_failures": 0,
+    "native_snapshot_max_seconds": 0.11716431499735336,
+    "decision_coverage": {
+      "expected": 1,
+      "evaluated": 1,
+      "coverage_percent": 100.0,
+      "unmeasured_slots": [],
+      "target_met": true
+    },
+    "execution": {
+      "status": "RECORDED",
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "carry_in_exits": 0
+    },
+    "final_accounting": "VERIFIED_FLAT",
+    "peak_tree_rss_bytes": 429838336,
+    "source_database_bytes": 125980672
+  },
+  "loaded_entry": {
+    "decision_status": "OPEN",
+    "clocks": {
+      "as_of": "2026-10-28T14:00:16.442015Z",
+      "deadline": "2026-10-28T14:00:21.442015Z",
+      "account_captured_at": "2026-10-28T14:00:15.572113Z",
+      "account_max_age_seconds": 20,
+      "quote_max_age_seconds": 10,
+      "model_completed_at": "2026-10-28T14:00:17.218767+00:00",
+      "review_at": "2026-10-28T14:00:17.382747+00:00",
+      "options": [
+        {
+          "source_at": "2026-10-28T14:00:13.784366Z",
+          "received_at": "2026-10-28T14:00:14.784366Z",
+          "admission_deadline": "2026-10-28T14:00:21.442015Z"
+        },
+        {
+          "source_at": "2026-10-28T14:00:13.784366Z",
+          "received_at": "2026-10-28T14:00:14.784366Z",
+          "admission_deadline": "2026-10-28T14:00:21.442015Z"
+        }
+      ]
+    },
+    "acceptance_spans": [
+      {
+        "elapsed_seconds": 0.524275,
+        "phase": "ENTRY_SETTLEMENT_AND_RESERVATION",
+        "status": "COMPLETE"
+      },
+      {
+        "elapsed_seconds": 0.000681,
+        "phase": "NATIVE_ACCEPT_SPAWN",
+        "remaining_at_start_seconds": 3.695758,
+        "status": "COMPLETE"
+      },
+      {
+        "elapsed_seconds": 0.47171,
+        "phase": "NATIVE_ACCEPT_TRANSPORT",
+        "status": "COMPLETE"
+      },
+      {
+        "elapsed_seconds": 0.830741,
+        "phase": "NATIVE_ACCEPT",
+        "status": "COMPLETE"
+      },
+      {
+        "elapsed_seconds": 1.216084,
+        "local_age_seconds": 2.686646,
+        "phase": "DISPATCH",
+        "quote_age_seconds": 3.686646,
+        "receive_lag_seconds": 1.0,
+        "status": "COMPLETE"
+      }
+    ],
+    "native": [
+      {
+        "child_stages": [
+          {
+            "cpu_seconds": 2e-06,
+            "elapsed_seconds": 5e-06,
+            "stage": "IMPORTS"
+          },
+          {
+            "cpu_seconds": 0.20262,
+            "elapsed_seconds": 0.408968,
+            "stage": "REQUEST"
+          },
+          {
+            "cpu_seconds": 0.203516,
+            "elapsed_seconds": 0.413163,
+            "stage": "VENUE_OPEN"
+          },
+          {
+            "cpu_seconds": 0.205179,
+            "elapsed_seconds": 0.414827,
+            "stage": "ACCEPT"
+          },
+          {
+            "cpu_seconds": 0.207772,
+            "elapsed_seconds": 0.42357,
+            "stage": "SERIALIZE"
+          },
+          {
+            "cpu_seconds": 0.207812,
+            "elapsed_seconds": 0.423625,
+            "stage": "COMPLETE"
+          }
+        ],
+        "child_trace_status": "OBSERVED",
+        "elapsed_seconds": 0.472,
+        "parent_phase": "RESPONSE_VALIDATE"
+      }
+    ]
+  },
+  "qualification": {
+    "host_entry": "UNVERIFIED",
+    "host_duration": "UNVERIFIED",
+    "connected_health": "UNVERIFIED",
+    "cgroup_memory_limit_verified_locally": false,
+    "local_duration_seconds": 90
+  },
+  "next": "One isolated 335-second host entry gate with the new candidate and unchanged one-CPU/one-GiB limits. Review the terminal receipt before any duration run or connected deployment.",
+  "preserved": [
+    "installed connected release 2d538b7",
+    "account and all journals",
+    "review hold",
+    "timer",
+    "limits and deadlines",
+    "main",
+    "draft PR #1 metadata",
+    "old offline workers and evidence"
+  ],
+  "provider_calls": false,
+  "model_service_calls": false,
+  "live_enabled": false
+}

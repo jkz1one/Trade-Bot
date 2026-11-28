@@ -1,0 +1,325 @@
+{
+  "version": "paper-auth-refresh-offline-v1",
+  "base_commit": "1922b0e3074d0014fc54b8a11dd48dec1f16613c",
+  "base_tree": "c4b81f58c40814179c5180d573c739224fc34852",
+  "application_files": 317,
+  "source_wheel_installed_bytes_match": true,
+  "runtime_pinned_dependencies_verified": 60,
+  "wheel_sha256": "97cfcad49f36e97d0eab3714d12d5523ba8b490b78258d7874ae61f36114508b",
+  "mcp_version": "2.3.0",
+  "changed_tests_and_host_scripts_copies_match": true,
+  "installed_testing": "Python 3.12, -I, warnings as errors, explicit anyio plugin; copied tests/scripts outside checkout with no app directory; native children use installed wheel.",
+  "verification_runs": [
+    {
+      "report": "installed.xml",
+      "passed": 361,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "report": "host-final.xml",
+      "passed": 50,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "report": "login-final.xml",
+      "passed": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "unique_passed_cases": 363,
+  "unique_failed_cases": 0,
+  "suites": {
+    "tests.test_capability_inventory": 9,
+    "tests.test_connected_feed_recovery": 21,
+    "tests.test_connected_runtime": 19,
+    "tests.test_execution_market_reads": 63,
+    "tests.test_option_read_capture": 58,
+    "tests.test_option_read_diagnostics": 14,
+    "tests.test_paper_session_report": 33,
+    "tests.test_paper_session_start": 25,
+    "tests.test_portfolio_feed": 7,
+    "tests.test_preopen_inputs": 16,
+    "tests.test_preopen_replay": 4,
+    "tests.test_read_auth_host": 12,
+    "tests.test_robinhood_oauth_refresh": 17,
+    "tests.test_scope_feed": 13,
+    "tests.test_session_host": 40,
+    "tests.test_shadow_service": 12
+  },
+  "source_sha256": {
+    "app/robinhood/client.py": "95dc6871d00a410fbdf09d9dffb02f287f8d8b3c93dc5d7928220b444b94cb66",
+    "app/robinhood/oauth.py": "609f05eadc88fc4a14a1204ab9ab2a8f877e8db39b9fc6003725a689d0b2076e",
+    "scripts/connected-session-host.py": "375e7beac280a01a2c88a98b669b55fafdbbc25120deaf5a5072f3a37a3babbe",
+    "scripts/paper-session-report.py": "2dc2377d4ce79bef7d926f45227b8db876d17744700ceb0376cbb9136d7d4562",
+    "tests/test_robinhood_oauth_refresh.py": "e463ce86ee71b66229ff8f1624006002de17fdd66c69161fcbf54a5fea2272b8",
+    "tests/test_read_auth_host.py": "fe4cfa447e1c9f32f2f8b595699f128d53208388e7d3c1acdc73d257f6c967ec",
+    "tests/test_paper_session_report.py": "64eab45c28760898f928bb7e534b4d278ceeb6ea7c9e6be81fdb98bce6c6cf5a"
+  },
+  "host_evidence": {
+    "artifact_sha256": "004198878feed9cd4a562994fbd8737fd85d188051cb5ead45581a6c1fc76dd3",
+    "artifact_bytes": 43691,
+    "run_id": "paper-1103-174343-7ae3b7",
+    "report_checkout": "1922b0e3074d0014fc54b8a11dd48dec1f16613c",
+    "application_image_release": "0a4e4e4",
+    "authorization_required_captures": [
+      {
+        "sequence": 587,
+        "evidence_available": true,
+        "status": [
+          "FAILED"
+        ],
+        "schemas_present": false,
+        "stage": "CONNECT",
+        "causes": [
+          {
+            "error_class": "ExceptionGroup"
+          },
+          {
+            "error_class": "ReadAuthorizationRequired"
+          },
+          {
+            "error_class": "CancelledError"
+          },
+          {
+            "error_class": "OTHER_ERROR"
+          }
+        ],
+        "truncated": false
+      },
+      {
+        "sequence": 588,
+        "evidence_available": true,
+        "status": [
+          "FAILED"
+        ],
+        "schemas_present": false,
+        "stage": "CONNECT",
+        "causes": [
+          {
+            "error_class": "ExceptionGroup"
+          },
+          {
+            "error_class": "ReadAuthorizationRequired"
+          },
+          {
+            "error_class": "CancelledError"
+          },
+          {
+            "error_class": "OTHER_ERROR"
+          }
+        ],
+        "truncated": false
+      },
+      {
+        "sequence": 589,
+        "evidence_available": true,
+        "status": [
+          "FAILED"
+        ],
+        "schemas_present": false,
+        "stage": "CONNECT",
+        "causes": [
+          {
+            "error_class": "ExceptionGroup"
+          },
+          {
+            "error_class": "ReadAuthorizationRequired"
+          },
+          {
+            "error_class": "CancelledError"
+          },
+          {
+            "error_class": "OTHER_ERROR"
+          }
+        ],
+        "truncated": false
+      },
+      {
+        "sequence": 590,
+        "evidence_available": true,
+        "status": [
+          "FAILED"
+        ],
+        "schemas_present": false,
+        "stage": "CONNECT",
+        "causes": [
+          {
+            "error_class": "ExceptionGroup"
+          },
+          {
+            "error_class": "ReadAuthorizationRequired"
+          },
+          {
+            "error_class": "CancelledError"
+          },
+          {
+            "error_class": "OTHER_ERROR"
+          }
+        ],
+        "truncated": false
+      },
+      {
+        "sequence": 591,
+        "evidence_available": true,
+        "status": [
+          "FAILED"
+        ],
+        "schemas_present": false,
+        "stage": "CONNECT",
+        "causes": [
+          {
+            "error_class": "ExceptionGroup"
+          },
+          {
+            "error_class": "ReadAuthorizationRequired"
+          },
+          {
+            "error_class": "CancelledError"
+          },
+          {
+            "error_class": "OTHER_ERROR"
+          }
+        ],
+        "truncated": false
+      },
+      {
+        "sequence": 592,
+        "evidence_available": true,
+        "status": [
+          "FAILED"
+        ],
+        "schemas_present": false,
+        "stage": "CONNECT",
+        "causes": [
+          {
+            "error_class": "ExceptionGroup"
+          },
+          {
+            "error_class": "ReadAuthorizationRequired"
+          },
+          {
+            "error_class": "CancelledError"
+          },
+          {
+            "error_class": "OTHER_ERROR"
+          }
+        ],
+        "truncated": false
+      },
+      {
+        "sequence": 593,
+        "evidence_available": true,
+        "status": [
+          "FAILED"
+        ],
+        "schemas_present": false,
+        "stage": "CONNECT",
+        "causes": [
+          {
+            "error_class": "ExceptionGroup"
+          },
+          {
+            "error_class": "ReadAuthorizationRequired"
+          },
+          {
+            "error_class": "CancelledError"
+          },
+          {
+            "error_class": "OTHER_ERROR"
+          }
+        ],
+        "truncated": false
+      },
+      {
+        "sequence": 594,
+        "evidence_available": true,
+        "status": [
+          "FAILED"
+        ],
+        "schemas_present": false,
+        "stage": "CONNECT",
+        "causes": [
+          {
+            "error_class": "ExceptionGroup"
+          },
+          {
+            "error_class": "ReadAuthorizationRequired"
+          },
+          {
+            "error_class": "CancelledError"
+          },
+          {
+            "error_class": "OTHER_ERROR"
+          }
+        ],
+        "truncated": false
+      },
+      {
+        "sequence": 595,
+        "evidence_available": true,
+        "status": [
+          "FAILED"
+        ],
+        "schemas_present": false,
+        "stage": "CONNECT",
+        "causes": [
+          {
+            "error_class": "ExceptionGroup"
+          },
+          {
+            "error_class": "ReadAuthorizationRequired"
+          },
+          {
+            "error_class": "CancelledError"
+          },
+          {
+            "error_class": "OTHER_ERROR"
+          }
+        ],
+        "truncated": false
+      },
+      {
+        "sequence": 596,
+        "evidence_available": true,
+        "status": [
+          "FAILED"
+        ],
+        "schemas_present": false,
+        "stage": "CONNECT",
+        "causes": [
+          {
+            "error_class": "ExceptionGroup"
+          },
+          {
+            "error_class": "ReadAuthorizationRequired"
+          },
+          {
+            "error_class": "CancelledError"
+          },
+          {
+            "error_class": "OTHER_ERROR"
+          }
+        ],
+        "truncated": false
+      }
+    ],
+    "proves": "Headless CONNECT requested interactive authorization before schemas/market reads.",
+    "does_not_prove": "Expiry, revocation, reason for rejection, or current refresh-grant usability."
+  },
+  "acceptance_limits": [
+    "No actual provider/model calls or broker orders; host OAuth grant recovery remains unverified.",
+    "Reproduced pinned SDK 2.3.0 restart 401 login without refresh; adapter tries the existing grant once only after native issuer/resource validation.",
+    "Native rotation/omitted refresh token/scope persistence, later in-process expiry, rejected/missing grants, invalid/changed issuer, 403 scope step-up, transport failure/cancellation and explicit PKCE fallback tested.",
+    "Host schema check uses no owner/account/model mounts and refuses active connected sessions; explicit login backs up credentials under the native lease, protects stderr and keeps timeout/interrupt cleanup.",
+    "Account, enrollment, spending limits, halts, freshness and history gates remain unchanged.",
+    "Connected simulated fill/full lifecycle, Scope original inputs/exact bindings/continuous timing, and valid original Swing daily bars remain unresolved.",
+    "November 3 preparation remains historical; do not use it for a November 4 run.",
+    "The pre-existing five-second Scope SDK-worker timeout documented in PAPER_SCOPE_OPERATION_PROOF.json is not addressed by this authorization fix."
+  ]
+}

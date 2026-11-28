@@ -3,9 +3,28 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, WithJsonSchema, model_validator
+
+
+# Pydantic's Decimal validation schema includes regex lookaround, which the
+# Structured Outputs API rejects. Override only the two model-proposed price
+# fields' wire representation. Decimal parsing, finiteness and Field(gt=0)
+# validation still run locally before any governor/review action.
+DecisionPrice = Annotated[
+    Decimal,
+    WithJsonSchema(
+        {
+            "anyOf": [
+                {"type": "number", "exclusiveMinimum": 0},
+                {"type": "string"},
+            ],
+            "description": "Positive finite decimal price; a string preserves precision.",
+        },
+        mode="validation",
+    ),
+]
 
 
 def utc_now() -> datetime:
@@ -33,14 +52,14 @@ class TradeDecision(BaseModel):
     setup_quality: float = Field(ge=0, le=1)
     horizon: Horizon = Horizon.INTRADAY
     desired_exposure_fraction: float = Field(default=0, ge=0, le=1)
-    invalidation_price: Decimal | None = Field(default=None, gt=0)
-    target_price: Decimal | None = Field(default=None, gt=0)
+    invalidation_price: DecisionPrice | None = Field(default=None, gt=0)
+    target_price: DecisionPrice | None = Field(default=None, gt=0)
     hold_overnight: bool = False
-    thesis: str = Field(min_length=1, max_length=500)
-    invalidation_reason: str = Field(min_length=1, max_length=300)
-    evidence: list[str] = Field(default_factory=list, max_length=6)
-    risks: list[str] = Field(default_factory=list, max_length=6)
-    why_now: str = Field(min_length=1, max_length=300)
+    thesis: str
+    invalidation_reason: str
+    evidence: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+    why_now: str
 
     @model_validator(mode="after")
     def validate_action_fields(self) -> "TradeDecision":
@@ -50,6 +69,21 @@ class TradeDecision(BaseModel):
             raise ValueError("OPEN_LONG requires invalidation_price")
         if self.action == Action.HOLD and self.symbol is None:
             self.desired_exposure_fraction = 0
+
+        text_limits = {
+            "thesis": (self.thesis, 500),
+            "invalidation_reason": (self.invalidation_reason, 300),
+            "why_now": (self.why_now, 300),
+        }
+        for name, (value, max_length) in text_limits.items():
+            if not value.strip():
+                raise ValueError(f"{name} must not be empty")
+            if len(value) > max_length:
+                raise ValueError(f"{name} exceeds {max_length} characters")
+        if len(self.evidence) > 6:
+            raise ValueError("evidence may contain at most 6 items")
+        if len(self.risks) > 6:
+            raise ValueError("risks may contain at most 6 items")
         return self
 
 
@@ -104,6 +138,7 @@ class AccountState(BaseModel):
     high_watermark: Decimal = Field(ge=0)
     realized_pnl: Decimal = Decimal("0")
     position: Position | None = None
+    working_orders: list[dict[str, Any]] = Field(default_factory=list)
 
     @property
     def drawdown_fraction(self) -> Decimal:
@@ -118,6 +153,7 @@ class MarketPacket(BaseModel):
     candidates: list[Candidate]
     regime: str = "unknown"
     recent_lessons: list[str] = Field(default_factory=list)
+    session_context: dict[str, str] | None = None
 
 
 class RiskDecision(BaseModel):
@@ -142,3 +178,7 @@ class ExecutionResult(BaseModel):
     fill_price: Decimal | None = None
     filled_quantity: Decimal = Decimal("0")
     message: str = ""
+    broker_review: dict[str, Any] | None = None
+    agent_error: str | None = None
+    review_error: str | None = None
+    session_blocked: bool = False

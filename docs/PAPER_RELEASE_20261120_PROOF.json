@@ -1,0 +1,278 @@
+{
+  "version": "paper-release-20261120-v1",
+  "implementation_commit": "9a140b8d8628c27f9304cd6331bbcee07af7074e",
+  "implementation_tree": "584c772963596d2e6e5a95c833643526bfcb44a0",
+  "parent_commit": "4490b68ee88977ba0dd32d725f0e0f600481a4b6",
+  "last_confirmed_host_release": "c03b6282fed59e48f113b06f4bc02f53b50410d0",
+  "incident_evidence": "PAPER_PROCESS_REVIEW_20261120.json",
+  "schema_reconstruction": {
+    "previous_metadata_sha256": "0b0c7205b8aee84dd599902ef5738736c2af04a7cb25fb5511553eb8d499c51f",
+    "rejected_metadata_sha256": "26f5fd99c50998f9633917b6b0348bf23c5385b1975315cb4aec658f22702899",
+    "rejected_structural_sha256": "4fd262ebfb92f1147324cbef1f1fd221c873b1de7fc87e2757d0a71b895dc443",
+    "change": "Added optional string get_equity_historicals.outputSchema.properties.data.properties.notice",
+    "method": "Original fixture plus previously retained November 12/14/17 deltas and the supplied notice exactly reconstruct the reported metadata."
+  },
+  "consumer_policy": {
+    "baseline": "app/options/read_contract.json",
+    "baseline_contract_sha256": "4d296d9a045742c42ec8b3bfbf7886ce95e1cbb00c94d40aa8f74f3d0b60bd97",
+    "allowed_extension": "New optional plain scalar properties directly in an output data envelope; string, boolean, integer, number or null, with no additional schema constraints.",
+    "strict": [
+      "all existing data fields and constraints",
+      "required lists",
+      "input schemas",
+      "tool capabilities and permission annotations",
+      "original evidence identity",
+      "original clocks and subject identities"
+    ],
+    "response_validation": "Every payload uses the actual discovered schema retained in its original capture, including continuous delivery and Swing-cache replay.",
+    "empty_history": "Not promoted to usable bars or readiness.",
+    "unknown_breaking_change": "Still blocked; no general per-family schema negotiation."
+  },
+  "diagnostic": {
+    "command": "python3 scripts/paper-diagnose.py [--target-session YYYY-MM-DD]",
+    "provider_calls": false,
+    "account_state_modified": false,
+    "captures_credentials": false,
+    "reports": [
+      "installed release and image",
+      "UTC observation and controller update",
+      "selected day and original failure",
+      "bounded schema paths and evidence directory",
+      "worker start/end/restarts/exit/OOM",
+      "feed and decision evidence",
+      "immutable display receipt age"
+    ],
+    "display_receipt_accounting_reverified": false,
+    "dashboard": "Current preparation cause precedes explicitly dated historical worker reports."
+  },
+  "release_handoff": {
+    "command": "python3 scripts/paper-release.py deploy --checkout /opt/trade-bot-dashboard",
+    "separate_clean_candidate_worktree": true,
+    "qualification": [
+      "wait for controller and reject an active worker",
+      "build candidate",
+      "verify normally stopped owner",
+      "capture current and required Swing catalogs",
+      "publish and verify stopped flat account",
+      "recheck unchanged owner"
+    ],
+    "activation": [
+      "pin installed checkout",
+      "install scheduler with timer stopped",
+      "verify installed release and image",
+      "update reader",
+      "restore previously active timer"
+    ],
+    "rollback": "Restore checkout, config, managed systemd units and reader before restarting the timer; leave timer stopped if rollback fails.",
+    "stage_receipt": "/root/trade-bot-release-*/release.json",
+    "resumes_review_hold": false,
+    "clears_retry_counts": false,
+    "starts_worker": false,
+    "host_execution": "NOT_RUN_BY_ASSISTANT"
+  },
+  "verification": {
+    "status": "PASSED",
+    "installed_system": {
+      "version": "paper-system-check-v1",
+      "status": "PASSED",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "market_acceptance": "UNVERIFIED",
+      "wall_clock_soak": "NOT_RUN",
+      "host_acceptance": "UNVERIFIED",
+      "application_files": 334,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "7e94bc9da882c2f930239920685dc6c356ed74b10652c411e64cb0920186936c",
+      "test_exit_code": 0
+    },
+    "tests": 800,
+    "passed": 799,
+    "failed": 0,
+    "errors": 0,
+    "skipped": [
+      {
+        "name": "test_cross_uid_snapshot_is_readable_by_unprivileged_dashboard_without_auth_copy",
+        "reason": "Reader 10001 is not mapped in this environment: uid"
+      }
+    ],
+    "seconds": 402.066,
+    "artifact_sha256": {
+      "summary.json": "6c8ac07059cb7adee83aa69279e5f10e68104f249bcf08155927f465571d181a",
+      "tests.xml": "43b1af6d75a52f21c500dd19d688c59dce7a1786d76f4a9320783480893ee716",
+      "tests.log": "15106722b5d328e4530f929ea1c58b30340e88590f1483d8b0f4208e6a0c0989"
+    },
+    "changed_scripts_and_tests_match_staged_harness": 11,
+    "boundaries": "Noneditable installed application; isolated Python; root-mapped local network namespace; fixture provider/model/Docker boundaries. No connected host access.",
+    "reproduction": "Run python -I scripts/paper-system-check.py --output /absolute/new/offline-directory from a matching noneditable installation with requirements-runtime.lock. Local loopback and root test privileges are required."
+  },
+  "prior_integrated_attempt": {
+    "passed": 794,
+    "failed": 1,
+    "skipped": 1,
+    "failure": "New dashboard test clock preceded fixture publication; corrected to observe the already-published snapshot. No product freshness limit changed."
+  },
+  "unchanged": [
+    "connected account balances, positions, journals and enrollment",
+    "1000 USD initial simulated capital",
+    "two-play limit",
+    "1 USD daily and 5 USD total model budgets",
+    "source timestamps and freshness thresholds",
+    "main",
+    "feat/event-awareness-baseline",
+    "draft PR 1 metadata"
+  ],
+  "next_gate": "Operator runs guarded candidate qualification; only its actual receipt can confirm installation.",
+  "connected_acceptance": "UNVERIFIED",
+  "remaining": [
+    "provider CONNECT failures",
+    "publication under session load",
+    "Scope current inputs",
+    "Swing original target and geometry",
+    "same-worker launch/30-minute/2-hour/close evidence",
+    "full connected PAPER day and verified closing accounting"
+  ],
+  "offline_lifecycle_scenarios": [
+    {
+      "name": "system-normal",
+      "sha256": "a76ea19f362c9c656e3a2e5eb21f90aa4e70bbac04a51ee2c5beed5cd653f056",
+      "synthetic": true,
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "cycle_outcomes": [
+        {
+          "status": [
+            "COMPLETE"
+          ],
+          "reason": [],
+          "count": 2
+        }
+      ],
+      "final_runtime": [
+        {
+          "status": "STOPPED",
+          "reason": "OPTION_RUNTIME_STOPPED",
+          "feed_sequence": 34
+        }
+      ]
+    },
+    {
+      "name": "system-startup-missing",
+      "sha256": "d8d30379c56819b939363a6f4b9fa804d34ed85bcbc2d506de2cbde442023336",
+      "synthetic": true,
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "cycle_outcomes": [
+        {
+          "status": [
+            "COMPLETE"
+          ],
+          "reason": [],
+          "count": 2
+        }
+      ],
+      "final_runtime": [
+        {
+          "status": "STOPPED",
+          "reason": "OPTION_RUNTIME_STOPPED",
+          "feed_sequence": 34
+        }
+      ]
+    },
+    {
+      "name": "system-startup-pending",
+      "sha256": "060b7882776aed2f95c1b05a4e30f182c19c14b5e1f1ccb6b5e93494826a512a",
+      "synthetic": true,
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "cycle_outcomes": [
+        {
+          "status": [
+            "COMPLETE"
+          ],
+          "reason": [],
+          "count": 2
+        }
+      ],
+      "final_runtime": [
+        {
+          "status": "STOPPED",
+          "reason": "OPTION_RUNTIME_STOPPED",
+          "feed_sequence": 34
+        }
+      ]
+    },
+    {
+      "name": "system-with-publisher-failure",
+      "sha256": "a68a31d560f5f97b5afc4cd4a3916d50b850bac63cc9854b19a26b82de56b1b5",
+      "synthetic": true,
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "cycle_outcomes": [
+        {
+          "status": [
+            "COMPLETE"
+          ],
+          "reason": [],
+          "count": 2
+        }
+      ],
+      "final_runtime": [
+        {
+          "status": "STOPPED",
+          "reason": "OPTION_RUNTIME_STOPPED",
+          "feed_sequence": 34
+        }
+      ]
+    },
+    {
+      "name": "system-with-read-failure",
+      "sha256": "595d91b6d60b98cdbae5ef1595840badfa9b21c76166a01215e87dcc4cffb2f5",
+      "synthetic": true,
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "cycle_outcomes": [
+        {
+          "status": [
+            "COMPLETE"
+          ],
+          "reason": [],
+          "count": 2
+        }
+      ],
+      "final_runtime": [
+        {
+          "status": "STOPPED",
+          "reason": "OPTION_RUNTIME_STOPPED",
+          "feed_sequence": 34
+        }
+      ]
+    }
+  ]
+}

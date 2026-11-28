@@ -1,0 +1,25 @@
+(() => {
+  const interval = 15000;
+  async function refresh() {
+    const panel = document.getElementById('paper-operation');
+    if (!panel) return;
+    try {
+      const request = path => fetch(path, {cache: 'no-store', signal: AbortSignal.timeout(7000)});
+      const response = await request('/desk/operation');
+      if (!response.ok) throw Error();
+      const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+      const next = page.getElementById('paper-operation');
+      if (!next) throw Error();
+      if (!panel.isEqualNode(next)) panel.replaceWith(next);
+      if (document.body.dataset.accountUnavailable && (await request('/api/mixed?limit=1')).ok) location.reload();
+    } catch {
+      const current = document.getElementById('paper-operation');
+      current.dataset.state = 'UNKNOWN';
+      current.querySelector('h2').textContent = 'Status connection lost';
+      current.querySelector('.paper-current-detail').textContent = 'Current worker health is unknown. Retained details show the last report.';
+    } finally {
+      setTimeout(refresh, interval);
+    }
+  }
+  setTimeout(refresh, interval);
+})();

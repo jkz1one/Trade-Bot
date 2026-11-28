@@ -1,0 +1,241 @@
+{
+  "version": "paper-contention-proof-v1",
+  "implementation": "c7872818fa59ecbfee798a3ee62ce315c07cd036",
+  "parent_commit": "b12a29c051eb9707da71a5ce897ac0f12fe181e5",
+  "application_identity": {
+    "python": "3.12.14",
+    "application_files": 331,
+    "runtime_pins": 60,
+    "source_wheel_install_equal": true,
+    "wheel_sha256": "927e6c4db784487f8f43bfacf2a5824c6e201d898cdd01359d1dadf8c5b9fa33",
+    "application_manifest_sha256": "637c3b5bd6a06829a128a7228f9e4940116cae4f2692981dc7a55fcced393788",
+    "dependency_check": "PASSED"
+  },
+  "distinct_latest_counts": {
+    "PASSED": 521,
+    "SKIPPED": 1
+  },
+  "baseline_expected_failures": 3,
+  "synthetic": true,
+  "provider_calls": false,
+  "model_service_calls": false,
+  "live_enabled": false,
+  "connected_account_modified": false,
+  "combined_exit_seconds": 1.4651552599998467,
+  "combined_final_accounting": "VERIFIED",
+  "scenarios": [
+    {
+      "artifact": "docs/evidence/paper-contention-system-normal.json",
+      "sha256": "67f3d8c633227a00f5c815ea29d782a4dd034011a9e820cd773c2f2f4ce85878",
+      "native_process_calls": 35,
+      "native_process_max_seconds": 0.32739767199996095,
+      "capture_attempts": 35,
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "runtime_timing_coverage": {
+        "boundary": "NATIVE_COMMITMENTS_IN_REPORT_WINDOW",
+        "before_first_commit": "UNOBSERVABLE",
+        "cycles": {
+          "status": "OBSERVED",
+          "committed": 2,
+          "matched": 2,
+          "without_matched_trace": 0,
+          "trace_keys_without_commitment_in_window": 0,
+          "duplicate_trace_keys": 0,
+          "not_started": 0
+        },
+        "models": {
+          "status": "OBSERVED",
+          "committed": 2,
+          "matched": 2,
+          "without_matched_trace": 0,
+          "trace_keys_without_commitment_in_window": 0,
+          "duplicate_trace_keys": 0,
+          "unsettled": 0
+        }
+      }
+    },
+    {
+      "artifact": "docs/evidence/paper-contention-system-startup-missing.json",
+      "sha256": "899c7397bafdfdd80809771baeeaeb25684a17cca81766bbd564766c3b3b6edd",
+      "native_process_calls": 35,
+      "native_process_max_seconds": 0.2207427439998355,
+      "capture_attempts": 35,
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "runtime_timing_coverage": {
+        "boundary": "NATIVE_COMMITMENTS_IN_REPORT_WINDOW",
+        "before_first_commit": "UNOBSERVABLE",
+        "cycles": {
+          "status": "OBSERVED",
+          "committed": 2,
+          "matched": 2,
+          "without_matched_trace": 0,
+          "trace_keys_without_commitment_in_window": 0,
+          "duplicate_trace_keys": 0,
+          "not_started": 0
+        },
+        "models": {
+          "status": "OBSERVED",
+          "committed": 2,
+          "matched": 2,
+          "without_matched_trace": 0,
+          "trace_keys_without_commitment_in_window": 0,
+          "duplicate_trace_keys": 0,
+          "unsettled": 0
+        }
+      }
+    },
+    {
+      "artifact": "docs/evidence/paper-contention-system-startup-pending.json",
+      "sha256": "9e8c3083823ba6097f9fdd7d113ec39e3ee1fe7b6f422560be645487bbda4e90",
+      "native_process_calls": 35,
+      "native_process_max_seconds": 0.19512252799995622,
+      "capture_attempts": 35,
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "runtime_timing_coverage": {
+        "boundary": "NATIVE_COMMITMENTS_IN_REPORT_WINDOW",
+        "before_first_commit": "UNOBSERVABLE",
+        "cycles": {
+          "status": "OBSERVED",
+          "committed": 2,
+          "matched": 2,
+          "without_matched_trace": 0,
+          "trace_keys_without_commitment_in_window": 0,
+          "duplicate_trace_keys": 0,
+          "not_started": 0
+        },
+        "models": {
+          "status": "OBSERVED",
+          "committed": 2,
+          "matched": 2,
+          "without_matched_trace": 0,
+          "trace_keys_without_commitment_in_window": 0,
+          "duplicate_trace_keys": 0,
+          "unsettled": 0
+        }
+      }
+    },
+    {
+      "artifact": "docs/evidence/paper-contention-system-with-publisher-failure.json",
+      "sha256": "39f0b6dfbd3881985f5e735322aa0806e5fedbce88f756ab71b50c3574d58c7c",
+      "native_process_calls": 37,
+      "native_process_max_seconds": 0.4619293339999331,
+      "capture_attempts": 35,
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "runtime_timing_coverage": {
+        "boundary": "NATIVE_COMMITMENTS_IN_REPORT_WINDOW",
+        "before_first_commit": "UNOBSERVABLE",
+        "cycles": {
+          "status": "OBSERVED",
+          "committed": 2,
+          "matched": 2,
+          "without_matched_trace": 0,
+          "trace_keys_without_commitment_in_window": 0,
+          "duplicate_trace_keys": 0,
+          "not_started": 0
+        },
+        "models": {
+          "status": "OBSERVED",
+          "committed": 2,
+          "matched": 2,
+          "without_matched_trace": 0,
+          "trace_keys_without_commitment_in_window": 0,
+          "duplicate_trace_keys": 0,
+          "unsettled": 0
+        }
+      }
+    },
+    {
+      "artifact": "docs/evidence/paper-contention-system-with-read-failure.json",
+      "sha256": "33f8788188934205fd131b896b148f5d0b1c495a6fe0f1b97cb21623d83d70a7",
+      "native_process_calls": 35,
+      "native_process_max_seconds": 0.4609346759998516,
+      "capture_attempts": 35,
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "runtime_timing_coverage": {
+        "boundary": "NATIVE_COMMITMENTS_IN_REPORT_WINDOW",
+        "before_first_commit": "UNOBSERVABLE",
+        "cycles": {
+          "status": "OBSERVED",
+          "committed": 2,
+          "matched": 2,
+          "without_matched_trace": 0,
+          "trace_keys_without_commitment_in_window": 0,
+          "duplicate_trace_keys": 0,
+          "not_started": 0
+        },
+        "models": {
+          "status": "OBSERVED",
+          "committed": 2,
+          "matched": 2,
+          "without_matched_trace": 0,
+          "trace_keys_without_commitment_in_window": 0,
+          "duplicate_trace_keys": 0,
+          "unsettled": 0
+        }
+      }
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "docs/evidence/paper-contention-tests.json",
+      "sha256": "eab4493bf9d8cfaa143bd9e0846c934ca2556944b80c8484091631d5ebd6b46f"
+    },
+    {
+      "path": "docs/evidence/paper-contention-baseline.json",
+      "sha256": "4dd6d0a2cf1f9ef10bf2a3e2e88e545cb36e3d9662edfdbf82cff0036c26cff3"
+    },
+    {
+      "path": "docs/evidence/paper-combined-contention.json",
+      "sha256": "4c297ee20619cfe9b2f1b0a4e00e5ef66a2d009c2a7ed8c55b6499ff10c639bb"
+    },
+    {
+      "path": "docs/evidence/paper-contention-resources.json",
+      "sha256": "e5103fe0798b924900a2437522218616abbadef48b81627b91a0894fe4deea62"
+    }
+  ],
+  "limitations": [
+    "Full configured-duration wall-clock soak has not run.",
+    "Measured host memory limit and projected-month growth profile are not reproduced.",
+    "Work killed before any native commitment remains unobservable.",
+    "Timing-table compatibility with older strict-table releases still requires D2 review.",
+    "Actual Docker/systemd/cross-UID/browser and connected lifecycle acceptance remain unverified."
+  ],
+  "preservation": {
+    "main": "b5359aaf396e692d2142d7e02908f1544e045ee6",
+    "feat/event-awareness-baseline": "22567f9f1eac0b8c380e9593f080228ef5da2de2",
+    "pull_request_1": "open draft; title and entire body preserved",
+    "host_release": "d2046f6363084ca26fc850130eb94cba51f07b6d",
+    "host_deployment": "UNCHANGED",
+    "connected_account_and_limits": "UNCHANGED"
+  }
+}

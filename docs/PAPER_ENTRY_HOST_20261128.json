@@ -1,0 +1,199 @@
+{
+  "version": "paper-entry-host-20261128-v1",
+  "source": "Selected fields from the operator-supplied launch and terminal status; no direct server access or independent host inspection",
+  "status": "ENTRY_GATE_PASSED",
+  "observed_at": "2026-11-28T05:50:43.909458+00:00",
+  "release": "9c8161e40e2e93011e95942320fbd025d7d40c84",
+  "image_id": "sha256:f7c6d7ae52cacccee42e77d13d84ae93ffd923fdd79a15e85f83e02dbb06b5a5",
+  "evidence_directory": "/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-9c8161e40e2e-ucajqoed",
+  "qualification_profile": "entry",
+  "planned_seconds": 335,
+  "worker": {
+    "Status": "exited",
+    "Running": false,
+    "StartedAt": "2026-11-28T05:43:55.652747813Z",
+    "FinishedAt": "2026-11-28T05:49:48.521484217Z",
+    "ExitCode": 0,
+    "OOMKilled": false,
+    "Error": ""
+  },
+  "restart_count": 0,
+  "memory_pressure": {
+    "status": "NO_LIMIT_EVENT_RECORDED",
+    "scope": "Container lifetime of this short entry profile only",
+    "limit_bytes": 1073741824,
+    "peak_bytes": 812322816,
+    "peak_headroom_bytes": 261419008,
+    "events": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0
+    }
+  },
+  "entry_diagnostic": {
+    "evidence_clock": "ORIGINAL_SYNTHETIC_CLOCKS",
+    "cycle_key": "degen:5977320:portfolio:0",
+    "started_at": "2026-10-28T14:00:21.350043+00:00",
+    "stored_status": "COMPLETE",
+    "decision_status": "OPEN",
+    "reason": null,
+    "clocks": {
+      "as_of": "2026-10-28T14:00:22.043558Z",
+      "deadline": "2026-10-28T14:00:27.043558Z",
+      "account_captured_at": "2026-10-28T14:00:20.088559Z",
+      "account_max_age_seconds": 20,
+      "quote_max_age_seconds": 10,
+      "model_completed_at": "2026-10-28T14:00:23.520222+00:00",
+      "review_at": "2026-10-28T14:00:23.875680+00:00",
+      "options": [
+        {
+          "source_at": "2026-10-28T14:00:17.598227Z",
+          "received_at": "2026-10-28T14:00:18.598227Z",
+          "admission_deadline": "2026-10-28T14:00:27.043558Z"
+        },
+        {
+          "source_at": "2026-10-28T14:00:17.598227Z",
+          "received_at": "2026-10-28T14:00:18.598227Z",
+          "admission_deadline": "2026-10-28T14:00:27.043558Z"
+        }
+      ]
+    },
+    "cycle_elapsed_seconds": 7.211153,
+    "phases_seconds": {
+      "CYCLE_OPPORTUNITY_CLAIM": 0.676051,
+      "SCAN": 0.016241,
+      "STOCK_SCAN": 0.70694,
+      "SCOPE_SCAN": 0.002439,
+      "ENTRY_MODEL_ADMISSION": 0.01694,
+      "ENTRY_MODEL_REQUEST": 0.697824,
+      "ENTRY_MODEL": 0.003825,
+      "ENTRY_MIXED_SELECTION": 0.000788,
+      "ENTRY_SCOPE_RECEIPT_CHECK": 0.02484,
+      "ENTRY_SCOPE_SELECTION": 0.001276,
+      "ENTRY_OPTION_MARKET_READ": 0.007478,
+      "ENTRY_REVIEW": 0.058881,
+      "ADMISSION": 0.147449,
+      "ENTRY_SETTLEMENT_AND_RESERVATION": 1.103574,
+      "NATIVE_ACCEPT_SPAWN": 0.004324,
+      "NATIVE_ACCEPT_TRANSPORT": 1.293625,
+      "NATIVE_ACCEPT": 1.769264,
+      "DISPATCH": 2.463772
+    },
+    "native": {
+      "remaining_at_spawn_seconds": 2.413641,
+      "transport_status": "COMPLETE",
+      "parent_phase": "RESPONSE_VALIDATE",
+      "elapsed_seconds": 1.293,
+      "child_trace_status": "OBSERVED",
+      "child_stages": [
+        {"stage": "IMPORTS", "elapsed_seconds": 0.000014, "cpu_seconds": 0.000009},
+        {"stage": "REQUEST", "elapsed_seconds": 1.127526, "cpu_seconds": 0.543133},
+        {"stage": "VENUE_OPEN", "elapsed_seconds": 1.132104, "cpu_seconds": 0.545281},
+        {"stage": "ACCEPT", "elapsed_seconds": 1.141105, "cpu_seconds": 0.549305},
+        {"stage": "SERIALIZE", "elapsed_seconds": 1.158261, "cpu_seconds": 0.555536},
+        {"stage": "COMPLETE", "elapsed_seconds": 1.158575, "cpu_seconds": 0.555612}
+      ]
+    },
+    "restore_to_review": {
+      "window_seconds": 6.277453,
+      "wall_seconds_with_digest_running": 4.932749,
+      "wholly_contained_calls": 14,
+      "owner_thread_cpu_seconds": 4.281579,
+      "background_cpu_seconds": 0.284273
+    }
+  },
+  "worker_resource_window": {
+    "scope": "Worker start to diagnostic read; not isolated entry-phase CPU or I/O",
+    "elapsed_seconds": 338.89574134349823,
+    "cpu_usage_usec": 238074562,
+    "nr_periods": 3070,
+    "nr_throttled": 0,
+    "throttled_usec": 0,
+    "io_read_bytes": 63041536,
+    "io_write_bytes": 4645363712
+  },
+  "session_report": {
+    "source": "report.json",
+    "saved_at": "2026-11-28T05:49:47.285223+00:00",
+    "evidence_clock": "SYNTHETIC_REPORT_WINDOW",
+    "window_start": "2026-10-28T14:00:00+00:00",
+    "window_end": "2026-10-28T14:05:38.896706+00:00",
+    "heartbeat_at_cutoff": "FRESH",
+    "heartbeat_age_seconds": 4.527702,
+    "feed_at_cutoff": "FRESH",
+    "feed_age_seconds": 11.397627,
+    "current_runtime": "STOPPED",
+    "runtime_reason": "OPTION_RUNTIME_STOPPED",
+    "feed_sequence": 32,
+    "cycle_count": 2,
+    "complete_cycles": 2,
+    "decision_count": 2,
+    "second_decision_reason": "ENTRY_MODEL_RISK_PAUSE",
+    "delivered_collections": 32,
+    "timing_coverage": {
+      "boundary": "NATIVE_COMMITMENTS_IN_REPORT_WINDOW",
+      "before_first_commit": "UNOBSERVABLE",
+      "cycles_committed": 2,
+      "cycles_matched": 2,
+      "models_committed": 1,
+      "models_matched": 1,
+      "unsettled_models": 0
+    },
+    "coverage_issues": [
+      "SCOPE_CURRENT_INPUT_UNAVAILABLE",
+      "SWING_ORIGINAL_SOURCES_UNAVAILABLE"
+    ],
+    "run_issues": [],
+    "runtime_failures": [],
+    "publication_failures": []
+  },
+  "progress": {
+    "status": "PASSED",
+    "elapsed_seconds": 338.8966470854357,
+    "native_snapshot_calls": 130,
+    "native_snapshot_failures": 0,
+    "native_snapshot_max_seconds": 0.3414598060771823,
+    "capture_attempts": 32,
+    "peak_tree_rss_bytes": 470986752,
+    "source_database_bytes": 127991808,
+    "report_copy_storage": "EVIDENCE_DIRECTORY",
+    "decision_coverage": {
+      "expected": 2,
+      "evaluated": 2,
+      "coverage_percent": 100.0,
+      "unmeasured_slots": [],
+      "target_met": true
+    },
+    "execution": {
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "carry_in_exits": 0
+    },
+    "final_accounting": "VERIFIED_FLAT",
+    "failure_class": null,
+    "failure": null
+  },
+  "interpretation": [
+    "This is one passed host synthetic entry/protective-exit lifecycle under the existing limits and deadlines, not connected or full-duration qualification.",
+    "The successful native transport took 1.293625 seconds, longer than the prior failed run's 1.228111-second remaining lease. This run had 2.413641 seconds remaining. Different owner timings prevent attributing the pass solely to reduced imports; this is not a controlled host A/B or a percentile estimate.",
+    "There were no memory-limit events in this short container lifetime. Earlier multi-hour pressure and concurrent publisher failure remain unresolved.",
+    "The duration fixture proposes one entry then HOLD. A duration pass can qualify endurance of that workload but cannot establish repeated active entry/exit latency or all-family coverage.",
+    "Synthetic source clocks, model replies and fills do not establish Robinhood CONNECT health, authentic source coverage or a successful connected PAPER day."
+  ],
+  "next_check": {
+    "status": "NOT_YET_LAUNCHED",
+    "release": "9c8161e40e2e93011e95942320fbd025d7d40c84",
+    "profile": "duration",
+    "planned_seconds": 21480,
+    "purpose": "Measure memory, publication, feed and accounting through the earlier 4h49m failure point using the same implementation in a new isolated fixture",
+    "resource_limits_unchanged": true,
+    "connected_deployment_authorized_by_result": false
+  },
+  "connected_health": "UNVERIFIED",
+  "live_enabled": false,
+  "state_modified": false
+}

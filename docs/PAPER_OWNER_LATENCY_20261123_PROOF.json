@@ -1,0 +1,793 @@
+{
+  "version": "paper-owner-latency-20261123-v1",
+  "base_commit": "752d9767808c8b49b99d2ee71e0e8879562c8e79",
+  "status": "SHORT_LOAD_GATES_PASSED_FULL_DURATION_PENDING",
+  "scope": "Offline synthetic fixtures only. No host access, deployment, restart, resume, halt clearing or account mutation.",
+  "changes": [
+    "Timing records are bounded in memory and committed with ordinary fenced owner writes, with a final owner-close flush. Rollback retains pending versions; reports keep missing/unfinished traces explicit and count native commitments independently.",
+    "Full entry requests and model budget reservations share one durable transaction before the model call. Original request expiry is checked after entering the restore fence. Admission rollback preserves the request without an admitted call; risk pause recognition is still committed.",
+    "Every current SQLite cell is read. Tables with at least 256 rows reuse canonical JSON encodings in 256-row batches identified by SHA256 of typed scalar tuples. Pickle is used only for local serialization, never loading. The existing sorted canonical v1 hash and independent authority remain unchanged.",
+    "The original 192 MiB encoding budget is divided into 160 MiB for row batches and 32 MiB for individual text. Both caches clear on a different restore authority. The four-MiB prefix limit, risk/model limits, freshness and native deadlines are unchanged."
+  ],
+  "evidence_limits": [
+    "Short fixture uses 30,006 distinct diagnostic padding rows, not a reconstructed month of real account history.",
+    "CPU affinity is one logical CPU; aggregate RSS is sampled against 1 GiB, not enforced by a kernel memory cgroup.",
+    "Timing preparation latency excludes persistence; persistence is included in the owner transaction carrying the record. A crash before the next owner commit may leave a missing or RUNNING diagnostic.",
+    "Matching batch fingerprints reuse encoding under the same SHA256 collision-resistance assumption as the authority hash; the canonical authority hash format is not migrated.",
+    "Full-duration and month-growth acceptance remain pending. The installed host collector CONNECT failures remain unresolved."
+  ],
+  "regression": {
+    "restore_queue_and_harness": {
+      "tests": 80,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 5.366,
+      "junit_sha256": "b5b8d3beb3462d59093af5f1c19e1961bc179e8605faddb30f9d33f966dc06fc"
+    },
+    "risk_admission_and_option_execution": {
+      "tests": 94,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 53.553,
+      "junit_sha256": "0353cf6efec4fd921eef0b20ad3e669ddcf7c840ce2f066012ebfbc6d6ac04e3"
+    },
+    "installed_system": {
+      "tests": 926,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "seconds": 433.469,
+      "junit_sha256": "da7c824f253d5702f38f408804789370652264a57b0b5726dd3558624651768b",
+      "status": "PASSED",
+      "application_files": 336,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "f9f8035603dcb429a9fa589a878653a33b579c7fbc2458e1712d7d0378f53138",
+      "skip_reason": "Reader UID 10001 is not mapped in this test environment."
+    },
+    "groups_overlap": true,
+    "extended_protection": {
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 40.517,
+      "junit_sha256": "31b66cbcd794aa06c48532d69535a8feacbc34de0a22a9cddd8b8f060a50dbee"
+    }
+  },
+  "benchmark": {
+    "version": "restore-scan-benchmark-v1",
+    "synthetic": true,
+    "provider_calls": false,
+    "live_enabled": false,
+    "cpu_affinity": [
+      8
+    ],
+    "seed_mib": 112,
+    "trials": [
+      {
+        "policy": "scan_mru",
+        "samples": [
+          {
+            "wall_seconds": 1.5662392940012069,
+            "cpu_seconds": 1.558214414
+          },
+          {
+            "wall_seconds": 0.7222837879999133,
+            "cpu_seconds": 0.714504314
+          },
+          {
+            "wall_seconds": 0.7004543629991531,
+            "cpu_seconds": 0.6945431450000008
+          },
+          {
+            "wall_seconds": 0.6631430260003981,
+            "cpu_seconds": 0.657576752999999
+          },
+          {
+            "wall_seconds": 0.6707143130006443,
+            "cpu_seconds": 0.6618398999999986
+          }
+        ],
+        "warm_median_seconds": 0.6855843379998987,
+        "canonical_v1_hash_matches": true,
+        "restore_status": "VERIFIED",
+        "cache_entries": 24957,
+        "cache_bytes": 201320664,
+        "row_cache_bytes": 0
+      },
+      {
+        "policy": "row_batches",
+        "samples": [
+          {
+            "wall_seconds": 0.8329977350003901,
+            "cpu_seconds": 0.8232291039999993
+          },
+          {
+            "wall_seconds": 0.3908232419998967,
+            "cpu_seconds": 0.38123044399999984
+          },
+          {
+            "wall_seconds": 0.4335807740008022,
+            "cpu_seconds": 0.4281639360000007
+          },
+          {
+            "wall_seconds": 0.37456115699933434,
+            "cpu_seconds": 0.36847389699999944
+          },
+          {
+            "wall_seconds": 0.3817738720008492,
+            "cpu_seconds": 0.37363211500000126
+          }
+        ],
+        "warm_median_seconds": 0.38629855700037297,
+        "canonical_v1_hash_matches": true,
+        "restore_status": "VERIFIED",
+        "cache_entries": 23,
+        "cache_bytes": 11943,
+        "row_cache_bytes": 120284430
+      },
+      {
+        "policy": "scan_mru",
+        "samples": [
+          {
+            "wall_seconds": 0.9574133030000667,
+            "cpu_seconds": 0.951891208000001
+          },
+          {
+            "wall_seconds": 0.6719081970004481,
+            "cpu_seconds": 0.6614882469999976
+          },
+          {
+            "wall_seconds": 0.7058090690006793,
+            "cpu_seconds": 0.7007559169999986
+          },
+          {
+            "wall_seconds": 0.604058687998986,
+            "cpu_seconds": 0.5980452300000003
+          },
+          {
+            "wall_seconds": 0.6577123589995608,
+            "cpu_seconds": 0.6459809510000021
+          }
+        ],
+        "warm_median_seconds": 0.6648102780000045,
+        "canonical_v1_hash_matches": true,
+        "restore_status": "VERIFIED",
+        "cache_entries": 24955,
+        "cache_bytes": 201326365,
+        "row_cache_bytes": 0
+      },
+      {
+        "policy": "row_batches",
+        "samples": [
+          {
+            "wall_seconds": 0.8138477149987011,
+            "cpu_seconds": 0.8072867539999997
+          },
+          {
+            "wall_seconds": 0.38405866699940816,
+            "cpu_seconds": 0.3794641499999969
+          },
+          {
+            "wall_seconds": 0.37715384299917787,
+            "cpu_seconds": 0.3716718340000007
+          },
+          {
+            "wall_seconds": 0.39000953100003244,
+            "cpu_seconds": 0.38404408600000295
+          },
+          {
+            "wall_seconds": 0.3537722359997133,
+            "cpu_seconds": 0.3491952480000009
+          }
+        ],
+        "warm_median_seconds": 0.380606254999293,
+        "canonical_v1_hash_matches": true,
+        "restore_status": "VERIFIED",
+        "cache_entries": 23,
+        "cache_bytes": 11951,
+        "row_cache_bytes": 120284430
+      }
+    ],
+    "seed_rows": 30006,
+    "database_bytes": 123351040,
+    "peak_process_rss_bytes": 713801728,
+    "status": "RECORDED"
+  },
+  "failed_intermediate": {
+    "variant": "Coalesced diagnostics alone, before atomic request admission and row-batch encoding",
+    "installed_checks": {
+      "tests": 920,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "seconds": 445.396,
+      "junit_sha256": "e5685b139eb1024a5150fa834c0f91ca151d22f23f222525eb7237914aed50fd"
+    },
+    "short_status": "FAILED",
+    "failure": "Known fixture lifecycle did not complete",
+    "dispatch_reason": "ORIGINAL_APPROVAL_EXPIRED",
+    "opening_restore_profile": {
+      "status": "OBSERVED",
+      "reservation_at": "2026-10-28T14:00:29.544420+00:00",
+      "source_at": "2026-10-28T14:00:19.604320Z",
+      "received_at": "2026-10-28T14:00:20.604320Z",
+      "source_to_reservation": {
+        "window_seconds": 9.9401,
+        "wall_seconds_with_digest_running": 8.415143,
+        "wholly_contained_calls": 22,
+        "owner_thread_cpu_seconds": 7.92655,
+        "background_cpu_seconds": 0.363116,
+        "owner_thread_calls": {
+          "app.mixed.portfolio_execution.reconcile": 4,
+          "app.options.runtime._tick": 6,
+          "app.options.coordinator._cycle_once": 2,
+          "app.mixed.selection.collect": 2,
+          "app.options.coordinator._pending_evidence": 2,
+          "app.options.engine.begin_model_attempt": 2,
+          "app.options.entry_coordination._settle_reply": 2,
+          "app.options.entry_coordination.run_entry_cycle": 1
+        }
+      },
+      "receipt_to_reservation": {
+        "window_seconds": 8.9401,
+        "wall_seconds_with_digest_running": 8.415143,
+        "wholly_contained_calls": 22,
+        "owner_thread_cpu_seconds": 7.92655,
+        "background_cpu_seconds": 0.363116,
+        "owner_thread_calls": {
+          "app.mixed.portfolio_execution.reconcile": 4,
+          "app.options.runtime._tick": 6,
+          "app.options.coordinator._cycle_once": 2,
+          "app.mixed.selection.collect": 2,
+          "app.options.coordinator._pending_evidence": 2,
+          "app.options.engine.begin_model_attempt": 2,
+          "app.options.entry_coordination._settle_reply": 2,
+          "app.options.entry_coordination.run_entry_cycle": 1
+        }
+      }
+    },
+    "extended_protection": {
+      "tests": 9,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 65.832,
+      "junit_sha256": "1b75d29fb8181b19cdde79053861ce474fa636e450718b4fe853bdf1c00f80d8"
+    }
+  },
+  "short_loaded_run": {
+    "version": "paper-soak-result-v1",
+    "status": "PASSED",
+    "synthetic": true,
+    "provider_calls": false,
+    "model_service_calls": false,
+    "live_enabled": false,
+    "planned_seconds": 335,
+    "nominal_worker_seconds": 21480,
+    "wall_clock_full_duration": "NOT_RUN",
+    "nominal_cpu_profile": true,
+    "source_seed": {
+      "kind": "labeled diagnostic padding, not month-history proof",
+      "rows": 30006,
+      "initial_database_bytes": 124760064
+    },
+    "memory_enforcement": "sampled aggregate RSS ceiling; not a kernel cgroup",
+    "memory_limit_bytes": 1073741824,
+    "logical_cpus": 1,
+    "max_feed_recoveries": 0,
+    "native_snapshot_calls": 152,
+    "native_snapshot_failures": 0,
+    "native_snapshot_max_seconds": 0.1698676180003531,
+    "capture_attempts": 32,
+    "entry_model_calls": 1,
+    "management_model_calls": 0,
+    "dashboard_reads": 11,
+    "report_reads": 11,
+    "peak_tree_rss_bytes": 556552192,
+    "peak_processes": 2,
+    "children_reaped_count": 153,
+    "elapsed_seconds": 337.67057042299894,
+    "source_database_bytes": 128245760,
+    "feed_recoveries": 0,
+    "worker_window_cpu": {
+      "elapsed_seconds": 337.670525,
+      "worker_user_seconds": 183.340682,
+      "worker_system_seconds": 39.040607,
+      "reaped_child_user_seconds": 5.310031,
+      "reaped_child_system_seconds": 1.483054,
+      "average_busy_cores": 0.678692,
+      "average_allocated_cpu_percent": 67.869
+    },
+    "decision_coverage": {
+      "expected": 2,
+      "evaluated": 2,
+      "coverage_percent": 100.0,
+      "unmeasured_slots": [],
+      "target_met": true
+    },
+    "opening_restore_profile": {
+      "status": "OBSERVED",
+      "reservation_at": "2026-10-28T14:00:19.735740+00:00",
+      "source_at": "2026-10-28T14:00:14.306398Z",
+      "received_at": "2026-10-28T14:00:15.306398Z",
+      "source_to_reservation": {
+        "window_seconds": 5.429342,
+        "wall_seconds_with_digest_running": 4.065568,
+        "wholly_contained_calls": 20,
+        "owner_thread_cpu_seconds": 3.640892,
+        "background_cpu_seconds": 0.169334,
+        "owner_thread_calls": {
+          "app.mixed.portfolio_execution.reconcile": 4,
+          "app.options.runtime._tick": 6,
+          "app.options.coordinator._cycle_once": 2,
+          "app.mixed.selection.collect": 2,
+          "app.options.entry_coordination._admit_request": 2,
+          "app.options.entry_coordination._settle_reply": 2,
+          "app.options.entry_coordination.run_entry_cycle": 1
+        }
+      },
+      "receipt_to_reservation": {
+        "window_seconds": 4.429342,
+        "wall_seconds_with_digest_running": 3.905006,
+        "wholly_contained_calls": 19,
+        "owner_thread_cpu_seconds": 3.640892,
+        "background_cpu_seconds": 0.0,
+        "owner_thread_calls": {
+          "app.mixed.portfolio_execution.reconcile": 4,
+          "app.options.runtime._tick": 6,
+          "app.options.coordinator._cycle_once": 2,
+          "app.mixed.selection.collect": 2,
+          "app.options.entry_coordination._admit_request": 2,
+          "app.options.entry_coordination._settle_reply": 2,
+          "app.options.entry_coordination.run_entry_cycle": 1
+        }
+      }
+    },
+    "execution": {
+      "status": "RECORDED",
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "carry_in_exits": 0
+    },
+    "final_accounting": "VERIFIED_FLAT",
+    "source_growth_bytes": 3534848,
+    "projected_22_sessions_growth_bytes": 4986351555,
+    "projection_note": "Linear extrapolation only, not a month-growth pass",
+    "native_snapshot_p99_seconds": 0.16552954600047087,
+    "native_deadline_seconds": 5.0,
+    "native_headroom_target_met": true,
+    "cpu_user_seconds": 187.435993,
+    "cpu_system_seconds": 41.06667,
+    "children_reaped": true
+  },
+  "short_report": {
+    "execution": {
+      "status": "RECORDED",
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "carry_in_exits": 0
+    },
+    "entry_freshness": {
+      "status": "OBSERVED",
+      "reservations": 1,
+      "measured": 1,
+      "missing_or_invalid": 0,
+      "omitted": 0,
+      "clocks": {
+        "quote_age": {
+          "samples": 1,
+          "p50_seconds": 5.429342,
+          "p95_seconds": 5.429342,
+          "p99_seconds": 5.429342,
+          "max_seconds": 5.429342
+        },
+        "receive_lag": {
+          "samples": 1,
+          "p50_seconds": 1.0,
+          "p95_seconds": 1.0,
+          "p99_seconds": 1.0,
+          "max_seconds": 1.0
+        },
+        "local_age": {
+          "samples": 1,
+          "p50_seconds": 4.429342,
+          "p95_seconds": 4.429342,
+          "p99_seconds": 4.429342,
+          "max_seconds": 4.429342
+        }
+      }
+    },
+    "publication_failures": [],
+    "runtime_timing": {
+      "status": "OBSERVED",
+      "records": 155,
+      "measured": 155,
+      "missing_or_invalid": 0,
+      "omitted": 0,
+      "trace_storage": {
+        "COALESCED": 155
+      },
+      "trace_start_prepare": {
+        "samples": 155,
+        "p50_seconds": 0.004577,
+        "p95_seconds": 0.030243,
+        "p99_seconds": 0.054257,
+        "max_seconds": 0.087074
+      },
+      "trace_start_write": null,
+      "coverage": {
+        "boundary": "NATIVE_COMMITMENTS_IN_REPORT_WINDOW",
+        "before_first_commit": "UNOBSERVABLE",
+        "cycles": {
+          "status": "OBSERVED",
+          "committed": 2,
+          "matched": 2,
+          "without_matched_trace": 0,
+          "trace_keys_without_commitment_in_window": 0,
+          "duplicate_trace_keys": 0,
+          "not_started": 0
+        },
+        "models": {
+          "status": "OBSERVED",
+          "committed": 1,
+          "matched": 1,
+          "without_matched_trace": 0,
+          "trace_keys_without_commitment_in_window": 0,
+          "duplicate_trace_keys": 0,
+          "unsettled": 0
+        }
+      },
+      "phases": {
+        "TICK": {
+          "samples": 153,
+          "p50_seconds": 1.279848,
+          "p95_seconds": 1.942363,
+          "p99_seconds": 2.465962,
+          "max_seconds": 4.209789
+        },
+        "TICK_PACKET_VALIDATION": {
+          "samples": 153,
+          "p50_seconds": 0.029172,
+          "p95_seconds": 0.063516,
+          "p99_seconds": 0.129936,
+          "max_seconds": 0.134155
+        },
+        "TICK_REPEAT_RECEIPT": {
+          "samples": 119,
+          "p50_seconds": 0.201994,
+          "p95_seconds": 0.398847,
+          "p99_seconds": 0.440281,
+          "max_seconds": 0.657726
+        },
+        "TICK_QUOTE_FILLS": {
+          "samples": 151,
+          "p50_seconds": 0.008386,
+          "p95_seconds": 0.019549,
+          "p99_seconds": 0.069879,
+          "max_seconds": 0.096333
+        },
+        "NATIVE_SNAPSHOT_SPAWN": {
+          "samples": 152,
+          "p50_seconds": 0.000784,
+          "p95_seconds": 0.010715,
+          "p99_seconds": 0.019805,
+          "max_seconds": 0.089709
+        },
+        "NATIVE_SNAPSHOT": {
+          "samples": 152,
+          "p50_seconds": 0.042885,
+          "p95_seconds": 0.130238,
+          "p99_seconds": 0.165411,
+          "max_seconds": 0.169854
+        },
+        "RECONCILE_COMMIT": {
+          "samples": 152,
+          "p50_seconds": 0.453453,
+          "p95_seconds": 0.609903,
+          "p99_seconds": 0.711513,
+          "max_seconds": 0.95615
+        },
+        "PROTECTION": {
+          "samples": 153,
+          "p50_seconds": 0.518906,
+          "p95_seconds": 1.142339,
+          "p99_seconds": 1.775456,
+          "max_seconds": 3.339495
+        },
+        "DELIVERY_COMMIT": {
+          "samples": 153,
+          "p50_seconds": 0.420886,
+          "p95_seconds": 0.499362,
+          "p99_seconds": 0.658965,
+          "max_seconds": 0.744236
+        },
+        "TICK_NEW_RECEIPT": {
+          "samples": 32,
+          "p50_seconds": 0.420073,
+          "p95_seconds": 0.547935,
+          "p99_seconds": 0.598864,
+          "max_seconds": 0.598864
+        },
+        "CYCLE": {
+          "samples": 2,
+          "p50_seconds": 3.018313,
+          "p95_seconds": 4.978723,
+          "p99_seconds": 4.978723,
+          "max_seconds": 4.978723
+        },
+        "CYCLE_OPPORTUNITY_CLAIM": {
+          "samples": 2,
+          "p50_seconds": 0.378139,
+          "p95_seconds": 0.494275,
+          "p99_seconds": 0.494275,
+          "max_seconds": 0.494275
+        },
+        "SCAN": {
+          "samples": 2,
+          "p50_seconds": 0.008775,
+          "p95_seconds": 0.028607,
+          "p99_seconds": 0.028607,
+          "max_seconds": 0.028607
+        },
+        "STOCK_SCAN": {
+          "samples": 2,
+          "p50_seconds": 0.401352,
+          "p95_seconds": 0.518895,
+          "p99_seconds": 0.518895,
+          "max_seconds": 0.518895
+        },
+        "SCOPE_SCAN": {
+          "samples": 2,
+          "p50_seconds": 0.00126,
+          "p95_seconds": 0.0031,
+          "p99_seconds": 0.0031,
+          "max_seconds": 0.0031
+        },
+        "ENTRY_MODEL_ADMISSION": {
+          "samples": 2,
+          "p50_seconds": 0.009302,
+          "p95_seconds": 0.01064,
+          "p99_seconds": 0.01064,
+          "max_seconds": 0.01064
+        },
+        "ENTRY_MODEL_REQUEST": {
+          "samples": 2,
+          "p50_seconds": 0.375953,
+          "p95_seconds": 0.475366,
+          "p99_seconds": 0.475366,
+          "max_seconds": 0.475366
+        },
+        "PROTECTION_POSITIONS": {
+          "samples": 9,
+          "p50_seconds": 0.007223,
+          "p95_seconds": 0.012224,
+          "p99_seconds": 0.012224,
+          "max_seconds": 0.012224
+        },
+        "PROTECTION_ASSESS": {
+          "samples": 7,
+          "p50_seconds": 0.421576,
+          "p95_seconds": 0.440374,
+          "p99_seconds": 0.440374,
+          "max_seconds": 0.440374
+        },
+        "PROTECTION_HEARTBEAT": {
+          "samples": 9,
+          "p50_seconds": 0.40902,
+          "p95_seconds": 0.435693,
+          "p99_seconds": 0.435693,
+          "max_seconds": 0.435693
+        },
+        "PROTECTION_RESERVATION": {
+          "samples": 2,
+          "p50_seconds": 0.410584,
+          "p95_seconds": 0.423482,
+          "p99_seconds": 0.423482,
+          "max_seconds": 0.423482
+        },
+        "ADMISSION": {
+          "samples": 2,
+          "p50_seconds": 0.026235,
+          "p95_seconds": 0.064764,
+          "p99_seconds": 0.064764,
+          "max_seconds": 0.064764
+        },
+        "NATIVE_ACCEPT_SPAWN": {
+          "samples": 2,
+          "p50_seconds": 0.000535,
+          "p95_seconds": 0.000623,
+          "p99_seconds": 0.000623,
+          "max_seconds": 0.000623
+        },
+        "NATIVE_ACCEPT_TRANSPORT": {
+          "samples": 2,
+          "p50_seconds": 0.538129,
+          "p95_seconds": 0.857237,
+          "p99_seconds": 0.857237,
+          "max_seconds": 0.857237
+        },
+        "NATIVE_ACCEPT": {
+          "samples": 2,
+          "p50_seconds": 0.539597,
+          "p95_seconds": 1.093044,
+          "p99_seconds": 1.093044,
+          "max_seconds": 1.093044
+        },
+        "DISPATCH": {
+          "samples": 2,
+          "p50_seconds": 1.569767,
+          "p95_seconds": 1.952706,
+          "p99_seconds": 1.952706,
+          "max_seconds": 1.952706
+        },
+        "ENTRY_MODEL": {
+          "samples": 1,
+          "p50_seconds": 0.001933,
+          "p95_seconds": 0.001933,
+          "p99_seconds": 0.001933,
+          "max_seconds": 0.001933
+        },
+        "ENTRY_MIXED_SELECTION": {
+          "samples": 1,
+          "p50_seconds": 0.000459,
+          "p95_seconds": 0.000459,
+          "p99_seconds": 0.000459,
+          "max_seconds": 0.000459
+        },
+        "ENTRY_SCOPE_RECEIPT_CHECK": {
+          "samples": 1,
+          "p50_seconds": 0.010705,
+          "p95_seconds": 0.010705,
+          "p99_seconds": 0.010705,
+          "max_seconds": 0.010705
+        },
+        "ENTRY_SCOPE_SELECTION": {
+          "samples": 1,
+          "p50_seconds": 0.00059,
+          "p95_seconds": 0.00059,
+          "p99_seconds": 0.00059,
+          "max_seconds": 0.00059
+        },
+        "ENTRY_MODEL_SETTLEMENT": {
+          "samples": 1,
+          "p50_seconds": 0.402458,
+          "p95_seconds": 0.402458,
+          "p99_seconds": 0.402458,
+          "max_seconds": 0.402458
+        },
+        "ENTRY_PROTECTION_WAIT": {
+          "samples": 1,
+          "p50_seconds": 0.000127,
+          "p95_seconds": 0.000127,
+          "p99_seconds": 0.000127,
+          "max_seconds": 0.000127
+        },
+        "ENTRY_OPTION_MARKET_READ": {
+          "samples": 1,
+          "p50_seconds": 0.00593,
+          "p95_seconds": 0.00593,
+          "p99_seconds": 0.00593,
+          "max_seconds": 0.00593
+        },
+        "ENTRY_REVIEW": {
+          "samples": 1,
+          "p50_seconds": 0.040156,
+          "p95_seconds": 0.040156,
+          "p99_seconds": 0.040156,
+          "max_seconds": 0.040156
+        }
+      }
+    }
+  },
+  "loaded_protection": [
+    {
+      "asset": "STOCK",
+      "seed_mib": 112,
+      "journal_bytes_before_contention": 124760064,
+      "exit_seconds": 3.892341464999845,
+      "breach_to_native_ack_seconds": 2.3245683289987937,
+      "breach_to_tick_completion_seconds": 3.5230408389998047,
+      "breach_to_flat_observed_seconds": 5.357623225998395,
+      "next_quote_to_flat_observed_seconds": 1.4473731059988495,
+      "exit_submitted_while_all_waiting": true,
+      "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+      "report_snapshot_open_during_exit": true,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0
+    },
+    {
+      "asset": "OPTION",
+      "seed_mib": 112,
+      "journal_bytes_before_contention": 124817408,
+      "exit_seconds": 4.373732211999595,
+      "breach_to_native_ack_seconds": 2.70116435700038,
+      "breach_to_tick_completion_seconds": 3.9146733609995863,
+      "breach_to_flat_observed_seconds": 5.964383394999459,
+      "next_quote_to_flat_observed_seconds": 1.6318954509988544,
+      "exit_submitted_while_all_waiting": true,
+      "exit_filled_from_later_packet_before_advice_or_history_returned": true,
+      "report_snapshot_open_during_exit": true,
+      "native_submissions": 2,
+      "accounting": "VERIFIED",
+      "held_positions": 0
+    }
+  ],
+  "full_duration": {
+    "status": "INCOMPLETE",
+    "requested_seconds": 21480,
+    "evidence_directory": "/workspace/scratch/b29c7148e65c/row-batches-full-1123",
+    "application_manifest_sha256": "f9f8035603dcb429a9fa589a878653a33b579c7fbc2458e1712d7d0378f53138",
+    "worker_cpu_affinity": [
+      0
+    ],
+    "result": "No final report or live launcher/worker was found on November 24. Raw RUNNING receipts are retained unchanged; this is not a full-duration pass or an established application failure.",
+    "observed_at": "2026-11-24T15:09:52.315462+00:00",
+    "last_progress_modified_at": "2026-11-24T03:13:54.770706+00:00",
+    "last_progress": {
+      "version": "paper-soak-result-v1",
+      "status": "RUNNING",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "planned_seconds": 21480,
+      "nominal_worker_seconds": 21480,
+      "wall_clock_full_duration": "PENDING",
+      "nominal_cpu_profile": true,
+      "source_seed": {
+        "kind": "labeled diagnostic padding, not month-history proof",
+        "rows": 30006,
+        "initial_database_bytes": 124760064
+      },
+      "memory_enforcement": "sampled aggregate RSS ceiling; not a kernel cgroup",
+      "memory_limit_bytes": 1073741824,
+      "logical_cpus": 1,
+      "max_feed_recoveries": 0,
+      "native_snapshot_calls": 254,
+      "native_snapshot_failures": 0,
+      "native_snapshot_max_seconds": 0.30843187800019223,
+      "capture_attempts": 59,
+      "entry_model_calls": 1,
+      "management_model_calls": 0,
+      "dashboard_reads": 20,
+      "report_reads": 20,
+      "peak_tree_rss_bytes": 694136832,
+      "peak_processes": 2,
+      "children_reaped_count": 256,
+      "elapsed_seconds": 599.7687803940007,
+      "source_database_bytes": 130510848
+    },
+    "process_observed": false,
+    "final_report_present": false,
+    "raw_receipts": {
+      "summary.json": {
+        "sha256": "568f021546473911291a8d12ac316b78143d1ee381087880a0a8e276720a1b50",
+        "status": "RUNNING"
+      },
+      "progress.json": {
+        "sha256": "07f920f01998fb2c790213a3d04a7d4351e0458844128e17671e06faaee77180",
+        "status": "RUNNING"
+      }
+    }
+  },
+  "confirmed_host": {
+    "release": "2d538b7f32afa7b6df09e7af0d3534e9e27f71e5",
+    "image_id": "sha256:38843a3d7487ccbf7bdbfc8b0657d73f2829ffc3412a4cc009f21e85a1f808ac",
+    "review_hold": "SESSION_STOPPED_REVIEW_REQUIRED",
+    "changed": false
+  },
+  "protected": {
+    "main": true,
+    "draft_pr_1_metadata": true,
+    "account_and_enrollment": true,
+    "existing_limits": true,
+    "original_clocks_and_deadlines": true,
+    "existing_host_worker_and_release": true
+  }
+}

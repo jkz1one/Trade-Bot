@@ -1,0 +1,5 @@
+# Linux CPython 3.12; generated from the tested environment by scripts/lock-dependencies.py.
+# Exact dependency versions; image/OS artifacts are verified separately.
+packaging==26.3
+setuptools==84.0.0
+wheel==0.48.0

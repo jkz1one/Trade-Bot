@@ -1,0 +1,638 @@
+{
+  "version": "paper-short-host-gate-proof-v1",
+  "recorded_date": "2026-11-27",
+  "base_release": "5e147f3da1a106eeb0a66aa1af34ca252a4c0ad2",
+  "scope": "Qualification tooling and regression reproduction; no application latency repair",
+  "application_unchanged": true,
+  "application_manifest_sha256": "6f2b3d274a215f9f86a436f0f7f60d9806a0f3c8d458496cf45d266addbb034b",
+  "application_files": 336,
+  "runtime_pins": 60,
+  "source_files_sha256": {
+    "scripts/paper-soak-host.py": "d365d29103c6983f7dd38aa0703b2d37590b530e07856549c43accf469f02d49",
+    "tests/soak_worker.py": "a968ac88933d24aeaef846a4889c5af31b7e5bc6510853740d20f1e67158b5bc",
+    "tests/soak_restore_profile.py": "b779ac3df7c73cacfdf1e490793cbfc9238792d49ebbeaeebf5f164193497818",
+    "tests/soak_diagnostics.py": "e58f64d16a49a7a80fa9fa5f4e5054bc7ef7af0d7c0dc9d7d5083217844d3f17",
+    "tests/test_soak_diagnostics.py": "5426397a54c284c12f00317135ecbb6a4ab9a43ffef39e3abea39f8df3fe78bd",
+    "tests/test_portfolio_models.py": "36a47d3f6e5f9f9256e18aa0b4fba48135123de013f8e47c930c4395fa677558",
+    "tests/test_paper_soak_host.py": "230b2cff6dafd2fe316c728263d53b63d44732e4dd633d2bd657fc389df7ff6e"
+  },
+  "focused_checks": "148 passed in 14.56s",
+  "checks_include": [
+    "Original quote/plan deadline unchanged after timely reply and delayed settlement",
+    "Known model charge remains settled; no reservation or handoff after expiry; same-slot retry remains non-submitting",
+    "335-second mode preserves all Docker limits, refuses existing workers/unguarded scheduler and retains isolated evidence",
+    "Short pass cannot become duration pass and requires original complete decision diagnostic",
+    "Missing/reset/new-device resource counters remain explicit; read-only extraction preserves database bytes"
+  ],
+  "positive_control": {
+    "directory": "/workspace/scratch/b29c7148e65c/entry-profile-final-1127",
+    "summary": {
+      "version": "paper-soak-launch-v1",
+      "status": "PASSED",
+      "application_files": 336,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "6f2b3d274a215f9f86a436f0f7f60d9806a0f3c8d458496cf45d266addbb034b",
+      "seconds": 335,
+      "seed_mib": 112,
+      "max_feed_recoveries": 0,
+      "worker_cpu_affinity": [
+        0
+      ],
+      "network": "ISOLATED",
+      "host_acceptance": "UNVERIFIED",
+      "wall_clock_soak": "NOT_RUN",
+      "synthetic": true,
+      "provider_calls": false,
+      "model_service_calls": false,
+      "live_enabled": false,
+      "worker_pid": 2,
+      "worker_start_ticks": "1226341",
+      "child_exit_code": 0,
+      "cgroup_memory": {
+        "status": "UNAVAILABLE"
+      }
+    },
+    "progress": {
+      "status": "PASSED",
+      "elapsed_seconds": 336.87906577800095,
+      "native_snapshot_calls": 194,
+      "native_snapshot_failures": 0,
+      "native_snapshot_max_seconds": 0.1859727680002834,
+      "capture_attempts": 34,
+      "peak_tree_rss_bytes": 446148608,
+      "source_database_bytes": 128819200,
+      "decision_coverage": {
+        "expected": 2,
+        "evaluated": 2,
+        "coverage_percent": 100.0,
+        "unmeasured_slots": [],
+        "target_met": true
+      },
+      "execution": {
+        "status": "RECORDED",
+        "entry_fills": 1,
+        "exit_fills": 1,
+        "completed_round_trips": 1,
+        "carry_in_exits": 0
+      },
+      "final_accounting": "VERIFIED_FLAT",
+      "children_reaped": true,
+      "worker_window_cpu": {
+        "elapsed_seconds": 336.878966,
+        "worker_user_seconds": 144.65596,
+        "worker_system_seconds": 31.494816,
+        "reaped_child_user_seconds": 5.851629,
+        "reaped_child_system_seconds": 1.746948,
+        "average_busy_cores": 0.545446,
+        "average_allocated_cpu_percent": 54.545
+      },
+      "worker_resource_window": {
+        "scope": "worker start to diagnostic read; not isolated entry-phase CPU or I/O",
+        "elapsed_seconds": 336.87898238100024,
+        "cpu": {
+          "status": "UNAVAILABLE"
+        },
+        "io": {
+          "status": "UNAVAILABLE"
+        },
+        "start": {
+          "monotonic_seconds": 12269.696589231,
+          "observed_at": "2026-11-27T20:56:43.332739+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        },
+        "end": {
+          "monotonic_seconds": 12606.575571612,
+          "observed_at": "2026-11-27T21:02:20.211721+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        }
+      },
+      "opening_restore_profile": {
+        "status": "OBSERVED",
+        "reservation_at": "2026-10-28T14:00:17.865628+00:00",
+        "source_at": "2026-10-28T14:00:13.796459Z",
+        "received_at": "2026-10-28T14:00:14.796459Z",
+        "source_to_reservation": {
+          "window_seconds": 4.069169,
+          "wall_seconds_with_digest_running": 3.061627,
+          "wholly_contained_calls": 16,
+          "owner_thread_cpu_seconds": 2.745627,
+          "background_cpu_seconds": 0.153794,
+          "owner_thread_calls": {
+            "app.mixed.portfolio_execution.reconcile": 4,
+            "app.options.runtime._tick": 2,
+            "app.options.coordinator._cycle_once": 2,
+            "app.mixed.selection.collect": 2,
+            "app.options.entry_coordination._admit_request": 2,
+            "app.options.entry_coordination._settle_reply": 2,
+            "app.options.entry_coordination.run_entry_cycle": 1
+          }
+        },
+        "receipt_to_reservation": {
+          "window_seconds": 3.069169,
+          "wall_seconds_with_digest_running": 2.667576,
+          "wholly_contained_calls": 14,
+          "owner_thread_cpu_seconds": 2.596369,
+          "background_cpu_seconds": 0.0,
+          "owner_thread_calls": {
+            "app.mixed.portfolio_execution.reconcile": 3,
+            "app.options.runtime._tick": 2,
+            "app.options.coordinator._cycle_once": 2,
+            "app.mixed.selection.collect": 2,
+            "app.options.entry_coordination._admit_request": 2,
+            "app.options.entry_coordination._settle_reply": 2,
+            "app.options.entry_coordination.run_entry_cycle": 1
+          }
+        }
+      }
+    },
+    "entry_diagnostic": {
+      "status": "RECORDED",
+      "evidence_clock": "ORIGINAL_SYNTHETIC_CLOCKS",
+      "cycle_key": "degen:5977320:portfolio:0",
+      "started_at": "2026-10-28T14:00:16.018696+00:00",
+      "stored_status": "COMPLETE",
+      "decision_status": "OPEN",
+      "reason": null,
+      "clocks": {
+        "as_of": "2026-10-28T14:00:16.489392Z",
+        "deadline": "2026-10-28T14:00:21.489392Z",
+        "account_captured_at": "2026-10-28T14:00:15.575478Z",
+        "account_max_age_seconds": 20,
+        "quote_max_age_seconds": 10,
+        "model_completed_at": "2026-10-28T14:00:17.298337+00:00",
+        "review_at": "2026-10-28T14:00:17.691116+00:00",
+        "options": [
+          {
+            "source_at": "2026-10-28T14:00:13.796459Z",
+            "received_at": "2026-10-28T14:00:14.796459Z",
+            "admission_deadline": "2026-10-28T14:00:21.489392Z"
+          },
+          {
+            "source_at": "2026-10-28T14:00:13.796459Z",
+            "received_at": "2026-10-28T14:00:14.796459Z",
+            "admission_deadline": "2026-10-28T14:00:21.489392Z"
+          }
+        ]
+      },
+      "cycle_timing": {
+        "started_at": "2026-10-28T14:00:16.003752+00:00",
+        "elapsed_seconds": 4.240161,
+        "generation": 2,
+        "kind": "CYCLE",
+        "native": [
+          {
+            "child_stages": [
+              {
+                "cpu_seconds": 3e-06,
+                "elapsed_seconds": 7e-06,
+                "stage": "IMPORTS"
+              },
+              {
+                "cpu_seconds": 0.248281,
+                "elapsed_seconds": 0.499411,
+                "stage": "REQUEST"
+              },
+              {
+                "cpu_seconds": 0.249097,
+                "elapsed_seconds": 0.50023,
+                "stage": "VENUE_OPEN"
+              },
+              {
+                "cpu_seconds": 0.250655,
+                "elapsed_seconds": 0.501788,
+                "stage": "ACCEPT"
+              },
+              {
+                "cpu_seconds": 0.25321,
+                "elapsed_seconds": 0.519988,
+                "stage": "SERIALIZE"
+              },
+              {
+                "cpu_seconds": 0.253241,
+                "elapsed_seconds": 0.520022,
+                "stage": "COMPLETE"
+              }
+            ],
+            "child_trace_status": "OBSERVED",
+            "elapsed_seconds": 0.582,
+            "parent_phase": "RESPONSE_VALIDATE"
+          }
+        ],
+        "native_omitted": 0,
+        "packet_age_seconds": 1.207293,
+        "packet_sequence": 2,
+        "packet_sha256": "dbe8858bfd7e4e2457465d8bea0e7f12e71ea6ea658c6ccbfc495ea80b519d0e",
+        "slot": 5977320,
+        "spans": [
+          {
+            "elapsed_seconds": 0.461478,
+            "phase": "CYCLE_OPPORTUNITY_CLAIM",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.008263,
+            "phase": "SCAN",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.379775,
+            "phase": "STOCK_SCAN",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.001341,
+            "phase": "SCOPE_SCAN",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.009157,
+            "phase": "ENTRY_MODEL_ADMISSION",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.391521,
+            "phase": "ENTRY_MODEL_REQUEST",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.003114,
+            "model_source_key": "degen:5977320:portfolio:0",
+            "phase": "ENTRY_MODEL",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.000445,
+            "phase": "ENTRY_MIXED_SELECTION",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.010085,
+            "phase": "ENTRY_SCOPE_RECEIPT_CHECK",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.000462,
+            "phase": "ENTRY_SCOPE_SELECTION",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.384875,
+            "phase": "ENTRY_MODEL_SETTLEMENT",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 8.7e-05,
+            "phase": "ENTRY_PROTECTION_WAIT",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.003919,
+            "phase": "ENTRY_OPTION_MARKET_READ",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.027102,
+            "phase": "ENTRY_REVIEW",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.064455,
+            "local_age_seconds": 3.069169,
+            "phase": "ADMISSION",
+            "quote_age_seconds": 4.069169,
+            "receive_lag_seconds": 1.0,
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.002954,
+            "phase": "NATIVE_ACCEPT_SPAWN",
+            "remaining_at_start_seconds": 3.264666,
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.581913,
+            "phase": "NATIVE_ACCEPT_TRANSPORT",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.871499,
+            "phase": "NATIVE_ACCEPT",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 1.244292,
+            "local_age_seconds": 3.133689,
+            "phase": "DISPATCH",
+            "quote_age_seconds": 4.133689,
+            "receive_lag_seconds": 1.0,
+            "status": "COMPLETE"
+          }
+        ],
+        "spans_omitted": 0,
+        "status": "COMPLETE",
+        "trace_start_prepare_seconds": 0.002915,
+        "trace_storage": "COALESCED",
+        "version": "runtime-timing-v1"
+      },
+      "restore_to_review": {
+        "status": "OBSERVED",
+        "window_seconds": 3.894657,
+        "wall_seconds_with_digest_running": 2.915303,
+        "wholly_contained_calls": 15,
+        "owner_thread_cpu_seconds": 2.599305,
+        "background_cpu_seconds": 0.153794,
+        "owner_thread_calls": {
+          "app.mixed.portfolio_execution.reconcile": 4,
+          "app.options.runtime._tick": 2,
+          "app.options.coordinator._cycle_once": 2,
+          "app.mixed.selection.collect": 2,
+          "app.options.entry_coordination._admit_request": 2,
+          "app.options.entry_coordination._settle_reply": 2
+        }
+      },
+      "resources": {
+        "scope": "worker start to diagnostic read; not isolated entry-phase CPU or I/O",
+        "elapsed_seconds": 37.64057671500086,
+        "cpu": {
+          "status": "UNAVAILABLE"
+        },
+        "io": {
+          "status": "UNAVAILABLE"
+        },
+        "start": {
+          "monotonic_seconds": 12269.696589231,
+          "observed_at": "2026-11-27T20:56:43.332739+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        },
+        "end": {
+          "monotonic_seconds": 12307.337165946,
+          "observed_at": "2026-11-27T20:57:20.973316+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        }
+      }
+    },
+    "first_complete_diagnostic_preserved_through_shutdown": true,
+    "staged_helpers_match_final_source": true
+  },
+  "negative_control": {
+    "method": "After durable settlement, wait until original plan deadline plus 0.1s; do not alter source timestamps, approval or limits. This checks failure capture, not host CPU emulation.",
+    "directory": "/workspace/scratch/b29c7148e65c/entry-profile-rejection-1127",
+    "status": "EXPECTED_FAILURE_RECORDED",
+    "elapsed_seconds": 40.563349989000926,
+    "injected_wait_seconds": [
+      3.928578
+    ],
+    "expected_failure": "Known fixture entry failed: ORIGINAL_PLAN_DEADLINE_EXPIRED",
+    "children_reaped": true,
+    "original_charge_settled": true,
+    "unsettled_calls": 0,
+    "orders": 0,
+    "diagnostic": {
+      "status": "RECORDED",
+      "evidence_clock": "ORIGINAL_SYNTHETIC_CLOCKS",
+      "cycle_key": "degen:5977320:portfolio:0",
+      "started_at": "2026-10-28T14:00:15.908543+00:00",
+      "stored_status": "COMPLETE",
+      "decision_status": "HOLD",
+      "reason": "ORIGINAL_PLAN_DEADLINE_EXPIRED",
+      "clocks": {
+        "as_of": "2026-10-28T14:00:16.328145Z",
+        "deadline": "2026-10-28T14:00:21.328145Z",
+        "account_captured_at": "2026-10-28T14:00:15.478544Z",
+        "account_max_age_seconds": 20,
+        "quote_max_age_seconds": 10,
+        "model_completed_at": "2026-10-28T14:00:17.118723+00:00",
+        "review_at": "2026-10-28T14:00:21.487710+00:00",
+        "options": [
+          {
+            "source_at": "2026-10-28T14:00:13.714731Z",
+            "received_at": "2026-10-28T14:00:14.714731Z",
+            "admission_deadline": "2026-10-28T14:00:21.328145Z"
+          },
+          {
+            "source_at": "2026-10-28T14:00:13.714731Z",
+            "received_at": "2026-10-28T14:00:14.714731Z",
+            "admission_deadline": "2026-10-28T14:00:21.328145Z"
+          }
+        ]
+      },
+      "cycle_timing": {
+        "started_at": "2026-10-28T14:00:15.895964+00:00",
+        "elapsed_seconds": 6.488751,
+        "generation": 2,
+        "kind": "CYCLE",
+        "native": [],
+        "native_omitted": 0,
+        "packet_age_seconds": 1.181233,
+        "packet_sequence": 2,
+        "packet_sha256": "b8735f1d475bcb4c6385c691b8ff8e8e6de72541e58de6a32071b2bde714bffd",
+        "slot": 5977320,
+        "spans": [
+          {
+            "elapsed_seconds": 0.409992,
+            "phase": "CYCLE_OPPORTUNITY_CLAIM",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.007934,
+            "phase": "SCAN",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.385137,
+            "phase": "STOCK_SCAN",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.001349,
+            "phase": "SCOPE_SCAN",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.008454,
+            "phase": "ENTRY_MODEL_ADMISSION",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.372229,
+            "phase": "ENTRY_MODEL_REQUEST",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.001808,
+            "model_source_key": "degen:5977320:portfolio:0",
+            "phase": "ENTRY_MODEL",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.000593,
+            "phase": "ENTRY_MIXED_SELECTION",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.009753,
+            "phase": "ENTRY_SCOPE_RECEIPT_CHECK",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.000491,
+            "phase": "ENTRY_SCOPE_SELECTION",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 4.312721,
+            "phase": "ENTRY_MODEL_SETTLEMENT",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.007122,
+            "phase": "ENTRY_PROTECTION_WAIT",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.035109,
+            "phase": "ENTRY_OPTION_MARKET_READ",
+            "status": "COMPLETE"
+          },
+          {
+            "elapsed_seconds": 0.037775,
+            "phase": "ENTRY_REVIEW",
+            "status": "COMPLETE"
+          }
+        ],
+        "spans_omitted": 0,
+        "status": "COMPLETE",
+        "trace_start_prepare_seconds": 0.003113,
+        "trace_storage": "COALESCED",
+        "version": "runtime-timing-v1"
+      },
+      "restore_to_review": {
+        "status": "OBSERVED",
+        "window_seconds": 7.772979,
+        "wall_seconds_with_digest_running": 2.954698,
+        "wholly_contained_calls": 15,
+        "owner_thread_cpu_seconds": 2.599795,
+        "background_cpu_seconds": 0.164449,
+        "owner_thread_calls": {
+          "app.mixed.portfolio_execution.reconcile": 4,
+          "app.options.runtime._tick": 2,
+          "app.options.coordinator._cycle_once": 2,
+          "app.mixed.selection.collect": 2,
+          "app.options.entry_coordination._admit_request": 2,
+          "app.options.entry_coordination._settle_reply": 2
+        }
+      },
+      "resources": {
+        "scope": "worker start to diagnostic read; not isolated entry-phase CPU or I/O",
+        "elapsed_seconds": 36.45090598999923,
+        "cpu": {
+          "status": "UNAVAILABLE"
+        },
+        "io": {
+          "status": "UNAVAILABLE"
+        },
+        "start": {
+          "monotonic_seconds": 12171.278429856,
+          "observed_at": "2026-11-27T20:55:04.914579+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        },
+        "end": {
+          "monotonic_seconds": 12207.729335846,
+          "observed_at": "2026-11-27T20:55:41.365486+00:00",
+          "scope": "mounted cgroup v2; includes worker children",
+          "memory": {
+            "status": "UNAVAILABLE"
+          },
+          "cpu": {
+            "status": "UNAVAILABLE"
+          },
+          "io": {
+            "status": "UNAVAILABLE"
+          }
+        }
+      }
+    }
+  },
+  "intermediate_control": {
+    "directory": "/workspace/scratch/b29c7148e65c/entry-profile-1127",
+    "elapsed_seconds": 336.7012411979995,
+    "status": "PASSED",
+    "note": "Pre-final diagnostic retention implementation; final control above verifies final helper bytes."
+  },
+  "verification_notes": [
+    "148 focused installed-package cases passed; earlier 120/147/148 results overlap, not additive.",
+    "Scoped Ruff E4/E7/E9/F/I and whitespace pass; first broad inherited Ruff configuration exposed existing warnings plus import ordering, corrected new import ordering. No broad lint-clean claim.",
+    "Docker executable is unavailable locally. CPU affinity is one logical CPU; mounted cgroup counters are unavailable, explicitly retained as such.",
+    "No matching application rebuild required: all 336 installed application files match unchanged source with 60 pinned dependencies."
+  ],
+  "artifact_sha256": {
+    "/workspace/scratch/b29c7148e65c/entry-profile-final-1127/summary.json": "90d88252823ca7448d0f51d4231a30dbfc2a5deb38dfea9d3a04c4752eff3b96",
+    "/workspace/scratch/b29c7148e65c/entry-profile-final-1127/progress.json": "0fbc2767eccdf7730931e067ed9947e101f75a5882e0cd6a8d735969e751a79a",
+    "/workspace/scratch/b29c7148e65c/entry-profile-final-1127/report.json": "d4ed1cd85f43e621bc42651a1867868546ef74f24b2bd7635cf704d3b22ddb80",
+    "/workspace/scratch/b29c7148e65c/entry-profile-final-1127/entry-diagnostic.json": "7196e1b22d7e8ee212909251ce600884260a9f71c8358b30fc32c01fb14467c7",
+    "/workspace/scratch/b29c7148e65c/entry-profile-rejection-1127/probe-result.json": "83a7ecf8f7439b002371299c71b85f4c05fbf4dda135503be13e7e651175a7d8",
+    "/workspace/scratch/b29c7148e65c/entry-profile-verified-checks-1127.log": "4bdc3599f849a7608e7fc8f810b47ee678f8822a788718ec93ba6845bb9ef609"
+  },
+  "limits": [
+    "Not Docker/server qualification",
+    "Not a repaired host entry deadline",
+    "Not repeated active lifecycle coverage",
+    "Not full-day or full-cadence month evidence",
+    "No provider connectivity evidence"
+  ],
+  "preserved": {
+    "installed_connected_release": "2d538b7f32afa7b6df09e7af0d3534e9e27f71e5",
+    "host_access_performed": false,
+    "deployed_or_resumed": false,
+    "running_host_soak_changed": false,
+    "limits_changed": false,
+    "main_changed": false,
+    "pr_1_metadata_changed": false
+  },
+  "next": "Measure a critical-path transaction/storage repair before another host run. Do not redeploy or resize on this harness result."
+}

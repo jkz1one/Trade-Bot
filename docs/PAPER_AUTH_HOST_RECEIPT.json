@@ -1,0 +1,35 @@
+{
+  "version": "paper-auth-host-receipt-v1",
+  "reported_client_date": "2026-11-04",
+  "client_timezone": "America/New_York",
+  "source": "Operator-supplied terminal output; no direct host access.",
+  "release": "d84785794f75a7717941d6dfd9a68a7444296c78",
+  "image_id": "sha256:f06d883c1c5ed91c0a6833dd2186dd0a2ccf0856c9a114ff17f1546aa4e090f9",
+  "report": {
+    "execution_authority": false,
+    "live_enabled": false,
+    "market_reads": 0,
+    "model_calls": 0,
+    "next_command": null,
+    "private_directory": "/root/trade-bot-read-auth-2j4m02qm",
+    "schema_sha256": "77f5aaac0e67dd9fb194d35bdbfb3779a351f52db8c6594a90dadd4f3fc5e272",
+    "status": "READ_AUTH_VERIFIED",
+    "trading_ready": false
+  },
+  "schema_review": {
+    "accepted_mapping_sha256": "d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15",
+    "matches_accepted_mapping": false,
+    "changed_fields": "UNKNOWN: original saved schema contents must be reviewed.",
+    "saved_discovery": "/root/trade-bot-read-auth-2j4m02qm/headless-discovery.json",
+    "next_action": "Export the already-saved six read-tool schemas with the installed offline export-schemas command. No new capture, login, build, repin or enrollment."
+  },
+  "limits": [
+    "Headless authorization/schema discovery succeeded. The summary does not identify whether token refresh was exercised.",
+    "Different metadata digest is proven; semantic schema changes versus description/annotation changes are not yet known.",
+    "No fresh market data, model calls, worker start, simulated fill or lifecycle acceptance is established.",
+    "The existing schema gate remains unchanged; exported evidence is not automatic approval of a new wire contract."
+  ],
+  "application_and_scripts_changed": false,
+  "application_tree": "a8edcaab96c4e3bd16c4473ea58de3c3e59f9f80",
+  "scripts_tree": "d071e99ec4655c89b02f9469739e3875a1f73964"
+}

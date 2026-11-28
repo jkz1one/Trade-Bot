@@ -1,0 +1,76 @@
+{
+  "version": "paper-static-publication-host-20261127-v1",
+  "source": "Operator-supplied terminal output; no direct server access",
+  "reader_release": "85f95a51b0d00b09c72d63abbb1736ed7376e5fb",
+  "source_release": "d2e78bf88e0fa78a0940bb3f3881564027f70442",
+  "source_evidence": "/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-d2e78bf88e0f-foxg0rjo",
+  "evidence_directory": "/var/lib/trade-bot-paper-soak/trade-bot-publisher-replay-umbcteph",
+  "image_id": "sha256:401df4323742aef1a30e62f79be7608036f6111dde449fefaf25da1db7c8b4bd",
+  "container_id": "6fdbc32d8864658930867ed1a804fa4310374af539ab565a8603cfffad98d172",
+  "status": "REPLAY_RECORDED",
+  "attach_exit_code": 0,
+  "restart_count": 0,
+  "worker": {
+    "Status": "exited",
+    "Running": false,
+    "OOMKilled": false,
+    "ExitCode": 0,
+    "StartedAt": "2026-11-28T01:37:25.46816361Z",
+    "FinishedAt": "2026-11-28T01:37:34.059977473Z"
+  },
+  "source_mount": "READ_ONLY",
+  "limits": {
+    "cpus": 1,
+    "memory_bytes": 1073741824,
+    "swap_bytes": 0,
+    "pids": 128
+  },
+  "result": {
+    "status": "STATIC_PUBLICATION_PASSED",
+    "calls": 1,
+    "elapsed_seconds": 0.9642013469710946,
+    "stage": "INSTALL_DISPLAY",
+    "source_modified": false,
+    "source_database_bytes": 218877952,
+    "display_limit_bytes": 67108864,
+    "publication_deadline_seconds": 5,
+    "phases": {
+      "COPY_SOURCE": 0.6503931358456612,
+      "PROJECT_DISPLAY": 0.053952169604599476
+    },
+    "last_projection_table": "execution_runtime_timings",
+    "source_sha256": {
+      "runtime.json": "59bb9ec0a4f54c08f8d4f6c3eb815ef802c16280ebff7186634589e04ef97fe1",
+      "options.db": "9074ffef89f794e15ab781d8d9c91d30e6b977d5ed3e5e8381b8a444e6cafdce",
+      "options.db.authority.db": "011d1a1e8444d6bca1f90568871eae0fa6f1d3d9ff19130ae0c5635ea31b1276",
+      "venue.db": "d5e31c6f47dfe649bb8e1fc3bd2ccd18b84f64ad8986e8ac3c93bf1df4c60bf2",
+      "options.db.runtime.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "publication": {
+      "status": "PUBLISHED",
+      "source_database_bytes": 218877952,
+      "display_database_bytes": 5414912,
+      "population_id": "offline-duration-capacity-v1",
+      "binding_sha256": "055dba7146809e4abd79af664a1293b6c2dd76797c7e95799b160d4e44e2cb2c",
+      "published_at": "2026-11-28T01:37:32.895047+00:00",
+      "checkpoint": {
+        "owner_revision": 4728,
+        "runtime_generation": 2,
+        "feed_sequence": 1619
+      },
+      "held_plays": 0,
+      "fills": 0
+    },
+    "execution_authority": false,
+    "credentials_opened": false,
+    "provider_calls": false,
+    "live_enabled": false,
+    "connected_health": "UNVERIFIED"
+  },
+  "interpretation": {
+    "established": "Stopped fixture at its final size can publish using the original image and unchanged container limits; source hashes/mtimes unchanged",
+    "not_established": "Original failure cause, concurrent operation, sustained memory headroom, fixture lifecycle or connected health",
+    "size_hypothesis": "This final source projects to 5.16 MiB, well below the unchanged 64-MiB cap; a fixed final-state size failure was not reproduced",
+    "timing_scope": "0.964 s is one publication, not the 8.592 s total container lifetime or a percentile"
+  }
+}

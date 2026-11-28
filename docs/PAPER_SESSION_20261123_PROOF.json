@@ -1,0 +1,297 @@
+{
+  "version": "paper-session-20261123-v1",
+  "evidence_source": "Operator-pasted read-only diagnostic and selected saved report fields; no direct host access.",
+  "installed_release": "2d538b7f32afa7b6df09e7af0d3534e9e27f71e5",
+  "installed_image": "sha256:38843a3d7487ccbf7bdbfc8b0657d73f2829ffc3412a4cc009f21e85a1f808ac",
+  "run_id": "daily-20261123",
+  "observed_at": "2026-11-24T00:37:18.654338+00:00",
+  "controller": {
+    "status": "FAILED",
+    "reasons": [
+      "SESSION_STOPPED_REVIEW_REQUIRED"
+    ],
+    "paused": false,
+    "preparation_failures": 0,
+    "receipt_available": true,
+    "launch_attempted": true
+  },
+  "worker": {
+    "started_at": "2026-11-23T15:01:41.911049511Z",
+    "finished_at": "2026-11-23T17:59:21.52662907Z",
+    "elapsed_seconds": 10659.61558,
+    "restart_count": 0,
+    "exit_code": 2,
+    "oom_killed": false
+  },
+  "execution": {
+    "decision_count": 0,
+    "cycle_count": 42,
+    "interrupted": 1,
+    "skipped_feed_unavailable": 35,
+    "skipped_slot_not_observed": 6,
+    "entry_fills": 0,
+    "exit_fills": 0
+  },
+  "collection": {
+    "attempts": 344,
+    "delivered": 3,
+    "failed": 341,
+    "reported_failure_samples": 13,
+    "sample_sequences": [
+      2684,
+      2685,
+      2686,
+      3017,
+      3018,
+      3019,
+      3020,
+      3021,
+      3022,
+      3023,
+      3024,
+      3025,
+      3026
+    ],
+    "sample_error_class": "TimeoutError",
+    "sample_last_progress": "CONNECT",
+    "sample_completed_reads": 0,
+    "original_failed_capture_available": false,
+    "scope": "All 13 shown samples stalled before DISCOVER; no assertion that all 341 failures had this stage."
+  },
+  "collection_timing": {
+    "measured": 344,
+    "missing_or_invalid": 0,
+    "omitted": 0,
+    "failed_p50_seconds": 18.751929,
+    "failed_max_seconds": 24.906787,
+    "capture_p50_seconds": 16.522773,
+    "capture_max_seconds": 22.713949,
+    "read_parent_p50_seconds": 14.182549,
+    "read_parent_max_seconds": 19.856958,
+    "history_plan_max_seconds": 8.660798,
+    "history_binding_max_seconds": 7.898688
+  },
+  "runtime_failure": {
+    "occurred_at": "2026-11-23T17:59:01.212481+00:00",
+    "operation": "snapshot",
+    "error_class": "FixtureProcessTimeout",
+    "timeout_seconds": 5.0,
+    "elapsed_seconds": 8.454,
+    "option_process": {
+      "parent_phase": "SPAWN",
+      "elapsed_seconds": 5.272,
+      "child_trace_status": "NOT_OBSERVED",
+      "child_stages": []
+    }
+  },
+  "publication_failures": [],
+  "last_feed_at": "2026-11-23T17:23:25.492703+00:00",
+  "feed_age_seconds_at_report_window_end": 2156.033926,
+  "family_input_issues": {
+    "SCOPE": [
+      "SCOPE_CURRENT_INPUT_UNAVAILABLE"
+    ],
+    "SWING": []
+  },
+  "earlier_controller_failure": {
+    "at": "2026-11-23T14:06:19.301721+00:00",
+    "step": "daily-info",
+    "reason": "DAILY_INFO_UNAVAILABLE",
+    "error_class": "ValueError",
+    "last_frame": "app/options/observer.py:136",
+    "relationship": "Predates the successful launch; not established as the exit cause."
+  },
+  "acceptance": {
+    "R3_guarded_installation": "CONFIRMED_PREVIOUSLY",
+    "R4_connected_day": "FAILED",
+    "root_cause": "UNRESOLVED"
+  },
+  "diagnosis_limits": [
+    "CONNECT in the deployed build includes lazy SDK imports, OAuth setup and MCP initialization; it does not by itself identify a network or authorization fault.",
+    "A reproduced parent-loop delay produces SPAWN/NOT_OBSERVED even after a read-only child completes successfully. The host child outcome is not established by that reproduction.",
+    "Host configuration confirms one CPU and 1 GiB. Supplied timings locate expensive local journal writes and prompt median scheduler wakeup; they do not establish CPU shortage or identify the collector CONNECT subphase.",
+    "SWING having no listed input issue does not prove readiness when no decisions were recorded."
+  ],
+  "changes": [
+    "Include saved collector failures, collection timing, runtime failures and runtime timing in paper-diagnose output.",
+    "Emit fixed SDK_IMPORTS, OAUTH_SETUP and MCP_INITIALIZE progress stages and retain them through child, host and report sanitizers.",
+    "Keep deadlines, response limits, authentication behavior, account state and worker lifecycle unchanged."
+  ],
+  "next_gate": "Requested timing/resource evidence received. Qualify the varied-history local cache repair offline; full-duration and connected acceptance remain open. Preserve the host review hold, worker and installed release.",
+  "preserved": [
+    "operator-managed host",
+    "account state and enrollment",
+    "risk and model limits",
+    "main",
+    "feat/event-awareness-baseline",
+    "draft PR 1 metadata"
+  ],
+  "verification": {
+    "status": "PASSED",
+    "passed": 268,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 35.552,
+    "scope": "Nine focused diagnostic, MCP adapter/auth, capture, process trace, timing, session report and host wrapper suites. Source-side pytest with matching rebuilt noneditable child package. Not a full installed-system or wall-clock soak run.",
+    "environment": "Root-mapped user namespace and isolated network namespace. No external provider/model calls; credential and host boundaries use fixtures.",
+    "earlier_attempts": "The first new client test encountered the executor proxy setting before its fake MCP context; the test now removes proxy environment settings. A source-side run without root mapping had 32 host-permission failures; all 268 cases passed in the intended root-mapped namespace.",
+    "artifact_sha256": {
+      "diagnostics-1123-root-tests.xml": "d7ecb1d158bf156d5274a5a42cabf727db27ba528f5d7e04e1b3e73a4f785e41",
+      "diagnostics-1123-root-tests.log": "7cc73bf0a69a7435995071f8625e2b22982a6f3253e74634bacab5e221333743"
+    },
+    "source_sha256": {
+      "app/options/read_capture.py": "a73b896e626ccf07b22008cff19e114b2e2bee3eeab74d135b597437d3ad58e6",
+      "app/options/read_worker.py": "ef8011d01ec3184483f73509f7105db399329a43d63ca9f2e67f4818e7587241",
+      "app/robinhood/client.py": "2956caf69c604bbc31a79925233071a454249a1dda7be287a59771497bc2469e",
+      "scripts/connected-session-host.py": "802d539938ce104d1c2c944c4a777576055c8bc7e880e3475ae6ba4b1b035aee",
+      "scripts/paper-diagnose.py": "98d1f6365e9ae8828b4e3553a2b61587307d9af6d027903d3d47dd83e5090a13",
+      "scripts/paper-session-report.py": "85479e0485119ab8e35d515d6a17786b2ae478520ef9ae4c26bc5dcfd3992c71",
+      "tests/test_feed_timing.py": "b04fc618473fc95e01f0ea00c35fb08b4d62ffe97c9f7090f7eae9d39746c269",
+      "tests/test_option_process_trace.py": "2b543b3f297c252a2fd537f1a0af45d5158c0ef3a67f40cd0fe496018974afb2",
+      "tests/test_option_read_diagnostics.py": "02feadcd12b8767a8a1f3290ae6f7d0b201f2dbeb5db21a11b47116cc2af2eb2",
+      "tests/test_paper_diagnose.py": "b5bab3ad12fd13af0f81d37b632c7d93477eec371448a0d3c186a18bebc01779",
+      "tests/test_robinhood_client.py": "f16e82d56a04c3d4692a2ac52b83bf5e14d0152832243f94139c259f4aecd3dc"
+    },
+    "runtime_behavior_changed": false,
+    "host_repair_acceptance": "UNVERIFIED"
+  },
+  "host_resource_limits": {
+    "nano_cpus": 1000000000,
+    "cpu_quota": 0,
+    "cpu_period": 0,
+    "memory_bytes": 1073741824,
+    "pids_limit": 128
+  },
+  "runtime_timing": {
+    "status": "OBSERVED",
+    "measured": 637,
+    "phases": {
+      "TICK": {
+        "samples": 637,
+        "p50_seconds": 13.180197,
+        "p95_seconds": 16.726491,
+        "p99_seconds": 18.297466,
+        "max_seconds": 20.096235
+      },
+      "TICK_PACKET_VALIDATION": {
+        "samples": 637,
+        "p50_seconds": 0.114915,
+        "p95_seconds": 0.260478,
+        "p99_seconds": 0.344109,
+        "max_seconds": 1.420396
+      },
+      "NATIVE_SNAPSHOT_SPAWN": {
+        "samples": 637,
+        "p50_seconds": 2.3457,
+        "p95_seconds": 3.864364,
+        "p99_seconds": 4.527104,
+        "max_seconds": 5.272015
+      },
+      "NATIVE_SNAPSHOT": {
+        "samples": 637,
+        "p50_seconds": 2.351454,
+        "p95_seconds": 3.870699,
+        "p99_seconds": 4.530408,
+        "max_seconds": 5.292435
+      },
+      "PROTECTION": {
+        "samples": 637,
+        "p50_seconds": 5.25826,
+        "p95_seconds": 7.56315,
+        "p99_seconds": 8.617413,
+        "max_seconds": 9.957263
+      },
+      "RECONCILE_COMMIT": {
+        "samples": 636,
+        "p50_seconds": 2.817282,
+        "p95_seconds": 4.124484,
+        "p99_seconds": 5.349697,
+        "max_seconds": 6.368097
+      },
+      "DELIVERY_COMMIT": {
+        "samples": 636,
+        "p50_seconds": 2.184281,
+        "p95_seconds": 3.531967,
+        "p99_seconds": 4.157303,
+        "max_seconds": 5.883079
+      },
+      "TICK_NEW_RECEIPT": {
+        "samples": 3,
+        "p50_seconds": 2.461507,
+        "p95_seconds": 3.012029,
+        "p99_seconds": 3.012029,
+        "max_seconds": 3.012029
+      },
+      "TICK_QUOTE_FILLS": {
+        "samples": 4,
+        "p50_seconds": 0.009428,
+        "p95_seconds": 0.020371,
+        "p99_seconds": 0.020371,
+        "max_seconds": 0.020371
+      },
+      "TICK_REPEAT_RECEIPT": {
+        "samples": 1,
+        "p50_seconds": 2.888777,
+        "p95_seconds": 2.888777,
+        "p99_seconds": 2.888777,
+        "max_seconds": 2.888777
+      }
+    },
+    "scheduler_delay": {
+      "samples": 637,
+      "p50_seconds": 0.0040106400847435,
+      "p95_seconds": 0.011674700770527124,
+      "p99_seconds": 0.02217925013974309,
+      "max_seconds": 1.1311188382096589
+    },
+    "trace_start_write": {
+      "samples": 637,
+      "p50_seconds": 3.130563,
+      "p95_seconds": 4.983251,
+      "p99_seconds": 6.182078,
+      "max_seconds": 8.088622
+    },
+    "native_spawn_budget": {
+      "NATIVE_SNAPSHOT_SPAWN": {
+        "samples": 637,
+        "p50_seconds": 4.999781,
+        "p95_seconds": 4.999832,
+        "p99_seconds": 4.999842,
+        "max_seconds": 4.999854,
+        "min_seconds": 4.997598
+      }
+    },
+    "native_observed_intervals": {
+      "REQUEST": {
+        "samples": 636,
+        "p50_seconds": 0.000115,
+        "p95_seconds": 0.000169,
+        "p99_seconds": 0.000353,
+        "max_seconds": 0.001468
+      },
+      "VENUE_OPEN": {
+        "samples": 636,
+        "p50_seconds": 9e-06,
+        "p95_seconds": 0.00124,
+        "p99_seconds": 0.001327,
+        "max_seconds": 0.00582
+      },
+      "SNAPSHOT": {
+        "samples": 636,
+        "p50_seconds": 0.000986,
+        "p95_seconds": 0.002945,
+        "p99_seconds": 0.004314,
+        "max_seconds": 0.008294
+      },
+      "SERIALIZE": {
+        "samples": 636,
+        "p50_seconds": 9.9e-05,
+        "p95_seconds": 0.001536,
+        "p99_seconds": 0.003134,
+        "max_seconds": 0.004243
+      }
+    }
+  },
+  "local_followup": "PAPER_RESTORE_SCAN_20261123_PROOF.json: varied-history cache reproduction and verification; host deployment and connected recovery remain unverified."
+}

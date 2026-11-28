@@ -1,0 +1,581 @@
+{
+  "version": "paper-soak-host-observations-20261127-v3",
+  "source": "Operator-supplied terminal output; no direct server access",
+  "release": "d2e78bf88e0fa78a0940bb3f3881564027f70442",
+  "image_id": "sha256:401df4323742aef1a30e62f79be7608036f6111dde449fefaf25da1db7c8b4bd",
+  "evidence_directory": "/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-d2e78bf88e0f-foxg0rjo",
+  "started_at": "2026-11-27T19:05:39.328144636Z",
+  "launch": {
+    "observed_at": "2026-11-27T19:05:39.793174+00:00",
+    "launch_status": "STARTED",
+    "status": "RUNNING_AWAITING_PROGRESS",
+    "reason": "NO_PROGRESS_RECEIPT_YET",
+    "restart_count": 0,
+    "oom_killed": false
+  },
+  "progress_observations": [
+    {
+      "observed_at": "2026-11-27T19:23:12.163860+00:00",
+      "status": "RUNNING",
+      "restart_count": 0,
+      "oom_killed": false,
+      "progress_age_seconds": 1.1664116382598877,
+      "elapsed_seconds": 1028.8391778413206,
+      "native_snapshot_calls": 384,
+      "native_snapshot_failures": 0,
+      "native_snapshot_max_seconds": 0.7922091959044337,
+      "capture_attempts": 100,
+      "peak_tree_rss_bytes": 473833472,
+      "source_database_bytes": 131371008,
+      "decision_coverage": null,
+      "execution": null,
+      "final_accounting": null,
+      "cgroup_memory": {
+        "status": "OBSERVED",
+        "current_bytes": 607027200,
+        "peak_bytes": 866164736,
+        "max_bytes": 1073741824,
+        "events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "stat": {
+          "anon": 443994112,
+          "file": 152805376,
+          "kernel": 9965568,
+          "pagetables": 1228800,
+          "sock": 0,
+          "shmem": 0,
+          "slab": 8561848
+        }
+      }
+    },
+    {
+      "observed_at": "2026-11-27T20:11:52.064219+00:00",
+      "status": "RUNNING",
+      "restart_count": 0,
+      "oom_killed": false,
+      "progress_age_seconds": 1.0787723064422607,
+      "elapsed_seconds": 3948.827487545088,
+      "native_snapshot_calls": 1435,
+      "native_snapshot_failures": 0,
+      "native_snapshot_max_seconds": 0.7922091959044337,
+      "capture_attempts": 386,
+      "peak_tree_rss_bytes": 549855232,
+      "source_database_bytes": 149356544,
+      "decision_coverage": null,
+      "execution": null,
+      "final_accounting": null,
+      "cgroup_memory": {
+        "status": "OBSERVED",
+        "current_bytes": 737419264,
+        "peak_bytes": 995057664,
+        "max_bytes": 1073741824,
+        "events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "stat": {
+          "anon": 543342592,
+          "file": 185589760,
+          "kernel": 8318976,
+          "pagetables": 1511424,
+          "sock": 0,
+          "shmem": 0,
+          "slab": 6596176
+        }
+      }
+    }
+  ],
+  "acceptance": "FAILED_FIXTURE_ENTRY_DEADLINE_AND_LATER_PUBLISHER_FAILURE",
+  "next_checkpoint": "Static replay completed: see PAPER_PUBLISHER_HOST_20261127.json. The original final-size source publishes under its original image and limits while stopped. New report-copy storage repair and local lifecycle checks are recorded in PAPER_REPORT_STORAGE_20261127_PROOF.json. Next is one isolated 335-second entry profile on the host, preserving the installed bot, account, limits, review hold and all older evidence; full duration and original failure attribution remain open.",
+  "final_duration": "FAILED_BEFORE_PLANNED_DURATION",
+  "interim_feed_decision_lifecycle_report": {
+    "source": "Operator-supplied selected fields from retained latest-report.json",
+    "window_end": "2026-10-28T14:24:41.803548+00:00",
+    "runtime_evidence": {
+      "heartbeat": "FRESH",
+      "heartbeat_at": "2026-10-28T14:24:39.909870+00:00",
+      "heartbeat_age_seconds": 1.893678,
+      "heartbeat_max_age_seconds": 20,
+      "feed": "FRESH",
+      "feed_at": "2026-10-28T14:24:31.681649+00:00",
+      "feed_age_seconds": 10.121899,
+      "feed_max_age_seconds": 30
+    },
+    "current_runtime": [
+      {
+        "status": "RUNNING",
+        "reason": null,
+        "feed_sequence": 144
+      }
+    ],
+    "cycle_count": 5,
+    "cycle_outcomes": [
+      {
+        "status": [
+          "COMPLETE"
+        ],
+        "reason": [],
+        "count": 5
+      }
+    ],
+    "decision_count": 5,
+    "run_execution": {
+      "status": "RECORDED",
+      "entry_fills": 0,
+      "exit_fills": 0,
+      "completed_round_trips": 0,
+      "carry_in_exits": 0
+    },
+    "collection": [
+      {
+        "status": "DELIVERED",
+        "attempts": 145,
+        "first_sequence": 1,
+        "last_sequence": 145
+      }
+    ],
+    "runtime_failures": [],
+    "publication_failures": [],
+    "run_issues": []
+  },
+  "connected_health": "UNVERIFIED",
+  "live_enabled": false,
+  "preserved": [
+    "installed connected release",
+    "account",
+    "risk and model limits",
+    "timer",
+    "SESSION_STOPPED_REVIEW_REQUIRED",
+    "prior failed soak evidence"
+  ],
+  "later_decision_extraction": {
+    "window_end": "NOT_SUPPLIED",
+    "decision_reason_counts": [
+      {
+        "reason": [
+          "ORIGINAL_PLAN_DEADLINE_EXPIRED"
+        ],
+        "decisions": 1,
+        "first_at": "2026-10-28T14:00:25.541753+00:00",
+        "last_at": "2026-10-28T14:00:25.541753+00:00"
+      },
+      {
+        "reason": [
+          "ENTRY_MODEL_HOLD_OR_REJECTED"
+        ],
+        "decisions": 2,
+        "first_at": "2026-10-28T14:05:11.240079+00:00",
+        "last_at": "2026-10-28T14:10:10.019832+00:00"
+      },
+      {
+        "reason": [
+          "NO_ADMITTED_CONTRACT"
+        ],
+        "decisions": 3,
+        "first_at": "2026-10-28T14:15:15.652473+00:00",
+        "last_at": "2026-10-28T14:25:05.612787+00:00"
+      }
+    ],
+    "entry_freshness": {
+      "status": "NO_ENTRIES",
+      "reservations": 0,
+      "measured": 0,
+      "missing_or_invalid": 0,
+      "omitted": 0,
+      "clocks": {}
+    },
+    "expired_before_native_submission": 0,
+    "attempt_recovery": {
+      "matched_in_run": 0,
+      "unresolved_at_last_snapshot": 0
+    },
+    "model_calls": {
+      "run": {
+        "attempts": 3,
+        "unsettled": 0
+      },
+      "account_total": {
+        "attempts": 3,
+        "unsettled": 0
+      }
+    },
+    "first_decisions": [
+      {
+        "started_at": "2026-10-28T14:00:25.541753+00:00",
+        "stored_status": "COMPLETE",
+        "status": [
+          "HOLD"
+        ],
+        "reason": [
+          "ORIGINAL_PLAN_DEADLINE_EXPIRED"
+        ],
+        "entry_timely": true,
+        "option_market_sequence": 2,
+        "option_market_review_reasons": [
+          "ORIGINAL_PLAN_DEADLINE_EXPIRED"
+        ]
+      },
+      {
+        "started_at": "2026-10-28T14:05:11.240079+00:00",
+        "stored_status": "COMPLETE",
+        "status": [
+          "HOLD"
+        ],
+        "reason": [
+          "ENTRY_MODEL_HOLD_OR_REJECTED"
+        ],
+        "entry_timely": true,
+        "option_market_sequence": null,
+        "option_market_review_reasons": null
+      }
+    ]
+  },
+  "interpretation": [
+    "The controlled fixture emits ENTER once then HOLD for all later model calls. Its first intended entry was rejected before reservation. That run cannot meet its required round trip.",
+    "The original ten-second option quote source-age deadline is limiting. The account has a twenty-second freshness bound and does not set this deadline. The model reply was timely with 0.335549 seconds remaining. Settlement consumed 0.934584 seconds; protection wait was 0.000120 seconds. Review occurred 0.622810 seconds after the unchanged deadline.",
+    "Fresh feed, completed decisions and native snapshot speed do not override this lifecycle failure. Zero fills alone in an ordinary market session are not failure.",
+    "The 66-minute observation is beyond the prior 37m19s OOM, with no restart/OOM, but peak cgroup memory is 995057664 of 1073741824 bytes. This is partial resource evidence, not full-duration or lifecycle acceptance; no final result supplied."
+  ],
+  "first_entry_clocks": {
+    "as_of": "2026-10-28T14:00:27.463707Z",
+    "valid_until": "2026-10-28T14:00:29.848382Z",
+    "model_completed_at": "2026-10-28T14:00:29.512833+00:00",
+    "review_at": "2026-10-28T14:00:30.471192+00:00",
+    "reason": "ORIGINAL_PLAN_DEADLINE_EXPIRED"
+  },
+  "first_cycle": {
+    "started_at": "2026-10-28T14:00:25.461144+00:00",
+    "elapsed_seconds": 6.825801,
+    "status": "COMPLETE",
+    "spans": [
+      {
+        "phase": "CYCLE_OPPORTUNITY_CLAIM",
+        "elapsed_seconds": 1.868856,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "SCAN",
+        "elapsed_seconds": 0.057212,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "STOCK_SCAN",
+        "elapsed_seconds": 0.997314,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "SCOPE_SCAN",
+        "elapsed_seconds": 0.003324,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_MODEL_ADMISSION",
+        "elapsed_seconds": 0.018703,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_MODEL_REQUEST",
+        "elapsed_seconds": 0.889438,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_MODEL",
+        "elapsed_seconds": 0.003779,
+        "status": "COMPLETE",
+        "model_source_key": "degen:5977320:portfolio:0"
+      },
+      {
+        "phase": "ENTRY_MIXED_SELECTION",
+        "elapsed_seconds": 0.001043,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_SCOPE_RECEIPT_CHECK",
+        "elapsed_seconds": 0.028941,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_SCOPE_SELECTION",
+        "elapsed_seconds": 0.00151,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_MODEL_SETTLEMENT",
+        "elapsed_seconds": 0.934584,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_PROTECTION_WAIT",
+        "elapsed_seconds": 0.00012,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_OPTION_MARKET_READ",
+        "elapsed_seconds": 0.012765,
+        "status": "COMPLETE"
+      },
+      {
+        "phase": "ENTRY_REVIEW",
+        "elapsed_seconds": 0.079084,
+        "status": "COMPLETE"
+      }
+    ]
+  },
+  "derived_timing": {
+    "plan_validity_seconds": 2.384675,
+    "seconds_remaining_at_model_reply": 0.335549,
+    "review_seconds_past_deadline": 0.62281,
+    "reply_to_review_seconds": 0.958359,
+    "quote_age_at_cycle_start_seconds": 5.612762,
+    "quote_age_at_plan_seconds": 7.615325,
+    "quote_age_at_model_reply_seconds": 9.664451,
+    "quote_age_at_review_seconds": 10.62281,
+    "source_to_receipt_seconds": 1.0,
+    "receipt_to_cycle_start_seconds": 4.612762,
+    "limiting_clock": "ORIGINAL_OPTION_QUOTE_SOURCE_PLUS_10_SECONDS"
+  },
+  "original_deadline_inputs": {
+    "as_of": "2026-10-28T14:00:27.463707Z",
+    "deadline": "2026-10-28T14:00:29.848382Z",
+    "account_captured_at": "2026-10-28T14:00:24.014596Z",
+    "account_max_age": 20,
+    "quote_max_age": 10,
+    "options": [
+      {
+        "source_at": "2026-10-28T14:00:19.848382Z",
+        "received_at": "2026-10-28T14:00:20.848382Z",
+        "admission_deadline": "2026-10-28T14:00:29.848382Z"
+      },
+      {
+        "source_at": "2026-10-28T14:00:19.848382Z",
+        "received_at": "2026-10-28T14:00:20.848382Z",
+        "admission_deadline": "2026-10-28T14:00:29.848382Z"
+      }
+    ]
+  },
+  "terminal_observation": {
+    "source": "Operator-supplied terminal output, received after local entry repair; no direct server access",
+    "status": "FAILED",
+    "reason": "SOAK_EXIT_OR_ASSERTION_FAILURE",
+    "observed_at": "2026-11-28T00:15:40.164119+00:00",
+    "worker": {
+      "Status": "exited",
+      "Running": false,
+      "StartedAt": "2026-11-27T19:05:39.328144636Z",
+      "FinishedAt": "2026-11-27T23:54:32.74032312Z",
+      "ExitCode": 1,
+      "OOMKilled": false,
+      "Error": ""
+    },
+    "restart_count": 0,
+    "progress_age_seconds": 1269.0335638523102,
+    "last_cgroup_memory": {
+      "status": "OBSERVED",
+      "scope": "mounted cgroup v2, including file/tmpfs charges",
+      "current_bytes": 264630272,
+      "peak_bytes": 1073741824,
+      "max_bytes": 1073741824,
+      "events": {
+        "low": 0,
+        "high": 0,
+        "max": 603798,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "stat": {
+        "anon": 12890112,
+        "file": 249339904,
+        "kernel": 2330624,
+        "pagetables": 126976,
+        "sock": 0,
+        "shmem": 0,
+        "slab": 2131888
+      }
+    },
+    "progress": {
+      "status": "FAILED",
+      "elapsed_seconds": 17300.010166555643,
+      "native_snapshot_calls": 4529,
+      "native_snapshot_failures": 0,
+      "native_snapshot_max_seconds": 0.7922091959044337,
+      "capture_attempts": 1619,
+      "peak_tree_rss_bytes": 815005696,
+      "source_database_bytes": 218853376,
+      "decision_coverage": null,
+      "execution": null,
+      "final_accounting": null,
+      "failure_class": "ComponentFailure",
+      "failure": "CONNECTED_COMPONENT_STOPPED:PUBLISHER"
+    },
+    "connected_health": "UNVERIFIED",
+    "live_enabled": false,
+    "state_modified": false
+  },
+  "terminal_interpretation": {
+    "container_elapsed_seconds_approx": 17333.412178,
+    "lifecycle": "Already failed at the original quote deadline; elapsed time does not change that result",
+    "capacity": "The cgroup peak reached its 1-GiB cap; 603798 max-boundary events, zero OOM and OOM-kill events",
+    "current_memory": "Post-exit observation, not the running working set",
+    "publisher_cause": "NOT_SUPPLIED: component summary alone does not establish timeout, memory error or another exception",
+    "memory_causality": "UNDETERMINED: cumulative counters do not locate or prove the publisher failure cause",
+    "kernel_reference": "https://docs.kernel.org/admin-guide/cgroup-v2.html#memory-interface-files",
+    "qualification": "Failed duration and lifecycle; no connected or resource acceptance"
+  },
+  "retained_incident_observation": {
+    "source": "Operator-supplied standalone status output; no direct server access",
+    "reader_commit": "0a8816ba8eab322d8ecfc69241f2fea47832385a",
+    "observed_at": "2026-11-28T01:09:54.086553+00:00",
+    "status": "FAILED",
+    "reason": "SOAK_EXIT_OR_ASSERTION_FAILURE",
+    "qualification_profile": "duration",
+    "planned_seconds": 21480,
+    "failure_evidence": null,
+    "retained_incidents": {
+      "status": "STORED_EVENTS_READ",
+      "source": "data/run/owner/options.db",
+      "evidence_clock": "ORIGINAL_SYNTHETIC_CLOCKS",
+      "accounting_reverified": false,
+      "publication_failures": [
+        {
+          "at": "2026-10-28T18:47:59.869522+00:00",
+          "evidence_available": true,
+          "error_class": "OperationalError",
+          "stage": "RUNNING",
+          "frames": [
+            {
+              "file": "app/mixed/connected_runtime.py",
+              "line": 662
+            },
+            {
+              "file": "app/mixed/connected_runtime.py",
+              "line": 281
+            },
+            {
+              "file": "app/mixed/connected_runtime.py",
+              "line": 273
+            },
+            {
+              "file": "app/mixed/dashboard_snapshot.py",
+              "line": 300
+            },
+            {
+              "file": "app/mixed/dashboard_snapshot.py",
+              "line": 339
+            },
+            {
+              "file": "app/mixed/dashboard_snapshot.py",
+              "line": 235
+            }
+          ]
+        }
+      ]
+    },
+    "session_report": {
+      "source": "latest-report.json",
+      "saved_at": "2026-11-27T23:54:01.962642+00:00",
+      "receipt_freshness": "STALE",
+      "evidence_clock": "SYNTHETIC_REPORT_WINDOW",
+      "window_start": "2026-10-28T14:00:00+00:00",
+      "window_end": "2026-10-28T18:47:49.397478+00:00",
+      "runtime_evidence_at_cutoff": {
+        "heartbeat": "FRESH",
+        "heartbeat_at": "2026-10-28T18:47:45.866533+00:00",
+        "heartbeat_age_seconds": 3.530945,
+        "heartbeat_max_age_seconds": 20,
+        "feed": "FRESH",
+        "feed_at": "2026-10-28T18:47:41.674578+00:00",
+        "feed_age_seconds": 7.7229,
+        "feed_max_age_seconds": 30
+      },
+      "current_runtime": [
+        {
+          "status": "RUNNING",
+          "reason": null,
+          "feed_sequence": 1617
+        }
+      ],
+      "cycle_count": 58,
+      "decision_count": 58,
+      "cycle_outcomes": [
+        {
+          "status": [
+            "COMPLETE"
+          ],
+          "reason": [],
+          "count": 58
+        }
+      ],
+      "decision_reason_counts": [
+        {
+          "reason": [
+            "ORIGINAL_PLAN_DEADLINE_EXPIRED"
+          ],
+          "decisions": 1
+        },
+        {
+          "reason": [
+            "ENTRY_MODEL_HOLD_OR_REJECTED"
+          ],
+          "decisions": 2
+        },
+        {
+          "reason": [
+            "NO_ADMITTED_CONTRACT"
+          ],
+          "decisions": 55
+        }
+      ],
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 0,
+        "exit_fills": 0,
+        "completed_round_trips": 0,
+        "carry_in_exits": 0
+      },
+      "collection": [
+        {
+          "status": "DELIVERED",
+          "attempts": 1617,
+          "first_sequence": 1,
+          "last_sequence": 1617
+        }
+      ],
+      "runtime_failures": [],
+      "publication_failures": [],
+      "run_issues": []
+    },
+    "memory_pressure": {
+      "status": "LIMIT_REACHED",
+      "scope": "container lifetime; not failure-phase attribution",
+      "limit_bytes": 1073741824,
+      "peak_bytes": 1073741824,
+      "peak_headroom_bytes": 0,
+      "events": {
+        "max": 603798,
+        "oom": 0,
+        "oom_kill": 0
+      },
+      "failure_causality": "UNDETERMINED"
+    },
+    "connected_health": "UNVERIFIED",
+    "live_enabled": false,
+    "state_modified": false
+  },
+  "latest_interpretation": {
+    "publisher": "OperationalError at dashboard_snapshot.py:235, the display-table INSERT SELECT; SQLite error code and failing table were not retained by the old code",
+    "report_cutoff": "The fresh feed/heartbeat and empty publication failures in latest-report precede the retained publisher incident; neither contradicts it",
+    "local_ambiguity": "Both the unchanged 64-MiB display cap and a forced SQL progress interrupt reproduce OperationalError at this same line; neither proves the host cause",
+    "memory_causality": "UNDETERMINED; the 1-GiB lifetime peak is not failure-phase attribution"
+  }
+}

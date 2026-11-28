@@ -1,0 +1,68 @@
+{
+  "version": "paper-host-deployment-receipt-v1",
+  "evidence_source": "operator supplied terminal output",
+  "recorded_date_ny": "2026-11-14",
+  "release": "39d8e48c5f4bfefeed7d5b05682edb733ddb8e8a",
+  "image_id": "sha256:2b3f216f901b40ab1ed1d243e0b8a8901893f152429ec019fc42b89ec0ebd9f8",
+  "capture": {
+    "status": "CATALOG_CAPTURED",
+    "target_session": "2026-11-16",
+    "evidence_directory": "/root/trade-bot-options-proof-r1vpi738",
+    "context_sha256": "9f9e2b9547de50996a904ec05ebaded682b1ada2dd7e8a359b298ffbc37df777",
+    "capture_hashes": [
+      "e8e21fe6fac642afb20131435089b215050bfa22c63a4c808f55fd00662626dc",
+      "f0e939fbe3e1be2ca56f868a5dca906f98c7fd07cae92f80d443bfc569ceedaf",
+      "a4be7160c6c82036fa3787730875339067112d7262a32de0ed7ac4b1c6f6aa40",
+      "523a2757ee99de028eb4f2f1e21b2e380f620c33e83f2217ef7ae81aa6445de0"
+    ],
+    "anchor_symbols": [
+      "SPY",
+      "QQQ"
+    ],
+    "candidate_count": 4,
+    "provider_tool_calls": 8,
+    "all_fresh_at_capture": false,
+    "future_quote_samples": [],
+    "entitlement": "UNKNOWN",
+    "workers_started": false,
+    "live_enabled": false,
+    "trading_ready": false
+  },
+  "installation": {
+    "status": "DAILY_SCHEDULE_INSTALLED",
+    "paused": false,
+    "updated": true,
+    "live_enabled": false
+  },
+  "reader": {
+    "status": "DASHBOARD_READER_UPDATED",
+    "previous": "trade-bot-dashboard-reader-0b13891b3c8e"
+  },
+  "schedule": {
+    "target_session": "2026-11-16",
+    "prepare_at": "2026-11-16T14:00:00+00:00",
+    "start_at": "2026-11-16T15:00:00+00:00",
+    "close_at": "2026-11-16T21:00:00+00:00"
+  },
+  "daily_info": {
+    "receipt": null,
+    "automatic_catalog_blockers": [],
+    "start_blockers": [
+      "OWNER_NOT_NORMALLY_STOPPED",
+      "OWNER_HALT_REQUIRES_REVIEW"
+    ],
+    "failed_snapshot_read": true,
+    "last_runtime_started_at": "2026-11-10T15:02:03.133442+00:00",
+    "owner_state": {
+      "entry_halted": true,
+      "feed_sequence": 1432,
+      "halt_reason": "OPTION_RUNTIME_FAILED",
+      "owner_configuration_sha256": "1f17034e5d8e2a6e6f838950cc58621230b05206eca1d268c6273c7d6d3bbb96",
+      "owner_revision": 5453,
+      "runtime_generation": 15,
+      "runtime_status": "FAILED"
+    },
+    "state_modified": false,
+    "trading_ready": false
+  }
+}

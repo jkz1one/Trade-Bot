@@ -1,0 +1,113 @@
+{
+  "version": "paper-process-review-20261120-v1",
+  "scope": "Process audit and work-order change only; no runtime patch or host mutation.",
+  "source_commit": "dc1cb92f83aef55bbb3b608dbd85daef72c86ff6",
+  "operator_transcript_sha256": "e4a61077c624302e93530555f0544e253c32ab488daf25dfb0d188cef3571f28",
+  "deployed_release": "c03b6282fed59e48f113b06f4bc02f53b50410d0",
+  "image_id": "sha256:6641eb92a09fb324250f767fd97e1048dbd54c5cbdae41fad205a56001a52018",
+  "host_confirmed": {
+    "schedule_installed": true,
+    "reader_updated": true,
+    "schedule_resumed": true,
+    "preflight_snapshot": {
+      "status": "PUBLISHED",
+      "source_modified": false,
+      "held_plays": 0,
+      "fills": 0,
+      "published_at": "2026-11-20T00:51:39.235005+00:00",
+      "owner_revision": 8765,
+      "feed_sequence": 2636,
+      "runtime_generation": 16
+    }
+  },
+  "failed_session": {
+    "target_session": "2026-11-20",
+    "run_id": "daily-20261120",
+    "worker_exists": false,
+    "observed_at": "2026-11-20T18:04:57.692445+00:00",
+    "status": "MISSING_INPUTS",
+    "reasons": [
+      "PREPARATION_RETRY_LIMIT",
+      "StepFailed"
+    ],
+    "preparation_failures": 3,
+    "receipt": null,
+    "failure_stage": "VALIDATE_PLAN",
+    "error_class": "SchemaContractChanged",
+    "completed_market_reads": 0,
+    "evidence_directories": [
+      "/root/trade-bot-options-proof-6nmmzgw8",
+      "/root/trade-bot-options-proof-_d_gk75s",
+      "/root/trade-bot-options-proof-j6dnlhp3"
+    ]
+  },
+  "schema_delta": {
+    "previous_sha256": "0b0c7205b8aee84dd599902ef5738736c2af04a7cb25fb5511553eb8d499c51f",
+    "observed_sha256": "26f5fd99c50998f9633917b6b0348bf23c5385b1975315cb4aec658f22702899",
+    "observed_contract_sha256": "4fd262ebfb92f1147324cbef1f1fd221c873b1de7fc87e2757d0a71b895dc443",
+    "changes": [
+      {
+        "operation": "ADDED",
+        "path": [
+          "get_equity_historicals",
+          "outputSchema",
+          "properties",
+          "data",
+          "properties",
+          "notice"
+        ],
+        "value": {
+          "description": "Why results is empty when no complete bar falls in the range. Absent otherwise.",
+          "type": "string"
+        }
+      }
+    ],
+    "required_data_fields": [
+      "results"
+    ],
+    "additional_properties": false,
+    "reconstruction": "November 4 schema fixture plus November 12, 14 and 17 deltas reconstruct the previous hash. Adding only the supplied notice reconstructs the exact observed hash.",
+    "conclusion": "This optional output field alone explains the contract mismatch; compatibility still needs explicit adapter and response-validation tests."
+  },
+  "audited_gaps": [
+    {
+      "source": "app/options/read_gateway.py:same_schema_contract",
+      "finding": "One digest across all tools rejects output additions even when consumed fields are unchanged."
+    },
+    {
+      "source": "app/mixed/paper_health.py:evidence",
+      "finding": "Any retained publication failure replaces the current controller reason without matching the target session."
+    },
+    {
+      "source": "scripts/paper-daily.py:main/tick",
+      "finding": "Day state retains StepFailed and retry limit while detailed capture failure is available only in logs/evidence."
+    },
+    {
+      "source": "scripts/paper-system-check.py:SUITES",
+      "finding": "Installed system suites use synthetic provider/Docker boundaries; the explicit read_schema_contract suite is absent from this list."
+    }
+  ],
+  "work_order": [
+    "R1 consumer compatibility contract",
+    "R2 bounded diagnostic and current-day reporting",
+    "R3 candidate qualification and guarded deployment",
+    "R4 sustained connected acceptance"
+  ],
+  "implementation_status": "PLANNED_NOT_IMPLEMENTED",
+  "unchanged": [
+    "application code",
+    "tests",
+    "host state",
+    "account balances and positions",
+    "risk and AI limits",
+    "main",
+    "draft PR 1"
+  ],
+  "remaining": [
+    "Provider CONNECT failures",
+    "Publication performance under session load",
+    "Scope current inputs",
+    "Swing original target and geometry",
+    "Full-session connected acceptance"
+  ]
+}

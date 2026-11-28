@@ -1,0 +1,740 @@
+{
+  "version": "portfolio-native-replay-v2",
+  "settings": {
+    "limits": {
+      "version": "long-option-admission-v1",
+      "mode": "PAPER",
+      "account_id": "option-paper",
+      "population_id": "ui-review-two-play-20261009",
+      "allowed_underlyings": [
+        "SPY",
+        "QQQ"
+      ],
+      "provider": "fixture",
+      "option_source": "fixture-opra",
+      "underlying_source": "fixture-equity",
+      "session_source": "XNYS_REGULAR_INTERSECTION_V1",
+      "max_contracts": 10,
+      "max_entry_debit": "500",
+      "max_account_exposure": "950",
+      "max_full_premium_loss": "500",
+      "entry_fee_per_contract": "0.65",
+      "exit_fee_per_contract": "0.65",
+      "entry_fee_per_order": "1",
+      "exit_fee_per_order": "1",
+      "slippage_bps": "5",
+      "max_spread_fraction": "0.10",
+      "minimum_underlying_price": "5",
+      "quote_max_age_seconds": 10,
+      "account_max_age_seconds": 10,
+      "max_receive_lag_seconds": 2,
+      "max_sync_seconds": 2,
+      "approval_lifetime_seconds": 5
+    },
+    "execution": {
+      "mixed_owner": {
+        "portfolio": {
+          "version": "mixed-native-portfolio-v2",
+          "max_plays": 2,
+          "exposure_limit": "900",
+          "index_exposure_limit": "900"
+        },
+        "version": "mixed-native-owner-v1",
+        "stocks": {
+          "version": "mixed-long-shares-v1",
+          "provider": "fixture",
+          "quote_source": "stock-tape",
+          "allowed_symbols": [
+            "SPY",
+            "QQQ"
+          ],
+          "share_step": "0.1",
+          "max_shares": "2",
+          "max_entry_debit": "250",
+          "max_account_exposure": "950",
+          "minimum_price": "5",
+          "max_spread_fraction": "0.1",
+          "slippage_bps": "0",
+          "entry_fee_per_share": "0.01",
+          "exit_fee_per_share": "0.01",
+          "entry_fee_per_order": "0.1",
+          "exit_fee_per_order": "0.1",
+          "quote_max_age_seconds": 30,
+          "max_receive_lag_seconds": 5,
+          "approval_lifetime_seconds": 10
+        },
+        "allocation": "daily-calendar-fixture-v1",
+        "daily_data_cost": "0",
+        "daily_host_cost": "0",
+        "daily_operating_cost": "0"
+      },
+      "version": "option-paper-lifecycle-v1",
+      "capital": "1000",
+      "daily_loss_limit": "600",
+      "total_loss_limit": "800",
+      "calendar_source": "XNYS_REGULAR_INTERSECTION_V1",
+      "entry_cutoff_minutes": 30,
+      "exit_cutoff_minutes": 15,
+      "expiry_guard_seconds": 60,
+      "premium_catastrophe_fraction": "0.5",
+      "supervisor_max_age_seconds": 20,
+      "process_timeout_seconds": 5.0,
+      "cost_policy": null,
+      "loss_control": {
+        "version": "native-position-loss-v1",
+        "max_consecutive_losses": 2,
+        "cooldown_seconds": 1800,
+        "families": [
+          {
+            "family": "DEGEN",
+            "max_consecutive_losses": 2,
+            "cooldown_seconds": 1800
+          },
+          {
+            "family": "SWING",
+            "max_consecutive_losses": 2,
+            "cooldown_seconds": 1800
+          },
+          {
+            "family": "SCOPE",
+            "max_consecutive_losses": 2,
+            "cooldown_seconds": 1800
+          }
+        ]
+      }
+    },
+    "stock_policy": {
+      "version": "native-stock-selection-v1",
+      "instruments": [
+        {
+          "provider": "fixture",
+          "instrument_id": "stock-spy",
+          "symbol": "SPY",
+          "kind": "ETF",
+          "market": "US_LISTED",
+          "currency": "USD",
+          "tick": "0.01",
+          "metadata_complete": true,
+          "tradable": true
+        },
+        {
+          "provider": "fixture",
+          "instrument_id": "stock-qqq",
+          "symbol": "QQQ",
+          "kind": "ETF",
+          "market": "US_LISTED",
+          "currency": "USD",
+          "tick": "0.01",
+          "metadata_complete": true,
+          "tradable": true
+        }
+      ],
+      "family_priority": [
+        "DEGEN"
+      ],
+      "asset_priority": [
+        "STOCK",
+        "OPTION"
+      ],
+      "swing": null
+    },
+    "setup": {
+      "version": "degen-completed-bars-v1",
+      "symbols": [
+        "SPY",
+        "QQQ"
+      ],
+      "history_source": "fixture-bars",
+      "max_bar_age_seconds": 300,
+      "max_receive_lag_seconds": 2,
+      "volume_lookback": 3,
+      "minimum_volume_ratio": "1.05",
+      "opening_range_minutes": 15,
+      "stop_buffer_fraction": "0.0001",
+      "maximum_extension_fraction": "0.0065",
+      "vwap_separation_fraction": "0.0022",
+      "vwap_touch_fraction": "0.0018",
+      "setup_priority": [
+        "ORB_CONTINUATION",
+        "VWAP_PULLBACK",
+        "FAILED_BREAK_REVERSAL"
+      ]
+    },
+    "selection": {
+      "version": "degen-contract-selection-v1",
+      "metadata_source": "fixture-chain",
+      "max_inventory_contracts": 8,
+      "max_quote_contracts": 4,
+      "max_metadata_age_seconds": 10,
+      "minimum_abs_delta": "0.25",
+      "maximum_abs_delta": "0.7",
+      "target_abs_delta": "0.45",
+      "maximum_strike_distance_fraction": "0.02",
+      "minimum_volume": 10,
+      "minimum_open_interest": 100
+    },
+    "runtime": {
+      "version": "option-local-runtime-v1",
+      "mixed_inputs": "mixed-runtime-inputs-v1",
+      "simulated_fills": "mixed-quote-fills-v1",
+      "feed_file": "/offline-review/feed.json",
+      "tick_seconds": 0.2,
+      "heartbeat_max_age_seconds": 10,
+      "feed_max_age_seconds": 10
+    },
+    "judgment_limits": null,
+    "key_file": null,
+    "entry_policy": null,
+    "position_policy": null
+  },
+  "packets": [
+    {
+      "version": "mixed-normalized-portfolio-v2",
+      "population_id": "ui-review-two-play-20261009",
+      "sequence": 1,
+      "recorded_at": "2026-10-09T14:00:00Z",
+      "frame": {
+        "portfolio_version": "portfolio-frame-v2",
+        "stocks": [
+          {
+            "quote": {
+              "source": "stock-tape",
+              "source_at": "2026-10-09T14:00:00Z",
+              "received_at": "2026-10-09T14:00:00Z",
+              "entitlement": "REALTIME",
+              "complete": true,
+              "instrument": {
+                "provider": "fixture",
+                "instrument_id": "stock-spy",
+                "symbol": "SPY",
+                "kind": "ETF",
+                "market": "US_LISTED",
+                "currency": "USD",
+                "tick": "0.01",
+                "metadata_complete": true,
+                "tradable": true
+              },
+              "bid": "600.8",
+              "ask": "600.81",
+              "bid_size": "2",
+              "ask_size": "2"
+            },
+            "swing": null,
+            "catalyst": null
+          },
+          {
+            "quote": {
+              "source": "stock-tape",
+              "source_at": "2026-10-09T14:00:00Z",
+              "received_at": "2026-10-09T14:00:00Z",
+              "entitlement": "REALTIME",
+              "complete": true,
+              "instrument": {
+                "provider": "fixture",
+                "instrument_id": "stock-qqq",
+                "symbol": "QQQ",
+                "kind": "ETF",
+                "market": "US_LISTED",
+                "currency": "USD",
+                "tick": "0.01",
+                "metadata_complete": true,
+                "tradable": true
+              },
+              "bid": "600.8",
+              "ask": "600.81",
+              "bid_size": "2",
+              "ask_size": "2"
+            },
+            "swing": null,
+            "catalyst": null
+          }
+        ],
+        "histories": [
+          {
+            "source": "fixture-bars",
+            "source_at": "2026-10-09T14:00:00Z",
+            "received_at": "2026-10-09T14:00:00Z",
+            "entitlement": "REALTIME",
+            "complete": true,
+            "symbol": "SPY",
+            "interval_seconds": 300,
+            "bounds": "regular",
+            "adjustment": "split",
+            "bars": [
+              {
+                "begins_at": "2026-10-09T13:30:00Z",
+                "open": "599",
+                "high": "600",
+                "low": "598",
+                "close": "599",
+                "volume": 100,
+                "interpolated": false
+              },
+              {
+                "begins_at": "2026-10-09T13:35:00Z",
+                "open": "599",
+                "high": "600",
+                "low": "598",
+                "close": "599",
+                "volume": 100,
+                "interpolated": false
+              },
+              {
+                "begins_at": "2026-10-09T13:40:00Z",
+                "open": "599",
+                "high": "600",
+                "low": "598",
+                "close": "599",
+                "volume": 100,
+                "interpolated": false
+              },
+              {
+                "begins_at": "2026-10-09T13:45:00Z",
+                "open": "600",
+                "high": "600.3",
+                "low": "599.9",
+                "close": "600.2",
+                "volume": 100,
+                "interpolated": false
+              },
+              {
+                "begins_at": "2026-10-09T13:50:00Z",
+                "open": "600.2",
+                "high": "600.5",
+                "low": "600.1",
+                "close": "600.4",
+                "volume": 100,
+                "interpolated": false
+              },
+              {
+                "begins_at": "2026-10-09T13:55:00Z",
+                "open": "600.4",
+                "high": "600.9",
+                "low": "600.3",
+                "close": "600.8",
+                "volume": 300,
+                "interpolated": false
+              }
+            ]
+          },
+          {
+            "source": "fixture-bars",
+            "source_at": "2026-10-09T14:00:00Z",
+            "received_at": "2026-10-09T14:00:00Z",
+            "entitlement": "REALTIME",
+            "complete": true,
+            "symbol": "QQQ",
+            "interval_seconds": 300,
+            "bounds": "regular",
+            "adjustment": "split",
+            "bars": [
+              {
+                "begins_at": "2026-10-09T13:30:00Z",
+                "open": "599",
+                "high": "600",
+                "low": "598",
+                "close": "599",
+                "volume": 100,
+                "interpolated": false
+              },
+              {
+                "begins_at": "2026-10-09T13:35:00Z",
+                "open": "599",
+                "high": "600",
+                "low": "598",
+                "close": "599",
+                "volume": 100,
+                "interpolated": false
+              },
+              {
+                "begins_at": "2026-10-09T13:40:00Z",
+                "open": "599",
+                "high": "600",
+                "low": "598",
+                "close": "599",
+                "volume": 100,
+                "interpolated": false
+              },
+              {
+                "begins_at": "2026-10-09T13:45:00Z",
+                "open": "600",
+                "high": "600.3",
+                "low": "599.9",
+                "close": "600.2",
+                "volume": 100,
+                "interpolated": false
+              },
+              {
+                "begins_at": "2026-10-09T13:50:00Z",
+                "open": "600.2",
+                "high": "600.5",
+                "low": "600.1",
+                "close": "600.4",
+                "volume": 100,
+                "interpolated": false
+              },
+              {
+                "begins_at": "2026-10-09T13:55:00Z",
+                "open": "600.4",
+                "high": "600.9",
+                "low": "600.3",
+                "close": "600.8",
+                "volume": 300,
+                "interpolated": false
+              }
+            ]
+          }
+        ],
+        "inventories": [
+          {
+            "source": "fixture-chain",
+            "source_at": "2026-10-09T14:00:00Z",
+            "received_at": "2026-10-09T14:00:00Z",
+            "entitlement": "REALTIME",
+            "complete": true,
+            "request_id": "chain-request",
+            "symbol": "SPY",
+            "expiration": "2026-10-09",
+            "contracts": [
+              {
+                "source": "fixture-chain",
+                "source_at": "2026-10-09T14:00:00Z",
+                "received_at": "2026-10-09T14:00:00Z",
+                "entitlement": "REALTIME",
+                "complete": true,
+                "instrument": {
+                  "provider": "fixture",
+                  "instrument_id": "provider-contract",
+                  "contract": {
+                    "underlying": "SPY",
+                    "underlying_kind": "ETF",
+                    "underlying_market": "US_LISTED",
+                    "root": "SPY",
+                    "right": "CALL",
+                    "strike": "600",
+                    "expiration": "2026-10-09",
+                    "multiplier": 100,
+                    "deliverable_kind": "SHARES",
+                    "deliverable_units": 100,
+                    "currency": "USD",
+                    "exercise_style": "AMERICAN",
+                    "settlement": "PHYSICAL",
+                    "settlement_session": "PM",
+                    "last_trading_at": "2026-10-09T20:00:00Z",
+                    "expires_at": "2026-10-09T21:00:00Z",
+                    "settles_at": "2026-10-10T20:00:00Z",
+                    "adjusted": false,
+                    "tick_below_three": "0.01",
+                    "tick_at_or_above_three": "0.01"
+                  },
+                  "metadata_complete": true,
+                  "option_tradable": true
+                },
+                "delta": "0.45",
+                "greek_provenance": "OBSERVED",
+                "volume": 500,
+                "open_interest": 1000
+              }
+            ]
+          },
+          {
+            "source": "fixture-chain",
+            "source_at": "2026-10-09T14:00:00Z",
+            "received_at": "2026-10-09T14:00:00Z",
+            "entitlement": "REALTIME",
+            "complete": true,
+            "request_id": "chain-request",
+            "symbol": "QQQ",
+            "expiration": "2026-10-09",
+            "contracts": [
+              {
+                "source": "fixture-chain",
+                "source_at": "2026-10-09T14:00:00Z",
+                "received_at": "2026-10-09T14:00:00Z",
+                "entitlement": "REALTIME",
+                "complete": true,
+                "instrument": {
+                  "provider": "fixture",
+                  "instrument_id": "provider-contract-qqq",
+                  "contract": {
+                    "underlying": "QQQ",
+                    "underlying_kind": "ETF",
+                    "underlying_market": "US_LISTED",
+                    "root": "QQQ",
+                    "right": "CALL",
+                    "strike": "600",
+                    "expiration": "2026-10-09",
+                    "multiplier": 100,
+                    "deliverable_kind": "SHARES",
+                    "deliverable_units": 100,
+                    "currency": "USD",
+                    "exercise_style": "AMERICAN",
+                    "settlement": "PHYSICAL",
+                    "settlement_session": "PM",
+                    "last_trading_at": "2026-10-09T20:00:00Z",
+                    "expires_at": "2026-10-09T21:00:00Z",
+                    "settles_at": "2026-10-10T20:00:00Z",
+                    "adjusted": false,
+                    "tick_below_three": "0.01",
+                    "tick_at_or_above_three": "0.01"
+                  },
+                  "metadata_complete": true,
+                  "option_tradable": true
+                },
+                "delta": "0.45",
+                "greek_provenance": "OBSERVED",
+                "volume": 500,
+                "open_interest": 1000
+              }
+            ]
+          }
+        ],
+        "quotes": [
+          {
+            "source": "fixture-opra",
+            "source_at": "2026-10-09T14:00:00Z",
+            "received_at": "2026-10-09T14:00:00Z",
+            "entitlement": "REALTIME",
+            "complete": true,
+            "instrument": {
+              "provider": "fixture",
+              "instrument_id": "provider-contract",
+              "contract": {
+                "underlying": "SPY",
+                "underlying_kind": "ETF",
+                "underlying_market": "US_LISTED",
+                "root": "SPY",
+                "right": "CALL",
+                "strike": "600",
+                "expiration": "2026-10-09",
+                "multiplier": 100,
+                "deliverable_kind": "SHARES",
+                "deliverable_units": 100,
+                "currency": "USD",
+                "exercise_style": "AMERICAN",
+                "settlement": "PHYSICAL",
+                "settlement_session": "PM",
+                "last_trading_at": "2026-10-09T20:00:00Z",
+                "expires_at": "2026-10-09T21:00:00Z",
+                "settles_at": "2026-10-10T20:00:00Z",
+                "adjusted": false,
+                "tick_below_three": "0.01",
+                "tick_at_or_above_three": "0.01"
+              },
+              "metadata_complete": true,
+              "option_tradable": true
+            },
+            "bid": "0.98",
+            "ask": "1",
+            "bid_size": 20,
+            "ask_size": 20
+          },
+          {
+            "source": "fixture-opra",
+            "source_at": "2026-10-09T14:00:00Z",
+            "received_at": "2026-10-09T14:00:00Z",
+            "entitlement": "REALTIME",
+            "complete": true,
+            "instrument": {
+              "provider": "fixture",
+              "instrument_id": "provider-contract-qqq",
+              "contract": {
+                "underlying": "QQQ",
+                "underlying_kind": "ETF",
+                "underlying_market": "US_LISTED",
+                "root": "QQQ",
+                "right": "CALL",
+                "strike": "600",
+                "expiration": "2026-10-09",
+                "multiplier": 100,
+                "deliverable_kind": "SHARES",
+                "deliverable_units": 100,
+                "currency": "USD",
+                "exercise_style": "AMERICAN",
+                "settlement": "PHYSICAL",
+                "settlement_session": "PM",
+                "last_trading_at": "2026-10-09T20:00:00Z",
+                "expires_at": "2026-10-09T21:00:00Z",
+                "settles_at": "2026-10-10T20:00:00Z",
+                "adjusted": false,
+                "tick_below_three": "0.01",
+                "tick_at_or_above_three": "0.01"
+              },
+              "metadata_complete": true,
+              "option_tradable": true
+            },
+            "bid": "0.98",
+            "ask": "1",
+            "bid_size": 20,
+            "ask_size": 20
+          }
+        ],
+        "underlyings": [
+          {
+            "source": "fixture-equity",
+            "source_at": "2026-10-09T14:00:00Z",
+            "received_at": "2026-10-09T14:00:00Z",
+            "entitlement": "REALTIME",
+            "complete": true,
+            "symbol": "SPY",
+            "bid": "600.8",
+            "ask": "600.81"
+          },
+          {
+            "source": "fixture-equity",
+            "source_at": "2026-10-09T14:00:00Z",
+            "received_at": "2026-10-09T14:00:00Z",
+            "entitlement": "REALTIME",
+            "complete": true,
+            "symbol": "QQQ",
+            "bid": "600.8",
+            "ask": "600.81"
+          }
+        ]
+      },
+      "kind": "CYCLE",
+      "action": null,
+      "coverage_issues": []
+    },
+    {
+      "version": "mixed-normalized-portfolio-v2",
+      "population_id": "ui-review-two-play-20261009",
+      "sequence": 2,
+      "recorded_at": "2026-10-09T14:00:01Z",
+      "frame": {
+        "portfolio_version": "portfolio-frame-v2",
+        "held_stocks": [
+          {
+            "quote": {
+              "source": "stock-tape",
+              "source_at": "2026-10-09T14:00:01Z",
+              "received_at": "2026-10-09T14:00:01Z",
+              "entitlement": "REALTIME",
+              "complete": true,
+              "instrument": {
+                "provider": "fixture",
+                "instrument_id": "stock-spy",
+                "symbol": "SPY",
+                "kind": "ETF",
+                "market": "US_LISTED",
+                "currency": "USD",
+                "tick": "0.01",
+                "metadata_complete": true,
+                "tradable": true
+              },
+              "bid": "600.8",
+              "ask": "600.81",
+              "bid_size": "2",
+              "ask_size": "2"
+            },
+            "swing": null,
+            "catalyst": null
+          },
+          {
+            "quote": {
+              "source": "stock-tape",
+              "source_at": "2026-10-09T14:00:01Z",
+              "received_at": "2026-10-09T14:00:01Z",
+              "entitlement": "REALTIME",
+              "complete": true,
+              "instrument": {
+                "provider": "fixture",
+                "instrument_id": "stock-qqq",
+                "symbol": "QQQ",
+                "kind": "ETF",
+                "market": "US_LISTED",
+                "currency": "USD",
+                "tick": "0.01",
+                "metadata_complete": true,
+                "tradable": true
+              },
+              "bid": "600.8",
+              "ask": "600.81",
+              "bid_size": "2",
+              "ask_size": "2"
+            },
+            "swing": null,
+            "catalyst": null
+          }
+        ],
+        "histories": [],
+        "inventories": [],
+        "quotes": [],
+        "underlyings": []
+      },
+      "kind": "MARKET",
+      "action": null,
+      "coverage_issues": []
+    },
+    {
+      "version": "mixed-normalized-portfolio-v2",
+      "population_id": "ui-review-two-play-20261009",
+      "sequence": 3,
+      "recorded_at": "2026-10-09T14:00:02Z",
+      "frame": {
+        "portfolio_version": "portfolio-frame-v2",
+        "held_stocks": [
+          {
+            "quote": {
+              "source": "stock-tape",
+              "source_at": "2026-10-09T14:00:02Z",
+              "received_at": "2026-10-09T14:00:02Z",
+              "entitlement": "REALTIME",
+              "complete": true,
+              "instrument": {
+                "provider": "fixture",
+                "instrument_id": "stock-spy",
+                "symbol": "SPY",
+                "kind": "ETF",
+                "market": "US_LISTED",
+                "currency": "USD",
+                "tick": "0.01",
+                "metadata_complete": true,
+                "tradable": true
+              },
+              "bid": "601.20",
+              "ask": "601.21",
+              "bid_size": "2",
+              "ask_size": "2"
+            },
+            "swing": null,
+            "catalyst": null
+          },
+          {
+            "quote": {
+              "source": "stock-tape",
+              "source_at": "2026-10-09T14:00:02Z",
+              "received_at": "2026-10-09T14:00:02Z",
+              "entitlement": "REALTIME",
+              "complete": true,
+              "instrument": {
+                "provider": "fixture",
+                "instrument_id": "stock-qqq",
+                "symbol": "QQQ",
+                "kind": "ETF",
+                "market": "US_LISTED",
+                "currency": "USD",
+                "tick": "0.01",
+                "metadata_complete": true,
+                "tradable": true
+              },
+              "bid": "600.60",
+              "ask": "600.61",
+              "bid_size": "2",
+              "ask_size": "2"
+            },
+            "swing": null,
+            "catalyst": null
+          }
+        ],
+        "histories": [],
+        "inventories": [],
+        "quotes": [],
+        "underlyings": []
+      },
+      "kind": "MARKET",
+      "action": null,
+      "coverage_issues": []
+    }
+  ]
+}

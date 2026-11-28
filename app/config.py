@@ -3,7 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,14 +14,30 @@ class Settings(BaseSettings):
     starting_capital: Decimal = Decimal("10.00")
     db_url: str = "sqlite:///./trader.db"
     live_enabled: bool = False
-    model_name: str = "gpt-5.6-luna"
-    model_input_usd_per_million: Decimal = Decimal("0.20")
-    model_output_usd_per_million: Decimal = Decimal("1.20")
+    model_name: str = "gpt-6-luna"
+    model_input_usd_per_million: Decimal = Decimal("0.10")
+    model_output_usd_per_million: Decimal = Decimal("0.50")
     benchmark_symbol: str = "SPY"
     min_order_notional: Decimal = Decimal("1.00")
     quote_max_age_seconds: int = 90
     max_daily_entries: int = 8
     exit_cooldown_minutes: int = 15
+    robinhood_mcp_url: str = "https://agent.robinhood.com/mcp/trading"
+    robinhood_redirect_uri: str = "http://127.0.0.1:8765/callback"
+    robinhood_oauth_storage: str = "~/.trade-bot/robinhood-oauth.json"
+    robinhood_interactive_auth: bool = True
+    openai_api_key_file: str | None = None
+    shadow_service_lock_path: str = "var/shadow-service.lock"
+    release_sha: str = "unknown"
+    model_process_timeout_seconds: float = Field(default=120, gt=0, le=300)
+    model_request_timeout_seconds: float = Field(default=60, gt=0, le=120)
+    dashboard_password_file: str | None = None
+    synthetic_experiment_id: str | None = None
+    robinhood_schema_snapshot: str = "var/robinhood-tool-schemas.json"
+    robinhood_required_schema_snapshot: str = "var/robinhood-required-schemas.json"
+    robinhood_db_url: str = "sqlite:///./robinhood.db"
+    shadow_lookback_days: int = 7
+    shadow_bar_interval: str = "5minute"
     initial_symbols: list[str] = Field(
         default_factory=lambda: [
             "SPY", "QQQ", "IWM", "DIA", "XLK", "XLF", "XLE", "XLI", "XLV", "XLY",
@@ -32,6 +48,11 @@ class Settings(BaseSettings):
     @property
     def normalized_mode(self) -> str:
         return self.mode.upper()
+
+    @field_validator("synthetic_experiment_id", mode="before")
+    @classmethod
+    def blank_experiment_is_disabled(cls, value):
+        return None if isinstance(value, str) and not value.strip() else value
 
 
 @lru_cache

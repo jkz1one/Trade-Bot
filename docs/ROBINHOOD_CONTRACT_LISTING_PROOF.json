@@ -1,0 +1,103 @@
+{
+  "version": "robinhood-contract-listing-v1",
+  "parent": "681c43b66ac88353e9f465f8cdfe013952e0dad9",
+  "capture_id": "f15f524e90ff4a75b941f04e0f5100cf",
+  "collected_at": "2026-10-25T05:11:55.747093Z",
+  "schema_sha256": "d6a6d50fb64753b33658f310fcc0ca211ab018194c075fa8f952f5d0597f7a15",
+  "completed_reads": 2,
+  "input_output_schemas_revalidated": true,
+  "first_page_counts": {
+    "SPY": 100,
+    "QQQ": 100
+  },
+  "pagination_present": {
+    "SPY": true,
+    "QQQ": true
+  },
+  "complete_chain_inventory": false,
+  "all_returned_subjects_and_unique_ids_checked": true,
+  "selected_records": [
+    {
+      "chain_id": "c277b118-58d9-4060-8dc5-a3b5898955cb",
+      "chain_symbol": "SPY",
+      "expiration_date": "2026-10-26",
+      "id": "0eb7725e-bf00-4817-8e47-0092d1910f75",
+      "min_ticks": {
+        "above_tick": "0.01",
+        "below_tick": "0.01",
+        "cutoff_price": "0.00"
+      },
+      "sellout_datetime": "2026-10-26T19:45:00+00:00",
+      "state": "active",
+      "strike_price": "760.0000",
+      "tradability": "tradable",
+      "trade_value_multiplier": "100.0000",
+      "type": "call",
+      "underlying_type": "equity"
+    },
+    {
+      "chain_id": "a95fe906-11f0-4699-bfc2-520dd706e98d",
+      "chain_symbol": "QQQ",
+      "expiration_date": "2026-10-26",
+      "id": "6058511b-ce40-4dd6-8ef9-8f5a3736ed90",
+      "min_ticks": {
+        "above_tick": "0.01",
+        "below_tick": "0.01",
+        "cutoff_price": "0.00"
+      },
+      "sellout_datetime": "2026-10-26T19:45:00+00:00",
+      "state": "active",
+      "strike_price": "705.0000",
+      "tradability": "tradable",
+      "trade_value_multiplier": "100.0000",
+      "type": "call",
+      "underlying_type": "equity"
+    }
+  ],
+  "selection_reason": "Exact previously requested strikes, one observed active/tradable CALL per chain for 2026-10-26; schema samples only.",
+  "prior_empty_filter_cause": "NOT_ISOLATED",
+  "new_credential_host_directory": "/var/lib/trade-bot-read-auth",
+  "old_credential_directory": "OPERATOR_DELETED_OR_MISSING_DO_NOT_REUSE",
+  "supplied_artifacts": {
+    "samples(3).json": {
+      "bytes": 37768,
+      "sha256": "e6fcd5fbdbfc6f091f47877df880e7e670f57c29a56724eeb962c5d455b9fddb"
+    },
+    "summary(5).json": {
+      "bytes": 325,
+      "sha256": "4a38ae76eca5a864689cd180ef0f8024edb99b21ac651261627342d7cbab119e"
+    },
+    "exit-code(2)": {
+      "bytes": 4,
+      "sha256": "a5e45837a2959db847f7e67a915d0ecaddd47f943af2af5fa6453be497faabca"
+    },
+    "plan(1).json": {
+      "bytes": 597,
+      "sha256": "d3edf134f87ddf14ace75c3797b118fb869a48131353b1f25d65d9eba538ce3f"
+    },
+    "stderr.log": {
+      "bytes": 189,
+      "sha256": "09617bc89eb454bc2e1297e9020ea8d460e303c50c394d849d953f2afdccf3fe"
+    },
+    "samples(4).json": {
+      "bytes": 215780,
+      "sha256": "d04bf3144ef93c3a8809d57355d749543266d1fda4adb7563875b7980b91db56"
+    },
+    "summary(6).json": {
+      "bytes": 325,
+      "sha256": "6373dcc4fb46fe79367e814dd48808dac11e9a149bc283a486e95c36c13ffe2a"
+    }
+  },
+  "next_plan_sha256": "4f189991fa7b57b79c43304fc9ab5bfe86f02af423c0d9d154fbc63506f49d4e",
+  "next_plan_calls": 2,
+  "next_plan_schema_validated": true,
+  "next_plan_executed": false,
+  "native_contract_metadata_complete": false,
+  "broker_sellout_time_is_exchange_expiry": false,
+  "workspace_provider_calls": 0,
+  "application_changes": false,
+  "prior_installed_test_count": 119,
+  "prior_application_file_count": 256,
+  "prior_proof": "ROBINHOOD_SAMPLE_ACCEPTANCE_PROOF.json",
+  "connected_paper_ready": false
+}

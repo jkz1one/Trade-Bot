@@ -1,0 +1,49 @@
+{
+  "purpose": "SCHEMA_MAPPING_EVIDENCE",
+  "symbols": [
+    "SPY",
+    "QQQ"
+  ],
+  "instrument_ids": [],
+  "calls": [
+    {
+      "label": "equity-quotes",
+      "tool": "get_equity_quotes",
+      "arguments": {
+        "symbols": [
+          "SPY",
+          "QQQ"
+        ]
+      }
+    },
+    {
+      "label": "completed-history",
+      "tool": "get_equity_historicals",
+      "arguments": {
+        "symbols": [
+          "SPY",
+          "QQQ"
+        ],
+        "start_time": "2026-10-23T13:30:00Z",
+        "end_time": "2026-10-23T14:00:00Z",
+        "interval": "5minute",
+        "bounds": "regular",
+        "adjustment_type": "split"
+      }
+    },
+    {
+      "label": "spy-chains",
+      "tool": "get_option_chains",
+      "arguments": {
+        "underlying_symbol": "SPY"
+      }
+    },
+    {
+      "label": "qqq-chains",
+      "tool": "get_option_chains",
+      "arguments": {
+        "underlying_symbol": "QQQ"
+      }
+    }
+  ]
+}

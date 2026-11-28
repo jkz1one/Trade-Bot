@@ -1,0 +1,237 @@
+{
+  "version": "paper-startup-protection-proof-v1",
+  "date_utc": "2026-11-11",
+  "base_commit": "db3826782b8a3447e6d0dfa6f1521635724e63dd",
+  "implementation_commit": "d35d318e50d376e8f7287f7bffe72486e2eb640e",
+  "synthetic": true,
+  "provider_calls": false,
+  "model_service_calls": false,
+  "host_changed": false,
+  "account_changed": false,
+  "limits_changed": false,
+  "live_enabled": false,
+  "identity": {
+    "application_files": 330,
+    "source_wheel_installed_bytes_match": true,
+    "wheel_sha256": "eb6a57e3f1d1196ada8a9ade9cea3ab4d36f8a4434d0a0e0724727d7ed3dc45f",
+    "application_manifest_sha256": "b41029579a962b91a39148250ff71c928d80a74d3b359f1fddcc4887de191d93",
+    "runtime_pins_verified": 60,
+    "python_version": "3.12.14",
+    "dependency_check": "PASSED",
+    "syntax_checked_files": 20,
+    "noneditable_isolated_installation": true
+  },
+  "baseline": {
+    "artifact": "evidence/paper-startup-protection-baseline.json",
+    "sha256": "9265b5a923343e59850ba4111ad5e0e4ee07bd2486bdf4a4f4201566ac830928"
+  },
+  "verification": [
+    {
+      "group": "targeted",
+      "wheel_sha256": "d5bb047c602cf802da9a2d657306353a25b9efc2c2626672734ab241ddb484a5",
+      "counts": {
+        "PASSED": 65
+      },
+      "cases": 65,
+      "seconds": 330.21,
+      "junit_sha256": "f09169d061d1a1ef6a86b6bea80619d6c566a66095a682c3dda796990828ba7a",
+      "log_sha256": "b050c41115bb261033deb4ff950223e8209f8f1a29cfb47232199035f83a485f"
+    },
+    {
+      "group": "final-system-check",
+      "wheel_sha256": "eb6a57e3f1d1196ada8a9ade9cea3ab4d36f8a4434d0a0e0724727d7ed3dc45f",
+      "counts": {
+        "PASSED": 448,
+        "FAILED": 2,
+        "SKIPPED": 1
+      },
+      "cases": 451,
+      "seconds": 808.049,
+      "junit_sha256": "1439746a141cd0188f58b22fd365a4d86bdc6f34b8131d0179a7095bcd4e0fa1",
+      "log_sha256": "1ea01ddc19b74f9fa81828adb641bd8c81fe47353cf73c0e2461f6caa9c81f4f"
+    },
+    {
+      "group": "corrected-host-suite",
+      "wheel_sha256": "eb6a57e3f1d1196ada8a9ade9cea3ab4d36f8a4434d0a0e0724727d7ed3dc45f",
+      "counts": {
+        "PASSED": 48
+      },
+      "cases": 48,
+      "seconds": 0.46,
+      "junit_sha256": "f5c675b7b58d36b7967746a39baaf84694b216f868a3f9152a72800b94959686",
+      "log_sha256": "93c5172eb917dad2942830da88311c58a37914d1669633bfa53f817c164c7d16"
+    }
+  ],
+  "final_status_counts": {
+    "PASSED": 450,
+    "SKIPPED": 1
+  },
+  "overlapping_groups_not_summed": true,
+  "verification_status": "PASSED_WITH_TARGETED_TEST_CORRECTION",
+  "skips": [
+    {
+      "test_file": "tests/test_dashboard_snapshot.py",
+      "name": "test_cross_uid_snapshot_is_readable_by_unprivileged_dashboard_without_auth_copy",
+      "original_name_sha256": "b94963b92ae24d5f63a176d875772155ead64a128d0de674d88060e62e16e7b4",
+      "status": "SKIPPED",
+      "seconds": 0.002,
+      "reason": "Reader 10001 is not mapped in this environment: uid"
+    }
+  ],
+  "scenarios": [
+    {
+      "artifact": "evidence/paper-startup-protection-normal.json",
+      "sha256": "ce64a25720059d0bce04421740c3c004014fb193081bc15cb9708152c8ce09d6",
+      "capture_attempts": 35,
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "runtime_timing_records": 41,
+      "runtime_timing_measured": 41,
+      "publication_incidents": 0
+    },
+    {
+      "artifact": "evidence/paper-startup-protection-read-timeout.json",
+      "sha256": "d6663a810bde0e9b0da01742ecf160ed17226c7c339d7e01ba8bb1bbd2f41e64",
+      "capture_attempts": 35,
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "runtime_timing_records": 41,
+      "runtime_timing_measured": 41,
+      "publication_incidents": 0
+    },
+    {
+      "artifact": "evidence/paper-startup-protection-publisher-failure.json",
+      "sha256": "32ecf0f37747369dbc796433cd10556377f6a6110cc052aad661c5aa2d60eeef",
+      "capture_attempts": 35,
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "runtime_timing_records": 42,
+      "runtime_timing_measured": 42,
+      "publication_incidents": 1
+    },
+    {
+      "artifact": "evidence/paper-startup-protection-startup-missing.json",
+      "sha256": "84335f39d1b52ba6f63a9b80fca3179f578d0e41dc7f95e257b121609bf62094",
+      "capture_attempts": 35,
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "runtime_timing_records": 41,
+      "runtime_timing_measured": 41,
+      "publication_incidents": 1
+    },
+    {
+      "artifact": "evidence/paper-startup-protection-startup-pending.json",
+      "sha256": "a8d50aa889a86a92a696cbce8fcd6f22f53ac74d58dcdcf6454961f8be1a4750",
+      "capture_attempts": 35,
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 2,
+        "exit_fills": 2,
+        "completed_round_trips": 2,
+        "carry_in_exits": 0
+      },
+      "runtime_timing_records": 41,
+      "runtime_timing_measured": 41,
+      "publication_incidents": 1
+    }
+  ],
+  "test_results": {
+    "artifact": "evidence/paper-startup-protection-tests.json",
+    "sha256": "e47ae5a9ce7af4104b59f660a345953d92076dc75adad9563c59586970e2981e",
+    "bytes": 186221
+  },
+  "phase_samples": {
+    "artifact": "evidence/paper-extended-phase-samples.json",
+    "sha256": "7a510d5b92700bb502857405d8ce33489ee4d4038fae71fd49652d2d851d4014",
+    "cases": 9,
+    "observed_phases": [
+      "ADMISSION",
+      "CYCLE",
+      "DISPATCH",
+      "ENTRY_MODEL",
+      "NATIVE_ACCEPT",
+      "NATIVE_SNAPSHOT",
+      "OPTION_MANAGEMENT_MODEL",
+      "PROTECTION",
+      "SCAN",
+      "SCOPE_QUALITY",
+      "SCOPE_REFRESH",
+      "SCOPE_SCAN",
+      "STOCK_ADMISSION",
+      "STOCK_DISPATCH",
+      "STOCK_MANAGEMENT_MODEL",
+      "STOCK_REFRESH",
+      "STOCK_SCAN",
+      "TICK"
+    ]
+  },
+  "source_sha256": {
+    "app/mixed/connected_runtime.py": "2fc6dc92b29e99dc8079753d6c35780b18c5841ee90bdccbcb7f730214422f5f",
+    "app/mixed/entry.py": "8a5d787e44c2701168c5222f091bee64e0a8946d4572677bba8feb1a491bf7fb",
+    "app/mixed/portfolio_management.py": "2c16301519fdbab07b5868de7e37cfc22e50d2a12f81f61103498c75ec270214",
+    "app/mixed/position.py": "c84076c8d5c54ac5121cfc117d036988e6d0d7204719670fecdb89ddc3465fe2",
+    "app/mixed/selection.py": "b24014664107ffae4aa101efdd2cfd15d3071ef5e6aa0b4f7c669f0db3b538ba",
+    "app/options/engine.py": "dbe82004cac095b12f76ad2f5d73e85ab261cfdf122b51a87549c1c557401f0f",
+    "app/options/position_coordination.py": "4aeb98ca1f0672b9bca1bb2663caaadbe22d46b3ead17cc1dd0afdb5d1e84cd7",
+    "app/options/runtime_timing.py": "7dc9607c23bdaae815e8901ba7e41c43b1badb971ec81df80e05660e309f3fab",
+    "app/options/scope_ai.py": "d408c00825d431d1dd9a6f4c4353bb5fb44c756d831efcd721189011c791b8fa",
+    "app/options/scope_arbitration.py": "6fefdee82a6a615abe0416afe48c94aac65f8de691844abcff748dc93310a466",
+    "app/options/scope_quality.py": "665489878422b3375686bfd71a644b6e2ca2189d7d5b51488f8cc4bf0ad2ce2d",
+    "scripts/connected-session-host.py": "3582e42b7663b66341e47f2066bae1ec9fe97d0f0fcc68664ec3bb2380fd3360",
+    "scripts/paper-session-report.py": "fab4b00294cbd22aa0c054b27db1c5b00b4a5f691163faac57b68d1e01e5c5d2",
+    "scripts/paper-system-check.py": "67c063899642a26c4a17e639be739747f74b2f04d9a2297dc04218b4565336aa",
+    "tests/test_connected_publisher.py": "72e173921daf7abe3412d6087123e620a02d7c8a743d7e020acc19a632be5c92",
+    "tests/test_connected_system.py": "6fa6f2e752b9ecac4b9f336b2c8e46c308fc1aa1c1daf2ebc5c56b7fbf24cfb4",
+    "tests/test_mixed_runtime.py": "a088b5c4268a19c5d1f1373730f04a3bd706e79d59bb328d7c75b20dee9d4eab",
+    "tests/test_option_runtime.py": "2ff46f69217189e1ccf50b1ab55e80d598e6dea3b57b68b0bb0acf3e530d0031",
+    "tests/test_portfolio_models.py": "7dc735439be6e1a6463f8b07ea8b18e28b511bd99ff68bcaa4183f75171be4a1",
+    "tests/test_session_host.py": "69b4c183a424ab0ada7c657ef66000e45aba7541ca7eaf5fb61a31c1d0f4571e"
+  },
+  "checklist": {
+    "A2": "PARTIAL_STOCK_SCOPE_MANAGEMENT_PHASES_ADDED",
+    "A4": "PARTIAL_VERIFIED_HELD_STARTUP_AND_DISPLAY_MODEL_OVERLAP"
+  },
+  "development_failures": [
+    {
+      "run": "installed baseline reproduction",
+      "failed": 1,
+      "reason": "Missing completed dashboard snapshot stopped restart before protecting the remaining holding."
+    },
+    {
+      "run": "final-system-check",
+      "failed": 2,
+      "reason": "Existing capture mount tests confused /state in a temporary host source path with a container destination.",
+      "correction": "Assert all three exact mount source/destination pairs and forbid volume aliases; complete host suite rerun passed against the same installed wheel. No application gate or deadline changed."
+    }
+  ],
+  "limitations": [
+    "Synthetic provider/model responses and accelerated fixture clock; no connected lifecycle or Robinhood latency evidence.",
+    "Killed-before-runtime-record denominators and full-session timing/capacity profiling remain incomplete.",
+    "No combined prolonged history/model/report stress matrix or full-duration host resource-profile soak.",
+    "Protection-only startup requires intact enrollment and verified reconciled native holdings; flat, pending-only or unreconciled exposure is not admitted by this path.",
+    "The normal daily flat launcher is unchanged; protection-only host review does not deploy or automatically resume an account.",
+    "Cross-UID publication, actual Docker/systemd isolation and browser visual acceptance remain host/environment gates.",
+    "Older strict native-journal table allowlists still require reviewed rollback compatibility before an upgrade.",
+    "No full Ruff lint claim; changed Python files passed syntax and whitespace checks."
+  ]
+}

@@ -1,0 +1,2689 @@
+{
+  "synthetic": true,
+  "market_acceptance": false,
+  "native_process_calls": 35,
+  "native_process_max_seconds": 0.4609346759998516,
+  "dashboard_reads": 87,
+  "capture_attempts": 35,
+  "report": {
+    "window_start": "2026-10-28T14:00:26+00:00",
+    "window_end": "2026-10-28T14:06:16+00:00",
+    "live_enabled": false,
+    "provider_calls": false,
+    "state_modified": false,
+    "cycles": [
+      {
+        "slot": 5977320,
+        "status": "COMPLETE",
+        "reason": null,
+        "started_at": "2026-10-28T14:00:26+00:00",
+        "completed_at": "2026-10-28T14:01:06+00:00"
+      },
+      {
+        "slot": 5977321,
+        "status": "COMPLETE",
+        "reason": null,
+        "started_at": "2026-10-28T14:05:16+00:00",
+        "completed_at": "2026-10-28T14:05:16+00:00"
+      }
+    ],
+    "decisions": [
+      {
+        "cycle_key": "degen:5977320:portfolio:0",
+        "started_at": "2026-10-28T14:01:06+00:00",
+        "stored_status": "COMPLETE",
+        "evidence_available": true,
+        "evidence_bytes": 35809,
+        "omitted_summary_fields": [],
+        "status": [
+          "OPEN"
+        ],
+        "reason": [],
+        "unavailable_families": [
+          "SWING"
+        ],
+        "stock_rejections": [
+          "MIXED_STOCK_INSTRUMENT_UNSUPPORTED",
+          "SWING_INPUT_UNAVAILABLE"
+        ],
+        "option_market_sequence": 4,
+        "option_market_review_reasons": [
+          "OFFLINE_PLAN_VALIDATED"
+        ],
+        "entry_timely": true,
+        "scope_admission_reasons": [],
+        "option_candidates": 2,
+        "stock_candidates": 0,
+        "scans": [
+          {
+            "strategy": "DEGEN",
+            "symbol": [
+              "SPY"
+            ],
+            "issues": [],
+            "setups": [
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "CONFIRMED"
+                ],
+                "reasons": []
+              },
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "OPENING_BREAK_AND_HOLD_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "EMA_TREND_ALIGNMENT_REQUIRED",
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "OBSERVED_FAILED_BREAK_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              }
+            ]
+          },
+          {
+            "strategy": "DEGEN",
+            "symbol": [
+              "QQQ"
+            ],
+            "issues": [],
+            "setups": [
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "CONFIRMED"
+                ],
+                "reasons": []
+              },
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "OPENING_BREAK_AND_HOLD_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "EMA_TREND_ALIGNMENT_REQUIRED",
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "OBSERVED_FAILED_BREAK_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              }
+            ]
+          }
+        ],
+        "contract_exclusions": [
+          "INSTRUMENT_OR_ZERO_DTE_IDENTITY_INELIGIBLE"
+        ],
+        "total_scans": 2,
+        "scans_omitted": 0,
+        "inventory_timing": [
+          {
+            "symbol": "SPY",
+            "source_at": "2026-10-28T14:01:05Z",
+            "received_at": "2026-10-28T14:01:06Z",
+            "evaluated_at": "2026-10-28T14:01:06Z",
+            "source_age_seconds": 1.0,
+            "receive_lag_seconds": 1.0,
+            "clock_order_valid": true,
+            "max_metadata_age_seconds": 10
+          },
+          {
+            "symbol": "QQQ",
+            "source_at": "2026-10-28T14:01:05Z",
+            "received_at": "2026-10-28T14:01:06Z",
+            "evaluated_at": "2026-10-28T14:01:06Z",
+            "source_age_seconds": 1.0,
+            "receive_lag_seconds": 1.0,
+            "clock_order_valid": true,
+            "max_metadata_age_seconds": 10
+          }
+        ]
+      },
+      {
+        "cycle_key": "degen:5977321:portfolio:0",
+        "started_at": "2026-10-28T14:05:16+00:00",
+        "stored_status": "COMPLETE",
+        "evidence_available": true,
+        "evidence_bytes": 33964,
+        "omitted_summary_fields": [],
+        "status": [
+          "OPEN"
+        ],
+        "reason": [],
+        "unavailable_families": [
+          "SWING"
+        ],
+        "rejections": [
+          "DUPLICATE_EXPOSURE"
+        ],
+        "stock_rejections": [
+          "DUPLICATE_EXPOSURE",
+          "MIXED_STOCK_INSTRUMENT_UNSUPPORTED",
+          "SWING_INPUT_UNAVAILABLE"
+        ],
+        "option_market_sequence": 29,
+        "option_market_review_reasons": [
+          "OFFLINE_PLAN_VALIDATED"
+        ],
+        "entry_timely": true,
+        "scope_admission_reasons": [],
+        "option_candidates": 1,
+        "stock_candidates": 0,
+        "scans": [
+          {
+            "strategy": "DEGEN",
+            "symbol": [
+              "SPY"
+            ],
+            "issues": [],
+            "setups": [
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "CONFIRMED"
+                ],
+                "reasons": []
+              },
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "OPENING_BREAK_AND_HOLD_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "EMA_TREND_ALIGNMENT_REQUIRED",
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "OBSERVED_FAILED_BREAK_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              }
+            ]
+          },
+          {
+            "strategy": "DEGEN",
+            "symbol": [
+              "QQQ"
+            ],
+            "issues": [],
+            "setups": [
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "CONFIRMED"
+                ],
+                "reasons": []
+              },
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "OPENING_BREAK_AND_HOLD_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "EMA_TREND_ALIGNMENT_REQUIRED",
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "OBSERVED_FAILED_BREAK_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              }
+            ]
+          }
+        ],
+        "contract_exclusions": [
+          "INSTRUMENT_OR_ZERO_DTE_IDENTITY_INELIGIBLE"
+        ],
+        "total_scans": 2,
+        "scans_omitted": 0,
+        "inventory_timing": [
+          {
+            "symbol": "SPY",
+            "source_at": "2026-10-28T14:05:15Z",
+            "received_at": "2026-10-28T14:05:16Z",
+            "evaluated_at": "2026-10-28T14:05:16Z",
+            "source_age_seconds": 1.0,
+            "receive_lag_seconds": 1.0,
+            "clock_order_valid": true,
+            "max_metadata_age_seconds": 10
+          },
+          {
+            "symbol": "QQQ",
+            "source_at": "2026-10-28T14:05:15Z",
+            "received_at": "2026-10-28T14:05:16Z",
+            "evaluated_at": "2026-10-28T14:05:16Z",
+            "source_age_seconds": 1.0,
+            "receive_lag_seconds": 1.0,
+            "clock_order_valid": true,
+            "max_metadata_age_seconds": 10
+          }
+        ]
+      }
+    ],
+    "cycle_count": 2,
+    "cycle_outcomes": [
+      {
+        "status": [
+          "COMPLETE"
+        ],
+        "reason": [],
+        "count": 2
+      }
+    ],
+    "decision_count": 2,
+    "cycles_omitted": 0,
+    "decisions_omitted": 0,
+    "runtime_evidence": {
+      "heartbeat": "FRESH",
+      "heartbeat_at": "2026-10-28T14:06:06+00:00",
+      "heartbeat_age_seconds": 10.0,
+      "heartbeat_max_age_seconds": 20,
+      "feed": "FRESH",
+      "feed_at": "2026-10-28T14:06:06+00:00",
+      "feed_age_seconds": 10.0,
+      "feed_max_age_seconds": 30
+    },
+    "reviewed_entry_resumes": 1,
+    "current_runtime": [
+      {
+        "status": "STOPPED",
+        "reason": "OPTION_RUNTIME_STOPPED",
+        "feed_sequence": 34
+      }
+    ],
+    "accepted_packet": {
+      "sequence": 34,
+      "accepted_at": "2026-10-28T14:06:06+00:00",
+      "kind": [
+        "MARKET"
+      ],
+      "coverage_issues": [
+        "SCOPE_CURRENT_INPUT_UNAVAILABLE",
+        "SWING_ORIGINAL_SOURCES_UNAVAILABLE"
+      ]
+    },
+    "current_control": [
+      {
+        "halted": 1,
+        "halt_reason": "OPTION_RUNTIME_STOPPED"
+      }
+    ],
+    "account_total_fills": 4,
+    "fill_count_source": "PORTFOLIO_ORDER_OBSERVATIONS",
+    "run_execution": {
+      "status": "RECORDED",
+      "entry_fills": 2,
+      "exit_fills": 2,
+      "completed_round_trips": 2,
+      "carry_in_exits": 0
+    },
+    "model_spending": {
+      "status": "COMPLETE",
+      "day": "2026-10-28",
+      "timezone": "America/New_York",
+      "budgets": {
+        "daily_budget": "1",
+        "total_budget": "5"
+      },
+      "costs": {
+        "run": {
+          "settled_cost": "0.00004",
+          "unknown_calls": 0
+        },
+        "day": {
+          "settled_cost": "0.00004",
+          "unknown_calls": 0
+        },
+        "account_total": {
+          "settled_cost": "0.00004",
+          "unknown_calls": 0
+        }
+      }
+    },
+    "runtime_failures": [],
+    "publication_failure_evidence": "AVAILABLE",
+    "publication_failures": [],
+    "runtime_timing": {
+      "status": "OBSERVED",
+      "records": 39,
+      "measured": 39,
+      "missing_or_invalid": 0,
+      "omitted": 0,
+      "spans_omitted": 0,
+      "native_omitted": 0,
+      "by_status": {
+        "TICK:COMPLETE": 37,
+        "NATIVE_SNAPSHOT:COMPLETE": 35,
+        "PROTECTION:COMPLETE": 37,
+        "ADMISSION:COMPLETE": 4,
+        "NATIVE_ACCEPT:COMPLETE": 4,
+        "DISPATCH:COMPLETE": 4,
+        "CYCLE:COMPLETE": 2,
+        "SCAN:COMPLETE": 2,
+        "STOCK_SCAN:COMPLETE": 2,
+        "SCOPE_SCAN:COMPLETE": 2,
+        "ENTRY_MODEL:COMPLETE": 2
+      },
+      "phases": {
+        "TICK": {
+          "samples": 37,
+          "p50_seconds": 0.695156,
+          "p95_seconds": 2.492529,
+          "p99_seconds": 3.161477,
+          "max_seconds": 3.161477
+        },
+        "NATIVE_SNAPSHOT": {
+          "samples": 35,
+          "p50_seconds": 0.133237,
+          "p95_seconds": 0.263846,
+          "p99_seconds": 0.460921,
+          "max_seconds": 0.460921
+        },
+        "PROTECTION": {
+          "samples": 37,
+          "p50_seconds": 0.387771,
+          "p95_seconds": 2.03025,
+          "p99_seconds": 2.446251,
+          "max_seconds": 2.446251
+        },
+        "ADMISSION": {
+          "samples": 4,
+          "p50_seconds": 0.261046,
+          "p95_seconds": 0.423876,
+          "p99_seconds": 0.423876,
+          "max_seconds": 0.423876
+        },
+        "NATIVE_ACCEPT": {
+          "samples": 4,
+          "p50_seconds": 1.21681,
+          "p95_seconds": 1.419598,
+          "p99_seconds": 1.419598,
+          "max_seconds": 1.419598
+        },
+        "DISPATCH": {
+          "samples": 4,
+          "p50_seconds": 1.45996,
+          "p95_seconds": 1.919306,
+          "p99_seconds": 1.919306,
+          "max_seconds": 1.919306
+        },
+        "CYCLE": {
+          "samples": 2,
+          "p50_seconds": 2.282187,
+          "p95_seconds": 3.582721,
+          "p99_seconds": 3.582721,
+          "max_seconds": 3.582721
+        },
+        "SCAN": {
+          "samples": 2,
+          "p50_seconds": 0.022188,
+          "p95_seconds": 0.064825,
+          "p99_seconds": 0.064825,
+          "max_seconds": 0.064825
+        },
+        "STOCK_SCAN": {
+          "samples": 2,
+          "p50_seconds": 0.027647,
+          "p95_seconds": 0.179519,
+          "p99_seconds": 0.179519,
+          "max_seconds": 0.179519
+        },
+        "SCOPE_SCAN": {
+          "samples": 2,
+          "p50_seconds": 0.02062,
+          "p95_seconds": 0.035224,
+          "p99_seconds": 0.035224,
+          "max_seconds": 0.035224
+        },
+        "ENTRY_MODEL": {
+          "samples": 2,
+          "p50_seconds": 0.002091,
+          "p95_seconds": 0.003885,
+          "p99_seconds": 0.003885,
+          "max_seconds": 0.003885
+        }
+      },
+      "recent": [
+        {
+          "id": 40,
+          "started_at": "2026-10-28T14:06:06+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 3,
+          "slot": null,
+          "packet_sequence": 34,
+          "packet_sha256": "1e410cb18e9356a5c3831e73fb712ec28afb48c982e48ce9f0d4f26cdf48e464",
+          "elapsed_seconds": 1.105334,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.223,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 7e-06,
+                  "cpu_seconds": 5e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.067817,
+                  "cpu_seconds": 0.000298
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.06783,
+                  "cpu_seconds": 0.000308
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.068672,
+                  "cpu_seconds": 0.001151
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.068857,
+                  "cpu_seconds": 0.001335
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 34,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 39,
+          "started_at": "2026-10-28T14:05:56+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 3,
+          "slot": null,
+          "packet_sequence": 33,
+          "packet_sha256": "e3e2e27265e22e66637ea5ad75bb9f4fcbc4b85dcf9b065a56fa053de61956ec",
+          "elapsed_seconds": 2.492529,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.132,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 6e-06,
+                  "cpu_seconds": 4e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.04685,
+                  "cpu_seconds": 0.000261
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.046868,
+                  "cpu_seconds": 0.000273
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.047611,
+                  "cpu_seconds": 0.001017
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.047832,
+                  "cpu_seconds": 0.001238
+                }
+              ]
+            },
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.928,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "IMPORTS",
+                  "elapsed_seconds": 7e-06,
+                  "cpu_seconds": 3e-06
+                },
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 0.419519,
+                  "cpu_seconds": 0.419327
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.420578,
+                  "cpu_seconds": 0.420384
+                },
+                {
+                  "stage": "ACCEPT",
+                  "elapsed_seconds": 0.428123,
+                  "cpu_seconds": 0.427929
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.774932,
+                  "cpu_seconds": 0.768591
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.775031,
+                  "cpu_seconds": 0.768687
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 33,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 38,
+          "started_at": "2026-10-28T14:05:46+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 3,
+          "slot": null,
+          "packet_sequence": 32,
+          "packet_sha256": "ec5562017b6b0bfd0ff33c270c988ee86d145f6ba3d0ad2a560805524acc760e",
+          "elapsed_seconds": 0.934687,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.06,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 4e-06,
+                  "cpu_seconds": 3e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 9.1e-05,
+                  "cpu_seconds": 9e-05
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 9.7e-05,
+                  "cpu_seconds": 9.5e-05
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.000948,
+                  "cpu_seconds": 0.000948
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.001103,
+                  "cpu_seconds": 0.001102
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 32,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 37,
+          "started_at": "2026-10-28T14:05:36+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 31,
+          "packet_sha256": "6e52c78b0adf937ab2fb058c2e49f99816615294d026d8ed8e8a88efb58c348b",
+          "elapsed_seconds": 1.191448,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.176,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 6e-06,
+                  "cpu_seconds": 5e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.08479,
+                  "cpu_seconds": 0.000183
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.084805,
+                  "cpu_seconds": 0.000193
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.085825,
+                  "cpu_seconds": 0.001214
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.085995,
+                  "cpu_seconds": 0.001383
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 31,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 36,
+          "started_at": "2026-10-28T14:05:26+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 30,
+          "packet_sha256": "2e38fce89ef5f7f9e05b9697ab23e2544c68f3bb69ce7822596160ea70ce1c73",
+          "elapsed_seconds": 3.161477,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.1,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 5e-06,
+                  "cpu_seconds": 3e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 8.1e-05,
+                  "cpu_seconds": 7.9e-05
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 8.5e-05,
+                  "cpu_seconds": 8.2e-05
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.000836,
+                  "cpu_seconds": 0.000835
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.000981,
+                  "cpu_seconds": 0.000979
+                }
+              ]
+            },
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 1.334,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "IMPORTS",
+                  "elapsed_seconds": 7e-06,
+                  "cpu_seconds": 4e-06
+                },
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 0.594425,
+                  "cpu_seconds": 0.594419
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.59665,
+                  "cpu_seconds": 0.59664
+                },
+                {
+                  "stage": "ACCEPT",
+                  "elapsed_seconds": 0.603528,
+                  "cpu_seconds": 0.603519
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 1.00586,
+                  "cpu_seconds": 1.003198
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 1.005939,
+                  "cpu_seconds": 1.003275
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 30,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 35,
+          "started_at": "2026-10-28T14:05:16+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 29,
+          "packet_sha256": "1e28d4f794655eb2f7951a63a3e191ea0afcc4b7d393635c54af9df7e66247a9",
+          "elapsed_seconds": 0.724566,
+          "native": [],
+          "collector_attempt": 29,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 34,
+          "started_at": "2026-10-28T14:05:16+00:00",
+          "kind": "CYCLE",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": 5977321,
+          "packet_sequence": 29,
+          "packet_sha256": "1e28d4f794655eb2f7951a63a3e191ea0afcc4b7d393635c54af9df7e66247a9",
+          "elapsed_seconds": 3.582721,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 1.419,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "IMPORTS",
+                  "elapsed_seconds": 9e-06,
+                  "cpu_seconds": 4e-06
+                },
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 0.647494,
+                  "cpu_seconds": 0.647368
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.808914,
+                  "cpu_seconds": 0.649869
+                },
+                {
+                  "stage": "ACCEPT",
+                  "elapsed_seconds": 0.813952,
+                  "cpu_seconds": 0.654907
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 1.208624,
+                  "cpu_seconds": 1.046606
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 1.20878,
+                  "cpu_seconds": 1.046759
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 29,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 33,
+          "started_at": "2026-10-28T14:05:16+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 29,
+          "packet_sha256": "1e28d4f794655eb2f7951a63a3e191ea0afcc4b7d393635c54af9df7e66247a9",
+          "elapsed_seconds": 0.702764,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.155,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 4e-06,
+                  "cpu_seconds": 3e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.103153,
+                  "cpu_seconds": 0.000144
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.103166,
+                  "cpu_seconds": 0.000153
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.104155,
+                  "cpu_seconds": 0.001144
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.104267,
+                  "cpu_seconds": 0.001254
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 29,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 32,
+          "started_at": "2026-10-28T14:05:06+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 28,
+          "packet_sha256": "c3bb1a45155b21809da8d9ad8b36e2a3be325024863901f48b9aa38bf365775c",
+          "elapsed_seconds": 0.691579,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.102,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 5e-06,
+                  "cpu_seconds": 3e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.011917,
+                  "cpu_seconds": 0.000132
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.011929,
+                  "cpu_seconds": 0.000141
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.013105,
+                  "cpu_seconds": 0.001318
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.013226,
+                  "cpu_seconds": 0.001439
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 28,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 31,
+          "started_at": "2026-10-28T14:04:56+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 27,
+          "packet_sha256": "b1c619820e31ad05a5fb01ae925b871d0dd6acace818f965b9ee8876a67eb348",
+          "elapsed_seconds": 0.815429,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.201,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 5e-06,
+                  "cpu_seconds": 4e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.126758,
+                  "cpu_seconds": 0.00064
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.126781,
+                  "cpu_seconds": 0.000659
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.127457,
+                  "cpu_seconds": 0.001336
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.127897,
+                  "cpu_seconds": 0.001777
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 27,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 30,
+          "started_at": "2026-10-28T14:04:46+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 26,
+          "packet_sha256": "7c555a8bc1990c1d9a76630f2a7331f413bda70a23b94accbd0ded41f6a85a01",
+          "elapsed_seconds": 0.845568,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.178,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 7e-06,
+                  "cpu_seconds": 4e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.063209,
+                  "cpu_seconds": 0.000179
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.063225,
+                  "cpu_seconds": 0.000189
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.064018,
+                  "cpu_seconds": 0.000984
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.064149,
+                  "cpu_seconds": 0.001114
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 26,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 29,
+          "started_at": "2026-10-28T14:04:36+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 25,
+          "packet_sha256": "fecdb9973d2e252ecdf8cf1c2d12e6f95b914410045a58308f7c59484d1cff9e",
+          "elapsed_seconds": 0.717894,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.17,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 5e-06,
+                  "cpu_seconds": 4e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.094491,
+                  "cpu_seconds": 0.000327
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.094508,
+                  "cpu_seconds": 0.000338
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.095791,
+                  "cpu_seconds": 0.001623
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.095917,
+                  "cpu_seconds": 0.001747
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 25,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 28,
+          "started_at": "2026-10-28T14:04:26+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 24,
+          "packet_sha256": "c3992d1a06b0ca443ebdb24ee766de5cc25daea80ec690aeb55addee9872d498",
+          "elapsed_seconds": 0.924134,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.216,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 6e-06,
+                  "cpu_seconds": 5e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.108232,
+                  "cpu_seconds": 0.000204
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.108248,
+                  "cpu_seconds": 0.000216
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.109319,
+                  "cpu_seconds": 0.001288
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.109503,
+                  "cpu_seconds": 0.001472
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 24,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 27,
+          "started_at": "2026-10-28T14:04:16+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 23,
+          "packet_sha256": "0a813958e600a53b53755092f9edf893e26c8faa1ac64a16e2241604ef247dbc",
+          "elapsed_seconds": 0.71668,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.166,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 5e-06,
+                  "cpu_seconds": 4e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.067436,
+                  "cpu_seconds": 0.000234
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.067452,
+                  "cpu_seconds": 0.000246
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.069156,
+                  "cpu_seconds": 0.001953
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.069308,
+                  "cpu_seconds": 0.002103
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 23,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 26,
+          "started_at": "2026-10-28T14:04:06+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 22,
+          "packet_sha256": "cffa0bc8f78429fcd43c330ef963f369b1d6cc4d76c2a37cea8f91f90bfbd2c4",
+          "elapsed_seconds": 0.712123,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.126,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 5e-06,
+                  "cpu_seconds": 4e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.039749,
+                  "cpu_seconds": 0.000175
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.039762,
+                  "cpu_seconds": 0.000185
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.040845,
+                  "cpu_seconds": 0.001268
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.040981,
+                  "cpu_seconds": 0.001404
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 22,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 25,
+          "started_at": "2026-10-28T14:03:56+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 21,
+          "packet_sha256": "3163bdc5721e2961b776bbee3fc2d83c114c973ce1bbe3590c6093fa84f13139",
+          "elapsed_seconds": 0.666608,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.157,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 5e-06,
+                  "cpu_seconds": 4e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.08387,
+                  "cpu_seconds": 0.000328
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.083886,
+                  "cpu_seconds": 0.000339
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.085048,
+                  "cpu_seconds": 0.001503
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.085158,
+                  "cpu_seconds": 0.001612
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 21,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 24,
+          "started_at": "2026-10-28T14:03:46+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 20,
+          "packet_sha256": "ef1e69ff786760db7f90cef7edc4fab15f06ac395e4c69de2b9a4f57347a94c9",
+          "elapsed_seconds": 0.679567,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.123,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 6e-06,
+                  "cpu_seconds": 4e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.03603,
+                  "cpu_seconds": 0.00012
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.036042,
+                  "cpu_seconds": 0.000129
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.036836,
+                  "cpu_seconds": 0.000924
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.036945,
+                  "cpu_seconds": 0.001031
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 20,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 23,
+          "started_at": "2026-10-28T14:03:36+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 19,
+          "packet_sha256": "8432b6f757fda0a94fadadbb9d63a985671f5f42c6d5c77192af9df18a766513",
+          "elapsed_seconds": 0.695156,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.156,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 5e-06,
+                  "cpu_seconds": 3e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.08937,
+                  "cpu_seconds": 0.000196
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.089388,
+                  "cpu_seconds": 0.000208
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.090173,
+                  "cpu_seconds": 0.000995
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.090298,
+                  "cpu_seconds": 0.001118
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 19,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 22,
+          "started_at": "2026-10-28T14:03:26+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 18,
+          "packet_sha256": "5ff6040c6642ee127ae2901951181132f933a5b9953e527edcabcaceb065e680",
+          "elapsed_seconds": 0.679506,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.121,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 7e-06,
+                  "cpu_seconds": 4e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.033083,
+                  "cpu_seconds": 0.000163
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.033096,
+                  "cpu_seconds": 0.000172
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.034177,
+                  "cpu_seconds": 0.001255
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.034285,
+                  "cpu_seconds": 0.001362
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 18,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 21,
+          "started_at": "2026-10-28T14:03:16+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 17,
+          "packet_sha256": "09ee67a9eeacb938c39fe5311151525a5b60763cde6aeff1b69915985430f37f",
+          "elapsed_seconds": 0.685205,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.156,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 5e-06,
+                  "cpu_seconds": 3e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.094379,
+                  "cpu_seconds": 0.000165
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.094402,
+                  "cpu_seconds": 0.000184
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.095184,
+                  "cpu_seconds": 0.000968
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.095317,
+                  "cpu_seconds": 0.0011
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 17,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 20,
+          "started_at": "2026-10-28T14:03:06+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 16,
+          "packet_sha256": "105c06e2eb2438fa95c78524e69c862ce24ef11fc755f44a3e4d5c9d98864e70",
+          "elapsed_seconds": 0.631922,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.098,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 6e-06,
+                  "cpu_seconds": 4e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.01954,
+                  "cpu_seconds": 0.000274
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.019555,
+                  "cpu_seconds": 0.000285
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.020835,
+                  "cpu_seconds": 0.001567
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.02129,
+                  "cpu_seconds": 0.002021
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 16,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 19,
+          "started_at": "2026-10-28T14:02:56+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 15,
+          "packet_sha256": "b1b7dbe1079a0098dded6bf6a7ae07941b6e0dd1ecd6d87511017fe15689cb37",
+          "elapsed_seconds": 0.814092,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.208,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 5e-06,
+                  "cpu_seconds": 3e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.135982,
+                  "cpu_seconds": 0.000173
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.135997,
+                  "cpu_seconds": 0.000184
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.13682,
+                  "cpu_seconds": 0.001007
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.136908,
+                  "cpu_seconds": 0.001095
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 15,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 18,
+          "started_at": "2026-10-28T14:02:46+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 14,
+          "packet_sha256": "31d90bb24ed96626ccb586604a6d37a407959478f44bb122261ee53b003f4283",
+          "elapsed_seconds": 0.746886,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.127,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 6e-06,
+                  "cpu_seconds": 4e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.050006,
+                  "cpu_seconds": 0.000247
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.050029,
+                  "cpu_seconds": 0.000265
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.05088,
+                  "cpu_seconds": 0.001118
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.05101,
+                  "cpu_seconds": 0.001247
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 14,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 17,
+          "started_at": "2026-10-28T14:02:36+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 13,
+          "packet_sha256": "b4ca7acdef65c169d9a5012fb9acfad96bb8aa05d13702d88ace2452d72916f1",
+          "elapsed_seconds": 0.635396,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.148,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 7e-06,
+                  "cpu_seconds": 5e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.073254,
+                  "cpu_seconds": 0.000163
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.073293,
+                  "cpu_seconds": 0.000198
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.07499,
+                  "cpu_seconds": 0.001898
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.075129,
+                  "cpu_seconds": 0.0021
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 13,
+          "collector_binding": "MATCHED"
+        },
+        {
+          "id": 16,
+          "started_at": "2026-10-28T14:02:26+00:00",
+          "kind": "TICK",
+          "status": "COMPLETE",
+          "generation": 2,
+          "slot": null,
+          "packet_sequence": 12,
+          "packet_sha256": "25e3383706cea7116fcf0fe1de4818567c6c0547bca8dade11c27c08e14bf770",
+          "elapsed_seconds": 0.905138,
+          "native": [
+            {
+              "parent_phase": "RESPONSE_VALIDATE",
+              "elapsed_seconds": 0.264,
+              "child_trace_status": "OBSERVED",
+              "child_stages": [
+                {
+                  "stage": "REQUEST",
+                  "elapsed_seconds": 6e-06,
+                  "cpu_seconds": 4e-06
+                },
+                {
+                  "stage": "VENUE_OPEN",
+                  "elapsed_seconds": 0.063816,
+                  "cpu_seconds": 0.00017
+                },
+                {
+                  "stage": "SNAPSHOT",
+                  "elapsed_seconds": 0.063844,
+                  "cpu_seconds": 0.000194
+                },
+                {
+                  "stage": "SERIALIZE",
+                  "elapsed_seconds": 0.064858,
+                  "cpu_seconds": 0.001209
+                },
+                {
+                  "stage": "COMPLETE",
+                  "elapsed_seconds": 0.064982,
+                  "cpu_seconds": 0.001333
+                }
+              ]
+            }
+          ],
+          "collector_attempt": 12,
+          "collector_binding": "MATCHED"
+        }
+      ],
+      "execution_quote_clocks": {
+        "quote_age_seconds": {
+          "samples": 8,
+          "p50_seconds": 1.0,
+          "p95_seconds": 1.0,
+          "p99_seconds": 1.0,
+          "max_seconds": 1.0
+        },
+        "receive_lag_seconds": {
+          "samples": 8,
+          "p50_seconds": 1.0,
+          "p95_seconds": 1.0,
+          "p99_seconds": 1.0,
+          "max_seconds": 1.0
+        },
+        "local_age_seconds": {
+          "samples": 8,
+          "p50_seconds": 0.0,
+          "p95_seconds": 0.0,
+          "p99_seconds": 0.0,
+          "max_seconds": 0.0
+        }
+      },
+      "native_observed_intervals": {
+        "REQUEST": {
+          "samples": 39,
+          "p50_seconds": 0.052005,
+          "p95_seconds": 0.16142,
+          "p99_seconds": 0.366641,
+          "max_seconds": 0.366641
+        },
+        "VENUE_OPEN": {
+          "samples": 39,
+          "p50_seconds": 1.5000000000015001e-05,
+          "p95_seconds": 0.00687799999999994,
+          "p99_seconds": 0.007544999999999968,
+          "max_seconds": 0.007544999999999968
+        },
+        "SNAPSHOT": {
+          "samples": 35,
+          "p50_seconds": 0.0008659999999999987,
+          "p95_seconds": 0.0017039999999999972,
+          "p99_seconds": 0.0017509999999999956,
+          "max_seconds": 0.0017509999999999956
+        },
+        "SERIALIZE": {
+          "samples": 39,
+          "p50_seconds": 0.0001250000000000001,
+          "p95_seconds": 0.0004400000000000237,
+          "p99_seconds": 0.00045500000000000054,
+          "max_seconds": 0.00045500000000000054
+        },
+        "IMPORTS": {
+          "samples": 4,
+          "p50_seconds": 0.594418,
+          "p95_seconds": 0.647485,
+          "p99_seconds": 0.647485,
+          "max_seconds": 0.647485
+        },
+        "ACCEPT": {
+          "samples": 4,
+          "p50_seconds": 0.3946719999999999,
+          "p95_seconds": 0.41481900000000005,
+          "p99_seconds": 0.41481900000000005,
+          "max_seconds": 0.41481900000000005
+        }
+      },
+      "packet_age": {
+        "samples": 38,
+        "p50_seconds": 0.0,
+        "p95_seconds": 0.0,
+        "p99_seconds": 10.0,
+        "max_seconds": 10.0
+      },
+      "inspected_bytes": 42112,
+      "scheduler_delay": {
+        "samples": 37,
+        "p50_seconds": 0.001112687999921036,
+        "p95_seconds": 0.05556273100000908,
+        "p99_seconds": 1.1118847319999077,
+        "max_seconds": 1.1118847319999077
+      },
+      "coverage": {
+        "boundary": "NATIVE_COMMITMENTS_IN_REPORT_WINDOW",
+        "before_first_commit": "UNOBSERVABLE",
+        "cycles": {
+          "status": "OBSERVED",
+          "committed": 2,
+          "matched": 2,
+          "without_matched_trace": 0,
+          "trace_keys_without_commitment_in_window": 0,
+          "duplicate_trace_keys": 0,
+          "not_started": 0
+        },
+        "models": {
+          "status": "OBSERVED",
+          "committed": 2,
+          "matched": 2,
+          "without_matched_trace": 0,
+          "trace_keys_without_commitment_in_window": 0,
+          "duplicate_trace_keys": 0,
+          "unsettled": 0
+        }
+      }
+    },
+    "first_decisions": [
+      {
+        "cycle_key": "degen:5977320:portfolio:0",
+        "started_at": "2026-10-28T14:01:06+00:00",
+        "stored_status": "COMPLETE",
+        "evidence_available": true,
+        "evidence_bytes": 35809,
+        "omitted_summary_fields": [],
+        "status": [
+          "OPEN"
+        ],
+        "reason": [],
+        "unavailable_families": [
+          "SWING"
+        ],
+        "stock_rejections": [
+          "MIXED_STOCK_INSTRUMENT_UNSUPPORTED",
+          "SWING_INPUT_UNAVAILABLE"
+        ],
+        "option_market_sequence": 4,
+        "option_market_review_reasons": [
+          "OFFLINE_PLAN_VALIDATED"
+        ],
+        "entry_timely": true,
+        "scope_admission_reasons": [],
+        "option_candidates": 2,
+        "stock_candidates": 0,
+        "scans": [
+          {
+            "strategy": "DEGEN",
+            "symbol": [
+              "SPY"
+            ],
+            "issues": [],
+            "setups": [
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "CONFIRMED"
+                ],
+                "reasons": []
+              },
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "OPENING_BREAK_AND_HOLD_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "EMA_TREND_ALIGNMENT_REQUIRED",
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "OBSERVED_FAILED_BREAK_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              }
+            ]
+          },
+          {
+            "strategy": "DEGEN",
+            "symbol": [
+              "QQQ"
+            ],
+            "issues": [],
+            "setups": [
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "CONFIRMED"
+                ],
+                "reasons": []
+              },
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "OPENING_BREAK_AND_HOLD_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "EMA_TREND_ALIGNMENT_REQUIRED",
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "OBSERVED_FAILED_BREAK_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              }
+            ]
+          }
+        ],
+        "contract_exclusions": [
+          "INSTRUMENT_OR_ZERO_DTE_IDENTITY_INELIGIBLE"
+        ],
+        "total_scans": 2,
+        "scans_omitted": 0,
+        "inventory_timing": [
+          {
+            "symbol": "SPY",
+            "source_at": "2026-10-28T14:01:05Z",
+            "received_at": "2026-10-28T14:01:06Z",
+            "evaluated_at": "2026-10-28T14:01:06Z",
+            "source_age_seconds": 1.0,
+            "receive_lag_seconds": 1.0,
+            "clock_order_valid": true,
+            "max_metadata_age_seconds": 10
+          },
+          {
+            "symbol": "QQQ",
+            "source_at": "2026-10-28T14:01:05Z",
+            "received_at": "2026-10-28T14:01:06Z",
+            "evaluated_at": "2026-10-28T14:01:06Z",
+            "source_age_seconds": 1.0,
+            "receive_lag_seconds": 1.0,
+            "clock_order_valid": true,
+            "max_metadata_age_seconds": 10
+          }
+        ]
+      },
+      {
+        "cycle_key": "degen:5977321:portfolio:0",
+        "started_at": "2026-10-28T14:05:16+00:00",
+        "stored_status": "COMPLETE",
+        "evidence_available": true,
+        "evidence_bytes": 33964,
+        "omitted_summary_fields": [],
+        "status": [
+          "OPEN"
+        ],
+        "reason": [],
+        "unavailable_families": [
+          "SWING"
+        ],
+        "rejections": [
+          "DUPLICATE_EXPOSURE"
+        ],
+        "stock_rejections": [
+          "DUPLICATE_EXPOSURE",
+          "MIXED_STOCK_INSTRUMENT_UNSUPPORTED",
+          "SWING_INPUT_UNAVAILABLE"
+        ],
+        "option_market_sequence": 29,
+        "option_market_review_reasons": [
+          "OFFLINE_PLAN_VALIDATED"
+        ],
+        "entry_timely": true,
+        "scope_admission_reasons": [],
+        "option_candidates": 1,
+        "stock_candidates": 0,
+        "scans": [
+          {
+            "strategy": "DEGEN",
+            "symbol": [
+              "SPY"
+            ],
+            "issues": [],
+            "setups": [
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "CONFIRMED"
+                ],
+                "reasons": []
+              },
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "OPENING_BREAK_AND_HOLD_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "EMA_TREND_ALIGNMENT_REQUIRED",
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "OBSERVED_FAILED_BREAK_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              }
+            ]
+          },
+          {
+            "strategy": "DEGEN",
+            "symbol": [
+              "QQQ"
+            ],
+            "issues": [],
+            "setups": [
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "CONFIRMED"
+                ],
+                "reasons": []
+              },
+              {
+                "family": [
+                  "ORB_CONTINUATION"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "OPENING_BREAK_AND_HOLD_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "VWAP_PULLBACK"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "DIRECTIONAL_CANDLE_CONFIRMATION_REQUIRED",
+                  "EMA_TREND_ALIGNMENT_REQUIRED",
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "PRIOR_VWAP_SEPARATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED",
+                  "VWAP_TREND_STRUCTURE_INSUFFICIENT"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "OBSERVED_FAILED_BREAK_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED"
+                ]
+              },
+              {
+                "family": [
+                  "FAILED_BREAK_REVERSAL"
+                ],
+                "status": [
+                  "WATCHING"
+                ],
+                "reasons": [
+                  "FIFTEEN_MINUTE_CONFIRMATION_REQUIRED",
+                  "REVERSAL_CONTINUATION_REQUIRED",
+                  "VWAP_CONFIRMATION_REQUIRED"
+                ]
+              }
+            ]
+          }
+        ],
+        "contract_exclusions": [
+          "INSTRUMENT_OR_ZERO_DTE_IDENTITY_INELIGIBLE"
+        ],
+        "total_scans": 2,
+        "scans_omitted": 0,
+        "inventory_timing": [
+          {
+            "symbol": "SPY",
+            "source_at": "2026-10-28T14:05:15Z",
+            "received_at": "2026-10-28T14:05:16Z",
+            "evaluated_at": "2026-10-28T14:05:16Z",
+            "source_age_seconds": 1.0,
+            "receive_lag_seconds": 1.0,
+            "clock_order_valid": true,
+            "max_metadata_age_seconds": 10
+          },
+          {
+            "symbol": "QQQ",
+            "source_at": "2026-10-28T14:05:15Z",
+            "received_at": "2026-10-28T14:05:16Z",
+            "evaluated_at": "2026-10-28T14:05:16Z",
+            "source_age_seconds": 1.0,
+            "receive_lag_seconds": 1.0,
+            "clock_order_valid": true,
+            "max_metadata_age_seconds": 10
+          }
+        ]
+      }
+    ],
+    "decision_reason_counts": [
+      {
+        "reason": [],
+        "decisions": 2,
+        "first_at": "2026-10-28T14:01:06+00:00",
+        "last_at": "2026-10-28T14:05:16+00:00"
+      }
+    ],
+    "halt_history": [
+      {
+        "occurred_at": "2026-10-28T14:00:26+00:00",
+        "reason": [
+          "OPTION_RUNTIME_FEED_UNAVAILABLE"
+        ]
+      },
+      {
+        "occurred_at": "2026-10-28T14:05:46+00:00",
+        "reason": [
+          "OPTION_RUNTIME_STOPPED"
+        ]
+      },
+      {
+        "occurred_at": "2026-10-28T14:06:16+00:00",
+        "reason": [
+          "OPTION_RUNTIME_STOPPED"
+        ]
+      }
+    ],
+    "attempt_recovery": {
+      "matched_in_run": 0,
+      "unresolved_at_last_snapshot": 0
+    },
+    "flat_feed_recoveries": 0,
+    "model_calls": {
+      "run": {
+        "attempts": 2,
+        "unsettled": 0
+      },
+      "account_total": {
+        "attempts": 2,
+        "unsettled": 0
+      }
+    },
+    "collection": [
+      {
+        "status": "DELIVERED",
+        "attempts": 34,
+        "first_sequence": 1,
+        "last_sequence": 35
+      },
+      {
+        "status": "FAILED",
+        "attempts": 1,
+        "first_sequence": 3,
+        "last_sequence": 3
+      }
+    ],
+    "latest_packet": {
+      "sequence": 35,
+      "started_at": "2026-10-28T14:06:06+00:00",
+      "kind": [
+        "MARKET"
+      ],
+      "coverage_issues": [
+        "SCOPE_CURRENT_INPUT_UNAVAILABLE",
+        "SWING_ORIGINAL_SOURCES_UNAVAILABLE"
+      ]
+    },
+    "packet_summary": [
+      {
+        "kind": [
+          "MARKET"
+        ],
+        "coverage_issues": [
+          "SCOPE_CURRENT_INPUT_UNAVAILABLE",
+          "SWING_ORIGINAL_SOURCES_UNAVAILABLE"
+        ],
+        "packets": 30,
+        "first_sequence": 1,
+        "last_sequence": 35
+      },
+      {
+        "kind": [
+          "CYCLE"
+        ],
+        "coverage_issues": [
+          "SCOPE_CURRENT_INPUT_UNAVAILABLE",
+          "SWING_ORIGINAL_SOURCES_UNAVAILABLE"
+        ],
+        "packets": 4,
+        "first_sequence": 4,
+        "last_sequence": 30
+      }
+    ],
+    "collection_timing": {
+      "status": "OBSERVED",
+      "attempts": 35,
+      "measured": 35,
+      "missing_or_invalid": 0,
+      "omitted": 0,
+      "by_status": {
+        "DELIVERED": {
+          "samples": 34,
+          "p50_seconds": 0.56397,
+          "p95_seconds": 2.624978,
+          "p99_seconds": 4.212534,
+          "max_seconds": 4.212534
+        },
+        "FAILED": {
+          "samples": 1,
+          "p50_seconds": 0.134131,
+          "p95_seconds": 0.134131,
+          "p99_seconds": 0.134131,
+          "max_seconds": 0.134131
+        }
+      },
+      "phases": {
+        "PREPARE": {
+          "samples": 35,
+          "p50_seconds": 0.012614,
+          "p95_seconds": 0.036629,
+          "p99_seconds": 0.065318,
+          "max_seconds": 0.065318
+        },
+        "HISTORY_PLAN": {
+          "samples": 35,
+          "p50_seconds": 0.00155,
+          "p95_seconds": 0.063241,
+          "p99_seconds": 0.088166,
+          "max_seconds": 0.088166
+        },
+        "CAPTURE": {
+          "samples": 35,
+          "p50_seconds": 0.392608,
+          "p95_seconds": 2.451442,
+          "p99_seconds": 4.041184,
+          "max_seconds": 4.041184
+        },
+        "PERSIST_CAPTURE": {
+          "samples": 34,
+          "p50_seconds": 0.002878,
+          "p95_seconds": 0.005292,
+          "p99_seconds": 0.006984,
+          "max_seconds": 0.006984
+        },
+        "SOURCE_BINDING": {
+          "samples": 34,
+          "p50_seconds": 0.003597,
+          "p95_seconds": 0.00761,
+          "p99_seconds": 0.009415,
+          "max_seconds": 0.009415
+        },
+        "HISTORY_BINDING": {
+          "samples": 34,
+          "p50_seconds": 0.028822,
+          "p95_seconds": 0.08434,
+          "p99_seconds": 0.108639,
+          "max_seconds": 0.108639
+        },
+        "NORMALIZE": {
+          "samples": 34,
+          "p50_seconds": 0.075074,
+          "p95_seconds": 0.103444,
+          "p99_seconds": 0.125488,
+          "max_seconds": 0.125488
+        },
+        "SOURCE_CLOCK_CHECK": {
+          "samples": 34,
+          "p50_seconds": 0.002194,
+          "p95_seconds": 0.005362,
+          "p99_seconds": 0.006069,
+          "max_seconds": 0.006069
+        },
+        "PUBLISH": {
+          "samples": 34,
+          "p50_seconds": 0.030343,
+          "p95_seconds": 0.059534,
+          "p99_seconds": 0.065962,
+          "max_seconds": 0.065962
+        }
+      },
+      "child_observed_intervals": {},
+      "attempt_total": {
+        "samples": 35,
+        "p50_seconds": 0.56397,
+        "p95_seconds": 2.624978,
+        "p99_seconds": 4.212534,
+        "max_seconds": 4.212534
+      }
+    },
+    "collector_failures": [
+      {
+        "sequence": 3,
+        "started_at": "2026-10-28T14:00:46+00:00",
+        "codes": [
+          "CAPTURE"
+        ],
+        "evidence_available": true,
+        "error_class": "TimeoutError",
+        "frames": [
+          {
+            "file": "app/mixed/continuous_feed.py",
+            "line": 774
+          }
+        ],
+        "source_capture": {
+          "evidence_available": false
+        }
+      }
+    ],
+    "run_issues": [
+      "COLLECTOR_FAILURES_RECORDED"
+    ],
+    "run_id": "daily-20261028",
+    "session_timing": {
+      "planned_seconds": 3600,
+      "elapsed_seconds": 350.0
+    },
+    "operation": {
+      "state": "STOPPED",
+      "reasons": [
+        "SESSION_ENDED_EARLY"
+      ],
+      "family_input_issues": {
+        "SCOPE": [
+          "SCOPE_CURRENT_INPUT_UNAVAILABLE"
+        ],
+        "SWING": [
+          "SWING_ORIGINAL_SOURCES_UNAVAILABLE"
+        ]
+      },
+      "last_decision_at": "2026-10-28T14:05:16+00:00",
+      "last_decision_reasons": [
+        "DUPLICATE_EXPOSURE",
+        "INSTRUMENT_OR_ZERO_DTE_IDENTITY_INELIGIBLE"
+      ],
+      "container_running": false,
+      "trading_ready": false
+    }
+  }
+}

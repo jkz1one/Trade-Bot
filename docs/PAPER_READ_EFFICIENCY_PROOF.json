@@ -1,0 +1,105 @@
+{
+  "version": "paper-read-efficiency-offline-v1",
+  "base_commit": "840255127c8d895fd6bc22dab9410bb7f6ec48a0",
+  "application_files": 320,
+  "source_wheel_installed_bytes_match": true,
+  "runtime_pinned_dependencies_verified": 60,
+  "wheel_sha256": "d62849dd7c59d2877188dc5700998d9be0d880b5ee18b98e52eeae1bce08f90b",
+  "unique_passed_cases": 644,
+  "verification": [
+    {
+      "report": "installed.xml",
+      "cases": 640,
+      "failures": 3,
+      "sha256": "d9099ed2f11b8ee0b5f6f990f4451a90ead1d5fd5567169c576461e4b27ff879"
+    },
+    {
+      "report": "final-report.xml",
+      "cases": 50,
+      "failures": 0,
+      "sha256": "ea25a020edc0ce252cf8afc40895be63d7702a653ee763de70a600273549c834"
+    },
+    {
+      "report": "final-wire.xml",
+      "cases": 120,
+      "failures": 0,
+      "sha256": "7fc43edae341c977202bdcb43d09ba9f09e92941a584d6acb91e557571b92946"
+    }
+  ],
+  "installed_testing": "Python 3.12 -I -W error; noneditable wheel; copied tests/scripts/examples outside checkout; plugin autoload disabled, explicit anyio. Broad suite used an isolated user namespace mapping the current user to root for root-owned host fixtures. No application source on the test import path.",
+  "regression_reproduction": {
+    "report": "before.xml",
+    "expected_failures": 2,
+    "sha256": "204fabb46f53c38c61ed7e1dfb61bfeded17007a35c0f852c9eebe24ce92ebb0",
+    "reasons": [
+      "Repeated identical schema definitions performed redundant checks",
+      "Inventory blocker was reported as WAITING_FOR_SETUP"
+    ]
+  },
+  "test_environment_corrections": "Broad run: 637 passed, three failed. Two cases lacked a copied examples fixture; copying the original unchanged examples resolved them. An existing privacy test used PRIVATE as its secret marker and collided with the allowed PRIVATE_AUTH diagnostic phase from the prior release; use PRIVATE_SENTINEL to test actual secret exclusion. All 120 wire/cache/diagnostic cases pass after those corrections. The final saved-clock report expansion passed all 50 reporting cases. No production gate or deadline was relaxed.",
+  "benchmark": {
+    "before": {
+      "schema_definitions": 12,
+      "checks_per_sample": 120,
+      "cpu_seconds": [
+        0.378538248,
+        0.3996467629999999,
+        0.4732289460000001
+      ],
+      "median_cpu_seconds": 0.3996467629999999
+    },
+    "after": {
+      "schema_definitions": 12,
+      "checks_per_sample": 120,
+      "cpu_seconds": [
+        0.040848930000000006,
+        0.002589433000000002,
+        0.002948966999999997
+      ],
+      "median_cpu_seconds": 0.002948966999999997
+    },
+    "scope": "Repeated construction/checking of twelve original retained Robinhood schema definitions. CPU-time microbenchmark only; no provider calls, host timing or timeout-fix claim."
+  },
+  "source_sha256": {
+    "app/options/read_gateway.py": "642f31499f12048d55366e4733a87d33da945974597646af7d064e5138d57abe",
+    "scripts/paper-session-report.py": "c6a15faf76004f52fe1f0fd26e26e08b5d8a3a58007b87d6eefd5431cb5df39c",
+    "tests/test_read_schema_cache.py": "036d7e5e02230de4a32e22665f7bb1e774662b0b4fc6d32b3f39cd5b771d14ab",
+    "tests/test_paper_session_report.py": "ae8c6d9b5fc3c2c6e792528f3e732e32dcb4999d18517e6a4ecd9ee30bf1b4e7",
+    "tests/test_option_read_diagnostics.py": "c8905973978164f0097d1fd1eb2015303493d0fc4fd5f5af170b6313ca62af50"
+  },
+  "syntax_and_whitespace": "AST parsing of changed Python and git diff --check passed; Ruff was not installed in this workspace.",
+  "retained_host_report": {
+    "run_id": "paper-1106-151939-cd07ea",
+    "source_sha256": "77f82c60ef4ff424f84421832dc0cf9824d3fa279abb35921c94a9cc5d877c3e",
+    "image_id": "sha256:3b5a3344fc30b4d5450aa719450ef79554845063d24e4a705f862fa8f5e13bf6",
+    "completed_cycles": 2,
+    "decisions_with_scans": 1,
+    "pre_scan_supersession_holds": 1,
+    "watching_setups": 12,
+    "confirmed_setups": 0,
+    "inventory_blocker": "INVENTORY_BINDING_COVERAGE_OR_FRESHNESS",
+    "delivered": 23,
+    "failed": 5,
+    "timeout_phases": {
+      "DISCOVER": 2,
+      "SERIALIZE": 2,
+      "CLOSE": 1
+    },
+    "accepted_sequence": 678,
+    "collected_sequence": 679,
+    "feed_recoveries": 2,
+    "fills": 0,
+    "model_calls": 0,
+    "model_cost": "0",
+    "container_exit_code": 0
+  },
+  "limitations": [
+    "Timeout stages are last-reached phases, not elapsed-time/root-cause evidence.",
+    "Host latency, snapshot supersession and exact inventory rejection remain unresolved.",
+    "New report can inspect original stored inventory clocks without another capture.",
+    "Usable original Swing daily history and original SPX history/exact Scope bindings remain required.",
+    "No connected fill or complete trading lifecycle is claimed."
+  ],
+  "live_enabled": false,
+  "host_changes_made_by_assistant": false
+}

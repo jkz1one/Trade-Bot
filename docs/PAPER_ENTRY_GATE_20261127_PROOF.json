@@ -1,0 +1,145 @@
+{
+  "version": "paper-fixture-entry-gate-20261127-v1",
+  "base_commit": "c65049304000165ca55736c8c9ba4ffd1989edbb",
+  "status": "HARNESS_FAILURE_DETECTION_VERIFIED",
+  "application_changed": false,
+  "application_manifest_sha256": "6f2b3d274a215f9f86a436f0f7f60d9806a0f3c8d458496cf45d266addbb034b",
+  "change": "Track the sole ENTER fixture cycle and stop when that exact decision completes with a non-OPEN outcome. Preserve original saved report, failure reason and cleanup. Do not fail on pending, unrelated HOLD or zero fills alone.",
+  "focused_tests": {
+    "passed": 100,
+    "seconds": 3.49,
+    "suites": [
+      "tests/test_paper_soak.py",
+      "tests/test_paper_soak_host.py"
+    ],
+    "before": "New regression rejected unsupported fixture expectation argument; preceding guard did not implement the terminal entry check."
+  },
+  "short_loaded_control": {
+    "status": "PASSED",
+    "elapsed_seconds": 91.00738837400058,
+    "source_seed": {
+      "kind": "labeled diagnostic padding, not month-history proof",
+      "rows": 30006,
+      "initial_database_bytes": 124760064
+    },
+    "logical_cpus": 1,
+    "fixture_entry_cycle": "degen:5977320:portfolio:0",
+    "native_snapshot_calls": 49,
+    "native_snapshot_failures": 0,
+    "native_snapshot_max_seconds": 0.13987204099976225,
+    "execution": {
+      "status": "RECORDED",
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "carry_in_exits": 0
+    },
+    "final_accounting": "VERIFIED_FLAT",
+    "children_reaped": true
+  },
+  "injected_rejection": {
+    "status": "EXPECTED_FAILURE_RECORDED",
+    "injected_delay": [
+      {
+        "cycle_key": "degen:5977320:portfolio:0",
+        "seconds": 5.008342,
+        "original_valid_until": "2026-10-28T14:00:16.550621+00:00"
+      }
+    ],
+    "elapsed_total_seconds": 37.158638141000665,
+    "requested_duration_seconds": 300,
+    "failure": "Known fixture entry failed: ORIGINAL_PLAN_DEADLINE_EXPIRED",
+    "note": "Harness regression only; injected settlement stall does not establish host root cause."
+  },
+  "retained_failed_receipt": {
+    "status": "FAILED",
+    "elapsed_seconds": 35.80475510100041,
+    "fixture_entry_cycle": "degen:5977320:portfolio:0",
+    "failure_class": "AssertionError",
+    "failure": "Known fixture entry failed: ORIGINAL_PLAN_DEADLINE_EXPIRED",
+    "children_reaped": true
+  },
+  "failed_entry": {
+    "first_decisions": [
+      {
+        "cycle_key": "degen:5977320:portfolio:0",
+        "stored_status": "COMPLETE",
+        "status": [
+          "HOLD"
+        ],
+        "reason": [
+          "ORIGINAL_PLAN_DEADLINE_EXPIRED"
+        ],
+        "entry_timely": true,
+        "plan_seconds_remaining": {
+          "at_reply": 4.931373,
+          "at_option_review": -0.127642
+        }
+      }
+    ],
+    "entry_freshness": {
+      "status": "NO_ENTRIES",
+      "reservations": 0,
+      "measured": 0,
+      "missing_or_invalid": 0,
+      "omitted": 0,
+      "clocks": {}
+    },
+    "model_calls": {
+      "run": {
+        "attempts": 1,
+        "unsettled": 0
+      },
+      "account_total": {
+        "attempts": 1,
+        "unsettled": 0
+      }
+    }
+  },
+  "receipts": [
+    {
+      "path": "/workspace/scratch/b29c7148e65c/soak-first-entry-before-1127.log",
+      "sha256": "faefd20b7ad1a399370a073b2b7631bb3c84cc196771cb7dd3671568d65ab6b1"
+    },
+    {
+      "path": "/workspace/scratch/b29c7148e65c/soak-first-entry-after-1127.log",
+      "sha256": "2aaa9ddf1e50395d123a02f1581aa78a1e59d4c1ddbe6395da2c5c687c12abca"
+    },
+    {
+      "path": "/workspace/scratch/b29c7148e65c/soak-first-entry-after-1127.xml",
+      "sha256": "c5557ee6abbeacf783f0daa5b41ab7447712d30c1ce0a4c8f64809d0ab20c646"
+    },
+    {
+      "path": "/workspace/scratch/b29c7148e65c/entry-gate-1127/summary.json",
+      "sha256": "628d56f2c775bfb408be503e7eaeec7966fdb58e1d42fc0e1e58bde982998ed4"
+    },
+    {
+      "path": "/workspace/scratch/b29c7148e65c/entry-gate-1127/progress.json",
+      "sha256": "f0792027bc36d70625777d5bb6a6ab89943a1fc7e5553eb63330d4f0408f37f9"
+    },
+    {
+      "path": "/workspace/scratch/b29c7148e65c/entry-gate-1127/report.json",
+      "sha256": "61e4eb23b09d589d089826b9de13c60da5e31ca1bee2284e20d743bc1068d6db"
+    },
+    {
+      "path": "/workspace/scratch/b29c7148e65c/entry-rejection-injected-1127/injection-proof.json",
+      "sha256": "1ded95a119a6517a2d48f2572297dde0477cdafac3001f0cf24d626ee855d3b6"
+    },
+    {
+      "path": "/workspace/scratch/b29c7148e65c/entry-rejection-injected-1127/progress.json",
+      "sha256": "ab1fcc9799c2568f203eaacc5059c28b700d14bce8bc22ecf958641ebb7859d5"
+    },
+    {
+      "path": "/workspace/scratch/b29c7148e65c/entry-rejection-injected-1127/latest-report.json",
+      "sha256": "798ffdfdd764be092d74f83b1a5bac84f72061be2b3729244a1085bdbec4183e"
+    }
+  ],
+  "verification_invocation_failure": "Initial standalone injection omitted the parent tests package path and failed import before creating state; corrected invocation completed the expected failure test.",
+  "limits": [
+    "Injected delay intentionally sleeps after durable model settlement until the unchanged original deadline has elapsed; this establishes harness behavior, not the cause of the host delay.",
+    "Short control uses 112 MiB of varied diagnostic history, one CPU and an isolated network/PID namespace; not Docker memory or full-duration qualification.",
+    "Application unchanged; original clocks, limits, account authority and model charge settlement remain intact.",
+    "No connected owner, host worker, timer, review hold, main or PR metadata changed.",
+    "Host first-cycle spans are supplied and locate settlement overrun; the entry-path timing repair remains open."
+  ]
+}
