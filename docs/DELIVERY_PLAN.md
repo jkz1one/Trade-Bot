@@ -40,6 +40,20 @@ cannot be adopted as connected evidence or execution state.
 
 ## Delivery checklist
 
+### November 28 short host gate passed — same-build endurance next
+
+`9c8161e` passed the operator's short host gate: one simulated entry and protective
+exit, verified flat accounting, two complete decisions, 32 delivered collections
+and 130 successful snapshots. Peak memory was about 775 MiB with no limit events;
+exit 0 and no restart. [Evidence and attribution limits](PAPER_ENTRY_HOST_20261128.json).
+
+Run the same implementation's isolated 21,480-second `duration` profile next,
+retaining all limits and original deadlines. This checks publication and memory
+beyond the old 4h49m failure; it does not replace repeated active lifecycle,
+restart/protection or authentic provider qualification. Follow
+[PAPER_NEXT_SESSION.md](PAPER_NEXT_SESSION.md). No deployment, resume or capacity
+change follows from the short pass; keep the connected account and review hold.
+
 ### November 27 native startup repair — host entry gate pending
 
 The host follow-up records `UNKNOWN` and `FixtureProcessTimeout`, with

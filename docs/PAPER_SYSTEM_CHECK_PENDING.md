@@ -1,5 +1,22 @@
 # Recovered offline system checkpoint
 
+November 28: operator-supplied short host lifecycle passed on `9c8161e`.
+
+The terminal `ENTRY_GATE_PASSED` receipt records one entry, one protective exit,
+verified flat accounting, fresh feed/heartbeat at cutoff and no runtime or
+publication failures. Both scheduled decisions and all 130 native snapshots
+completed; 32 collections were delivered. Peak cgroup memory was 812,322,816
+bytes with no limit events. [Host evidence](PAPER_ENTRY_HOST_20261128.json).
+
+Advance to the same build's new isolated 5h58m duration check. The shorter pass
+does not close the old multi-hour publisher/memory incident or establish repeated
+entry latency. Connected provider health and a full PAPER day remain unverified.
+The [current host procedure](PAPER_NEXT_SESSION.md) preserves installed `2d538b7`,
+account state, limits, timer, review hold and previous evidence. This checkpoint
+changes evidence and work order only; application and launcher bytes are unchanged.
+
+### Previous native startup checkpoint
+
 November 27: startup repair verified locally; short host entry gate remains required.
 
 The host follow-up records `UNKNOWN` and `FixtureProcessTimeout`, with

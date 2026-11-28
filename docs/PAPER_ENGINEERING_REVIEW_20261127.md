@@ -1,5 +1,44 @@
 # PAPER engineering review — November 27
 
+## November 28 host entry pass and remaining qualification
+
+The terminal host result on `9c8161e` is `ENTRY_GATE_PASSED`: the original-clock
+fixture entered, exited protectively and verified flat accounting. Two decisions
+completed, 32 collections were delivered, and 130 native snapshots succeeded
+(maximum 0.341 seconds). Feed and heartbeat were fresh at cutoff. Exit was 0,
+with no restart, OOM or publication failure.
+[Selected operator-supplied evidence](PAPER_ENTRY_HOST_20261128.json).
+
+Peak cgroup memory was 812,322,816 bytes (774.69 MiB), leaving 249.31 MiB below
+the existing 1-GiB limit. No `max`, `oom` or `oom_kill` events occurred. This
+six-minute observation does not qualify multi-hour headroom. The recorded worker
+resource window also includes about 4.65 GB of disk writes; those aggregate
+counters do not identify a particular function's write cost.
+
+Acceptance had 2.413641 seconds remaining at spawn and completed transport in
+1.293625 seconds. The failed prior host run had only 1.228111 seconds remaining,
+less than this successful transport duration. Thus the pass cannot be attributed
+solely to import reduction: preceding owner work and the available lease changed
+too. One observed entry is not a p95 estimate. Restore-to-review still records
+4.281579 seconds of owner-thread CPU inside digest calls; that cost remains an
+optimization target under the existing integrity checks and original deadlines.
+
+With a complete short lifecycle now observed, run the same pinned implementation
+through the new isolated 21,480-second duration profile. This advances the
+independent endurance investigation beyond the old 4h49m publisher failure while
+keeping repeated active-lifecycle qualification open. Avoid another implementation
+change or capacity change in this duration comparison. It is not a controlled
+reproduction of the old failure and cannot retroactively establish its cause.
+
+The fixture offers one entry, then HOLD; the short run's second decision was
+`ENTRY_MODEL_RISK_PAUSE`. A mostly flat duration pass cannot prove repeated entry
+latency, loaded restart/protection across families, or authentic Scope/Swing
+coverage. Those gates and Robinhood CONNECT health remain required before a
+connected release. No deployment/resume, account reset, limit change or halt
+clearing follows from this evidence. [Host procedure](PAPER_NEXT_SESSION.md).
+
+## Previous native startup checkpoint
+
 ## Native startup repair and bounded qualification
 
 The host follow-up records `UNKNOWN` and `FixtureProcessTimeout`, with
@@ -211,7 +250,11 @@ compatibility path are requirements for any eventual storage change.
 
 ## Revised work order
 
-Current application checkpoint: settlement and reservation now share a fenced
+The November 28 host pass above supersedes the earlier host-gate-pending status.
+The same-build duration investigation may now run independently; repeated active
+load remains open and cannot be replaced by that endurance result.
+
+Earlier application checkpoint: settlement and reservation now share a fenced
 commit when protection is complete. One redundant transaction/two digests are
 removed; local original quote age at reservation changed from 4.029 to 3.392
 seconds, and the complete entry cycle from 6.416 to 5.764 seconds. These are

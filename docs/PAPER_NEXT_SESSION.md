@@ -1,6 +1,53 @@
 # Daily PAPER operation
 
-## Current action: qualify native startup in one isolated short host test
+## Current action: same-build isolated endurance after the passed entry gate
+
+The operator's November 28, 12:50 a.m. New York receipt records
+`ENTRY_GATE_PASSED` on `9c8161e`: one entry, one protective exit, verified flat
+accounting, two complete decisions, 32 delivered collections, 130 successful
+snapshots and no runtime/publication failure. The container exited 0 with no
+restart. Peak memory was about 775 MiB without limit events in this short run.
+[Exact supplied evidence and limits](PAPER_ENTRY_HOST_20261128.json).
+
+Run the same candidate in a new detached `duration` fixture for 21,480 seconds
+(5h58m plus setup/drain). This tests memory growth and publication past the prior
+4h49m failure. It is not a connected deployment and does not replace repeated
+active-lifecycle or provider-health qualification. The fixture uses synthetic
+data with one initial entry, then HOLD; later flat operation cannot prove repeated
+fresh entries. Preserve all prior failed and passed workers and evidence.
+
+Use this phone-safe block; the launch command is one physical line:
+
+```bash
+(
+  set -euo pipefail
+  cd /opt/trade-bot-dashboard
+  release=9c8161e40e2e93011e95942320fbd025d7d40c84
+  git fetch origin slice2/robinhood-read-shadow
+  git merge-base --is-ancestor HEAD "$release"
+  git merge-base --is-ancestor "$release" FETCH_HEAD
+  candidate=$(mktemp -d)
+  git worktree add --detach "$candidate" "$release"
+  trap 'git worktree remove "$candidate"' EXIT
+  python3 "$candidate/scripts/paper-soak-host.py" start --profile duration --checkout /opt/trade-bot-dashboard
+)
+```
+
+The launcher checks the existing pause/review hold and refuses active connected
+or offline workers. It never stops them or changes that hold. It starts only a
+new disposable population with one CPU, 1 GiB, no extra swap, no network or
+credentials and unchanged deadlines. The connected account, installed `2d538b7`,
+timer and reader remain untouched. If a guard refuses launch, retain its reason;
+do not clear the hold or stop another worker to bypass it.
+
+Paste the launch output. Use its returned read-only check command after roughly
+30 minutes and after completion around six hours. Review the terminal status,
+memory events/headroom, original-clock decision and feed coverage, publication
+failures, native timing, lifecycle and final accounting together. No pass is
+claimed until the operator supplies that result. A duration pass establishes
+only this workload's endurance, not connected health or readiness to deploy.
+
+## Previous native startup gate — completed by the operator
 
 The host follow-up records `UNKNOWN` and `FixtureProcessTimeout`, with
 `IMPORTS` as the last observed child stage. Its original five-second plan deadline

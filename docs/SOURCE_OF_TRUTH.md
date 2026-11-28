@@ -1,5 +1,29 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.244. November 28, New York time. Short host lifecycle passed; endurance open.
+
+The operator supplied `ENTRY_GATE_PASSED` for `9c8161e`: one simulated entry,
+one protective exit, verified flat accounting, both scheduled decisions complete,
+32 delivered collections and 130 successful native snapshots. The worker exited
+normally with zero restarts. Feed and heartbeat were fresh at the report cutoff.
+Peak memory was 812,322,816 bytes under the unchanged 1-GiB limit, with no limit
+or OOM events during this short run. [Supplied host evidence](PAPER_ENTRY_HOST_20261128.json).
+
+This is one synthetic lifecycle, not sustained or connected acceptance. Native
+transport took 1.294 seconds with 2.414 seconds left at spawn; the prior failure
+had only 1.228 seconds left. The changed lease margin and owner timings prevent
+attributing the pass solely to the import repair. Multi-hour memory/publication,
+repeated active lifecycles and provider CONNECT health remain open.
+
+Next: run the same pinned `9c8161e` implementation in a new isolated `duration`
+profile, 21,480 seconds (5h 58m), to cross the old 4h49m failure point. Its mostly
+flat workload measures endurance only. [Host procedure](PAPER_NEXT_SESSION.md)
+and [remaining qualification](PAPER_ENGINEERING_REVIEW_20261127.md) govern the
+next steps. Preserve installed `2d538b7`, connected state, limits, timer, review
+hold and old evidence. No connected deployment or resume is qualified by this pass.
+
+### Previous native startup checkpoint
+
 Version 1.243. November 27, New York time. Native acceptance startup isolation.
 
 The host follow-up records `UNKNOWN` and `FixtureProcessTimeout`, with
