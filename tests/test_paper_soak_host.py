@@ -1,6 +1,9 @@
 import importlib.util
 import json
 import os
+import sqlite3
+import subprocess
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -415,3 +418,148 @@ def test_short_status_requires_original_decision_diagnostic(evidence, tmp_path, 
     diagnostic['decision_status'] = 'HOLD'
     path.write_text(json.dumps(diagnostic))
     assert host.status(tmp_path)['reason'] == 'ORIGINAL_ENTRY_DIAGNOSTIC_REQUIRED'
+
+
+def retained_journal(evidence, tmp_path, rows=()):
+    item, receipt, _, _ = evidence
+    receipt['data'] = str(tmp_path / 'data')
+    item['Mounts'][0]['Source'] = receipt['data']
+    path = tmp_path / 'data/run/owner/options.db'
+    path.parent.mkdir(parents=True)
+    with sqlite3.connect(path) as db:
+        db.execute('CREATE TABLE execution_events(sequence INTEGER PRIMARY KEY,occurred_at,kind,payload)')
+        db.executemany('INSERT INTO execution_events(occurred_at,kind,payload) VALUES(?,?,?)', rows)
+    return path
+
+
+def test_terminal_publication_event_survives_missing_final_report(evidence, tmp_path, monkeypatch):
+    at = '2026-10-28T18:48:00+00:00'
+    payload = {'stage': 'RUNNING', 'error_class': 'TimeoutError',
+               'frames': [{'file': 'app/mixed/dashboard_snapshot.py', 'line': 372}],
+               'message': 'never print arbitrary exception messages'}
+    path = retained_journal(evidence, tmp_path, [(at, 'CONNECTED_PUBLICATION_FAILED', json.dumps(payload))])
+    item, receipt, summary, progress = evidence
+    item['State']['ExitCode'] = 1
+    summary['status'] = progress['status'] = 'FAILED'
+    progress['failure_evidence'] = [{'phase': 'SHUTDOWN', 'error_class': 'ComponentFailure'}]
+    run = path.parent.parent
+    files = {tmp_path / 'host.json': receipt, run / 'summary.json': summary,
+             run / 'progress.json': progress, run / 'latest-report.json': saved_report()}
+    for p, value in files.items():
+        p.write_text(json.dumps(value))
+    original = {p: (p.read_bytes(), p.stat().st_mtime_ns) for p in tmp_path.rglob('*') if p.is_file()}
+    monkeypatch.setattr(host, 'ROOT', tmp_path / 'removed-worktree')
+    calls = []
+    def command(args):
+        calls.append(args)
+        return json.dumps([item])
+    monkeypatch.setattr(host, 'command', command)
+    result = host.status(tmp_path)
+    assert result['status'] == 'FAILED'
+    assert result['session_report']['publication_failures'] == []  # Earlier report missed it.
+    incidents = result['retained_incidents']
+    assert incidents['status'] == 'STORED_EVENTS_READ' and not incidents['accounting_reverified']
+    assert incidents['publication_failures'] == [{'at': at, 'stage': 'RUNNING',
+        'error_class': 'TimeoutError', 'frames': payload['frames'], 'evidence_available': True}]
+    assert 'never print' not in json.dumps(result)
+    assert result['failure_evidence'] == progress['failure_evidence']
+    assert calls == [['docker', 'container', 'inspect', receipt['container_id']]]
+    assert {p: (p.read_bytes(), p.stat().st_mtime_ns) for p in tmp_path.rglob('*') if p.is_file()} == original
+    # An older saved pass cannot overrule a durable publisher incident either.
+    item['State']['ExitCode'] = 0
+    summary['status'] = progress['status'] = 'PASSED'
+    for p, value in ((run / 'summary.json', summary), (run / 'progress.json', progress)):
+        p.write_text(json.dumps(value))
+    assert host.status(tmp_path)['reason'] == 'RETAINED_PUBLICATION_FAILURE'
+
+
+def test_standalone_reader_runs_from_stdin_without_candidate_or_application(evidence, tmp_path):
+    path = retained_journal(evidence, tmp_path, [('2026-10-28T18:48:00+00:00',
+        'CONNECTED_PUBLICATION_FAILED', '{"error_class":"MemoryError","frames":[]}')])
+    item, receipt, summary, progress = evidence
+    item['State']['ExitCode'] = 1
+    summary['status'] = progress['status'] = 'FAILED'
+    run = path.parent.parent
+    for p, value in ((tmp_path / 'host.json', receipt), (run / 'summary.json', summary),
+                     (run / 'progress.json', progress)):
+        p.write_text(json.dumps(value))
+    fake = tmp_path / 'docker'
+    fake.write_text('#!' + sys.executable + '\nprint(' + repr(json.dumps([item])) + ')\n')
+    fake.chmod(0o700)
+    result = subprocess.run([sys.executable, '-I', '-', 'status', '--evidence', str(tmp_path)],
+        input=Path(host.__file__).read_text(), cwd=tmp_path, text=True, capture_output=True,
+        env={'PATH': str(tmp_path)}, timeout=5)
+    value = json.loads(result.stdout)
+    assert result.returncode == 1 and value['status'] == 'FAILED'
+    assert value['retained_incidents']['publication_failures'][0]['error_class'] == 'MemoryError'
+    assert not value['state_modified'] and not result.stderr
+
+
+@pytest.mark.parametrize('damage', ['running', 'identity', 'foreign_data', 'symlink',
+                                   'missing', 'corrupt', 'wal', 'journal', 'wal_header'])
+def test_retained_incident_read_rejects_mutable_or_unbound_journals(evidence, tmp_path, damage):
+    path = retained_journal(evidence, tmp_path)
+    item, receipt, _, _ = evidence
+    if damage == 'running':
+        item['State'].update(Running=True, Status='running')
+    elif damage == 'identity':
+        item['Image'] = 'other'
+    elif damage == 'foreign_data':
+        receipt['data'] = str(tmp_path / 'elsewhere')
+        item['Mounts'][0]['Source'] = receipt['data']
+    elif damage == 'symlink':
+        path.rename(path.with_name('original.db'))
+        path.symlink_to(path.with_name('original.db'))
+    elif damage == 'missing':
+        path.unlink()
+    elif damage == 'corrupt':
+        path.write_bytes(b'not sqlite' * 100)
+    elif damage in {'wal', 'journal'}:
+        Path(str(path) + '-' + damage).write_bytes(b'retain')
+    else:
+        data = bytearray(path.read_bytes())
+        data[18:20] = b'\x02\x02'
+        path.write_bytes(data)
+    original = {p: p.read_bytes() for p in tmp_path.rglob('*') if p.is_file()}
+    assert host.retained_publication_failures(tmp_path, item, receipt)['status'] == 'UNAVAILABLE'
+    assert {p: p.read_bytes() for p in tmp_path.rglob('*') if p.is_file()} == original
+
+
+def test_retained_event_read_bounds_rows_payloads_and_selected_fields(evidence, tmp_path):
+    at = '2026-10-28T18:48:00+00:00'
+    invalid = ['{', '[]', None, ' ' * 16385, json.dumps({'error_class': [], 'stage': {}})]
+    rows = [(at, 'CONNECTED_PUBLICATION_FAILED', value) for value in invalid]
+    private = {'error_class': 'OSError', 'frames': [
+        {'file': '/private/secrets.py', 'line': 4}, {'file': 'app/../private.py', 'line': 5},
+        {'file': 'app/mixed/dashboard_snapshot.py', 'line': True}], 'extra': 'not selected'}
+    rows += [(at, 'CONNECTED_PUBLICATION_FAILED', json.dumps(private))] * 7
+    rows.append((at, 'OTHER_EVENT', '{"private": "not selected"}'))
+    retained_journal(evidence, tmp_path, rows)
+    result = host.retained_publication_failures(tmp_path, evidence[0], evidence[1])
+    assert result['status'] == 'STORED_EVENTS_READ'
+    assert len(result['publication_failures']) == 10
+    assert result['publication_failures'][0]['frames'] == []
+    assert any(not r['evidence_available'] for r in result['publication_failures'])
+    assert 'not selected' not in json.dumps(result) and 'private' not in json.dumps(result)
+
+
+@pytest.mark.parametrize('events,peak,status', [
+    ({'max': 603798, 'oom': 0, 'oom_kill': 0}, host.MEMORY, 'LIMIT_REACHED'),
+    ({'max': 1, 'oom': 0, 'oom_kill': 0}, host.MEMORY - 1, 'LIMIT_REACHED'),
+    ({'max': 0, 'oom': 0, 'oom_kill': 0}, host.MEMORY - 1, 'NO_LIMIT_EVENT_RECORDED'),
+    ({'max': 4, 'oom': 1, 'oom_kill': 0}, host.MEMORY, 'OOM_RECORDED'),
+    ({'max': 4, 'oom': 1, 'oom_kill': 1}, host.MEMORY, 'OOM_KILL_RECORDED'),
+])
+def test_memory_pressure_does_not_conflate_limit_events_oom_or_postexit_usage(events, peak, status):
+    result = host.memory_pressure({'status': 'OBSERVED', 'events': events,
+        'max_bytes': host.MEMORY, 'peak_bytes': peak, 'current_bytes': 1})
+    assert result['status'] == status and result['peak_headroom_bytes'] == host.MEMORY - peak
+    assert result['failure_causality'] == 'UNDETERMINED'
+
+
+@pytest.mark.parametrize('memory', [None, {}, {'status': 'UNAVAILABLE'},
+    {'status': 'OBSERVED', 'max_bytes': None, 'peak_bytes': 1, 'events': {}},
+    {'status': 'OBSERVED', 'max_bytes': host.MEMORY, 'peak_bytes': 1,
+     'events': {'max': True, 'oom': 0, 'oom_kill': 0}}])
+def test_missing_memory_counters_do_not_claim_available_capacity(memory):
+    assert host.memory_pressure(memory) == {'status': 'UNAVAILABLE'}

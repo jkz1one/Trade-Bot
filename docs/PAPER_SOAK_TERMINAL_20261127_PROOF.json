@@ -1,0 +1,147 @@
+{
+  "version": "paper-soak-terminal-evidence-20261127-v1",
+  "base_commit": "9bad805ca12944560b605e61add202123ee8f2c4",
+  "scope": "Offline harness and stopped-test diagnostic reader; application bytes and installed host unchanged",
+  "application_manifest_sha256": "cdaa7376445bcad20f46d88878df17b130957d591d8e14be593c70b7b566b884",
+  "reported_host_result": "PAPER_SOAK_20261127_HOST.json#terminal_observation",
+  "repair": [
+    "Retain the first observation error while draining the original worker; preserve component and final-evidence failures separately",
+    "Expose stopped disposable journal publication events when no final report exists; no application import or full database copy",
+    "Refuse active, unbound, symlinked, WAL or sidecar-bearing journal reads; use bounded immutable read-only SQLite",
+    "Separate max-boundary events, OOM and OOM kill; post-exit current memory is not capacity headroom",
+    "A retained publication failure overrides an older saved pass"
+  ],
+  "verification": {
+    "installed_python": "/workspace/scratch/b29c7148e65c/entry-atomic-env/bin/python",
+    "isolation": "network and PID namespace, matching /proc, Python -I -W error; no Docker/cgroup qualification locally",
+    "initial_suites": [
+      "paper_soak",
+      "paper_soak_host",
+      "soak_diagnostics",
+      "connected_publisher"
+    ],
+    "initial_result": {
+      "passed": 173,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 10.612
+    },
+    "reader_after_final_change": {
+      "passed": 99,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 0.244
+    },
+    "distinct_cases": 174,
+    "coverage": [
+      "first cause survives simultaneous cleanup and evidence failures",
+      "cancellation drains children and retains the publisher cause",
+      "stopped old fixture with an earlier clean report exposes its later durable incident",
+      "reader preserves file bytes and modification times; Docker inspect only",
+      "bounded row count and payload; allowlisted classes and application frames",
+      "live, foreign, missing, symlinked, corrupt and WAL/sidecar databases refuse",
+      "stdin invocation needs no checkout switch or application install",
+      "limit events cannot be mislabeled OOM or used to infer failure causality"
+    ],
+    "lint": "Scoped Ruff E4,E7,E9,F and git diff --check passed",
+    "full_application_suite": "Not repeated: application unchanged; prior exact installed proof remains separate"
+  },
+  "failure_injection": {
+    "status": "EXPECTED_FAILURE_RETAINED",
+    "application_files": 336,
+    "runtime_pins": 60,
+    "application_manifest_sha256": "cdaa7376445bcad20f46d88878df17b130957d591d8e14be593c70b7b566b884",
+    "injection": "third publisher invocation raises TimeoutError",
+    "planned_seconds": 60,
+    "seed_mib": 0,
+    "logical_cpus": 1,
+    "failure_class": "ValueError",
+    "failure": "SOAK_DASHBOARD_UNAVAILABLE",
+    "failure_evidence": [
+      {
+        "phase": "OBSERVATION",
+        "error_class": "ValueError",
+        "frames": []
+      },
+      {
+        "phase": "SHUTDOWN",
+        "error_class": "ComponentFailure",
+        "frames": [
+          {
+            "file": "app/mixed/connected_runtime.py",
+            "line": 696
+          }
+        ],
+        "components": [
+          {
+            "component": "PUBLISHER",
+            "stage": "RUNNING",
+            "error_class": "TimeoutError",
+            "frames": [
+              {
+                "file": "app/mixed/connected_runtime.py",
+                "line": 662
+              },
+              {
+                "file": "app/mixed/connected_runtime.py",
+                "line": 283
+              },
+              {
+                "file": "app/mixed/connected_runtime.py",
+                "line": 273
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "elapsed_seconds": 35.21585144599999,
+    "children_reaped": true,
+    "native_snapshot_failures": 0,
+    "qualification": "NOT_A_DURATION_OR_CONNECTED_PASS"
+  },
+  "failure_injection_bootstrap": "import importlib.util\nimport json\nimport os\nimport sys\nfrom pathlib import Path\n\nimport app\nimport pytest\n\nroot = Path('/workspace/scratch/dd628cda3621/trade-bot')\nsys.path.extend([str(root), str(root / 'tests')])\nfrom soak_worker import run\nfrom app.mixed.dashboard_snapshot import DashboardPublisher\n\nspec = importlib.util.spec_from_file_location('soak_launcher', root / 'scripts/paper-soak.py')\nlauncher = importlib.util.module_from_spec(spec)\nspec.loader.exec_module(launcher)\noutput = Path('/workspace/scratch/b29c7148e65c/soak-terminal-injection-1127')\nidentity = launcher.validate(output, 60, 0)\noutput.mkdir(mode=0o700)\nos.sched_setaffinity(0, [min(os.sched_getaffinity(0))])\noriginal = DashboardPublisher.publish\ncalls = []\ndef failing_publish(publisher):\n    calls.append(1)\n    if len(calls) >= 3:\n        raise TimeoutError('synthetic publisher failure')\n    return original(publisher)\nwith pytest.MonkeyPatch.context() as patch:\n    patch.setattr(DashboardPublisher, 'publish', failing_publish)\n    try:\n        run(output, 60, 0)\n    except (ValueError, AssertionError) as exc:\n        primary = type(exc).__name__\n    else:\n        raise AssertionError('The injected publisher failure must fail the run')\nr = json.loads((output / 'progress.json').read_text())\nassert r['status'] == 'FAILED' and r['children_reaped']\nassert r['failure_class'] == primary\nassert r['failure_evidence'][0]['phase'] == 'OBSERVATION'\nshutdown = next(p for p in r['failure_evidence'] if p['phase'] == 'SHUTDOWN')\nassert shutdown['error_class'] == 'ComponentFailure'\nassert any(c['component'] == 'PUBLISHER' and c['error_class'] == 'TimeoutError'\n           for c in shutdown['components'])\nresult = {'status': 'EXPECTED_FAILURE_RETAINED', **identity,\n          'injection': 'third publisher invocation raises TimeoutError',\n          'planned_seconds': 60, 'seed_mib': 0, 'logical_cpus': 1,\n          'failure_class': r['failure_class'], 'failure': r['failure'],\n          'failure_evidence': r['failure_evidence'],\n          'elapsed_seconds': r['elapsed_seconds'], 'children_reaped': r['children_reaped'],\n          'native_snapshot_failures': r['native_snapshot_failures'],\n          'qualification': 'NOT_A_DURATION_OR_CONNECTED_PASS'}\n(output / 'injection-proof.json').write_text(json.dumps(result, indent=2) + '\\n')\nprint(json.dumps(result, indent=2))\n",
+  "artifacts": {
+    "soak-terminal-1127-tests.xml": {
+      "path": "/workspace/scratch/b29c7148e65c/soak-terminal-1127-tests.xml",
+      "sha256": "8d4e2fb811ffbfb221cb8e60d8d7e63b5ff9249489ca3710aa6d6b423299b953"
+    },
+    "soak-terminal-1127-reader-final.xml": {
+      "path": "/workspace/scratch/b29c7148e65c/soak-terminal-1127-reader-final.xml",
+      "sha256": "1971b891cf5d0ac3155c0defe0495fe743bbf5157cf6ba7ce081bc41e8d51bd9"
+    },
+    "soak-terminal-1127-tests.log": {
+      "path": "/workspace/scratch/b29c7148e65c/soak-terminal-1127-tests.log",
+      "sha256": "30f17372c35a3df142afc099878c80ef69625ba0f17fa3a4be611cc3e6e5456e"
+    },
+    "soak-terminal-1127-reader-final.log": {
+      "path": "/workspace/scratch/b29c7148e65c/soak-terminal-1127-reader-final.log",
+      "sha256": "68b1797a64b7724ac165ed0fc470a709cf7e6a39c6a3713447ac2df0419f551d"
+    },
+    "soak-terminal-injection-1127/injection-proof.json": {
+      "path": "/workspace/scratch/b29c7148e65c/soak-terminal-injection-1127/injection-proof.json",
+      "sha256": "aa121ce34eec74370367806450b9ed927f1a4d74ff6b6f7c837afe3423e9adca"
+    },
+    "soak-terminal-injection-1127/progress.json": {
+      "path": "/workspace/scratch/b29c7148e65c/soak-terminal-injection-1127/progress.json",
+      "sha256": "a9a6a315ca93b6c5d85e58b97d59c836997af0b4616e3a02980dd0ecec53bd47"
+    },
+    "check-soak-terminal-injection.py": {
+      "path": "/workspace/scratch/b29c7148e65c/check-soak-terminal-injection.py",
+      "sha256": "097ad873635f7c2c07cf70cf2e0490593d03d9497d18a790a4089e9e726a0fb6"
+    }
+  },
+  "limitations": [
+    "Underlying publisher cause from the real host has not yet been supplied",
+    "Injected TimeoutError demonstrates retained evidence; it does not identify the real host failure",
+    "Cumulative cgroup counters do not establish whether memory reclaim caused the publisher failure",
+    "No new host run, build, deployment, schedule resume, resource increase or connected account change",
+    "Host entry gate, repeated active lifecycle load, full-duration capacity and provider CONNECT health remain open"
+  ],
+  "verified_source_sha256": {
+    "scripts/paper-soak-host.py": "31ad8341bf3cec0f152914bc94206b0cc4a9ff0c6c562d3c96f4a0e0eaf843ac",
+    "tests/soak_worker.py": "738517603d0bec39db24014ffa9224205958fc9930fa05d5069bb1757be35471",
+    "tests/test_paper_soak.py": "4db0edfb432925993f41edadd98797310ac14910d5bb76952d4037961154730f",
+    "tests/test_paper_soak_host.py": "cf414be1526f01fd6c4a84dfcd08512c9fc3c13987d4bb1f350d8ce8d1e39f79"
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "version": "paper-soak-host-observations-20261127-v1",
+  "version": "paper-soak-host-observations-20261127-v2",
   "source": "Operator-supplied terminal output; no direct server access",
   "release": "d2e78bf88e0fa78a0940bb3f3881564027f70442",
   "image_id": "sha256:401df4323742aef1a30e62f79be7608036f6111dde449fefaf25da1db7c8b4bd",
@@ -95,9 +95,9 @@
       }
     }
   ],
-  "acceptance": "FAILED_FIXTURE_ENTRY_DEADLINE",
-  "next_checkpoint": "Follow PAPER_ENGINEERING_REVIEW_20261127.md: reproduce and reduce source-to-native-acceptance latency under the deployed resource profile before another long run; preserve current host and original clocks.",
-  "final_duration": "NOT_SUPPLIED",
+  "acceptance": "FAILED_FIXTURE_ENTRY_DEADLINE_AND_LATER_PUBLISHER_FAILURE",
+  "next_checkpoint": "Read the stopped disposable journal publication incident using the bounded diagnostic reader; preserve the existing failure and connected owner. Review its concrete cause before another host run. The measured entry repair still needs the 335-second host gate before repeated active load or duration.",
+  "final_duration": "FAILED_BEFORE_PLANNED_DURATION",
   "interim_feed_decision_lifecycle_report": {
     "source": "Operator-supplied selected fields from retained latest-report.json",
     "window_end": "2026-10-28T14:24:41.803548+00:00",
@@ -362,5 +362,74 @@
         "admission_deadline": "2026-10-28T14:00:29.848382Z"
       }
     ]
+  },
+  "terminal_observation": {
+    "source": "Operator-supplied terminal output, received after local entry repair; no direct server access",
+    "status": "FAILED",
+    "reason": "SOAK_EXIT_OR_ASSERTION_FAILURE",
+    "observed_at": "2026-11-28T00:15:40.164119+00:00",
+    "worker": {
+      "Status": "exited",
+      "Running": false,
+      "StartedAt": "2026-11-27T19:05:39.328144636Z",
+      "FinishedAt": "2026-11-27T23:54:32.74032312Z",
+      "ExitCode": 1,
+      "OOMKilled": false,
+      "Error": ""
+    },
+    "restart_count": 0,
+    "progress_age_seconds": 1269.0335638523102,
+    "last_cgroup_memory": {
+      "status": "OBSERVED",
+      "scope": "mounted cgroup v2, including file/tmpfs charges",
+      "current_bytes": 264630272,
+      "peak_bytes": 1073741824,
+      "max_bytes": 1073741824,
+      "events": {
+        "low": 0,
+        "high": 0,
+        "max": 603798,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "stat": {
+        "anon": 12890112,
+        "file": 249339904,
+        "kernel": 2330624,
+        "pagetables": 126976,
+        "sock": 0,
+        "shmem": 0,
+        "slab": 2131888
+      }
+    },
+    "progress": {
+      "status": "FAILED",
+      "elapsed_seconds": 17300.010166555643,
+      "native_snapshot_calls": 4529,
+      "native_snapshot_failures": 0,
+      "native_snapshot_max_seconds": 0.7922091959044337,
+      "capture_attempts": 1619,
+      "peak_tree_rss_bytes": 815005696,
+      "source_database_bytes": 218853376,
+      "decision_coverage": null,
+      "execution": null,
+      "final_accounting": null,
+      "failure_class": "ComponentFailure",
+      "failure": "CONNECTED_COMPONENT_STOPPED:PUBLISHER"
+    },
+    "connected_health": "UNVERIFIED",
+    "live_enabled": false,
+    "state_modified": false
+  },
+  "terminal_interpretation": {
+    "container_elapsed_seconds_approx": 17333.412178,
+    "lifecycle": "Already failed at the original quote deadline; elapsed time does not change that result",
+    "capacity": "The cgroup peak reached its 1-GiB cap; 603798 max-boundary events, zero OOM and OOM-kill events",
+    "current_memory": "Post-exit observation, not the running working set",
+    "publisher_cause": "NOT_SUPPLIED: component summary alone does not establish timeout, memory error or another exception",
+    "memory_causality": "UNDETERMINED: cumulative counters do not locate or prove the publisher failure cause",
+    "kernel_reference": "https://docs.kernel.org/admin-guide/cgroup-v2.html#memory-interface-files",
+    "qualification": "Failed duration and lifecycle; no connected or resource acceptance"
   }
 }

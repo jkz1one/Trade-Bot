@@ -1,4 +1,5 @@
 import importlib.util
+import asyncio
 import json
 import sqlite3
 from datetime import timedelta
@@ -12,6 +13,74 @@ SPEC = importlib.util.spec_from_file_location(
 )
 soak = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(soak)
+
+
+@pytest.mark.parametrize('observation,shutdown,final_evidence', [
+    (False, False, False), (True, False, False), (False, True, False),
+    (True, True, False), (True, True, True), (False, False, True), (False, True, True),
+])
+def test_soak_retains_primary_and_drain_failures_without_replacing_the_cause(
+    observation, shutdown, final_evidence
+):
+    from soak_worker import connected, observed_worker
+    async def scenario():
+        stop = asyncio.Event()
+        cleaned = []
+        metrics = {}
+        first = ValueError('test observation failure')
+        details = [{'component': 'PUBLISHER', 'stage': 'RUNNING', 'error_class': 'TimeoutError',
+                    'frames': [{'file': 'app/mixed/dashboard_snapshot.py', 'line': 372}]}]
+        drain = connected.ComponentFailure('CONNECTED_COMPONENT_STOPPED:PUBLISHER', details)
+        last = OSError('test resource evidence failure')
+        async def worker():
+            await stop.wait()
+            cleaned.append('worker')
+            if shutdown:
+                raise drain
+            return {'feed_recoveries': 0}
+        def finalize():
+            cleaned.append('evidence')
+            if final_evidence:
+                raise last
+        task = asyncio.create_task(worker())
+        try:
+            async with observed_worker(task, stop, metrics, finalize=finalize):
+                if observation:
+                    raise first
+        except BaseException as exc:
+            assert exc is (first if observation else drain if shutdown else last)
+        else:
+            assert not (observation or shutdown or final_evidence)
+        assert task.done() and stop.is_set() and cleaned == ['worker', 'evidence']
+        records = metrics.get('failure_evidence', [])
+        assert [r['phase'] for r in records] == [
+            phase for active, phase in ((observation, 'OBSERVATION'), (shutdown, 'SHUTDOWN'),
+                                        (final_evidence, 'FINAL_EVIDENCE')) if active]
+        assert 'test observation failure' not in json.dumps(records)
+        if shutdown:
+            assert next(r for r in records if r['phase'] == 'SHUTDOWN')['components'] == details
+        else:
+            assert metrics['feed_recoveries'] == 0
+    asyncio.run(scenario())
+
+
+def test_soak_cancellation_still_drains_and_retains_component_cause():
+    from soak_worker import connected, observed_worker
+    async def scenario():
+        stop = asyncio.Event()
+        metrics = {}
+        async def worker():
+            await stop.wait()
+            raise connected.ComponentFailure('CONNECTED_COMPONENT_STOPPED:PUBLISHER', [
+                {'component': 'PUBLISHER', 'error_class': 'MemoryError', 'frames': []}])
+        task = asyncio.create_task(worker())
+        with pytest.raises(asyncio.CancelledError):
+            async with observed_worker(task, stop, metrics):
+                raise asyncio.CancelledError()
+        assert task.done()
+        assert metrics['failure_evidence'][0]['error_class'] == 'CancelledError'
+        assert metrics['failure_evidence'][1]['components'][0]['error_class'] == 'MemoryError'
+    asyncio.run(scenario())
 
 
 @pytest.mark.parametrize('field,message', [('native', 'Native acceptance failure'),

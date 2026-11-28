@@ -1,71 +1,66 @@
 # Daily PAPER operation
 
-## Current action: preserve deployment; inspect the retained test
+## Current action: inspect the stopped test; keep deployment unchanged
 
-The new entry transaction has a measured local improvement and passes the loaded
-protection, entry/exit and installed regression checks. It combines settlement
-and reservation after completed protection without changing original deadlines
-or limits. [Proof](PAPER_ENTRY_TRANSACTION_20261127_PROOF.json).
+The operator supplied the old `d2e78bf` soak's terminal receipt at 7:15 p.m.
+New York time. It exited at 6:54 p.m. after about 4h 49m with
+`CONNECTED_COMPONENT_STOPPED:PUBLISHER`, exit 1, no restart and no OOM kill.
+All 4,529 native snapshot reads succeeded. That does not override the earlier
+original-quote entry rejection or the later publisher failure.
 
-It has not been run on the server and does not close the reported host deadline
-failure. The next operator qualification is the isolated 335-second `entry`
-profile, after the existing retained worker has ended and its final evidence has
-been collected. Do not launch another worker alongside it or stop it for this
-candidate. The read-only status command below is the only current operator step.
-Paste its output before a new launch is chosen.
+Peak cgroup memory reached the full 1-GiB limit; `memory.events.max` was 603,798,
+with zero `oom` and `oom_kill` events. The low final current-memory value was
+observed after exit. This establishes limit pressure, not the cause of the
+publisher failure. Its concrete exception is still missing.
+[Original supplied terminal evidence](PAPER_SOAK_20261127_HOST.json).
 
-No deployment, schedule resume, resize, halt clearing or account change is part
-of this checkpoint. Keep the installed connected release and review hold.
-Repeated active lifecycle and full-duration memory qualification also remain
-open; a short host pass would not qualify a connected trading day.
+The offline harness now preserves the first observation error and any component
+failure encountered while draining. The standalone checker can read the latest
+publication incident from the stopped disposable journal when its final report
+was never saved. It verifies the retained container identity/isolation and rejects
+live, foreign, symlinked or WAL/sidecar-bearing journals; reads are bounded and
+immutable, with no account verification or execution authority.
+
+174 distinct focused checks pass. An injected publisher timeout retained both
+the first dashboard failure and underlying component cause, with children reaped;
+its last progress sample was 35.22 seconds. This is evidence-path verification,
+not a reproduction or repair of the unknown host publisher cause. Application
+bytes remain those of the previously verified entry repair.
+[Verification and limits](PAPER_SOAK_TERMINAL_20261127_PROOF.json).
+
+Next operator action: inspect the stopped test with the pinned standalone reader,
+without building or switching the installed checkout. Review the concrete
+publisher cause before another host trial. Preserve installed `2d538b7`, account,
+limits, timer, review hold and failed evidence. No deployment, resume or resize.
 
 ### Retained November 27 test
 
-The isolated `d2e78bf` run started November 27 at 2:05:39 p.m. ET and uses:
+Evidence directory:
 
 `/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-d2e78bf88e0f-foxg0rjo`
 
-Its only intended entry was rejected with `ORIGINAL_PLAN_DEADLINE_EXPIRED` before
-reservation, despite a timely model response. This fixture returns HOLD for later
-calls, so its required lifecycle gate has failed. Healthy synthetic feed and native
-snapshots do not override that failure. A 66-minute resource observation is supplied; no final result has
-been supplied. [Exact observations](PAPER_SOAK_20261127_HOST.json).
+The copied `check.py` inside this older attempt only prints the top-level component
+failure. The current `scripts/paper-soak-host.py status --evidence <directory>`
+adds `retained_incidents.publication_failures`, selected prior-report fields and
+explicit memory-limit evidence. It is standard-library-only and can run from the
+pinned candidate source on stdin. Fetching that source does not require a build,
+checkout switch, worker start or schedule command. Do not replace the old checker
+or delete its files. An exit status of 1 is expected for this already-failed test.
+Paste the complete diagnostic output before choosing a new host trial.
 
-The saved clocks and first CYCLE spans are supplied: settlement took 0.935
-seconds after the model replied with 0.336 seconds left. Protection wait was
-0.000120 seconds; review was 0.623 seconds late. Use this evidence to reduce entry
-latency before another candidate run. Do not rerun the former launch block, redeploy, resume the schedule, change
-limits, clear halts or overwrite retained evidence. Keep the connected `2d538b7`
-checkout, account, daily timer, existing workers and session-review hold intact.
-The server remains operator-managed; no direct host inspection was performed.
+The measured application entry repair remains locally verified in
+[PAPER_ENTRY_TRANSACTION_20261127_PROOF.json]. After the publisher cause is reviewed,
+its next host qualification is the isolated 335-second `entry` profile. A pass
+would still require repeated active lifecycles and full-duration capacity before
+connected operation. Do not repeat the old full-duration launch.
 
-The existing test can be inspected without changing it:
+The actual host remains operator-managed; no direct inspection was performed.
+Keep the installed `2d538b7` owner, account, timer, original risk/model/resource
+limits and `SESSION_STOPPED_REVIEW_REQUIRED` hold. Retain the earlier OOM attempt at
+`/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-20923e2e823d-iftsm6k7` too.
 
-```bash
-proof=/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-d2e78bf88e0f-foxg0rjo
-python3 "$proof/check.py" status --evidence "$proof"
-```
-
-The saved `d2e78bf` checker may still say RUNNING because it does not stop on this
-fixture rejection. That label describes its process, not successful qualification.
-New source reporting reads the same interim report without restarting the test.
-The new harness also stops on completed rejection of its exact one-shot entry;
-this does not alter the running older worker.
-
-The 100 focused checks pass. An injected original-deadline rejection stops in
-37.16 seconds and preserves its settled model charge and failed receipt; the
-112-MiB short control still completes a round trip with verified flat accounting.
-[Guard verification](PAPER_ENTRY_GATE_20261127_PROOF.json).
-
-The separate local 22-session sampled replay and paced follow-up passed, with one
-round trip and verified flat accounting in the paced window. That is narrow
-local evidence; Docker duration, sustained full-cadence month growth, provider
-CONNECT health and connected R4 remain open.
-[Calendar proof](PAPER_CALENDAR_20261127_PROOF.json).
-
-Retain the prior OOM evidence at
-`/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-20923e2e823d-iftsm6k7`.
-[Developer iteration loop](PAPER_SYSTEM_CHECK.md). Earlier commands below are history.
+[Engineering work order](PAPER_ENGINEERING_REVIEW_20261127.md) ·
+[Developer iteration loop](PAPER_SYSTEM_CHECK.md). Commands below are history.
 
 ## Prior November 20 installation and schedule check
 

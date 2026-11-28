@@ -40,6 +40,39 @@ cannot be adopted as connected evidence or execution state.
 
 ## Delivery checklist
 
+### November 27 terminal host result — immediate next step
+
+The operator supplied the old `d2e78bf` soak's terminal receipt at 7:15 p.m.
+New York time. It exited at 6:54 p.m. after about 4h 49m with
+`CONNECTED_COMPONENT_STOPPED:PUBLISHER`, exit 1, no restart and no OOM kill.
+All 4,529 native snapshot reads succeeded. That does not override the earlier
+original-quote entry rejection or the later publisher failure.
+
+Peak cgroup memory reached the full 1-GiB limit; `memory.events.max` was 603,798,
+with zero `oom` and `oom_kill` events. The low final current-memory value was
+observed after exit. This establishes limit pressure, not the cause of the
+publisher failure. Its concrete exception is still missing.
+[Original supplied terminal evidence](PAPER_SOAK_20261127_HOST.json).
+
+The offline harness now preserves the first observation error and any component
+failure encountered while draining. The standalone checker can read the latest
+publication incident from the stopped disposable journal when its final report
+was never saved. It verifies the retained container identity/isolation and rejects
+live, foreign, symlinked or WAL/sidecar-bearing journals; reads are bounded and
+immutable, with no account verification or execution authority.
+
+174 distinct focused checks pass. An injected publisher timeout retained both
+the first dashboard failure and underlying component cause, with children reaped;
+its last progress sample was 35.22 seconds. This is evidence-path verification,
+not a reproduction or repair of the unknown host publisher cause. Application
+bytes remain those of the previously verified entry repair.
+[Verification and limits](PAPER_SOAK_TERMINAL_20261127_PROOF.json).
+
+Next operator action: inspect the stopped test with the pinned standalone reader,
+without building or switching the installed checkout. Review the concrete
+publisher cause before another host trial. Preserve installed `2d538b7`, account,
+limits, timer, review hold and failed evidence. No deployment, resume or resize.
+
 ### November 27 measured entry transaction repair
 
 Regular portfolio option entry now commits the exact paid reply and usage,

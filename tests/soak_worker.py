@@ -6,7 +6,7 @@ import os
 import resource
 import sqlite3
 import time
-from contextlib import closing, contextmanager
+from contextlib import asynccontextmanager, closing, contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -22,6 +22,7 @@ from test_paper_session_report import module as reports
 from test_robinhood_read_mapping import schemas
 
 from app.execution.economics import UsageEvidence
+from app.execution.failure import failure_details
 from app.mixed import connected_runtime as connected
 from app.mixed.continuous_feed import ContinuousFeed
 from app.mixed.dashboard_reader import create_app
@@ -33,6 +34,45 @@ from app.options.runtime_cli import initialize
 
 NOMINAL_SECONDS = 21480  # 10:00 to 16:00, less the daily launcher's 120s cushion.
 BASE = datetime(2026, 10, 28, 14, tzinfo=UTC)
+
+
+def retain_failure(metrics, error, phase):
+    """Keep the original failure and component causes even if draining also fails."""
+    record = {'phase': phase, **failure_details(error)}
+    if isinstance(error, connected.ComponentFailure):
+        record['error_class'] = 'ComponentFailure'
+        # The supervisor already strips messages, locals and credentials.
+        record['components'] = error.details[:16]
+    metrics.setdefault('failure_evidence', []).append(record)
+
+
+@asynccontextmanager
+async def observed_worker(task, stop, metrics, *, finalize=lambda: None):
+    primary = None
+    try:
+        yield
+    except BaseException as exc:
+        primary = exc
+        retain_failure(metrics, exc, 'OBSERVATION')
+        raise
+    finally:
+        stop.set()
+        pending = None
+        try:
+            outcome = await asyncio.wait_for(task, 60)
+            metrics['feed_recoveries'] = outcome['feed_recoveries']
+        except BaseException as exc:
+            retain_failure(metrics, exc, 'SHUTDOWN')
+            if primary is None:
+                pending = exc
+        try:
+            finalize()
+        except BaseException as exc:
+            retain_failure(metrics, exc, 'FINAL_EVIDENCE')
+            if primary is None and pending is None:
+                pending = exc
+        if pending is not None:
+            raise pending
 
 
 def reject_recorded_failure(report, *, fixture_entry_cycle=None):
@@ -422,7 +462,12 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
             diagnostic_complete = (value.get('stored_status') == 'COMPLETE'
                                    and (value.get('cycle_timing') or {}).get('status') == 'COMPLETE')
 
-        try:
+        def finalize():
+            metrics["worker_window_cpu"] = cpu_window(cpu_start, cpu_sample(), cpu_count)
+            metrics['worker_resource_window'] = resource_window(resource_start, resources())
+            diagnostic()
+
+        async with observed_worker(task, stop, metrics, finalize=finalize):
             while time.monotonic() - started[0] < seconds:
                 if task.done():
                     await task
@@ -452,15 +497,6 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
                     next_report = elapsed + 30
                 save(output / "progress.json", metrics)
                 await asyncio.sleep(min(1, max(0, seconds - (time.monotonic() - started[0]))))
-        finally:
-            stop.set()
-            try:
-                outcome = await asyncio.wait_for(task, 60)
-                metrics["feed_recoveries"] = outcome["feed_recoveries"]
-            finally:
-                metrics["worker_window_cpu"] = cpu_window(cpu_start, cpu_sample(), cpu_count)
-                metrics['worker_resource_window'] = resource_window(resource_start, resources())
-                diagnostic()
         metrics["elapsed_seconds"] = time.monotonic() - started[0]
         final = await asyncio.to_thread(
             reports.report, output, BASE.isoformat(), live_clock().isoformat()
@@ -527,6 +563,8 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
         else:
             metrics["wall_clock_full_duration"] = "NOT_RUN"
     except BaseException as exc:
+        if not metrics.get('failure_evidence'):
+            retain_failure(metrics, exc, 'RESULT')
         metrics.update(status="FAILED", failure_class=type(exc).__name__, failure=str(exc)[:200])
         raise
     finally:

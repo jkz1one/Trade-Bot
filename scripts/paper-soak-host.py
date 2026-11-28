@@ -9,9 +9,12 @@ import math
 import os
 import re
 import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
+import time
+from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -195,6 +198,102 @@ def session_report(directory, observed_at=None, *, finished):
                 'publication_failures')}}
 
 
+def failure_detail(value):
+    """Project stored application diagnostics, never messages or arbitrary paths."""
+    if not isinstance(value, dict):
+        return {'evidence_available': False}
+    result = {'evidence_available': True, 'frames': []}
+    error = value.get('error_class')
+    if isinstance(error, str) and error in {
+        'ValueError', 'TypeError', 'KeyError', 'RuntimeError', 'TimeoutError',
+        'OSError', 'PermissionError', 'FileNotFoundError', 'MemoryError',
+        'FixtureProcessTimeout', 'FixtureProcessFailed', 'FixtureProcessProtocolError',
+        'OperationalError', 'DatabaseError', 'IntegrityError', 'ProgrammingError',
+        'CancelledError', 'ExecutionBlocked', 'OTHER_ERROR',
+    }:
+        result['error_class'] = value['error_class']
+    if isinstance(value.get('stage'), str) and value['stage'] in {'STARTUP', 'RUNNING'}:
+        result['stage'] = value['stage']
+    frames = value.get('frames')
+    for frame in frames[-8:] if isinstance(frames, list) else []:
+        if not isinstance(frame, dict):
+            continue
+        path, line = frame.get('file'), frame.get('line')
+        if (isinstance(path, str) and len(path) <= 240
+                and re.fullmatch(r'app/(?:[A-Za-z0-9_]+/)*[A-Za-z0-9_]+\.py', path)
+                and type(line) is int and 0 < line <= 1000000):
+            result['frames'].append({'file': path, 'line': line})
+    return result
+
+
+def retained_publication_failures(output, item, receipt):
+    """Read a stopped disposable journal even when its final report was not saved."""
+    unavailable = {'status': 'UNAVAILABLE', 'accounting_reverified': False}
+    if item['State']['Running'] or item['State']['Status'] != 'exited':
+        return {**unavailable, 'reason': 'WORKER_NOT_STOPPED'}
+    if not isolation_matches(item, receipt):
+        return {**unavailable, 'reason': 'CONTAINER_IDENTITY_OR_ISOLATION_MISMATCH'}
+    path = output / 'data/run/owner/options.db'
+    try:
+        if (Path(receipt['data']) != output / 'data' or path.resolve(strict=True) != path
+                or not path.is_file() or not 100 <= path.stat().st_size <= 1024**3):
+            raise ValueError('DEDICATED_RETAINED_JOURNAL_REQUIRED')
+        # This is a stopped rollback-journal database, never a live WAL view.
+        # Immutable read mode cannot create sidecars, acquire writer locks or recover it.
+        if any(Path(str(path) + suffix).exists() for suffix in ('-wal', '-shm', '-journal')):
+            raise ValueError('RETAINED_SQLITE_SIDECARS_REQUIRE_REVIEW')
+        with path.open('rb') as stream:
+            header = stream.read(20)
+        if header[:16] != b'SQLite format 3\x00' or header[18:20] != b'\x01\x01':
+            raise ValueError('STOPPED_ROLLBACK_JOURNAL_REQUIRED')
+        deadline = time.monotonic() + 2
+        with closing(sqlite3.connect(path.as_uri() + '?mode=ro&immutable=1', uri=True, timeout=0)) as db:
+            db.execute('PRAGMA query_only=ON')
+            db.execute('PRAGMA trusted_schema=OFF')
+            db.set_progress_handler(lambda: int(time.monotonic() >= deadline), 1000)
+            rows = db.execute(
+                "SELECT occurred_at,CASE WHEN length(CAST(payload AS BLOB))<=16384 THEN payload END "
+                "FROM execution_events WHERE kind='CONNECTED_PUBLICATION_FAILED' "
+                "ORDER BY sequence DESC LIMIT 10").fetchall()
+        failures = []
+        for at, raw in rows:
+            try:
+                value = json.loads(raw) if raw else None
+            except (TypeError, ValueError):
+                value = None
+            # Timestamps are original synthetic evidence, not current server health.
+            try:
+                stamp = datetime.fromisoformat(at) if isinstance(at, str) and len(at) <= 64 else None
+                at = stamp.isoformat() if stamp is not None and stamp.utcoffset() is not None else None
+            except ValueError:
+                at = None
+            failures.append({'at': at, **failure_detail(value)})
+        return {'status': 'STORED_EVENTS_READ', 'source': 'data/run/owner/options.db',
+                'evidence_clock': 'ORIGINAL_SYNTHETIC_CLOCKS', 'accounting_reverified': False,
+                'publication_failures': failures}
+    except (OSError, ValueError, sqlite3.Error) as exc:
+        return {**unavailable, 'reason': 'RETAINED_JOURNAL_UNREADABLE', 'error_class': type(exc).__name__}
+
+
+def memory_pressure(memory):
+    """Separate a recorded limit event from OOM and from post-exit usage."""
+    if not isinstance(memory, dict) or memory.get('status') != 'OBSERVED':
+        return {'status': 'UNAVAILABLE'}
+    events = memory.get('events')
+    limit, peak = memory.get('max_bytes'), memory.get('peak_bytes')
+    if (not isinstance(events, dict) or type(limit) is not int or limit <= 0
+            or type(peak) is not int or peak < 0
+            or any(type(events.get(k)) is not int or events[k] < 0 for k in ('max', 'oom', 'oom_kill'))):
+        return {'status': 'UNAVAILABLE'}
+    status = ('OOM_KILL_RECORDED' if events['oom_kill'] else 'OOM_RECORDED' if events['oom']
+              else 'LIMIT_REACHED' if events['max'] or peak >= limit else 'NO_LIMIT_EVENT_RECORDED')
+    return {'status': status, 'scope': 'container lifetime; not failure-phase attribution',
+            'limit_bytes': limit, 'peak_bytes': peak,
+            'peak_headroom_bytes': max(0, limit - peak),
+            'events': {k: events[k] for k in ('max', 'oom', 'oom_kill')},
+            'failure_causality': 'UNDETERMINED'}
+
+
 def isolation_matches(item, receipt):
     profile = receipt.get('profile', 'duration')  # Older retained receipts were duration only.
     if profile not in PROFILES or receipt.get('seconds', PROFILES[profile]) != PROFILES[profile]:
@@ -281,6 +380,10 @@ def status(output):
         outcome, reason = 'RUNNING_STALE_PROGRESS', 'LAST_PROGRESS_OVER_90_SECONDS_OLD'
     elif outcome == 'RUNNING' and not progress:
         outcome, reason = 'RUNNING_AWAITING_PROGRESS', 'NO_PROGRESS_RECEIPT_YET'
+    memory = summary.get('cgroup_memory') or progress.get('cgroup_memory')
+    incidents = retained_publication_failures(output, item, receipt)
+    if incidents.get('publication_failures') and outcome in {'PASSED', 'ENTRY_GATE_PASSED'}:
+        outcome, reason = 'FAILED', 'RETAINED_PUBLICATION_FAILURE'
     return {'status': outcome, 'reason': reason, 'observed_at': observed_at.isoformat(),
             'qualification_profile': receipt.get('profile', 'duration'),
             'planned_seconds': receipt.get('seconds', SECONDS),
@@ -288,7 +391,10 @@ def status(output):
             'worker': {k: item['State'].get(k) for k in
                        ('Status', 'Running', 'StartedAt', 'FinishedAt', 'ExitCode', 'OOMKilled', 'Error')},
             'restart_count': item['RestartCount'], 'progress_age_seconds': age,
-            'last_cgroup_memory': summary.get('cgroup_memory') or progress.get('cgroup_memory'),
+            'last_cgroup_memory': memory,
+            'memory_pressure': memory_pressure(memory),
+            'failure_evidence': progress.get('failure_evidence'),
+            'retained_incidents': incidents,
             'entry_diagnostic': diagnostic,
             'worker_resource_window': progress.get('worker_resource_window'),
             'session_report': session_report(progress_path.parent,

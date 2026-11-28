@@ -1,6 +1,22 @@
 # PAPER engineering review — November 27
 
-## Assessment
+## Terminal host evidence, supplied later on November 27
+
+The retained test ended after about 4h 49m with a publisher component failure,
+exit 1, no restart and no OOM kill. Its cgroup peak reached 1 GiB and recorded
+603,798 max-boundary events. It completed 4,529 native snapshot reads without
+failure but never recovered its rejected fixture entry. Final low current memory
+is post-exit evidence, not the running working set. The concrete publisher error
+has not been supplied; cumulative memory counters do not establish its cause.
+[Exact receipt](PAPER_SOAK_20261127_HOST.json).
+
+The evidence path now retains primary and shutdown causes together and can read
+the old stopped journal's publication event without a rebuild. This closes a
+reporting gap, not the publisher incident or capacity gate. Read that durable
+cause before another host trial; keep the next application qualification short.
+[Evidence-path verification](PAPER_SOAK_TERMINAL_20261127_PROOF.json).
+
+## Earlier assessment at the 66-minute observation
 
 More RAM is not the demonstrated remedy for the first-entry failure. The earlier
 `20923e2` test did die from OOM; the current `d2e78bf` test rejected its intended
