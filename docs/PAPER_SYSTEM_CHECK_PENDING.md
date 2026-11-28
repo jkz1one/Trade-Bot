@@ -1,19 +1,31 @@
 # Recovered offline system checkpoint
 
-November 28: operator-supplied short host lifecycle passed on `9c8161e`.
+November 28: duration failed at its first entry; return to repeated short qualification.
 
-The terminal `ENTRY_GATE_PASSED` receipt records one entry, one protective exit,
-verified flat accounting, fresh feed/heartbeat at cutoff and no runtime or
-publication failures. Both scheduled decisions and all 130 native snapshots
-completed; 32 collections were delivered. Peak cgroup memory was 812,322,816
-bytes with no limit events. [Host evidence](PAPER_ENTRY_HOST_20261128.json).
+The new `9c8161e` duration attempt exited during its first minute with native
+acceptance UNKNOWN. Only 1.309 seconds remained at spawn; response read timed out.
+Peak memory was 652.48 MiB with zero limit/OOM events. This run reached no endurance
+qualification. Preserve the earlier one-round-trip short pass, but it did not
+establish reliable opening margin. [Supplied failure](PAPER_DURATION_ENTRY_FAILURE_20261128.json).
 
-Advance to the same build's new isolated 5h58m duration check. The shorter pass
-does not close the old multi-hour publisher/memory incident or establish repeated
-entry latency. Connected provider health and a full PAPER day remain unverified.
-The [current host procedure](PAPER_NEXT_SESSION.md) preserves installed `2d538b7`,
-account state, limits, timer, review hold and previous evidence. This checkpoint
-changes evidence and work order only; application and launcher bytes are unchanged.
+The candidate verifies all committed rows at the start of every fenced write,
+then reuses verified timing rows inside the same SQLite write lock while rereading
+all changed ids and all other tables. The canonical v1 hash, atomic authority,
+rollback checks, original deadlines, limits and protection remain unchanged.
+Local alternating measurements reduce large-history transaction medians about
+14–17%. [Mechanism, primary-source research and limits](PAPER_RESTORE_TRANSACTION_20261128.md).
+
+Next host qualification is `entry-repeat`: three fresh 335-second lifecycles in
+one pinned image, stopping on the first failed lifecycle or inadequate acceptance
+margin. Require terminal `ENTRY_SERIES_PASSED`, no limit/OOM events, flat accounting
+and at least twice the measured transport duration remaining at each spawn.
+This is a test threshold, not a relaxed runtime deadline. One pass no longer
+advances to duration. [Host procedure](PAPER_NEXT_SESSION.md).
+
+Preserve installed `2d538b7`, connected account, limits, timer, review hold and old
+evidence. No deploy/resume, capacity change or full-duration retry. Long-lived
+repeated entries, sustained memory/publication and provider CONNECT health remain
+open; a full connected PAPER day remains unverified.
 
 ### Previous native startup checkpoint
 

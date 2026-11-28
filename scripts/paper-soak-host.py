@@ -23,7 +23,7 @@ EVIDENCE = Path('/var/lib/trade-bot-paper-soak')
 LOCK = Path('/run/lock/trade-bot-paper-soak.lock')
 LABEL = 'trade-bot.offline-soak-v1'
 SECONDS = 21480
-PROFILES = {'entry': 335, 'duration': SECONDS}
+PROFILES = {'entry': 335, 'entry-repeat': 1005, 'duration': SECONDS}
 MEMORY = 1024**3
 BUILD_INPUTS = ('Dockerfile.paper-soak', 'Dockerfile.paper-soak.dockerignore',
                 'requirements-runtime.lock', 'requirements-build.lock', 'requirements-dev.lock',
@@ -36,7 +36,9 @@ def run_args(profile):
     if profile not in PROFILES:
         raise ValueError('KNOWN_QUALIFICATION_PROFILE_REQUIRED')
     args = list(RUN_ARGS)
-    args[args.index('--seconds') + 1] = str(PROFILES[profile])
+    args[args.index('--seconds') + 1] = str(335 if profile == 'entry-repeat' else PROFILES[profile])
+    if profile == 'entry-repeat':
+        args.append('--repeat-entry')
     return args
 
 
@@ -231,14 +233,15 @@ def failure_detail(value):
     return result
 
 
-def retained_publication_failures(output, item, receipt):
+def retained_publication_failures(output, item, receipt, *, trial=None):
     """Read a stopped disposable journal even when its final report was not saved."""
     unavailable = {'status': 'UNAVAILABLE', 'accounting_reverified': False}
     if item['State']['Running'] or item['State']['Status'] != 'exited':
         return {**unavailable, 'reason': 'WORKER_NOT_STOPPED'}
     if not isolation_matches(item, receipt):
         return {**unavailable, 'reason': 'CONTAINER_IDENTITY_OR_ISOLATION_MISMATCH'}
-    path = output / 'data/run/owner/options.db'
+    relative = f'data/run/trial-{trial}/owner/options.db' if trial in (1, 2, 3) else 'data/run/owner/options.db'
+    path = output / relative
     try:
         if (Path(receipt['data']) != output / 'data' or path.resolve(strict=True) != path
                 or not path.is_file() or not 100 <= path.stat().st_size <= 1024**3):
@@ -273,7 +276,7 @@ def retained_publication_failures(output, item, receipt):
             except ValueError:
                 at = None
             failures.append({'at': at, **failure_detail(value)})
-        return {'status': 'STORED_EVENTS_READ', 'source': 'data/run/owner/options.db',
+        return {'status': 'STORED_EVENTS_READ', 'source': relative,
                 'evidence_clock': 'ORIGINAL_SYNTHETIC_CLOCKS', 'accounting_reverified': False,
                 'publication_failures': failures}
     except (OSError, ValueError, sqlite3.Error) as exc:
@@ -337,6 +340,11 @@ def classify(item, receipt, summary, progress):
         return 'INCOMPLETE', 'CONTAINER_NOT_COMPLETED'
     if state['ExitCode'] != 0 or 'FAILED' in (summary.get('status'), progress.get('status')):
         return 'FAILED', 'SOAK_EXIT_OR_ASSERTION_FAILURE'
+    return completion(receipt, summary, progress)
+
+
+def completion(receipt, summary, progress):
+    """Evidence checks shared by single runs and each independently retained trial."""
     elapsed = progress.get('elapsed_seconds')
     profile = receipt.get('profile', 'duration')
     seconds = PROFILES[profile]
@@ -359,6 +367,89 @@ def classify(item, receipt, summary, progress):
         else 'COMPLETE_ENTRY_GATE_EVIDENCE_REQUIRED')
 
 
+def entry_margin(diagnostic):
+    """A series needs measured acceptance margin, not only a lucky fill."""
+    if not (diagnostic.get('status') == 'RECORDED' and diagnostic.get('decision_status') == 'OPEN'
+            and diagnostic.get('stored_status') == 'COMPLETE' and diagnostic.get('clocks')
+            and (diagnostic.get('cycle_timing') or {}).get('status') == 'COMPLETE'):
+        return {'status': 'UNVERIFIED'}
+    spans = (diagnostic.get('cycle_timing') or {}).get('spans') or []
+    spawn = [s for s in spans if s.get('phase') == 'NATIVE_ACCEPT_SPAWN']
+    transport = [s for s in spans if s.get('phase') == 'NATIVE_ACCEPT_TRANSPORT']
+    if len(spawn) != 1 or len(transport) != 1 or any(s.get('status') != 'COMPLETE' for s in spawn + transport):
+        return {'status': 'UNVERIFIED'}
+    budget, elapsed = spawn[0].get('remaining_at_start_seconds'), transport[0].get('elapsed_seconds')
+    if any(type(v) not in (int, float) or not math.isfinite(v) or v <= 0 for v in (budget, elapsed)):
+        return {'status': 'UNVERIFIED'}
+    return {'status': 'MET' if budget >= 2 * elapsed else 'INSUFFICIENT',
+            'remaining_at_spawn_seconds': budget, 'transport_seconds': elapsed,
+            'margin_seconds': budget - elapsed, 'minimum_budget_to_transport_ratio': 2}
+
+
+def repeat_status(output, item, receipt):
+    root = output / 'data/run'
+    series = load_optional(root / 'series.json')
+    trials = []
+    for index in range(1, 4):
+        directory = root / f'trial-{index}'
+        summary = load_optional(directory / 'summary.json')
+        progress = load_optional(directory / 'progress.json')
+        diagnostic = load_optional(directory / 'entry-diagnostic.json')
+        if not summary:
+            trials.append({'trial': index, 'status': 'NOT_STARTED'})
+            continue
+        phase, reason = completion(receipt | {'profile': 'entry'}, summary, progress)
+        margin = entry_margin(diagnostic)
+        if phase == 'ENTRY_GATE_PASSED' and margin['status'] != 'MET':
+            phase, reason = 'INCOMPLETE', 'ENTRY_MARGIN_NOT_QUALIFIED'
+        memory = memory_pressure(summary.get('cgroup_memory') or progress.get('cgroup_memory'))
+        if phase == 'ENTRY_GATE_PASSED' and memory['status'] != 'NO_LIMIT_EVENT_RECORDED':
+            phase, reason = 'INCOMPLETE', 'MEMORY_HEADROOM_NOT_QUALIFIED'
+        if 'FAILED' in (summary.get('status'), progress.get('status')):
+            phase, reason = 'FAILED', progress.get('failure') or 'TRIAL_FAILED'
+        elif progress.get('status') == 'RUNNING':
+            phase, reason = 'RUNNING', None
+        incidents = retained_publication_failures(output, item, receipt, trial=index)
+        if incidents.get('publication_failures'):
+            phase, reason = 'FAILED', 'RETAINED_PUBLICATION_FAILURE'
+        report = session_report(directory, finished=summary.get('status') != 'RUNNING')
+        trials.append({'trial': index, 'status': phase, 'reason': reason,
+                       'elapsed_seconds': progress.get('elapsed_seconds'),
+                       'execution': progress.get('execution'), 'final_accounting': progress.get('final_accounting'),
+                       'runtime_evidence_at_cutoff': report.get('runtime_evidence_at_cutoff'),
+                       'decision_count': report.get('decision_count'), 'collection': report.get('collection'),
+                       'entry_margin': margin, 'memory_pressure': memory,
+                       'failure_evidence': progress.get('failure_evidence'),
+                       'publication_failures': incidents.get('publication_failures'),
+                       'entry_diagnostic': diagnostic if phase in ('FAILED', 'INCOMPLETE') else None})
+    state = item['State']
+    active = series.get('active_trial')
+    current = root / f'trial-{active}/progress.json' if type(active) is int and 1 <= active <= 3 else root / 'series.json'
+    age = max(0, time.time() - current.stat().st_mtime) if current.exists() else None
+    outcome, reason = 'INCOMPLETE', 'THREE_COMPLETE_ENTRY_TRIALS_REQUIRED'
+    if not isolation_matches(item, receipt):
+        outcome, reason = 'UNVERIFIED', 'CONTAINER_IDENTITY_OR_ISOLATION_MISMATCH'
+    elif state['OOMKilled'] or item['RestartCount']:
+        outcome, reason = 'FAILED', 'CONTAINER_RESTART_OR_OOM'
+    elif state['Running']:
+        outcome, reason = (('RUNNING_STALE_PROGRESS', 'LAST_PROGRESS_OVER_90_SECONDS_OLD') if age is not None and age > 90
+                           else ('RUNNING', None) if age is not None
+                           else ('RUNNING_AWAITING_PROGRESS', 'NO_PROGRESS_RECEIPT_YET'))
+    elif state['ExitCode'] != 0 or series.get('status') == 'FAILED':
+        outcome, reason = 'FAILED', 'ENTRY_SERIES_FAILED'
+    elif (state['Status'] == 'exited' and series.get('status') == 'PASSED'
+          and series.get('repetitions') == 3 and series.get('seconds_each') == 335
+          and series.get('application_manifest_sha256') == receipt['application_manifest_sha256']
+          and all(t['status'] == 'ENTRY_GATE_PASSED' for t in trials)):
+        outcome, reason = 'ENTRY_SERIES_PASSED', None
+    return {'status': outcome, 'reason': reason, 'observed_at': datetime.now(UTC).isoformat(),
+            'qualification_profile': 'entry-repeat', 'planned_seconds': 1005,
+            'evidence_directory': str(output), 'release': receipt['release'], 'image_id': receipt['image_id'],
+            'worker': {k: state.get(k) for k in ('Status', 'Running', 'StartedAt', 'FinishedAt', 'ExitCode', 'OOMKilled')},
+            'restart_count': item['RestartCount'], 'active_trial': active, 'progress_age_seconds': age, 'trials': trials,
+            'connected_health': 'UNVERIFIED', 'live_enabled': False, 'state_modified': False}
+
+
 def status(output):
     receipt = json.loads((output / 'host.json').read_text())
     if 'container_id' not in receipt:
@@ -367,6 +458,8 @@ def status(output):
     if len(items) != 1:
         raise ValueError('EXACT_CONTAINER_REQUIRED')
     item = items[0]
+    if receipt.get('profile') == 'entry-repeat':
+        return repeat_status(output, item, receipt)
     progress_path = Path(receipt['data']) / 'run/progress.json'
     summary = load_optional(progress_path.with_name('summary.json'))
     progress = load_optional(progress_path)
@@ -418,7 +511,7 @@ if __name__ == '__main__':
     launch = sub.add_parser('start')
     launch.add_argument('--checkout', type=Path, required=True)
     launch.add_argument('--profile', choices=tuple(PROFILES), default='duration',
-                        help='entry: 335-second lifecycle gate; duration: full worker window')
+                        help='entry: 335 seconds; entry-repeat: three fresh entry trials; duration: full window')
     sub.add_parser('status').add_argument('--evidence', type=Path, required=True)
     args = parser.parse_args()
     try:
@@ -428,4 +521,4 @@ if __name__ == '__main__':
                   'reason': str(exc)[:160], 'live_enabled': False}
     print(json.dumps(result, indent=2))
     raise SystemExit(0 if result['status'] in (
-        'RUNNING', 'RUNNING_STALE_PROGRESS', 'RUNNING_AWAITING_PROGRESS', 'PASSED', 'ENTRY_GATE_PASSED') else 1)
+        'RUNNING', 'RUNNING_STALE_PROGRESS', 'RUNNING_AWAITING_PROGRESS', 'PASSED', 'ENTRY_GATE_PASSED', 'ENTRY_SERIES_PASSED') else 1)

@@ -1,26 +1,31 @@
 # Autonomous Compounding Trader: source of truth
 
-Version 1.244. November 28, New York time. Short host lifecycle passed; endurance open.
+Version 1.245. November 28: duration failed at its first entry; return to repeated short qualification.
 
-The operator supplied `ENTRY_GATE_PASSED` for `9c8161e`: one simulated entry,
-one protective exit, verified flat accounting, both scheduled decisions complete,
-32 delivered collections and 130 successful native snapshots. The worker exited
-normally with zero restarts. Feed and heartbeat were fresh at the report cutoff.
-Peak memory was 812,322,816 bytes under the unchanged 1-GiB limit, with no limit
-or OOM events during this short run. [Supplied host evidence](PAPER_ENTRY_HOST_20261128.json).
+The new `9c8161e` duration attempt exited during its first minute with native
+acceptance UNKNOWN. Only 1.309 seconds remained at spawn; response read timed out.
+Peak memory was 652.48 MiB with zero limit/OOM events. This run reached no endurance
+qualification. Preserve the earlier one-round-trip short pass, but it did not
+establish reliable opening margin. [Supplied failure](PAPER_DURATION_ENTRY_FAILURE_20261128.json).
 
-This is one synthetic lifecycle, not sustained or connected acceptance. Native
-transport took 1.294 seconds with 2.414 seconds left at spawn; the prior failure
-had only 1.228 seconds left. The changed lease margin and owner timings prevent
-attributing the pass solely to the import repair. Multi-hour memory/publication,
-repeated active lifecycles and provider CONNECT health remain open.
+The candidate verifies all committed rows at the start of every fenced write,
+then reuses verified timing rows inside the same SQLite write lock while rereading
+all changed ids and all other tables. The canonical v1 hash, atomic authority,
+rollback checks, original deadlines, limits and protection remain unchanged.
+Local alternating measurements reduce large-history transaction medians about
+14–17%. [Mechanism, primary-source research and limits](PAPER_RESTORE_TRANSACTION_20261128.md).
 
-Next: run the same pinned `9c8161e` implementation in a new isolated `duration`
-profile, 21,480 seconds (5h 58m), to cross the old 4h49m failure point. Its mostly
-flat workload measures endurance only. [Host procedure](PAPER_NEXT_SESSION.md)
-and [remaining qualification](PAPER_ENGINEERING_REVIEW_20261127.md) govern the
-next steps. Preserve installed `2d538b7`, connected state, limits, timer, review
-hold and old evidence. No connected deployment or resume is qualified by this pass.
+Next host qualification is `entry-repeat`: three fresh 335-second lifecycles in
+one pinned image, stopping on the first failed lifecycle or inadequate acceptance
+margin. Require terminal `ENTRY_SERIES_PASSED`, no limit/OOM events, flat accounting
+and at least twice the measured transport duration remaining at each spawn.
+This is a test threshold, not a relaxed runtime deadline. One pass no longer
+advances to duration. [Host procedure](PAPER_NEXT_SESSION.md).
+
+Preserve installed `2d538b7`, connected account, limits, timer, review hold and old
+evidence. No deploy/resume, capacity change or full-duration retry. Long-lived
+repeated entries, sustained memory/publication and provider CONNECT health remain
+open; a full connected PAPER day remains unverified.
 
 ### Previous native startup checkpoint
 

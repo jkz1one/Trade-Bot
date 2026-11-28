@@ -86,6 +86,79 @@ def test_short_profile_only_changes_duration_not_container_limits():
         host.start(Path('/absent'), profile='arbitrary')
 
 
+def test_repeat_profile_preserves_short_limits_and_uses_same_image():
+    args = ('offline', 'a' * 40, 'sha256:' + 'b' * 64, Path('/fresh/data'))
+    assert host.create_args(*args, profile='entry-repeat') == host.create_args(*args, profile='entry') + ['--repeat-entry']
+
+
+def series_files(tmp_path, evidence):
+    item, receipt, summary, progress = entry_evidence(evidence)
+    receipt.update(profile='entry-repeat', seconds=1005, data=str(tmp_path / 'data'))
+    item['Mounts'][0]['Source'] = receipt['data']
+    item['Config']['Cmd'] = host.run_args('entry-repeat')
+    root = tmp_path / 'data/run'
+    root.mkdir(parents=True)
+    series = {'status': 'PASSED', 'repetitions': 3, 'seconds_each': 335,
+              'application_manifest_sha256': receipt['application_manifest_sha256']}
+    (root / 'series.json').write_text(json.dumps(series))
+    summary['cgroup_memory'] = {'status': 'OBSERVED', 'max_bytes': host.MEMORY, 'peak_bytes': 700000000,
+                                'events': {'max': 0, 'oom': 0, 'oom_kill': 0}}
+    diagnostic = {'status': 'RECORDED', 'decision_status': 'OPEN', 'stored_status': 'COMPLETE',
+                  'clocks': {'deadline': 'original'}, 'cycle_timing': {'status': 'COMPLETE', 'spans': [
+                      {'phase': 'NATIVE_ACCEPT_SPAWN', 'status': 'COMPLETE', 'remaining_at_start_seconds': 3},
+                      {'phase': 'NATIVE_ACCEPT_TRANSPORT', 'status': 'COMPLETE', 'elapsed_seconds': 1}]}}
+    for i in range(1, 4):
+        directory = root / f'trial-{i}'
+        directory.mkdir()
+        for name, value in [('summary.json', summary), ('progress.json', progress), ('entry-diagnostic.json', diagnostic)]:
+            (directory / name).write_text(json.dumps(value))
+    return item, receipt, root
+
+
+@pytest.mark.parametrize('defect', [None, 'missing', 'hash', 'elapsed', 'margin', 'oom', 'memory', 'exit', 'running', 'restart', 'isolation'])
+def test_repeat_requires_every_original_clock_lifecycle_and_outer_container(tmp_path, evidence, defect):
+    item, receipt, root = series_files(tmp_path, evidence)
+    if defect in ('missing', 'hash', 'elapsed', 'margin', 'memory'):
+        name = {'missing': 'summary.json', 'hash': 'summary.json', 'elapsed': 'progress.json',
+                'margin': 'entry-diagnostic.json', 'memory': 'summary.json'}[defect]
+        path = root / 'trial-2' / name
+        data = json.loads(path.read_text())
+        if defect == 'missing':
+            path.unlink()
+        else:
+            if defect == 'hash': data['application_manifest_sha256'] = 'other'
+            elif defect == 'elapsed': data['elapsed_seconds'] = 42
+            elif defect == 'margin': data['cycle_timing']['spans'][0]['remaining_at_start_seconds'] = 1.3
+            elif defect == 'memory': data['cgroup_memory']['events']['max'] = 1
+            path.write_text(json.dumps(data))
+    elif defect == 'oom': item['State']['OOMKilled'] = True
+    elif defect == 'exit': item['State']['ExitCode'] = 1
+    elif defect == 'running': item['State']['Running'] = True
+    elif defect == 'restart': item['RestartCount'] = 1
+    elif defect == 'isolation': item['HostConfig']['NetworkMode'] = 'host'
+    result = host.repeat_status(tmp_path, item, receipt)
+    assert (result['status'] == 'ENTRY_SERIES_PASSED') == (defect is None)
+
+
+@pytest.mark.parametrize('budget,elapsed', [(1.3, 1.3), (None, 1), (3, float('nan')), (True, 1), (3, 0)])
+def test_entry_margin_rejects_missing_invalid_or_insufficient_budget(tmp_path, evidence, budget, elapsed):
+    _, _, root = series_files(tmp_path, evidence)
+    diagnostic = json.loads((root / 'trial-1/entry-diagnostic.json').read_text())
+    diagnostic['cycle_timing']['spans'][0]['remaining_at_start_seconds'] = budget
+    diagnostic['cycle_timing']['spans'][1]['elapsed_seconds'] = elapsed
+    assert host.entry_margin(diagnostic)['status'] != 'MET'
+
+
+def test_running_series_requires_fresh_progress_not_only_a_running_container(tmp_path, evidence):
+    item, receipt, root = series_files(tmp_path, evidence)
+    item['State']['Running'] = True
+    series = json.loads((root / 'series.json').read_text()) | {'active_trial': 2}
+    (root / 'series.json').write_text(json.dumps(series))
+    path = root / 'trial-2/progress.json'
+    os.utime(path, (0, 0))
+    assert host.repeat_status(tmp_path, item, receipt)['status'] == 'RUNNING_STALE_PROGRESS'
+
+
 @pytest.mark.parametrize('which,key,value', [
     (2, 'status', 'RUNNING'), (2, 'status', None), (2, 'child_exit_code', 2),
     (2, 'application_manifest_sha256', 'other'), (2, 'seconds', 335), (2, 'seed_mib', 68),

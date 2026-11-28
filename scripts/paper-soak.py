@@ -174,6 +174,58 @@ def run(output, seconds, seed_mib, *, cpus=1, max_feed_recoveries=0, profile_ope
     return result
 
 
+def repeat(output, seconds, seed_mib, *, cpus=1, profile_opening_restore=False):
+    """Three fresh worker processes/accounts; retain every attempt and fail fast."""
+    identity = validate(output, seconds, seed_mib)
+    if seconds > 335:
+        raise ValueError('REPEATED_ENTRY_MAXIMUM_335_SECONDS')
+    output.mkdir(mode=0o700)
+    result = {'version': 'paper-entry-series-v1', 'status': 'RUNNING', **identity,
+              'repetitions': 3, 'seconds_each': seconds, 'seed_mib': seed_mib,
+              'trials': [], 'provider_calls': False, 'live_enabled': False}
+
+    def save_series():
+        pending = output / 'series.pending'
+        with pending.open('w') as stream:
+            json.dump(result, stream, indent=2)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(pending, output / 'series.json')
+
+    save_series()
+    try:
+        for index in range(1, 4):
+            result['active_trial'] = index
+            save_series()
+            value = run(output / f'trial-{index}', seconds, seed_mib, cpus=cpus,
+                        profile_opening_restore=profile_opening_restore)
+            result['trials'].append({'trial': index, 'status': value['status'],
+                                     'child_exit_code': value.get('child_exit_code')})
+            if value['status'] != 'PASSED':
+                result['status'] = 'FAILED'
+                return result
+            spec = importlib.util.spec_from_file_location('entry_qualification', ROOT / 'scripts/paper-soak-host.py')
+            qualification = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(qualification)
+            diagnostic = json.loads((output / f'trial-{index}/entry-diagnostic.json').read_text())
+            margin = qualification.entry_margin(diagnostic)
+            result['trials'][-1]['entry_margin'] = margin
+            if margin['status'] != 'MET':
+                result.update(status='FAILED', reason='ENTRY_MARGIN_NOT_QUALIFIED')
+                return result
+            memory = qualification.memory_pressure(value.get('cgroup_memory'))
+            if memory['status'] not in ('UNAVAILABLE', 'NO_LIMIT_EVENT_RECORDED'):
+                result.update(status='FAILED', reason='MEMORY_HEADROOM_NOT_QUALIFIED')
+                return result
+        result['status'] = 'PASSED'
+    except BaseException:
+        result['status'] = 'FAILED'
+        raise
+    finally:
+        save_series()
+    return result
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
@@ -185,10 +237,18 @@ if __name__ == "__main__":
                         help="Reviewed flat feed recoveries in this disposable run")
     parser.add_argument("--profile-opening-restore", action="store_true",
                         help="Measure journal verification CPU and elapsed time during the first approved opening")
+    parser.add_argument('--repeat-entry', action='store_true',
+                        help='Run three fresh short lifecycles sequentially; retain and stop on failure')
     args = parser.parse_args()
     try:
-        value = run(args.output, args.seconds, args.seed_mib, cpus=args.cpus,
-                    max_feed_recoveries=args.max_feed_recoveries, profile_opening_restore=args.profile_opening_restore)
+        if args.repeat_entry:
+            if args.max_feed_recoveries:
+                raise ValueError('REPEATED_ENTRY_RECOVERY_MUST_BE_ZERO')
+            value = repeat(args.output, args.seconds, args.seed_mib, cpus=args.cpus,
+                           profile_opening_restore=args.profile_opening_restore)
+        else:
+            value = run(args.output, args.seconds, args.seed_mib, cpus=args.cpus,
+                        max_feed_recoveries=args.max_feed_recoveries, profile_opening_restore=args.profile_opening_restore)
     except (OSError, ValueError) as exc:
         value = {"status": "UNAVAILABLE", "reason": str(exc), "live_enabled": False}
     print(json.dumps(value, sort_keys=True))

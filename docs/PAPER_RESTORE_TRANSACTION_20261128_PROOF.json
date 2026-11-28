@@ -1,0 +1,1068 @@
+{
+  "version": "paper-restore-transaction-20261128-proof-v1",
+  "synthetic": true,
+  "provider_calls": false,
+  "live_enabled": false,
+  "source_base_commit": "7dd88c90cab9d2b9b56aaeb6d3d248c397d9443f",
+  "changed_application_sha256": {
+    "app/execution/journal.py": "70660175fcd64f73aa020fe886621106783199f772f875ff196d827c7ba06c28",
+    "app/execution/restore.py": "71a41ccb9733ffde3f6d995d298683f898316d1bd040d3005e843d8b514088d5",
+    "app/execution/restore_transaction.py": "48ee8fcad866de7e465eb30a8e896c47b992abd3aab7e9bfb66f9cf99581a8e4"
+  },
+  "wheel_sha256": "3270c6d4cdffde7a0ca86712c818de15ecc28018413d049d99c4ce7fddb42dd5",
+  "installed_application_manifest_sha256": "0d96d7de25f52ef2737827f9368793a7e5f710aca056edeeff7bb3786b95209d",
+  "application_files": 341,
+  "runtime_pins_verified": 60,
+  "installed_regressions": {
+    "passed": 382,
+    "seconds": 62.12,
+    "network": "Existing synthetic tests; real child processes use noneditable installed package",
+    "scope": [
+      "canonical legacy digest equivalence",
+      "tamper/rollback/authority and competing writer checks",
+      "cached statements, trigger, FK, REPLACE and bypass fallbacks",
+      "entry expiry and uncertain-order recovery",
+      "stock/option protection and settlement",
+      "soak lifecycle, fail-fast series and host identity checks"
+    ],
+    "additional_check": "Fresh-progress series check: 1 passed in 0.12s after the 381-test run"
+  },
+  "benchmark": {
+    "version": "restore-transaction-benchmark-v1",
+    "synthetic": true,
+    "cpu_affinity": [
+      0
+    ],
+    "seed_mib": 112,
+    "trials": [
+      {
+        "policy": "full_scan",
+        "samples": [
+          {
+            "wall_seconds": 0.37104945100145414,
+            "cpu_seconds": 0.36619191800000017
+          },
+          {
+            "wall_seconds": 0.37157208799908403,
+            "cpu_seconds": 0.3676583720000002
+          },
+          {
+            "wall_seconds": 0.3500153809982294,
+            "cpu_seconds": 0.34591176900000065
+          },
+          {
+            "wall_seconds": 0.3561706820000836,
+            "cpu_seconds": 0.35203168999999956
+          },
+          {
+            "wall_seconds": 0.35629081200022483,
+            "cpu_seconds": 0.3522978479999992
+          },
+          {
+            "wall_seconds": 0.3704979069989349,
+            "cpu_seconds": 0.366102111
+          }
+        ],
+        "warm_median_seconds": 0.35629081200022483,
+        "canonical_v1_hash_matches": true,
+        "restore_status": "VERIFIED"
+      },
+      {
+        "policy": "transaction_reuse",
+        "samples": [
+          {
+            "wall_seconds": 0.24669026199990185,
+            "cpu_seconds": 0.2419538320000001
+          },
+          {
+            "wall_seconds": 0.3066860569997516,
+            "cpu_seconds": 0.3019066620000004
+          },
+          {
+            "wall_seconds": 0.305375317002472,
+            "cpu_seconds": 0.30131023500000076
+          },
+          {
+            "wall_seconds": 0.30985422800222295,
+            "cpu_seconds": 0.30526672000000055
+          },
+          {
+            "wall_seconds": 0.3078504469995096,
+            "cpu_seconds": 0.3035881679999992
+          },
+          {
+            "wall_seconds": 0.3097206169986748,
+            "cpu_seconds": 0.3054425399999996
+          }
+        ],
+        "warm_median_seconds": 0.3078504469995096,
+        "canonical_v1_hash_matches": true,
+        "restore_status": "VERIFIED"
+      },
+      {
+        "policy": "full_scan",
+        "samples": [
+          {
+            "wall_seconds": 0.36104903600062244,
+            "cpu_seconds": 0.3568503930000002
+          },
+          {
+            "wall_seconds": 0.3616176110008382,
+            "cpu_seconds": 0.3582699619999996
+          },
+          {
+            "wall_seconds": 0.3636697039983119,
+            "cpu_seconds": 0.35262118099999995
+          },
+          {
+            "wall_seconds": 0.40877472200008924,
+            "cpu_seconds": 0.3940551729999999
+          },
+          {
+            "wall_seconds": 0.3529956240017782,
+            "cpu_seconds": 0.3495424420000006
+          },
+          {
+            "wall_seconds": 0.3485746179976559,
+            "cpu_seconds": 0.3440957840000003
+          }
+        ],
+        "warm_median_seconds": 0.3616176110008382,
+        "canonical_v1_hash_matches": true,
+        "restore_status": "VERIFIED"
+      },
+      {
+        "policy": "transaction_reuse",
+        "samples": [
+          {
+            "wall_seconds": 0.23511659099676763,
+            "cpu_seconds": 0.23065369699999927
+          },
+          {
+            "wall_seconds": 0.3299085559992818,
+            "cpu_seconds": 0.32042802000000137
+          },
+          {
+            "wall_seconds": 0.2994630559987854,
+            "cpu_seconds": 0.2939222690000012
+          },
+          {
+            "wall_seconds": 0.30107121399851167,
+            "cpu_seconds": 0.29727672799999993
+          },
+          {
+            "wall_seconds": 0.3026647980004782,
+            "cpu_seconds": 0.2987337719999985
+          },
+          {
+            "wall_seconds": 0.3014724770000612,
+            "cpu_seconds": 0.29693517899999833
+          }
+        ],
+        "warm_median_seconds": 0.3014724770000612,
+        "canonical_v1_hash_matches": true,
+        "restore_status": "VERIFIED"
+      }
+    ],
+    "provider_calls": false,
+    "live_enabled": false,
+    "scope": "Same process, alternating transaction policies; no host latency claim",
+    "seed_rows": 30006,
+    "database_bytes": 123351040,
+    "peak_process_rss_bytes": 500699136,
+    "status": "RECORDED"
+  },
+  "repeated_local_entry": {
+    "series": {
+      "version": "paper-entry-series-v1",
+      "status": "PASSED",
+      "application_files": 341,
+      "runtime_pins": 60,
+      "application_manifest_sha256": "0d96d7de25f52ef2737827f9368793a7e5f710aca056edeeff7bb3786b95209d",
+      "repetitions": 3,
+      "seconds_each": 90,
+      "seed_mib": 112,
+      "trials": [
+        {
+          "trial": 1,
+          "status": "PASSED",
+          "child_exit_code": 0,
+          "entry_margin": {
+            "status": "MET",
+            "remaining_at_spawn_seconds": 3.785528,
+            "transport_seconds": 0.528778,
+            "margin_seconds": 3.25675,
+            "minimum_budget_to_transport_ratio": 2
+          }
+        },
+        {
+          "trial": 2,
+          "status": "PASSED",
+          "child_exit_code": 0,
+          "entry_margin": {
+            "status": "MET",
+            "remaining_at_spawn_seconds": 3.667917,
+            "transport_seconds": 0.46767,
+            "margin_seconds": 3.200247,
+            "minimum_budget_to_transport_ratio": 2
+          }
+        },
+        {
+          "trial": 3,
+          "status": "PASSED",
+          "child_exit_code": 0,
+          "entry_margin": {
+            "status": "MET",
+            "remaining_at_spawn_seconds": 3.816684,
+            "transport_seconds": 0.499927,
+            "margin_seconds": 3.316757,
+            "minimum_budget_to_transport_ratio": 2
+          }
+        }
+      ],
+      "provider_calls": false,
+      "live_enabled": false,
+      "active_trial": 3
+    },
+    "trials": [
+      {
+        "trial": 1,
+        "summary": {
+          "version": "paper-soak-launch-v1",
+          "status": "PASSED",
+          "application_files": 341,
+          "runtime_pins": 60,
+          "application_manifest_sha256": "0d96d7de25f52ef2737827f9368793a7e5f710aca056edeeff7bb3786b95209d",
+          "seconds": 90,
+          "seed_mib": 112,
+          "max_feed_recoveries": 0,
+          "worker_cpu_affinity": [
+            0
+          ],
+          "network": "ISOLATED",
+          "host_acceptance": "UNVERIFIED",
+          "wall_clock_soak": "NOT_RUN",
+          "synthetic": true,
+          "provider_calls": false,
+          "model_service_calls": false,
+          "live_enabled": false,
+          "worker_pid": 2,
+          "worker_start_ticks": "2638499",
+          "child_exit_code": 0,
+          "cgroup_memory": {
+            "status": "UNAVAILABLE"
+          }
+        },
+        "progress": {
+          "status": "PASSED",
+          "elapsed_seconds": 90.9192860430012,
+          "native_snapshot_calls": 51,
+          "native_snapshot_failures": 0,
+          "native_snapshot_max_seconds": 0.15687853999770596,
+          "capture_attempts": 9,
+          "peak_tree_rss_bytes": 449708032,
+          "source_database_bytes": 126001152,
+          "decision_coverage": {
+            "expected": 1,
+            "evaluated": 1,
+            "coverage_percent": 100.0,
+            "unmeasured_slots": [],
+            "target_met": true
+          },
+          "execution": {
+            "status": "RECORDED",
+            "entry_fills": 1,
+            "exit_fills": 1,
+            "completed_round_trips": 1,
+            "carry_in_exits": 0
+          },
+          "final_accounting": "VERIFIED_FLAT",
+          "failure": null,
+          "children_reaped": true
+        },
+        "entry_diagnostic": {
+          "decision_status": "OPEN",
+          "clocks": {
+            "as_of": "2026-10-28T14:00:16.099817Z",
+            "deadline": "2026-10-28T14:00:21.099817Z",
+            "account_captured_at": "2026-10-28T14:00:15.321526Z",
+            "account_max_age_seconds": 20,
+            "quote_max_age_seconds": 10,
+            "model_completed_at": "2026-10-28T14:00:16.808272+00:00",
+            "review_at": "2026-10-28T14:00:17.079582+00:00",
+            "options": [
+              {
+                "source_at": "2026-10-28T14:00:13.877333Z",
+                "received_at": "2026-10-28T14:00:14.877333Z",
+                "admission_deadline": "2026-10-28T14:00:21.099817Z"
+              },
+              {
+                "source_at": "2026-10-28T14:00:13.877333Z",
+                "received_at": "2026-10-28T14:00:14.877333Z",
+                "admission_deadline": "2026-10-28T14:00:21.099817Z"
+              }
+            ]
+          },
+          "cycle_timing": {
+            "started_at": "2026-10-28T14:00:15.756795+00:00",
+            "elapsed_seconds": 3.036495,
+            "generation": 2,
+            "kind": "CYCLE",
+            "native": [
+              {
+                "child_stages": [
+                  {
+                    "cpu_seconds": 2e-06,
+                    "elapsed_seconds": 5e-06,
+                    "stage": "IMPORTS"
+                  },
+                  {
+                    "cpu_seconds": 0.225267,
+                    "elapsed_seconds": 0.461264,
+                    "stage": "REQUEST"
+                  },
+                  {
+                    "cpu_seconds": 0.226531,
+                    "elapsed_seconds": 0.466756,
+                    "stage": "VENUE_OPEN"
+                  },
+                  {
+                    "cpu_seconds": 0.228518,
+                    "elapsed_seconds": 0.468743,
+                    "stage": "ACCEPT"
+                  },
+                  {
+                    "cpu_seconds": 0.231399,
+                    "elapsed_seconds": 0.477257,
+                    "stage": "SERIALIZE"
+                  },
+                  {
+                    "cpu_seconds": 0.231433,
+                    "elapsed_seconds": 0.477303,
+                    "stage": "COMPLETE"
+                  }
+                ],
+                "child_trace_status": "OBSERVED",
+                "elapsed_seconds": 0.529,
+                "parent_phase": "RESPONSE_VALIDATE"
+              }
+            ],
+            "native_omitted": 0,
+            "packet_age_seconds": 0.879462,
+            "packet_sequence": 2,
+            "packet_sha256": "8673dd4dadc942615516d0bf156a55725998c0088e28f2facae04b0f03900f47",
+            "slot": 5977320,
+            "spans": [
+              {
+                "elapsed_seconds": 0.319581,
+                "phase": "CYCLE_OPPORTUNITY_CLAIM",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.009506,
+                "phase": "SCAN",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.333303,
+                "phase": "STOCK_SCAN",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.00127,
+                "phase": "SCOPE_SCAN",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.009307,
+                "phase": "ENTRY_MODEL_ADMISSION",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.339072,
+                "phase": "ENTRY_MODEL_REQUEST",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.002104,
+                "model_source_key": "degen:5977320:portfolio:0",
+                "phase": "ENTRY_MODEL",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.000759,
+                "phase": "ENTRY_MIXED_SELECTION",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.010063,
+                "phase": "ENTRY_SCOPE_RECEIPT_CHECK",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.000501,
+                "phase": "ENTRY_SCOPE_SELECTION",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.003624,
+                "phase": "ENTRY_OPTION_MARKET_READ",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.027287,
+                "phase": "ENTRY_REVIEW",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.063187,
+                "local_age_seconds": 2.230573,
+                "phase": "ADMISSION",
+                "quote_age_seconds": 3.230573,
+                "receive_lag_seconds": 1.0,
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.502702,
+                "phase": "ENTRY_SETTLEMENT_AND_RESERVATION",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.002933,
+                "phase": "NATIVE_ACCEPT_SPAWN",
+                "remaining_at_start_seconds": 3.785528,
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.528778,
+                "phase": "NATIVE_ACCEPT_TRANSPORT",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.530425,
+                "phase": "NATIVE_ACCEPT",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.786874,
+                "local_age_seconds": 2.293792,
+                "phase": "DISPATCH",
+                "quote_age_seconds": 3.293792,
+                "receive_lag_seconds": 1.0,
+                "status": "COMPLETE"
+              }
+            ],
+            "spans_omitted": 0,
+            "status": "COMPLETE",
+            "trace_start_prepare_seconds": 0.002863,
+            "trace_storage": "COALESCED",
+            "version": "runtime-timing-v1"
+          },
+          "restore_to_review": {
+            "status": "OBSERVED",
+            "window_seconds": 3.202249,
+            "wall_seconds_with_digest_running": 2.348729,
+            "wholly_contained_calls": 14,
+            "owner_thread_cpu_seconds": 2.108692,
+            "background_cpu_seconds": 0.228619,
+            "owner_thread_calls": {
+              "app.mixed.portfolio_execution.reconcile": 4,
+              "app.options.runtime._tick": 2,
+              "app.options.coordinator._cycle_once": 2,
+              "app.mixed.selection.collect": 2,
+              "app.options.entry_coordination._admit_request": 2,
+              "app.options.entry_coordination._settle_and_reserve": 1
+            }
+          }
+        },
+        "report_cutoff": {
+          "window_end": "2026-10-28T14:01:30.919293+00:00",
+          "runtime_evidence": {
+            "heartbeat": "FRESH",
+            "heartbeat_at": "2026-10-28T14:01:29.290777+00:00",
+            "heartbeat_age_seconds": 1.628516,
+            "heartbeat_max_age_seconds": 20,
+            "feed": "FRESH",
+            "feed_at": "2026-10-28T14:01:25.861103+00:00",
+            "feed_age_seconds": 5.05819,
+            "feed_max_age_seconds": 30
+          },
+          "run_execution": {
+            "status": "RECORDED",
+            "entry_fills": 1,
+            "exit_fills": 1,
+            "completed_round_trips": 1,
+            "carry_in_exits": 0
+          },
+          "cycle_count": 1,
+          "decision_count": 1,
+          "runtime_failures": [],
+          "publication_failures": [],
+          "run_issues": []
+        }
+      },
+      {
+        "trial": 2,
+        "summary": {
+          "version": "paper-soak-launch-v1",
+          "status": "PASSED",
+          "application_files": 341,
+          "runtime_pins": 60,
+          "application_manifest_sha256": "0d96d7de25f52ef2737827f9368793a7e5f710aca056edeeff7bb3786b95209d",
+          "seconds": 90,
+          "seed_mib": 112,
+          "max_feed_recoveries": 0,
+          "worker_cpu_affinity": [
+            0
+          ],
+          "network": "ISOLATED",
+          "host_acceptance": "UNVERIFIED",
+          "wall_clock_soak": "NOT_RUN",
+          "synthetic": true,
+          "provider_calls": false,
+          "model_service_calls": false,
+          "live_enabled": false,
+          "worker_pid": 69,
+          "worker_start_ticks": "2648306",
+          "child_exit_code": 0,
+          "cgroup_memory": {
+            "status": "UNAVAILABLE"
+          }
+        },
+        "progress": {
+          "status": "PASSED",
+          "elapsed_seconds": 90.86964607100163,
+          "native_snapshot_calls": 51,
+          "native_snapshot_failures": 0,
+          "native_snapshot_max_seconds": 0.1181430709984852,
+          "capture_attempts": 9,
+          "peak_tree_rss_bytes": 444682240,
+          "source_database_bytes": 125992960,
+          "decision_coverage": {
+            "expected": 1,
+            "evaluated": 1,
+            "coverage_percent": 100.0,
+            "unmeasured_slots": [],
+            "target_met": true
+          },
+          "execution": {
+            "status": "RECORDED",
+            "entry_fills": 1,
+            "exit_fills": 1,
+            "completed_round_trips": 1,
+            "carry_in_exits": 0
+          },
+          "final_accounting": "VERIFIED_FLAT",
+          "failure": null,
+          "children_reaped": true
+        },
+        "entry_diagnostic": {
+          "decision_status": "OPEN",
+          "clocks": {
+            "as_of": "2026-10-28T14:00:15.888549Z",
+            "deadline": "2026-10-28T14:00:20.888549Z",
+            "account_captured_at": "2026-10-28T14:00:15.173818Z",
+            "account_max_age_seconds": 20,
+            "quote_max_age_seconds": 10,
+            "model_completed_at": "2026-10-28T14:00:16.609034+00:00",
+            "review_at": "2026-10-28T14:00:16.980897+00:00",
+            "options": [
+              {
+                "source_at": "2026-10-28T14:00:13.743651Z",
+                "received_at": "2026-10-28T14:00:14.743651Z",
+                "admission_deadline": "2026-10-28T14:00:20.888549Z"
+              },
+              {
+                "source_at": "2026-10-28T14:00:13.743651Z",
+                "received_at": "2026-10-28T14:00:14.743651Z",
+                "admission_deadline": "2026-10-28T14:00:20.888549Z"
+              }
+            ]
+          },
+          "cycle_timing": {
+            "started_at": "2026-10-28T14:00:15.556453+00:00",
+            "elapsed_seconds": 3.067187,
+            "generation": 2,
+            "kind": "CYCLE",
+            "native": [
+              {
+                "child_stages": [
+                  {
+                    "cpu_seconds": 2e-06,
+                    "elapsed_seconds": 6e-06,
+                    "stage": "IMPORTS"
+                  },
+                  {
+                    "cpu_seconds": 0.199325,
+                    "elapsed_seconds": 0.400051,
+                    "stage": "REQUEST"
+                  },
+                  {
+                    "cpu_seconds": 0.200296,
+                    "elapsed_seconds": 0.405897,
+                    "stage": "VENUE_OPEN"
+                  },
+                  {
+                    "cpu_seconds": 0.202003,
+                    "elapsed_seconds": 0.407603,
+                    "stage": "ACCEPT"
+                  },
+                  {
+                    "cpu_seconds": 0.204801,
+                    "elapsed_seconds": 0.415806,
+                    "stage": "SERIALIZE"
+                  },
+                  {
+                    "cpu_seconds": 0.204832,
+                    "elapsed_seconds": 0.415976,
+                    "stage": "COMPLETE"
+                  }
+                ],
+                "child_trace_status": "OBSERVED",
+                "elapsed_seconds": 0.467,
+                "parent_phase": "RESPONSE_VALIDATE"
+              }
+            ],
+            "native_omitted": 0,
+            "packet_age_seconds": 0.812802,
+            "packet_sequence": 2,
+            "packet_sha256": "a3ff5f3355009140c5d2860788765d75bca6c2bea54dbe69be301de868c993e1",
+            "slot": 5977320,
+            "spans": [
+              {
+                "elapsed_seconds": 0.311782,
+                "phase": "CYCLE_OPPORTUNITY_CLAIM",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.008018,
+                "phase": "SCAN",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.336369,
+                "phase": "STOCK_SCAN",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.001174,
+                "phase": "SCOPE_SCAN",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.008954,
+                "phase": "ENTRY_MODEL_ADMISSION",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.351948,
+                "phase": "ENTRY_MODEL_REQUEST",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.00175,
+                "model_source_key": "degen:5977320:portfolio:0",
+                "phase": "ENTRY_MODEL",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.001392,
+                "phase": "ENTRY_MIXED_SELECTION",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.011921,
+                "phase": "ENTRY_SCOPE_RECEIPT_CHECK",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.000493,
+                "phase": "ENTRY_SCOPE_SELECTION",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.003205,
+                "phase": "ENTRY_OPTION_MARKET_READ",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.026123,
+                "phase": "ENTRY_REVIEW",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.061917,
+                "local_age_seconds": 2.263782,
+                "phase": "ADMISSION",
+                "quote_age_seconds": 3.263782,
+                "receive_lag_seconds": 1.0,
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.608,
+                "phase": "ENTRY_SETTLEMENT_AND_RESERVATION",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.003134,
+                "phase": "NATIVE_ACCEPT_SPAWN",
+                "remaining_at_start_seconds": 3.667917,
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.46767,
+                "phase": "NATIVE_ACCEPT_TRANSPORT",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.469891,
+                "phase": "NATIVE_ACCEPT",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.797099,
+                "local_age_seconds": 2.32575,
+                "phase": "DISPATCH",
+                "quote_age_seconds": 3.32575,
+                "receive_lag_seconds": 1.0,
+                "status": "COMPLETE"
+              }
+            ],
+            "spans_omitted": 0,
+            "status": "COMPLETE",
+            "trace_start_prepare_seconds": 0.002744,
+            "trace_storage": "COALESCED",
+            "version": "runtime-timing-v1"
+          },
+          "restore_to_review": {
+            "status": "OBSERVED",
+            "window_seconds": 3.237246,
+            "wall_seconds_with_digest_running": 2.302629,
+            "wholly_contained_calls": 13,
+            "owner_thread_cpu_seconds": 2.140239,
+            "background_cpu_seconds": 0.0,
+            "owner_thread_calls": {
+              "app.mixed.portfolio_execution.reconcile": 4,
+              "app.options.runtime._tick": 2,
+              "app.options.coordinator._cycle_once": 2,
+              "app.mixed.selection.collect": 2,
+              "app.options.entry_coordination._admit_request": 2,
+              "app.options.entry_coordination._settle_and_reserve": 1
+            }
+          }
+        },
+        "report_cutoff": {
+          "window_end": "2026-10-28T14:01:30.869652+00:00",
+          "runtime_evidence": {
+            "heartbeat": "FRESH",
+            "heartbeat_at": "2026-10-28T14:01:29.049742+00:00",
+            "heartbeat_age_seconds": 1.81991,
+            "heartbeat_max_age_seconds": 20,
+            "feed": "FRESH",
+            "feed_at": "2026-10-28T14:01:25.013623+00:00",
+            "feed_age_seconds": 5.856029,
+            "feed_max_age_seconds": 30
+          },
+          "run_execution": {
+            "status": "RECORDED",
+            "entry_fills": 1,
+            "exit_fills": 1,
+            "completed_round_trips": 1,
+            "carry_in_exits": 0
+          },
+          "cycle_count": 1,
+          "decision_count": 1,
+          "runtime_failures": [],
+          "publication_failures": [],
+          "run_issues": []
+        }
+      },
+      {
+        "trial": 3,
+        "summary": {
+          "version": "paper-soak-launch-v1",
+          "status": "PASSED",
+          "application_files": 341,
+          "runtime_pins": 60,
+          "application_manifest_sha256": "0d96d7de25f52ef2737827f9368793a7e5f710aca056edeeff7bb3786b95209d",
+          "seconds": 90,
+          "seed_mib": 112,
+          "max_feed_recoveries": 0,
+          "worker_cpu_affinity": [
+            0
+          ],
+          "network": "ISOLATED",
+          "host_acceptance": "UNVERIFIED",
+          "wall_clock_soak": "NOT_RUN",
+          "synthetic": true,
+          "provider_calls": false,
+          "model_service_calls": false,
+          "live_enabled": false,
+          "worker_pid": 136,
+          "worker_start_ticks": "2658041",
+          "child_exit_code": 0,
+          "cgroup_memory": {
+            "status": "UNAVAILABLE"
+          }
+        },
+        "progress": {
+          "status": "PASSED",
+          "elapsed_seconds": 90.84980962500049,
+          "native_snapshot_calls": 51,
+          "native_snapshot_failures": 0,
+          "native_snapshot_max_seconds": 0.08171237699934863,
+          "capture_attempts": 9,
+          "peak_tree_rss_bytes": 445624320,
+          "source_database_bytes": 125984768,
+          "decision_coverage": {
+            "expected": 1,
+            "evaluated": 1,
+            "coverage_percent": 100.0,
+            "unmeasured_slots": [],
+            "target_met": true
+          },
+          "execution": {
+            "status": "RECORDED",
+            "entry_fills": 1,
+            "exit_fills": 1,
+            "completed_round_trips": 1,
+            "carry_in_exits": 0
+          },
+          "final_accounting": "VERIFIED_FLAT",
+          "failure": null,
+          "children_reaped": true
+        },
+        "entry_diagnostic": {
+          "decision_status": "OPEN",
+          "clocks": {
+            "as_of": "2026-10-28T14:00:15.853569Z",
+            "deadline": "2026-10-28T14:00:20.853569Z",
+            "account_captured_at": "2026-10-28T14:00:15.161156Z",
+            "account_max_age_seconds": 20,
+            "quote_max_age_seconds": 10,
+            "model_completed_at": "2026-10-28T14:00:16.544793+00:00",
+            "review_at": "2026-10-28T14:00:16.811058+00:00",
+            "options": [
+              {
+                "source_at": "2026-10-28T14:00:13.717624Z",
+                "received_at": "2026-10-28T14:00:14.717624Z",
+                "admission_deadline": "2026-10-28T14:00:20.853569Z"
+              },
+              {
+                "source_at": "2026-10-28T14:00:13.717624Z",
+                "received_at": "2026-10-28T14:00:14.717624Z",
+                "admission_deadline": "2026-10-28T14:00:20.853569Z"
+              }
+            ]
+          },
+          "cycle_timing": {
+            "started_at": "2026-10-28T14:00:15.518485+00:00",
+            "elapsed_seconds": 3.001535,
+            "generation": 2,
+            "kind": "CYCLE",
+            "native": [
+              {
+                "child_stages": [
+                  {
+                    "cpu_seconds": 2e-06,
+                    "elapsed_seconds": 3.4e-05,
+                    "stage": "IMPORTS"
+                  },
+                  {
+                    "cpu_seconds": 0.210004,
+                    "elapsed_seconds": 0.42186,
+                    "stage": "REQUEST"
+                  },
+                  {
+                    "cpu_seconds": 0.210909,
+                    "elapsed_seconds": 0.426169,
+                    "stage": "VENUE_OPEN"
+                  },
+                  {
+                    "cpu_seconds": 0.212888,
+                    "elapsed_seconds": 0.428222,
+                    "stage": "ACCEPT"
+                  },
+                  {
+                    "cpu_seconds": 0.216005,
+                    "elapsed_seconds": 0.44303,
+                    "stage": "SERIALIZE"
+                  },
+                  {
+                    "cpu_seconds": 0.216037,
+                    "elapsed_seconds": 0.443064,
+                    "stage": "COMPLETE"
+                  }
+                ],
+                "child_trace_status": "OBSERVED",
+                "elapsed_seconds": 0.5,
+                "parent_phase": "RESPONSE_VALIDATE"
+              }
+            ],
+            "native_omitted": 0,
+            "packet_age_seconds": 0.800861,
+            "packet_sequence": 2,
+            "packet_sha256": "cc58825ea1bf2027dc16fde804cdf8c776f7a6102185640c735aa26aa7b20f43",
+            "slot": 5977320,
+            "spans": [
+              {
+                "elapsed_seconds": 0.313944,
+                "phase": "CYCLE_OPPORTUNITY_CLAIM",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.008103,
+                "phase": "SCAN",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.328143,
+                "phase": "STOCK_SCAN",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.001219,
+                "phase": "SCOPE_SCAN",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.009249,
+                "phase": "ENTRY_MODEL_ADMISSION",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.330183,
+                "phase": "ENTRY_MODEL_REQUEST",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.001698,
+                "model_source_key": "degen:5977320:portfolio:0",
+                "phase": "ENTRY_MODEL",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.000506,
+                "phase": "ENTRY_MIXED_SELECTION",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.01071,
+                "phase": "ENTRY_SCOPE_RECEIPT_CHECK",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.000505,
+                "phase": "ENTRY_SCOPE_SELECTION",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.003014,
+                "phase": "ENTRY_OPTION_MARKET_READ",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.025751,
+                "phase": "ENTRY_REVIEW",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.060477,
+                "local_age_seconds": 2.11988,
+                "phase": "ADMISSION",
+                "quote_age_seconds": 3.11988,
+                "receive_lag_seconds": 1.0,
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.489251,
+                "phase": "ENTRY_SETTLEMENT_AND_RESERVATION",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.00429,
+                "phase": "NATIVE_ACCEPT_SPAWN",
+                "remaining_at_start_seconds": 3.816684,
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.499927,
+                "phase": "NATIVE_ACCEPT_TRANSPORT",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.501281,
+                "phase": "NATIVE_ACCEPT",
+                "status": "COMPLETE"
+              },
+              {
+                "elapsed_seconds": 0.844688,
+                "local_age_seconds": 2.180385,
+                "phase": "DISPATCH",
+                "quote_age_seconds": 3.180385,
+                "receive_lag_seconds": 1.0,
+                "status": "COMPLETE"
+              }
+            ],
+            "spans_omitted": 0,
+            "status": "COMPLETE",
+            "trace_start_prepare_seconds": 0.002918,
+            "trace_storage": "COALESCED",
+            "version": "runtime-timing-v1"
+          },
+          "restore_to_review": {
+            "status": "OBSERVED",
+            "window_seconds": 3.093434,
+            "wall_seconds_with_digest_running": 2.256615,
+            "wholly_contained_calls": 14,
+            "owner_thread_cpu_seconds": 2.033462,
+            "background_cpu_seconds": 0.222499,
+            "owner_thread_calls": {
+              "app.mixed.portfolio_execution.reconcile": 4,
+              "app.options.runtime._tick": 2,
+              "app.options.coordinator._cycle_once": 2,
+              "app.mixed.selection.collect": 2,
+              "app.options.entry_coordination._admit_request": 2,
+              "app.options.entry_coordination._settle_and_reserve": 1
+            }
+          }
+        },
+        "report_cutoff": {
+          "window_end": "2026-10-28T14:01:30.849817+00:00",
+          "runtime_evidence": {
+            "heartbeat": "FRESH",
+            "heartbeat_at": "2026-10-28T14:01:29.535883+00:00",
+            "heartbeat_age_seconds": 1.313934,
+            "heartbeat_max_age_seconds": 20,
+            "feed": "FRESH",
+            "feed_at": "2026-10-28T14:01:24.965171+00:00",
+            "feed_age_seconds": 5.884646,
+            "feed_max_age_seconds": 30
+          },
+          "run_execution": {
+            "status": "RECORDED",
+            "entry_fills": 1,
+            "exit_fills": 1,
+            "completed_round_trips": 1,
+            "carry_in_exits": 0
+          },
+          "cycle_count": 1,
+          "decision_count": 1,
+          "runtime_failures": [],
+          "publication_failures": [],
+          "run_issues": []
+        }
+      }
+    ]
+  },
+  "limitations": [
+    "Local clock and storage, not host timing. The operator timeout has not been reproduced on this machine.",
+    "One pinned CPU and loopback-only network/PID namespace. Kernel cgroup memory enforcement unavailable; worker sampled aggregate RSS stays subject to its unchanged 1-GiB assertion.",
+    "Local repeated lifecycles are 90 seconds each; host entry-repeat requires three 335-second trials. One preceding independent 90-second installed lifecycle also passed.",
+    "Three fresh disposable accounts do not establish repeated entries in one long-lived account, long-duration growth, provider CONNECT health or connected readiness.",
+    "Original deadlines, v1 hash, authority generation/atomicity, recovery and production state unchanged. Large or unsupported timing tables fall back to full scanning.",
+    "The local series runner started before the additional memory-event stop check was added; local cgroup telemetry is unavailable, so it would not change these results. Current host completion checks and runner contracts are covered by regression tests."
+  ],
+  "host_acceptance": "UNVERIFIED",
+  "connected_health": "UNVERIFIED"
+}

@@ -1,0 +1,85 @@
+{
+  "version": "paper-duration-entry-failure-20261128-v1",
+  "source": "Selected operator-supplied fields; no direct host access or independent host inspection",
+  "status": "FAILED",
+  "reason": "SOAK_EXIT_OR_ASSERTION_FAILURE",
+  "observed_at": "2026-11-28T06:59:41.648569+00:00",
+  "release": "9c8161e40e2e93011e95942320fbd025d7d40c84",
+  "image_id": "sha256:813f3799f2bcd8ec82415989b56673262fd2ede7c151920fc9bb99aa93179ab9",
+  "evidence_directory": "/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-9c8161e40e2e-fzdillzo",
+  "qualification_profile": "duration",
+  "planned_seconds": 21480,
+  "worker": {
+    "StartedAt": "2026-11-28T06:02:40.047727913Z",
+    "FinishedAt": "2026-11-28T06:03:37.756146325Z",
+    "ExitCode": 1,
+    "OOMKilled": false,
+    "restart_count": 0
+  },
+  "progress": {
+    "elapsed_seconds": 37.37670938670635,
+    "failure_class": "AssertionError",
+    "failure": "Native acceptance failure",
+    "native_snapshot_calls": 10,
+    "native_snapshot_failures": 0,
+    "native_snapshot_max_seconds": 0.17832599114626646,
+    "capture_attempts": 3
+  },
+  "memory": {
+    "peak_bytes": 684171264,
+    "max_bytes": 1073741824,
+    "events": {
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0
+    }
+  },
+  "entry": {
+    "decision_status": "UNKNOWN",
+    "stored_status": "COMPLETE",
+    "as_of": "2026-10-28T14:00:24.495493Z",
+    "deadline": "2026-10-28T14:00:28.704172Z",
+    "quote_source_at": "2026-10-28T14:00:18.704172Z",
+    "quote_received_at": "2026-10-28T14:00:19.704172Z",
+    "quote_max_age_seconds": 10,
+    "account_max_age_seconds": 20,
+    "model_completed_at": "2026-10-28T14:00:26.224970+00:00",
+    "review_at": "2026-10-28T14:00:26.597083+00:00",
+    "remaining_at_native_spawn_seconds": 1.309083,
+    "native_transport_seconds": 1.333502,
+    "native_parent_phase": "RESPONSE_READ",
+    "last_child_stage": "IMPORTS",
+    "settlement_and_reservation_seconds": 1.16509
+  },
+  "restore_to_review": {
+    "window_seconds": 7.892911,
+    "wall_seconds_with_digest_running": 6.144756,
+    "wholly_contained_calls": 14,
+    "owner_thread_cpu_seconds": 4.688892,
+    "background_cpu_seconds": 0.334611
+  },
+  "worker_resources": {
+    "elapsed_seconds": 42.401556879282,
+    "cpu_seconds": 36.212133,
+    "nr_throttled": 0,
+    "throttled_usec": 0,
+    "read_bytes": 74649600,
+    "write_bytes": 528592896
+  },
+  "report_cutoff": {
+    "window_end": "2026-10-28T14:00:37.537697+00:00",
+    "heartbeat": "FRESH",
+    "feed": "FRESH",
+    "decisions": 1,
+    "delivered_collections": 3,
+    "entry_fills": 0,
+    "exit_fills": 0,
+    "runtime_failures": [],
+    "publication_failures": []
+  },
+  "conclusion": "Opening native acceptance timed out. No endurance, memory growth, publication or connected qualification was reached. UNKNOWN is retained, not interpreted as proof of no venue acceptance.",
+  "previous_short_pass_preserved": "PAPER_ENTRY_HOST_20261128.json",
+  "connected_health": "UNVERIFIED",
+  "live_enabled": false,
+  "state_modified": false
+}

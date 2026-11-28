@@ -159,6 +159,44 @@ def test_reject_invalid_duration_before_creating_state(isolated, tmp_path, secon
     assert not output.exists()
 
 
+@pytest.mark.parametrize('failed_trial', [None, 1, 2, 3])
+def test_repeated_entry_retains_distinct_attempts_and_stops_at_failure(tmp_path, monkeypatch, failed_trial):
+    monkeypatch.setattr(soak, 'validate', lambda *args: {'application_manifest_sha256': 'same'})
+    calls = []
+    def attempt(output, seconds, seed, **kwargs):
+        calls.append(output)
+        output.mkdir()
+        (output / 'entry-diagnostic.json').write_text(json.dumps({
+            'status': 'RECORDED', 'decision_status': 'OPEN', 'stored_status': 'COMPLETE',
+            'clocks': {'deadline': 'original'}, 'cycle_timing': {'status': 'COMPLETE', 'spans': [
+                {'phase': 'NATIVE_ACCEPT_SPAWN', 'status': 'COMPLETE', 'remaining_at_start_seconds': 3},
+                {'phase': 'NATIVE_ACCEPT_TRANSPORT', 'status': 'COMPLETE', 'elapsed_seconds': 1}]}}))
+        assert seconds == 335 and seed == 112 and kwargs['cpus'] == 1
+        return {'status': 'FAILED' if len(calls) == failed_trial else 'PASSED', 'child_exit_code': 0}
+    monkeypatch.setattr(soak, 'run', attempt)
+    result = soak.repeat(tmp_path / 'series', 335, 112)
+    assert result['status'] == ('FAILED' if failed_trial else 'PASSED')
+    assert len(calls) == (failed_trial or 3) and len(set(calls)) == len(calls)
+    assert json.loads((tmp_path / 'series/series.json').read_text()) == result
+
+
+def test_repeat_does_not_continue_after_marginal_entry_or_exception(tmp_path, monkeypatch):
+    monkeypatch.setattr(soak, 'validate', lambda *args: {})
+    def attempt(output, *args, **kwargs):
+        output.mkdir()
+        (output / 'entry-diagnostic.json').write_text('{}')
+        return {'status': 'PASSED'}
+    monkeypatch.setattr(soak, 'run', attempt)
+    result = soak.repeat(tmp_path / 'marginal', 335, 112)
+    assert result['status'] == 'FAILED' and len(result['trials']) == 1
+    def interrupted(*args, **kwargs):
+        raise KeyboardInterrupt
+    monkeypatch.setattr(soak, 'run', interrupted)
+    with pytest.raises(KeyboardInterrupt):
+        soak.repeat(tmp_path / 'interrupted', 335, 112)
+    assert json.loads((tmp_path / 'interrupted/series.json').read_text())['status'] == 'FAILED'
+
+
 def test_reject_existing_account_without_modification(isolated, tmp_path):
     evidence = tmp_path / "existing.db"
     evidence.write_bytes(b"retain")

@@ -19,6 +19,7 @@ from threading import Lock
 from urllib.parse import quote
 
 from app.execution.restore_rows import RowEncodings
+from app.execution.restore_transaction import FencedConnection, TimingSnapshot, TABLE as TIMING_TABLE
 
 AUTHORITY_SCHEMA = "execution-restore-authority-v1"
 
@@ -185,6 +186,7 @@ def _scan(db, previous, budget, *, retain=True):
     digest = hashlib.sha256()
     prefixes = []
     matching = True
+    snapshot = getattr(db, '_restore_snapshot', None)
     schema = db.execute(
         "SELECT type,name,sql FROM main.sqlite_master WHERE name GLOB 'execution_*' "
         "AND type IN ('table','trigger','index') ORDER BY type,name"
@@ -198,10 +200,22 @@ def _scan(db, previous, budget, *, retain=True):
         batched = False
         if row[0] == "table":
             name = row[1].replace('"', '""')
-            cursor = iter(db.execute(f'SELECT * FROM main."{name}"'))
-            first = tuple(islice(cursor, 256))
-            batched = len(first) == 256 and _ROW_ENCODINGS is not None
-            if batched:
+            reused = snapshot.rows(db, definition) if snapshot is not None and name == TIMING_TABLE else None
+            if reused is not None:
+                # Rows were verified after BEGIN IMMEDIATE. TEMP triggers record
+                # every changed id; replay rereads those ids in this same lock.
+                # Keep the canonical sorted v1 byte stream, not a new hash format.
+                rows, batched, comparison = reused, True, None
+                first = ()
+                cursor = iter(())
+            else:
+                cursor = iter(db.execute(f'SELECT * FROM main."{name}"'))
+                first = tuple(islice(cursor, 256))
+            collect = (reused is None and len(first) == 256 and _ROW_ENCODINGS is not None
+                       and snapshot is not None and name == TIMING_TABLE
+                       and snapshot.select(db, definition))
+            if reused is None and len(first) == 256 and _ROW_ENCODINGS is not None:
+                batched = True
                 if comparison is not None:
                     comparison.extend(b'ROW-BATCH-SHA256:')
                 batch = first
@@ -209,6 +223,8 @@ def _scan(db, previous, budget, *, retain=True):
                 while batch:
                     key, encoded = _ROW_ENCODINGS.encode(batch, slot=(row[1], batch_index))
                     rows.extend(encoded)
+                    if collect:
+                        snapshot.add(batch, encoded)
                     if comparison is not None:
                         comparison.extend(key)
                         if len(comparison) > budget:
@@ -286,7 +302,11 @@ def begin_fenced_write(db, path):
             raise ValueError("RESTORE_FENCE_REQUIRES_DELETE_JOURNAL")
         db.execute(f"PRAGMA {schema}.synchronous=FULL")
     db.execute("BEGIN IMMEDIATE")
+    if isinstance(db, FencedConnection):
+        db._restore_snapshot = TimingSnapshot()
     _check(db)
+    if isinstance(db, FencedConnection):
+        db._restore_snapshot.arm(db)
     return True
 
 

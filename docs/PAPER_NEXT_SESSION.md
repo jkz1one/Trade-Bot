@@ -1,51 +1,33 @@
 # Daily PAPER operation
 
-## Current action: same-build isolated endurance after the passed entry gate
+## Current action: repeated short qualification, no duration retry
 
-The operator's November 28, 12:50 a.m. New York receipt records
-`ENTRY_GATE_PASSED` on `9c8161e`: one entry, one protective exit, verified flat
-accounting, two complete decisions, 32 delivered collections, 130 successful
-snapshots and no runtime/publication failure. The container exited 0 with no
-restart. Peak memory was about 775 MiB without limit events in this short run.
-[Exact supplied evidence and limits](PAPER_ENTRY_HOST_20261128.json).
+The operator's `9c8161e` duration attempt failed at its first entry, with only
+1.309 seconds left for native acceptance. Memory did not reach its limit. The
+previous single short pass remains recorded, but opening margin is not reliable.
+[Failure](PAPER_DURATION_ENTRY_FAILURE_20261128.json) and
+[repair/qualification rationale](PAPER_RESTORE_TRANSACTION_20261128.md).
 
-Run the same candidate in a new detached `duration` fixture for 21,480 seconds
-(5h58m plus setup/drain). This tests memory growth and publication past the prior
-4h49m failure. It is not a connected deployment and does not replace repeated
-active-lifecycle or provider-health qualification. The fixture uses synthetic
-data with one initial entry, then HOLD; later flat operation cannot prove repeated
-fresh entries. Preserve all prior failed and passed workers and evidence.
+Use the new pinned candidate's `entry-repeat` profile after publication. It runs
+three fresh 335-second entry/protective-exit fixtures sequentially using one
+immutable image. The total is about 17 minutes plus setup/drain, and the job
+continues after disconnect. It stops early on lifecycle failure or insufficient
+measured entry margin. Each attempt is retained separately.
 
-Use this phone-safe block; the launch command is one physical line:
+The status checker requires `ENTRY_SERIES_PASSED`, original OPEN diagnostics,
+complete decisions, one round trip and verified flat accounting per trial, at
+least twice the observed transport time remaining at native spawn, no recorded
+memory-limit/OOM events and no restart. A running container or zero fills alone
+cannot establish health or failure in an ordinary PAPER session. This known-entry
+fixture has a specific lifecycle requirement. Local short passes do not qualify
+the operator's host; paste its launch receipt and later terminal status.
 
-```bash
-(
-  set -euo pipefail
-  cd /opt/trade-bot-dashboard
-  release=9c8161e40e2e93011e95942320fbd025d7d40c84
-  git fetch origin slice2/robinhood-read-shadow
-  git merge-base --is-ancestor HEAD "$release"
-  git merge-base --is-ancestor "$release" FETCH_HEAD
-  candidate=$(mktemp -d)
-  git worktree add --detach "$candidate" "$release"
-  trap 'git worktree remove "$candidate"' EXIT
-  python3 "$candidate/scripts/paper-soak-host.py" start --profile duration --checkout /opt/trade-bot-dashboard
-)
-```
-
-The launcher checks the existing pause/review hold and refuses active connected
-or offline workers. It never stops them or changes that hold. It starts only a
-new disposable population with one CPU, 1 GiB, no extra swap, no network or
-credentials and unchanged deadlines. The connected account, installed `2d538b7`,
-timer and reader remain untouched. If a guard refuses launch, retain its reason;
-do not clear the hold or stop another worker to bypass it.
-
-Paste the launch output. Use its returned read-only check command after roughly
-30 minutes and after completion around six hours. Review the terminal status,
-memory events/headroom, original-clock decision and feed coverage, publication
-failures, native timing, lifecycle and final accounting together. No pass is
-claimed until the operator supplies that result. A duration pass establishes
-only this workload's endurance, not connected health or readiness to deploy.
+Keep one CPU, 1 GiB, no extra swap, no network/credentials and original execution
+deadlines. The launcher refuses active workers and requires the existing pause
+or review hold. Preserve installed `2d538b7`, connected state, limits, timer,
+reader and all prior evidence. Do not bypass guards, redeploy, resume or repeat
+the old long test. Three fresh starts do not close sustained publication/memory,
+repeated entries within one account, provider CONNECT health or a full PAPER day.
 
 ## Previous native startup gate — completed by the operator
 

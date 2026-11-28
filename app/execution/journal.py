@@ -148,7 +148,8 @@ class ExecutionJournal:
         if not self.writable:
             raise ValueError("Journal was opened read-only")
         db = sqlite3.connect(
-            "file:" + quote(str(self.path)) + "?mode=rw", uri=True, timeout=10, isolation_level=None
+            "file:" + quote(str(self.path)) + "?mode=rw", uri=True, timeout=10, isolation_level=None,
+            factory=restore.FencedConnection,
         )
         db.row_factory = sqlite3.Row
         timings = ()

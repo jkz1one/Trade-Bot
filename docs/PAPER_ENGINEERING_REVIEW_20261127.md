@@ -1,41 +1,33 @@
 # PAPER engineering review — November 27
 
-## November 28 host entry pass and remaining qualification
+## Current failure and work order
 
-The terminal host result on `9c8161e` is `ENTRY_GATE_PASSED`: the original-clock
-fixture entered, exited protectively and verified flat accounting. Two decisions
-completed, 32 collections were delivered, and 130 native snapshots succeeded
-(maximum 0.341 seconds). Feed and heartbeat were fresh at cutoff. Exit was 0,
-with no restart, OOM or publication failure.
-[Selected operator-supplied evidence](PAPER_ENTRY_HOST_20261128.json).
+November 28: duration failed at its first entry; return to repeated short qualification.
 
-Peak cgroup memory was 812,322,816 bytes (774.69 MiB), leaving 249.31 MiB below
-the existing 1-GiB limit. No `max`, `oom` or `oom_kill` events occurred. This
-six-minute observation does not qualify multi-hour headroom. The recorded worker
-resource window also includes about 4.65 GB of disk writes; those aggregate
-counters do not identify a particular function's write cost.
+The new `9c8161e` duration attempt exited during its first minute with native
+acceptance UNKNOWN. Only 1.309 seconds remained at spawn; response read timed out.
+Peak memory was 652.48 MiB with zero limit/OOM events. This run reached no endurance
+qualification. Preserve the earlier one-round-trip short pass, but it did not
+establish reliable opening margin. [Supplied failure](PAPER_DURATION_ENTRY_FAILURE_20261128.json).
 
-Acceptance had 2.413641 seconds remaining at spawn and completed transport in
-1.293625 seconds. The failed prior host run had only 1.228111 seconds remaining,
-less than this successful transport duration. Thus the pass cannot be attributed
-solely to import reduction: preceding owner work and the available lease changed
-too. One observed entry is not a p95 estimate. Restore-to-review still records
-4.281579 seconds of owner-thread CPU inside digest calls; that cost remains an
-optimization target under the existing integrity checks and original deadlines.
+The candidate verifies all committed rows at the start of every fenced write,
+then reuses verified timing rows inside the same SQLite write lock while rereading
+all changed ids and all other tables. The canonical v1 hash, atomic authority,
+rollback checks, original deadlines, limits and protection remain unchanged.
+Local alternating measurements reduce large-history transaction medians about
+14–17%. [Mechanism, primary-source research and limits](PAPER_RESTORE_TRANSACTION_20261128.md).
 
-With a complete short lifecycle now observed, run the same pinned implementation
-through the new isolated 21,480-second duration profile. This advances the
-independent endurance investigation beyond the old 4h49m publisher failure while
-keeping repeated active-lifecycle qualification open. Avoid another implementation
-change or capacity change in this duration comparison. It is not a controlled
-reproduction of the old failure and cannot retroactively establish its cause.
+Next host qualification is `entry-repeat`: three fresh 335-second lifecycles in
+one pinned image, stopping on the first failed lifecycle or inadequate acceptance
+margin. Require terminal `ENTRY_SERIES_PASSED`, no limit/OOM events, flat accounting
+and at least twice the measured transport duration remaining at each spawn.
+This is a test threshold, not a relaxed runtime deadline. One pass no longer
+advances to duration. [Host procedure](PAPER_NEXT_SESSION.md).
 
-The fixture offers one entry, then HOLD; the short run's second decision was
-`ENTRY_MODEL_RISK_PAUSE`. A mostly flat duration pass cannot prove repeated entry
-latency, loaded restart/protection across families, or authentic Scope/Swing
-coverage. Those gates and Robinhood CONNECT health remain required before a
-connected release. No deployment/resume, account reset, limit change or halt
-clearing follows from this evidence. [Host procedure](PAPER_NEXT_SESSION.md).
+Preserve installed `2d538b7`, connected account, limits, timer, review hold and old
+evidence. No deploy/resume, capacity change or full-duration retry. Long-lived
+repeated entries, sustained memory/publication and provider CONNECT health remain
+open; a full connected PAPER day remains unverified.
 
 ## Previous native startup checkpoint
 
