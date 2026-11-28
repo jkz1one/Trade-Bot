@@ -1,0 +1,216 @@
+{
+  "version": "paper-entry-host-20261127-v1",
+  "source": "Operator-supplied launch receipt and truncated terminal status; no direct server access",
+  "release": "91b69b65be3215bee5d6c1cc31dda8668ed8fb82",
+  "evidence_directory": "/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-91b69b65be32-8q8ejln3",
+  "image_id": "sha256:00e09922c1888b1013da91c9d0f4611b3cd244635204eaa12e27a05fea78052d",
+  "profile": "entry",
+  "planned_seconds": 335,
+  "launch_at": "2026-11-28T02:37:52.061030714Z",
+  "terminal_scope": "Progress explicitly FAILED; terminal container state, top-level failure details, original clocks and native child stages were omitted from the pasted excerpt",
+  "progress": {
+    "status": "FAILED",
+    "elapsed_seconds": 37.34412733837962,
+    "failure_class": "AssertionError",
+    "failure": "Native acceptance failure",
+    "native_snapshot_calls": 10,
+    "native_snapshot_failures": 0,
+    "native_snapshot_max_seconds": 0.1838867887854576,
+    "capture_attempts": 4,
+    "peak_tree_rss_bytes": 452468736,
+    "source_database_bytes": 125161472,
+    "report_copy_storage": "EVIDENCE_DIRECTORY"
+  },
+  "entry_phases_seconds": {
+    "SCAN": 0.017285,
+    "STOCK_SCAN": 0.853882,
+    "SCOPE_SCAN": 0.005154,
+    "ENTRY_MODEL_ADMISSION": 0.043412,
+    "ENTRY_MODEL_REQUEST": 1.504808,
+    "ENTRY_MODEL": 0.00814,
+    "ENTRY_SETTLEMENT_AND_RESERVATION": 1.289141,
+    "NATIVE_ACCEPT_SPAWN": 0.002806,
+    "NATIVE_ACCEPT_TRANSPORT": 1.24914,
+    "NATIVE_ACCEPT": 2.084023,
+    "DISPATCH": 2.772604
+  },
+  "native_acceptance": {
+    "remaining_at_spawn_seconds": 1.228111,
+    "transport_status": "FAILED",
+    "native_status": "FAILED",
+    "dispatch_quote_age_seconds": 7.391369,
+    "child_stages": "NOT_SUPPLIED"
+  },
+  "restore_to_review": {
+    "window_seconds": 7.192027,
+    "wall_seconds_with_digest_running": 6.068064,
+    "wholly_contained_calls": 14,
+    "owner_thread_cpu_seconds": 4.444427,
+    "background_cpu_seconds": 0.273049,
+    "owner_thread_calls": {
+      "app.mixed.portfolio_execution.reconcile": 4,
+      "app.options.runtime._tick": 2,
+      "app.options.coordinator._cycle_once": 2,
+      "app.mixed.selection.collect": 2,
+      "app.options.entry_coordination._admit_request": 2,
+      "app.options.entry_coordination._settle_and_reserve": 1
+    }
+  },
+  "resources": {
+    "scope": "Worker start to diagnostic read; not isolated entry-phase attribution",
+    "elapsed_seconds": 40.06469352263957,
+    "cpu_usage_usec": 34097967,
+    "nr_periods": 392,
+    "nr_throttled": 0,
+    "throttled_usec": 0,
+    "memory_current_bytes": 561922048,
+    "memory_peak_bytes": 691888128,
+    "memory_limit_bytes": 1073741824,
+    "memory_events": {
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0
+    },
+    "io_read_bytes": 34271232,
+    "io_write_bytes": 495583232
+  },
+  "last_report": {
+    "saved_at": "2026-11-28T02:38:45.678622+00:00",
+    "window_end": "2026-10-28T14:00:37.375596+00:00",
+    "heartbeat_at_cutoff": "FRESH",
+    "feed_at_cutoff": "FRESH",
+    "completed_cycles": 1,
+    "decision_count": 1,
+    "delivered_collections": 3,
+    "entry_fills": 0,
+    "exit_fills": 0,
+    "round_trips": 0,
+    "publication_failures": [],
+    "runtime_failures": []
+  },
+  "interpretation": [
+    "The short gate correctly failed early; it does not qualify an entry or deployment.",
+    "Recorded memory and CPU quota counters do not show a limit breach in this short interval. They do not qualify sustained headroom or measure host scheduling/steal time.",
+    "The dominant measured pre-review work is restore scanning; the child has a short remaining original lease. Missing child stages prevent attributing its failure to imports, venue acceptance, response handling or a specific timeout.",
+    "No deadline, quote timestamp, resource cap or account state should be changed to pass this gate."
+  ],
+  "next": "Read the existing saved entry clocks and child trace in a compact projection. Optimize measured work with the original bounds; do not repeat the unchanged host test.",
+  "connected_health": "UNVERIFIED",
+  "provider_calls": false,
+  "live_enabled": false,
+  "local_investigation": {
+    "scope": "Read-only existing synthetic owner, warm canonical scans, one pinned CPU; no host timing equivalence",
+    "source_database": "report-storage-quick-1127/lifecycle/owner/options.db",
+    "log_sha256": "9c874b0eee6a2c84036dd8e1830a8eb47412fa70efde80e93483dc520cc525db",
+    "sqlite_read_trials": [
+      {
+        "mmap": 0,
+        "samples": [
+          {
+            "wall": 0.9551231229997938,
+            "cpu": 0.9180003330000001,
+            "sha": "201a0d9484cd178e9ae249da928b498fcb87eac819e1e722486fbf7b64aadffa"
+          },
+          {
+            "wall": 0.16590386999996554,
+            "cpu": 0.16571590199999997,
+            "sha": "201a0d9484cd178e9ae249da928b498fcb87eac819e1e722486fbf7b64aadffa"
+          },
+          {
+            "wall": 0.14649016099974688,
+            "cpu": 0.14649046799999987,
+            "sha": "201a0d9484cd178e9ae249da928b498fcb87eac819e1e722486fbf7b64aadffa"
+          },
+          {
+            "wall": 0.1295093419994373,
+            "cpu": 0.12951024199999983,
+            "sha": "201a0d9484cd178e9ae249da928b498fcb87eac819e1e722486fbf7b64aadffa"
+          }
+        ]
+      },
+      {
+        "mmap": 268435456,
+        "samples": [
+          {
+            "wall": 0.12198055800035945,
+            "cpu": 0.12198273399999993,
+            "sha": "201a0d9484cd178e9ae249da928b498fcb87eac819e1e722486fbf7b64aadffa"
+          },
+          {
+            "wall": 0.12424199700035388,
+            "cpu": 0.12419696800000013,
+            "sha": "201a0d9484cd178e9ae249da928b498fcb87eac819e1e722486fbf7b64aadffa"
+          },
+          {
+            "wall": 0.12187763299880316,
+            "cpu": 0.12188161400000008,
+            "sha": "201a0d9484cd178e9ae249da928b498fcb87eac819e1e722486fbf7b64aadffa"
+          },
+          {
+            "wall": 0.12077171200144221,
+            "cpu": 0.12077493099999992,
+            "sha": "201a0d9484cd178e9ae249da928b498fcb87eac819e1e722486fbf7b64aadffa"
+          }
+        ]
+      },
+      {
+        "mmap": 0,
+        "samples": [
+          {
+            "wall": 0.16773901199849206,
+            "cpu": 0.1627464890000001,
+            "sha": "201a0d9484cd178e9ae249da928b498fcb87eac819e1e722486fbf7b64aadffa"
+          },
+          {
+            "wall": 0.1338127290000557,
+            "cpu": 0.13381393399999997,
+            "sha": "201a0d9484cd178e9ae249da928b498fcb87eac819e1e722486fbf7b64aadffa"
+          },
+          {
+            "wall": 0.13408207399879757,
+            "cpu": 0.13408289299999998,
+            "sha": "201a0d9484cd178e9ae249da928b498fcb87eac819e1e722486fbf7b64aadffa"
+          },
+          {
+            "wall": 0.1625420429991209,
+            "cpu": 0.1625429159999996,
+            "sha": "201a0d9484cd178e9ae249da928b498fcb87eac819e1e722486fbf7b64aadffa"
+          }
+        ]
+      },
+      {
+        "mmap": 268435456,
+        "samples": [
+          {
+            "wall": 0.12794139600009657,
+            "cpu": 0.12794179400000028,
+            "sha": "201a0d9484cd178e9ae249da928b498fcb87eac819e1e722486fbf7b64aadffa"
+          },
+          {
+            "wall": 0.12054820600133098,
+            "cpu": 0.12052047199999993,
+            "sha": "201a0d9484cd178e9ae249da928b498fcb87eac819e1e722486fbf7b64aadffa"
+          },
+          {
+            "wall": 0.12834828699851641,
+            "cpu": 0.1283484269999997,
+            "sha": "201a0d9484cd178e9ae249da928b498fcb87eac819e1e722486fbf7b64aadffa"
+          },
+          {
+            "wall": 0.13627498899950297,
+            "cpu": 0.13627583900000007,
+            "sha": "201a0d9484cd178e9ae249da928b498fcb87eac819e1e722486fbf7b64aadffa"
+          }
+        ]
+      }
+    ],
+    "warm_profile_seconds": 0.189,
+    "warm_profile_main_seconds": {
+      "sha256": 0.069,
+      "scan_including_row_reads": 0.048,
+      "pickle": 0.034
+    },
+    "native_imports_seconds": 0.420791,
+    "implementation_change": "NONE; read-setting effect too small to establish repair"
+  }
+}

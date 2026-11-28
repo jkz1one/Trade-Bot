@@ -1,5 +1,31 @@
 # Recovered offline system checkpoint
 
+November 27: host entry gate failed; inspect the retained acceptance trace.
+
+The `91b69b6` host entry gate failed after 37.34 seconds at native acceptance.
+It made no fills. The acceptance spawn had 1.228 seconds of its original lease
+remaining; transport and native acceptance failed. Ten snapshot reads succeeded.
+The pasted status begins partway through the cycle trace: original clocks,
+child stages, top-level failure details and terminal container state are missing.
+Do not infer the missing child stage or promote the prior local pass.
+[Supplied evidence and local investigation](PAPER_ENTRY_HOST_20261127.json).
+
+The observed 40-second resource window peaked at 691,888,128 bytes against
+1 GiB, with zero memory-max/OOM events and zero CPU quota throttling. It does not
+establish long-run memory headroom or rule out host scheduling/I/O delay. Restore
+work overlapped 6.068 of 7.192 seconds from quote source to review. Fourteen
+complete digest calls included 4.444 owner-thread CPU seconds. The unchanged
+journal integrity requirement remains the main measured latency concern.
+
+Next: obtain the existing saved original clocks and acceptance child trace in
+one compact read, then repair the measured work. No new host run, deployment,
+resume or resource increase. Preserve the installed bot, account, limits, review
+hold and all evidence. The five-second process and original quote/plan deadlines
+remain fixed. Application bytes remain `91b69b6`; this checkpoint records a
+failed host gate, not an application repair.
+
+### Previous report-storage checkpoint
+
 November 27: static host publication passed; short lifecycle qualification is next.
 
 The operator's 8:37 p.m. New York replay used the old `d2e78bf` image and
