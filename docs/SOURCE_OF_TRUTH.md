@@ -1,5 +1,42 @@
 # Autonomous Compounding Trader: source of truth
 
+Version 1.240. November 27, New York time. Bounded publication replay.
+
+The operator's 8:09 p.m. New York output locates the old publisher failure at
+`dashboard_snapshot.py:235`, the display-table `INSERT SELECT`, with
+`OperationalError`. The old event did not retain SQLite's error code or the table.
+Its last saved report precedes that incident: 58 complete decisions, 1,617 delivered
+collections and fresh feed/heartbeat at its cutoff. The original missed entry and
+later publisher failure still fail qualification.
+
+Two local reproductions reach that exact line: the unchanged 64-MiB display cap
+returns `SQLITE_FULL`; a forced progress-handler cancellation returns
+`SQLITE_INTERRUPT`. This establishes ambiguity, not either cause on the server.
+The recorded 1-GiB lifetime peak and 603,798 max events remain pressure evidence,
+not failure-phase attribution. [Supplied evidence](PAPER_SOAK_20261127_HOST.json).
+
+`scripts/paper-publisher-replay.py` runs one publication using the stopped offline
+test's original image and source mounted read-only. It retains the SQLite code,
+stage, table and phase times in new evidence. No build, connected-owner access,
+trading runtime, timer operation, halt clearing or deployment is involved. The
+one-CPU/1-GiB/no-swap/PID128 constraints, five-second publication deadline and
+64-MiB display cap are unchanged. A 45-second outer deadline stops only the new
+diagnostic container. The old failed worker and its files are preserved.
+
+175 focused checks pass, with one existing cross-UID skip. A local stopped
+123-MiB source published a 2.43-MiB display in 0.413 seconds with source hashes and
+mtimes unchanged. Application bytes did not change. Neither that control nor a
+later host static pass proves the original load-related cause or qualifies a
+trading day. [Verification and limits](PAPER_PUBLISHER_REPLAY_20261127_PROOF.json).
+
+Next action: one short publisher replay against the retained failed fixture,
+then review its complete result. Preserve installed `2d538b7`, connected account,
+limits, timer and review hold. The locally verified entry repair's 335-second
+host gate, repeated active lifecycles, sustained memory and provider CONNECT
+checks remain open. Do not repeat the old full-duration launch.
+
+### Earlier terminal evidence checkpoint
+
 Version 1.239. November 27, New York time. Terminal host failure and retained causes.
 
 The operator supplied the old `d2e78bf` soak's terminal receipt at 7:15 p.m.

@@ -1,0 +1,201 @@
+{
+  "version": "paper-publisher-replay-proof-20261127-v1",
+  "base_commit": "0a8816ba8eab322d8ecfc69241f2fea47832385a",
+  "decision": "Discriminate the retained publisher failure with one bounded replay before any new lifecycle or duration test",
+  "host_evidence": "PAPER_SOAK_20261127_HOST.json#retained_incident_observation",
+  "application_changed": false,
+  "publisher_same_bytes_as_failed_release_d2e78bf": true,
+  "publisher_sha256": "c7e6bb9b415dd04eab4da6ef5cd1cfee36eabc38d9f40d3064da8535ab985099",
+  "local_reproductions": {
+    "version": "publisher-sqlite-ambiguity-v1",
+    "source_bytes": 70926336,
+    "display_cap_bytes": 67108864,
+    "synthetic": true,
+    "source": "labeled capacity probe, no account",
+    "reproductions": [
+      {
+        "hypothesis": "display_cap",
+        "error_class": "OperationalError",
+        "sqlite_errorcode": 13,
+        "sqlite_errorname": "SQLITE_FULL",
+        "last_frame": {
+          "file": "app/mixed/dashboard_snapshot.py",
+          "line": 235
+        },
+        "elapsed_seconds": 0.1711478029992577
+      },
+      {
+        "hypothesis": "sql_progress_deadline",
+        "error_class": "OperationalError",
+        "sqlite_errorcode": 9,
+        "sqlite_errorname": "SQLITE_INTERRUPT",
+        "last_frame": {
+          "file": "app/mixed/dashboard_snapshot.py",
+          "line": 235
+        },
+        "elapsed_seconds": 0.01203902300039772,
+        "injection": "Forced progress-handler cancellation, not an observed five-second host deadline"
+      }
+    ],
+    "host_cause": "NOT_DETERMINED_BY_THIS_REPRODUCTION"
+  },
+  "local_static_control": {
+    "version": "paper-publisher-replay-v1",
+    "status": "STATIC_PUBLICATION_PASSED",
+    "source_identity_before": {
+      "runtime.json": {
+        "bytes": 12364,
+        "mtime_ns": 1795815309255257875,
+        "sha256": "0d65908a6352e1fe24adbe21cbe669c35286521afb92deab52ffeba2f237aee7"
+      },
+      "options.db": {
+        "bytes": 128901120,
+        "mtime_ns": 1795815647555998863,
+        "sha256": "952f96b3e49de47404f5b7f5952d7389757a93c35de3e461a3fc5d13e859937b"
+      },
+      "options.db.authority.db": {
+        "bytes": 8192,
+        "mtime_ns": 1795815647557328221,
+        "sha256": "9983cff3d25247fd9d655c810e969b6ee3a6446e252b5a8443befcc445f49644"
+      },
+      "venue.db": {
+        "bytes": 32768,
+        "mtime_ns": 1795815358250783638,
+        "sha256": "bf637bb551e5ddd071e8031eedb4a695c05a7c7af05707da082a0dd12e55c3cc"
+      },
+      "options.db.runtime.lock": {
+        "bytes": 0,
+        "mtime_ns": 1795815309258754104,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "source_modified": false,
+    "source_database_bytes": 128901120,
+    "display_limit_bytes": 67108864,
+    "publication_deadline_seconds": 5,
+    "phases": {
+      "COPY_SOURCE": 0.3257845220005038,
+      "PROJECT_DISPLAY": 0.009901274000185367
+    },
+    "last_projection_table": "execution_runtime_timings",
+    "calls": 1,
+    "execution_authority": false,
+    "credentials_opened": false,
+    "provider_calls": false,
+    "live_enabled": false,
+    "connected_health": "UNVERIFIED",
+    "scope": "Single stopped-owner publication; no runtime/collector contention or trading qualification",
+    "publication": {
+      "status": "PUBLISHED",
+      "source_database_bytes": 128901120,
+      "display_database_bytes": 2551808,
+      "population_id": "offline-duration-capacity-v1",
+      "version": "native-dashboard-snapshot-v1",
+      "binding_sha256": "cb85f892ff1674cfe602d77c3cdd3aa845478e328d5b92d00a230c2156d9ffb0",
+      "published_at": "2026-11-28T01:27:34.242808+00:00",
+      "display_history": "portfolio-snapshot-v1",
+      "checkpoint": {
+        "owner_revision": 250,
+        "runtime_generation": 2,
+        "feed_sequence": 33
+      },
+      "held_plays": 0,
+      "fills": 2,
+      "source_modified": false,
+      "provider_calls": false,
+      "credentials_opened": false,
+      "execution_authority": false,
+      "live_enabled": false
+    },
+    "elapsed_seconds": 0.41335456000069826,
+    "stage": "INSTALL_DISPLAY"
+  },
+  "local_scope": "Noneditable installed package, -I -W error, isolated network/PID namespaces, one CPU affinity for static control. No Docker CPU quota or memory cgroup qualification; no host source available locally.",
+  "regressions": {
+    "suites": [
+      "paper_publisher_replay",
+      "paper_soak_host",
+      "dashboard_snapshot",
+      "connected_publisher"
+    ],
+    "passed": 175,
+    "skipped": 1,
+    "seconds": 18.28,
+    "skip": "Existing cross-UID reader 10001 is not mapped in this environment",
+    "new_replay_cases": 18,
+    "junit_sha256": "41ae79da8fe1548411d16ea2752a37ce0af82784959452f9c6543ecec5ba43c0",
+    "log_sha256": "7b6b492be6899f1d3defb54dd02987d3062152bf7deffb2827cc0139681b9d46",
+    "ruff": "E4,E7,E9,F passed for the three changed Python files"
+  },
+  "diagnostic_contract": {
+    "container": "New disposable process from the original immutable image; no build",
+    "source": "Only the stopped, identity-checked offline owner, mounted read-only; known regular files hashed before and after",
+    "outputs": "New private evidence directory and new display copy; originals retained",
+    "guards": [
+      "root operator",
+      "same offline launcher lock",
+      "exact stopped container identity/isolation",
+      "no active connected/offline worker",
+      "scheduler paused or review-held",
+      "dedicated evidence root",
+      "offline-duration-capacity-v1 population",
+      "no extra, symlinked, hardlinked or WAL/sidecar-bearing owner files"
+    ],
+    "limits": {
+      "cpus": 1,
+      "memory_bytes": 1073741824,
+      "swap_bytes": 0,
+      "pids": 128,
+      "network": "none",
+      "publication_deadline_seconds": 5,
+      "display_limit_bytes": 67108864,
+      "attach_timeout_seconds": 45
+    },
+    "observations": [
+      "SQLite numeric code/name",
+      "publisher stage",
+      "last projected table",
+      "copy/projection time",
+      "original source identity/size",
+      "new display receipt on success"
+    ],
+    "timeout_cleanup": "Stop only the new diagnostic container; leave old worker and evidence untouched",
+    "read_limit": "Original read-only snapshot and accounting code; no execution owner, credential read, provider/model, entry or exit",
+    "scope": "Static one-shot publication; cannot reproduce the old concurrent runtime/collector working set"
+  },
+  "intermediate_failures_retained": [
+    {
+      "kind": "initial local reproduction harness",
+      "error": "SQLite ATTACH lacked uri=True",
+      "disposition": "Corrected the harness; no application change"
+    },
+    {
+      "kind": "first new-test setup",
+      "error": "Combined fixture retained the model-key path from its settings template",
+      "disposition": "Use an explicit synthetic placeholder outside the owner during fixture initialization; replay opens no key"
+    }
+  ],
+  "open_gates": [
+    "Actual host publisher error code/cause",
+    "Stable full-duration memory headroom",
+    "Same-host 335-second qualification of the entry transaction repair",
+    "Repeated eligible entry/protection/exit and restart/recovery under load",
+    "Provider CONNECT health",
+    "Full connected PAPER day"
+  ],
+  "preserved": [
+    "installed 2d538b7",
+    "connected account",
+    "limits",
+    "timer",
+    "review hold",
+    "old workers and evidence",
+    "main",
+    "draft PR #1 metadata"
+  ],
+  "changed_python_sha256": {
+    "scripts/paper-publisher-replay.py": "6484ab9a492010f4345283c1e67208f8c228fed72d365695344756e4ba5ed34b",
+    "scripts/paper-system-check.py": "583f1d4c77f081e72e3019fb8d957e26f21e09fdb6e279a28fe511f8e966f354",
+    "tests/test_paper_publisher_replay.py": "cfeac63a34ba0ff6663ee9f46380454c11faccee4c5aa77fb180243098cd5d37"
+  }
+}

@@ -25,7 +25,7 @@ SUITES = ('portfolio_controls', 'portfolio_models', 'entry_settlement_boundary',
           'protection_contention', 'swing_feed', 'swing_binding', 'portfolio_feed',
           'combined_session_feed', 'restore_encoding', 'snapshot_copy_lock', 'read_schema_contract',
           'paper_diagnose', 'paper_release', 'session_capture', 'contract_catalog', 'observed_simulation',
-          'paper_soak_host')
+          'paper_soak_host', 'paper_publisher_replay')
 
 
 def run(output, *, quick=False):

@@ -1,5 +1,5 @@
 {
-  "version": "paper-soak-host-observations-20261127-v2",
+  "version": "paper-soak-host-observations-20261127-v3",
   "source": "Operator-supplied terminal output; no direct server access",
   "release": "d2e78bf88e0fa78a0940bb3f3881564027f70442",
   "image_id": "sha256:401df4323742aef1a30e62f79be7608036f6111dde449fefaf25da1db7c8b4bd",
@@ -96,7 +96,7 @@
     }
   ],
   "acceptance": "FAILED_FIXTURE_ENTRY_DEADLINE_AND_LATER_PUBLISHER_FAILURE",
-  "next_checkpoint": "Read the stopped disposable journal publication incident using the bounded diagnostic reader; preserve the existing failure and connected owner. Review its concrete cause before another host run. The measured entry repair still needs the 335-second host gate before repeated active load or duration.",
+  "next_checkpoint": "One publication-only replay of the stopped disposable owner using its existing immutable image, read-only source mount and unchanged 1-CPU/1-GiB/no-swap/PID128 limits. Preserve all old evidence and deployment controls. A static pass does not establish contention as the old cause or qualify connected operation; the entry repair still needs its short host gate.",
   "final_duration": "FAILED_BEFORE_PLANNED_DURATION",
   "interim_feed_decision_lifecycle_report": {
     "source": "Operator-supplied selected fields from retained latest-report.json",
@@ -431,5 +431,151 @@
     "memory_causality": "UNDETERMINED: cumulative counters do not locate or prove the publisher failure cause",
     "kernel_reference": "https://docs.kernel.org/admin-guide/cgroup-v2.html#memory-interface-files",
     "qualification": "Failed duration and lifecycle; no connected or resource acceptance"
+  },
+  "retained_incident_observation": {
+    "source": "Operator-supplied standalone status output; no direct server access",
+    "reader_commit": "0a8816ba8eab322d8ecfc69241f2fea47832385a",
+    "observed_at": "2026-11-28T01:09:54.086553+00:00",
+    "status": "FAILED",
+    "reason": "SOAK_EXIT_OR_ASSERTION_FAILURE",
+    "qualification_profile": "duration",
+    "planned_seconds": 21480,
+    "failure_evidence": null,
+    "retained_incidents": {
+      "status": "STORED_EVENTS_READ",
+      "source": "data/run/owner/options.db",
+      "evidence_clock": "ORIGINAL_SYNTHETIC_CLOCKS",
+      "accounting_reverified": false,
+      "publication_failures": [
+        {
+          "at": "2026-10-28T18:47:59.869522+00:00",
+          "evidence_available": true,
+          "error_class": "OperationalError",
+          "stage": "RUNNING",
+          "frames": [
+            {
+              "file": "app/mixed/connected_runtime.py",
+              "line": 662
+            },
+            {
+              "file": "app/mixed/connected_runtime.py",
+              "line": 281
+            },
+            {
+              "file": "app/mixed/connected_runtime.py",
+              "line": 273
+            },
+            {
+              "file": "app/mixed/dashboard_snapshot.py",
+              "line": 300
+            },
+            {
+              "file": "app/mixed/dashboard_snapshot.py",
+              "line": 339
+            },
+            {
+              "file": "app/mixed/dashboard_snapshot.py",
+              "line": 235
+            }
+          ]
+        }
+      ]
+    },
+    "session_report": {
+      "source": "latest-report.json",
+      "saved_at": "2026-11-27T23:54:01.962642+00:00",
+      "receipt_freshness": "STALE",
+      "evidence_clock": "SYNTHETIC_REPORT_WINDOW",
+      "window_start": "2026-10-28T14:00:00+00:00",
+      "window_end": "2026-10-28T18:47:49.397478+00:00",
+      "runtime_evidence_at_cutoff": {
+        "heartbeat": "FRESH",
+        "heartbeat_at": "2026-10-28T18:47:45.866533+00:00",
+        "heartbeat_age_seconds": 3.530945,
+        "heartbeat_max_age_seconds": 20,
+        "feed": "FRESH",
+        "feed_at": "2026-10-28T18:47:41.674578+00:00",
+        "feed_age_seconds": 7.7229,
+        "feed_max_age_seconds": 30
+      },
+      "current_runtime": [
+        {
+          "status": "RUNNING",
+          "reason": null,
+          "feed_sequence": 1617
+        }
+      ],
+      "cycle_count": 58,
+      "decision_count": 58,
+      "cycle_outcomes": [
+        {
+          "status": [
+            "COMPLETE"
+          ],
+          "reason": [],
+          "count": 58
+        }
+      ],
+      "decision_reason_counts": [
+        {
+          "reason": [
+            "ORIGINAL_PLAN_DEADLINE_EXPIRED"
+          ],
+          "decisions": 1
+        },
+        {
+          "reason": [
+            "ENTRY_MODEL_HOLD_OR_REJECTED"
+          ],
+          "decisions": 2
+        },
+        {
+          "reason": [
+            "NO_ADMITTED_CONTRACT"
+          ],
+          "decisions": 55
+        }
+      ],
+      "run_execution": {
+        "status": "RECORDED",
+        "entry_fills": 0,
+        "exit_fills": 0,
+        "completed_round_trips": 0,
+        "carry_in_exits": 0
+      },
+      "collection": [
+        {
+          "status": "DELIVERED",
+          "attempts": 1617,
+          "first_sequence": 1,
+          "last_sequence": 1617
+        }
+      ],
+      "runtime_failures": [],
+      "publication_failures": [],
+      "run_issues": []
+    },
+    "memory_pressure": {
+      "status": "LIMIT_REACHED",
+      "scope": "container lifetime; not failure-phase attribution",
+      "limit_bytes": 1073741824,
+      "peak_bytes": 1073741824,
+      "peak_headroom_bytes": 0,
+      "events": {
+        "max": 603798,
+        "oom": 0,
+        "oom_kill": 0
+      },
+      "failure_causality": "UNDETERMINED"
+    },
+    "connected_health": "UNVERIFIED",
+    "live_enabled": false,
+    "state_modified": false
+  },
+  "latest_interpretation": {
+    "publisher": "OperationalError at dashboard_snapshot.py:235, the display-table INSERT SELECT; SQLite error code and failing table were not retained by the old code",
+    "report_cutoff": "The fresh feed/heartbeat and empty publication failures in latest-report precede the retained publisher incident; neither contradicts it",
+    "local_ambiguity": "Both the unchanged 64-MiB display cap and a forced SQL progress interrupt reproduce OperationalError at this same line; neither proves the host cause",
+    "memory_causality": "UNDETERMINED; the 1-GiB lifetime peak is not failure-phase attribution"
   }
 }
