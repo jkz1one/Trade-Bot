@@ -8,11 +8,33 @@ previous single short pass remains recorded, but opening margin is not reliable.
 [Failure](PAPER_DURATION_ENTRY_FAILURE_20261128.json) and
 [repair/qualification rationale](PAPER_RESTORE_TRANSACTION_20261128.md).
 
-Use the new pinned candidate's `entry-repeat` profile after publication. It runs
+Use candidate `fc6d41db8d7b26cf6a83d984db815b953278c381` with its `entry-repeat` profile. It runs
 three fresh 335-second entry/protective-exit fixtures sequentially using one
 immutable image. The total is about 17 minutes plus setup/drain, and the job
 continues after disconnect. It stops early on lifecycle failure or insufficient
 measured entry margin. Each attempt is retained separately.
+
+Run this once; the launch line is phone-safe and has no line continuations:
+
+```bash
+(
+  set -euo pipefail
+  cd /opt/trade-bot-dashboard
+  release=fc6d41db8d7b26cf6a83d984db815b953278c381
+  git fetch origin slice2/robinhood-read-shadow
+  git merge-base --is-ancestor HEAD "$release"
+  git merge-base --is-ancestor "$release" FETCH_HEAD
+  candidate=$(mktemp -d)
+  git worktree add --detach "$candidate" "$release"
+  trap 'git worktree remove "$candidate"' EXIT
+  python3 "$candidate/scripts/paper-soak-host.py" start --profile entry-repeat --checkout /opt/trade-bot-dashboard
+)
+```
+
+Paste the launch output. The returned `check_command` is read-only. Run it after
+about 18 minutes, or earlier to inspect progress, and paste the terminal result.
+A failed or incomplete trial blocks endurance; preserve the evidence instead of
+relaunching the same candidate. No check is claimed without operator output.
 
 The status checker requires `ENTRY_SERIES_PASSED`, original OPEN diagnostics,
 complete decisions, one round trip and verified flat accounting per trial, at
