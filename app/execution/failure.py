@@ -1,6 +1,7 @@
 """Bounded failure metadata without messages, source text, locals or credentials."""
 
 from pathlib import Path
+import sqlite3
 
 APP_ROOT = Path(__file__).resolve().parents[1]
 ERROR_TYPES = (
@@ -41,6 +42,13 @@ def failure_details(exc):
         else "OTHER_ERROR",
         "frames": [],
     }
+    # Fixed SQLite constants distinguish interruption, capacity and I/O without
+    # exposing exception messages, query text, paths or arbitrary attributes.
+    if kind.__module__ == 'sqlite3' and (kind.__module__, kind.__name__) in ERROR_TYPES:
+        code, name = getattr(exc, 'sqlite_errorcode', None), getattr(exc, 'sqlite_errorname', None)
+        if (type(code) is int and 0 < code <= 65535 and isinstance(name, str)
+                and name.startswith('SQLITE_') and len(name) <= 80 and getattr(sqlite3, name, None) == code):
+            result.update(sqlite_errorcode=code, sqlite_errorname=name)
     if (kind.__module__, kind.__name__) == ("app.execution.process", "FixtureProcessTimeout"):
         from app.options.process_trace import OptionProcessDiagnostics
 

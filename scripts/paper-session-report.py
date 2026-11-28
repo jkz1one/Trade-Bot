@@ -5,8 +5,10 @@ import argparse
 import importlib.util
 import json
 import math
+import os
 import re
 import sqlite3
+import stat
 import subprocess
 import time
 import tempfile
@@ -257,10 +259,17 @@ class ReportConnection(sqlite3.Connection):
                 scratch.cleanup()
 
 
-def connection(path):
+def connection(path, *, scratch_directory=None):
     # This host script deliberately has no installed application dependency.
     from contextlib import closing
-    scratch = tempfile.TemporaryDirectory(prefix='paper-report-')
+    if scratch_directory is not None:
+        scratch_directory = Path(scratch_directory)
+        info = scratch_directory.lstat()
+        if (not scratch_directory.is_absolute() or scratch_directory.resolve() != scratch_directory
+                or not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid()
+                or stat.S_IMODE(info.st_mode) != 0o700):
+            raise ValueError('PRIVATE_REPORT_SCRATCH_DIRECTORY_REQUIRED')
+    scratch = tempfile.TemporaryDirectory(prefix='paper-report-', dir=scratch_directory)
     db = None
     try:
         target = Path(scratch.name) / 'snapshot.db'
@@ -751,6 +760,11 @@ def failure_evidence(raw):
         'CancelledError', 'ExecutionBlocked', 'OTHER_ERROR',
     }:
         result['error_class'] = error
+    code, name = value.get('sqlite_errorcode'), value.get('sqlite_errorname')
+    if (error in ('OperationalError', 'DatabaseError', 'IntegrityError', 'ProgrammingError')
+            and type(code) is int and 0 < code <= 65535 and isinstance(name, str)
+            and name.startswith('SQLITE_') and len(name) <= 80 and getattr(sqlite3, name, None) == code):
+        result.update(sqlite_errorcode=code, sqlite_errorname=name)
     result['frames'] = []
     progress = value.get('read_progress')
     if (isinstance(progress, dict) and progress.get('stage') in {
@@ -1363,14 +1377,14 @@ def runtime_timing_evidence(db, start, end):
     return result
 
 
-def report(directory, started, finished):
+def report(directory, started, finished, *, scratch_directory=None):
     start = datetime.fromisoformat(started).astimezone(timezone.utc).isoformat()
     end = datetime.fromisoformat(finished).astimezone(timezone.utc).isoformat()
     if end < start:
         raise ValueError("INVALID_SESSION_WINDOW")
     result = {"window_start": start, "window_end": end, "live_enabled": False,
               "provider_calls": False, "state_modified": False}
-    db = connection(directory / "owner/options.db")
+    db = connection(directory / "owner/options.db", scratch_directory=scratch_directory)
     try:
         result["cycles"] = [dict(r) for r in db.execute(
             "SELECT slot,status,reason,started_at,completed_at FROM execution_option_runtime_slots "
@@ -1437,7 +1451,7 @@ def report(directory, started, finished):
         result.update(owner_diagnostics(db, start, end))
     finally:
         db.close()
-    db = connection(directory / "collector/collector.db")
+    db = connection(directory / "collector/collector.db", scratch_directory=scratch_directory)
     try:
         result["collection"] = [dict(r) for r in db.execute(
             "SELECT status,COUNT(*) AS attempts,MIN(sequence) AS first_sequence,"
@@ -1545,6 +1559,7 @@ def terminal_failures(container_id):
         if error not in ('SHUTDOWN_TIMEOUT', 'UNEXPECTED_RETURN'):
             error = safe.get('error_class', 'OTHER_ERROR')
         failure = {'component': part['component'], 'error_class': error, 'frames': safe['frames']}
+        failure.update({k: safe[k] for k in ('sqlite_errorcode', 'sqlite_errorname') if k in safe})
         process = safe_process(part.get('option_process'))
         if process:
             failure['option_process'] = process

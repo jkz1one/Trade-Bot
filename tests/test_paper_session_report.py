@@ -15,7 +15,8 @@ spec.loader.exec_module(module)
 
 
 @pytest.mark.parametrize('large', [False, True])
-def test_saved_report_scopes_cycles_and_extracts_rejections_without_writes(tmp_path, large):
+@pytest.mark.parametrize('explicit_scratch', [False, True])
+def test_saved_report_scopes_cycles_and_extracts_rejections_without_writes(tmp_path, large, explicit_scratch):
     owner = tmp_path / "owner/options.db"
     collector = tmp_path / "collector/collector.db"
     owner.parent.mkdir()
@@ -55,7 +56,11 @@ def test_saved_report_scopes_cycles_and_extracts_rejections_without_writes(tmp_p
                    (json.dumps({'kind': 'CYCLE', 'coverage_issues': ['SCOPE_CURRENT_INPUT_UNAVAILABLE'],
                                 'frame': {'private': 'DO_NOT_EXPOSE_PRIVATE_FRAME'}}),))
     before = (owner.read_bytes(), collector.read_bytes())
-    report = module.report(tmp_path, "2026-10-30T18:30:22.407711551Z", "2026-10-30T18:40:34.899702954Z")
+    scratch = tmp_path / 'private-report-copies'
+    if explicit_scratch:
+        scratch.mkdir(mode=0o700)
+    report = module.report(tmp_path, "2026-10-30T18:30:22.407711551Z", "2026-10-30T18:40:34.899702954Z",
+                           scratch_directory=scratch if explicit_scratch else None)
     assert len(report["cycles"]) == len(report["decisions"]) == 1
     assert report["reviewed_entry_resumes"] == 1
     assert report["collection"][0]["attempts"] == 1
@@ -75,6 +80,10 @@ def test_saved_report_scopes_cycles_and_extracts_rejections_without_writes(tmp_p
     assert "private-id" not in json.dumps(report)
     assert before == (owner.read_bytes(), collector.read_bytes())
     assert not report["provider_calls"] and not report["state_modified"]
+    if explicit_scratch:
+        assert not list(scratch.iterdir())
+        assert module.report(tmp_path, "2026-10-30T18:30:22.407711551Z",
+                             "2026-10-30T18:40:34.899702954Z") == report
 
 
 def test_missing_database_is_not_created(tmp_path):
@@ -83,13 +92,18 @@ def test_missing_database_is_not_created(tmp_path):
     assert not (tmp_path / "missing.db").exists()
 
 
-def test_report_snapshot_keeps_consistency_without_blocking_native_commits(tmp_path):
+@pytest.mark.parametrize('explicit_scratch', [False, True])
+def test_report_snapshot_keeps_consistency_without_blocking_native_commits(tmp_path, explicit_scratch):
     path = tmp_path / 'native.db'
     with sqlite3.connect(path) as db:
         db.execute('CREATE TABLE receipts(value TEXT)')
         db.execute("INSERT INTO receipts VALUES('original')")
-    report = module.connection(path)
+    scratch = tmp_path / 'copies'
+    scratch.mkdir(mode=0o700)
+    report = module.connection(path, scratch_directory=scratch if explicit_scratch else None)
     copy_path = Path(report.execute('PRAGMA database_list').fetchone()[2])
+    if explicit_scratch:
+        assert copy_path.parent.parent == scratch
     try:
         assert report.execute('SELECT value FROM receipts').fetchone()[0] == 'original'
         with sqlite3.connect(path, timeout=.1) as writer:
@@ -103,19 +117,40 @@ def test_report_snapshot_keeps_consistency_without_blocking_native_commits(tmp_p
 
 
 @pytest.mark.parametrize('limit', ['capacity', 'deadline'])
-def test_failed_report_copy_cleans_private_scratch_and_preserves_native(tmp_path, monkeypatch, limit):
+@pytest.mark.parametrize('explicit_scratch', [False, True])
+def test_failed_report_copy_cleans_private_scratch_and_preserves_native(tmp_path, monkeypatch, limit, explicit_scratch):
     path = tmp_path / 'native.db'
     with sqlite3.connect(path) as db:
         db.execute('CREATE TABLE receipts(value TEXT)')
         db.execute("INSERT INTO receipts VALUES('original')")
     before = path.read_bytes()
     scratch = tmp_path / 'scratch'
-    scratch.mkdir()
+    scratch.mkdir(mode=0o700)
     monkeypatch.setattr(module.tempfile, 'tempdir', str(scratch))
     monkeypatch.setattr(module, 'MAX_REPORT_SOURCE_BYTES' if limit == 'capacity' else 'REPORT_COPY_SECONDS', 0)
     with pytest.raises((ValueError, TimeoutError), match='REPORT_SOURCE_COPY_'):
-        module.connection(path)
+        module.connection(path, scratch_directory=scratch if explicit_scratch else None)
     assert not list(scratch.iterdir()) and path.read_bytes() == before
+
+
+@pytest.mark.parametrize('damage', ['public', 'symlink', 'file', 'absent'])
+def test_explicit_report_storage_refuses_nonprivate_or_aliased_paths(tmp_path, damage):
+    scratch = tmp_path / 'scratch'
+    scratch.mkdir(mode=0o700)
+    if damage == 'public':
+        scratch.chmod(0o755)
+    elif damage == 'symlink':
+        alias = tmp_path / 'alias'
+        alias.symlink_to(scratch, target_is_directory=True)
+        scratch = alias
+    elif damage == 'file':
+        scratch.rmdir()
+        scratch.write_text('retained')
+    else:
+        scratch.rmdir()
+    with pytest.raises((ValueError, FileNotFoundError)):
+        module.connection(tmp_path / 'absent.db', scratch_directory=scratch)
+    assert not (tmp_path / 'absent.db').exists()
 
 
 def test_short_report_has_exact_ny_spending_and_preserves_unknown_charges():

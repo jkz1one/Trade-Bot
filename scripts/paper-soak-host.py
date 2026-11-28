@@ -212,6 +212,11 @@ def failure_detail(value):
         'CancelledError', 'ExecutionBlocked', 'OTHER_ERROR',
     }:
         result['error_class'] = value['error_class']
+    code, name = value.get('sqlite_errorcode'), value.get('sqlite_errorname')
+    if (error in ('OperationalError', 'DatabaseError', 'IntegrityError', 'ProgrammingError')
+            and type(code) is int and 0 < code <= 65535 and isinstance(name, str)
+            and name.startswith('SQLITE_') and len(name) <= 80 and getattr(sqlite3, name, None) == code):
+        result.update(sqlite_errorcode=code, sqlite_errorname=name)
     if isinstance(value.get('stage'), str) and value['stage'] in {'STARTUP', 'RUNNING'}:
         result['stage'] = value['stage']
     frames = value.get('frames')
@@ -402,7 +407,7 @@ def status(output):
             'progress': {k: progress.get(k) for k in
                          ('status', 'elapsed_seconds', 'native_snapshot_calls', 'native_snapshot_failures',
                           'native_snapshot_max_seconds', 'capture_attempts', 'peak_tree_rss_bytes',
-                          'source_database_bytes', 'decision_coverage', 'execution', 'final_accounting',
+                          'source_database_bytes', 'report_copy_storage', 'decision_coverage', 'execution', 'final_accounting',
                           'failure_class', 'failure')},
             'connected_health': 'UNVERIFIED', 'live_enabled': False, 'state_modified': False}
 

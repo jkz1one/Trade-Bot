@@ -220,6 +220,11 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
     settings, policy = combined(captures.__wrapped__())
     schema = schemas.__wrapped__(SimpleNamespace())
     owner, collector, dashboard = (output / p for p in ("owner", "collector", "dashboard"))
+    # Host /evidence is a disk bind; /tmp is a 256-MiB tmpfs charged to the
+    # same 1-GiB worker. A full report copy must not duplicate the growing
+    # journal in RAM. Keep both source and all report queries unchanged.
+    report_scratch = output / 'report-copies'
+    report_scratch.mkdir(mode=0o700)
     key, password = output / "synthetic-key", output / "password"
     for path, value in ((key, "offline-never-transmitted"), (password, PASSWORD)):
         path.write_text(value)
@@ -270,6 +275,7 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
         "synthetic": True,
         "provider_calls": False,
         "model_service_calls": False,
+        "report_copy_storage": "EVIDENCE_DIRECTORY",
         "live_enabled": False,
         "planned_seconds": seconds,
         "nominal_worker_seconds": NOMINAL_SECONDS,
@@ -448,7 +454,8 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
                     raise ValueError("SOAK_DASHBOARD_UNAVAILABLE")
                 if response.json().get("accounting") != "VERIFIED":
                     raise ValueError("SOAK_ACCOUNTING_UNVERIFIED")
-            return reports.report(output, BASE.isoformat(), live_clock().isoformat())
+            return reports.report(output, BASE.isoformat(), live_clock().isoformat(),
+                                  scratch_directory=report_scratch)
 
         next_report = 5
         diagnostic_complete = False
@@ -499,7 +506,8 @@ def run(output, seconds, seed_mib, *, max_feed_recoveries=0, profile_opening_res
                 await asyncio.sleep(min(1, max(0, seconds - (time.monotonic() - started[0]))))
         metrics["elapsed_seconds"] = time.monotonic() - started[0]
         final = await asyncio.to_thread(
-            reports.report, output, BASE.isoformat(), live_clock().isoformat()
+            reports.report, output, BASE.isoformat(), live_clock().isoformat(),
+            scratch_directory=report_scratch,
         )
         save(output / "report.json", final)
         with closing(sqlite3.connect((owner / "options.db").as_uri() + "?mode=ro", uri=True)) as db:

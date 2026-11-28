@@ -1,6 +1,43 @@
 # Daily PAPER operation
 
-## Current action: one isolated publisher replay; keep deployment unchanged
+## Current action: isolated 335-second entry qualification
+
+The operator's 8:37 p.m. New York replay used the old `d2e78bf` image and
+unchanged one-CPU/1-GiB limits. Its stopped 208.7-MiB source published a 5.16-MiB
+display in 0.964 seconds, with original source hashes/mtimes unchanged. The
+64-MiB display cap was not reached. This static pass does not reproduce or clear
+the original concurrent failure. [Host result](PAPER_PUBLISHER_HOST_20261127.json).
+
+The offline test was placing each full report copy in its container's RAM-backed
+`/tmp`. A synthetic copy matching the failed run's recorded database size
+allocated 208.7 MiB there. The soak now explicitly places those disposable copies
+under its disk-backed evidence directory, retaining identical report contents,
+snapshot consistency, limits and cleanup. This removes that tmpfs allocation;
+it does not prove an equal cgroup peak reduction or identify the old failure cause.
+No global temporary-directory setting or connected report default changes.
+
+Known SQLite error codes now survive application, session-report and retained-soak
+diagnostics. Messages, SQL text, private paths and arbitrary attributes remain
+excluded. Entry/protection behavior is unchanged from the verified `9bad805`
+repair. [Changes, tests and limits](PAPER_REPORT_STORAGE_20261127_PROOF.json).
+
+Next host action: the detached 335-second `entry` profile, with early failure on
+its required fixture entry rejection. The short local lifecycle and loaded
+protection checks pass, but no host lifecycle pass is implied. Preserve installed
+`2d538b7`, connected account, limits, timer, review hold and all older evidence.
+Repeated active lifecycles, stable duration memory/publication and provider
+CONNECT health remain open. No deploy, resume, resize or long-soak launch.
+
+Use `scripts/paper-soak-host.py start --profile entry --checkout /opt/trade-bot-dashboard`
+from the pinned new candidate worktree. Keep the command on one physical line
+for phone pasting. The launcher builds only a separate test image and starts a
+detached disposable worker; it does not install or resume the connected bot.
+Paste launch output and retain its exact returned check command. Run that
+read-only check after roughly six minutes; a full lifecycle/coverage pass is
+`ENTRY_GATE_PASSED`, never full-duration or connected acceptance. An early
+failure is retained immediately rather than consuming another trading day.
+
+## Earlier isolated publisher replay — completed by the operator
 
 The operator's 8:09 p.m. New York output locates the old publisher failure at
 `dashboard_snapshot.py:235`, the display-table `INSERT SELECT`, with

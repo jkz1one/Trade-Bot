@@ -96,7 +96,7 @@
     }
   ],
   "acceptance": "FAILED_FIXTURE_ENTRY_DEADLINE_AND_LATER_PUBLISHER_FAILURE",
-  "next_checkpoint": "One publication-only replay of the stopped disposable owner using its existing immutable image, read-only source mount and unchanged 1-CPU/1-GiB/no-swap/PID128 limits. Preserve all old evidence and deployment controls. A static pass does not establish contention as the old cause or qualify connected operation; the entry repair still needs its short host gate.",
+  "next_checkpoint": "Static replay completed: see PAPER_PUBLISHER_HOST_20261127.json. The original final-size source publishes under its original image and limits while stopped. New report-copy storage repair and local lifecycle checks are recorded in PAPER_REPORT_STORAGE_20261127_PROOF.json. Next is one isolated 335-second entry profile on the host, preserving the installed bot, account, limits, review hold and all older evidence; full duration and original failure attribution remain open.",
   "final_duration": "FAILED_BEFORE_PLANNED_DURATION",
   "interim_feed_decision_lifecycle_report": {
     "source": "Operator-supplied selected fields from retained latest-report.json",

@@ -1,0 +1,157 @@
+{
+  "version": "paper-report-storage-20261127-v1",
+  "base_commit": "85f95a51b0d00b09c72d63abbb1736ed7376e5fb",
+  "status": "LOCAL_STORAGE_REPAIR_VERIFIED_HOST_ENTRY_GATE_PENDING",
+  "host_replay": "PAPER_PUBLISHER_HOST_20261127.json",
+  "changes": [
+    "Only the offline soak opts into a private report-copies directory under its disk-backed /evidence bind. Normal host report defaults are preserved.",
+    "The same private_backup, five-second copy deadline, 512-MiB source cap, SQL report queries and cleanup remain in force. No shared TMPDIR change affects other workers.",
+    "Application failure metadata and both saved-report readers retain only recognized matching SQLite numeric codes and constant names, without messages, query text, paths or locals.",
+    "Entry transaction and native protection implementation are unchanged from 9bad805; only app/execution/failure.py changes in the application."
+  ],
+  "storage_comparison": {
+    "version": "report-storage-comparison-v1",
+    "synthetic": true,
+    "source_bytes": 218853376,
+    "source_sha256": "5b33580e791d4a0ad6ebc7897c475d2df498520b1f26601161f0a67a0c4b594e",
+    "sample_scope": "Full-copy allocation, no trading or cgroup qualification",
+    "provider_calls": false,
+    "live_enabled": false,
+    "samples": [
+      {
+        "storage": "DEFAULT_TMPFS",
+        "copy_seconds": 0.6227074780008479,
+        "copied_rows": 53300,
+        "allocated_bytes": 218853376,
+        "copy_is_on_tmpfs": true,
+        "tmpfs_copy_allocated_bytes": 218853376
+      },
+      {
+        "storage": "EXPLICIT_DISK",
+        "copy_seconds": 0.19490943799974048,
+        "copied_rows": 53300,
+        "allocated_bytes": 218853376,
+        "copy_is_on_tmpfs": false,
+        "tmpfs_copy_allocated_bytes": 0
+      }
+    ],
+    "source_unchanged": true
+  },
+  "storage_limits": [
+    "Synthetic 53300-row database matches the last duration progress file size, not the actual host account contents; the post-shutdown host source is 24576 bytes larger.",
+    "Comparison measures allocated copy bytes on tmpfs versus disk. It does not measure a cgroup peak reduction, failure causality or stable resource headroom.",
+    "Disk page cache can still be charged to memory; moving the copy removes tmpfs allocation, not all report memory or CPU demand.",
+    "Single sequential copy durations are not a throughput benchmark; cache/scheduler effects are not controlled."
+  ],
+  "regressions": {
+    "runs": [
+      {
+        "file": "report-storage-regressions-1127.xml",
+        "sha256": "917e93a1773a61861a1ae88f45dcc34f0c8800b3be04726ec941a45d53e1f998",
+        "tests": 287,
+        "seconds": 7.286
+      },
+      {
+        "file": "report-storage-consumers-1127.xml",
+        "sha256": "1eb39c767bc1ed11a9f52fdec5f31a6184038c597c1fb5a178935d3a7ad54816",
+        "tests": 118,
+        "seconds": 16.05
+      },
+      {
+        "file": "report-storage-quick-1127/tests.xml",
+        "sha256": "fde699db6b59b1874de363ee1af3eb9c722b693d2d287e2a6526469578e066b3",
+        "tests": 2,
+        "seconds": 30.154
+      }
+    ],
+    "distinct_passes": 402,
+    "distinct_skips": 1,
+    "skip": "Existing cross-UID reader 10001 not mapped locally",
+    "report_equivalence": "Default and explicit scratch directory produce identical complete reports; immutable copied view does not block later source writes",
+    "failure_codes": "Real SQLITE_FULL, SQLITE_INTERRUPT and SQLITE_CONSTRAINT_PRIMARYKEY survive application and both reader projections; invalid attributes are omitted",
+    "lint": "E4,E7,E9,F pass; existing test_paper_session_report.py E701 lines excluded; no new E701 introduced"
+  },
+  "quick": {
+    "version": "paper-system-check-v1",
+    "status": "PASSED",
+    "check_profile": "QUICK",
+    "synthetic": true,
+    "provider_calls": false,
+    "model_service_calls": false,
+    "live_enabled": false,
+    "market_acceptance": "UNVERIFIED",
+    "wall_clock_soak": "NOT_RUN",
+    "host_acceptance": "UNVERIFIED",
+    "application_files": 336,
+    "runtime_pins": 60,
+    "application_manifest_sha256": "d8d8108530aa60a08bbe254516e05fdb8bdab47ce7ff1502f23db31546c104a6",
+    "stage": "SHORT_LIFECYCLE",
+    "test_exit_code": 0,
+    "lifecycle_exit_code": 0,
+    "elapsed_seconds": 129.329
+  },
+  "loaded_lifecycle": {
+    "status": "PASSED",
+    "planned_seconds": 90,
+    "elapsed_seconds": 91.14150567900015,
+    "report_copy_storage": "EVIDENCE_DIRECTORY",
+    "source_seed": {
+      "kind": "labeled diagnostic padding, not month-history proof",
+      "rows": 30006,
+      "initial_database_bytes": 124760064
+    },
+    "source_database_bytes": 125968384,
+    "native_snapshot_calls": 50,
+    "native_snapshot_failures": 0,
+    "native_snapshot_max_seconds": 0.10206541099978494,
+    "peak_tree_rss_bytes": 439230464,
+    "children_reaped": true,
+    "decision_coverage": {
+      "expected": 1,
+      "evaluated": 1,
+      "coverage_percent": 100.0,
+      "unmeasured_slots": [],
+      "target_met": true
+    },
+    "execution": {
+      "status": "RECORDED",
+      "entry_fills": 1,
+      "exit_fills": 1,
+      "completed_round_trips": 1,
+      "carry_in_exits": 0
+    },
+    "final_accounting": "VERIFIED_FLAT",
+    "cgroup_memory": {
+      "status": "UNAVAILABLE"
+    }
+  },
+  "local_scope": "Installed noneditable package, isolated network/PID namespace, one-CPU affinity for loaded checks. Local cgroup unavailable; not Docker CPU quota or 1-GiB memory qualification. Consumer regressions overlap part of the lifecycle run, so timings are not an uncontended comparison.",
+  "next": "One detached 335-second --profile entry host run, separate disposable population, same one-CPU/1-GiB/no-swap/PID128 limits. Stop on a completed rejection of its exact required fixture entry; full duration remains pending.",
+  "open_gates": [
+    "Same-host source-to-native-entry timing and complete short lifecycle",
+    "Repeated eligible lifecycles and restart/recovery under growing history",
+    "Sustained memory headroom and publication under concurrent runtime/report load",
+    "Original publisher incident cause",
+    "Provider CONNECT health",
+    "Full connected PAPER day"
+  ],
+  "preserved": [
+    "Installed 2d538b7",
+    "Connected account",
+    "Risk/model/resource/freshness limits",
+    "Timer and review hold",
+    "Original workers and evidence",
+    "main",
+    "Draft PR #1 metadata"
+  ],
+  "changed_python_sha256": {
+    "app/execution/failure.py": "93a58c7f2fd0fa23392dac6b082f6f58de2e5cc384193327eaa9f4a2d200b4e1",
+    "scripts/paper-session-report.py": "635b1093f40e9c4f12b96f50a50a617e4c12f8615d32892765ef2e2a5d1ef850",
+    "scripts/paper-soak-host.py": "e28e64b3e2d91c872c7941cefcd373787d7dc92e84e6a99c7effd1383dc0aa4c",
+    "scripts/paper-system-check.py": "ed1219b0a51ee57d920f8b8d3b7186dac40719a8f34b7c0726392cca7aa5487e",
+    "tests/soak_worker.py": "e2c66cfd96aa8df2981e089da85cc51c8125f391ff04ad02d2451c7014834e4e",
+    "tests/test_failure_diagnostics.py": "ff1499f4896491c51d8bb66d7099cce0063f71c8381982133564e04ea283229c",
+    "tests/test_paper_session_report.py": "0f33cea814ddd4d3d12b9613aba92708cf09f7f396008e1f49f29ef7f803631e",
+    "tests/report_storage_benchmark.py": "2f217a66c0731f9444f76215ee51625dd47a98fdab9a186b6d148b3d1c5ae3e6"
+  }
+}
