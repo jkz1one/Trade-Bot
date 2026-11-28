@@ -12,36 +12,15 @@ from datetime import datetime
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, field_validator
 
 from app.domain.models import TradeDecision
 from app.execution.alert_state import entry_reasons as alert_entry_reasons
+from app.execution.cost_models import CostPolicy  # Public compatibility export.
 from app.execution.market_state import entry_reasons as market_entry_reasons
 from app.execution.models import ZERO, Contract, Ledger, Snapshot
 from app.execution.runtime_state import entry_reasons as runtime_entry_reasons
 from app.execution.supervisor_state import entry_reasons as supervisor_entry_reasons
-
-
-class CostPolicy(Contract):
-    model: str = Field(default="gpt-6-luna", min_length=1, max_length=128)
-    input_per_million: Decimal = Field(default=Decimal(".10"), ge=0)
-    output_per_million: Decimal = Field(default=Decimal(".50"), ge=0)
-    total_budget: Decimal = Field(gt=0)
-    daily_budget: Decimal = Field(gt=0)
-    max_call_cost: Decimal = Field(default=Decimal(".01"), gt=0)
-
-    @model_validator(mode="after")
-    def bounded(self):
-        if self.max_call_cost > min(self.total_budget, self.daily_budget):
-            raise ValueError("Per-call cost reservation must fit both budgets")
-        return self
-
-    @field_validator("model")
-    @classmethod
-    def nonblank(cls, value):
-        if not value.strip():
-            raise ValueError("A model identity is required")
-        return value
 
 
 class UsageEvidence(Contract):

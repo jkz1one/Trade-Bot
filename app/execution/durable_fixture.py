@@ -9,25 +9,13 @@ import time
 from contextlib import contextmanager
 from decimal import Decimal
 from pathlib import Path
-from typing import Literal
 from uuid import uuid4
 
 from pydantic import Field
 
 from app.execution.fixture import LocalFixtureVenue
 from app.execution.models import Contract, Observation, VenuePosition
-
-FixtureFault = Literal[
-    "NONE",
-    "STALL_BEFORE_ACCEPT",
-    "STALL_AFTER_ACCEPT",
-    "IGNORE_TERM_AFTER_ACCEPT",
-    "CRASH_AFTER_ACCEPT",
-    "LOST_ACK",
-    "INVALID_ACK",
-    "OVERSIZED_ACK",
-    "STALL_READ",
-]
+from app.execution.process_protocol import FixtureFault
 
 
 class FixtureState(Contract):

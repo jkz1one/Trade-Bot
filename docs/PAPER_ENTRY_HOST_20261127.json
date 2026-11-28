@@ -1,13 +1,13 @@
 {
   "version": "paper-entry-host-20261127-v1",
-  "source": "Operator-supplied launch receipt and truncated terminal status; no direct server access",
+  "source": "Operator-supplied launch receipt, truncated terminal status and subsequent original-clock/native-trace extraction; no direct server access",
   "release": "91b69b65be3215bee5d6c1cc31dda8668ed8fb82",
   "evidence_directory": "/var/lib/trade-bot-paper-soak/trade-bot-offline-soak-91b69b65be32-8q8ejln3",
   "image_id": "sha256:00e09922c1888b1013da91c9d0f4611b3cd244635204eaa12e27a05fea78052d",
   "profile": "entry",
   "planned_seconds": 335,
   "launch_at": "2026-11-28T02:37:52.061030714Z",
-  "terminal_scope": "Progress explicitly FAILED; terminal container state, top-level failure details, original clocks and native child stages were omitted from the pasted excerpt",
+  "terminal_scope": "Progress explicitly FAILED; terminal container state and top-level failure details remain omitted. Follow-up supplied original clocks, native child stages and saved uncertain-attempt exception.",
   "progress": {
     "status": "FAILED",
     "elapsed_seconds": 37.34412733837962,
@@ -39,7 +39,24 @@
     "transport_status": "FAILED",
     "native_status": "FAILED",
     "dispatch_quote_age_seconds": 7.391369,
-    "child_stages": "NOT_SUPPLIED"
+    "child_stages": [
+      {
+        "stage": "IMPORTS",
+        "elapsed_seconds": 0.001235,
+        "cpu_seconds": 2.1e-05
+      }
+    ],
+    "decision_status": "UNKNOWN",
+    "reason": null,
+    "parent_phase": "RESPONSE_READ",
+    "elapsed_seconds": 1.233,
+    "child_trace_status": "OBSERVED",
+    "uncertain_attempts": [
+      {
+        "occurred_at": "2026-10-28T14:00:25.055940+00:00",
+        "error_class": "FixtureProcessTimeout"
+      }
+    ]
   },
   "restore_to_review": {
     "window_seconds": 7.192027,
@@ -91,10 +108,11 @@
   "interpretation": [
     "The short gate correctly failed early; it does not qualify an entry or deployment.",
     "Recorded memory and CPU quota counters do not show a limit breach in this short interval. They do not qualify sustained headroom or measure host scheduling/steal time.",
-    "The dominant measured pre-review work is restore scanning; the child has a short remaining original lease. Missing child stages prevent attributing its failure to imports, venue acceptance, response handling or a specific timeout.",
-    "No deadline, quote timestamp, resource cap or account state should be changed to pass this gate."
+    "Last observed child stage was IMPORTS. The original five-second plan deadline bound acceptance earlier than the ten-second quote-age ceiling. The parent recorded FixtureProcessTimeout and UNKNOWN, which must remain uncertain until native reconciliation; missing later telemetry does not prove no native mutation.",
+    "No deadline, quote timestamp, resource cap or account state should be changed to pass this gate.",
+    "Read-only code inspection found avoidable parent transport and legacy model imports in the child. A measured dependency-only repair is recorded separately; this failed host gate remains failed."
   ],
-  "next": "Read the existing saved entry clocks and child trace in a compact projection. Optimize measured work with the original bounds; do not repeat the unchanged host test.",
+  "next": "Qualify the tested dependency-only startup repair with a new isolated entry gate. Preserve old evidence and the connected review hold; no deployment, deadline extension or resource increase.",
   "connected_health": "UNVERIFIED",
   "provider_calls": false,
   "live_enabled": false,
@@ -212,5 +230,26 @@
     },
     "native_imports_seconds": 0.420791,
     "implementation_change": "NONE; read-setting effect too small to establish repair"
+  },
+  "entry_clocks": {
+    "as_of": "2026-10-28T14:00:21.818456Z",
+    "deadline": "2026-10-28T14:00:26.818456Z",
+    "account_captured_at": "2026-10-28T14:00:20.263318Z",
+    "account_max_age_seconds": 20,
+    "quote_max_age_seconds": 10,
+    "model_completed_at": "2026-10-28T14:00:24.290028+00:00",
+    "review_at": "2026-10-28T14:00:24.856598+00:00",
+    "options": [
+      {
+        "source_at": "2026-10-28T14:00:17.664571Z",
+        "received_at": "2026-10-28T14:00:18.664571Z",
+        "admission_deadline": "2026-10-28T14:00:26.818456Z"
+      },
+      {
+        "source_at": "2026-10-28T14:00:17.664571Z",
+        "received_at": "2026-10-28T14:00:18.664571Z",
+        "admission_deadline": "2026-10-28T14:00:26.818456Z"
+      }
+    ]
   }
 }

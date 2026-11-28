@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 
 from pydantic import BeforeValidator, Field, StrictBool, StrictInt, field_validator, model_validator
 
-from app.execution.models import Contract
+from app.execution.contracts import Contract
 
 
 def _decimal(value):

@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import Field, StrictBool, model_validator
 
-from app.execution.economics import CostPolicy
+from app.execution.cost_models import CostPolicy
 from app.mixed.native_models import MixedOwnerPolicy
 from app.mixed.stock_models import StockLimits, StockObservation, StockPosition
 from app.options.carry_models import SwingCarryTerms

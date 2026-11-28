@@ -5,23 +5,13 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from app.domain.models import Horizon, Position
+from app.execution.contracts import Contract  # Public compatibility export.
 
 ZERO = Decimal(0)
 SHARE_STEP = Decimal("0.00000001")
-
-
-class Contract(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True, allow_inf_nan=False)
-
-    @field_validator("*", mode="after")
-    @classmethod
-    def aware_times(cls, value):
-        if isinstance(value, datetime) and (value.tzinfo is None or value.utcoffset() is None):
-            raise ValueError("Execution timestamps must be timezone-aware")
-        return value
 
 
 class OrderState(StrEnum):

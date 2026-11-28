@@ -10,9 +10,8 @@ from app.options.process_trace import ChildTrace
 def main():
     trace = ChildTrace()
     trace.mark("IMPORTS")
-    from app.execution.process import MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES
-    from app.execution.worker import _stall
-    from app.options.process import OptionProcessResult, OptionRequest
+    from app.execution.process_protocol import MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, _stall
+    from app.options.process_models import OptionProcessResult, OptionRequest
     from app.options.venue import DurableOptionVenue
 
     trace.mark("REQUEST")

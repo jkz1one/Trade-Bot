@@ -14,9 +14,8 @@ from pydantic import Field, model_validator
 
 from app.execution.durable_fixture import DurableFixtureVenue, FixtureFault
 from app.execution.models import Contract, Intent, Snapshot
+from app.execution.process_protocol import MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES
 
-MAX_REQUEST_BYTES = 64 * 1024
-MAX_RESPONSE_BYTES = 1024 * 1024
 TERMINATION_GRACE_SECONDS = 1
 
 

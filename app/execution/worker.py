@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 import signal
 import sys
-import time
 
 from app.execution.durable_fixture import DurableFixtureVenue
 from app.execution.process import (
@@ -14,13 +13,7 @@ from app.execution.process import (
     FixtureRequest,
     FixtureResult,
 )
-
-
-def _stall(parent_pid):
-    while True:
-        if os.getppid() != parent_pid:
-            os._exit(96)
-        time.sleep(1)
+from app.execution.process_protocol import _stall
 
 
 def main():
